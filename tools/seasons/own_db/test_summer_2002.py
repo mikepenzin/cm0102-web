@@ -175,7 +175,11 @@ def class_sizes():
     text = open(os.path.join(REPO, "src", "recomp_rt", "win", "season_clubs.c"), encoding="utf-8").read()
     body = text[text.index("static const ClassSize CLASS_SIZE[] = {"):]
     body = body[:body.index("};")]
-    return {m[0]: int(m[3]) for m in re.findall(r'\{"([^"]+)", "([a-z_0-9]+)", (\d+), (\d+)\}', body)}
+    rows = re.findall(r'\{"([^"]+)", "([a-z_0-9]+)", (\d+), (\d+)\}', body)
+    n = body.count('{"')
+    if len(rows) != n:
+        raise SystemExit(f"FAIL: CLASS_SIZE has {n} rows, the test reads {len(rows)}")
+    return {m[0]: int(m[3]) for m in rows}
 
 
 def check_structure(F, T, out):
@@ -194,8 +198,6 @@ def check_structure(F, T, out):
     nf, nt = count(F), count(T)
     bad += [("division count", ct.get(d, d), nt[d], nf[d]) for d in sorted(set(nf) | set(nt)) if nf[d] != nt[d]]
     sizes, by_name = class_sizes(), {v: k for k, v in cf.items()}
-    if len(sizes) < 50:
-        bad.append(("CLASS_SIZE rows read", len(sizes)))
     for name, n in sorted(sizes.items()):
         if name not in by_name or nf[by_name[name]] < n:
             bad.append(("class size", name, n, nf.get(by_name.get(name), 0)))

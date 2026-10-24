@@ -34,7 +34,7 @@ reputation first going up, lower first going down), else a chain of three or mor
 First Division" is the club's 3.9.68 group, and Oulun Luistinseura and Vaasan Palloseura go to the North group.
 Competition 118 stays empty, as in 3.9.68. The season code makes the real sizes on the 2002/03 tile (slice 4).
 
-Result: 117 moves apply, 110 of them in 55 swaps of two and 7 in 2 longer chains. Every division keeps its 3.9.68
+Result: 117 moves apply, 110 of them in 55 swaps of two and 7 in longer chains. Every division keeps its 3.9.68
 count. `test_summer_2002.py` checks this, and that each CLASS_SIZE division holds at least its 2001 count. Run
 on the build of the first pass (before Q39), the check finds 33 faults, among them the Finnish groups (3 of 10) and
 the Croatian First Division (13 of 16).
@@ -185,10 +185,10 @@ Each club keeps its 3.9.68 division. The checked division is in `5-leagues.tsv` 
 | Russia | Biokhimik-Mordovia Saransk | 1601 | Russian Second Division - Volga | Russian Second Division - Central |
 | Russia | Baltika Kaliningrad | 1277 | Russian Second Division - West | Russian First Division |
 | South Korea | Sangmoo | 10106 | Korean Amateur League | Korean League |
-| Turkey | Erciyesspor | 3608 | Turkish 2. Division Category A | Turkish 2. Division Category B G4 |
+| Turkey | Batman Petrolspor | 1148 | Turkish 2. Division Category A | Turkish 2. Division Category B G5 |
 | Turkey | Siirt JETPAspor | 10515 | Turkish 2. Division Category A | Turkish 2. Division Category B G5 |
 | Turkey | Ispartaspor | 5459 | Turkish 2. Division Category B G2 | Turkish Lower Division |
-| Turkey | Boluspor | 1730 | Turkish 2. Division Category B G4 | Turkish Lower Division |
+| Turkey | Agrispor | 282 | Turkish 2. Division Category B G5 | Turkish Lower Division |
 | Turkey | Muglaspor | 7627 | none | Turkish 2. Division Category B G2 |
 | Turkey | Çubukspor | 2844 | none | Turkish 2. Division Category B G4 |
 | United States | Connecticut Wolves | 2702 | American A-League | none |

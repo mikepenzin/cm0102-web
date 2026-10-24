@@ -516,8 +516,10 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None, holders=
                    for kind, t, x, new, dec, why in planned]
     # Q40 (Max, 2026-10-24): holders that the Xbox data lacks and that a public source puts elsewhere in July 2002
     # leave their place, so the Xbox newcomer can take it. They have no Xbox row (x is None) and become free.
+    listed = {t for kind, t, x, new, dec, why in planned}
     for t, why in sorted((holders or {}).items()):
         need(T[t]["club"] is not None and T[t]["club"] >= 0, f"Q40: staff {t} has no club in 3.9.68")
+        need(t not in listed, f"Q40: staff {t} already has a row of the change list")
         planned.append(("2-releases", t, None, None, APPLIED, "Q40 (Max): " + why))
     if raw:
         planned, notes["full_lists"] = slot_holds(planned, raw)
@@ -894,9 +896,16 @@ def league_check(rows5, path, div_t, comps_t, TC, nations):
             r.update(new_division_id=new, rule=why, decision=APPLIED)
 
     for row in checked:
-        if not row["id_3968"].strip().isdigit():
-            continue                                    # Q35: no club in the database (and the reserve sides)
-        c, dec = int(row["id_3968"]), row["decision"]
+        raw = row["id_3968"].strip()
+        if not raw.isdigit():
+            if raw.rstrip("?").isdigit() and int(raw.rstrip("?")) in Q37:
+                raw = raw.rstrip("?")                   # an id the check was unsure of, which Q37 names
+            elif raw in ("not in database", "-1"):
+                continue                                # Q35: no club in the database (and the reserve sides)
+            else:
+                left.append(row)                        # an unsure id that no answer names
+                continue
+        c, dec = int(raw), row["decision"]
         need(c in TC, f"league check: club {c} is not in 3.9.68")
         if c in Q37:
             how = Q37[c]
@@ -994,19 +1003,19 @@ def balance(rows5, div_t, comps_t, ranks, rep):
         out = collections.defaultdict(list)
         for m in left:
             out[m["src"]].append(m)
+        def find(start, n, path, on_path):
+            """A chain from n back to start (each division once on the path), or None."""
+            for m in out.get(n, []):
+                if m["dst"] == start:
+                    return path + [m]
+                if m["dst"] not in on_path:
+                    got = find(start, m["dst"], path + [m], on_path | {m["dst"]})
+                    if got:
+                        return got
+            return None
         cycle = None
         for start in sorted(out, key=str):
-            stack = [(start, [])]
-            seen = set()
-            while stack and cycle is None:
-                n, path = stack.pop()
-                for m in out.get(n, []):
-                    if m["dst"] == start:
-                        cycle = path + [m]
-                        break
-                    if m["dst"] not in seen and len(path) < 8:
-                        seen.add(m["dst"])
-                        stack.append((m["dst"], path + [m]))
+            cycle = find(start, start, [], {start})
             if cycle:
                 break
         if not cycle:
