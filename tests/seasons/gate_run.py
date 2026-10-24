@@ -16,7 +16,7 @@ with --nations all and a save and load each July. <run folder> gets one folder p
 2001 to 2025 (oldest first), then 2001off, 2006off, 2011off, 2016off, 2021off (O273) and 2014c2 (O278: the 2014
 start crosses the Italian change of 2015/16).
 
-Databases: 2001 and 2002 play the base game. 2004 and 2006 play the own databases (Summer 2004.zip, Summer 2006.zip
+Databases: 2001 plays the base game. 2002, 2004 and 2006 play the own databases (Summer 2002.zip, Summer 2004.zip, Summer 2006.zip
 in --own-dbs). Each other year plays the folder of --databases whose name starts with its date (DATES).
 
 Limits: a new soak starts only while fewer than --max soaks of this run folder run, fewer than --machine games run on
@@ -62,7 +62,7 @@ DATES = {2003: "October 2003", 2005: "September 2005", 2007: "November 2007", 20
          2013: "Autumn 2013", 2014: "October 2014", 2015: "October 2015", 2016: "October 2016", 2017: "October 2017",
          2018: "October 2018", 2019: "October 2019", 2020: "November 2020", 2021: "October 2021",
          2022: "October 2022", 2023: "October 2023", 2024: "October 2024", 2025: "December 2025"}
-OWN = {2004: "Summer 2004", 2006: "Summer 2006"}
+OWN = {2002: "Summer 2002", 2004: "Summer 2004", 2006: "Summer 2006"}
 RUN8 = [str(y) for y in range(2001, 2026)] + ["2001off", "2006off", "2011off", "2016off", "2021off", "2014c2"]
 LOCK = threading.Lock()
 
@@ -81,7 +81,7 @@ def parse(item):
 
 def database(y, o):
     """(--database arguments, label) of a start year. The own databases are unpacked on first use."""
-    if y in (2001, 2002):
+    if y == 2001:
         return [], "3.9.68"
     if y in OWN:
         folder = os.path.join(o["run"], "owndb", str(y))

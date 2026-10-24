@@ -719,6 +719,21 @@ static void move_clubs(int season)
                     div[t].filled_own, div[t].filled_left, div[t].filled_up, div[t].filled_pool, div[t].filled_spare, div[t].filled_lower, div[t].stand_in,
                     div[t].open, div[t].want, div[t].n0);
     }
+    /* Test switch RECOMP_CLUB_DUMP=<file>: after the moves, one line per club (no national team) with its id, name
+     * and division, tab-separated. A tab or line end in a name is written as a space (the data holds such names).
+     * Nothing is written when the moves do not run. */
+    const char *dump = getenv("RECOMP_CLUB_DUMP");
+    FILE *df = dump && *dump ? host_fopen(dump, "w") : NULL;
+    for (int i = 0; df && i < count; i++) {
+        if (club[i].national) continue;
+        char name[64], division[64];
+        snprintf(name, sizeof name, "%s", win_str(club[i].at + CLUB_NAME));
+        snprintf(division, sizeof division, "%s", club[i].div ? win_str(club[i].div + COMP_NAME) : "none");
+        for (char *q = name; *q; q++) if (*q == '\t' || *q == '\n' || *q == '\r') *q = ' ';
+        for (char *q = division; *q; q++) if (*q == '\t' || *q == '\n' || *q == '\r') *q = ' ';
+        fprintf(df, "%d\t%s\t%s\n", club[i].id, name, division);
+    }
+    if (df) fclose(df);
     fprintf(stderr, "recomp: club moves of %d/%02d: %d divisions with a list (%d whole), %d clubs moved, %d left "
                     "their division, %d cut to the class count, %d listed clubs not in this database (%d found by "
                     "the plain name), %d divisions not in it, %d divisions short, %d divisions with another class "

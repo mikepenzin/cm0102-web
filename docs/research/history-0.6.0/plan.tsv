@@ -968,6 +968,975 @@ clear	3.9.68	2002	Yugoslav Second Division South	2001
 clear	3.9.68	2002	Yugoslav Second Division South	2002										
 clear	3.9.68	2002	Yugoslav Second Division West	2001										
 clear	3.9.68	2002	Yugoslav Second Division West	2002										
+add	Summer 2002	2002	PrepreLibertadores Cup	2002		add	Club de Fútbol Universidad	Mexico	Club Deportivo Cruz Azul	Mexico				
+add	Summer 2002	2002	American Major League	2002		add	Los Angeles Galaxy	United States	New England Revolution	United States				
+add	Summer 2002	2002	US Open Cup	2002		add	Columbus Crew	United States	Los Angeles Galaxy	United States				
+add	Summer 2002	2002	American A-League	2002		add	Milwaukee Rampage	United States	Richmond Kickers	United States				
+add	Summer 2002	2002	Chinese FA Cup	2002		add	Qingdao Yizhong	China PR	Liaoning Fushun	China PR				
+add	Summer 2002	2002	Chinese FA Super Cup	2002		agree	Shanghai Shenhua	China PR	Dalian Shide	China PR				
+add	Summer 2002	2002	Chinese First Division A	2002		add	Dalian Shide	China PR	Shenzhen Pingan	China PR				
+add	Summer 2002	2002	Chinese First Division B	2002		add	Xiamen Hongshi	China PR	Dalian Sàidélóng	China PR				
+add	Summer 2002	2002	Chinese Second Division	2002		add	Harbin Lange	China PR	Guangdong Xiongying	China PR				
+add	Summer 2002	2002	Japanese Cup	2002		add	Kashima Antlers	Japan	Urawa Red Diamonds	Japan				
+add	Summer 2002	2002	Japanese Football League	2002		add	Honda Football Club	Japan	Sagawa Soccer Club	Japan				
+add	Summer 2002	2002	Japanese J-League 1	2002		add	Jubilo Iwata	Japan	Yokohama F Marinos	Japan				
+add	Summer 2002	2002	Japanese J-League 2	2002		add	Oita Trinita	Japan	Cerezo Osaka	Japan				
+add	Summer 2002	2002	Japanese Super Cup	2002		add	Shimizu S-Pulse	Japan	Kashima Antlers	Japan				
+add	Summer 2002	2002	Japanese U-18 Championship	2002		add	Kunimi High School	Japan						
+add	Summer 2002	2002	Japanese University League	2002		add	Komazawa University	Japan	Kokushikan University Soccer Club	Japan				
+add	Summer 2002	2002	Korean FA Cup	2002		add	Suwon Samsung Blue Wings	South Korea	Pohang Steelers	South Korea				
+add	Summer 2002	2002	Korean League	2002		add	Songnam Ilhwa Chunma	South Korea	Ulsan Hyundai Horang-I	South Korea				
+add	Summer 2002	2002	Korean League Cup	2002		add	Songnam Ilhwa Chunma	South Korea	Ulsan Hyundai Horang-I	South Korea				
+add	Summer 2002	2002	Korean President Cup	2002		add	Hongik University	South Korea	Hallelujah	South Korea				
+add	Summer 2002	2002	Korean Super Cup	2002		add	Songnam Ilhwa Chunma	South Korea	Taejon Citizen	South Korea				
+add	Summer 2002	2002	Hong Kong First Division	2002		agree	Sun Hei	Hong Kong	Happy Valley Athletic	Hong Kong				
+add	Summer 2002	2002	Hong Kong FA Cup	2002		agree	South China Athletic	Hong Kong	Sun Hei	Hong Kong				
+add	Summer 2002	2002	Hong Kong League Cup	2002		agree	South China Athletic	Hong Kong	Hong Kong Rangers	Hong Kong				
+add	Summer 2002	2002	Hong Kong Junior Challenge Shield	2002		differ	Mutual	Hong Kong						
+add	Summer 2002	2002	Hong Kong Second Division	2002		agree	Fukien	Hong Kong	Tung Po	Hong Kong				
+add	Summer 2002	2002	Hong Kong Third Division A	2002		differ	Kwok Keung	Hong Kong						
+add	Summer 2002	2002	Hong Kong Third Division B	2002		agree	Ornaments	Hong Kong	Hi Lee	Hong Kong				
+add	Summer 2002	2002	Indian National Football League	2002		agree	Mohun Bagan Athletic Club	India	Churchill Brothers Sports Club	India				
+add	Summer 2002	2002	Indian Calcutta Super Division	2002		add	East Bengal Club	India	Mohammedan Sporting Club	India				
+add	Summer 2002	2002	Indian Goan Professional League	2002		add	Salgaocar Sports Club	India	Vasco Sports Club	India				
+add	Summer 2002	2002	Indian Mumbai League	2002		add	Mahindra United	India	Central Railway	India				
+add	Summer 2002	2002	Indian Dehli Senior Division	2002		add	Indian Air Force	India	Hindustan Football Club	India				
+add	Summer 2002	2002	Indian Bangalore Super Division	2002		differ	Hindustan Aeronautics Limited	India						
+add	Summer 2002	2002	Indian Guwahati Super Division	2002		add	Guwahati Town Club	India						
+add	Summer 2002	2002	Indian Punjab State Soccer League	2002		add	Jagatjit Cotton and Textiles Mills	India	Border Security Force	India				
+add	Summer 2002	2002	Malaysia Cup	2002		add	Selangor	Malaysia	Sabah	Malaysia				
+add	Summer 2002	2002	Malaysian Charity Shield	2002		add	Selangor	Malaysia	Terengganu	Malaysia				
+add	Summer 2002	2002	Malaysian League Premier Two	2002		add	Kedah	Malaysia	Melaka Telekom	Malaysia				
+add	Summer 2002	2002	Singaporean League	2002		add	Singapore Armed Forces FC	Singapore	Home United	Singapore				
+add	Summer 2002	2002	Singapore Cup	2002		add	Tampines Rovers	Singapore	Jurong FC	Singapore				
+add	Summer 2002	2002	Singaporean Prime League	2002		add	Home United	Singapore	Singapore Armed Forces FC	Singapore				
+add	Summer 2002	2002	New South Wales State League	2002		add	Rockdale City Suns	Australia	Hajduk Wanderers	Australia				
+add	Summer 2002	2002	Queensland Premier League	2002		add	Brisbane Lions	Australia						
+add	Summer 2002	2002	South Australian Premier League	2002		add	Raiders	Australia	Adelaide Blue Eagles	Australia				
+add	Summer 2002	2002	Western Australian Premier League	2002		add	Perth SC	Australia						
+add	Summer 2002	2002	South African Charity Cup	2002		add	Kaizer Chiefs	South Africa	Black Leopards	South Africa				
+add	Summer 2002	2002	South African First Division Coastal	2002		differ	African Wanderers	South Africa	Avendale Athletico	South Africa				
+add	Summer 2002	2002	South African First Division Inland	2002		differ	Dynamos	South Africa	Tycoon Silver Stars	South Africa				
+add	Summer 2002	2002	South African League Cup	2002		add	Jomo Cosmos	South Africa	Kaizer Chiefs	South Africa				
+add	Summer 2002	2002	South African Premier Division	2002		differ	Santos (RSA)	South Africa	Supersport United	South Africa				
+add	Summer 2002	2002	South African Top 8 Cup	2002		add	Santos (RSA)	South Africa	Sundowns	South Africa				
+add	Summer 2002	2002	Brazilian Bahia State Championship	2002		add	Esporte Clube Vitória	Brazil	Fluminense de Feira Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian Central State Championship	2002		add	Rio Branco Football Club	Brazil	Associação Desportiva Vasco da Gama	Brazil				
+add	Summer 2002	2002	Brazilian North State Championship	2002		add	Clube de Regatas Brasil	Brazil	Centro Sportivo Alagoano	Brazil				
+add	Summer 2002	2002	Brazilian Northeast State Championship	2002		add	Nacional Futebol Clube (AM)	Brazil	Atlético Clíper Clube	Brazil				
+add	Summer 2002	2002	Brazilian Gaúcho State Championship	2002		add	Sport Club Internacional	Brazil	Clube 15 de Novembro	Brazil				
+add	Summer 2002	2002	Brazilian Goiás State Championship	2002		add	Goiás Esporte Clube	Brazil	Novo Horizonte Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian Minas Gerais State Championship	2002		add	Associação Atlética Caldense	Brazil	Ipatinga Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian Paraná State Championship	2002		add	Iraty Sport Club	Brazil	Grêmio de Esportes Maringá	Brazil				
+add	Summer 2002	2002	Brazilian Pernambuco State Championship	2002		add	Clube Náutico Capibaribe	Brazil	Santa Cruz Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian Rio de Janeiro State Championship	2002		add	Fluminense Football Club	Brazil	Americano Futebol Clube (RJ)	Brazil				
+add	Summer 2002	2002	Brazilian Santa Catarina State Championship	2002		add	Figueirense Futebol Clube	Brazil	Criciúma Esporte Clube	Brazil				
+add	Summer 2002	2002	Brazilian São Paulo State Championship	2002		add	Ituano Futebol Clube	Brazil	União São João Esporte Clube	Brazil				
+add	Summer 2002	2002	Brazilian National First Division	2002		add	Santos Futebol Clube	Brazil	Sport Club Corinthians Paulista	Brazil				
+add	Summer 2002	2002	Brazilian National Second Division	2002		add	Criciúma Esporte Clube	Brazil	Fortaleza Esporte Clube	Brazil				
+add	Summer 2002	2002	Brazilian National Third Division	2002		add	Brasiliense Futebol Clube	Brazil	Marília Atlético Clube	Brazil				
+add	Summer 2002	2002	Brazilian Cup	2002		add	Sport Club Corinthians Paulista	Brazil	Brasiliense Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian Central Regional Cup	2002		add	Goiás Esporte Clube	Brazil	Sociedade Esportiva do Gama	Brazil				
+add	Summer 2002	2002	Brazilian North Regional Cup	2002		add	Paysandu Sport Club	Brazil	São Raimundo Esporte Clube (AM)	Brazil				
+add	Summer 2002	2002	Brazilian Northeast Regional Cup	2002		add	Esporte Clube Bahia	Brazil	Esporte Clube Vitória	Brazil				
+add	Summer 2002	2002	Brazilian South-Minas Regional Cup	2002		add	Cruzeiro Esporte Clube	Brazil	Clube Atlético Paranaense	Brazil				
+add	Summer 2002	2002	Brazilian Rio-São Paulo Tournement	2002		add	Sport Club Corinthians Paulista	Brazil	São Paulo Futebol Clube	Brazil				
+add	Summer 2002	2002	Polish First Division	2002		agree	Legia Warszawa	Poland	Wisla Krakow	Poland				
+add	Summer 2002	2002	Polish FA Cup	2002		agree	Wisla Krakow	Poland	Amica Wronki	Poland				
+add	Summer 2002	2002	Polish League Cup	2002		agree	Legia Warszawa	Poland	Wisla Krakow	Poland				
+add	Summer 2002	2002	Polish Second Division	2002		agree	Lech Poznan	Poland	Orlen Plock	Poland				
+add	Summer 2002	2002	Czech First Division	2002		agree	FC Slovan Liberec	Czech Republic	AC Sparta Prague	Czech Republic				
+add	Summer 2002	2002	Czech FA Cup	2002		differ	SK Slavia Prague	Czech Republic	AC Sparta Prague	Czech Republic				
+add	Summer 2002	2002	Czech Second Division	2002		agree	SK Ceske Budejovice	Czech Republic	FK Zlin	Czech Republic				
+add	Summer 2002	2002	Russian Cup	2002		agree	CSKA Moscow	Russia	Zenith St. Petersburg	Russia				
+add	Summer 2002	2002	Russian First Division	2002		add	Rubin Kazan	Russia	Chernomorets Novorossiysk	Russia				
+add	Summer 2002	2002	Russian Premier Division	2002		add	Lokomotiv Moscow	Russia	CSKA Moscow	Russia				
+add	Summer 2002	2002	Russian Second Division - Central	2002		add	Metallurg Lipetsk	Russia	Vityaz Podolsk	Russia				
+add	Summer 2002	2002	Russian Second Division - East	2002		add	Metallurg-Zapsib Novokuznetsk	Russia	Chkalovets-1936 Novosibirsk	Russia				
+add	Summer 2002	2002	Russian Second Division - South	2002		add	Terek Grozny	Russia	Dinamo Makhachkala	Russia				
+add	Summer 2002	2002	Russian Second Division - Ural	2002		add	Uralmash Yekaterinburg	Russia	Sodovik Sterlitamak	Russia				
+add	Summer 2002	2002	Russian Second Division - Volga	2002		add	Svetotekhnika Saransk	Russia	Volga Uljanovsk	Russia				
+add	Summer 2002	2002	Russian Second Division - West	2002		add	Baltika Kaliningrad	Russia	Arsenal Tula	Russia				
+add	Summer 2002	2002	Yugoslav Cup	2002		agree	Red Star Belgrade	Yugoslavia	Sartid Smederevo	Yugoslavia				
+add	Summer 2002	2002	Yugoslav First Division	2002		agree	Partizan Belgrade	Yugoslavia	Red Star Belgrade	Yugoslavia				
+add	Summer 2002	2002	Yugoslav Second Division East	2002		agree	Radnicki Nis	Yugoslavia	Napredak Krusevac	Yugoslavia				
+add	Summer 2002	2002	Yugoslav Second Division North	2002		agree	Radnicki Obrenovac/Milicionar	Yugoslavia	Buducnost Banatski Dvor	Yugoslavia				
+add	Summer 2002	2002	Yugoslav Second Division South	2002		agree	Mogren Budva	Yugoslavia	Buducnost Podgorica	Yugoslavia				
+add	Summer 2002	2002	English Conference	2002		agree	Boston United	England	Dagenham and Redbridge	England				
+add	Summer 2002	2002	English FA Cup	2002		agree	Arsenal	England	Chelsea	England				
+add	Summer 2002	2002	English FA Trophy	2002		agree	Yeovil Town	England	Stevenage Borough	England				
+add	Summer 2002	2002	English First Division	2002		agree	Manchester City	England	West Bromwich Albion	England				
+add	Summer 2002	2002	English Isthmian League Premier Division	2002		agree	Gravesend and Northfleet	England	Canvey Island	England				
+add	Summer 2002	2002	English League Cup	2002		agree	Blackburn Rovers	England	Tottenham Hotspur	England				
+add	Summer 2002	2002	English Northern Premier League Premier Division	2002		agree	Burton Albion	England	Vauxhall Motors	England				
+add	Summer 2002	2002	English Premier Division	2002		agree	Arsenal	England	Liverpool	England				
+add	Summer 2002	2002	English Second Division	2002		agree	Brighton and Hove Albion	England	Reading	England				
+add	Summer 2002	2002	English Southern League Premier Division	2002		agree	Kettering Town	England	Tamworth	England				
+add	Summer 2002	2002	English Third Division	2002		agree	Plymouth Argyle	England	Luton Town	England				
+add	Summer 2002	2002	English Vans Trophy	2002		agree	Blackpool	England	Cambridge United	England				
+add	Summer 2002	2002	Portuguese Cup	2002		agree	Sporting Clube de Portugal	Portugal	Leixões Sport Clube	Portugal				
+add	Summer 2002	2002	Portuguese Premier League	2002		agree	Sporting Clube de Portugal	Portugal	Boavista Futebol Clube	Portugal				
+add	Summer 2002	2002	Portuguese Second Division B Central	2002		agree	Sporting Clube da Covilhã	Portugal	Sporting Clube de Pombal	Portugal				
+add	Summer 2002	2002	Portuguese Second Division B North	2002		agree	Futebol Clube Marco	Portugal	Leixões Sport Clube	Portugal				
+add	Summer 2002	2002	Portuguese Second Division B South	2002		differ	Clube Futebol União Madeira	Portugal	Sporting Clube de Portugal B	Portugal				
+add	Summer 2002	2002	Portuguese Second League	2002		agree	Moreirense Futebol Clube	Portugal	Associação Académica de Coimbra	Portugal				
+add	Summer 2002	2002	Portuguese Third Division	2002		add	Clube Desportivo de Mafra	Portugal	Sport Clube "Os Dragões Sandinenses"	Portugal				
+add	Summer 2002	2002	Spanish Cup	2002		agree	Deportivo de La Coruña	Spain	Real Madrid C.F.	Spain				
+add	Summer 2002	2002	Spanish First Division	2002		agree	Valencia C.F.	Spain	Deportivo de La Coruña	Spain				
+add	Summer 2002	2002	Spanish Second Division	2002		agree	Atlético de Madrid	Spain	Racing Club de Santander	Spain				
+add	Summer 2002	2002	Spanish Second Division B1	2002		agree	Barakaldo C.F.	Spain	Cultural Leonesa	Spain				
+add	Summer 2002	2002	Spanish Second Division B2	2002		agree	F.C. Barcelona B	Spain	R.C.D. Espanyol B	Spain				
+add	Summer 2002	2002	Spanish Second Division B3	2002		agree	Real Madrid C.F. B	Spain	Valencia C.F. B	Spain				
+add	Summer 2002	2002	Spanish Second Division B4	2002		agree	Motril C.F.	Spain	A.D. Ceuta	Spain				
+add	Summer 2002	2002	Belgian Cup	2002		agree	Club Brugge KV	Belgium	R Excelsior Mouscron	Belgium				
+add	Summer 2002	2002	Belgian First Division	2002		agree	KRC Genk	Belgium	Club Brugge KV	Belgium				
+add	Summer 2002	2002	Belgian Fourth Division  A	2002		agree	RRC Tournaisien	Belgium	K Racing Waregem	Belgium				
+add	Summer 2002	2002	Belgian Fourth Division  B	2002		agree	K Berchem Sport	Belgium	Thor Kokerij Meldert	Belgium				
+add	Summer 2002	2002	Belgian Fourth Division  C	2002		agree	Exc Veldwezelt	Belgium	FC Verbroedering Meerhout	Belgium				
+add	Summer 2002	2002	Belgian Fourth Division  D	2002		agree	RE Dison - Verviers	Belgium	R Spa FC	Belgium				
+add	Summer 2002	2002	Belgian Second Division	2002		agree	KV Mechelen	Belgium	KSV Ingelmunster	Belgium				
+add	Summer 2002	2002	Belgian Third Division A	2002		agree	KSV Zulte Waregem	Belgium	KFC Vigor Wuitens Hamme	Belgium				
+add	Summer 2002	2002	Belgian Third Division B	2002		agree	KAS Eupen	Belgium	RW Walhain CG	Belgium				
+add	Summer 2002	2002	French Cup	2002		add	FC Lorient	France	Sporting Club Bastia	France				
+add	Summer 2002	2002	French First Division	2002		agree	Olympique Lyonnais	France	Racing Club Lens	France				
+add	Summer 2002	2002	French League Cup	2002		agree	Girondins de Bordeaux	France	FC Lorient	France				
+add	Summer 2002	2002	French National	2002		differ	Clermont Foot Auvergne	France	Stade de Reims Champagne	France				
+add	Summer 2002	2002	French Second Division	2002		differ	Ajaccio AC	France	Racing Club Strasbourg	France				
+add	Summer 2002	2002	Dutch Cup	2002		agree	Ajax	Holland	FC Utrecht	Holland				
+add	Summer 2002	2002	Dutch First Division	2002		add	FC Zwolle	Holland	Excelsior	Holland				
+add	Summer 2002	2002	Dutch Premier Division	2002		agree	Ajax	Holland	PSV	Holland				
+add	Summer 2002	2002	German First Division	2002		agree	BV Borussia Dortmund	Germany	Bayer 04 Leverkusen	Germany				
+add	Summer 2002	2002	German Second Division	2002		agree	Hannover 96	Germany	Arminia Bielefeld	Germany				
+add	Summer 2002	2002	German Cup	2002		agree	FC Schalke 04	Germany	Bayer 04 Leverkusen	Germany				
+add	Summer 2002	2002	German Regional Division North	2002		agree	VfB Lübeck	Germany	TSV Eintracht Braunschweig	Germany				
+add	Summer 2002	2002	German Regional Division South	2002		agree	SV Wacker Burghausen	Germany	SV Eintracht Trier 05	Germany				
+add	Summer 2002	2002	Austrian Premier Division	2002		add	FC Tirol Innsbruck	Austria	SK Sturm Graz	Austria				
+add	Summer 2002	2002	Austrian First Division	2002		add	SV Pasching	Austria	SC Austria Lustenau	Austria				
+add	Summer 2002	2002	Austrian FA Cup	2002		add	Grazer AK	Austria	SK Sturm Graz	Austria				
+add	Summer 2002	2002	Swiss National Division A	2002		add	FC Basel	Switzerland	Grasshopper Club Zurich	Switzerland				
+add	Summer 2002	2002	Swiss Cup	2002		add	FC Basel	Switzerland	Grasshopper Club Zurich	Switzerland				
+add	Summer 2002	2002	Luxembourg National Division	2002		add	F91 Dudelange	Luxembourg	CS Grevenmacher	Luxembourg				
+add	Summer 2002	2002	Luxembourg Cup	2002		add	Avenir Beggen	Luxembourg	F91 Dudelange	Luxembourg				
+add	Summer 2002	2002	CONCACAF Champions Cup	2002		add	Club Deportivo Pachuca	Mexico	Club Monarcas Morelia	Mexico				
+add	Summer 2002	2002	European Champions Cup	2002		add	Real Madrid C.F.	Spain	Bayer 04 Leverkusen	Germany				
+add	Summer 2002	2002	UEFA Cup	2002		add	Feyenoord	Holland	BV Borussia Dortmund	Germany				
+add	Summer 2002	2002	African Champions League	2002		add	Zamalek Sporting Club	Egypt	Raja de Casablanca	Morocco				
+add	Summer 2002	2002	African CAF Cup	2002		add	Jeunesse Sportive de Kabylie	Algeria	Tonnerre Yaoundé	Cameroon				
+add	Summer 2002	2002	African Cup Winners' Cup	2002		add	Wydad Casablanca	Morocco	Asante Kotoko	Ghana				
+add	Summer 2002	2002	Asian Club Championship	2002		agree	Suwon Samsung Blue Wings	South Korea	Anyang LG Cheetahs	South Korea				
+add	Summer 2002	2002	Asian Cup Winners' Cup	2002		agree	Al Hilal (KSA)	Saudi Arabia	Chonbuk Hyundai Motors	South Korea				
+add	Summer 2002	2002	CIS Champions Cup	2002		add	Dinamo Kiev	Ukraine	Spartak Moscow	Russia				
+add	Summer 2002	2002	Gulf Club Champions Cup	2002		agree	Al Ahli (KSA)	Saudi Arabia	Muharraq Club	Bahrain				
+add	Summer 2002	2002	Irish Premier Division	2002		agree	Shelbourne F.C.	Republic of Ireland	Shamrock Rovers	Republic of Ireland				
+add	Summer 2002	2002	Irish First Division	2002		agree	Drogheda United	Republic of Ireland	Finn Harps	Republic of Ireland				
+add	Summer 2002	2002	Irish Senior Challenge Cup	2002		agree	Dundalk F.C.	Republic of Ireland	Bohemian F.C.	Republic of Ireland				
+add	Summer 2002	2002	Irish Munster Senior Cup	2002		agree	Cork City	Republic of Ireland	Rockmount F.C.	Republic of Ireland				
+add	Summer 2002	2002	Irish Presidents Cup	2002		add	Bohemian F.C.	Republic of Ireland	Shelbourne F.C.	Republic of Ireland				
+add	Summer 2002	2002	Italian C1 Super Cup	2002		agree	Ascoli	Italy	Livorno	Italy				
+add	Summer 2002	2002	Italian Cup	2002		agree	Parma	Italy	Juventus	Italy				
+add	Summer 2002	2002	Italian Serie A	2002		agree	Juventus	Italy	AS Roma	Italy				
+add	Summer 2002	2002	Italian Serie B	2002		agree	Como	Italy	Modena	Italy				
+add	Summer 2002	2002	Italian Serie C Cup	2002		agree	Albinoleffe	Italy	Livorno	Italy				
+add	Summer 2002	2002	Italian Serie C1/A	2002		add	Livorno	Italy	Triestina	Italy				
+add	Summer 2002	2002	Italian Serie C1/B	2002		add	Ascoli	Italy	Catania	Italy				
+add	Summer 2002	2002	Italian Serie C2/A	2002		add	Prato	Italy	Pro Patria	Italy				
+add	Summer 2002	2002	Italian Serie C2/B	2002		add	Teramo	Italy	Sambenedettese	Italy				
+add	Summer 2002	2002	Italian Serie C2/C	2002		add	Martina	Italy	Paternò	Italy				
+add	Summer 2002	2002	African Cup of Nations	2002		agree	Cameroon		Senegal		Nigeria		Mali	
+add	Summer 2002	2002	Asian Games Football Tournament	2002		add	Iran		Japan		South Korea		South Korea	
+add	Summer 2002	2002	FIFA World Cup	2002		add	Brazil		Germany		Turkey		South Korea	
+add	Summer 2002	2002	Swedish Cup	2002		add	Djurgårdens IF	Sweden	AIK	Sweden				
+add	Summer 2002	2002	Swedish First Division	2002		add	Östers IF	Sweden	Enköpings SK	Sweden				
+add	Summer 2002	2002	Swedish Premier Division	2002		add	Djurgårdens IF	Sweden	Malmö FF	Sweden				
+add	Summer 2002	2002	Swedish Second Division East Gotaland	2002		add	Husqvarna FF	Sweden	Linköpings FF	Sweden				
+add	Summer 2002	2002	Swedish Second Division East Svealand	2002		add	Väsby IK FK	Sweden	Visby IF Gute	Sweden				
+add	Summer 2002	2002	Swedish Second Division North	2002		add	Bodens BK	Sweden	Umeå FC	Sweden				
+add	Summer 2002	2002	Swedish Second Division South Gotaland	2002		add	Falkenberg FF	Sweden	Lunds BK	Sweden				
+add	Summer 2002	2002	Swedish Second Division West Gotaland	2002		add	FC Trollhättan	Sweden	Göteborgs AIS	Sweden				
+add	Summer 2002	2002	Swedish Second Division West Svealand	2002		add	BK Forward	Sweden	Rynninge IK	Sweden				
+add	Summer 2002	2002	Swedish Third Division East Svealand	2002		add	Tyresö FF	Sweden	Älvsjö AIK	Sweden				
+add	Summer 2002	2002	Swedish Third Division Middle Gotaland	2002		add	Floda BoIF	Sweden	Jonsereds IF	Sweden				
+add	Summer 2002	2002	Swedish Third Division Middle Norrland	2002		add	IFK Östersund	Sweden	IFK Sundsvall	Sweden				
+add	Summer 2002	2002	Swedish Third Division North Norrland	2002		add	Sunnanå SK	Sweden	Morön BK	Sweden				
+add	Summer 2002	2002	Swedish Third Division North Svealand	2002		add	Vasalunds IF	Sweden	Heby AIF	Sweden				
+add	Summer 2002	2002	Swedish Third Division Northeast Gotaland	2002		add	Smedby AIS	Sweden						
+add	Summer 2002	2002	Swedish Third Division Northwest Gotaland	2002		add	Melleruds IF	Sweden	Vallens IF	Sweden				
+add	Summer 2002	2002	Swedish Third Division South Gotaland	2002		add	Bunkeflo IF	Sweden	Asmundstorps IF	Sweden				
+add	Summer 2002	2002	Swedish Third Division South Norrland	2002		add	Falu BS	Sweden						
+add	Summer 2002	2002	Swedish Third Division Southeast Gotaland	2002		add	Växjö BK	Sweden	Kristianstads FF	Sweden				
+add	Summer 2002	2002	Swedish Third Division Southwest Gotaland	2002		add	Skene IF	Sweden	Ljungby IF	Sweden				
+add	Summer 2002	2002	Swedish Third Division West Svealand	2002		add	Strömtorps IK	Sweden	IFK Eskilstuna	Sweden				
+add	Summer 2002	2002	Norwegian Premier Division	2002		add	Rosenborg BK	Norway	Molde FK	Norway				
+add	Summer 2002	2002	Norwegian First Division	2002		add	Tromsø IL	Norway	Aalesund FK	Norway				
+add	Summer 2002	2002	Norwegian Cup	2002		add	Vålerenga Fotball	Norway	Odd Grenland	Norway				
+add	Summer 2002	2002	Norwegian Second Division Group 1	2002		add	Fredrikstad FK	Norway	Kvik Halden	Norway				
+add	Summer 2002	2002	Norwegian Second Division Group 2	2002		add	Bærum SK	Norway	FK Tønsberg	Norway				
+add	Summer 2002	2002	Norwegian Second Division Group 3	2002		add	Mandalskameratene	Norway	IL Løv/Ham	Norway				
+add	Summer 2002	2002	Norwegian Second Division Group 4	2002		add	Alta IL	Norway	Byåsen IL	Norway				
+add	Summer 2002	2002	Danish Premier Division	2002		agree	Brøndbyernes Idræts Forening	Denmark	Football Club København	Denmark				
+add	Summer 2002	2002	Danish First Division	2002		agree	Køge Boldklub	Denmark	Farum Boldklub	Denmark				
+add	Summer 2002	2002	Danish Cup	2002		agree	Odense Boldklub	Denmark	Football Club København	Denmark				
+add	Summer 2002	2002	Danish Second Division	2002		agree	Boldklubben Skjold	Denmark	Ølstykke Fodbold Club	Denmark				
+add	Summer 2002	2002	Finnish Premier Division	2002		add	HJK Helsinki	Finland	Myllykosken Pallo-47	Finland				
+add	Summer 2002	2002	Finnish First Division	2002		add	Jalkapallo TPS	Finland	FC Jokerit	Finland				
+add	Summer 2002	2002	Finnish Cup	2002		add	FC Haka Valkeakoski	Finland	FC Lahti	Finland				
+add	Summer 2002	2002	Finnish Second Division South	2002		add	FC Espoo	Finland	AC Vantaa	Finland				
+add	Summer 2002	2002	Finnish Second Division East	2002		add	Warkaus JK	Finland	Mikkelin Palloilijat	Finland				
+add	Summer 2002	2002	Finnish Second Division West	2002		add	TPV Tampere	Finland	Salon Palloilijat	Finland				
+add	Summer 2002	2002	Finnish Second Division North	2002		add	Oulun Luistinseura	Finland						
+add	Summer 2002	2002	Northern Irish Cup	2002		agree	Linfield	Northern Ireland	Portadown	Northern Ireland				
+add	Summer 2002	2002	Northern Irish League Cup	2002		differ	Linfield	Northern Ireland	Glentoran	Northern Ireland				
+add	Summer 2002	2002	Northern Irish League First Division	2002		agree	Lisburn Distillery	Northern Ireland	Institute	Northern Ireland				
+add	Summer 2002	2002	Northern Irish League Premier Division	2002		agree	Portadown	Northern Ireland	Glentoran	Northern Ireland				
+add	Summer 2002	2002	Scottish Cup	2002		add	Glasgow Rangers	Scotland	Glasgow Celtic	Scotland				
+add	Summer 2002	2002	Scottish First Division	2002		add	Partick Thistle	Scotland	Airdrieonians					
+add	Summer 2002	2002	Scottish League Cup	2002		add	Glasgow Rangers	Scotland	Ayr United	Scotland				
+add	Summer 2002	2002	Scottish Premier Division	2002		add	Glasgow Celtic	Scotland	Glasgow Rangers	Scotland				
+add	Summer 2002	2002	Scottish Second Division	2002		add	Queen Of The South	Scotland	Alloa Athletic	Scotland				
+add	Summer 2002	2002	Scottish Third Division	2002		add	Brechin City	Scotland	Dumbarton	Scotland				
+add	Summer 2002	2002	Welsh Cup	2002		add	Barry Town	Wales	Bangor City	Wales				
+add	Summer 2002	2002	Welsh League Cup	2002		add	Caersws	Wales	Cwmbran Town	Wales				
+add	Summer 2002	2002	Welsh Premier Cup	2002		add	Cardiff City	England	Swansea City	England				
+add	Summer 2002	2002	Welsh Premier Division	2002		add	Barry Town	Wales	Total Network Solutions	Wales				
+add	Summer 2002	2002	African CAF Cup	2001		add	Jeunesse Sportive de Kabylie	Algeria	Etoile Sportive du Sahel	Tunisia				
+add	Summer 2002	2002	African Champions League	2001		agree	Al-Ahly Sporting Club	Egypt	Sundowns	South Africa				
+add	Summer 2002	2002	Asian Club Championship	2001		agree	Suwon Samsung Blue Wings	South Korea	Jubilo Iwata	Japan				
+add	Summer 2002	2002	Asian Cup Winners' Cup	2001		agree	Al Shabab (KSA)	Saudi Arabia	Dalian Shide	China PR				
+add	Summer 2002	2002	Asian Super Cup	2001		agree	Suwon Samsung Blue Wings	South Korea	Al Shabab (KSA)	Saudi Arabia				
+add	Summer 2002	2002	CIS Champions Cup	2001		add	Spartak Moscow	Russia						
+add	Summer 2002	2002	European Champions Cup	2001		agree	FC Bayern München	Germany	Valencia C.F.	Spain				
+add	Summer 2002	2002	European Super Cup	2001		add	Liverpool	England	FC Bayern München	Germany				
+add	Summer 2002	2002	Intercontinental Cup	2001		agree	FC Bayern München	Germany	Boca Juniors	Argentina				
+add	Summer 2002	2002	Merconorte Cup	2001		agree	Club Deportivo los Millonarios	Colombia	Club Sport Emelec	Ecuador				
+add	Summer 2002	2002	South American Copa Libertadores	2001		agree	Boca Juniors	Argentina	Club Deportivo Cruz Azul	Mexico				
+add	Summer 2002	2002	South American Copa Mercosur	2001		agree	San Lorenzo de Almagro	Argentina	Clube de Regatas do Flamengo	Brazil				
+add	Summer 2002	2002	UEFA Cup	2001		agree	Liverpool	England	C.D. Alavés	Spain				
+add	Summer 2002	2002	Argentine Premier Division	2001	Apertura	agree	Racing Club	Argentina	River Plate	Argentina				
+add	Summer 2002	2002	Argentine Premier Division	2001	Clausura	agree	River Plate	Argentina	Gimnasia y Esgrima de La Plata	Argentina				
+add	Summer 2002	2002	Argentine Second Division	2001		agree	Olimpo de Bahía Blanca	Argentina	Quilmes	Argentina				
+add	Summer 2002	2002	Australian National Soccer League	2001		agree	Sydney Olympic Sharks	Australia	Perth Glory	Australia				
+add	Summer 2002	2002	Austrian FA Cup	2001		agree	FC Austria Kärnten	Austria	FC Tirol Innsbruck	Austria				
+add	Summer 2002	2002	Austrian First Division	2001		add	FC Austria Kärnten	Austria	BSV Bad Bleiberg	Austria				
+add	Summer 2002	2002	Austrian Premier Division	2001		agree	FC Tirol Innsbruck	Austria	SK Rapid Vienna	Austria				
+add	Summer 2002	2002	Austrian Super Cup	2001		agree	FC Austria Kärnten	Austria	FC Tirol Innsbruck	Austria				
+add	Summer 2002	2002	Belgian Cup	2001		agree	KVC Westerlo	Belgium	KFC Lommelse SK	Belgium				
+add	Summer 2002	2002	Belgian First Division	2001		agree	RSC Anderlecht	Belgium	Club Brugge KV	Belgium				
+add	Summer 2002	2002	Belgian Second Division	2001		agree	KFC Lommelse SK	Belgium	KFC Turnhout	Belgium				
+add	Summer 2002	2002	Belgian Super Cup	2001		agree	RSC Anderlecht	Belgium	KVC Westerlo	Belgium				
+add	Summer 2002	2002	Belgian Third Division A	2001		agree	KSK Ronse	Belgium	KSV Zulte Waregem	Belgium				
+add	Summer 2002	2002	Belgian Third Division B	2001		agree	R Excelsior SC Virton	Belgium	R Francs Borains	Belgium				
+add	Summer 2002	2002	Brazilian Bahia State Championship	2001		agree	Esporte Clube Bahia	Brazil	Juazeiro Social Clube	Brazil				
+add	Summer 2002	2002	Brazilian Central Regional Cup	2001		agree	Goiás Esporte Clube	Brazil	Vila Nova Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian Central State Championship	2001		agree	Associação Desportiva Vasco da Gama	Brazil	Rio Branco Football Club	Brazil				
+add	Summer 2002	2002	Brazilian Champions Cup	2001		agree	Clube de Regatas do Flamengo	Brazil	São Paulo Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian Cup	2001		agree	Grêmio Foot-Ball Porto-Alegrense	Brazil	Sport Club Corinthians Paulista	Brazil				
+add	Summer 2002	2002	Brazilian Gaúcho State Championship	2001		agree	Grêmio Foot-Ball Porto-Alegrense	Brazil	Esporte Clube Juventude	Brazil				
+add	Summer 2002	2002	Brazilian Goiás State Championship	2001		agree	Vila Nova Futebol Clube	Brazil	Goiás Esporte Clube	Brazil				
+add	Summer 2002	2002	Brazilian Minas Gerais State Championship	2001		agree	América Futebol Clube (MG)	Brazil	Clube Atlético Mineiro	Brazil				
+add	Summer 2002	2002	Brazilian National First Division	2001		agree	Clube Atlético Paranaense	Brazil	Associação Desportiva São Caetano	Brazil				
+add	Summer 2002	2002	Brazilian National Second Division	2001		agree	Paysandu Sport Club	Brazil	Figueirense Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian National Third Division	2001		agree	Etti Jundiaí Futebol Clube	Brazil	Mogi Mirim Esporte Clube	Brazil				
+add	Summer 2002	2002	Brazilian North Regional Cup	2001		agree	São Raimundo Esporte Clube (AM)	Brazil	Paysandu Sport Club	Brazil				
+add	Summer 2002	2002	Brazilian North State Championship	2001		agree	Agremiação Sportiva Arapiraquense	Brazil	Centro Sportivo Alagoano	Brazil				
+add	Summer 2002	2002	Brazilian Northeast Regional Cup	2001		agree	Esporte Clube Bahia	Brazil	Sport Club do Recife	Brazil				
+add	Summer 2002	2002	Brazilian Northeast State Championship	2001		agree	Atlético Rio Negro Clube (AM)	Brazil	Nacional Futebol Clube (AM)	Brazil				
+add	Summer 2002	2002	Brazilian Paraná State Championship	2001		agree	Clube Atlético Paranaense	Brazil	Paraná Clube	Brazil				
+add	Summer 2002	2002	Brazilian Pernambuco State Championship	2001		agree	Clube Náutico Capibaribe	Brazil	Santa Cruz Futebol Clube	Brazil				
+add	Summer 2002	2002	Brazilian Rio de Janeiro State Championship	2001		agree	Clube de Regatas do Flamengo	Brazil	Clube de Regatas Vasco da Gama	Brazil				
+add	Summer 2002	2002	Brazilian Santa Catarina State Championship	2001		agree	Joinville Esporte Clube	Brazil	Criciúma Esporte Clube	Brazil				
+add	Summer 2002	2002	Brazilian São Paulo State Championship	2001		agree	Sport Club Corinthians Paulista	Brazil	Botafogo Futebol Clube (SP)	Brazil				
+add	Summer 2002	2002	Chinese First Division A	2001		agree	Dalian Shide	China PR	Shanghai Shenhua	China PR				
+add	Summer 2002	2002	Chinese First Division B	2001		agree	Shanghai Zhongyuan	China PR	Changchun Yatai	China PR				
+add	Summer 2002	2002	Croatian Cup	2001		agree	NK Dinamo	Croatia	NK Varteks	Croatia				
+add	Summer 2002	2002	Croatian First Division	2001		agree	NK Zagreb	Croatia	HNK Hajduk	Croatia				
+add	Summer 2002	2002	Croatian Second Division North	2001		agree	HNK Vukovar '91	Croatia	NK Belisce	Croatia				
+add	Summer 2002	2002	Croatian Second Division South	2001		agree	NK Istra	Croatia	NK Uljanik	Croatia				
+add	Summer 2002	2002	Czech FA Cup	2001		agree	FK Viktoria Zizkov	Czech Republic	AC Sparta Prague	Czech Republic				
+add	Summer 2002	2002	Czech First Division	2001		agree	AC Sparta Prague	Czech Republic	SK Slavia Prague	Czech Republic				
+add	Summer 2002	2002	Czech Second Division	2001		agree	SK Hradec Kralove	Czech Republic	Slezsky FC Opava	Czech Republic				
+add	Summer 2002	2002	Danish Cup	2001		agree	Silkeborg Idræts Forening	Denmark	Akademisk Boldklub	Denmark				
+add	Summer 2002	2002	Danish First Division	2001		agree	Esbjerg Forenede Boldklubber	Denmark	Vejle Boldklub	Denmark				
+add	Summer 2002	2002	Danish Premier Division	2001		agree	Football Club København	Denmark	Brøndbyernes Idræts Forening	Denmark				
+add	Summer 2002	2002	English Charity Shield	2001		agree	Liverpool	England	Manchester United	England				
+add	Summer 2002	2002	English Conference	2001		agree	Rushden & Diamonds	England	Yeovil Town	England				
+add	Summer 2002	2002	English FA Cup	2001		agree	Liverpool	England	Arsenal	England				
+add	Summer 2002	2002	English FA Trophy	2001		agree	Canvey Island	England	Forest Green Rovers	England				
+add	Summer 2002	2002	English First Division	2001		agree	Fulham	England	Blackburn Rovers	England				
+add	Summer 2002	2002	English League Cup	2001		agree	Liverpool	England	Birmingham City	England				
+add	Summer 2002	2002	English Premier Division	2001		agree	Manchester United	England	Arsenal	England				
+add	Summer 2002	2002	English Second Division	2001		agree	Millwall	England	Rotherham United	England				
+add	Summer 2002	2002	English Third Division	2001		agree	Brighton and Hove Albion	England	Cardiff City	England				
+add	Summer 2002	2002	English Vans Trophy	2001		agree	Port Vale	England	Brentford	England				
+add	Summer 2002	2002	Finnish Cup	2001		agree	Atlantis FC		Tampere United	Finland				
+add	Summer 2002	2002	Finnish First Division	2001		agree	FC Hämeenlinna	Finland	FF Jaro	Finland				
+add	Summer 2002	2002	Finnish Premier Division	2001		agree	Tampere United	Finland	HJK Helsinki	Finland				
+add	Summer 2002	2002	French Champions Trophy	2001		add	FC Nantes Atlantique	France	Racing Club Strasbourg	France				
+add	Summer 2002	2002	French Cup	2001		agree	Racing Club Strasbourg	France	Amiens SC	France				
+add	Summer 2002	2002	French First Division	2001		agree	FC Nantes Atlantique	France	Olympique Lyonnais	France				
+add	Summer 2002	2002	French League Cup	2001		agree	Olympique Lyonnais	France	AS Monaco	France				
+add	Summer 2002	2002	French National	2001		agree	Grenoble Foot 38	France	Amiens SC	France				
+add	Summer 2002	2002	French Second Division	2001		agree	FC Sochaux-Montbéliard	France	FC Lorient	France				
+add	Summer 2002	2002	German Cup	2001		agree	FC Schalke 04	Germany	1.FC Union Berlin	Germany				
+add	Summer 2002	2002	German First Division	2001		agree	FC Bayern München	Germany	FC Schalke 04	Germany				
+add	Summer 2002	2002	German League Cup	2001		agree	Hertha BSC Berlin	Germany	FC Schalke 04	Germany				
+add	Summer 2002	2002	German Regional Division North	2001		agree	1.FC Union Berlin	Germany	SV Babelsberg 03	Germany				
+add	Summer 2002	2002	German Regional Division South	2001		agree	Karlsruher SC	Germany	VfB Stuttgart Amateure	Germany				
+add	Summer 2002	2002	German Second Division	2001		agree	1.FC Nürnberg	Germany	Borussia M'gladbach	Germany				
+add	Summer 2002	2002	Greek Cup	2001		agree	AEK Athens	Greece	Olympiakos Piraeus	Greece				
+add	Summer 2002	2002	Greek National B Division	2001		agree	Pas Giannena	Greece	Kallithea	Greece				
+add	Summer 2002	2002	Dutch Cup	2001		agree	FC Twente	Holland	PSV	Holland				
+add	Summer 2002	2002	Dutch First Division	2001		agree	FC Den Bosch	Holland	Excelsior	Holland				
+add	Summer 2002	2002	Dutch Premier Division	2001		agree	PSV	Holland	Feyenoord	Holland				
+add	Summer 2002	2002	Dutch Super Cup	2001		agree	PSV	Holland	FC Twente	Holland				
+add	Summer 2002	2002	Indian Dehli Senior Division	2001		add	Hindustan Football Club	India	Indian Nationals Football Club	India				
+add	Summer 2002	2002	Indian Mumbai League	2001		add	Mahindra United	India	Air India	India				
+add	Summer 2002	2002	Italian C1 Super Cup	2001		differ	Modena	Italy	Città di Palermo	Italy				
+add	Summer 2002	2002	Italian Cup	2001		differ	Florentia Viola	Italy	Parma	Italy				
+add	Summer 2002	2002	Italian Serie A	2001		agree	AS Roma	Italy	Juventus	Italy				
+add	Summer 2002	2002	Italian Serie B	2001		differ	Torino	Italy	Piacenza	Italy				
+add	Summer 2002	2002	Italian Serie C Cup	2001		differ	Prato	Italy	Lumezzane	Italy				
+add	Summer 2002	2002	Italian Serie C1/A	2001		agree	Modena	Italy	Como	Italy				
+add	Summer 2002	2002	Italian Serie C1/B	2001		agree	Città di Palermo	Italy	Messina	Italy				
+add	Summer 2002	2002	Italian Serie C2/A	2001		agree	Padova	Italy	Triestina	Italy				
+add	Summer 2002	2002	Italian Serie C2/B	2001		agree	Lanciano	Italy	Chieti	Italy				
+add	Summer 2002	2002	Italian Serie C2/C	2001		agree	Taranto 1906	Italy	Sora	Italy				
+add	Summer 2002	2002	Italian Super Cup	2001		differ	AS Roma	Italy	Florentia Viola	Italy				
+add	Summer 2002	2002	Japanese Cup	2001		agree	Yokohama F Marinos	Japan	Jubilo Iwata	Japan				
+add	Summer 2002	2002	Japanese Emperor's Cup	2001		agree	Shimizu S-Pulse	Japan	Cerezo Osaka	Japan				
+add	Summer 2002	2002	Japanese J-League 1	2001		agree	Kashima Antlers	Japan	Jubilo Iwata	Japan				
+add	Summer 2002	2002	Japanese J-League 2	2001		agree	Kyoto Purple Sanga	Japan	Vegalta Sendai	Japan				
+add	Summer 2002	2002	Japanese Super Cup	2001		agree	Shimizu S-Pulse	Japan	Kashima Antlers	Japan				
+add	Summer 2002	2002	Luxembourg Cup	2001		add	FC Etzella Ettelbruck	Luxembourg	FC Wiltz	Luxembourg				
+add	Summer 2002	2002	Luxembourg National Division	2001		add	F91 Dudelange	Luxembourg	CS Grevenmacher	Luxembourg				
+add	Summer 2002	2002	Northern Irish Cup	2001		agree	Glentoran	Northern Ireland	Linfield	Northern Ireland				
+add	Summer 2002	2002	Northern Irish League Cup	2001		differ	Glentoran	Northern Ireland	Glenavon	Northern Ireland				
+add	Summer 2002	2002	Northern Irish League First Division	2001		agree	Ards	Northern Ireland	Lisburn Distillery	Northern Ireland				
+add	Summer 2002	2002	Northern Irish League Premier Division	2001		agree	Linfield	Northern Ireland	Glenavon	Northern Ireland				
+add	Summer 2002	2002	Norwegian Cup	2001		agree	Viking FK	Norway	Bryne FK	Norway				
+add	Summer 2002	2002	Norwegian First Division	2001		agree	Vålerenga Fotball	Norway	IK Start	Norway				
+add	Summer 2002	2002	Norwegian Premier Division	2001		agree	Rosenborg BK	Norway	Lillestrøm SK	Norway				
+add	Summer 2002	2002	Norwegian Second Division Group 1	2001		add	Tollnes BK	Norway	FF Lillehammer	Norway				
+add	Summer 2002	2002	Norwegian Second Division Group 2	2001		add	Åsane IL	Norway	Fana IL	Norway				
+add	Summer 2002	2002	Norwegian Second Division Group 3	2001		add	FK Oslo Øst	Norway	Strindheim IL	Norway				
+add	Summer 2002	2002	Norwegian Second Division Group 4	2001		add	Lørenskog IF	Norway	Skarp IF	Norway				
+add	Summer 2002	2002	Polish FA Cup	2001		agree	Polonia Warszawa	Poland	Gornik Zabrze	Poland				
+add	Summer 2002	2002	Polish First Division	2001		agree	Wisla Krakow	Poland	Pogon Szczecin	Poland				
+add	Summer 2002	2002	Polish League Cup	2001		agree	Wisla Krakow	Poland	Zaglebie Lubin	Poland				
+add	Summer 2002	2002	Polish Second Division	2001		agree	RKS Fameg Radomsko	Poland	KSZO Ostrowiec Swietokrzyski	Poland				
+add	Summer 2002	2002	Polish Super Cup	2001		differ	Wisla Krakow	Poland	Polonia Warszawa	Poland				
+add	Summer 2002	2002	Portuguese Cup	2001		agree	Futebol Clube do Porto	Portugal	Clube Sport Marítimo	Portugal				
+add	Summer 2002	2002	Portuguese Premier League	2001		agree	Boavista Futebol Clube	Portugal	Futebol Clube do Porto	Portugal				
+add	Summer 2002	2002	Portuguese Second Division B Central	2001		agree	União Desportiva Oliveirense	Portugal	Sporting Clube da Covilhã	Portugal				
+add	Summer 2002	2002	Portuguese Second Division B North	2001		agree	Moreirense Futebol Clube	Portugal	Futebol Clube de Famalicão	Portugal				
+add	Summer 2002	2002	Portuguese Second Division B South	2001		agree	Portimonense Sporting Clube	Portugal	Clube Futebol União Madeira	Portugal				
+add	Summer 2002	2002	Portuguese Second League	2001		agree	Clube Desportivo Santa Clara	Portugal	Varzim Sport Clube	Portugal				
+add	Summer 2002	2002	Irish First Division	2001		agree	Dundalk F.C.	Republic of Ireland	Monaghan United	Republic of Ireland				
+add	Summer 2002	2002	Irish League Cup	2001		agree	Limerick F.C.	Republic of Ireland	Derry City	Republic of Ireland				
+add	Summer 2002	2002	Irish Munster Senior Cup	2001		agree	Cork City	Republic of Ireland	College Corinthians	Republic of Ireland				
+add	Summer 2002	2002	Irish Premier Division	2001		agree	Bohemian F.C.	Republic of Ireland	Shelbourne F.C.	Republic of Ireland				
+add	Summer 2002	2002	Irish Senior Challenge Cup	2001		agree	Bohemian F.C.	Republic of Ireland	Longford Town	Republic of Ireland				
+add	Summer 2002	2002	Russian Cup	2001		agree	Lokomotiv Moscow	Russia	Anzhi Makhachkala	Russia				
+add	Summer 2002	2002	Russian First Division	2001		agree	Shinnik Yaroslavl	Russia	Uralan Elista	Russia				
+add	Summer 2002	2002	Russian Premier Division	2001		agree	Spartak Moscow	Russia	Lokomotiv Moscow	Russia				
+add	Summer 2002	2002	Russian Second Division - Ural	2001		agree	Uralmash Yekaterinburg	Russia	Sodovik Sterlitamak	Russia				
+add	Summer 2002	2002	Russian Second Division - West	2001		agree	Dinamo St. Petersburg	Russia	FC Pskov-2000	Russia				
+add	Summer 2002	2002	Scottish Cup	2001		agree	Glasgow Celtic	Scotland	Hibernian	Scotland				
+add	Summer 2002	2002	Scottish First Division	2001		agree	Livingston	Scotland	Ayr United	Scotland				
+add	Summer 2002	2002	Scottish League Challenge Cup	2001		add	Airdrieonians		Alloa Athletic	Scotland				
+add	Summer 2002	2002	Scottish League Cup	2001		agree	Glasgow Celtic	Scotland	Kilmarnock	Scotland				
+add	Summer 2002	2002	Scottish Premier Division	2001		agree	Glasgow Celtic	Scotland	Glasgow Rangers	Scotland				
+add	Summer 2002	2002	Scottish Second Division	2001		agree	Partick Thistle	Scotland	Arbroath	Scotland				
+add	Summer 2002	2002	Scottish Third Division	2001		agree	Hamilton Academical	Scotland	Cowdenbeath	Scotland				
+add	Summer 2002	2002	South African Premier Division	2001		agree	Orlando Pirates	South Africa	Kaizer Chiefs	South Africa				
+add	Summer 2002	2002	Korean League	2001		agree	Songnam Ilhwa Chunma	South Korea	Anyang LG Cheetahs	South Korea				
+add	Summer 2002	2002	Korean President Cup	2001		add	Kyunghee University	South Korea	Ulsan University	South Korea				
+add	Summer 2002	2002	Spanish Cup	2001		agree	Real Zaragoza	Spain	Real Club Celta de Vigo	Spain				
+add	Summer 2002	2002	Spanish First Division	2001		agree	Real Madrid C.F.	Spain	Deportivo de La Coruña	Spain				
+add	Summer 2002	2002	Spanish Second Division	2001		agree	Sevilla C.F.	Spain	Real Betis Balompié	Spain				
+add	Summer 2002	2002	Spanish Second Division B1	2001		agree	Atlético de Madrid B	Spain	C.D. Ourense	Spain				
+add	Summer 2002	2002	Spanish Second Division B2	2001		agree	Burgos C.F.	Spain	Cultural Leonesa	Spain				
+add	Summer 2002	2002	Spanish Second Division B3	2001		agree	U.D. Atlética Gramanet	Spain	Gimnástic Tarragona	Spain				
+add	Summer 2002	2002	Spanish Second Division B4	2001		agree	Cádiz C.F.	Spain	Polideportivo Ejido	Spain				
+add	Summer 2002	2002	Spanish Super Cup	2001		agree	Real Madrid C.F.	Spain	Real Zaragoza	Spain				
+add	Summer 2002	2002	Swedish Cup	2001		add	IF Elfsborg	Sweden	AIK	Sweden				
+add	Summer 2002	2002	Swedish First Division	2001		agree	Kalmar FF	Sweden	Landskrona BOIS	Sweden				
+add	Summer 2002	2002	Swedish Premier Division	2001		agree	Hammarby IF	Sweden	Djurgårdens IF	Sweden				
+add	Summer 2002	2002	Swedish Second Division North	2001		agree	IFK Luleå	Sweden	Bodens BK	Sweden				
+add	Summer 2002	2002	Swedish Second Division South Gotaland	2001		agree	Ängelholms FF	Sweden	Ystads IF	Sweden				
+add	Summer 2002	2002	Swedish Second Division West Gotaland	2001		agree	Panos Ljungskile SK	Sweden	Ytterby IS	Sweden				
+add	Summer 2002	2002	Swedish Third Division East Svealand	2001		add	IFK Lidingö	Sweden	Gustavsbergs IF	Sweden				
+add	Summer 2002	2002	Swedish Third Division Southwest Gotaland	2001		agree	Askims IK	Sweden	Varbergs GIF	Sweden				
+add	Summer 2002	2002	Swedish Third Division West Svealand	2001		agree	Ludvika FK	Sweden	Karlslunds IF	Sweden				
+add	Summer 2002	2002	Swiss Cup	2001		add	Servette FC	Switzerland	Yverdon-Sports	Switzerland				
+add	Summer 2002	2002	Swiss National Division A	2001		add	Grasshopper Club Zurich	Switzerland	FC Lugano	Switzerland				
+add	Summer 2002	2002	Turkish FA Cup	2001		add	Kocaelispor	Turkey	Besiktas JK	Turkey				
+add	Summer 2002	2002	Turkish Premier Division	2001		add	Galatasaray SK	Turkey	Fenerbahçe SK	Turkey				
+add	Summer 2002	2002	American Major League	2001		agree	San Jose Earthquakes	United States	Los Angeles Galaxy	United States				
+add	Summer 2002	2002	US Open Cup	2001		agree	Los Angeles Galaxy	United States	New England Revolution	United States				
+add	Summer 2002	2002	Welsh Cup	2001		agree	Barry Town	Wales	Total Network Solutions	Wales				
+add	Summer 2002	2002	Welsh Premier Cup	2001		add	Wrexham	England	Swansea City	England				
+add	Summer 2002	2002	Welsh Premier Division	2001		agree	Barry Town	Wales	Cwmbran Town	Wales				
+add	Summer 2002	2002	Yugoslav Cup	2001		agree	Partizan Belgrade	Yugoslavia	Red Star Belgrade	Yugoslavia				
+add	Summer 2002	2002	Yugoslav First Division	2001		agree	Red Star Belgrade	Yugoslavia	Partizan Belgrade	Yugoslavia				
+add	Summer 2002	2002	Yugoslav Second Division East	2001		agree	OFK Zvezdara Belgrade		Hajduk Belgrade	Yugoslavia				
+add	Summer 2002	2002	Yugoslav Second Division North	2001		agree	Mladost Apatin	Yugoslavia	Proleter Zrenjanin	Yugoslavia				
+add	Summer 2002	2002	Yugoslav Second Division South	2001		agree	Rudar Pljevlja	Yugoslavia	Bokelj Kotor	Yugoslavia				
+add	Summer 2002	2002	Yugoslav Second Division West	2001		agree	Mladost Lucani	Yugoslavia	Borac Auto Cacak	Yugoslavia				
+add	Summer 2002	2002	Confederations Cup	2001		agree	France		Japan		Australia		Japan	
+add	Summer 2002	2002	Copa America	2001		agree	Colombia		Mexico		Honduras		Colombia	
+clear	Summer 2002	2002	African CAF Cup	2001										
+clear	Summer 2002	2002	African CAF Cup	2002										
+clear	Summer 2002	2002	African Champions League	2001										
+clear	Summer 2002	2002	African Champions League	2002										
+clear	Summer 2002	2002	African Cup Winners' Cup	2002										
+clear	Summer 2002	2002	African Cup of Nations	2001										
+clear	Summer 2002	2002	African Cup of Nations	2002										
+clear	Summer 2002	2002	African Super Cup	2002										
+clear	Summer 2002	2002	Afro-Asian Champions Cup	2001										
+clear	Summer 2002	2002	Afro-Asian Champions Cup	2002										
+clear	Summer 2002	2002	American A-League	2002										
+clear	Summer 2002	2002	American Major League	2001										
+clear	Summer 2002	2002	American Major League	2002										
+clear	Summer 2002	2002	Arab Club Champions Cup	2002										
+clear	Summer 2002	2002	Arab Cup Winners' Cup	2002										
+clear	Summer 2002	2002	Arab Super Cup	2002										
+clear	Summer 2002	2002	Argentine Premier Division	2001										
+clear	Summer 2002	2002	Argentine Premier Division	2002										
+clear	Summer 2002	2002	Argentine Second Division	2001										
+clear	Summer 2002	2002	Argentine Second Division	2002										
+clear	Summer 2002	2002	Asian Club Championship	2001										
+clear	Summer 2002	2002	Asian Club Championship	2002										
+clear	Summer 2002	2002	Asian Cup	2001										
+clear	Summer 2002	2002	Asian Cup	2002										
+clear	Summer 2002	2002	Asian Cup Winners' Cup	2001										
+clear	Summer 2002	2002	Asian Cup Winners' Cup	2002										
+clear	Summer 2002	2002	Asian Games Football Tournament	2001										
+clear	Summer 2002	2002	Asian Games Football Tournament	2002										
+clear	Summer 2002	2002	Asian Super Cup	2001										
+clear	Summer 2002	2002	Asian Super Cup	2002										
+clear	Summer 2002	2002	Australian National Soccer League	2001										
+clear	Summer 2002	2002	Australian National Soccer League	2002										
+clear	Summer 2002	2002	Austrian FA Cup	2001										
+clear	Summer 2002	2002	Austrian FA Cup	2002										
+clear	Summer 2002	2002	Austrian First Division	2001										
+clear	Summer 2002	2002	Austrian First Division	2002										
+clear	Summer 2002	2002	Austrian Premier Division	2001										
+clear	Summer 2002	2002	Austrian Premier Division	2002										
+clear	Summer 2002	2002	Austrian Super Cup	2001										
+clear	Summer 2002	2002	Austrian Super Cup	2002										
+clear	Summer 2002	2002	Belgian Cup	2001										
+clear	Summer 2002	2002	Belgian Cup	2002										
+clear	Summer 2002	2002	Belgian First Division	2001										
+clear	Summer 2002	2002	Belgian First Division	2002										
+clear	Summer 2002	2002	Belgian Fourth Division  A	2002										
+clear	Summer 2002	2002	Belgian Fourth Division  B	2002										
+clear	Summer 2002	2002	Belgian Fourth Division  C	2002										
+clear	Summer 2002	2002	Belgian Fourth Division  D	2002										
+clear	Summer 2002	2002	Belgian League Cup	2001										
+clear	Summer 2002	2002	Belgian League Cup	2002										
+clear	Summer 2002	2002	Belgian Second Division	2001										
+clear	Summer 2002	2002	Belgian Second Division	2002										
+clear	Summer 2002	2002	Belgian Super Cup	2001										
+clear	Summer 2002	2002	Belgian Super Cup	2002										
+clear	Summer 2002	2002	Belgian Third Division A	2001										
+clear	Summer 2002	2002	Belgian Third Division A	2002										
+clear	Summer 2002	2002	Belgian Third Division B	2001										
+clear	Summer 2002	2002	Belgian Third Division B	2002										
+clear	Summer 2002	2002	Brazilian Bahia State Championship	2001										
+clear	Summer 2002	2002	Brazilian Bahia State Championship	2002										
+clear	Summer 2002	2002	Brazilian Central Regional Cup	2001										
+clear	Summer 2002	2002	Brazilian Central Regional Cup	2002										
+clear	Summer 2002	2002	Brazilian Central State Championship	2001										
+clear	Summer 2002	2002	Brazilian Central State Championship	2002										
+clear	Summer 2002	2002	Brazilian Champions Cup	2001										
+clear	Summer 2002	2002	Brazilian Champions Cup	2002										
+clear	Summer 2002	2002	Brazilian Cup	2001										
+clear	Summer 2002	2002	Brazilian Cup	2002										
+clear	Summer 2002	2002	Brazilian Gaúcho State Championship	2001										
+clear	Summer 2002	2002	Brazilian Gaúcho State Championship	2002										
+clear	Summer 2002	2002	Brazilian Goiás State Championship	2001										
+clear	Summer 2002	2002	Brazilian Goiás State Championship	2002										
+clear	Summer 2002	2002	Brazilian Minas Gerais State Championship	2001										
+clear	Summer 2002	2002	Brazilian Minas Gerais State Championship	2002										
+clear	Summer 2002	2002	Brazilian National First Division	2001										
+clear	Summer 2002	2002	Brazilian National First Division	2002										
+clear	Summer 2002	2002	Brazilian National Second Division	2001										
+clear	Summer 2002	2002	Brazilian National Second Division	2002										
+clear	Summer 2002	2002	Brazilian National Third Division	2001										
+clear	Summer 2002	2002	Brazilian National Third Division	2002										
+clear	Summer 2002	2002	Brazilian North Regional Cup	2001										
+clear	Summer 2002	2002	Brazilian North Regional Cup	2002										
+clear	Summer 2002	2002	Brazilian North State Championship	2001										
+clear	Summer 2002	2002	Brazilian North State Championship	2002										
+clear	Summer 2002	2002	Brazilian Northeast Regional Cup	2001										
+clear	Summer 2002	2002	Brazilian Northeast Regional Cup	2002										
+clear	Summer 2002	2002	Brazilian Northeast State Championship	2001										
+clear	Summer 2002	2002	Brazilian Northeast State Championship	2002										
+clear	Summer 2002	2002	Brazilian Paraná State Championship	2001										
+clear	Summer 2002	2002	Brazilian Paraná State Championship	2002										
+clear	Summer 2002	2002	Brazilian Pernambuco State Championship	2001										
+clear	Summer 2002	2002	Brazilian Pernambuco State Championship	2002										
+clear	Summer 2002	2002	Brazilian Rio de Janeiro State Championship	2001										
+clear	Summer 2002	2002	Brazilian Rio de Janeiro State Championship	2002										
+clear	Summer 2002	2002	Brazilian Rio-São Paulo Tournement	2002										
+clear	Summer 2002	2002	Brazilian Santa Catarina State Championship	2001										
+clear	Summer 2002	2002	Brazilian Santa Catarina State Championship	2002										
+clear	Summer 2002	2002	Brazilian South-Minas Regional Cup	2002										
+clear	Summer 2002	2002	Brazilian São Paulo State Championship	2001										
+clear	Summer 2002	2002	Brazilian São Paulo State Championship	2002										
+clear	Summer 2002	2002	Brazilian Taça Brazil	2002										
+clear	Summer 2002	2002	CIS Champions Cup	2001										
+clear	Summer 2002	2002	CIS Champions Cup	2002										
+clear	Summer 2002	2002	CONCACAF Champions Cup	2001										
+clear	Summer 2002	2002	CONCACAF Champions Cup	2002										
+clear	Summer 2002	2002	CONCACAF Cup Winners Cup	2002										
+clear	Summer 2002	2002	Chinese FA Cup	2002										
+clear	Summer 2002	2002	Chinese FA Super Cup	2002										
+clear	Summer 2002	2002	Chinese First Division A	2001										
+clear	Summer 2002	2002	Chinese First Division A	2002										
+clear	Summer 2002	2002	Chinese First Division B	2001										
+clear	Summer 2002	2002	Chinese First Division B	2002										
+clear	Summer 2002	2002	Chinese Second Division	2002										
+clear	Summer 2002	2002	Confederations Cup	2001										
+clear	Summer 2002	2002	Confederations Cup	2002										
+clear	Summer 2002	2002	Copa America	2001										
+clear	Summer 2002	2002	Copa America	2002										
+clear	Summer 2002	2002	Croatian Cup	2001										
+clear	Summer 2002	2002	Croatian Cup	2002										
+clear	Summer 2002	2002	Croatian First Division	2001										
+clear	Summer 2002	2002	Croatian First Division	2002										
+clear	Summer 2002	2002	Croatian Second Division	2001										
+clear	Summer 2002	2002	Croatian Second Division	2002										
+clear	Summer 2002	2002	Croatian Second Division North	2001										
+clear	Summer 2002	2002	Croatian Second Division North	2002										
+clear	Summer 2002	2002	Croatian Second Division South	2001										
+clear	Summer 2002	2002	Croatian Second Division South	2002										
+clear	Summer 2002	2002	Croatian Super Cup	2001										
+clear	Summer 2002	2002	Croatian Super Cup	2002										
+clear	Summer 2002	2002	Croatian Third Division Central	2002										
+clear	Summer 2002	2002	Croatian Third Division East	2002										
+clear	Summer 2002	2002	Croatian Third Division North	2002										
+clear	Summer 2002	2002	Croatian Third Division South	2002										
+clear	Summer 2002	2002	Croatian Third Division West	2002										
+clear	Summer 2002	2002	Czech FA Cup	2001										
+clear	Summer 2002	2002	Czech FA Cup	2002										
+clear	Summer 2002	2002	Czech First Division	2001										
+clear	Summer 2002	2002	Czech First Division	2002										
+clear	Summer 2002	2002	Czech Second Division	2001										
+clear	Summer 2002	2002	Czech Second Division	2002										
+clear	Summer 2002	2002	Danish Cup	2001										
+clear	Summer 2002	2002	Danish Cup	2002										
+clear	Summer 2002	2002	Danish First Division	2001										
+clear	Summer 2002	2002	Danish First Division	2002										
+clear	Summer 2002	2002	Danish Premier Division	2001										
+clear	Summer 2002	2002	Danish Premier Division	2002										
+clear	Summer 2002	2002	Danish Second Division	2002										
+clear	Summer 2002	2002	Dutch Cup	2001										
+clear	Summer 2002	2002	Dutch Cup	2002										
+clear	Summer 2002	2002	Dutch First Division	2001										
+clear	Summer 2002	2002	Dutch First Division	2002										
+clear	Summer 2002	2002	Dutch Premier Division	2001										
+clear	Summer 2002	2002	Dutch Premier Division	2002										
+clear	Summer 2002	2002	Dutch Super Cup	2001										
+clear	Summer 2002	2002	Dutch Super Cup	2002										
+clear	Summer 2002	2002	English Charity Shield	2001										
+clear	Summer 2002	2002	English Charity Shield	2002										
+clear	Summer 2002	2002	English Conference	2001										
+clear	Summer 2002	2002	English Conference	2002										
+clear	Summer 2002	2002	English Conference Cup	2001										
+clear	Summer 2002	2002	English Conference Cup	2002										
+clear	Summer 2002	2002	English FA Cup	2001										
+clear	Summer 2002	2002	English FA Cup	2002										
+clear	Summer 2002	2002	English FA Trophy	2001										
+clear	Summer 2002	2002	English FA Trophy	2002										
+clear	Summer 2002	2002	English First Division	2001										
+clear	Summer 2002	2002	English First Division	2002										
+clear	Summer 2002	2002	English Isthmian League Premier Division	2002										
+clear	Summer 2002	2002	English League Cup	2001										
+clear	Summer 2002	2002	English League Cup	2002										
+clear	Summer 2002	2002	English Northern Premier League Premier Division	2002										
+clear	Summer 2002	2002	English Premier Division	2001										
+clear	Summer 2002	2002	English Premier Division	2002										
+clear	Summer 2002	2002	English Second Division	2001										
+clear	Summer 2002	2002	English Second Division	2002										
+clear	Summer 2002	2002	English Southern League Premier Division	2002										
+clear	Summer 2002	2002	English Third Division	2001										
+clear	Summer 2002	2002	English Third Division	2002										
+clear	Summer 2002	2002	English Vans Trophy	2001										
+clear	Summer 2002	2002	English Vans Trophy	2002										
+clear	Summer 2002	2002	European Champions Cup	2001										
+clear	Summer 2002	2002	European Champions Cup	2002										
+clear	Summer 2002	2002	European Cup Winners Cup	2001										
+clear	Summer 2002	2002	European Cup Winners Cup	2002										
+clear	Summer 2002	2002	European Football Championship	2001										
+clear	Summer 2002	2002	European Football Championship	2002										
+clear	Summer 2002	2002	European Super Cup	2001										
+clear	Summer 2002	2002	European Super Cup	2002										
+clear	Summer 2002	2002	FIFA Club World Championship	2001										
+clear	Summer 2002	2002	FIFA Club World Championship	2002										
+clear	Summer 2002	2002	FIFA World Cup	2001										
+clear	Summer 2002	2002	FIFA World Cup	2002										
+clear	Summer 2002	2002	Far East Club Championship	2001										
+clear	Summer 2002	2002	Far East Club Championship	2002										
+clear	Summer 2002	2002	Finnish Cup	2001										
+clear	Summer 2002	2002	Finnish Cup	2002										
+clear	Summer 2002	2002	Finnish First Division	2001										
+clear	Summer 2002	2002	Finnish First Division	2002										
+clear	Summer 2002	2002	Finnish Premier Division	2001										
+clear	Summer 2002	2002	Finnish Premier Division	2002										
+clear	Summer 2002	2002	Finnish Second Division East	2002										
+clear	Summer 2002	2002	Finnish Second Division North	2002										
+clear	Summer 2002	2002	Finnish Second Division South	2002										
+clear	Summer 2002	2002	Finnish Second Division West	2002										
+clear	Summer 2002	2002	French Champions Trophy	2001										
+clear	Summer 2002	2002	French Champions Trophy	2002										
+clear	Summer 2002	2002	French Cup	2001										
+clear	Summer 2002	2002	French Cup	2002										
+clear	Summer 2002	2002	French First Division	2001										
+clear	Summer 2002	2002	French First Division	2002										
+clear	Summer 2002	2002	French League Cup	2001										
+clear	Summer 2002	2002	French League Cup	2002										
+clear	Summer 2002	2002	French National	2001										
+clear	Summer 2002	2002	French National	2002										
+clear	Summer 2002	2002	French Second Division	2001										
+clear	Summer 2002	2002	French Second Division	2002										
+clear	Summer 2002	2002	German Cup	2001										
+clear	Summer 2002	2002	German Cup	2002										
+clear	Summer 2002	2002	German First Division	2001										
+clear	Summer 2002	2002	German First Division	2002										
+clear	Summer 2002	2002	German League Cup	2001										
+clear	Summer 2002	2002	German League Cup	2002										
+clear	Summer 2002	2002	German Regional Division East	2001										
+clear	Summer 2002	2002	German Regional Division East	2002										
+clear	Summer 2002	2002	German Regional Division North	2001										
+clear	Summer 2002	2002	German Regional Division North	2002										
+clear	Summer 2002	2002	German Regional Division South	2001										
+clear	Summer 2002	2002	German Regional Division South	2002										
+clear	Summer 2002	2002	German Regional Division West/Southwest	2001										
+clear	Summer 2002	2002	German Regional Division West/Southwest	2002										
+clear	Summer 2002	2002	German Second Division	2001										
+clear	Summer 2002	2002	German Second Division	2002										
+clear	Summer 2002	2002	Greek Cup	2001										
+clear	Summer 2002	2002	Greek Cup	2002										
+clear	Summer 2002	2002	Greek National A Division	2002										
+clear	Summer 2002	2002	Greek National B Division	2001										
+clear	Summer 2002	2002	Greek National B Division	2002										
+clear	Summer 2002	2002	Gulf Club Champions Cup	2002										
+clear	Summer 2002	2002	Hong Kong FA Cup	2002										
+clear	Summer 2002	2002	Hong Kong First Division	2002										
+clear	Summer 2002	2002	Hong Kong Junior Challenge Shield	2002										
+clear	Summer 2002	2002	Hong Kong League Cup	2002										
+clear	Summer 2002	2002	Hong Kong Second Division	2002										
+clear	Summer 2002	2002	Hong Kong Senior Challenge Shield	2002										
+clear	Summer 2002	2002	Hong Kong Third Division A	2002										
+clear	Summer 2002	2002	Hong Kong Third Division B	2002										
+clear	Summer 2002	2002	Hong Kong Viceroy Cup	2001										
+clear	Summer 2002	2002	Hong Kong Viceroy Cup	2002										
+clear	Summer 2002	2002	Indian Bangalore Super Division	2002										
+clear	Summer 2002	2002	Indian Calcutta Super Division	2002										
+clear	Summer 2002	2002	Indian Chennai League	2002										
+clear	Summer 2002	2002	Indian Dehli Senior Division	2001										
+clear	Summer 2002	2002	Indian Dehli Senior Division	2002										
+clear	Summer 2002	2002	Indian Federation Cup	2002										
+clear	Summer 2002	2002	Indian Goan Professional League	2002										
+clear	Summer 2002	2002	Indian Guwahati Super Division	2002										
+clear	Summer 2002	2002	Indian Haryana State Championship	2001										
+clear	Summer 2002	2002	Indian Haryana State Championship	2002										
+clear	Summer 2002	2002	Indian Kerala Super League	2001										
+clear	Summer 2002	2002	Indian Kerala Super League	2002										
+clear	Summer 2002	2002	Indian Mumbai League	2001										
+clear	Summer 2002	2002	Indian Mumbai League	2002										
+clear	Summer 2002	2002	Indian National Football League	2002										
+clear	Summer 2002	2002	Indian Punjab State Soccer League	2001										
+clear	Summer 2002	2002	Indian Punjab State Soccer League	2002										
+clear	Summer 2002	2002	Indian Super Cup	2001										
+clear	Summer 2002	2002	Indian Super Cup	2002										
+clear	Summer 2002	2002	Indonesian Premier Division	2002										
+clear	Summer 2002	2002	Indonesian Second Division	2002										
+clear	Summer 2002	2002	Inter-American Cup	2001										
+clear	Summer 2002	2002	Inter-American Cup	2002										
+clear	Summer 2002	2002	Intercontinental Cup	2001										
+clear	Summer 2002	2002	Intercontinental Cup	2002										
+clear	Summer 2002	2002	Irish Blaxnit Cup	2002										
+clear	Summer 2002	2002	Irish Dublin City Cup	2002										
+clear	Summer 2002	2002	Irish Dublin and Belfast Inter-City Cup	2002										
+clear	Summer 2002	2002	Irish First Division	2001										
+clear	Summer 2002	2002	Irish First Division	2002										
+clear	Summer 2002	2002	Irish First Division Shield	2001										
+clear	Summer 2002	2002	Irish First Division Shield	2002										
+clear	Summer 2002	2002	Irish League Cup	2001										
+clear	Summer 2002	2002	Irish League Cup	2002										
+clear	Summer 2002	2002	Irish Leinster Senior Cup	2001										
+clear	Summer 2002	2002	Irish Leinster Senior Cup	2002										
+clear	Summer 2002	2002	Irish Munster Senior Cup	2001										
+clear	Summer 2002	2002	Irish Munster Senior Cup	2002										
+clear	Summer 2002	2002	Irish North-South Cup	2002										
+clear	Summer 2002	2002	Irish P.J. Casey Cup	2002										
+clear	Summer 2002	2002	Irish Premier Division	2001										
+clear	Summer 2002	2002	Irish Premier Division	2002										
+clear	Summer 2002	2002	Irish Presidents Cup	2002										
+clear	Summer 2002	2002	Irish Senior Challenge Cup	2001										
+clear	Summer 2002	2002	Irish Senior Challenge Cup	2002										
+clear	Summer 2002	2002	Irish Shield	2002										
+clear	Summer 2002	2002	Irish Super Cup	2002										
+clear	Summer 2002	2002	Irish Texaco Cup	2002										
+clear	Summer 2002	2002	Irish Top Four Cup	2002										
+clear	Summer 2002	2002	Irish Tyler Cup	2002										
+clear	Summer 2002	2002	Italian C1 Super Cup	2001										
+clear	Summer 2002	2002	Italian C1 Super Cup	2002										
+clear	Summer 2002	2002	Italian Cup	2001										
+clear	Summer 2002	2002	Italian Cup	2002										
+clear	Summer 2002	2002	Italian Serie A	2001										
+clear	Summer 2002	2002	Italian Serie A	2002										
+clear	Summer 2002	2002	Italian Serie B	2001										
+clear	Summer 2002	2002	Italian Serie B	2002										
+clear	Summer 2002	2002	Italian Serie C Cup	2001										
+clear	Summer 2002	2002	Italian Serie C Cup	2002										
+clear	Summer 2002	2002	Italian Serie C1/A	2001										
+clear	Summer 2002	2002	Italian Serie C1/A	2002										
+clear	Summer 2002	2002	Italian Serie C1/B	2001										
+clear	Summer 2002	2002	Italian Serie C1/B	2002										
+clear	Summer 2002	2002	Italian Serie C2/A	2001										
+clear	Summer 2002	2002	Italian Serie C2/A	2002										
+clear	Summer 2002	2002	Italian Serie C2/B	2001										
+clear	Summer 2002	2002	Italian Serie C2/B	2002										
+clear	Summer 2002	2002	Italian Serie C2/C	2001										
+clear	Summer 2002	2002	Italian Serie C2/C	2002										
+clear	Summer 2002	2002	Italian Super Cup	2001										
+clear	Summer 2002	2002	Italian Super Cup	2002										
+clear	Summer 2002	2002	Japanese Cup	2001										
+clear	Summer 2002	2002	Japanese Cup	2002										
+clear	Summer 2002	2002	Japanese Emperor's Cup	2001										
+clear	Summer 2002	2002	Japanese Emperor's Cup	2002										
+clear	Summer 2002	2002	Japanese Football League	2002										
+clear	Summer 2002	2002	Japanese J-League 1	2001										
+clear	Summer 2002	2002	Japanese J-League 1	2002										
+clear	Summer 2002	2002	Japanese J-League 2	2001										
+clear	Summer 2002	2002	Japanese J-League 2	2002										
+clear	Summer 2002	2002	Japanese Super Cup	2001										
+clear	Summer 2002	2002	Japanese Super Cup	2002										
+clear	Summer 2002	2002	Japanese U-18 Championship	2002										
+clear	Summer 2002	2002	Japanese University League	2002										
+clear	Summer 2002	2002	Korean FA Cup	2002										
+clear	Summer 2002	2002	Korean League	2001										
+clear	Summer 2002	2002	Korean League	2002										
+clear	Summer 2002	2002	Korean League Cup	2002										
+clear	Summer 2002	2002	Korean President Cup	2001										
+clear	Summer 2002	2002	Korean President Cup	2002										
+clear	Summer 2002	2002	Korean Super Cup	2002										
+clear	Summer 2002	2002	Luxembourg Cup	2001										
+clear	Summer 2002	2002	Luxembourg Cup	2002										
+clear	Summer 2002	2002	Luxembourg National Division	2001										
+clear	Summer 2002	2002	Luxembourg National Division	2002										
+clear	Summer 2002	2002	Malaysia Cup	2002										
+clear	Summer 2002	2002	Malaysian Charity Shield	2002										
+clear	Summer 2002	2002	Malaysian FA Cup	2002										
+clear	Summer 2002	2002	Malaysian League Premier One	2002										
+clear	Summer 2002	2002	Malaysian League Premier Two	2002										
+clear	Summer 2002	2002	Merconorte Cup	2001										
+clear	Summer 2002	2002	Merconorte Cup	2002										
+clear	Summer 2002	2002	Mexican First Division	2002										
+clear	Summer 2002	2002	Mexican First Division A	2002										
+clear	Summer 2002	2002	Mexican Second Division	2002										
+clear	Summer 2002	2002	New South Wales State League	2002										
+clear	Summer 2002	2002	New South Wales Super League	2002										
+clear	Summer 2002	2002	Northern Irish Cup	2001										
+clear	Summer 2002	2002	Northern Irish Cup	2002										
+clear	Summer 2002	2002	Northern Irish Gold Cup	2001										
+clear	Summer 2002	2002	Northern Irish Gold Cup	2002										
+clear	Summer 2002	2002	Northern Irish League Cup	2001										
+clear	Summer 2002	2002	Northern Irish League Cup	2002										
+clear	Summer 2002	2002	Northern Irish League First Division	2001										
+clear	Summer 2002	2002	Northern Irish League First Division	2002										
+clear	Summer 2002	2002	Northern Irish League Premier Division	2001										
+clear	Summer 2002	2002	Northern Irish League Premier Division	2002										
+clear	Summer 2002	2002	Norwegian Cup	2001										
+clear	Summer 2002	2002	Norwegian Cup	2002										
+clear	Summer 2002	2002	Norwegian First Division	2001										
+clear	Summer 2002	2002	Norwegian First Division	2002										
+clear	Summer 2002	2002	Norwegian Premier Division	2001										
+clear	Summer 2002	2002	Norwegian Premier Division	2002										
+clear	Summer 2002	2002	Norwegian Second Division Group 1	2001										
+clear	Summer 2002	2002	Norwegian Second Division Group 1	2002										
+clear	Summer 2002	2002	Norwegian Second Division Group 2	2001										
+clear	Summer 2002	2002	Norwegian Second Division Group 2	2002										
+clear	Summer 2002	2002	Norwegian Second Division Group 3	2001										
+clear	Summer 2002	2002	Norwegian Second Division Group 3	2002										
+clear	Summer 2002	2002	Norwegian Second Division Group 4	2001										
+clear	Summer 2002	2002	Norwegian Second Division Group 4	2002										
+clear	Summer 2002	2002	Norwegian Second Division Group 5	2001										
+clear	Summer 2002	2002	Norwegian Second Division Group 5	2002										
+clear	Summer 2002	2002	Norwegian Second Division Group 6	2001										
+clear	Summer 2002	2002	Norwegian Second Division Group 6	2002										
+clear	Summer 2002	2002	Norwegian Second Division Group 7	2001										
+clear	Summer 2002	2002	Norwegian Second Division Group 7	2002										
+clear	Summer 2002	2002	Norwegian Second Division Group 8	2001										
+clear	Summer 2002	2002	Norwegian Second Division Group 8	2002										
+clear	Summer 2002	2002	Oceania Champions Cup	2002										
+clear	Summer 2002	2002	Oceania Nations Cup	2001										
+clear	Summer 2002	2002	Oceania Nations Cup	2002										
+clear	Summer 2002	2002	Olympic Games	2001										
+clear	Summer 2002	2002	Olympic Games	2002										
+clear	Summer 2002	2002	Polish FA Cup	2001										
+clear	Summer 2002	2002	Polish FA Cup	2002										
+clear	Summer 2002	2002	Polish First Division	2001										
+clear	Summer 2002	2002	Polish First Division	2002										
+clear	Summer 2002	2002	Polish League Cup	2001										
+clear	Summer 2002	2002	Polish League Cup	2002										
+clear	Summer 2002	2002	Polish Second Division	2001										
+clear	Summer 2002	2002	Polish Second Division	2002										
+clear	Summer 2002	2002	Polish Super Cup	2001										
+clear	Summer 2002	2002	Polish Super Cup	2002										
+clear	Summer 2002	2002	Portuguese Cup	2001										
+clear	Summer 2002	2002	Portuguese Cup	2002										
+clear	Summer 2002	2002	Portuguese Premier League	2001										
+clear	Summer 2002	2002	Portuguese Premier League	2002										
+clear	Summer 2002	2002	Portuguese Second Division B Central	2001										
+clear	Summer 2002	2002	Portuguese Second Division B Central	2002										
+clear	Summer 2002	2002	Portuguese Second Division B North	2001										
+clear	Summer 2002	2002	Portuguese Second Division B North	2002										
+clear	Summer 2002	2002	Portuguese Second Division B South	2001										
+clear	Summer 2002	2002	Portuguese Second Division B South	2002										
+clear	Summer 2002	2002	Portuguese Second League	2001										
+clear	Summer 2002	2002	Portuguese Second League	2002										
+clear	Summer 2002	2002	Portuguese Super Cup	2002										
+clear	Summer 2002	2002	Portuguese Third Division	2001										
+clear	Summer 2002	2002	Portuguese Third Division	2002										
+clear	Summer 2002	2002	PrepreLibertadores Cup	2002										
+clear	Summer 2002	2002	Queensland Premier League	2002										
+clear	Summer 2002	2002	Russian Cup	2001										
+clear	Summer 2002	2002	Russian Cup	2002										
+clear	Summer 2002	2002	Russian First Division	2001										
+clear	Summer 2002	2002	Russian First Division	2002										
+clear	Summer 2002	2002	Russian Premier Division	2001										
+clear	Summer 2002	2002	Russian Premier Division	2002										
+clear	Summer 2002	2002	Russian Second Division - Central	2002										
+clear	Summer 2002	2002	Russian Second Division - East	2002										
+clear	Summer 2002	2002	Russian Second Division - South	2002										
+clear	Summer 2002	2002	Russian Second Division - Ural	2001										
+clear	Summer 2002	2002	Russian Second Division - Ural	2002										
+clear	Summer 2002	2002	Russian Second Division - Volga	2002										
+clear	Summer 2002	2002	Russian Second Division - West	2001										
+clear	Summer 2002	2002	Russian Second Division - West	2002										
+clear	Summer 2002	2002	Scottish Cup	2001										
+clear	Summer 2002	2002	Scottish Cup	2002										
+clear	Summer 2002	2002	Scottish First Division	2001										
+clear	Summer 2002	2002	Scottish First Division	2002										
+clear	Summer 2002	2002	Scottish League Challenge Cup	2001										
+clear	Summer 2002	2002	Scottish League Challenge Cup	2002										
+clear	Summer 2002	2002	Scottish League Cup	2001										
+clear	Summer 2002	2002	Scottish League Cup	2002										
+clear	Summer 2002	2002	Scottish Premier Division	2001										
+clear	Summer 2002	2002	Scottish Premier Division	2002										
+clear	Summer 2002	2002	Scottish Second Division	2001										
+clear	Summer 2002	2002	Scottish Second Division	2002										
+clear	Summer 2002	2002	Scottish Third Division	2001										
+clear	Summer 2002	2002	Scottish Third Division	2002										
+clear	Summer 2002	2002	Singapore Cup	2002										
+clear	Summer 2002	2002	Singaporean League	2002										
+clear	Summer 2002	2002	Singaporean President's Cup	2002										
+clear	Summer 2002	2002	Singaporean Prime League	2002										
+clear	Summer 2002	2002	South African Charity Cup	2002										
+clear	Summer 2002	2002	South African First Division	2002										
+clear	Summer 2002	2002	South African First Division Coastal	2002										
+clear	Summer 2002	2002	South African First Division Inland	2002										
+clear	Summer 2002	2002	South African League Cup	2002										
+clear	Summer 2002	2002	South African Premier Division	2001										
+clear	Summer 2002	2002	South African Premier Division	2002										
+clear	Summer 2002	2002	South African Superbowl	2002										
+clear	Summer 2002	2002	South African Top 8 Cup	2002										
+clear	Summer 2002	2002	South American CONMEBOL Cup	2001										
+clear	Summer 2002	2002	South American CONMEBOL Cup	2002										
+clear	Summer 2002	2002	South American Copa Libertadores	2001										
+clear	Summer 2002	2002	South American Copa Libertadores	2002										
+clear	Summer 2002	2002	South American Copa Mercosur	2001										
+clear	Summer 2002	2002	South American Copa Mercosur	2002										
+clear	Summer 2002	2002	South American Recopa	2001										
+clear	Summer 2002	2002	South American Recopa	2002										
+clear	Summer 2002	2002	South American Super Cup	2002										
+clear	Summer 2002	2002	South Australian Premier League	2002										
+clear	Summer 2002	2002	Spanish Cup	2001										
+clear	Summer 2002	2002	Spanish Cup	2002										
+clear	Summer 2002	2002	Spanish First Division	2001										
+clear	Summer 2002	2002	Spanish First Division	2002										
+clear	Summer 2002	2002	Spanish Second Division	2001										
+clear	Summer 2002	2002	Spanish Second Division	2002										
+clear	Summer 2002	2002	Spanish Second Division B1	2001										
+clear	Summer 2002	2002	Spanish Second Division B1	2002										
+clear	Summer 2002	2002	Spanish Second Division B2	2001										
+clear	Summer 2002	2002	Spanish Second Division B2	2002										
+clear	Summer 2002	2002	Spanish Second Division B3	2001										
+clear	Summer 2002	2002	Spanish Second Division B3	2002										
+clear	Summer 2002	2002	Spanish Second Division B4	2001										
+clear	Summer 2002	2002	Spanish Second Division B4	2002										
+clear	Summer 2002	2002	Spanish Super Cup	2001										
+clear	Summer 2002	2002	Spanish Super Cup	2002										
+clear	Summer 2002	2002	Swedish Cup	2001										
+clear	Summer 2002	2002	Swedish Cup	2002										
+clear	Summer 2002	2002	Swedish First Division	2001										
+clear	Summer 2002	2002	Swedish First Division	2002										
+clear	Summer 2002	2002	Swedish Premier Division	2001										
+clear	Summer 2002	2002	Swedish Premier Division	2002										
+clear	Summer 2002	2002	Swedish Second Division East Gotaland	2002										
+clear	Summer 2002	2002	Swedish Second Division East Svealand	2002										
+clear	Summer 2002	2002	Swedish Second Division North	2001										
+clear	Summer 2002	2002	Swedish Second Division North	2002										
+clear	Summer 2002	2002	Swedish Second Division South Gotaland	2001										
+clear	Summer 2002	2002	Swedish Second Division South Gotaland	2002										
+clear	Summer 2002	2002	Swedish Second Division West Gotaland	2001										
+clear	Summer 2002	2002	Swedish Second Division West Gotaland	2002										
+clear	Summer 2002	2002	Swedish Second Division West Svealand	2002										
+clear	Summer 2002	2002	Swedish Third Division East Svealand	2001										
+clear	Summer 2002	2002	Swedish Third Division East Svealand	2002										
+clear	Summer 2002	2002	Swedish Third Division Middle Gotaland	2002										
+clear	Summer 2002	2002	Swedish Third Division Middle Norrland	2002										
+clear	Summer 2002	2002	Swedish Third Division North Norrland	2002										
+clear	Summer 2002	2002	Swedish Third Division North Svealand	2002										
+clear	Summer 2002	2002	Swedish Third Division Northeast Gotaland	2002										
+clear	Summer 2002	2002	Swedish Third Division Northwest Gotaland	2002										
+clear	Summer 2002	2002	Swedish Third Division South Gotaland	2002										
+clear	Summer 2002	2002	Swedish Third Division South Norrland	2002										
+clear	Summer 2002	2002	Swedish Third Division Southeast Gotaland	2002										
+clear	Summer 2002	2002	Swedish Third Division Southwest Gotaland	2001										
+clear	Summer 2002	2002	Swedish Third Division Southwest Gotaland	2002										
+clear	Summer 2002	2002	Swedish Third Division West Svealand	2001										
+clear	Summer 2002	2002	Swedish Third Division West Svealand	2002										
+clear	Summer 2002	2002	Swiss Cup	2001										
+clear	Summer 2002	2002	Swiss Cup	2002										
+clear	Summer 2002	2002	Swiss National Division A	2001										
+clear	Summer 2002	2002	Swiss National Division A	2002										
+clear	Summer 2002	2002	Thai Premier League	2002										
+clear	Summer 2002	2002	Turkish FA Cup	2001										
+clear	Summer 2002	2002	Turkish FA Cup	2002										
+clear	Summer 2002	2002	Turkish Premier Division	2001										
+clear	Summer 2002	2002	Turkish Premier Division	2002										
+clear	Summer 2002	2002	UEFA Cup	2001										
+clear	Summer 2002	2002	UEFA Cup	2002										
+clear	Summer 2002	2002	US Open Cup	2001										
+clear	Summer 2002	2002	US Open Cup	2002										
+clear	Summer 2002	2002	Victorian Premier League	2002										
+clear	Summer 2002	2002	Welsh Cup	2001										
+clear	Summer 2002	2002	Welsh Cup	2002										
+clear	Summer 2002	2002	Welsh League Cup	2002										
+clear	Summer 2002	2002	Welsh Premier Cup	2001										
+clear	Summer 2002	2002	Welsh Premier Cup	2002										
+clear	Summer 2002	2002	Welsh Premier Division	2001										
+clear	Summer 2002	2002	Welsh Premier Division	2002										
+clear	Summer 2002	2002	Western Australian Premier League	2002										
+clear	Summer 2002	2002	Yugoslav Cup	2001										
+clear	Summer 2002	2002	Yugoslav Cup	2002										
+clear	Summer 2002	2002	Yugoslav First Division	2001										
+clear	Summer 2002	2002	Yugoslav First Division	2002										
+clear	Summer 2002	2002	Yugoslav Second Division	2001										
+clear	Summer 2002	2002	Yugoslav Second Division	2002										
+clear	Summer 2002	2002	Yugoslav Second Division East	2001										
+clear	Summer 2002	2002	Yugoslav Second Division East	2002										
+clear	Summer 2002	2002	Yugoslav Second Division North	2001										
+clear	Summer 2002	2002	Yugoslav Second Division North	2002										
+clear	Summer 2002	2002	Yugoslav Second Division South	2001										
+clear	Summer 2002	2002	Yugoslav Second Division South	2002										
+clear	Summer 2002	2002	Yugoslav Second Division West	2001										
+clear	Summer 2002	2002	Yugoslav Second Division West	2002										
 add	October 2003	2003	Argentine Premier Division	2002	Apertura	add	Independiente	Argentina	Boca Juniors	Argentina				
 add	October 2003	2003	Argentine Second Division	2002		add	Atlético Rafaela	Argentina	Argentinos Juniors	Argentina				
 add	October 2003	2003	Mexican First Division	2002	Apertura	add	Deportivo Toluca	Mexico	Club Monarcas Morelia	Mexico				

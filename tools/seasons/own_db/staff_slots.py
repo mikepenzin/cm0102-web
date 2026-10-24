@@ -1,7 +1,7 @@
 """Fill empty non-playing staff slots with the database's own free staff, so that a new game with every league
 selected fits the original game's 23,000 extra staff rows.
 
-usage: python3 -I staff_slots.py <db folder> <report.tsv> [<target need>]
+usage: python3 -I staff_slots.py <db folder> <report.tsv> [<target need> [<first season>]]
 
 At a new game, database_generate_extra_non_playing_staff 0x527240 makes a stand-in coach, scout, physio or manager
 for every empty slot of the clubs of the selected nations, from 23,000 reserve rows (0x528540). With every league
@@ -19,6 +19,10 @@ is nearest the median ability of the employed staff of that job at clubs of that
 What changes: the person's club, a joined date of 1 July of the first season, a contract to 30 June two years on,
 and the contract fields +0x4e..+0x5e of the employed staff member of that job and nation at the nearest club
 reputation; the club's slot list (+0xcf manager, +0x19f coaches, +0x1b3 scouts, +0x1cf physios).
+The first season is the year of the stored dates: 2001 for the databases stored the Update Team way (the default),
+2002 for Summer 2002, whose dates are real (Q12). A format 1 folder (Summer 2002, cmdb1.py) has the non-player row
+at +0x99 in place of +0x69, and -2 (as well as -1) for no national team at +0x24; the other fields are at the
+same offsets.
 """
 import collections
 import os
@@ -27,6 +31,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import cmdb1  # noqa: E402
 from cmdb import Folder, cstr  # noqa: E402
 from convert import check_squad_lists  # noqa: E402
 
@@ -94,16 +99,21 @@ def put_date(b, o, day, year):
     struct.pack_into("<hH", b, o, day, year)
 
 
-def main(argv):
+def main(argv, keep_out=()):
+    """keep_out: staff ids that stay out of the pool (Summer 2002: the people whom the change list changed)."""
     db, report = argv[0], argv[1]
     target = int(argv[2]) if len(argv) > 2 else TARGET
-    F = Folder(db)
+    first = int(argv[3]) if len(argv) > 3 else FIRST_SEASON
+    fmt1 = cmdb1.staff_format(db) == 1
+    F = cmdb1.open_folder(db) if fmt1 else Folder(db)
+    np_link = 0x99 if fmt1 else 0x69
+    no_nat = (-1, -2) if fmt1 else (-1,)          # 3.9.68 writes -2 for no national team
     before, missing = need(F)
     clubs = {i32(r, 0): r for r in F.rows(0)}
     staff, npl = F.rows(6), F.rows(9)
 
     def ability(r):
-        n = i32(r, 0x69)
+        n = i32(r, np_link)
         return i16(npl[n], 4) if 0 <= n < len(npl) else 0
     # The employed staff of each job: ability by club reputation, and their contracts by nation.
     curve, contracts = collections.defaultdict(list), collections.defaultdict(list)
@@ -124,8 +134,9 @@ def main(argv):
     pool = collections.defaultdict(list)
     for r in staff:
         y = struct.unpack_from("<H", r, 0x12)[0]
-        if (r[0x5f] == 1 and i32(r, 0x39) == -1 and i32(r, 0x24) == -1 and i32(r, 0x69) >= 0
-                and r[0x3d] in (5, 8, 9, 10) and FIRST_SEASON - 70 <= y <= FIRST_SEASON - 26):
+        if (r[0x5f] == 1 and i32(r, 0x39) == -1 and i32(r, 0x24) in no_nat and i32(r, np_link) >= 0
+                and i32(r, 0) not in keep_out
+                and r[0x3d] in (5, 8, 9, 10) and first - 70 <= y <= first - 26):
             pool[(i32(r, 0x1a), r[0x3d])].append(i32(r, 0))
     slots = sorted(((i16(clubs[c], 0x80), c, job) for (c, job), n in missing.items() for _ in range(n)),
                    key=lambda t: (t[0], t[1], (5, 8, 10, 9).index(t[2])))
@@ -141,8 +152,8 @@ def main(argv):
         cand.remove(sid)
         r, cl = staff[sid], clubs[c]
         struct.pack_into("<i", r, 0x39, c)
-        put_date(r, 0x3e, 181, FIRST_SEASON)
-        put_date(r, 0x46, 180, FIRST_SEASON + 2)
+        put_date(r, 0x3e, 181, first)
+        put_date(r, 0x46, 180, first + 2)
         near = contracts.get((job, i32(cl, 0x53)))
         if near:
             r[0x4e:0x5f] = min(near, key=lambda t: abs(t[0] - rep))[1]

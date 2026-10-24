@@ -86,7 +86,7 @@ The steps for each season:
 
 **The French CFA and Lower Division.** The game plays no league of these two divisions: French CFA has a stub object (FraCfaStubComp) and the French Lower Division a league entry with no club count (+0x3e is 0). Before the start the game moves the clubs of the divisions that it does not play to "A Lower Division": a base game start of 2001/02 (`RECOMP_SEASON_CODE=off`, France selected) shows French CFA and French Lower Division with 0 clubs and A Lower Division with 558. So both show 0 clubs at every start, with or without the club moves, and the check compares no list of a league with no club count. The moves of these two lists still choose which clubs the database holds there; the 54 French League Cup entrants depend on the French National list (step 5).
 
-`RECOMP_CLUB_LOG=1` writes a line per list: real clubs, clubs found in the database, clubs kept, the clubs filled from each pool, stand-ins, open places, the class count and the database count, and a line per missing club. `fills.tsv` (see Tests) collects the list lines of every run.
+`RECOMP_CLUB_DUMP=<file>` (test only) writes each club's id, name and division after the moves, one line per club. `RECOMP_CLUB_LOG=1` writes a line per list: real clubs, clubs found in the database, clubs kept, the clubs filled from each pool, stand-ins, open places, the class count and the database count, and a line per missing club. `fills.tsv` (see Tests) collects the list lines of every run.
 
 ### MLS
 

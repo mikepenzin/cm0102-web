@@ -12,13 +12,14 @@
 #                  Both go into the game folder of each download as Data-3.9.60 and Data-3.9.65, where
 #                  the option database finds them (src/recomp_rt/win/files.c).
 #   --season-dbs   the folder with the zips of the Update Team databases (test-fixtures/databases/zips). The
-#                  script makes the 23 season database zips of the season database table from it
+#                  script makes the 24 season database zips of the season database table from it
 #                  (tools/release/make_season_zips.py): each holds only the 20 data files, in a folder with
 #                  the neutral name of docs/research/rules-0.6.0/databases-signatures.tsv. It checks each
 #                  zip against that table and stops on a mismatch. The zips go in Seasons/ of the game
 #                  folder of each download (src/recomp_rt/win/seasons_db.h unpacks them on the first pick).
-#   --own-dbs      the folder with the zips of our own season databases (Summer 2004 for 2004/05 and Summer 2006 for 2006/07, Q351), each a
-#                  zip of the converter's output folder. make_season_zips.py reads it as a second source.
+#   --own-dbs      the folder with the zips of our own season databases (Summer 2002 for 2002/03, Summer 2004 for
+#                  2004/05 and Summer 2006 for 2006/07, Q351), each a zip of the converter's or build's output
+#                  folder. make_season_zips.py reads it as a second source.
 #   --sdl2-mac     the folder with mac-arm64 and mac-x86_64 SDL2 builds (tools/mac/build_sdl2.sh)
 #   --sdl2-mingw   the SDL2 mingw development release (SDL2-2.x.y)
 #   --site-assets  the site's pictures (logo, screenshots). They go into site-assets.zip on the release,
