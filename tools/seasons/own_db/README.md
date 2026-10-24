@@ -6,6 +6,9 @@ competition winners. The ratings and positions come from the Update Team databas
 Team record (Q383) are the one exception: FM's rating of each is the reference for his ratings (Max, 2026-10-17),
 through a mapping that `keyplayers.py` derives from the matched players and prints at each run.
 
+The Summer 2002 database (spec `docs/specs/2026-10-24-summer-2002-db-spec.md`) uses the same process with a format 1
+reader.
+
 The Football Manager discs are untrusted data. Mount an image read-only. Read it only with `python3 -I`. Run
 nothing from it. Keep the disc files, the facts and the work folders outside the repo. Commit no Football Manager
 data and nothing made from it.
@@ -65,6 +68,80 @@ the original game's 23,000 extra staff rows (else it stops at "Database.cpp 1844
 `<conv>` is a new folder for the converter's output. The overrides file (identity decisions per key player, see
 `keyplayers.py`) names FM rows, so it stays in the work folder with the FM data. Two builds with different
 `PYTHONHASHSEED` values (run with `python3 -P -s`, because `-I` ignores the seed) give the same files.
+
+## 2002/03 (Summer 2002), slice 1: the format 1 reader
+
+The facts come from the data folder of Championship Manager: Season 02/03 (Xbox, SI). The template is the 3.9.68
+`Data` folder. Both store the staff table in format 1 (157 bytes per row), which `cmdb.py` refuses on purpose.
+`cmdb1.py` reads format 1 and `xbox0203/read_xbox0203.py` writes the facts pickles in the shape of the FM readers
+(its header lists them). The Xbox disc is untrusted data: copy `data` from the mounted image, read it only with
+`python3 -I`, and keep the data and the facts outside the repo. Commit no Xbox data and nothing made from it.
+
+| Placeholder | What it is |
+|---|---|
+| `<xbox data>` | the `data` folder of the Xbox disc, copied as data |
+| `<3.9.68 Data>` | the `Data` folder of the clean 3.9.68 game |
+| `<facts-xbox>`, `<facts-3968>` | new folders for the two sets of facts pickles |
+
+```bash
+python3 -I xbox0203/read_xbox0203.py "<xbox data>" "<facts-xbox>"
+python3 -I xbox0203/read_xbox0203.py "<3.9.68 Data>" "<facts-3968>"
+python3 -I test_format1.py
+```
+
+Each run prints the counts and the known facts: Henry (Arsenal, with his ratings), Ronaldo (Real Madrid), Ferguson
+(Manchester United) and, on the Xbox data, Celestini (Olympique Marseille).
+
+## 2002/03 (Summer 2002), slice 2: the change list
+
+`xbox0203/change_list.py` writes what the Xbox facts change in the 3.9.68 template. Max reads it before the build.
+It writes one TSV per kind: club moves, releases, dates, ratings, league differences, names and competitions,
+unclear people and template duplicate pairs. `summary.md` gives the counts and the rows that need his decision.
+The header of the script gives the rules. `<changes>` is a new folder outside the repo.
+
+```bash
+python3 -I xbox0203/change_list.py "<facts-xbox>" "<facts-3968>" "<xbox data>" "<3.9.68 Data>" "<changes>" --league-check "<all-results.tsv>" --places "<places-2001-02.tsv>"
+python3 -I test_change_list.py
+```
+
+The list applies Max's answers Q21 to Q28: each row is applied, kept (an answer keeps the 3.9.68 value) or held
+(no answer takes it). The league rows that no answer settles go to `leagues-second-look.tsv`, sorted by nation.
+`--league-check` takes the check of every league row with two public sources (`xbox-0203-work/league-check/
+all-results.tsv`, outside the repo) and applies Max's answers Q33 to Q37 to it (`league_check`). Q39 keeps every
+division at its 3.9.68 club count (`balance`); `--places` gives the 2001/02 final places that decide which move
+is held (`move_key`).
+
+## 2002/03 (Summer 2002), slice 3: the build
+
+`xbox0203/build_2002.py` copies the 3.9.68 files and patches the format 1 rows in place with the applied rows of
+the list: staff clubs, dates and jobs, ratings, the club lists, divisions and the Florentia Viola name. It adds no
+row. Then `duplicates.merge_folder` merges the template's duplicate pairs (Q28) and keeps the pairs of two people
+(`duplicates.kept_apart`) on `<changes>/kept-pairs.tsv`. Then `staff_slots.py` fills empty staff slots (first
+season 2002, Q12) and `duplicates.py check` runs with that list. The header of the script gives the steps.
+
+The Turkish groups (Q11) need three free 3.9.68 competition rows, and 3.9.68 has two: the five "Turkish 2.
+Division Group" rows are key names of the game (an error box at load when one is missing) and the last division
+of 53 clubs. With `--exe <cm0102.exe>` the script proves this and stops. `--no-turkish-groups` builds without
+the groups, and the clubs keep their 3.9.68 groups.
+
+| Placeholder | What it is |
+|---|---|
+| `<out>` | the new database folder, named `Summer 2002` |
+| `<work>` | a new folder for the reports (merge, ids, staff slots, the duplicate check) |
+
+```bash
+python3 -I xbox0203/build_2002.py "<changes>" "<xbox data>" "<3.9.68 Data>" "<out>" "<work>" --no-turkish-groups
+python3 -I duplicates.py check "<out>" "<changes>/kept-pairs.tsv"
+python3 -I test_build_2002.py
+python3 -I test_summer_2002.py [<work root>]
+```
+
+`test_build_2002.py` checks the writer, the steps and the format 1 merge on synthetic folders.
+`test_summer_2002.py` is the pipeline seam: it reads `<work root>/changes`, `build/Summer 2002`,
+`build/summer-2002-work` and `disc/data` (default: `xbox-0203-work` beside the main checkout), checks every
+applied row, the duplicate check and the known facts, and builds twice with `PYTHONHASHSEED` 1 and 2 (with
+`python3 -P -s`) to show the same files. It skips when the data is absent. The zips come from
+`release-dbs/make_zip2002.sh`, outside the repo.
 
 ## Mapping of FM ratings (key players only)
 
