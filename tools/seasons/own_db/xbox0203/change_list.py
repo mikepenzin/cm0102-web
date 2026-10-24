@@ -963,8 +963,7 @@ def move_key(c, up, places, rep):
     champion, then the automatic places by place, then the play-off winners (the lowest promotion place stays
     down); then the clubs with no known place, by 3.9.68 reputation. Returns (key, note of the order)."""
     p = places.get(c)
-    if p and p.get("in_left_division") == "no":
-        return (0, 0.0, c), f"not in the division it leaves in 2001/02 ({p['table_name']}, {p['source']})"
+    out_of_date = bool(p) and p.get("in_left_division") == "no"
     if p and p["place"].isdigit() and p["table_size"].isdigit():
         frac = int(p["place"]) / int(p["table_size"])
         how = p["how"]
@@ -972,7 +971,12 @@ def move_key(c, up, places, rep):
             v = 0.0 if how == "champion" else (1.0 + frac if "play-off" in how else frac)
         else:
             v = -frac
-        return (1, v, c), f"{p['place']} of {p['table_size']}, {how} ({p['table_name']}, {p['source']})"
+        where = f"{p['place']} of {p['table_size']}, {how} ({p['table_name']}, {p['source']})"
+        if out_of_date:
+            return (0, v, c), "not in the division it leaves in the season before (the 3.9.68 row is out of date): " + where
+        return (1, v, c), where
+    if out_of_date:
+        return (0, 0.0, c), f"not in the division it leaves in the season before ({p['table_name']}, {p['source']})"
     return (2, -rep.get(c, 0) if up else rep.get(c, 0), c), "no 2001/02 place known: ordered by 3.9.68 reputation"
 
 
@@ -990,6 +994,15 @@ def balance(rows5, div_t, comps_t, ranks, rep, places=None):
 
     def rank(n):
         return ranks.get(n, -999) if n != NONE_NODE else -1000
+
+    def same_level(a, b):
+        """Two groups of one level: the same rank (+0x69) and the same name but its last word (Russian Second
+        Division - Central and - Volga, German Regional Division North and South). The rank alone is not the
+        level: the American A-League and D3-Pro League share rank 6."""
+        if NONE_NODE in (a, b) or a not in ranks or b not in ranks or ranks[a] != ranks[b]:
+            return False
+        stem = lambda n: comps_t[n].replace(" - ", " ").rsplit(" ", 1)[0]
+        return stem(a) == stem(b)
 
     moves = []
     for r in rows5:
@@ -1013,50 +1026,57 @@ def balance(rows5, div_t, comps_t, ranks, rep, places=None):
         up = rank(dst) > rank(src)
         key, why = move_key(c, up, places or {}, rep)
         moves.append(dict(row=r, src=src, dst=dst, key=key, why=why,
-                          level=src != NONE_NODE and dst != NONE_NODE and rank(src) == rank(dst)))
+                          level=same_level(src, dst)))
     left = sorted(moves, key=lambda m: m["key"])
     taken = []
-    # Swaps between two divisions.
+
+    def find(out, start, n, path, on_path):
+        """A chain of moves from n back to start (each division once on the path), or None."""
+        for m in out.get(n, []):
+            if m["dst"] == start:
+                return path + [m]
+            if m["dst"] not in on_path:
+                got = find(out, start, m["dst"], path + [m], on_path | {m["dst"]})
+                if got:
+                    return got
+        return None
+
+    def chains(left, level_only):
+        """Takes chains (two moves or more) from left until none is left; with level_only, only chains that hold a
+        move within one level, which is never held for balance (they come before every other pairing)."""
+        while True:
+            out = collections.defaultdict(list)
+            for m in left:
+                out[m["src"]].append(m)
+            cycle = None
+            if level_only:
+                for m in left:
+                    if m["level"]:
+                        cycle = find(out, m["src"], m["dst"], [m], {m["src"], m["dst"]})
+                        if cycle:
+                            break
+            else:
+                for start in sorted(out, key=str):
+                    cycle = find(out, start, start, [], {start})
+                    if cycle:
+                        break
+            if not cycle:
+                return left
+            taken.append(cycle)
+            used = {id(m) for m in cycle}
+            left = [m for m in left if id(m) not in used]
+
+    left = chains(left, True)
+    # Swaps between two divisions, in key order.
     by_pair = collections.defaultdict(list)
     for m in left:
         by_pair[(m["src"], m["dst"])].append(m)
     for (a, b), there in sorted(by_pair.items(), key=lambda kv: str(kv[0])):
         if str(a) < str(b):
-            back = by_pair.get((b, a), [])
-            for x, y in zip(there, back):
+            for x, y in zip(there, by_pair.get((b, a), [])):
                 taken.append([x, y])
     used = {id(m) for cyc in taken for m in cyc}
-    left = [m for m in left if id(m) not in used]
-    # Chains of three and more moves.
-    while True:
-        out = collections.defaultdict(list)
-        for m in left:
-            out[m["src"]].append(m)
-        def find(start, n, path, on_path):
-            """A chain from n back to start (each division once on the path), or None."""
-            for m in out.get(n, []):
-                if m["dst"] == start:
-                    return path + [m]
-                if m["dst"] not in on_path:
-                    got = find(start, m["dst"], path + [m], on_path | {m["dst"]})
-                    if got:
-                        return got
-            return None
-        cycle = None
-        for m in left:                                  # a move within one level is never held for balance:
-            if m["level"]:                              # its chains come first
-                cycle = find(m["src"], m["dst"], [m], {m["src"], m["dst"]})
-                if cycle:
-                    break
-        for start in ([] if cycle else sorted(out, key=str)):
-            cycle = find(start, start, [], {start})
-            if cycle:
-                break
-        if not cycle:
-            break
-        taken.append(cycle)
-        used = {id(m) for m in cycle}
-        left = [m for m in left if id(m) not in used]
+    left = chains([m for m in left if id(m) not in used], False)
     for cyc in taken:
         names = [m["row"]["club"] for m in cyc]
         for m in cyc:
