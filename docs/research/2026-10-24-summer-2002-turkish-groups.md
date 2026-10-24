@@ -91,7 +91,7 @@ G5, each of G1 to G3 holding 2 to 18) and from +0x2c == 2 after it (saved with t
 | 0x901800, 0x901ba0 | the clubs and final positions of the three tables |
 | 0x9006c0 | builds nothing |
 | chain 0x8fe250 | the original's calls less slots 2 and 3 |
-| 0x8fe3a0 | the pool of the Lower Division first (every club, as 0x8fe3a6..0x8fe474, so no club that goes down comes back), then the relegated rows of the three tables down; at more clubs than the season's size, the lowest places too; then the pool fills the tier back to its size (0x4afbd0, 0x6830b0) |
+| 0x8fe3a0 | the pool of the Lower Division first (every club, as 0x8fe3a6..0x8fe474, so no club that goes down comes back; with too few clubs for the free places, the Turkish clubs with no division too), then the relegated rows of the three tables down; above 52 clubs, the lowest places too; then the pool fills the tier to 52 (0x4afbd0, 0x6830b0), and a shortfall is logged |
 | deal 0x8fe580 | three parts (18, 17, 17 for 52); a club keeps its group while it has room (a club back from Category A keeps its old one); the others, sorted by 0x53fe50 as the original, fill the places left |
 
 Any other database has no tag rows, so every wrap runs the original (the form needs the three rows by name). A
@@ -103,6 +103,10 @@ The lines `recomp: turkish groups: ...` on stderr give the groups of each season
 change; `tests/seasons/turkish_groups_run.py` reads them.
 
 ## Differences from the real league
+
+- The division keeps 52 clubs (18, 17, 17) in every season (TIER_CLUBS): the exchange cuts or fills to that size,
+  and takes Turkish clubs with no division when the Lower Division has too few. The real league had 51 clubs in
+  three groups of 17 in 2003/04 and 2004/05 (rus-tur-219, rus-tur-220).
 
 - The honours of the division (its champion in the history) go to the Group A winner, as PorSecondB records its
   North zone. The real tier had three winners and no champion.

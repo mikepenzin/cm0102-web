@@ -90,6 +90,7 @@
 #define GROUPS 3
 #define MIN_GROUP 2
 #define MAX_GROUP 18                /* 2 (n - 1) dates fit in the 36 of stages -1 and 4 up to 18 clubs */
+#define TIER_CLUBS 52               /* the division's size in every season: the 18, 17 and 17 of 2002/03 (Q16) */
 
 #define F_MALLOC 0x00944e46u
 #define F_FREE 0x009452cau
@@ -722,12 +723,9 @@ RT_WRAP(008fe3a0, tur_exchange)
     }
     uint32_t b = rd32(g_mem, obj + OBJ_RECORD), lower = record_of(KEY_LOWER), t[GROUPS];
     tables_of(obj, t);
-    int want = 0, most = 0, down = 0, cut = 0, up = 0;
-    for (int k = 0; k < GROUPS; k++) {
-        int n = table_clubs(t[k]);
-        want += n;
-        if (n > most) most = n;
-    }
+    int want = TIER_CLUBS, most = 0, down = 0, cut = 0, up = 0, spare = 0;
+    for (int k = 0; k < GROUPS; k++)
+        if (table_clubs(t[k]) > most) most = table_clubs(t[k]);
     if (!readable(b) || !lower) {
         rt_ret_stdcall(0, 0);
         return;
@@ -739,6 +737,23 @@ RT_WRAP(008fe3a0, tur_exchange)
         uint32_t club = club_at(i);
         if (rd32(g_mem, club + CLUB_DIVISION) == lower && rd32(g_mem, club + CLUB_NATION))
             wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
+    }
+    /* A Lower Division too small for the free places: the Turkish clubs with no division join the pool (as Q523's
+     * pools of the new tiers), so the division keeps its size. */
+    uint32_t nation = table_clubs(t[0]) ? rd32(g_mem, row_club(t[0], 0) + CLUB_NATION) : 0;
+    int relegated = 0;
+    for (int k = 0; k < GROUPS; k++)
+        for (int i = 0; i < table_clubs(t[k]); i++) {
+            uint32_t row = rd32(g_mem, t[k] + OBJ_TABLE) + (uint32_t)i * ROW_SIZE;
+            if (g_mem[row + ROW_STATUS] == 3 && rd32(g_mem, rd32(g_mem, row) + CLUB_DIVISION) == b) relegated++;
+        }
+    int free_places = want - (division_clubs(b) - relegated);     /* the places left after the relegation */
+    for (int i = 0; pool && nation && npool < free_places && i < c; i++) {
+        uint32_t club = club_at(i);
+        if (!rd32(g_mem, club + CLUB_DIVISION) && rd32(g_mem, club + CLUB_NATION) == nation) {
+            wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
+            spare++;
+        }
     }
     for (int k = 0; k < GROUPS && !rt_unwinding; k++)
         for (int i = 0; i < table_clubs(t[k]) && !rt_unwinding; i++) {
@@ -775,8 +790,11 @@ RT_WRAP(008fe3a0, tur_exchange)
     }
     game_free(pool);
     if (rt_unwinding) return;
-    fprintf(stderr, "recomp: turkish groups: %d relegated, %d cut, %d up from the Lower Division of %d, %d clubs\n",
-            down, cut, up, npool, division_clubs(b));
+    fprintf(stderr, "recomp: turkish groups: %d relegated, %d cut, %d up from the Lower Division of %d (%d with no "
+            "division), %d clubs\n", down, cut, up, npool, spare, division_clubs(b));
+    if (division_clubs(b) != want)
+        fprintf(stderr, "recomp: turkish groups: the division holds %d clubs, not %d: too few clubs to fill it\n",
+                division_clubs(b), want);
     rt_ret_stdcall(0, 0);
 }
 
