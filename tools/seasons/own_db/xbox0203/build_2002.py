@@ -206,7 +206,9 @@ def apply_divisions(F, changes, log):
             continue
         c, d = int(row["id_3968"]), int(row["new_division_id"])
         need(c in by_id and d in comps, f"leagues: club {c} or competition {d} is not in the data")
-        need(comps.get(i32(by_id[c], 0x57)) == row["division_3968"] and comps[d] == row["division_xbox"],
+        v = i32(by_id[c], 0x57)
+        have = comps.get(v, "none") if v >= 0 else "none"          # the change list's name of no division
+        need(have == row["division_3968"] and comps[d] == row["division_xbox"],
              f"leagues: {row['club']} does not have the listed divisions")
         put(by_id[c], "<i", 0x57, d)
         n += 1

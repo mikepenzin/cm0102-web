@@ -1431,7 +1431,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	cro_a2a	Omladinac Novo Selo Rok	8279	NK Omladinac	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Sloga Nova Gradiška	10676	NK Sloga	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Valpovka	12238	NK Valpovska Satnica	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
-2002/03	cro_a2a	Metalac Osijek	7289	NK Metalac (S)	Croatian Third Division Central	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
+2002/03	cro_a2a	Metalac Osijek	7286	NK Metalac	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Vukovar '91	12620	HNK Vukovar '91	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Podravac	8865	NK Podravac	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Grafičar Vodovod	4532	NK Graficar Vodovod	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
@@ -1442,12 +1442,53 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	cro_a2b	Uskok Klis	12132	NK Uskok	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Croatia Sesvete	10372	NK Croatia Sesvete	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Hrvatski Dragovoljac	5172	NK Hrvatski Dragovoljac	Croatian First Division	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
-2002/03	cro_a2b	GOŠK Dubrovnik	3304	HNK Dubrovnik	Croatian Third Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
+2002/03	cro_a2b	GOŠK Dubrovnik	4259	NK GOSK	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Imotski	5332	NK Imotski	Croatian Lower Division	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Novalja	8054	NK Novalja	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Istra Pula	5463	NK Istra	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Orijent	8334	NK Orijent	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
-2002/03	cro_a2b	TŠK Topolovac				https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
+2002/03	cro_a2b	TŠK Topolovac	11312	NK TSK	Croatian First Division	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
+2002/03	Croatian Lower Division	Buducnost Podbrest	1976	Buducnost Podbrest	Croatian Third Division North	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	Drava	3267	Drava	Croatian Third Division North	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	Kucan '99	6197	Kucan '99	Croatian Third Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Lower Division	NK Garic	4309	NK Garic	Croatian Third Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Lower Division	NK Imotska Krajina	5331	NK Imotska Krajina	Croatian Second Division South	https://hr.wikipedia.org/wiki/NK_Imotski
+2002/03	Croatian Lower Division	NK Ivanska	5487	NK Ivanska	Croatian Third Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Lower Division	NK Lokomotiva Cestorad	6716	NK Lokomotiva Cestorad	Croatian Third Division East	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Mladost Fazana	7432	NK Mladost Fazana	Croatian Third Division West	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Lower Division	NK Moslavac	7579	NK Moslavac	Croatian Third Division Central	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Moslavina	7580	NK Moslavina	Croatian Third Division Central	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Orkan	8339	NK Orkan	Croatian Third Division South	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Ostrc	8395	NK Ostrc	Croatian Third Division Central	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Lower Division	NK Otocac	8403	NK Otocac	Croatian Third Division West	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Lower Division	NK Pitomaca	8832	NK Pitomaca	Croatian Third Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Lower Division	NK Primorac	9066	NK Primorac	Croatian Third Division South	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Radnik	9300	NK Radnik	Croatian Third Division Central	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Spansko	10839	NK Spansko	Croatian Third Division Central	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Tomislav	11649	NK Tomislav	Croatian Third Division East	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Trnje (T)	11810	NK Trnje (T)	Croatian Third Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Lower Division	NK Zrinski	13174	NK Zrinski	Croatian Third Division East	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Metalac (S)	7289	NK Metalac (S)	Croatian Third Division Central	https://hr.wikipedia.org/wiki/4._rang_HNL-a_2002./03.
+2002/03	Croatian Lower Division	NK Mladost 127.	7440	NK Mladost 127.	Croatian Lower Division	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division Central	HNK Segesta	10300	HNK Segesta	Croatian Second Division South	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division Central	NK Samobor	10020	NK Samobor	Croatian Second Division South	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division Central	NK Trnje	11809	NK Trnje	Croatian Second Division South	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division Central	NK Vrbovec	12615	NK Vrbovec	Croatian Second Division South	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division North	Ivancica	5484	Ivancica	Croatian Second Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division North	NK Bjelovar	1625	NK Bjelovar	Croatian Second Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division North	NK Krizevci	6171	NK Krizevci	Croatian Lower Division	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division North	NK Mladost Molve	7435	NK Mladost Molve	Croatian Second Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division North	NK Papuk	8582	NK Papuk	Croatian Second Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division North	NK Sloga (C)	10671	NK Sloga (C)	Croatian Second Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division North	Sloboda Varaždin	10667	NK Sloboda	Croatian Third Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division East	NK Bedem	1431	NK Bedem	Croatian Second Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division East	NK NASK-Nasicecement	7679	NK NASK-Nasicecement	Croatian Second Division North	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division South	NK Mosor	7581	NK Mosor	Croatian Second Division South	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Croatian Third Division West	NK Zminj	13160	NK Zminj	Croatian Second Division South	https://hr.wikipedia.org/wiki/3._HNL_2002./03.
+2002/03	Polish Lower Division	Hutnik Krakow	5223	Hutnik Krakow	Polish Second Division	https://pl.wikipedia.org/wiki/III_liga_polska_w_pi%C5%82ce_no%C5%BCnej_(2002/2003)
+2002/03	Polish Lower Division	Jagiellonia Bialystok	5551	Jagiellonia Bialystok	Polish Second Division	https://pl.wikipedia.org/wiki/III_liga_polska_w_pi%C5%82ce_no%C5%BCnej_(2002/2003)
+2002/03	Polish Lower Division	Polonia Bytom	8923	Polonia Bytom	Polish Second Division	https://pl.wikipedia.org/wiki/III_liga_polska_w_pi%C5%82ce_no%C5%BCnej_(2002/2003)
+2002/03	Polish Lower Division	Zaglebie Sosnowiec	13068	Zaglebie Sosnowiec	Polish Second Division	https://pl.wikipedia.org/wiki/III_liga_polska_w_pi%C5%82ce_no%C5%BCnej_(2002/2003)
 2003/04	cro_a2a	Međimurje	2128	NK Cakovec	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2a	Belišće	1466	NK Belisce	Croatian First Division	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2a	Vukovar '91	12620	HNK Vukovar '91	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League

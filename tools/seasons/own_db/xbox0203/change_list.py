@@ -33,7 +33,8 @@ answer takes it, the 3.9.68 value stays).
   summary gives the proof and its limit. Q25: the rating changes of all clear matches apply, major or not.
 - Kind 5 leagues: every club whose division differs between the 3.9.68 club.dat, the Xbox club.dat and the
   2002/03 club-table row, and every club-table row with no club id (Q15). Q24 (league_decision): the Xbox league
-  where the Xbox data and the club table agree, the 3.9.68 league where the club table agrees with 3.9.68. The
+  where the Xbox data and the club table agree, the 3.9.68 league where the club table agrees with 3.9.68 (or with
+  a 3.9.68 group of a real division that 3.9.68 splits, SPLIT). The
   rest go to leagues-second-look.tsv, sorted by nation, and keep the 3.9.68 league in this build.
 - Kind 6 names and competitions: club names and nations that differ, clubs and competitions in one set only, and
   the clubs of the Xbox Turkish Category B groups (Q11). The Fiorentina name (Q5) applies. The three groups are
@@ -301,6 +302,11 @@ def real_division(label):
     return label
 
 
+# A real division that 3.9.68 splits into groups: the club table agrees with 3.9.68 when the club is in one of them
+# (Ykkönen, one group from 2003, is the Xbox "Finnish First Division" and the 3.9.68 North and South divisions).
+SPLIT = {"Finnish First Division": ("Finnish First Division North", "Finnish First Division South")}
+
+
 def league_decision(a, b, vs, real, comp_ids):
     """(decision, rule, 3.9.68 competition id or -1) of a league row by Q24. a and b are the 3.9.68 and Xbox
     division names, vs the Xbox division against the 2002/03 club table, real the table's game divisions."""
@@ -309,7 +315,7 @@ def league_decision(a, b, vs, real, comp_ids):
             return APPLIED, "Q24: the Xbox data and the club table agree, the Xbox league", comp_ids[b]
         return HELD, ("Q24 second look: the Xbox league agrees with the club table, but 3.9.68 has no "
                       "competition of that name (the Turkish groups wait for the group rows)"), -1
-    if a in real:
+    if a in real or any(a in SPLIT.get(r, ()) for r in real):
         return KEPT, "Q24: the club table agrees with 3.9.68, the 3.9.68 league stays", -1
     return HELD, "Q24 second look: no rule settles the row, the 3.9.68 league stays in this build", -1
 
