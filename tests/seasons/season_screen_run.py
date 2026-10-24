@@ -156,6 +156,9 @@ def main(argv):
     only = argv[argv.index("--only") + 1] if "--only" in argv else None
     shots = os.path.abspath(argv[argv.index("--shots") + 1]) if "--shots" in argv else None
     own = os.path.abspath(argv[argv.index("--own-zips") + 1]) if "--own-zips" in argv else None
+    if only in ("2002", "2004", "2006") and not own:
+        print(f"FAIL  run {only} needs --own-zips (our own databases)")
+        return 1
     if own:
         RUNS[2002] = ("folder:Summer 2002", "Summer 2002")
         RUNS[2004] = ("folder:Summer 2004", "Summer 2004")

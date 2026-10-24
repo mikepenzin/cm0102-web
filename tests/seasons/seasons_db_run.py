@@ -288,14 +288,17 @@ def main(argv):
         check(status == PREPARE["OK"] and unpacked == 0, "an unpacked season starts without its zip")
 
         # the 2002/03 tile with Summer 2002 (slice 4 of the Summer 2002 spec)
-        if own:
+        plain = "/Users/max/Projects/cm0102/clean-3968/Data"     # the 3.9.68 data of this Mac (handover)
+        if own and not os.path.isdir(plain):
+            print(f"note  {plain} is not there: the 2002/03 check is skipped")
+        elif own:
             out3 = os.path.join(work, "z3")
             r = subprocess.run([sys.executable, "-I", MAKE, "--season-dbs", own, "--out", out3, "--only", "Summer 2002"],
                                capture_output=True, text=True)
             check(r.returncode == 0, f"make_season_zips.py Summer 2002: {r.stdout.splitlines()[-1:] or r.stderr[-200:]}")
             shutil.copy(os.path.join(out3, "Summer 2002.zip"), os.path.join(game, "Seasons", "Summer 2002.zip"))
             base = os.path.join(save, "Databases", "Plain 3.9.68")
-            shutil.copytree("/Users/max/Projects/cm0102/clean-3968/Data", base)
+            shutil.copytree(plain, base)
             rows, custom = scan(tool, game, save)
             check(rows["2002/03"] == (STATUS["IN_DOWNLOAD"], "") and "Plain 3.9.68" not in custom,
                   f"scan: 2002/03 has Summer 2002 in the download and no other version ({rows['2002/03']})")

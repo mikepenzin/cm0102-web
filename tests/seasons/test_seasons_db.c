@@ -213,7 +213,7 @@ static void test_table(void)
         else CHECK(k && k->season == y);
     }
     CHECK(have == 24);
-    CHECK(!strcmp(seasons_db_for_season(2002)->name, "Summer 2002"));
+    CHECK(seasons_db_for_season(2002) && !strcmp(seasons_db_for_season(2002)->name, "Summer 2002"));
     for (int i = 0; i < seasons_known_count; i++)
         for (int j = i + 1; j < seasons_known_count; j++)
             CHECK(seasons_known_dbs[i].club_size != seasons_known_dbs[j].club_size ||
