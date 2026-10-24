@@ -169,6 +169,13 @@ assert not set(DIVISION_INSNS) & (set(INSNS) | set(PATCHES)) and not set(DIVISIO
 INSNS.update(DIVISION_INSNS)
 PATCHES.update(DIVISION_PATCHES)
 
+# The Turkish Category B in three groups with Summer 2002: the group sizes of TurSecondB (tur_groups.py).
+from tur_groups import INSNS as TUR_INSNS, PATCHES as TUR_PATCHES  # noqa: E402
+
+assert not set(TUR_INSNS) & (set(INSNS) | set(PATCHES)) and not set(TUR_PATCHES) & (set(PATCHES) | set(INSNS))
+INSNS.update(TUR_INSNS)
+PATCHES.update(TUR_PATCHES)
+
 # A fix for the error box league_stage.cpp 533 of a league load (league_load.py): a row array of 0 bytes.
 from league_load import INSNS as LOAD_INSNS  # noqa: E402
 

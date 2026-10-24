@@ -17,7 +17,7 @@ CALLBACK_FILES = ("picker.c", "assistant.c", "commentary.c", "holiday_next.c", "
                   "season_change.c", "season_kind_club_world.c", "season_comps.c", "season_bra_states.c",
                   "season_super_cups.c", "season_new_cups.c", "season_cup_groups.c",
                   "season_club_cups.c", "season_playoffs.c", "season_nl.c", "season_nl_euro.c", "season_nl_wc.c",
-                  "season_gold_cup.c", "season_divisions.c", "screen_sweep.c")
+                  "season_gold_cup.c", "season_divisions.c", "season_tur_groups.c", "screen_sweep.c")
                                 # in src/recomp_rt/win
 
 # address: (bytes of the first eight, name)
@@ -180,6 +180,13 @@ CALLBACKS = {
     # season_bra_states.c (slice 20e): the state championships of Brazil
     0x687430: ("81ec080200005355", "League: add a club to the table row (row, club, 0, 0), thiscall"),
     0x435340: ("6aff683948950064", "BraRegNorth::BraRegNorth, thiscall (year, record), ret 8"),
+    # season_tur_groups.c (Summer 2002 slice 5): the Turkish Category B in three groups
+    0x53FE50: ("81ec080200008b84", "the compare of the Turkish group deal 0x8fe580 (passed to qsort)"),
+    0x8FF7E0: ("8a44240481ec0802", "TurSecondB::create_schedule, thiscall (stage, &count, &code, &flag), ret 0x10"),
+    0x7D2CD0: ("81ec04020000558b", "PorSecondB::set_predicted_positions (own table and slots 0, 1), thiscall"),
+    0x4241B0: ("8b4424048b490856", "BelThird::set_club_progress (three groups), thiscall, ret 0x14"),
+    0x684640: ("83ec0c5355568bf1", "League::record_season_honours, thiscall"),
+    0x48C6D0: ("8b44241453565785", "Comp::build_fate_news_text, thiscall, ret 0x28"),
 }
 
 
