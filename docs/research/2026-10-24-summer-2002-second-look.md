@@ -220,6 +220,151 @@ clubs that join Série C from no division, or the Croatian clubs that drop to co
 | United States | Miami Fusion FC | 7347 | American Major League | none | no move of this kind applies: nothing moves the other way |
 | United States | Tampa Bay Mutiny | 11353 | American Major League | none | no move of this kind applies: nothing moves the other way |
 
+### On the 2002/03 tile (Q42, slice 4)
+
+The season code moves clubs at a 2002/03 start by the 2002/03 rows of the club tables (`rules-0.6.0/*-clubs.tsv`,
+`season_clubs.c` move_clubs), up to the class count of each division. Q42: it applies only the held moves that a
+2002/03 row gives. A test game (2002/03, Summer 2002, every nation, `RECOMP_CLUB_DUMP`) shows where each club ends.
+Of the 117 applied moves, 116 stay in their checked division. The one other, Yimpas Yozgatspor (13032), goes to the
+Turkish Lower Division because the 2002/03 Category A row names the 3. Lig club Yozgatspor (13033); branch
+claude/club-ids (0f616da3) corrects that id.
+
+Of the 157 held moves, 37 end in their checked division on the tile. 34 have a 2002/03 club-table row, but the class
+count of the division holds them (the list has more clubs than the class takes, `season_clubs.c` CLASS_SIZE and
+`season_sizes`). The other 86 have no 2002/03 row for their checked division, or another row, and wait for
+2002/03 lists of those divisions (out of scope for 0.6.0).
+
+Held by the class count (34):
+
+| Nation | Club | Id | Checked division | Division on the tile |
+|---|---|---|---|---|
+| Brazil | Americano Futebol Clube (RJ) | 679 | Brazilian National Third Division | none |
+| Brazil | Associação Atlética Francana | 4156 | Brazilian National Third Division | none |
+| Brazil | Associação Atlética Portuguesa (RJ) | 9003 | Brazilian National Third Division | none |
+| Brazil | Associação Desportiva Cabofriense | 2109 | Brazilian National Third Division | none |
+| Brazil | Botafogo Futebol Clube (SP) | 1788 | Brazilian National Third Division | none |
+| Brazil | Caxias Futebol Clube | 2311 | Brazilian National Third Division | none |
+| Brazil | Clube Atlético Bragantino | 1818 | Brazilian National Third Division | none |
+| Brazil | Comercial Esporte Clube | 2676 | Brazilian National Third Division | none |
+| Brazil | Desportiva Capixaba | 3049 | Brazilian National Third Division | none |
+| Brazil | Esporte Clube São José | 10179 | Brazilian National Third Division | none |
+| Brazil | Esporte Clube XV de Novembro | 12940 | Brazilian National Third Division | none |
+| Brazil | Estrela do Norte Futebol Clube | 3680 | Brazilian National Third Division | none |
+| Brazil | Goytacaz Futebol Clube | 4520 | Brazilian National Third Division | none |
+| Brazil | Grêmio Esportivo Brasil | 1841 | Brazilian National Third Division | none |
+| Brazil | Grêmio de Esportes Maringá | 4589 | Brazilian National Third Division | none |
+| Brazil | Iraty Sport Club | 5427 | Brazilian National Third Division | none |
+| Brazil | Ituiutaba Esporte Clube | 5479 | Brazilian National Third Division | none |
+| Brazil | Macaé Sports | 6935 | Brazilian National Third Division | none |
+| Brazil | Rio Branco Atlético Clube | 9568 | Brazilian National Third Division | none |
+| Brazil | Serra Futebol Clube | 10357 | Brazilian National Third Division | none |
+| Brazil | Tuna Luso Brasileira | 11861 | Brazilian National Third Division | none |
+| Brazil | Tupi Football Club | 11870 | Brazilian National Third Division | none |
+| Brazil | Uberaba Sport Club | 11987 | Brazilian National Third Division | none |
+| Finland | FC Jokerit | 3801 | Finnish Premier Division | Finnish First Division South |
+| Finland | FC KooTeePee | 6105 | Finnish Premier Division | Finnish First Division South |
+| Germany | Eintracht Frankfurt Amateure | 4163 | German Regional Division South | German Regional Division North |
+| Northern Ireland | Ards | 813 | Northern Irish League Premier Division | Northern Irish League First Division |
+| Northern Ireland | Institute | 5373 | Northern Irish League Premier Division | Northern Irish League First Division |
+| Republic of Ireland | Bray Wanderers A.F.C. | 1855 | Irish First Division | Irish Premier Division |
+| Republic of Ireland | Dundalk F.C. | 3329 | Irish First Division | Irish Premier Division |
+| Russia | Metallurg Lipetsk | 7301 | Russian First Division | Russian Second Division - Central |
+| Russia | Metallurg-Zapsib Novokuznetsk | 7304 | Russian First Division | Russian Second Division - East |
+| Russia | Uralmash Yekaterinburg | 12117 | Russian First Division | Russian Second Division - Ural |
+| South Korea | Sangmoo | 10106 | Korean League | Korean Amateur League |
+
+Waiting for a 2002/03 list (86):
+
+| Nation | Club | Id | Checked division | Division on the tile |
+|---|---|---|---|---|
+| - | Choisy-le-Roy | 2516 | French Lower Division | none |
+| - | JCO Le Creusot | 5508 | French Lower Division | none |
+| - | Luçon | 6793 | French Lower Division | none |
+| - | Stade Lannionnais | 6369 | French Lower Division | none |
+| - | US Corte | 2755 | French Lower Division | none |
+| Argentina | Belgrano de Mendoza | 1463 | A Lower Division | Argentine Third Division |
+| Argentina | Central Córdoba de Rosario | 2841 | Argentine Third Division | Argentine Second Division |
+| Argentina | Chaco For Ever | 4107 | A Lower Division | Argentine Third Division |
+| Argentina | Chacras de Coria | 2391 | A Lower Division | Argentine Third Division |
+| Argentina | Cultural Argentino de General Pico | 2853 | A Lower Division | Argentine Third Division |
+| Argentina | Deportivo Merlo | 7273 | A Lower Division | Argentine Third Division |
+| Argentina | General Belgrano de La Pampa | 4340 | A Lower Division | Argentine Third Division |
+| Argentina | Huracán de Mendoza | 5214 | A Lower Division | Argentine Third Division |
+| Argentina | Independiente Rivadavia de Mendoza | 5347 | Argentine Third Division | Argentine Second Division |
+| Argentina | Ituzaingó | 5481 | A Lower Division | Argentine Third Division |
+| Argentina | Liniers de Bahía Blanca | 6609 | A Lower Division | Argentine Third Division |
+| Argentina | Patronato de Paraná | 8628 | A Lower Division | Argentine Third Division |
+| Argentina | Platense | 8840 | Argentine Third Division | Argentine Second Division |
+| Argentina | Racing de Córdoba | 9267 | Argentine Third Division | Argentine Second Division |
+| Argentina | San Martín de Tucumán | 10068 | A Lower Division | Argentine Third Division |
+| Argentina | Sportivo Barraca de Paso de los Libres | 10944 | A Lower Division | Argentine Third Division |
+| Argentina | Villa Mitre de Bahía Blanca | 12489 | Argentine Third Division | Argentine Second Division |
+| Croatia | Buducnost Podbrest | 1976 | Croatian Lower Division | Croatian Third Division North |
+| Croatia | DOSK | 2889 | Croatian Lower Division | Croatian Third Division South |
+| Croatia | Drava | 3267 | Croatian Lower Division | Croatian Third Division North |
+| Croatia | HNK Segesta | 10300 | Croatian Third Division Central | Croatian First Division |
+| Croatia | Ivancica | 5484 | Croatian Third Division North | Croatian Second Division North |
+| Croatia | Kucan '99 | 6197 | Croatian Lower Division | Croatian Third Division North |
+| Croatia | NK Bedem | 1431 | Croatian Third Division East | Croatian Second Division North |
+| Croatia | NK Bjelovar | 1625 | Croatian Third Division North | Croatian First Division |
+| Croatia | NK Garic | 4309 | Croatian Lower Division | Croatian Third Division North |
+| Croatia | NK Lokomotiva Cestorad | 6716 | Croatian Lower Division | Croatian Third Division East |
+| Croatia | NK Metalac (S) | 7289 | Croatian Lower Division | Croatian Second Division North |
+| Croatia | NK Mladost Fazana | 7432 | Croatian Lower Division | Croatian Third Division West |
+| Croatia | NK Mladost Molve | 7435 | Croatian Third Division North | Croatian Second Division North |
+| Croatia | NK Moslavac | 7579 | Croatian Lower Division | Croatian Third Division Central |
+| Croatia | NK Moslavina | 7580 | Croatian Lower Division | Croatian Third Division Central |
+| Croatia | NK Mosor | 7581 | Croatian Third Division South | Croatian Second Division South |
+| Croatia | NK Omladinac (C) | 8275 | Croatian Lower Division | Croatian Third Division North |
+| Croatia | NK Orkan | 8339 | Croatian Lower Division | Croatian Third Division South |
+| Croatia | NK Ostrc | 8395 | Croatian Lower Division | Croatian Third Division Central |
+| Croatia | NK Otocac | 8403 | Croatian Lower Division | Croatian Third Division West |
+| Croatia | NK Papuk | 8582 | Croatian Third Division North | Croatian Second Division North |
+| Croatia | NK Pitomaca | 8832 | Croatian Lower Division | Croatian Third Division North |
+| Croatia | NK Primorac | 9066 | Croatian Lower Division | Croatian Third Division South |
+| Croatia | NK Radnik | 9300 | Croatian Lower Division | Croatian Third Division Central |
+| Croatia | NK Samobor | 10020 | Croatian Third Division Central | Croatian Second Division South |
+| Croatia | NK Sloga (C) | 10671 | Croatian Third Division North | Croatian Third Division South |
+| Croatia | NK Spansko | 10839 | Croatian Lower Division | Croatian Third Division Central |
+| Croatia | NK TSK | 11312 | Croatian Second Division South | Croatian First Division |
+| Croatia | NK Tomislav | 11649 | Croatian Lower Division | Croatian Third Division East |
+| Croatia | NK Trnje | 11809 | Croatian Third Division Central | Croatian Second Division South |
+| Croatia | NK Trnje (T) | 11810 | Croatian Lower Division | Croatian Third Division North |
+| Croatia | NK Zminj | 13160 | Croatian Third Division West | none |
+| Croatia | NK Zrinski | 13174 | Croatian Lower Division | Croatian Third Division East |
+| Finland | FC HIFK | 4728 | Finnish Lower Division | Finnish First Division South |
+| Finland | FC Mikkeli | 3827 | Finnish Lower Division | Finnish Second Division East |
+| Finland | Hangö Idrottsklubb | 3790 | Finnish Lower Division | none |
+| Finland | IF Gnistan | 4454 | Finnish Second Division South | Finnish First Division South |
+| Finland | Mikkelin Pallo | 7346 | Finnish Lower Division | Finnish Second Division East |
+| Finland | Oulun Tervarit | 11488 | Finnish Second Division North | Finnish First Division North |
+| Finland | Salon Palloilijat | 9979 | Finnish Second Division West | Finnish First Division South |
+| Finland | TPV Tampere | 11307 | Finnish Second Division West | Finnish First Division North |
+| Finland | Terjärv US | 11315 | Finnish Second Division North | Finnish Lower Division |
+| Germany | 1.FC Köln U23 | 5929 | German Regional Division North | A Lower Division |
+| Poland | Jagiellonia Bialystok | 5551 | Polish Lower Division | none |
+| Poland | Polonia Bytom | 8923 | Polish Lower Division | none |
+| Russia | Biokhimik-Mordovia Saransk | 1601 | Russian Second Division - Central | Russian Second Division - Volga |
+| Russia | Mosgaz Moscow | 7574 | Russian Lower Division | Russian Second Division - Central |
+| Turkey | Batman Petrolspor | 1148 | Turkish 2. Division Category B G5 | Turkish 2. Division Category A |
+| Turkey | Ispartaspor | 5459 | Turkish Lower Division | Turkish 2. Division Category B G2 |
+| Turkey | Muglaspor | 7627 | Turkish 2. Division Category B G2 | none |
+| Turkey | Siirt JETPAspor | 10515 | Turkish 2. Division Category B G5 | Turkish 2. Division Category A |
+| Turkey | Vanspor A.S. | 12254 | Turkish Lower Division | Turkish 2. Division Category B G5 |
+| Turkey | Çubukspor | 2844 | Turkish 2. Division Category B G4 | none |
+| United States | Boston Bulldogs | 1780 | none | American D3-Pro League |
+| United States | Chico Rooks | 2490 | none | American D3-Pro League |
+| United States | Connecticut Wolves | 2702 | none | American A-League |
+| United States | Hershey Wildcats | 5013 | none | American A-League |
+| United States | Long Island Rough Riders | 6728 | American D3-Pro League | American A-League |
+| United States | Miami Fusion FC | 7347 | none | American Major League |
+| United States | Rhode Island Stingrays | 9517 | none | American D3-Pro League |
+| United States | San Diego Flash | 10036 | none | American A-League |
+| United States | Stanislaus County Cruisers | 11056 | none | American D3-Pro League |
+| United States | Tampa Bay Mutiny | 11353 | none | American Major League |
+| United States | Tucson Fireballs | 11851 | none | American D3-Pro League |
+
+
 ## 2. Held staff rows
 
 25 rows: 16 moves and 3 date rows held by a full club list, and 6 rows where the Xbox job is player and the 3.9.68
