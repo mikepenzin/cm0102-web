@@ -20,6 +20,12 @@ Output, in the shapes of read_fm2005.py and read_fm2007.py, so that match.py, le
 - clubhist.pkl   (competition, club, year, position, 0, 0, 0, 0, 0, 0, 0) for the first to fourth place of each
                  row of club_comp_history.dat. Years are as stored. Played, won, goals and points are not in the
                  file and are 0.
+                 Limit for slice 2: the file holds cup results as well as league results, and only the first four
+                 places. leagues.py reads these rows as full league tables, so slice 2 must pick the league
+                 competitions (or use the template's club rows) before it runs leagues.py on this source.
+                 match.py, leagues.py and convert.py also open the template with cmdb.Folder, which reads format 2
+                 only, so slice 2 needs cmdb1.Folder1 there. A player-manager (flags 3) has job 1, a job byte with no
+                 FM code has job 0 (convert.py keeps the template row for both).
 - comphist.pkl   (competition, year, (team 1 to 4, then 0xffffffff twice)) for each row of club_comp_history.dat
                  and nation_comp_history.dat. 0xffffffff is no team.
 - ratings.pkl    {people_all index: dict(ca, pa, rep, row, pos, attrs)} for each player. pos is by FM's older
@@ -27,7 +33,7 @@ Output, in the shapes of read_fm2005.py and read_fm2007.py, so that match.py, le
                  keyplayers.py reads them as it reads FM's. No loans.pkl or careers.pkl: CM data has no loans, and
                  careers are in the template.
 
-Checks printed at the end: Henry (Arsenal, 181/189 on the Xbox data), Ronaldo (Real Madrid), Ferguson (Manchester
+Checks printed at the end: Henry (Arsenal, with his ratings), Ronaldo (Real Madrid), Ferguson (Manchester
 United) and Celestini (Olympique Marseille on the Xbox data).
 """
 import collections
@@ -45,8 +51,8 @@ from cmdb1 import need, u  # noqa: E402
 from keyplayers import CM_ATTRS, FM_OLD  # noqa: E402
 
 NO_TEAM = 0xffffffff
-FM_JOB = {5: 16, 6: 20, 8: 2, 9: 14, 10: 12}       # CM job byte (0x3d) -> FM job code; the reverse of convert.JOBS
-FLAGS = {1, 2, 3}                                  # bit 1 non-player, bit 2 player
+FM_JOB = {5: 16, 6: 20, 8: 2, 9: 14, 10: 12}       # CM job byte (0x3d) to FM job code, the reverse of convert.JOBS
+FLAGS = {1, 2, 3}                                  # 1 non-player, 2 player, 3 both (player-manager)
 
 
 def names_of(F, tid):
@@ -154,10 +160,13 @@ def facts(path):
 
 
 def show(out, name, first, second=None, year=None):
-    """Print the people with these names (last word of the full name matches too)."""
-    hits = [(i, x) for i, x in enumerate(out["people_all"])
-            if cmdb.norm(x["sn"]) == cmdb.norm(second or first) and (second is None or cmdb.norm(x["fn"]) == cmdb.norm(first))
-            or (second is None and cmdb.norm(x["cn"] or "") == cmdb.norm(first))]
+    """Print the people named first + second, or with the surname or common name `first` when second is None."""
+    def named(x):
+        if second is None:
+            return first_n in (cmdb.norm(x["sn"]), cmdb.norm(x["cn"] or ""))
+        return cmdb.norm(x["sn"]) == cmdb.norm(second) and cmdb.norm(x["fn"]) == first_n
+    first_n = cmdb.norm(first)
+    hits = [(i, x) for i, x in enumerate(out["people_all"]) if named(x)]
     hits = [(i, x) for i, x in hits if year is None or (x["dob"] and x["dob"].year == year)]
     hits.sort(key=lambda t: -(out["ratings"].get(t[0]) or {}).get("ca", 0))
     for i, x in hits[:3]:
@@ -184,6 +193,7 @@ def main(argv):
     print("history teams not in the club tables:", dangling)
     print("jobs", collections.Counter(x["job"] for x in P).most_common(10))
     yrs = [h[2] for h in out["clubhist"]]
+    need(yrs, "club_comp_history.dat has no rows")
     print("history years", min(yrs), "to", max(yrs))
     show(out, "Henry", "Thierry", "Henry", 1977)
     show(out, "Ronaldo", "Ronaldo")

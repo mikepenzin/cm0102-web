@@ -6,7 +6,7 @@ untrusted input, so every read is checked and a folder of another shape stops th
 
 Format 1 staff row (found in the data and proved by the player links): ids of the first, second and common name at
 4, 8 and 12; date of birth at 0x10; nation at 0x1a; club at 0x39; job at 0x3d; joined at 0x3e; contract end at
-0x46; flags at 0x5f (bit 2 player, bit 1 non-player); row id in the player table (10) at 0x91; row id in the
+0x46; flags at 0x5f (2 player, 1 non-player, 3 both); row id in the player table (10) at 0x91; row id in the
 non-player table (9) at 0x99. Player row (70 bytes): current and potential ability as i16 at 5 and 7, three
 reputations as i16 at 9, 12 position bytes at 0x0f, 42 attribute bytes from 0x1b.
 """
@@ -52,6 +52,7 @@ class Folder1(cmdb.Folder):
     """cmdb.Folder for a folder whose staff table is in format 1. Same rows() and table() calls."""
 
     def __init__(self, path):
+        need(os.path.isfile(os.path.join(path, "index.dat")), f"{path}: there is no index.dat")
         super().__init__(path)
         ib = self.raw.get("index.dat")
         need(ib is not None and len(ib) >= 8 and (len(ib) - 8) % 67 == 0,

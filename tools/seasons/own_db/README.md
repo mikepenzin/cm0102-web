@@ -1,10 +1,13 @@
 # Own season databases
 
-These tools build the 2004/05 and 2006/07 season databases (Q351). The Summer 2002 database (spec `docs/specs/2026-10-24-summer-2002-db-spec.md`) uses the same process with a format 1 reader. The facts come from Football Manager 2005 and
+These tools build the 2004/05 and 2006/07 season databases (Q351). The facts come from Football Manager 2005 and
 2007: names, dates of birth, nations, clubs, jobs, contracts, loans (2004/05), careers, final tables and
 competition winners. The ratings and positions come from the Update Team databases. Key players with no Update
 Team record (Q383) are the one exception: FM's rating of each is the reference for his ratings (Max, 2026-10-17),
 through a mapping that `keyplayers.py` derives from the matched players and prints at each run.
+
+The Summer 2002 database (spec `docs/specs/2026-10-24-summer-2002-db-spec.md`) uses the same process with a format 1
+reader.
 
 The Football Manager discs are untrusted data. Mount an image read-only. Read it only with `python3 -I`. Run
 nothing from it. Keep the disc files, the facts and the work folders outside the repo. Commit no Football Manager
@@ -86,7 +89,7 @@ python3 -I xbox0203/read_xbox0203.py "<3.9.68 Data>" "<facts-3968>"
 python3 -I test_format1.py
 ```
 
-Each run prints the counts and the known facts: Henry (181/189 at Arsenal), Ronaldo (Real Madrid), Ferguson
+Each run prints the counts and the known facts: Henry (Arsenal, with his ratings), Ronaldo (Real Madrid), Ferguson
 (Manchester United) and, on the Xbox data, Celestini (Olympique Marseille). The later steps (season settings,
 change list, build) are slices 2 and 3 of the spec.
 

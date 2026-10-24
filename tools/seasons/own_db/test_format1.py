@@ -1,7 +1,8 @@
-"""Cases for the format 1 reader (cmdb1.py, xbox0203/read_xbox0203.py) on a folder made here. usage: python3 -I test_format1.py
+"""Cases for the format 1 reader (cmdb1.py, xbox0203/read_xbox0203.py) on a folder made here.
+Usage: python3 -I test_format1.py
 
-The folder is synthetic: two nations, two clubs, a player (Thierry Henry, 181/189), a manager and a bad copy of the
-folder for each check that must stop the script. No game data is in the repo.
+The folder is synthetic: one nation, two clubs, an invented player (Tom Test, 150/160), an invented manager and
+a bad copy of the folder for each check that must stop the script. No game data is in the repo.
 """
 import datetime
 import os
@@ -77,8 +78,8 @@ def hist_row(i, comp, year, clubs):
 
 def build(path, version=1, bad=None):
     """Write a format 1 folder. `bad` names one fault: club, name, flags, player, date, short, history."""
-    names13, names14, names15 = [name_row("Thierry", 0), name_row("Alex", 1)], [name_row("Henry", 0), name_row(
-        "Ferguson", 1)], [name_row("Titi", 0)]
+    names13, names14, names15 = [name_row("Tom", 0), name_row("Ann", 1)], [name_row("Test", 0), name_row(
+        "Boss", 1)], [name_row("Tommy", 0)]
     clubs0 = [club_row(0, "Arsenal", 0), club_row(1, "Manchester United", 0)]
     staff = [staff_row(0, 0, 0, 0, (228, 1977), 0, 99 if bad == "club" else 0, 11, (214, 1999), (180, 2004), 2, 0, -1),
              staff_row(1, 1, 1, -1, (364, 1941), 0, 1, 5, (287, 1986), (180, 2005), 1, -1, 0)]
@@ -90,7 +91,7 @@ def build(path, version=1, bad=None):
         staff[0] = staff_row(0, 0, 0, 0, (228, 1977), 0, 0, 11, (214, 1999), (180, 2004), 2, 5, -1)
     if bad == "date":
         staff[0] = staff_row(0, 0, 0, 0, (900, 1977), 0, 0, 11, (214, 1999), (180, 2004), 2, 0, -1)
-    staff_file = b"".join(staff) + b"".join([bytes(68)]) + player_row(181, 189)
+    staff_file = b"".join(staff) + bytes(68) + player_row(150, 160)
     if bad == "short":
         staff_file = staff_file[:-30]
     ch = [hist_row(0, 7, 2002, (0, 1, -1, -1))]
@@ -129,16 +130,16 @@ def main():
         build(os.path.join(t, "ok"))
         out, dangling = rx.facts(os.path.join(t, "ok"))
         P, R = out["people_all"], out["ratings"]
-        want = [
+        have = [
             (P[0]["fn"], P[0]["sn"], P[0]["cn"], P[0]["dob"], P[0]["club"], P[0]["job"], P[0]["role"]),
             (P[1]["sn"], P[1]["cn"], P[1]["dob"], P[1]["club"], P[1]["job"], P[1]["role"]),
         ]
-        have = [
-            ("Thierry", "Henry", "Titi", datetime.date(1977, 8, 17), 0, 1, "player"),
-            ("Ferguson", None, datetime.date(1941, 12, 31), 1, 16, "staff"),
+        want = [
+            ("Tom", "Test", "Tommy", datetime.date(1977, 8, 17), 0, 1, "player"),
+            ("Boss", None, datetime.date(1941, 12, 31), 1, 16, "staff"),
         ]
-        bad += [(a, b) for a, b in zip(want, have) if a != b]
-        if (R[0]["ca"], R[0]["pa"], R[0]["rep"]) != (181, 189, (100, 150, 190)) or list(R) != [0]:
+        bad += [(a, b) for a, b in zip(have, want) if a != b]
+        if (R[0]["ca"], R[0]["pa"], R[0]["rep"]) != (150, 160, (100, 150, 190)) or list(R) != [0]:
             bad.append(("ratings", R))
         if R[0]["pos"]["Goalkeeper"] != 1 or R[0]["attrs"]["Acceleration"] != 100 or "Versatility" not in R[0]["attrs"]:
             bad.append(("positions or attributes", R[0]))
@@ -161,6 +162,13 @@ def main():
     # cmdb.py still refuses format 1 and still reads the table size 110 of format 2.
     if cmdb.REC[6] != 110:
         bad.append(("cmdb.REC[6] changed", cmdb.REC[6]))
+    with tempfile.TemporaryDirectory() as t:
+        build(os.path.join(t, "ok"))
+        try:
+            cmdb.Folder(os.path.join(t, "ok")).table(6)
+            bad.append(("cmdb.py reads format 1",))
+        except SystemExit:
+            pass
     for x in bad:
         print("FAIL", x)
     print("PASS" if not bad else f"FAILED: {len(bad)}")
