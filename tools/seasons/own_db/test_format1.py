@@ -3,7 +3,6 @@
 The folder is synthetic: two nations, two clubs, a player (Thierry Henry, 181/189), a manager and a bad copy of the
 folder for each check that must stop the script. No game data is in the repo.
 """
-import copy
 import datetime
 import os
 import struct

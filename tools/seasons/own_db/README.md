@@ -1,6 +1,6 @@
 # Own season databases
 
-These tools build the 2004/05 and 2006/07 season databases (Q351). The facts come from Football Manager 2005 and
+These tools build the 2004/05 and 2006/07 season databases (Q351). The Summer 2002 database (spec `docs/specs/2026-10-24-summer-2002-db-spec.md`) uses the same process with a format 1 reader. The facts come from Football Manager 2005 and
 2007: names, dates of birth, nations, clubs, jobs, contracts, loans (2004/05), careers, final tables and
 competition winners. The ratings and positions come from the Update Team databases. Key players with no Update
 Team record (Q383) are the one exception: FM's rating of each is the reference for his ratings (Max, 2026-10-17),
@@ -65,6 +65,30 @@ the original game's 23,000 extra staff rows (else it stops at "Database.cpp 1844
 `<conv>` is a new folder for the converter's output. The overrides file (identity decisions per key player, see
 `keyplayers.py`) names FM rows, so it stays in the work folder with the FM data. Two builds with different
 `PYTHONHASHSEED` values (run with `python3 -P -s`, because `-I` ignores the seed) give the same files.
+
+## 2002/03 (Summer 2002), slice 1: the format 1 reader
+
+The facts come from the data folder of Championship Manager: Season 02/03 (Xbox, SI). The template is the 3.9.68
+`Data` folder. Both store the staff table in format 1 (157 bytes per row), which `cmdb.py` refuses on purpose.
+`cmdb1.py` reads format 1 and `xbox0203/read_xbox0203.py` writes the facts pickles in the shape of the FM readers
+(its header lists them). The Xbox disc is untrusted data: copy `data` from the mounted image, read it only with
+`python3 -I`, and keep the data and the facts outside the repo. Commit no Xbox data and nothing made from it.
+
+| Placeholder | What it is |
+|---|---|
+| `<xbox data>` | the `data` folder of the Xbox disc, copied as data |
+| `<3.9.68 Data>` | the `Data` folder of the clean 3.9.68 game |
+| `<facts-xbox>`, `<facts-3968>` | new folders for the two sets of facts pickles |
+
+```bash
+python3 -I xbox0203/read_xbox0203.py "<xbox data>" "<facts-xbox>"
+python3 -I xbox0203/read_xbox0203.py "<3.9.68 Data>" "<facts-3968>"
+python3 -I test_format1.py
+```
+
+Each run prints the counts and the known facts: Henry (181/189 at Arsenal), Ronaldo (Real Madrid), Ferguson
+(Manchester United) and, on the Xbox data, Celestini (Olympique Marseille). The later steps (season settings,
+change list, build) are slices 2 and 3 of the spec.
 
 ## Mapping of FM ratings (key players only)
 
