@@ -100,14 +100,16 @@ unclear people and template duplicate pairs. `summary.md` gives the counts and t
 The header of the script gives the rules. `<changes>` is a new folder outside the repo.
 
 ```bash
-python3 -I xbox0203/change_list.py "<facts-xbox>" "<facts-3968>" "<xbox data>" "<3.9.68 Data>" "<changes>" --league-check "<all-results.tsv>"
+python3 -I xbox0203/change_list.py "<facts-xbox>" "<facts-3968>" "<xbox data>" "<3.9.68 Data>" "<changes>" --league-check "<all-results.tsv>" --places "<places-2001-02.tsv>"
 python3 -I test_change_list.py
 ```
 
 The list applies Max's answers Q21 to Q28: each row is applied, kept (an answer keeps the 3.9.68 value) or held
 (no answer takes it). The league rows that no answer settles go to `leagues-second-look.tsv`, sorted by nation.
 `--league-check` takes the check of every league row with two public sources (`xbox-0203-work/league-check/
-all-results.tsv`, outside the repo) and applies Max's answers Q33 to Q37 to it (`league_check`).
+all-results.tsv`, outside the repo) and applies Max's answers Q33 to Q37 to it (`league_check`). Q39 keeps every
+division at its 3.9.68 club count (`balance`); `--places` gives the 2001/02 final places that decide which move
+is held (`move_key`).
 
 ## 2002/03 (Summer 2002), slice 3: the build
 

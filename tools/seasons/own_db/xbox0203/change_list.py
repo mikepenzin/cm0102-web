@@ -949,7 +949,34 @@ def read_ranks(path):
     return ranks, rep
 
 
-def balance(rows5, div_t, comps_t, ranks, rep):
+def read_places(path):
+    """{club id: row} of the 2001/02 final places (league-check/places-2001-02.tsv: place, table_size, how,
+    table_name, source, in_left_division)."""
+    with open(path, newline="", encoding="utf-8") as h:
+        return {int(r["id_3968"]): r for r in csv.DictReader(h, delimiter="\t", quoting=csv.QUOTE_NONE)}
+
+
+def move_key(c, up, places, rep):
+    """The order in which balance takes the moves of one kind (the first are applied, the last held), by the rule
+    of Q39: a club that was not in the division it leaves (the 3.9.68 row is out of date) first; then, going down,
+    the club with the worst 2001/02 place first (the relegated club with the best place stays up); going up, the
+    champion, then the automatic places by place, then the play-off winners (the lowest promotion place stays
+    down); then the clubs with no known place, by 3.9.68 reputation. Returns (key, note of the order)."""
+    p = places.get(c)
+    if p and p.get("in_left_division") == "no":
+        return (0, 0.0, c), f"not in the division it leaves in 2001/02 ({p['table_name']}, {p['source']})"
+    if p and p["place"].isdigit() and p["table_size"].isdigit():
+        frac = int(p["place"]) / int(p["table_size"])
+        how = p["how"]
+        if up:
+            v = 0.0 if how == "champion" else (1.0 + frac if "play-off" in how else frac)
+        else:
+            v = -frac
+        return (1, v, c), f"{p['place']} of {p['table_size']}, {how} ({p['table_name']}, {p['source']})"
+    return (2, -rep.get(c, 0) if up else rep.get(c, 0), c), "no 2001/02 place known: ordered by 3.9.68 reputation"
+
+
+def balance(rows5, div_t, comps_t, ranks, rep, places=None):
     """Q39: applies the league moves only as swaps, so that every division keeps its 3.9.68 club count (the
     original's create_table takes a fixed count, season_clubs.c CLASS_SIZE). A move pairs with a move the other
     way between the same two divisions (higher reputation first up, lower first down), then the moves left form
@@ -984,7 +1011,9 @@ def balance(rows5, div_t, comps_t, ranks, rep):
             r.update(new_division_id=-1, division_new="", decision=KEPT, rule=r["rule"] + ", the 3.9.68 league stays")
             continue
         up = rank(dst) > rank(src)
-        moves.append(dict(row=r, src=src, dst=dst, key=(-rep.get(c, 0) if up else rep.get(c, 0), c)))
+        key, why = move_key(c, up, places or {}, rep)
+        moves.append(dict(row=r, src=src, dst=dst, key=key, why=why,
+                          level=src != NONE_NODE and dst != NONE_NODE and rank(src) == rank(dst)))
     left = sorted(moves, key=lambda m: m["key"])
     taken = []
     # Swaps between two divisions.
@@ -1014,7 +1043,12 @@ def balance(rows5, div_t, comps_t, ranks, rep):
                         return got
             return None
         cycle = None
-        for start in sorted(out, key=str):
+        for m in left:                                  # a move within one level is never held for balance:
+            if m["level"]:                              # its chains come first
+                cycle = find(m["src"], m["dst"], [m], {m["src"], m["dst"]})
+                if cycle:
+                    break
+        for start in ([] if cycle else sorted(out, key=str)):
             cycle = find(start, start, [], {start})
             if cycle:
                 break
@@ -1032,7 +1066,7 @@ def balance(rows5, div_t, comps_t, ranks, rep):
         r = m["row"]
         r.update(new_division_id=-1, decision=HELD,         # division_new keeps the checked division, for the list
                  rule=r["rule"] + "; Q39 held: no swap partner, so the division would change its club count; "
-                 "the 3.9.68 league stays")
+                 "the 3.9.68 league stays" + ("" if m["level"] else "; order: " + m["why"]))
     # Every division keeps its count.
     delta = collections.Counter()
     for r in rows5:
@@ -1054,13 +1088,17 @@ def outside_repo(path):
 
 
 def main(argv):
-    check = None
+    check = places = None
     if "--league-check" in argv:
         i = argv.index("--league-check")
         need(i + 1 < len(argv), "--league-check needs a file")
         check, argv = argv[i + 1], argv[:i] + argv[i + 2:]
+    if "--places" in argv:
+        i = argv.index("--places")
+        need(i + 1 < len(argv), "--places needs a file")
+        places, argv = argv[i + 1], argv[:i] + argv[i + 2:]
     need(len(argv) in (5, 6), "usage: change_list.py <facts-xbox> <facts-3968> <xbox data> <3.9.68 Data> <out> "
-                              "[<rules folder>] [--league-check <all-results.tsv>]")
+                              "[<rules folder>] [--league-check <all-results.tsv>] [--places <places-2001-02.tsv>]")
     fxp, ftp, dx, dt, out = argv[:5]
     rules = argv[5] if len(argv) == 6 else RULES
     need(outside_repo(out), "the out folder must be outside the repo")
@@ -1079,7 +1117,8 @@ def main(argv):
     for r in rows["5-leagues"]:
         r.setdefault("division_new", r["division_xbox"] if r["decision"] == APPLIED else "")
     ranks, rep = read_ranks(dt)
-    unpaired, notes["swaps"] = balance(rows["5-leagues"], div_t, comps_t, ranks, rep)
+    unpaired, notes["swaps"] = balance(rows["5-leagues"], div_t, comps_t, ranks, rep,
+                                       read_places(places) if places else None)
     notes["unpaired"] = len(unpaired)
     os.makedirs(out, exist_ok=True)
     for kind, fields in FIELDS.items():
