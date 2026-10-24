@@ -43,11 +43,11 @@ Which move is held when there are more moves than partners (`move_key`, the coor
    check uses the 2003 season, so Dundalk, Galway United and Monaghan United, relegated in 2001/02, count as
    out-of-date rows, and Bray Wanderers (relegated in 2002/03) stays up.
 3. With no known place, the 3.9.68 reputation decides, and the row says so.
-4. A move within one level (a group change) looks for its chain first, before any swap, and is not held for balance. Two such
-   moves of this kind exist: Biokhimik-Mordovia (Second Division Volga to Central) and Eintracht Frankfurt
-   Amateure (Regional North to South) are held only because no chain returns to their division. The rank
-   (+0x69) alone is not the level (the A-League and the D3-Pro League share rank 6), so two divisions are one
-   level only with the same rank and the same name but its last word.
+4. A move within one level (a group change) looks for its chain first, before any swap, and is not held for
+   balance. Two such moves are held only because no chain returns to their division: Biokhimik-Mordovia (Second
+   Division Volga to Central) and Eintracht Frankfurt Amateure (Regional North to South). The rank (+0x69) alone
+   is not the level (the A-League and the D3-Pro League share rank 6), so two divisions are one level only with
+   the same rank and the same name but its last word.
 
 Result: 117 moves apply, 110 of them in 55 swaps of two and 7 in longer chains. Every division
 keeps its 3.9.68 count. `test_summer_2002.py` checks this, and that each CLASS_SIZE division holds at least its
