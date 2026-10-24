@@ -318,6 +318,12 @@ uint32_t rt_ger_regional_clubs(uint32_t obj, uint32_t original);
 /* Liga 3 (slice 20): the series size of the Portuguese Segunda B object, 0x7d2412, 0x7d2965, 0x7d29ff, 0x7d2ab2. */
 uint32_t rt_por_group_clubs(uint32_t obj, uint32_t original);
 uint32_t rt_por_stage_clubs(uint32_t obj, uint32_t original);
+/* The Turkish Category B in three groups with Summer 2002 (win/season_tur_groups.c): the table of TurSecondB
+ * (0x9002cd, 0x9002d2) and its group stages (0x900812, 0x90089d, 0x900932, 0x9009e4), tools/recomp/tur_groups.py. */
+uint32_t rt_tur_table_clubs(uint32_t obj, uint32_t original);
+uint32_t rt_tur_table_bytes(uint32_t obj, uint32_t original);
+uint32_t rt_tur_stage_clubs(uint32_t obj, uint32_t original);
+uint32_t rt_tur_stage_bytes(uint32_t obj, uint32_t original);
 /* 1 when the Portuguese Cup takes a club with no division (0x7ce37d): a Portuguese club in a game with Liga 3. */
 uint32_t rt_por_cup_none(uint32_t club);
 /* The date count of a French league's template for the clubs that its division holds (slice 18). */

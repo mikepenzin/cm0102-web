@@ -119,10 +119,11 @@ row. Then `duplicates.merge_folder` merges the template's duplicate pairs (Q28) 
 (`duplicates.kept_apart`) on `<changes>/kept-pairs.tsv`. Then `staff_slots.py` fills empty staff slots (first
 season 2002, Q12) and `duplicates.py check` runs with that list. The header of the script gives the steps.
 
-The Turkish groups (Q11) need three free 3.9.68 competition rows, and 3.9.68 has two: the five "Turkish 2.
-Division Group" rows are key names of the game (an error box at load when one is missing) and the last division
-of 53 clubs. With `--exe <cm0102.exe>` the script proves this and stops. `--no-turkish-groups` builds without
-the groups, and the clubs keep their 3.9.68 groups.
+The Turkish groups (Q11, Q29, Q43, slice 5): the build puts the three Xbox rows "Turkish 2. Division Category B
+Group A" to "C" into the free 3.9.68 rows 287, 288 and 233 and tags each of the 52 member clubs with its row (club
++0x60). No row is added: nation comp ids follow the club comp ids in one array. Club
+divisions stay (Q39), so the original game plays its five groups of 10, and this game plays the three groups
+(`docs/research/2026-10-24-summer-2002-turkish-groups.md`). `--no-turkish-groups` builds without them.
 
 | Placeholder | What it is |
 |---|---|
@@ -130,7 +131,7 @@ the groups, and the clubs keep their 3.9.68 groups.
 | `<work>` | a new folder for the reports (merge, ids, staff slots, the duplicate check) |
 
 ```bash
-python3 -I xbox0203/build_2002.py "<changes>" "<xbox data>" "<3.9.68 Data>" "<out>" "<work>" --no-turkish-groups
+python3 -I xbox0203/build_2002.py "<changes>" "<xbox data>" "<3.9.68 Data>" "<out>" "<work>"
 python3 -I duplicates.py check "<out>" "<changes>/kept-pairs.tsv"
 python3 -I test_build_2002.py
 python3 -I test_summer_2002.py [<work root>]

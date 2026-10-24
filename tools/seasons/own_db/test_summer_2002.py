@@ -38,9 +38,12 @@ sys.path.insert(0, os.path.join(HERE, "xbox0203"))
 import cmdb  # noqa: E402
 import cmdb1  # noqa: E402
 import duplicates  # noqa: E402
+from build_2002 import FREE_ROWS  # noqa: E402
 from change_list import REPO  # noqa: E402
 from read_xbox0203 import FM_JOB  # noqa: E402
 
+GROUPS = "Turkish 2. Division Category B Group "
+SIZES = {"A": 18, "B": 17, "C": 17}           # the 2002/03 groups (Q16)
 MARKER = os.sep + os.path.join(".claude", "worktrees") + os.sep
 MAIN = REPO[:(REPO + os.sep).index(MARKER)] if MARKER in REPO + os.sep else REPO
 ROOT = os.path.dirname(MAIN)
@@ -118,8 +121,19 @@ def check_changes(F, changes, work):
     for kind in ("7-unclear",):
         bad += [(kind, "applied", r["person"]) for r in read_tsv(os.path.join(changes, kind + ".tsv"))
                 if r["decision"] == "applied"]
+    group_rows = {cmdb.cstr(r, 4, 51): i32(r, 0) for r in F.rows(12)}
     for row in read_tsv(os.path.join(changes, "6-names.tsv")):
-        if row["decision"] == "applied" and row["item"] != "club name":
+        if row["decision"] == "applied" and row["item"] == "competition":
+            name = row["value_xbox"].rsplit(" (", 1)[0]
+            if not name.startswith(GROUPS) or name not in group_rows:
+                bad.append(("Turkish group row", name))
+            n += 1
+        elif row["decision"] == "applied" and row["item"].startswith("member of " + GROUPS):
+            name = row["item"][len("member of "):]
+            if i32(clubs[int(row["id_3968"])], 0x60) != group_rows.get(name):
+                bad.append(("Turkish group tag", row["value_xbox"], name))
+            n += 1
+        elif row["decision"] == "applied" and row["item"] != "club name":
             bad.append(("an applied name row that the build does not write", row["item"]))
         elif row["decision"] == "applied":
             r = clubs[int(row["id_3968"])]
@@ -155,7 +169,9 @@ def check_untouched(F, T, changes, work):
             bad.append(("ratings changed", t, n))
         checked += 1
     div = {int(r["id_3968"]) for r in read_tsv(os.path.join(changes, "5-leagues.tsv")) if r["decision"] == "applied"}
-    named = {int(r["id_3968"]) for r in read_tsv(os.path.join(changes, "6-names.tsv")) if r["decision"] == "applied"}
+    names6 = [r for r in read_tsv(os.path.join(changes, "6-names.tsv")) if r["decision"] == "applied"]
+    named = {int(r["id_3968"]) for r in names6 if r["item"] == "club name"}
+    tagged = {int(r["id_3968"]) for r in names6 if r["item"].startswith("member of " + GROUPS)}
     for a, b in zip(T.rows(0), F.rows(0)):
         c = i32(a, 0)
         keep = bytearray(a)
@@ -164,6 +180,8 @@ def check_untouched(F, T, changes, work):
             keep[0x57:0x5b] = b[0x57:0x5b]
         if c in named:
             keep[4:0x52] = b[4:0x52]
+        if c in tagged:
+            keep[0x60:0x64] = b[0x60:0x64]
         if bytes(keep) != bytes(b):
             bad.append(("club row changed", c))
     print(f"untouched staff rows checked: {checked}")
@@ -193,7 +211,17 @@ def check_structure(F, T, out):
         bad.append(("data files", len(dats)))
     comps = lambda X: {i32(r, 0): cmdb.cstr(r, 4, 51) for r in X.rows(12)}
     cf, ct = comps(F), comps(T)
-    bad += [("competition row", c, ct[c], cf.get(c)) for c in sorted(ct) if cf.get(c) != ct[c]]
+    renamed = {c for c in ct if ct[c] in FREE_ROWS and cf.get(c, "").startswith(GROUPS)}   # slice 5, step 6
+    bad += [("competition row", c, ct[c], cf.get(c)) for c in sorted(ct) if cf.get(c) != ct[c] and c not in renamed]
+    if len(renamed) != len(FREE_ROWS):
+        bad.append(("Turkish group rows in the free rows", sorted(renamed)))
+    # One competition array: club comps 0 to n - 1, then the nation comps from n (ids as 3.9.68), so no id clashes.
+    club_ids = [i32(r, 0) for r in F.rows(12)]
+    nation_ids = [i32(r, 0) for r in F.rows(16)]
+    if club_ids != list(range(len(club_ids))) or nation_ids != list(range(len(club_ids), len(club_ids) + len(nation_ids))):
+        bad.append(("competition ids clash or have gaps", len(club_ids), nation_ids[:3]))
+    if nation_ids != [i32(r, 0) for r in T.rows(16)]:
+        bad.append(("nation competition ids moved",))
     count = lambda X: collections.Counter(i32(r, 0x57) for r in X.rows(0) if i32(r, 0x57) >= 0)
     nf, nt = count(F), count(T)
     bad += [("division count", ct.get(d, d), nt[d], nf[d]) for d in sorted(set(nf) | set(nt)) if nf[d] != nt[d]]
@@ -202,6 +230,37 @@ def check_structure(F, T, out):
         if name not in by_name or nf[by_name[name]] < n:
             bad.append(("class size", name, n, nf.get(by_name.get(name), 0)))
     print(f"classes checked: {len(sizes)}, divisions checked: {len(nt)}")
+    return bad
+
+
+def check_groups(F, T):
+    """Slice 5 (Q16, Q29, Q43): the three Xbox group rows fill the free rows of 3.9.68 (FREE_ROWS, nation Turkey), 18,
+    17 and 17 Turkish clubs carry their group tag (club +0x60, unused for them in 3.9.68) and no other club does. The
+    tagged clubs keep their divisions (check_structure)."""
+    bad = []
+    old = {cmdb.cstr(r, 4, 51): i32(r, 0) for r in T.rows(12)}
+    rows = {i32(r, 0): r for r in F.rows(12)}
+    nations = {i32(r, 0): cmdb.cstr(r, 4, 51) for r in F.rows(4)}
+    ids = []
+    for (letter, size), free in zip(SIZES.items(), FREE_ROWS):
+        cid = old.get(free, -1)
+        r = rows.get(cid)
+        if r is None or cmdb.cstr(r, 4, 51) != GROUPS + letter or nations.get(i32(r, 0x5d)) != "Turkey":
+            bad.append(("Turkish group row", cid, r is not None and cmdb.cstr(r, 4, 51)))
+        ids.append(cid)
+    tags = collections.Counter(i32(r, 0x60) for r in F.rows(0) if i32(r, 0x60) in ids)
+    if [tags[c] for c in ids] != list(SIZES.values()):
+        bad.append(("Turkish group tags", dict(tags)))
+    was = {i32(r, 0): i32(r, 0x60) for r in T.rows(0)}
+    bad += [("group tag over a 3.9.68 tag", i32(r, 0)) for r in F.rows(0)
+            if i32(r, 0x60) in ids and was.get(i32(r, 0)) not in (-1, -2)]
+    nat = {i32(r, 0): nations.get(i32(r, 0x53)) for r in F.rows(0)}
+    bad += [("group tag of a club not of Turkey", c) for c in (i32(r, 0) for r in F.rows(0) if i32(r, 0x60) in ids)
+            if nat[c] != "Turkey"]
+    refs = collections.Counter(i32(r, o) for t in (0, 1) for r in F.rows(t) for o in (0x57, 0x5b))
+    refs.update(i32(r, 4) for t in (19, 20) for r in F.rows(t))
+    bad += [("a group row has other references", c, refs[c]) for c in ids if refs[c]]
+    print(f"Turkish groups checked: {sum(tags.values())} clubs in rows {ids}")
     return bad
 
 
@@ -236,7 +295,7 @@ def same_builds(root, out, template):
             shutil.copytree(os.path.join(root, "changes"), ch)
             res = subprocess.run([sys.executable, "-P", "-s", script, ch, os.path.join(root, "disc", "data"),
                                   template, os.path.join(t, "out-" + seed), os.path.join(t, "work-" + seed),
-                                  "--no-turkish-groups"],
+                                  ],
                                  env={k: v for k, v in os.environ.items() if not k.startswith("PYTHON")} | dict(
                                      PYTHONHASHSEED=seed),
                                  capture_output=True, text=True, cwd=t)
@@ -267,6 +326,7 @@ def main(argv):
     F, T = cmdb1.open_folder(out), cmdb1.open_folder(template)
     bad = check_changes(F, changes, work) + check_untouched(F, T, changes, work) + check_facts(F)
     bad += check_structure(F, T, out)
+    bad += check_groups(F, T)
     bad += [("more rows than 3.9.68", t) for t, e in F.idx.items() if e["count"] > T.idx[t]["count"]]
     with contextlib.redirect_stdout(io.StringIO()) as log:
         if duplicates.check(out, os.path.join(changes, "kept-pairs.tsv")):

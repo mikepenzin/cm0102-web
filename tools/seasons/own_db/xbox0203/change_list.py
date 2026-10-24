@@ -41,9 +41,11 @@ answer takes it, the 3.9.68 value stays).
   Q33 to Q37 settle the rows (league_check): each "change" row takes the checked game division, rows that the
   sources confirm are kept, and Q36 and Q37 name the rest by club id. division_new holds the division taken.
 - Kind 6 names and competitions: club names and nations that differ, clubs and competitions in one set only, and
-  the clubs of the Xbox Turkish Category B groups (Q11). The Fiorentina name (Q5) applies. The three groups are
-  held: 3.9.68 has two free Turkish competition rows, not three (build_2002.py, step 6). The group of each club is
-  a league decision, so it is held in kind 6 and in kind 5. Q27: a club with no nation on
+  the clubs of the Xbox Turkish Category B groups (Q11). The Fiorentina name (Q5) applies. The three groups apply
+  (Q29, Q43, slice 5): the build puts the three Xbox group rows into free 3.9.68 rows and tags each member club with
+  its group (club +0x60);
+  the club's division stays (Q39, kind 5), and the game makes the groups (build_2002.py, step 6). Q27: a club with no
+  nation on
   the Xbox keeps its 3.9.68 nation. Every other row is held.
 - Duplicates (Q14): no change adds a row. duplicates.find (people.py rules and the same-club rule) runs on the
   3.9.68 people before and after the applied club changes. A change that makes a new pair is held, and so is a
@@ -83,8 +85,10 @@ TURKISH_GROUPS = "Turkish 2. Division Category B"
 APPLIED, HELD, KEPT = "applied", "held", "kept"
 WIPED = "the Xbox data has no contract end, 3.9.68 has one"
 JOB_Q22 = "Q22: the Xbox job too"
-GROUPS_WAIT = ("Q11: three Turkish Category B groups (slice 5 code). Held: 3.9.68 has only two free Turkish "
-               "competition rows, and the build adds no rows (build_2002.py, step 6)")
+GROUPS_ROW = ("Q11, Q29, Q43: three Turkish Category B groups. The build puts the Xbox group row into a free "
+              "3.9.68 competition row, no row added (build_2002.py, step 6)")
+GROUPS_MEMBER = ("Q11, Q29: a club of the Xbox group. The build sets its group tag (club +0x60) to the group row, its "
+                 "division stays (Q39), and the game plays the group (season_tur_groups.c)")
 NO_ROW = ("Q22 takes the Xbox job, but the 3.9.68 row has no player or non-player row for it and slice 3 adds "
           "no rows")
 
@@ -648,9 +652,9 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None, holders=
                 item="competition", id_3968=it, id_xbox=ix,
                 value_3968=f"{name} ({used_t[it]} clubs)" if it >= 0 else "-",
                 value_xbox=f"{name} ({used_x[ix]} clubs)" if ix >= 0 else "-",
-                rule=GROUPS_WAIT if turk else
+                rule=GROUPS_ROW if turk else
                 "a competition row in 3.9.68 only, with no club: slice 3 may reuse it" if unused else
-                "a competition change that the spec does not name", decision=HELD))
+                "a competition change that the spec does not name", decision=APPLIED if turk else HELD))
             if unused:
                 notes["unused_comps"].append((it, name))
             if turk:
@@ -662,7 +666,7 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None, holders=
                 rows["6-names"].append(dict(
                     item=f"member of {name}", id_3968=t if t is not None else -1, id_xbox=x,
                     value_3968=dname(div_t, comps_t, t) if t is not None else "-", value_xbox=XC[x]["long"],
-                    rule="Q11 and Q15: a club of the Xbox group, a league decision (5-leagues.tsv)", decision=HELD))
+                    rule=GROUPS_MEMBER, decision=APPLIED if t is not None else HELD))
 
     # Kind 7: unclear people. A row of an unknown date of birth whose 3.9.68 namesake has the same club, dates and
     # ratings changes nothing. It is only counted.
@@ -818,12 +822,11 @@ def summary(rows, notes):
              f"clear matches. They give {sum(1 for r in allp if r['rule'].startswith('Q26') or 'Q26 clear' in r['rule'])} "
              f"rows of kinds 1 to 3. Unclear rows left: {len(rows['7-unclear'])}, all held.")
     L.append("   Turkish groups (Q11): the Xbox groups are " + ", ".join(f"{n} ({c} clubs)" for _, n, c in
-                                                                    notes["groups"]) + ". They are held: the "
-             "build needs three free 3.9.68 competition rows and adds no rows. The 3.9.68 rows with no club and no "
-             "Xbox row are " + (", ".join(f"{n} ({i})" for i, n in notes["unused_comps"]) or "none") + ". They "
-             "are not free: the game finds them by name (an error box at load when one is missing) and clubs hold "
-             "them as last division (build_2002.py, step 6). Only two Turkish rows are free. This needs your "
-             "decision (spec, Open decisions).")
+                                                                    notes["groups"]) + ". They apply (Q29, Q43): the "
+             "build puts the three rows into free 3.9.68 rows and tags the member clubs, and the game plays the groups (slice 5). The "
+             "3.9.68 rows with no club and no Xbox row are " +
+             (", ".join(f"{n} ({i})" for i, n in notes["unused_comps"]) or "none") + ". They stay: the game finds "
+             "the five Turkish group rows by name (an error box at load when one is missing).")
     L.append(f"7. Q27 (no Xbox nation): {sum(1 for r in rows['6-names'] if r['rule'].startswith('Q27'))} clubs keep "
              "the 3.9.68 nation.")
     tp = rows["8-template-pairs"]

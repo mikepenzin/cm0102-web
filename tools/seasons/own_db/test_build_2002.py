@@ -234,6 +234,78 @@ def build_cases(t):
     return bad, F
 
 
+GROUP = "Turkish 2. Division Category B Group "
+
+
+def group_folder(path, xbox):
+    """A copy of the synthetic template with a colour and a continent table and the three free rows of build step 6
+    (ids 3 to 5); the Xbox copy has them too, then the three group rows (ids 6 to 8)."""
+    build(path, xbox)
+    files = {"colour.dat": struct.pack("<i", 0) + cs("White", 54),
+             "continent.dat": struct.pack("<i", 0) + cs("Europe", 194)}
+    comps = open(os.path.join(path, "club_comp.dat"), "rb").read()
+    comps += b"".join(bytes(comp_row(3 + k, name)) for k, name in enumerate(b2.FREE_ROWS))
+    if xbox:
+        comps += b"".join(bytes(comp_row(6 + k, GROUP + c)) for k, c in enumerate("ABC"))
+    files["club_comp.dat"] = comps
+    ib = bytearray(open(os.path.join(path, "index.dat"), "rb").read())
+    for i in range(8, len(ib), 67):
+        if struct.unpack_from("<i", ib, i + 51)[0] == 12:
+            struct.pack_into("<i", ib, i + 55, len(comps) // 107)
+    ib += cs("colour.dat", 51) + struct.pack("<iiii", 2, 1, 0, 1)
+    ib += cs("continent.dat", 51) + struct.pack("<iiii", 3, 1, 0, 1)
+    files["index.dat"] = bytes(ib)
+    for f, data in files.items():
+        with open(os.path.join(path, f), "wb") as h:
+            h.write(data)
+    if not xbox:                                    # 3.9.68 leaves the group tag of these clubs at -2
+        club = bytearray(open(os.path.join(path, "club.dat"), "rb").read())
+        for i in range(len(club) // 581):
+            struct.pack_into("<i", club, 581 * i + 0x60, -2)
+        open(os.path.join(path, "club.dat"), "wb").write(bytes(club))
+
+
+def group_cases(t):
+    """Step 6 (slice 5, Q43): the three Xbox group rows fill the free rows with their ids, no row is added, the member
+    clubs get their group tag and their divisions stay; a club that has a tag, or a free row that a club points at,
+    stops it; --no-turkish-groups leaves it out."""
+    bad = []
+    group_folder(os.path.join(t, "g-tpl"), False)
+    group_folder(os.path.join(t, "g-xbox"), True)
+    ch = os.path.join(t, "g-changes")
+    os.makedirs(ch)
+    rows = [dict(item="competition", id_3968=-1, id_xbox=6 + k, value_3968="-", value_xbox=f"{GROUP}{c} (1 clubs)",
+                 rule="Q29", decision="applied") for k, c in enumerate("ABC")]
+    rows += [dict(item=f"member of {GROUP}A", id_3968=0, id_xbox=0, value_3968="-", value_xbox="Fiorentina",
+                  rule="Q29", decision="applied"),
+             dict(item=f"member of {GROUP}B", id_3968=1, id_xbox=1, value_3968="-", value_xbox="Second Town",
+                  rule="Q29", decision="applied")]
+    with open(os.path.join(ch, "6-names.tsv"), "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, list(rows[0]), delimiter="\t", lineterminator="\n")
+        w.writeheader()
+        w.writerows(rows)
+    F, X = cmdb1.open_folder(os.path.join(t, "g-tpl")), cmdb1.open_folder(os.path.join(t, "g-xbox"))
+    ids = b2.apply_groups(F, X, ch, False, [])
+    comps = {i32(r, 0): cmdb1.cmdb.cstr(r, 4, 51) for r in F.rows(12)}
+    if ids != [3, 4, 5] or F.idx[12]["count"] != 6 or [comps.get(i) for i in (3, 4, 5)] != [GROUP + c for c in "ABC"]:
+        bad.append(("group rows", ids, comps))
+    cl = F.rows(0)
+    if [i32(cl[0], 0x60), i32(cl[1], 0x60)] != [3, 4] or [i32(cl[0], 0x57), i32(cl[1], 0x57)] != [1, 1]:
+        bad.append(("group tags", [i32(c, 0x60) for c in cl], [i32(c, 0x57) for c in cl]))
+    G = cmdb1.open_folder(os.path.join(t, "g-tpl"))
+    struct.pack_into("<i", G.rows(0)[1], 0x60, 2)                    # club 1 already has a group
+    if not stops(lambda: b2.apply_groups(G, X, ch, False, [])):
+        bad.append(("no stop for a club with a group tag",))
+    J = cmdb1.open_folder(os.path.join(t, "g-tpl"))
+    struct.pack_into("<i", J.rows(0)[1], 0x5b, 4)                    # club 1's last division is a free row
+    if not stops(lambda: b2.apply_groups(J, X, ch, False, [])):
+        bad.append(("no stop for a free row with a reference",))
+    H = cmdb1.open_folder(os.path.join(t, "g-tpl"))
+    if b2.apply_groups(H, X, ch, True, []) != [] or H.idx[12]["count"] != 6:
+        bad.append(("--no-turkish-groups changed the data",))
+    return bad
+
+
 def merge_cases(t, F):
     """duplicates.merge_folder on format 1: Jo Pair merges, the two Andy Evans stay, Zed Last (the last row) takes
     the dropped place, and every reference to him follows."""
@@ -364,6 +436,7 @@ def main():
         more, F = build_cases(t)
         bad += more
         bad += merge_cases(t, F)
+        bad += group_cases(t)
         bad += format2_cases(t)
     for x in bad:
         print("FAIL", x)

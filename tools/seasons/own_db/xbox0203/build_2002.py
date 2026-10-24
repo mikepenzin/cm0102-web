@@ -1,12 +1,11 @@
 """Build the Summer 2002 database: a copy of the 3.9.68 files with the applied rows of the change list.
 
-Usage: python3 -I build_2002.py <changes> <xbox data> <3.9.68 Data> <out folder> <work folder>
-                                [--exe <cm0102.exe>] [--no-turkish-groups]
+Usage: python3 -I build_2002.py <changes> <xbox data> <3.9.68 Data> <out folder> <work folder> [--no-turkish-groups]
 
 <changes> is the folder of change_list.py (with Max's answers Q21 to Q28 applied). The two data folders are read
 only, and the out folder (the new database, "Summer 2002") and the work folder (reports) must be new and outside
 the repo. The data is untrusted input: every read and write is bounds-checked (cmdb1.py) and nothing from it runs.
-Commit no Xbox data and nothing made from it. Spec: docs/specs/2026-10-24-summer-2002-db-spec.md, slice 3.
+Commit no Xbox data and nothing made from it. Spec: docs/specs/2026-10-24-summer-2002-db-spec.md, slices 3 and 5.
 
 The build patches the format 1 rows in place and adds no row, so every count of index.dat stays, except the rows
 that the duplicate merge removes. A change that would need a new row stops the build. Steps:
@@ -23,13 +22,13 @@ that the duplicate merge removes. A change that would need a new row stops the b
 4. Divisions (kind 5, Q24, Q34 to Q37): club +0x57 is the new_division_id column (-2: no division).
 5. Names (kind 6): the long name (+0x04, 51 bytes) and short name (+0x38, 26 bytes) of Fiorentina come from the
    Xbox row (Florentia Viola, Q5).
-6. Turkish groups (Q11): the three Xbox "Category B Group" competitions need three free 3.9.68 rows of
-   club_comp.dat. A free row has no club that points at it (club +0x57, +0x5b, +0x60), no history row (19, 20),
-   and a name that is not a key name of the game: set_key_ids 0x601a40 finds key competitions by name and shows
-   an error box for each that it does not find (0x6043ac to 0x60ba6e, for example 0x607547 for "Turkish 2.
-   Division Group 1"). The proof needs cm0102.exe (--exe) and the key name chains of src/cm3/key_ids_table.c.
-   With fewer than three free Turkish rows the build stops, unless --no-turkish-groups leaves the step out (the
-   clubs then keep their 3.9.68 groups).
+6. Turkish groups (Q11, Q16, Q29, Q43, slice 5): the three Xbox rows "Turkish 2. Division Category B Group A", "B"
+   and "C" replace the free rows 287, 288 and 233 (FREE_ROWS; no club and no history row points at them), and the
+   group tag (club +0x60) of each member club of kind 6 names its row. No row is added: nation comp ids follow the
+   club comp ids in one array, so an added row would move them. Club divisions stay (Q39): the original game plays its five groups of 10 from the
+   divisions G1 to G5 (its first-season merge overwrites +0x60 of those clubs), and this game plays the three groups
+   (src/recomp_rt/win/season_tur_groups.c). The five "Turkish 2. Division Group" rows 168 to 172 stay: the game finds
+   them by name at load (set_key_ids 0x601a40, for example 0x607547). --no-turkish-groups leaves the step out.
 7. Duplicates (Q28): duplicates.merge_folder merges the template pairs by the 2006/07 rules and keeps the pairs
    that duplicates.kept_apart calls two people. It runs again until no other pair is left. The kept pairs, with
    their ids after the merge, go to <changes>/kept-pairs.tsv, the list that duplicates.py check accepts.
@@ -44,13 +43,10 @@ import argparse
 import collections
 import csv
 import os
-import re
-import struct
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OWN_DB = os.path.dirname(HERE)
-REPO = os.path.realpath(os.path.dirname(os.path.dirname(os.path.dirname(OWN_DB))))
 sys.path.insert(0, OWN_DB)
 sys.path.insert(0, HERE)
 import cmdb  # noqa: E402
@@ -65,8 +61,6 @@ FIRST_SEASON = 2002                     # the dates are real dates (Q12)
 DATES = (0x3e, 0x4e)                    # joined and contract end, 8 bytes each
 RATINGS = (0x05, 0x45)                  # player row: abilities, reputations, positions, attributes
 GROUPS = "Turkish 2. Division Category B Group "
-KEY_TABLE = os.path.join(REPO, "src", "cm3", "key_ids_table.c")
-SEASON_NATION = "Turkey"
 
 
 def need(cond, msg):
@@ -228,8 +222,8 @@ def apply_names(F, X, changes, log):
     xc = {i32(r, 0): r for r in X.rows(0)}
     n = 0
     for row in read_tsv(os.path.join(changes, "6-names.tsv")):
-        if row["decision"] != "applied":
-            continue
+        if row["decision"] != "applied" or row["item"] == "competition" or row["item"].startswith("member of " + GROUPS):
+            continue                    # the Turkish groups: step 6
         need(row["item"] == "club name", f"names: the build does not know the applied row {row['item']!r}")
         t, x = int(row["id_3968"]), int(row["id_xbox"])
         need(t in tc and x in xc, f"names: club {t} or Xbox club {x} is not in the data")
@@ -245,40 +239,17 @@ def apply_names(F, X, changes, log):
 
 # ---- step 6: Turkish groups
 
-def exe_strings(exe):
-    """A reader of zero-ended strings at virtual addresses of a PE file."""
-    b = open(exe, "rb").read()
-    need(len(b) > 0x40 and b[:2] == b"MZ", f"{exe} is not an exe")
-    pe = struct.unpack_from("<I", b, 0x3c)[0]
-    need(pe + 0xf8 <= len(b) and b[pe:pe + 4] == b"PE\0\0", f"{exe} has no PE header")
-    n, osz = struct.unpack_from("<H", b, pe + 6)[0], struct.unpack_from("<H", b, pe + 20)[0]
-    base = struct.unpack_from("<I", b, pe + 24 + 28)[0]
-    secs = [struct.unpack_from("<IIII", b, pe + 24 + osz + 40 * i + 8) for i in range(n)]
-
-    def at(addr):
-        rva = addr - base
-        for vs, va, rs, ra in secs:
-            if va <= rva < va + min(vs, rs):
-                o = ra + rva - va
-                end = b.find(b"\0", o)
-                need(end >= 0, f"{exe}: no end of the string at {addr:#x}")
-                return b[o:end].decode("latin1")
-        raise SystemExit(f"build_2002: {exe}: {addr:#x} is in no section")
-    return at
+# The free 3.9.68 rows that take the three groups, in group order (A, B, C): the two free Turkish rows and the free
+# Korean All-Star Cup row (docs/research/2026-10-24-summer-2002-turkish-group-rows.md: no club and no history row
+# points at them, and their names are not key names of the game). Rows are reused, never added: the game keeps one
+# competition array, club comps then nation comps, and a nation comp's id is the club comp count plus its index,
+# so an added club comp row would move every nation comp id that the history files hold.
+FREE_ROWS = ("Turkish 2. Divison Category B Group 1", "Turkish 2. Division", "Korean All-Star Cup")
 
 
-def key_names(exe):
-    """The club comp names that the game's set_key_ids looks for (lower case)."""
-    text = open(KEY_TABLE, encoding="utf-8").read()
-    body = text.split("const key_id_entry_t g_key_club_comp_chain[] = {")
-    need(len(body) == 2, f"{KEY_TABLE} has no club comp chain")
-    at = exe_strings(exe)
-    return {at(int(a, 16)).lower() for a in re.findall(r"\{(0x[0-9a-f]+),", body[1].split("};")[0])}
-
-
-def free_rows(F, keys):
-    """3.9.68 club_comp rows of Turkey (or of no nation, with a Turkish name) that nothing points at."""
-    nations = {i32(r, 0): cmdb.cstr(r, 4, 51) for r in F.rows(4)}
+def comp_refs(F):
+    """Every club comp id that the clubs (+0x57, +0x5b, +0x60) and the club and nation comp history rows (+0x04)
+    hold."""
     used = collections.Counter()
     for t in (0, 1):
         for r in F.rows(t):
@@ -287,27 +258,53 @@ def free_rows(F, keys):
     for t in (19, 20):
         for r in F.rows(t):
             used[i32(r, 4)] += 1
-    out = []
-    for r in F.rows(12):
-        cid, name, nat = i32(r, 0), cmdb.cstr(r, 4, 51), i32(r, 0x5d)
-        turkish = nations.get(nat) == SEASON_NATION or nat < 0 and name.startswith("Turkish")
-        if turkish and not used[cid] and name.lower() not in keys:
-            out.append(cid)
-    return out
+    return used
 
 
-def apply_groups(F, X, exe, skip, log):
-    groups = sorted((cmdb.cstr(r, 4, 51), i32(r, 0)) for r in X.rows(12) if cmdb.cstr(r, 4, 51).startswith(GROUPS))
-    need(len(groups) == 3, f"Turkish groups: the Xbox data has {len(groups)} groups, not 3")
+def apply_groups(F, X, changes, skip, log):
+    """Q11, Q16, Q29: the three Xbox group rows replace the free rows FREE_ROWS (the Xbox row as it is but its id: the
+    colour, continent and nation ids name the same rows in both sets), and each member club's group tag (club +0x60,
+    unused for Turkish clubs in 3.9.68) names its group row. No row is added and no id moves. Club divisions stay
+    (Q39), so the original game plays its five groups of 10. Returns the ids of the group rows."""
+    rows = [r for r in read_tsv(os.path.join(changes, "6-names.tsv")) if r["decision"] == "applied"]
+    comps = [r for r in rows if r["item"] == "competition"]
+    members = [r for r in rows if r["item"].startswith("member of " + GROUPS)]
     if skip:
-        log.append("Turkish groups: left out (--no-turkish-groups), the clubs keep their 3.9.68 groups")
-        return
-    need(exe, "Turkish groups: the proof of free rows needs --exe <cm0102.exe> (or --no-turkish-groups)")
-    free = free_rows(F, key_names(exe))
-    need(len(free) >= len(groups), f"Turkish groups: only {len(free)} free Turkish rows ({free}) for "
-                                   f"{len(groups)} groups, and the build adds no rows (--no-turkish-groups "
-                                   "leaves the groups out)")
-    raise SystemExit("build_2002: Turkish groups: free rows exist, but the member clubs are not decided in the list")
+        log.append("Turkish groups: left out (--no-turkish-groups)")
+        return []
+    xrows = {i32(r, 0): r for r in X.rows(12)}
+    groups = sorted((cmdb.cstr(xrows[int(r["id_xbox"])], 4, 51), int(r["id_xbox"])) for r in comps
+                    if int(r["id_xbox"]) in xrows)
+    need(len(comps) == 3 and [g for g, _ in groups] == [GROUPS + c for c in "ABC"],
+         f"Turkish groups: the list applies {len(comps)} competition rows, not the three Xbox groups")
+    for t in (2, 3, 4):
+        width = 51 if t == 4 else 25                # nation names 51 bytes, colour and continent names 25
+        same = ({i32(r, 0): cmdb.cstr(r, 4, width) for r in F.rows(t)} ==
+                {i32(r, 0): cmdb.cstr(r, 4, width) for r in X.rows(t)})
+        need(same, f"Turkish groups: the names of table {t} differ between the sets, so an Xbox row's ids would not hold")
+    by_name = {}
+    for r in F.rows(12):
+        by_name.setdefault(cmdb.cstr(r, 4, 51), []).append(r)
+    used = comp_refs(F)
+    target = {}
+    for (name, xid), free in zip(groups, FREE_ROWS):
+        found = by_name.get(free, [])
+        need(len(found) == 1, f"Turkish groups: the free row {free!r} is not in the template once")
+        r = found[0]
+        cid = i32(r, 0)
+        need(not used[cid], f"Turkish groups: row {cid} {free!r} is not free ({used[cid]} references)")
+        put_bytes(r, 4, bytes(xrows[xid][4:]))     # the whole row but its id
+        target[name] = cid
+    clubs = {i32(r, 0): r for r in F.rows(0)}
+    tagged = collections.Counter()
+    for r in members:
+        name, t = r["item"][len("member of "):], int(r["id_3968"])
+        need(name in target and t in clubs, f"Turkish groups: member {t} of {name!r} is not in the data")
+        need(i32(clubs[t], 0x60) in (-1, -2), f"Turkish groups: club {t} already has a group tag")
+        put(clubs[t], "<i", 0x60, target[name])
+        tagged[name] += 1
+    log.append("Turkish groups: rows " + ", ".join(f"{n} {target[n]} ({tagged[n]} clubs)" for n, _ in groups))
+    return [target[n] for n, _ in groups]
 
 
 # ---- step 7: duplicates
@@ -370,7 +367,6 @@ def main(argv):
     ap.add_argument("template")
     ap.add_argument("out")
     ap.add_argument("work")
-    ap.add_argument("--exe")
     ap.add_argument("--no-turkish-groups", action="store_true")
     a = ap.parse_args(argv)
     for p in (a.out, a.work):
@@ -386,7 +382,7 @@ def main(argv):
     fix_lists(F, changed, log)
     apply_divisions(F, a.changes, log)
     apply_names(F, X, a.changes, log)
-    apply_groups(F, X, a.exe, a.no_turkish_groups, log)
+    apply_groups(F, X, a.changes, a.no_turkish_groups, log)
     for f, b in F.raw.items():
         need(len(b) == sizes[f], f"{f} changed its length before the merge: a row was added")
     os.makedirs(a.work)
