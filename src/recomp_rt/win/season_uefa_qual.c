@@ -23,8 +23,10 @@
  * wrap of 0x518790 writes the ties again after the original: a Champions Path tie has only champions (new
  * champions and the winners of the Champions Path ties below), a League Path tie only the other clubs, each
  * winner of the round below meets a new club when it can (as the seeded draw 0x51d2d0 does), and the rest
- * meet each other at random (0x90cfc0). Every round has flag 0x200 of +0xd, so the draw 0x51c410 keeps the
- * ties (0x51c5d4..0x51c5f1) and only applies the home and away rules (0x51e870, 0x522610).
+ * meet each other at random (0x90cfc0). Every round has flag 0x200 of +0xd and the nation rule 4 of +0xb, so the
+ * draw 0x51c410 runs the nation draw 0x51d9f0 (0x51c5d4; +0xb wins over 0x200), which moves the known clubs over
+ * all ties of the round: its wrap below runs it on each path apart (issue #68). Then the home and away rules
+ * (0x51e870, 0x522610).
  *
  * Europa League (Uefa_Cup, vtable 0x970790). build_entrants 0x902b90 (wrapped in season_uefa_cup.c) gives way
  * to uc_access_entrants: the qualifying clubs by round from the lowest (each round: its new clubs, then slots for
@@ -51,6 +53,7 @@
 #include "season_cups.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define KEY_CL 0x9cf6e8u
@@ -66,6 +69,7 @@
 #define F_RANDOM 0x0090cfc0u
 #define F_CL_ROUNDS 0x00583c50u         /* EuropeanCup::create_round_table, thiscall (stage, &rounds, &name, &league) */
 #define F_DRAW_DATE 0x00521e60u
+#define F_NATION_DRAW 0x0051d9f0u       /* Cup::check_round_teams_for_nation, thiscall (round), ret 4 */
 #define F_MATCH_DATE 0x00521eb0u
 
 #define ROUND_SIZE 0x68u
@@ -141,6 +145,18 @@ static void set_dates(uint32_t t, int r, int draw_day, int draw_month, int day, 
     call_cdecl(F_DRAW_DATE, 7, d);
     uint32_t m[9] = {t, (uint32_t)r, (uint32_t)day, (uint32_t)month, 0, (uint32_t)weekday, 2, year, 0};
     if (!rt_unwinding) call_cdecl(F_MATCH_DATE, 9, m);
+}
+
+/* Test switch RECOMP_UEFA_PATH_DRAW=off (issue #68 proof): the paths as before the fix, in the layout (a round
+ * with no new League Path clubs takes both paths) and in the draw (the wrap of 0x51d9f0 runs the original). */
+static int path_draw_off(void)
+{
+    static int off = -1;
+    if (off < 0) {
+        const char *v = getenv("RECOMP_UEFA_PATH_DRAW");
+        off = v && !strcmp(v, "off");
+    }
+    return off;
 }
 
 /* ---- The layout of a cup's entrants ---- */
@@ -224,6 +240,8 @@ typedef struct {
     int level[MAX_ROUNDS];              /* the level of each round (index into the LEVELS table) */
     int clubs_in[MAX_ROUNDS], fresh[MAX_ROUNDS], first[MAX_ROUNDS];
     int cp_fresh[MAX_ROUNDS], lp_fresh[MAX_ROUNDS];
+    int two[MAX_ROUNDS];                /* Champions League: 1 for a round of two paths (new League Path clubs, or
+                                         * League Path winners of the round before) */
     int direct_first, slots;            /* the first slot after the rounds, the slot count */
 } Layout;
 
@@ -291,9 +309,11 @@ static int make_layout(const SeasonUefa *r, char comp, Layout *L, uint32_t cl)
         int i = L->rounds++;
         if (i >= MAX_ROUNDS) return 0;
         L->level[i] = k;
-        /* Champions League: the winners stay in their path. A round of one path (Q2 to 2017/18) takes both. */
-        if (comp == 'c' && !lp) cp_win += lp_win, lp_win = 0;
-        if (comp != 'c') cp_win += lp_win, lp_win = 0;
+        /* Champions League: the winners stay in their path, also in a round with no new League Path clubs (the
+         * play-offs from 2018/19: PO LP 4 clubs, the Q3 League Path winners; issue #68). A round with no League
+         * Path at all (Q1, and Q2 to 2017/18) has one path. */
+        if (comp != 'c' || (!lp && path_draw_off())) cp_win += lp_win, lp_win = 0;
+        L->two[i] = comp == 'c' && lp + lp_win > 0;
         L->cp_fresh[i] = cp, L->lp_fresh[i] = lp;
         L->fresh[i] = cp + lp, L->first[i] = slot, L->clubs_in[i] = cp + lp + cp_win + lp_win;
         if ((cp + cp_win) % 2 || (lp + lp_win) % 2) {
@@ -545,7 +565,7 @@ static int pair_path(uint32_t cup, int r, int first, Side *w, int nw, Side *f, i
 static int cp_ties_of(const Layout *L, int r)
 {
     if (r < 0) return 0;
-    int win = r == 0 ? 0 : L->lp_fresh[r] == 0 ? L->clubs_in[r - 1] / 2 : cp_ties_of(L, r - 1);
+    int win = r == 0 ? 0 : !L->two[r] ? L->clubs_in[r - 1] / 2 : cp_ties_of(L, r - 1);
     return (win + L->cp_fresh[r]) / 2;
 }
 
@@ -562,7 +582,7 @@ static void cl_paths(uint32_t cl, const Layout *L)
         }
         Side w[2][64], f[2][64];
         int nw[2] = {0, 0}, nf[2] = {0, 0};
-        int one_path = L->lp_fresh[r] == 0;
+        int one_path = !L->two[r];
         if (r > 0) {
             int prev = L->clubs_in[r - 1] / 2;
             for (int t = 0; t < prev && t < 64; t++) {
@@ -608,6 +628,72 @@ RT_WRAP(00518790, cup_map_fixture_tree)
     for (int i = L.direct_first; i < L.slots; i++) g_mem[e + ENTRY * (uint32_t)i + 5] = 1;
     cpu = saved;
     fprintf(stderr, "recomp: uefa: Champions League ties of %d rounds in two paths\n", L.rounds);
+}
+
+/* ---- The nation draw inside each path (issue #68) ----
+ *
+ * Cup::draw_round 0x51c410 tests +0xb & 4 before +0xd & 0x200 (0x51c5d4..0x51c5f1): a round with the nation rule
+ * goes to check_round_teams_for_nation 0x51d9f0 and the 0x200 keep is not reached. 0x51d9f0 (thiscall (round) ret
+ * 4) takes every known side of every tie of the round out (marks -2, 0x51dc66, 0x51dd25; a winner to come, -1, stays
+ * in its place), sorts them by the count of clubs of their nation (0x945333) and places each in a random tie with a
+ * free side, first with no club of its nation on the other side, then without that test (0x51de39..0x51dfc1). It
+ * writes the winner links of a moved winner's source tie (+6 tie, +8 1 home 0 away, +0x12 round; 0x51e056..
+ * 0x51e17d). Over the whole round, a champion could go into a League Path tie and the reverse. Here, for a Champions
+ * League qualifying round of two paths, the wrap runs the original twice: once on the Champions Path ties (0 ..
+ * cp_ties_of - 1) and once on the League Path ties after them, by setting the round's tie array (+0xad) and tie count
+ * (+0x1a) to the path for each call. So the nation rule of the original acts inside each path. Then it writes the
+ * winner links again with the ties' real indices (the second call saw indices from 0). Other cups, rounds of one
+ * path and the base game (no access list) keep the original (Q152). */
+void o_0051d9f0(void);
+static int nation_draw_inner;
+
+RT_WRAP(0051d9f0, cup_nation_draw)
+{
+    uint32_t cup = cpu.ecx;
+    int r = (int16_t)rt_arg(0);
+    const SeasonUefa *row = !path_draw_off() && !nation_draw_inner && readable(cup) && rd32(g_mem, cup) == CL_VTABLE ? access_row_of(cup) : NULL;
+    Layout L;
+    if (!row || !make_layout(row, 'c', &L, cup) || r < 0 || r >= L.rounds || r >= MAX_ROUNDS || !L.two[r] ||
+        (int16_t)rd16(g_mem, cup + 0x3c) != L.rounds || !readable(rd32(g_mem, cup + 0xa3)) ||
+        !readable(rd32(g_mem, cup + 0xad))) {
+        o_0051d9f0();
+        return;
+    }
+    uint32_t rec = rd32(g_mem, cup + 0xa3) + ROUND_SIZE * (uint32_t)r, arr = rd32(g_mem, cup + 0xad) + 4u * (uint32_t)r;
+    int ties = (int16_t)rd16(g_mem, rec + 0x1a), cp = cp_ties_of(&L, r);
+    uint32_t base = rd32(g_mem, arr);
+    if (ties != L.clubs_in[r] / 2 || cp <= 0 || cp >= ties || !readable(base)) {
+        o_0051d9f0();
+        return;
+    }
+    Cpu saved = cpu;
+    uint32_t a[1] = {(uint32_t)r};
+    nation_draw_inner = 1;
+    for (int p = 0; p < 2 && !rt_unwinding; p++) {
+        wr32(g_mem, arr, base + (p ? TIE_SIZE * (uint32_t)cp : 0));
+        wr16(g_mem, rec + 0x1a, (uint16_t)(p ? ties - cp : cp));
+        call_this(F_NATION_DRAW, cup, 1, a);
+    }
+    nation_draw_inner = 0;
+    if (rt_unwinding) return;
+    wr32(g_mem, arr, base);
+    wr16(g_mem, rec + 0x1a, (uint16_t)ties);
+    for (int t = 0; t < ties; t++) {
+        uint32_t tie = base + TIE_SIZE * (uint32_t)t;
+        for (int h = 1; h >= 0; h--) {
+            int16_t slot = (int16_t)rd16(g_mem, tie + (h ? 0 : 2));
+            int16_t src_r = (int16_t)rd16(g_mem, tie + (h ? 0xe : 0x10)), src_t = (int16_t)rd16(g_mem, tie + (h ? 0xa : 0xc));
+            if (slot < 0 || src_r < 0 || src_r >= r || src_t < 0 || src_t >= L.clubs_in[src_r] / 2) continue;
+            uint32_t from = tie_at(cup, src_r, src_t);
+            wr16(g_mem, from + 6, (uint16_t)t);
+            wr16(g_mem, from + 8, (uint16_t)h);
+            wr16(g_mem, from + 0x12, (uint16_t)r);
+        }
+    }
+    cpu = saved;
+    rt_ret_stdcall(0, 1);
+    fprintf(stderr, "recomp: uefa: Champions League round code %d drawn in two paths (%d and %d ties), the nation rule "
+                    "inside each\n", CL_LEVELS[L.level[r]].round_code, cp, ties - cp);
 }
 
 /* ---- Europa League ---- */
@@ -1046,7 +1132,6 @@ void season_uefa_ecl_fill_drops(uint32_t ecl) { ecl_fill_drops(ecl); }
 
 void o_0051f890(void);
 
-#include <stdlib.h>
 
 /* Test only (RECOMP_UEFA_LOG=1): each week, the state of a cup's qualifying rounds: the current stage +0x30,
  * the next round +0xab, the rounds set up +0xac, +0xb1, and for each round its ties by state (+0x34: 0 not
@@ -1093,6 +1178,58 @@ static void log_week(void)
     if (uc) log_cup("EL", uc);
     uint32_t ecl = season_uefa_ecl_object();
     if (season_uefa_cup_kind(ecl) == 'k') log_cup("ECL", ecl);
+}
+
+/* Test log (RECOMP_UEFA_TIES=1, issue #68): each Champions League qualifying tie of a round with two paths, each
+ * day that its sides or its state (+0x34) change, once both sides are known: the tie's path by its index
+ * (cp_ties_of) and each club's path by its entry slot (C a new champion of a round, L another; a winner keeps its
+ * slot), and "mixed" when they differ. */
+static int slot_path(const Layout *L, int s)
+{
+    for (int k = 0; k < L->rounds; k++) {
+        if (s >= L->first[k] && s < L->first[k] + L->cp_fresh[k]) return 0;
+        if (s >= L->first[k] + L->cp_fresh[k] && s < L->first[k] + L->fresh[k]) return 1;
+    }
+    return -1;
+}
+
+static void log_cl_ties(void)
+{
+    static int seen_year = -1;
+    static uint32_t seen[MAX_ROUNDS][64];
+    if (!getenv("RECOMP_UEFA_TIES")) return;
+    uint32_t cl = comp_object(KEY_CL, CL_VTABLE);
+    const SeasonUefa *row = cl ? access_row_of(cl) : NULL;
+    Layout L;
+    if (!row || !make_layout(row, 'c', &L, cl)) return;
+    int year = (int16_t)rd16(g_mem, cl + 0x40), day = (int16_t)rd16(g_mem, 0xae2c90u);
+    if (year != seen_year) {
+        memset(seen, 0, sizeof seen);
+        seen_year = year;
+    }
+    uint32_t e = rd32(g_mem, cl + 0xa7);
+    if (!readable(e) || !readable(rd32(g_mem, cl + 0xad))) return;
+    int split = 0;
+    for (int r = 0; r < L.rounds && r < MAX_ROUNDS; r++) {
+        split |= L.two[r];
+        if (!split) continue;           /* a round after the split with one path (the switch off): the clubs show it */
+        int ties = L.clubs_in[r] / 2, cp = cp_ties_of(&L, r);
+        for (int t = 0; t < ties && t < 64; t++) {
+            uint32_t tie = tie_at(cl, r, t);
+            int16_t a = (int16_t)rd16(g_mem, tie), b = (int16_t)rd16(g_mem, tie + 2);
+            uint32_t key = ((uint32_t)(uint16_t)a << 16 | (uint16_t)b) ^ ((uint32_t)g_mem[tie + 0x34] << 30) ^ 1u;
+            if (seen[r][t] == key || a < 0 || b < 0 || a >= L.slots || b >= L.slots) continue;
+            seen[r][t] = key;
+            uint32_t ca = rd32(g_mem, e + ENTRY * (uint32_t)a), cb = rd32(g_mem, e + ENTRY * (uint32_t)b);
+            int pa = slot_path(&L, a), pb = slot_path(&L, b), pt = t < cp ? 0 : 1;
+            fprintf(stderr, "recomp: uefa: test: CL %d/%02d day %d round code %d tie %d (%s path, state %d): %.30s (%s, "
+                            "nation %u) v %.30s (%s, nation %u)%s\n", year, (year + 1) % 100, day,
+                    CL_LEVELS[L.level[r]].round_code, t, pt ? "League" : "Champions", g_mem[tie + 0x34],
+                    readable(ca) ? win_str(ca + 4) : "?", pa ? "L" : "C", readable(ca) ? rd32(g_mem, ca + 0x53) : 0,
+                    readable(cb) ? win_str(cb + 4) : "?", pb ? "L" : "C", readable(cb) ? rd32(g_mem, cb + 0x53) : 0,
+                    pa != pt || pb != pt ? " mixed" : "");
+        }
+    }
 }
 
 /* ---- A round that is drawn after the date of its first leg (box Cup.cpp 1278, 2018/19) ----
@@ -1157,6 +1294,7 @@ RT_WRAP(0051f890, cup_update_for_date)
     if (kind && access_row_of(cup)) {
         Cpu saved = cpu;
         if (kind == 'e') log_week();
+        if (kind == 'e') log_cl_ties();
         if (kind == 'e') uc_fill_drops(cup);
         else ecl_fill_drops(cup);
         if (!rt_unwinding) cup_dates_ahead(cup);
