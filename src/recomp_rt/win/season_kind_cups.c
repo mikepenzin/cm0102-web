@@ -20,6 +20,7 @@
 #include "season.h"
 #include "season_change.h"
 #include "season_cups.h"
+#include "season_names.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -241,4 +242,53 @@ RT_WRAP(005f36e0, cups_hol_cup)
     uint32_t self = cpu.ecx, stage = rt_arg(0) & 0xffu, count = rt_arg(1);
     o_005f36e0();
     if (!rt_unwinding) table_made_stage(self, stage, count, 0x13u);
+}
+
+/* ---- The Russian Cup's new edition after a late final (O151, gate (a) pre-run on 53fba30a, 2008 start) ----
+ *
+ * RusCup::update_for_date 0x7e9ec0 (vtable +0x14 of 0x96f124; thiscall: date, flag; ret 8) starts the next edition
+ * (vtable +8, RusCup::start_new_season 0x7e9d10, at 0x7e9f12) only when the flag is set, all_stages_complete
+ * (vtable +0xc, 0x7e9ed6) is true and the date is exactly 1 June of its year (0x549f70 with day 1, month 5 at
+ * 0x7e9ee4..0x7e9f0c). The cup plays rounds 1 to 3 in June, September and October of year Y and rounds 4 to 6 from
+ * March to 21 May of Y+1 (RusCup::create_round_table 0x7e9530). A final that the game moves past 1 June leaves the
+ * edition complete one day too late: the next chance is then the season pass at Russia's entry (update day 360,
+ * 0x5d5cc6), after the June, September and October rounds of the new edition. In a 2008 game (September 2008
+ * database, Select All, changing rules on) the second semi-final of 2009/10 moved from 4 May (day 124, the day of
+ * the European semi-finals) to day 145, the final from day 137 to day 152 (2 June), and the 2010 edition started
+ * on day 360 of 2010; the league check found the cup at edition 2009 on 1 August 2010. In a season game the cup
+ * now also starts its edition on the first update day after 1 June on which it is complete and still holds the
+ * year before, up to the day before its first draw (23 June, 0x7e95f8). The base game keeps the original's one
+ * day (Q152). */
+#define RUS_CUP_VTABLE 0x0096f124u
+#define COMP_YEAR_AT 0x40u
+
+static int leap(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }
+
+static uint32_t call_vfunc(uint32_t self, uint32_t slot)
+{
+    Cpu saved = cpu;
+    cpu.ecx = self;
+    uint32_t r = rt_callback(rd32(g_mem, rd32(g_mem, self) + slot), 0, NULL);
+    if (!rt_unwinding) cpu = saved;
+    return r;
+}
+
+void o_007e9ec0(void);
+RT_WRAP(007e9ec0, rus_cup_late_final)
+{
+    uint32_t self = cpu.ecx, date = rt_arg(0), flag = rt_arg(1);
+    o_007e9ec0();
+    if (rt_unwinding || !flag || !season_game_changes() || !readable(self) || !readable(date)) return;
+    if (rd32(g_mem, self) != RUS_CUP_VTABLE) return;
+    int day = (int16_t)rd16(g_mem, date), year = (int16_t)rd16(g_mem, date + 2);
+    int june1 = 151 + leap(year), first_draw = 173 + leap(year);     /* day of the year from 0: 1 June, 23 June */
+    if (day <= june1 || day >= first_draw || (int16_t)rd16(g_mem, self + COMP_YEAR_AT) >= year) return;
+    uint32_t eax = cpu.eax;
+    if (!(call_vfunc(self, 0xc) & 0xffu) || rt_unwinding) return;
+    int before = (int16_t)rd16(g_mem, self + COMP_YEAR_AT);
+    call_vfunc(self, 8);
+    if (rt_unwinding) return;
+    cpu.eax = eax;
+    fprintf(stderr, "recomp: cups: rus_cup %d complete after 1 June: edition %d starts on day %d of %d\n", before,
+            (int16_t)rd16(g_mem, self + COMP_YEAR_AT), day, year);
 }
