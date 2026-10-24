@@ -26,7 +26,9 @@
  * club of the division in G4 or G5) at construction and from +0x2c == 2 after it:
  * - create_table takes the G1 clubs (Group A) and slots 0 and 1 the G2 and G3 clubs (Groups B and C), at most 18 a
  *   group (MAX_GROUP); slots 2 and 3 are not built and +0x2c is 2, so League::update_for_date 0x6847c0 calls no
- *   advance_stage (it calls it while +0x30 is below +0x2c - 1, 0x6849d1..0x6849e3);
+ *   advance_stage (it calls it while +0x30 is below +0x2c - 1, 0x6849d1..0x6849e3; +0x30 is the last slot built,
+ *   0x900a8e); League::load and the save keep the places (+0xbe..+0xc1: 0x6886d7, 0x689589; League_Stage 0x68c113,
+ *   0x68cc27);
  * - each group: the winner up, the last two down (Q19: 2002/03, tr.wikipedia "2002-03 2. Futbol Ligi B
  *   Kategorisi"; the 2003/04 rule is the same), a double round robin on 2 (n - 1) dates for n clubs (2 n for an odd
  *   n: one club rests each round), made of the class's autumn dates (stage -1) and its spring dates (stage 4);
@@ -88,7 +90,6 @@
 #define GROUPS 3
 #define MIN_GROUP 2
 #define MAX_GROUP 18                /* 2 (n - 1) dates fit in the 36 of stages -1 and 4 up to 18 clubs */
-#define POOL_MAX 200
 
 #define F_MALLOC 0x00944e46u
 #define F_FREE 0x009452cau
@@ -203,6 +204,26 @@ static void group_counts(int counts[5])
     }
 }
 
+/* The three group rows of the data (Summer 2002), by name, or 0 (Q16: the form needs them). Kept for the record
+ * table and its count, so a new game with another database looks again. */
+static int group_rows(uint32_t tag[GROUPS])
+{
+    static uint32_t at_comps, at_count, found[GROUPS];
+    uint32_t comps = rd32(g_mem, COMPS), count = rd32(g_mem, COMP_COUNT);
+    if (comps != at_comps || count != at_count) {
+        at_comps = comps;
+        at_count = count;
+        for (int k = 0; k < GROUPS; k++) found[k] = 0;
+        for (uint32_t i = 0; readable(comps) && i < count && i < 4096u; i++) {
+            uint32_t r = comps + i * COMP_SIZE;
+            for (int k = 0; k < GROUPS; k++)
+                if (!found[k] && !strncmp(win_str(r + 4u), GROUP_NAMES[k], 52)) found[k] = r;
+        }
+    }
+    for (int k = 0; k < GROUPS; k++) tag[k] = found[k];
+    return found[0] && found[1] && found[2];
+}
+
 /* 1 when the clubs make three groups: none in G4 or G5, G1 to G3 each from MIN_GROUP to MAX_GROUP. */
 static int clubs_form(void)
 {
@@ -214,10 +235,12 @@ static int clubs_form(void)
     return 1;
 }
 
-/* 1 when the TurSecondB object plays the three-group form. */
+/* 1 when the TurSecondB object plays the three-group form: the data has the three group rows, and the object has
+ * its two stage slots or (at construction) the clubs make three groups. */
 static int form(uint32_t obj)
 {
-    if (!groups_on() || !readable(obj) || rd32(g_mem, obj) != TSB_VTABLE) return 0;
+    uint32_t tag[GROUPS];
+    if (!groups_on() || !readable(obj) || rd32(g_mem, obj) != TSB_VTABLE || !group_rows(tag)) return 0;
     uint32_t slots = rd32(g_mem, obj + OBJ_STAGE_COUNT);
     if (slots == FORM_SLOTS) return 1;
     return slots == CLASS_SLOTS && clubs_form();
@@ -266,7 +289,8 @@ static void log_groups(uint32_t obj)
     for (int k = 0; k < GROUPS; k++) {
         fprintf(stderr, "recomp: turkish groups: %d/%02d Group %c: %d clubs:", year, (year + 1) % 100, LETTER[k],
                 table_clubs(t[k]));
-        for (int i = 0; i < table_clubs(t[k]); i++) fprintf(stderr, "%s %.51s", i ? ";" : "", win_str(row_club(t[k], i) + 4u));
+        for (int i = 0; i < table_clubs(t[k]); i++)
+            fprintf(stderr, "%s %.51s", i ? ";" : "", win_str(row_club(t[k], i) + 4u));
         fprintf(stderr, "\n");
     }
 }
@@ -287,13 +311,8 @@ RT_WRAP(008fddc0, tur_first_table)
         o_008fddc0();
         return;
     }
-    uint32_t comps = rd32(g_mem, COMPS), tag[GROUPS] = {0, 0, 0};
-    int ncomps = (int)rd32(g_mem, COMP_COUNT);
-    for (int i = 0; readable(comps) && i < ncomps && i < 4096; i++) {
-        uint32_t r = comps + (uint32_t)i * COMP_SIZE;
-        for (int k = 0; k < GROUPS; k++)
-            if (!tag[k] && !strncmp(win_str(r + 4u), GROUP_NAMES[k], 52)) tag[k] = r;
-    }
+    uint32_t tag[GROUPS];
+    group_rows(tag);
     uint32_t lower = record_of(KEY_LOWER), b = record_of(KEY_B), g[5];
     for (int k = 0; k < 5; k++) g[k] = group_record(k);
     int tagged[GROUPS] = {0, 0, 0}, n = club_count();
@@ -325,7 +344,9 @@ RT_WRAP(008fddc0, tur_first_table)
                 wr32(g_mem, club + CLUB_DIVISION, g[k]);
                 in[k]++;
             } else {
-                if (in_row >= 0) wr32(g_mem, club + CLUB_DIVISION, lower);   /* no object plays the row */
+                /* A full group (MAX_GROUP) or another division. No object plays a group row, and a club left in G4
+                 * or G5 would end the form (clubs_form), so such a club goes to the Lower Division. */
+                if (in_row >= 0 || in_groups) wr32(g_mem, club + CLUB_DIVISION, lower);
                 kept++;
             }
             wr32(g_mem, club + CLUB_GROUP, 0);
@@ -372,6 +393,8 @@ uint32_t rt_tur_table_clubs(uint32_t obj, uint32_t original)
 {
     if (!form(obj)) return original;
     uint32_t n = (uint32_t)group_size(0);
+    /* The class never writes +0xa7 (no store in 0x8ff4c0..0x901c70); a class that changes its count resets it, as
+     * GerRegional::create_table at 0x5dd815, so the new count resets it here. */
     if (n != rd16(g_mem, obj + OBJ_CLUBS)) wr16(g_mem, obj + OBJ_MATCHES, 0xffffu);
     return n;
 }
@@ -611,7 +634,8 @@ RT_WRAP(00901ac0, tur_group_progress)
     forward(F_PROGRESS3, 5);
 }
 
-/* advance_stage 0x9006c0 (thiscall): not reached in the form (+0x30 is +0x2c - 1); a call builds nothing. */
+/* advance_stage 0x9006c0 (thiscall): not reached in the form (create_group_stage stores the slot in +0x30 at
+ * 0x900a8e, so +0x30 is 1 = +0x2c - 1); a call builds nothing. */
 void o_009006c0(void);
 RT_WRAP(009006c0, tur_group_advance)
 {
@@ -684,10 +708,11 @@ static int division_clubs(uint32_t rec)
 }
 
 /* tur_first_promote_lower_clubs_to_third_tier 0x8fe3a0 (thiscall): 10 clubs of the Lower Division (club +0x53 set)
- * up by 0x4afbd0, then the relegated rows of the five tables down with +0x60 cleared. The form: the relegated rows
- * of the three tables down first (+0x60 cleared); at more clubs than the size of the season played (the sum of the
- * three tables), the lowest places go down too, the groups in turn; then the Lower Division fills the division to
- * that size. */
+ * up by 0x4afbd0, then the relegated rows of the five tables down with +0x60 cleared. The form: the pool of the Lower
+ * Division first, as the original (0x8fe3a6..0x8fe474: every club, before any club goes down), so no club that goes
+ * down here comes back up; then the relegated rows of the three tables down (+0x60 cleared); at more clubs than the
+ * size of the season played (the sum of the three tables), the lowest places go down too, the groups in turn; then
+ * the pool fills the division to that size. */
 void o_008fe3a0(void);
 RT_WRAP(008fe3a0, tur_exchange)
 {
@@ -707,6 +732,13 @@ RT_WRAP(008fe3a0, tur_exchange)
     if (!readable(b) || !lower) {
         rt_ret_stdcall(0, 0);
         return;
+    }
+    int npool = 0, c = club_count();
+    uint32_t pool = game_malloc(4u * (uint32_t)(c > 0 ? c : 1));
+    for (int i = 0; pool && i < c; i++) {
+        uint32_t club = club_at(i);
+        if (rd32(g_mem, club + CLUB_DIVISION) == lower && rd32(g_mem, club + CLUB_NATION))
+            wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
     }
     for (int k = 0; k < GROUPS && !rt_unwinding; k++)
         for (int i = 0; i < table_clubs(t[k]) && !rt_unwinding; i++) {
@@ -730,13 +762,7 @@ RT_WRAP(008fe3a0, tur_exchange)
             wr32(g_mem, club + CLUB_GROUP, 0);
             cut++;
         }
-    int need = want - division_clubs(b), npool = 0;
-    uint32_t pool = need > 0 ? game_malloc(4u * POOL_MAX) : 0;
-    for (int i = 0, c = club_count(); pool && i < c && npool < POOL_MAX; i++) {
-        uint32_t club = club_at(i);
-        if (rd32(g_mem, club + CLUB_DIVISION) == lower && rd32(g_mem, club + CLUB_NATION))
-            wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
-    }
+    int need = want - division_clubs(b);
     if (need > npool) need = npool;
     if (need > 0 && !rt_unwinding) {
         uint32_t a[3] = {pool, (uint32_t)npool, (uint32_t)need};

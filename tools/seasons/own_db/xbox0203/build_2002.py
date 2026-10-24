@@ -256,7 +256,9 @@ def apply_groups(F, X, changes, skip, log):
     need(len(comps) == 3 and [g for g, _ in groups] == [GROUPS + c for c in "ABC"],
          f"Turkish groups: the list applies {len(comps)} competition rows, not the three Xbox groups")
     for t in (2, 3, 4):
-        same = {i32(r, 0): cmdb.cstr(r, 4, 25) for r in F.rows(t)} == {i32(r, 0): cmdb.cstr(r, 4, 25) for r in X.rows(t)}
+        width = 51 if t == 4 else 25                # nation names 51 bytes, colour and continent names 25
+        same = ({i32(r, 0): cmdb.cstr(r, 4, width) for r in F.rows(t)} ==
+                {i32(r, 0): cmdb.cstr(r, 4, width) for r in X.rows(t)})
         need(same, f"Turkish groups: the names of table {t} differ between the sets, so an Xbox row's ids would not hold")
     e = F.idx[12]
     b, off, size, count = F.table(12)

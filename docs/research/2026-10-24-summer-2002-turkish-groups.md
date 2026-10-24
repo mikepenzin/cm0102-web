@@ -57,6 +57,10 @@ difference). The colour, continent and nation ids of the Xbox rows name the same
 copied as they are but their ids. Only club.dat (bytes +0x60 to +0x63 of 52 clubs), club_comp.dat and index.dat
 differ from the build without the groups. No free row is reused, so the 3.9.68 rows 287 and 288 stay as they are.
 
+The three rows move one window of the original: set_key_ids 0x601a40 runs the club comp name chain over the rows
+0 to count - 128 (`add eax, -0x7f` at 0x604248), so with 436 rows it reads three more rows (306 to 308). They are
+Irish cups whose names are no key names, so no key id changes.
+
 This is why the data side adds rows and the code makes the groups: the key rows G1 to G5 cannot change their
 counts (Q39 and the original game), the Xbox rows give the names Q16 asks for, and the game code needs only a
 tag that it reads once.
@@ -83,10 +87,12 @@ G5, each of G1 to G3 holding 2 to 18) and from +0x2c == 2 after it (saved with t
 | 0x901800, 0x901ba0 | the clubs and final positions of the three tables |
 | 0x9006c0 | builds nothing |
 | chain 0x8fe250 | the original's calls less slots 2 and 3 |
-| 0x8fe3a0 | the relegated rows of the three tables to the Lower Division; at more clubs than the season's size, the lowest places too; then the Lower Division fills the tier back to its size (0x4afbd0, 0x6830b0) |
+| 0x8fe3a0 | the pool of the Lower Division first (every club, as 0x8fe3a6..0x8fe474, so no club that goes down comes back), then the relegated rows of the three tables down; at more clubs than the season's size, the lowest places too; then the pool fills the tier back to its size (0x4afbd0, 0x6830b0) |
 | deal 0x8fe580 | the original's sort (0x53fe50), then three parts: 18, 17, 17 for 52 |
 
-Any other database has no tag rows, so every wrap runs the original. `RECOMP_TURKISH_GROUPS=off` is the test
+Any other database has no tag rows, so every wrap runs the original (the form needs the three rows by name). A
+load keeps the places of each table: League::load reads +0xbe..+0xc1 at 0x6886d7 and the save writes them at
+0x689589 (League_Stage 0x68c113 and 0x68cc27). `RECOMP_TURKISH_GROUPS=off` is the test
 switch (the same-save run `turkish-groups-off`).
 
 The lines `recomp: turkish groups: ...` on stderr give the groups of each season and each move at a season

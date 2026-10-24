@@ -82,7 +82,9 @@ def check_summer(log, first, last):
     bad = [f"message box: {b}" for b in boxes]
     real = real_groups()
     with open(log, encoding="latin-1") as h:
-        m = re.search(r"turkish groups: three groups of \d+, \d+ and \d+ clubs; (\d+) tagged clubs stay", h.read())
+        text = h.read()
+    bad += [f"runtime warning: {w}" for w in re.findall(r"recomp: turkish groups: (?:no dates for|\d+ clubs make groups of)[^\n]*", text)]
+    m = re.search(r"turkish groups: three groups of \d+, \d+ and \d+ clubs; (\d+) tagged clubs stay", text)
     if not m:
         return bad + ["no line of the first-season groups"]
     stayed = int(m.group(1))
@@ -149,6 +151,8 @@ def main(argv):
         runs.append(("other", program, None, 2002, 2003))
         if ref:
             runs.append(("other-ref", os.path.abspath(ref), None, 2002, 2003))
+        else:
+            print("note: without --ref-build the other run checks only that no groups line appears")
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
         futures = {r[0]: pool.submit(run_one, r[0], r[1], game, r[2], r[3], r[4], keep) for r in runs}
         results = {k: f.result() for k, f in futures.items()}
