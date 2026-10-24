@@ -98,7 +98,7 @@
  * Update Team database, October 2003 and September 2005 included, credits the Update Team. Our own season
  * databases Summer 2004 and Summer 2006 (Q351) take their facts from Football Manager and their ratings from the Update Team.
  * Summer 2002 takes its facts from SI's Xbox data of Championship Manager: Season 02/03 and its ratings from 3.9.68
- * (Summer 2002 spec, Q13).
+ * (Summer 2002 spec, Q13; the text is Max's, Q44).
  * Never a person's name in the code. One table, so a later change is one line. */
 typedef struct { const char *name; const char *credit; } Credit;
 static const Credit credits[] = {
@@ -107,7 +107,7 @@ static const Credit credits[] = {
     {"3.9.65", "Data by Sports Interactive"},
     {"Summer 2004", "Bosman Edition database, ratings by the CM 01/02 Update Team"},
     {"Summer 2006", "Bosman Edition database, ratings by the CM 01/02 Update Team"},
-    {"Summer 2002", "Bosman Edition database, data by Sports Interactive"},
+    {"Summer 2002", "Bosman Edition database, data from CM 02/03"},
 };
 #define CREDIT_UPDATE_TEAM "Database by the CM 01/02 Update Team"
 #define CREDIT_CUSTOM "Your own database"

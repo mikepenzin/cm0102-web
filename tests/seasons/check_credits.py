@@ -9,7 +9,7 @@ Team credit, so a misspelt name would silently give the wrong credit. The checks
 - every name of the credit table is a database of the signatures table;
 - the official data sets (roles official version and official base) credit Sports Interactive;
 - our own season databases (OWN) credit the Bosman Edition and the Update Team's ratings, and Summer 2002
-  (OWN_SI: Xbox facts and 3.9.68 ratings) the Bosman Edition and Sports Interactive;
+  (OWN_SI: Xbox facts and 3.9.68 ratings) the Bosman Edition and CM 02/03 (Max, Q44);
 - no other database is in the credit table (they all take the Update Team credit).
 Exit code 1 on a failed check.
 """
@@ -25,7 +25,7 @@ OWN = {"Summer 2004", "Summer 2006"}
 OWN_SI = {"Summer 2002"}          # facts and ratings of Sports Interactive (spec 2026-10-24, Q13)
 CREDIT_SI = "Data by Sports Interactive"
 CREDIT_OWN = "Bosman Edition database, ratings by the CM 01/02 Update Team"
-CREDIT_OWN_SI = "Bosman Edition database, data by Sports Interactive"
+CREDIT_OWN_SI = "Bosman Edition database, data from CM 02/03"
 
 
 def main():
