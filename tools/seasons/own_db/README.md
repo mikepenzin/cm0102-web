@@ -90,8 +90,21 @@ python3 -I test_format1.py
 ```
 
 Each run prints the counts and the known facts: Henry (Arsenal, with his ratings), Ronaldo (Real Madrid), Ferguson
-(Manchester United) and, on the Xbox data, Celestini (Olympique Marseille). The later steps (season settings,
-change list, build) are slices 2 and 3 of the spec.
+(Manchester United) and, on the Xbox data, Celestini (Olympique Marseille).
+
+## 2002/03 (Summer 2002), slice 2: the change list
+
+`xbox0203/change_list.py` writes what the Xbox facts change in the 3.9.68 template, for Max to read before the
+build: one TSV per kind (club moves, releases, dates, ratings, league differences, names and competitions, unclear
+people) and `summary.md` with the counts and the rows that need his decision. Its header gives the rules. `<changes>`
+is a new folder outside the repo.
+
+```bash
+python3 -I xbox0203/change_list.py "<facts-xbox>" "<facts-3968>" "<xbox data>" "<3.9.68 Data>" "<changes>"
+python3 -I test_change_list.py
+```
+
+The build of the database (slice 3) waits for Max's answers on the list.
 
 ## Mapping of FM ratings (key players only)
 
