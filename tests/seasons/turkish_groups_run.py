@@ -4,7 +4,7 @@ the season core case of the groups, promotion and relegation across two season c
 
 Usage:
     python3 tests/seasons/turkish_groups_run.py <cm0102_recomp> <game folder> --database "<Summer 2002 folder>"
-        [--only summer|other] [--ref-build <program>] [--keep <folder>] [--jobs n]
+        [--only summer|other|summer-off] [--ref-build <program>] [--keep <folder>] [--jobs n]
 
 The runs (the season jump of tests/seasons/rules_report_check.py, Select All less the 15 other rows of the Select
 League(s) screen, so Turkey plays; the runtime's lines "recomp: turkish groups: ...",
@@ -22,6 +22,9 @@ src/recomp_rt/win/season_tur_groups.c):
     other   a 2002/03 start with the game's own 3.9.68 data to the end of 2003/04 (one season change): no line of the
             groups (the five groups of 10 of the original). With --ref-build the same run of that program gives the
             same rules report, so the change does not touch another database.
+    summer-off  (only with --only summer-off) the summer game with RECOMP_TURKISH_GROUPS=off, to tell whether a fault
+            of the summer run is the groups' own.
+A message box stops a run at once (its code is "box").
 --keep keeps each run's folder there (<keep>/<run>). Each run takes about 20 to 40 minutes.
 """
 import concurrent.futures
@@ -124,10 +127,11 @@ def check_summer(log, first, last):
     return bad
 
 
-def run_one(name, program, game, database, year, last, keep):
+def run_one(name, program, game, database, year, last, keep, env=None):
     work = os.path.join(keep, name) if keep else tempfile.mkdtemp(prefix=f"cm0102-turkey-{name}-")
     nations = ["all"] + OTHERS
-    code, report = rrc.run(program, game, last, year, database, nations, [], work, 4 * 3600)
+    code, report = rrc.run(program, game, last, year, database, nations, [], work, 4 * 3600, env_more=env,
+                           stop_on_box=True)
     return code, report, os.path.join(work, "stderr.txt")
 
 
@@ -147,6 +151,8 @@ def main(argv):
             print("--database <Summer 2002 folder> is needed for the summer run")
             return 2
         runs.append(("summer", program, database, 2002, 2004))
+    if only == "summer-off":                # the same game with the groups off: is a fault the groups' own?
+        runs.append(("summer-off", program, database, 2002, 2004))
     if only in (None, "other"):
         runs.append(("other", program, None, 2002, 2003))
         if ref:
@@ -154,7 +160,8 @@ def main(argv):
         else:
             print("note: without --ref-build the other run checks only that no groups line appears")
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
-        futures = {r[0]: pool.submit(run_one, r[0], r[1], game, r[2], r[3], r[4], keep) for r in runs}
+        futures = {r[0]: pool.submit(run_one, r[0], r[1], game, r[2], r[3], r[4], keep,
+                                     {"RECOMP_TURKISH_GROUPS": "off"} if r[0] == "summer-off" else None) for r in runs}
         results = {k: f.result() for k, f in futures.items()}
     failed = []
     for name, (code, report, log) in results.items():
