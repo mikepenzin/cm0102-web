@@ -504,7 +504,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2013/14	Ykkönen	HIFK	4728	FC HIFK	Finnish First Division South	https://en.wikipedia.org/wiki/2014_Ykkönen
 2013/14	Ykkönen	KTP	6131	Kotkan TP	Finnish Second Division South	https://en.wikipedia.org/wiki/2014_Ykkönen
 2013/14	Ykkönen	Ilves	6502	Ilves	Finnish First Division North	https://en.wikipedia.org/wiki/2014_Ykkönen
-2013/14	Ykkönen	AC Oulu	3836	FC Oulu	none	https://en.wikipedia.org/wiki/2014_Ykkönen
+2013/14	Ykkönen	AC Oulu	11488	AC Oulu	Finnish First Division North	https://en.wikipedia.org/wiki/2014_Ykkönen
 2013/14	Ykkönen	Haka	3791	FC Haka	Finnish First Division North	https://en.wikipedia.org/wiki/2014_Ykkönen
 2013/14	Ykkönen	PK-35 Vantaa	8458	Pallokerho-35	Finnish First Division North	https://en.wikipedia.org/wiki/2014_Ykkönen
 2013/14	Ykkönen	JJK	5512	Jyväskylän Jalkapalloklubi	Finnish Premier Division	https://en.wikipedia.org/wiki/2014_Ykkönen
@@ -555,7 +555,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2014/15	Tippeligaen	Start	11061	IK Start	Norwegian Premier Division	https://en.wikipedia.org/wiki/2015_Tippeligaen
 2014/15	Tippeligaen	Mjøndalen	7424	Mjøndalen IF	Norwegian First Division	https://en.wikipedia.org/wiki/2015_Tippeligaen
 2014/15	Tippeligaen	Sandefjord	10089	Sandefjord Fotball	Norwegian First Division	https://en.wikipedia.org/wiki/2015_Tippeligaen
-2014/15	Ykkönen	AC Oulu	3836	FC Oulu	Finnish Lower Division	https://en.wikipedia.org/wiki/2015_Ykkönen
+2014/15	Ykkönen	AC Oulu	4784	AC Oulu	Finnish First Division North	https://en.wikipedia.org/wiki/2015_Ykkönen
 2014/15	Ykkönen	EIF	3388	Ekenäs IF	Finnish First Division South	https://en.wikipedia.org/wiki/2015_Ykkönen
 2014/15	Ykkönen	FC Jazz	3798	FC Jazz	Finnish First Division South	https://en.wikipedia.org/wiki/2015_Ykkönen
 2014/15	Ykkönen	JJK	5512	JJK Jyväskylä	Finnish First Division North	https://en.wikipedia.org/wiki/2015_Ykkönen

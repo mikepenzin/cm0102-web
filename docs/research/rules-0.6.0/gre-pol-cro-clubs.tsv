@@ -621,7 +621,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2022/23	gre_second	Almopos Aridea	9809	Almopos Arideas	Greek National B Division	https://en.wikipedia.org/wiki/2022–23_Super_League_Greece_2
 2022/23	gre_second	Makedonikos	4263	Makedonikos Neapolis	Greek Lower Division	https://en.wikipedia.org/wiki/2022–23_Super_League_Greece_2
 2022/23	gre_second	Panathinaikos B	6732	Panathinaikos Athens B	Greek Lower Division	https://en.wikipedia.org/wiki/2022–23_Super_League_Greece_2
-2022/23	gre_second	Diagoras	6485	AO Diagoras Vrachneikon	Greek Lower Division	https://en.wikipedia.org/wiki/2022–23_Super_League_Greece_2
+2022/23	gre_second	Diagoras	8571	Diagoras Rodou	Greek Lower Division	https://en.wikipedia.org/wiki/2022–23_Super_League_Greece_2
 2022/23	gre_second	Apollon Pontus	5783	Apollon Pontou	Greek National B Division	https://en.wikipedia.org/wiki/2022–23_Super_League_Greece_2
 2022/23	gre_second	Veria	3182	Veria NPS	Greek National B Division	https://en.wikipedia.org/wiki/2022–23_Super_League_Greece_2
 2022/23	gre_second	Iraklis Larissa	1661	Iraklis Larisas	Greek Lower Division	https://en.wikipedia.org/wiki/2022–23_Super_League_Greece_2
@@ -659,7 +659,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2023/24	new (gre second, group 2)	Kalamata	5785	PS Kalamata	Greek National B Division	https://en.wikipedia.org/wiki/2023–24_Super_League_Greece_2
 2023/24	new (gre second, group 2)	Ionikos	5410	Ionikos Nikeas	Greek National B Division	https://en.wikipedia.org/wiki/2023–24_Super_League_Greece_2
 2023/24	new (gre second, group 2)	Ilioupoli	10582	GS Ilioupolis	Greek Lower Division	https://en.wikipedia.org/wiki/2023–24_Super_League_Greece_2
-2023/24	new (gre second, group 2)	Diagoras	6485	AO Diagoras Vrachneikon	Greek Lower Division	https://en.wikipedia.org/wiki/2023–24_Super_League_Greece_2
+2023/24	new (gre second, group 2)	Diagoras	8571	Diagoras Rodou	Greek Lower Division	https://en.wikipedia.org/wiki/2023–24_Super_League_Greece_2
 2023/24	new (gre second, group 2)	Egaleo	5319	AO Egaleo	Greek National B Division	https://en.wikipedia.org/wiki/2023–24_Super_League_Greece_2
 2023/24	new (gre second, group 2)	Olympiacos B	6378	Olympiacos Piraeus B	Greek Lower Division	https://en.wikipedia.org/wiki/2023–24_Super_League_Greece_2
 2023/24	new (gre second, group 2)	Giouchtas	6862	AO Giouchtas	Greek Lower Division	https://en.wikipedia.org/wiki/2023–24_Super_League_Greece_2
@@ -1431,7 +1431,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	cro_a2a	Omladinac Novo Selo Rok	8279	NK Omladinac	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Sloga Nova Gradiška	10676	NK Sloga	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Valpovka	12238	NK Valpovska Satnica	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
-2002/03	cro_a2a	Metalac Osijek	7289	NK Metalac (S)	Croatian Third Division Central	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
+2002/03	cro_a2a	Metalac Osijek	7286	NK Metalac	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Vukovar '91	12620	HNK Vukovar '91	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Podravac	8865	NK Podravac	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2a	Grafičar Vodovod	4532	NK Graficar Vodovod	Croatian Second Division North	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
@@ -1442,7 +1442,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	cro_a2b	Uskok Klis	12132	NK Uskok	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Croatia Sesvete	10372	NK Croatia Sesvete	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Hrvatski Dragovoljac	5172	NK Hrvatski Dragovoljac	Croatian First Division	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
-2002/03	cro_a2b	GOŠK Dubrovnik	3304	HNK Dubrovnik	Croatian Third Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
+2002/03	cro_a2b	GOŠK Dubrovnik	4259	NK GOSK	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Imotski	5332	NK Imotski	Croatian Lower Division	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Novalja	8054	NK Novalja	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
 2002/03	cro_a2b	Istra Pula	5463	NK Istra	Croatian Second Division South	https://en.wikipedia.org/wiki/2002–03_Croatian_Second_Football_League
@@ -1453,7 +1453,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2003/04	cro_a2a	Vukovar '91	12620	HNK Vukovar '91	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2a	Grafičar Vodovod	4532	NK Graficar Vodovod	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2a	Slavonija Požega	10654	NK Slavonija	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
-2003/04	cro_a2a	Metalac Osijek	7289	NK Metalac (S)	Croatian Third Division Central	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
+2003/04	cro_a2a	Metalac Osijek	7286	NK Metalac	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2a	Virovitica	12529	NK Virovitica	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2a	Čakovec	2128	NK Cakovec	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2a	Koprivnica	6111	NK Koprivnica	Croatian Second Division North	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
@@ -1470,14 +1470,14 @@ season	division	club	db_club_id	db_club	db_division	source
 2003/04	cro_a2b	Imotski	5332	NK Imotski	Croatian Lower Division	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2b	Hrvatski Dragovoljac	5172	NK Hrvatski Dragovoljac	Croatian Second Division South	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2b	Croatia Sesvete	10372	NK Croatia Sesvete	Croatian Second Division South	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
-2003/04	cro_a2b	GOŠK Dubrovnik	3304	HNK Dubrovnik	Croatian Third Division South	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
+2003/04	cro_a2b	GOŠK Dubrovnik	4259	NK GOSK	Croatian Second Division South	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2003/04	cro_a2b	Orijent	8334	NK Orijent	Croatian Second Division South	https://en.wikipedia.org/wiki/2003–04_Croatian_Second_Football_League
 2005/06	cro_a2a	Belišće	1466	NK Belisce	Croatian First Division	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
 2005/06	cro_a2a	Grafičar Vodovod	4532	NK Graficar Vodovod	Croatian Second Division North	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
 2005/06	cro_a2a	Bjelovar	1625	NK Bjelovar	Croatian Second Division North	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
 2005/06	cro_a2a	Vukovar '91	12620	HNK Vukovar '91	Croatian Second Division North	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
 2005/06	cro_a2a	Koprivnica	6111	NK Koprivnica	Croatian Second Division North	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
-2005/06	cro_a2a	Metalac Osijek	7289	NK Metalac (S)	Croatian Third Division Central	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
+2005/06	cro_a2a	Metalac Osijek	7286	NK Metalac	Croatian Second Division North	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
 2005/06	cro_a2a	Marsonia	7138	NK Marsonia	Croatian First Division	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
 2005/06	cro_a2a	Čakovec				https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League
 2005/06	cro_a2a	Graničar Županja	4545	NK Granicar	Croatian Second Division North	https://en.wikipedia.org/wiki/2005–06_Croatian_Second_Football_League

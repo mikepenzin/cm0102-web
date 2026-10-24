@@ -176,6 +176,10 @@ if(NOT WIN32)
     # The names table and the club moves table (0.6.0 slice 15): the tools read every part and stop on a bad row.
     add_test(NAME season_names_table COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tools/seasons/make_names.py" --check)
     add_test(NAME season_clubs_table COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tools/seasons/make_clubs.py" --check)
+    # The club ids of the clubs files (O151): each row names a club record of its season's database. The check reads
+    # the databases of test-fixtures and skips (code 77) where they are missing.
+    add_test(NAME season_club_ids COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tests/seasons/club_ids_check.py")
+    set_tests_properties(season_club_ids PROPERTIES SKIP_RETURN_CODE 77)
     add_test(NAME season_club_records_table COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tools/seasons/make_club_records.py" --check)
     # The UEFA formats by season (0.6.0 slice 22): the committed table matches uefa.tsv, and its lookups.
     add_test(NAME season_uefa_table COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tools/seasons/make_uefa_table.py" --check)

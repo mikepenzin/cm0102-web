@@ -42,7 +42,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Championnat National	RC Besançon	1541	Besançon Racing Club	French National	https://www.rsssf.org/tablesf/fran03.html
 2002/03	Championnat National	SCO Angers	736	SCO Angers	French National	https://www.rsssf.org/tablesf/fran03.html
 2002/03	Championnat National	FC Rouen	9705	Olympique Grand Rouen	French CFA	https://www.rsssf.org/tablesf/fran03.html
-2002/03	Championnat National	Dijon FCO	3776	FC Dijon	none	https://www.rsssf.org/tablesf/fran03.html
+2002/03	Championnat National	Dijon FCO	3087	Dijon Football Côte d'Or	French National	https://www.rsssf.org/tablesf/fran03.html
 2002/03	Championnat National	FC Martigues	7142	FC Martigues	French Second Division	https://www.rsssf.org/tablesf/fran03.html
 2002/03	Championnat National	Valenciennes FC	12214	Valenciennes FC	French CFA	https://www.rsssf.org/tablesf/fran03.html
 2002/03	Championnat National	AS Cannes	2190	AS Cannes	French National	https://www.rsssf.org/tablesf/fran03.html
@@ -101,7 +101,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2003/04	Ligue 2	FC Rouen	9705	Olympique Grand Rouen	French Second Division	https://en.wikipedia.org/wiki/2003–04_Ligue_2
 2003/04	Championnat National	Stade de Reims	9467	Stade de Reims Champagne	French National	https://www.rsssf.org/tablesf/fran04.html
 2003/04	Championnat National	Stade Brestois	1876	Stade Brestois 29	French National	https://www.rsssf.org/tablesf/fran04.html
-2003/04	Championnat National	Dijon FCO	3776	FC Dijon	none	https://www.rsssf.org/tablesf/fran04.html
+2003/04	Championnat National	Dijon FCO	3087	Dijon Football Côte d'Or	French National	https://www.rsssf.org/tablesf/fran04.html
 2003/04	Championnat National	SO Romorantin	9648	Stade Olympique Romorantin	French National	https://www.rsssf.org/tablesf/fran04.html
 2003/04	Championnat National	Gazeléc FCO Ajaccio	4322	Gazélec FCO Ajaccio	French National	https://www.rsssf.org/tablesf/fran04.html
 2003/04	Championnat National	AS Cannes	2190	AS Cannes	French National	https://www.rsssf.org/tablesf/fran04.html
@@ -183,7 +183,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2005/06	Ligue 2	CS Sedan Ardennes	10296	CS Sedan-Ardennes	French Second Division	https://en.wikipedia.org/wiki/2005–06_Ligue_2
 2005/06	Ligue 2	FC Lorient	6740	FC Lorient	French Second Division	https://en.wikipedia.org/wiki/2005–06_Ligue_2
 2005/06	Ligue 2	SM Caen	2116	Stade Malherbe de Caen	French Second Division	https://en.wikipedia.org/wiki/2005–06_Ligue_2
-2005/06	Ligue 2	Dijon FCO	3776	FC Dijon	none	https://en.wikipedia.org/wiki/2005–06_Ligue_2
+2005/06	Ligue 2	Dijon FCO	3087	Dijon Football Côte d'Or	French National	https://en.wikipedia.org/wiki/2005–06_Ligue_2
 2005/06	Ligue 2	SC Bastia	1390	Sporting Club Bastia	French Second Division	https://en.wikipedia.org/wiki/2005–06_Ligue_2
 2005/06	Ligue 2	Le Havre AC	6414	Le Havre Athletic Club	French Second Division	https://en.wikipedia.org/wiki/2005–06_Ligue_2
 2005/06	Ligue 2	US Créteil-Lusitanos	2798	US Créteil	French Second Division	https://en.wikipedia.org/wiki/2005–06_Ligue_2
@@ -218,7 +218,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2005/06	Championnat National	Bayonne	1414	Bayonne	French Lower Division	https://www.rsssf.org/tablesf/fran06.html
 2005/06	Championnat National	Croix de Savoie	4271	FC Gaillard	French Lower Division	https://www.rsssf.org/tablesf/fran06.html
 2005/06	Championnat National	Moulins	7601	AS Moulinoise	French Lower Division	https://www.rsssf.org/tablesf/fran06.html
-2005/06	Championnat National	Gazeléc Ajaccio FCO	329	Gazélec FCO Ajaccio	French Lower Division	https://www.rsssf.org/tablesf/fran06.html
+2005/06	Championnat National	Gazeléc Ajaccio FCO	4322	Gazélec FCO Ajaccio	French National	https://www.rsssf.org/tablesf/fran06.html
 2006/07	Ligue 1	Auxerre	1074	AJ Auxerre	French First Division	https://en.wikipedia.org/wiki/2006–07_Ligue_1
 2006/07	Ligue 1	Bordeaux	1754	Girondins de Bordeaux	French First Division	https://en.wikipedia.org/wiki/2006–07_Ligue_1
 2006/07	Ligue 1	Le Mans	6415	Le Mans Union Club 72	French First Division	https://en.wikipedia.org/wiki/2006–07_Ligue_1
@@ -315,7 +315,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2007/08	Ligue 2	Amiens SC	683	Amiens Sporting Club Football	French Second Division	https://en.wikipedia.org/wiki/2007–08_Ligue_2
 2007/08	Ligue 2	LB Châteauroux	2429	Berrichonne de Châteauroux	French Second Division	https://en.wikipedia.org/wiki/2007–08_Ligue_2
 2007/08	Ligue 2	US Boulogne	1796	US Boulogne Côte d'Opale	French National	https://en.wikipedia.org/wiki/2007–08_Ligue_2
-2007/08	Ligue 2	Dijon FCO	3776	FC Dijon	none	https://en.wikipedia.org/wiki/2007–08_Ligue_2
+2007/08	Ligue 2	Dijon FCO	3087	Dijon Football Côte d'Or	French Second Division	https://en.wikipedia.org/wiki/2007–08_Ligue_2
 2007/08	Ligue 2	Chamois Niortais FC	7955	Chamois Niortais FC	French Second Division	https://en.wikipedia.org/wiki/2007–08_Ligue_2
 2007/08	Ligue 2	FC Libourne-Saint-Seurin	6552	FC Libourne-Saint-Seurin-Sur-L'Isle	French Second Division	https://en.wikipedia.org/wiki/2007–08_Ligue_2
 2007/08	Ligue 2	FC Gueugnon	4666	FC Gueugnon	French Second Division	https://en.wikipedia.org/wiki/2007–08_Ligue_2
@@ -366,7 +366,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2008/09	Ligue 2	FC Metz	7328	FC Metz	French Second Division	https://en.wikipedia.org/wiki/2008–09_Ligue_2
 2008/09	Ligue 2	Tours FC	11738	Tours Football Club	French Second Division	https://en.wikipedia.org/wiki/2008–09_Ligue_2
 2008/09	Ligue 2	Angers SCO	736	SCO Angers	French Second Division	https://en.wikipedia.org/wiki/2008–09_Ligue_2
-2008/09	Ligue 2	Dijon FCO	3776	FC Dijon	none	https://en.wikipedia.org/wiki/2008–09_Ligue_2
+2008/09	Ligue 2	Dijon FCO	3087	Dijon Football Côte d'Or	French National	https://en.wikipedia.org/wiki/2008–09_Ligue_2
 2008/09	Ligue 2	CS Sedan Ardennes	10296	CS Sedan Ardennes	French Second Division	https://en.wikipedia.org/wiki/2008–09_Ligue_2
 2008/09	Ligue 2	Vannes Olympique Club	12253	Vannes Olympique Club	French Second Division	https://en.wikipedia.org/wiki/2008–09_Ligue_2
 2008/09	Ligue 2	SC Bastia	1390	Sporting Club Bastia	French Second Division	https://en.wikipedia.org/wiki/2008–09_Ligue_2
@@ -427,7 +427,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2009/10	Ligue 2	Clermont Foot	2598	Clermont Foot Auvergne	French Second Division	https://en.wikipedia.org/wiki/2009–10_Ligue_2
 2009/10	Ligue 2	Le Havre AC	6414	Le Havre Athletic Club	French Second Division	https://en.wikipedia.org/wiki/2009–10_Ligue_2
 2009/10	Ligue 2	Stade Lavallois	6406	Stade Lavallois Mayenne FC	French Second Division	https://en.wikipedia.org/wiki/2009–10_Ligue_2
-2009/10	Ligue 2	Dijon FCO	3776	FC Dijon	none	https://en.wikipedia.org/wiki/2009–10_Ligue_2
+2009/10	Ligue 2	Dijon FCO	3087	Dijon Football Côte d'Or	French Second Division	https://en.wikipedia.org/wiki/2009–10_Ligue_2
 2009/10	Ligue 2	Nîmes Olympique	7951	Nîmes Olympique	French National	https://en.wikipedia.org/wiki/2009–10_Ligue_2
 2009/10	Ligue 2	Tours FC	11738	Tours Football Club	French Second Division	https://en.wikipedia.org/wiki/2009–10_Ligue_2
 2009/10	Ligue 2	CS Sedan Ardennes	10296	CS Sedan Ardennes	French Second Division	https://en.wikipedia.org/wiki/2009–10_Ligue_2
@@ -481,7 +481,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2010/11	Ligue 1	AC Arles-Avignon	843	Athlétic Club Arles-Avignon	French Second Division	https://en.wikipedia.org/wiki/2010–11_Ligue_1
 2010/11	Ligue 2	Évian Thonon Gaillard FC	4271	Evian Thonon Gaillard FC	French Second Division	https://en.wikipedia.org/wiki/2010–11_Ligue_2
 2010/11	Ligue 2	AC Ajaccio	330	Athletic Club Ajaccio	French National	https://en.wikipedia.org/wiki/2010–11_Ligue_2
-2010/11	Ligue 2	Dijon FCO	3776	FC Dijon	none	https://en.wikipedia.org/wiki/2010–11_Ligue_2
+2010/11	Ligue 2	Dijon FCO	3087	Dijon Football Côte d'Or	French Second Division	https://en.wikipedia.org/wiki/2010–11_Ligue_2
 2010/11	Ligue 2	Le Mans FC	6415	Le Mans Union Club 72	French Second Division	https://en.wikipedia.org/wiki/2010–11_Ligue_2
 2010/11	Ligue 2	CS Sedan Ardennes	10296	CS Sedan Ardennes	French Second Division	https://en.wikipedia.org/wiki/2010–11_Ligue_2
 2010/11	Ligue 2	Angers SCO	736	Angers Sporting Club de l'Ouest	French Second Division	https://en.wikipedia.org/wiki/2010–11_Ligue_2
@@ -538,7 +538,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2011/12	Ligue 1	AC Ajaccio	330	Athletic Club Ajaccio	French National	https://en.wikipedia.org/wiki/2011–12_Ligue_1
 2011/12	Ligue 1	FC Lorient	6740	FC Lorient Bretagne Sud	French First Division	https://en.wikipedia.org/wiki/2011–12_Ligue_1
 2011/12	Ligue 1	Stade Malherbe Caen	2116	Stade Malherbe de Caen	French First Division	https://en.wikipedia.org/wiki/2011–12_Ligue_1
-2011/12	Ligue 1	Dijon FCO	3776	FC Dijon	none	https://en.wikipedia.org/wiki/2011–12_Ligue_1
+2011/12	Ligue 1	Dijon FCO	3087	Dijon Football Côte d'Or	French First Division	https://en.wikipedia.org/wiki/2011–12_Ligue_1
 2011/12	Ligue 1	AJ Auxerre	1074	AJ Auxerre	French First Division	https://en.wikipedia.org/wiki/2011–12_Ligue_1
 2011/12	Ligue 2	SC Bastia	1390	Sporting Club Bastia	French Second Division	https://en.wikipedia.org/wiki/2011–12_Ligue_2
 2011/12	Ligue 2	Stade de Reims	9467	Stade de Reims	French Second Division	https://en.wikipedia.org/wiki/2011–12_Ligue_2
@@ -1533,7 +1533,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2003/04	CFA	Olympique Noisy-le-Sey	7980	Olympique Noisy-le-Sec Banlieue	French CFA	https://www.rsssf.org/tablesf/fran04.html
 2003/04	CFA	Paris Saint-Germain (2)				https://www.rsssf.org/tablesf/fran04.html
 2003/04	CFA	Lens (2)				https://www.rsssf.org/tablesf/fran04.html
-2003/04	CFA	Calais	2149	Calvi	French Lower Division	https://www.rsssf.org/tablesf/fran04.html
+2003/04	CFA	Calais	2131	Calais Racing UFC	French CFA	https://www.rsssf.org/tablesf/fran04.html
 2003/04	CFA	Mantes 78 FC	7058	FC Mantois 78	French Lower Division	https://www.rsssf.org/tablesf/fran04.html
 2003/04	CFA	Dunkerque	3339	US Littoral Dunkerque	French CFA	https://www.rsssf.org/tablesf/fran04.html
 2003/04	CFA	US Boulogne Côte-d'Opale	1796	US Boulogne-sur-Mer	French CFA	https://www.rsssf.org/tablesf/fran04.html
@@ -1602,7 +1602,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2005/06	CFA	Dunkerque	3339	US Littoral Dunkerque	French CFA	https://www.rsssf.org/tablesf/fran06.html
 2005/06	CFA	Auxerre 2 (reserves)				https://www.rsssf.org/tablesf/fran06.html
 2005/06	CFA	Roye	9729	US Royenne	French CFA	https://www.rsssf.org/tablesf/fran06.html
-2005/06	CFA	Calais	2149	Calvi	French Lower Division	https://www.rsssf.org/tablesf/fran06.html
+2005/06	CFA	Calais	2131	Calais Racing UFC	French CFA	https://www.rsssf.org/tablesf/fran06.html
 2005/06	CFA	Compiègne				https://www.rsssf.org/tablesf/fran06.html
 2005/06	CFA	Lens 2 (reserves)				https://www.rsssf.org/tablesf/fran06.html
 2005/06	CFA	Lesquin				https://www.rsssf.org/tablesf/fran06.html
@@ -2975,7 +2975,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2001/02	CFA 2	FC Marmande	7129	FC Marmande 47	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
 2001/02	CFA 2	Rodez AF	9634	Rodez Aveyron Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
 2001/02	CFA 2	Toulouse Fontaines	11733	Toulouse Fontaines	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
-2001/02	CFA 2	Stade bordelais	1755	Stade Bordelais UC	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
+2001/02	CFA 2	Stade bordelais	11016	Stade Bordelais	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
 2001/02	CFA 2	FC Saint-Médard-en-Jalles	9963	Saint-Médard	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
 2001/02	CFA 2	Blagnac FC	1653	Blagnac	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
 2001/02	CFA 2	FA Carcassonne Villalbe	2227	FA Carcassonne-Villalbe	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
@@ -3109,7 +3109,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	CFA 2	Balma SC	1271	Balma SC	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	AS Angoulême (B)				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	Rodez AF	9634	Rodez Aveyron Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	CFA 2	Stade bordelais	1755	Stade Bordelais UC	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
+2002/03	CFA 2	Stade bordelais	11016	Stade Bordelais	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	US Saintes	9969	US Saintes Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	FC Saint-Médard-en-Jalles	9963	Saint-Médard	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	AS Muret	7655	Muret	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
@@ -3353,7 +3353,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2005/06	CFA 2	Castelnau-le-Crès FC				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2005-2006
 2005/06	CFA 2	ES Cros-de-Cagnes				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2005-2006
 2005/06	CFA 2	GC Lunel	6830	Lunel	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2005-2006
-2005/06	CFA 2	Stade bordelais	1755	Stade Bordelais UC	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2005-2006
+2005/06	CFA 2	Stade bordelais	11016	Stade Bordelais	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2005-2006
 2005/06	CFA 2	Luçon VF				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2005-2006
 2005/06	CFA 2	La Roche VF	6300	La Roche-sur-Yon Vendée	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2005-2006
 2005/06	CFA 2	JS Cugnalaise				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2005-2006
@@ -4286,7 +4286,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2014/15	CFA 2	Saint-Colomban Locminé	6667	Saint-Colomban Locminé	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2014-2015
 2014/15	CFA 2	SC Herouvillais	1569	SC Hérouvillais	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2014-2015
 2014/15	CFA 2	SO Choletais	2517	SO Cholet	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2014-2015
-2014/15	CFA 2	Saint-Pryvé Saint-Hilaire FC	4509	Saint-Pryvé Saint-Hilaire	A Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2014-2015
+2014/15	CFA 2	Saint-Pryvé Saint-Hilaire FC	9965	Saint-Pryvé Saint-Hilaire	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2014-2015
 2014/15	CFA 2	Le Mans FC				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2014-2015
 2014/15	CFA 2	La Roche VF	6300	La Roche-sur-Yon Vendée	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2014-2015
 2014/15	CFA 2	Angers SCO (B)	4774	Angers SCO II	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2014-2015
@@ -4796,14 +4796,14 @@ season	division	club	db_club_id	db_club	db_division	source
 2018/19	National 3	Dijon FCO (B)	1905	FCO Dijon B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	Louhans-Cuiseaux FC	6761	CS Louhans-Cuiseaux 71	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	AJ Auxerre (B)	4516	AJ Auxerre II	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
-2018/19	National 3	Besançon Football	1541	Racing Besançon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
+2018/19	National 3	Besançon Football				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	FC Montceau Bourgogne	7513	Football Club Montceau Bourgogne	A Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	FC Gueugnon	477	Gueugnon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	Jura Dolois Football				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	FC Sochaux-Montbéliard (B)	1866	FC Sochaux-Montbéliard II	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	Is-Selongey Football	7531	SC Selongey	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	FC Morteau-Montlebon	9957	Morteau-Montlebon	A Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
-2018/19	National 3	Racing Besançon				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
+2018/19	National 3	Racing Besançon	1541	Racing Besançon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	US Charitoise				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	CO Avallonnais				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
 2018/19	National 3	FC Grandvillars				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2018-2019
@@ -4963,9 +4963,9 @@ season	division	club	db_club_id	db_club	db_division	source
 2019/20	National 3	US Saint-Flour				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
 2019/20	National 3	AJ Auxerre (B)	4516	AJ Auxerre B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
 2019/20	National 3	FC Gueugnon	477	Gueugnon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
-2019/20	National 3	Besançon	1541	Racing Besançon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
+2019/20	National 3	Besançon				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
 2019/20	National 3	Dijon FCO (B)	1905	FCO Dijon B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
-2019/20	National 3	Racing Besançon				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
+2019/20	National 3	Racing Besançon	1541	Racing Besançon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
 2019/20	National 3	CA Pontarlier	1053	CA Pontarlier	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
 2019/20	National 3	FC Sochaux-Montbéliard (B)	1866	FC Sochaux-Montbéliard II	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
 2019/20	National 3	Morteau	9957	FC Morteau-Montlebon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2019-2020
@@ -5872,7 +5872,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2024/25	National 3	Louhans-Cuiseaux FC	6761	Louhans-Cuiseaux FC	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	FC Gueugnon	477	FC Gueugnon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	SR Colmar	2655	SR Colmar	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
-2024/25	National 3	Racing Besançon	1541	Besançon Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
+2024/25	National 3	Racing Besançon	9936	Racing Besançon	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	FC Sochaux-Montbéliard (B)	1866	FC Sochaux-Montbéliard B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	CA Pontarlier	1053	CA Pontarlier	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	FC Metz (B)	541	FC Metz B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
@@ -5880,7 +5880,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2024/25	National 3	Jura Dolois Football	974	Jura Dolois Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	ASM Belfort FC	1460	ASM Belfort	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	ES Thaon	7127	ES Thaon	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
-2024/25	National 3	Besançon Football	9936	Racing Besançon	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
+2024/25	National 3	Besançon Football	1541	Besançon Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	Sarreguemines FC	5650	Sarreguemines	A Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	US Sarre-Union	208	US Sarre-Union	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
 2024/25	National 3	US Raon-l'Étape	9365	US Raon-l'Étape	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2024-2025
@@ -5986,7 +5986,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2025/26	National 3	ES Troyes AC (B)	4072	ESTAC Troyes B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	Thonon Évian GG FC	4271	Thonon Évian Grand Genève FC	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	FC Chalon	2401	Chalon-sur-Saône	A Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
-2025/26	National 3	Racing Besançon	1541	Besançon Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
+2025/26	National 3	Racing Besançon	9936	Racing Besançon	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	Jura Dolois Football	974	Jura Dolois Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	US Torcy PVM	11246	US Torcy	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	CA Pontarlier	1053	CA Pontarlier	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
@@ -5996,7 +5996,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2025/26	National 3	FC Mulhouse	7638	FC Mulhouse	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	RC Strasbourg (B)	2166	Racing Strasbourg B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	FC Sochaux-Montbéliard (B)	1866	FC Sochaux-Montbéliard B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
-2025/26	National 3	Besançon Football	9936	Racing Besançon	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
+2025/26	National 3	Besançon Football	1541	Besançon Football	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	Hauts Lyonnais	9617	Hauts Lyonnais	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	Mâcon 71	6941	Mâcon 71	French CFA	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
 2025/26	National 3	Dijon FCO (B)	1905	Dijon FCO B	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2025-2026
