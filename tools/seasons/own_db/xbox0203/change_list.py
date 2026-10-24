@@ -33,9 +33,11 @@ answer takes it, the 3.9.68 value stays).
   summary gives the proof and its limit. Q25: the rating changes of all clear matches apply, major or not.
 - Kind 5 leagues: every club whose division differs between the 3.9.68 club.dat, the Xbox club.dat and the
   2002/03 club-table row, and every club-table row with no club id (Q15). Q24 (league_decision): the Xbox league
-  where the Xbox data and the club table agree, the 3.9.68 league where the club table agrees with 3.9.68 (or with
-  a 3.9.68 group of a real division that 3.9.68 splits, SPLIT). The
+  where the Xbox data and the club table agree, the 3.9.68 league where the club table agrees with 3.9.68. The
   rest go to leagues-second-look.tsv, sorted by nation, and keep the 3.9.68 league in this build.
+  With --league-check <all-results.tsv> (the check of every league row with two public sources) Max's answers
+  Q33 to Q37 settle the rows (league_check): each "change" row takes the checked game division, rows that the
+  sources confirm are kept, and Q36 and Q37 name the rest by club id. division_new holds the division taken.
 - Kind 6 names and competitions: club names and nations that differ, clubs and competitions in one set only, and
   the clubs of the Xbox Turkish Category B groups (Q11). The Fiorentina name (Q5) applies. The three groups are
   held: 3.9.68 has two free Turkish competition rows, not three (build_2002.py, step 6). The group of each club is
@@ -302,11 +304,6 @@ def real_division(label):
     return label
 
 
-# A real division that 3.9.68 splits into groups: the club table agrees with 3.9.68 when the club is in one of them
-# (Ykkönen, one group from 2003, is the Xbox "Finnish First Division" and the 3.9.68 North and South divisions).
-SPLIT = {"Finnish First Division": ("Finnish First Division North", "Finnish First Division South")}
-
-
 def league_decision(a, b, vs, real, comp_ids):
     """(decision, rule, 3.9.68 competition id or -1) of a league row by Q24. a and b are the 3.9.68 and Xbox
     division names, vs the Xbox division against the 2002/03 club table, real the table's game divisions."""
@@ -315,7 +312,7 @@ def league_decision(a, b, vs, real, comp_ids):
             return APPLIED, "Q24: the Xbox data and the club table agree, the Xbox league", comp_ids[b]
         return HELD, ("Q24 second look: the Xbox league agrees with the club table, but 3.9.68 has no "
                       "competition of that name (the Turkish groups wait for the group rows)"), -1
-    if a in real or any(a in SPLIT.get(r, ()) for r in real):
+    if a in real:
         return KEPT, "Q24: the club table agrees with 3.9.68, the 3.9.68 league stays", -1
     return HELD, "Q24 second look: no rule settles the row, the 3.9.68 league stays in this build", -1
 
@@ -684,7 +681,7 @@ FIELDS = {
     "4-ratings": ["person", "born", "id_3968", "id_xbox", "club_3968", "major", "ca_3968", "ca_xbox", "pa_3968",
                   "pa_xbox", "world_3968", "world_xbox", "fields", "changes", "rule", "decision"],
     "5-leagues": ["club", "id_3968", "id_xbox", "nation", "nation_name", "division_3968", "division_xbox", "table_label",
-                  "table_division", "xbox_vs_table", "table_db_division", "new_division_id", "rule", "decision"],
+                  "table_division", "xbox_vs_table", "table_db_division", "new_division_id", "division_new", "rule", "decision"],
     "6-names": ["item", "id_3968", "id_xbox", "value_3968", "value_xbox", "rule", "decision"],
     "7-unclear": ["reason", "person", "born", "ids_3968", "clubs_3968", "id_xbox", "club_xbox", "joined_xbox",
                   "cend_xbox", "differs", "ratings_differ", "rule", "decision"],
@@ -782,11 +779,15 @@ def summary(rows, notes):
              "releases keep the 3.9.68 club.")
     lg = rows["5-leagues"]
     second = [r for r in lg if r["decision"] == HELD]
-    L.append(f"4. Q24 (leagues): {count(rows, '5-leagues', APPLIED)} clubs take the Xbox league, "
-             f"{count(rows, '5-leagues', KEPT)} keep the 3.9.68 league because the club table agrees with it, and "
+    L.append(f"4. Q24 (leagues): {count(rows, '5-leagues', APPLIED)} clubs take a new league (the Xbox league, or "
+             f"with the league check the checked one), {count(rows, '5-leagues', KEPT)} rows keep the 3.9.68 league "
+             "(the club table or the check agrees with it, or the row names no club), and "
              f"{len(second)} rows go to leagues-second-look.tsv (they keep the 3.9.68 league in this build). Per "
              "nation: " + ", ".join(f"{n} {c}" for n, c in sorted(collections.Counter(
                  r["nation_name"] for r in second).items(), key=lambda kv: (-kv[1], kv[0]))) + ".")
+    if "league_left" in notes:
+        L.append(f"   Q33 to Q37 (the league check with two sources per row, --league-check): applied in the counts "
+                 f"above. Checked rows that no answer settles: {notes['league_left']}.")
     L.append(f"5. Q25 (rating changes of clear matches): {count(rows, '4-ratings', APPLIED)} applied, "
              f"{sum(1 for r in rows['4-ratings'] if r['major'] == 'no')} of them for players who are not major, and "
              f"{sum(1 for r in rows['4-ratings'] if 'Q26' in r['rule'])} of them for Q26 clear matches (the list "
@@ -829,6 +830,81 @@ def summary(rows, notes):
     return "\n".join(L)
 
 
+# ---- Max's league answers (Q33 to Q37, 2026-10-24) on the checked rows of league-check/all-results.tsv
+
+Q37 = {3776: "none", 5508: "lower", 6369: "lower", 3847: "lower", 9522: "lower", 5331: "lower", 7574: "lower",
+       7575: "lower", 11488: "Finnish Second Division North", 2490: "none", 7639: "none", 10994: "none",
+       2059: "keep", 9569: "keep", 5682: "keep", 5683: "keep", 6846: "keep"}     # 6846 Lusitanos: Q36
+LOWER = {"France": "French Lower Division", "Finland": "Finnish Lower Division", "Croatia": "Croatian Lower Division",
+         "Russia": "Russian Lower Division"}
+NO_DIVISION = -2                                    # club.dat +0x57 of a club with no division in 3.9.68
+
+
+def league_check(rows5, path, div_t, comps_t, TC, nations):
+    """Applies the checked league rows (each with two sources) to the kind 5 rows by Max's answers:
+    Q34 every "change" row takes its game division (a new row when the club has none), "ok_as_built" keeps the
+    built value, Q36 and Q37 settle the "max" rows by club id, Q35 rows with no club need nothing. Q33 (the 2003
+    season for the calendar-year leagues) is in the check itself. Returns the rows left unsettled."""
+    with open(path, newline="", encoding="utf-8") as h:
+        checked = list(csv.DictReader(h, delimiter="\t", quoting=csv.QUOTE_NONE))
+    ids = {v: k for k, v in comps_t.items()}
+    by_id = {int(r["id_3968"]): r for r in rows5 if int(r["id_3968"]) >= 0}
+    left = []
+
+    def name_of(c):
+        v = div_t.get(c, -1)
+        return comps_t.get(v, "none") if v >= 0 else "none"
+
+    def settle(c, target, why):
+        if target == "none":
+            new, name = NO_DIVISION, "none"
+        else:
+            need(target in ids, f"league check: no 3.9.68 competition {target!r}")
+            new, name = ids[target], target
+        r = by_id.get(c)
+        if r is None:
+            r = dict(club=TC[c]["long"], id_3968=c, id_xbox=-1, nation=TC[c]["nat"],
+                     nation_name=nations.get(TC[c]["nat"], ("-",))[0], division_3968=name_of(c), division_xbox="-",
+                     table_label="-", table_division="-", xbox_vs_table="-", table_db_division="-")
+            rows5.append(r)
+            by_id[c] = r
+        r["division_new"] = name
+        if name == r["division_3968"]:
+            r.update(new_division_id=-1, rule=why + ", the 3.9.68 league stays", decision=KEPT, division_new="")
+        else:
+            r.update(new_division_id=new, rule=why, decision=APPLIED)
+
+    for row in checked:
+        if not row["id_3968"].strip().isdigit():
+            continue                                    # Q35: no club in the database (and the reserve sides)
+        c, dec = int(row["id_3968"]), row["decision"]
+        need(c in TC, f"league check: club {c} is not in 3.9.68")
+        if c in Q37:
+            how = Q37[c]
+            nat = nations.get(TC[c]["nat"], ("-",))[0]
+            if how == "keep":
+                settle(c, name_of(c), "Q36/Q37 (Max)")
+            else:
+                # A club with no nation in 3.9.68 (JCO Le Creusot, Stade Lannionnais) takes the checked division.
+                if how == "lower":
+                    how = LOWER.get(nat, row["game_division"].strip())
+                    need(how.endswith("Lower Division"), f"league check: no Lower Division for club {c}")
+                settle(c, how, "Q37 (Max)")
+        elif dec == "change":
+            settle(c, row["game_division"].strip(), "Q34: two sources agree on " + row["real_league_2002_03"].strip())
+        elif dec == "ok_as_built":
+            r = by_id.get(c)
+            if r is not None and r["decision"] == HELD:
+                settle(c, name_of(c), "Q34: two sources agree with the build")
+        else:
+            left.append(row)
+    for r in rows5:
+        if int(r["id_3968"]) < 0 and r["decision"] == HELD:
+            r.update(rule="Q35: the club-table row names no club of the database, no action", decision=KEPT)
+        r.setdefault("division_new", r["division_xbox"] if r["decision"] == APPLIED else "")
+    return left
+
+
 def outside_repo(path):
     """True when path is outside this checkout and outside the main checkout of a worktree."""
     path = os.path.realpath(path)
@@ -840,8 +916,13 @@ def outside_repo(path):
 
 
 def main(argv):
+    check = None
+    if "--league-check" in argv:
+        i = argv.index("--league-check")
+        need(i + 1 < len(argv), "--league-check needs a file")
+        check, argv = argv[i + 1], argv[:i] + argv[i + 2:]
     need(len(argv) in (5, 6), "usage: change_list.py <facts-xbox> <facts-3968> <xbox data> <3.9.68 Data> <out> "
-                              "[<rules folder>]")
+                              "[<rules folder>] [--league-check <all-results.tsv>]")
     fxp, ftp, dx, dt, out = argv[:5]
     rules = argv[5] if len(argv) == 6 else RULES
     need(outside_repo(out), "the out folder must be outside the repo")
@@ -855,6 +936,10 @@ def main(argv):
     nations = ft["nations"]
     for r in rows["5-leagues"]:
         r["nation_name"] = nations[r["nation"]][0] if r["nation"] in nations else "(no club id)"
+    if check:
+        notes["league_left"] = len(league_check(rows["5-leagues"], check, div_t, comps_t, ft["clubs"], nations))
+    for r in rows["5-leagues"]:
+        r.setdefault("division_new", r["division_xbox"] if r["decision"] == APPLIED else "")
     os.makedirs(out, exist_ok=True)
     for kind, fields in FIELDS.items():
         write_tsv(os.path.join(out, kind + ".tsv"), fields, rows[kind])

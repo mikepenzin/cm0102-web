@@ -20,7 +20,7 @@ that the duplicate merge removes. A change that would need a new row stops the b
    manager +0xcf, assistant +0xd3, coaches +0x19f, scouts +0x1b3, physios +0x1cf (convert.JOB_LISTS), chairman
    +0xbf (job 1) and directors +0xc3 (jobs 2 to 4), as change_list.SLOTS. change_list.py holds the rows whose
    list is full, so a full list here stops the build. convert.check_squad_lists then checks every club.
-4. Divisions (kind 5, Q24): club +0x57 is the new_division_id column.
+4. Divisions (kind 5, Q24, Q34 to Q37): club +0x57 is the new_division_id column (-2: no division).
 5. Names (kind 6): the long name (+0x04, 51 bytes) and short name (+0x38, 26 bytes) of Fiorentina come from the
    Xbox row (Florentia Viola, Q5).
 6. Turkish groups (Q11): the three Xbox "Category B Group" competitions need three free 3.9.68 rows of
@@ -205,10 +205,11 @@ def apply_divisions(F, changes, log):
         if row["decision"] != "applied":
             continue
         c, d = int(row["id_3968"]), int(row["new_division_id"])
-        need(c in by_id and d in comps, f"leagues: club {c} or competition {d} is not in the data")
+        need(c in by_id and (d in comps or d == -2), f"leagues: club {c} or competition {d} is not in the data")
         v = i32(by_id[c], 0x57)
         have = comps.get(v, "none") if v >= 0 else "none"          # the change list's name of no division
-        need(have == row["division_3968"] and comps[d] == row["division_xbox"],
+        want = row.get("division_new") or row["division_xbox"]     # the checked division (Q34), else the Xbox one
+        need(have == row["division_3968"] and comps.get(d, "none") == want,
              f"leagues: {row['club']} does not have the listed divisions")
         put(by_id[c], "<i", 0x57, d)
         n += 1

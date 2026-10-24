@@ -1456,7 +1456,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2001/02	CFA	Levallois-Perret SC	6520	Levallois	French CFA	https://www.rsssf.org/tablesf/fran02.html
 2002/03	CFA	Paris Saint-Germain FC (B)				https://www.rsssf.org/tablesf/fran03.html
 2002/03	CFA	Ent.Sannois Saint-Gratien	10973	Sannois-Saint-Gratien	French CFA	https://www.rsssf.org/tablesf/fran03.html
-2002/03	CFA	Racing Club de France	9266	Racing Club de Paris	French National	https://www.rsssf.org/tablesf/fran03.html
+2002/03	CFA	Racing Club de France				https://www.rsssf.org/tablesf/fran03.html
 2002/03	CFA	AJ Auxerre (B)				https://www.rsssf.org/tablesf/fran03.html
 2002/03	CFA	US Boulogne Côte-d'Opale	1796	US Boulogne-sur-Mer	French National	https://www.rsssf.org/tablesf/fran03.html
 2002/03	CFA	FC Dieppe	3082	FC Dieppe	French CFA	https://www.rsssf.org/tablesf/fran03.html
@@ -3035,7 +3035,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	CFA 2	ALM Évreux				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	AJ Auxerroise (C)				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	US Roye-Noyon	9729	US Royenne	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	CFA 2	AS Choisy-le-Roi	2516	Choisy-le-Roy	none	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
+2002/03	CFA 2	AS Choisy-le-Roi				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	AS Beauvais (B)				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	CO Châlons-en-Champagne	2402	CO Châlons-en-Champagne	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	Olympique Saint-Quentin	9966	Olympique Saint-Quentinois	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
@@ -3117,7 +3117,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	CFA 2	ES Rochelaise	6301	ES La Rochelle	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	US Joué-lès-Tours	5650	US Joué-lès-Tours	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	USJA Carquefou	2251	US Jeanne-d'Arc Carquefou	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	CFA 2	Stade Luçonnais	6793	Luçon	none	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
+2002/03	CFA 2	Stade Luçonnais				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	La Roche VF (B)				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	Chamois Niortais FC (B)				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	Angers SCO (B)				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
@@ -3145,22 +3145,6 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	CFA 2	FC Flérien	4072	Flers FC	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	Saint-Colomban Locminé	6667	Saint-Colomban Locminé	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2002/03	CFA 2	AF Virois				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	French Lower Division (real: regional league)	AS Evry	3728	AS Evry	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	French Lower Division (real: regional league)	Châteaudun OC	2428	ChÃ¢teaudun OC	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	French Lower Division (real: regional league)	FC Béziers-Devèze	1562	FC BÃ©ziers-DevÃ¨ze	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	French Lower Division (real: regional league)	Sarrebourg	10211	Sarrebourg	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	French Lower Division (real: regional league)	Tourcoing FC	11736	Tourcoing FC	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	French Lower Division (real: regional league)	Perpignan FC	8693	Perpignan FC	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
-2002/03	French Lower Division (real: regional league)	Olympique Charleville-Mézières	2420	Olympique Charleville-MÃ©ziÃ¨res	French Lower Division	https://fr.wikipedia.org/wiki/Football_Club_Olympique_de_Charleville-Mézières
-2002/03	French Lower Division (real: regional league)	FC Villefranche Beaujolais	12505	FC Villefranche Beaujolais	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2003-2004
-2002/03	French Lower Division (real: regional league)	Stade Athlétique d'Epinal	3603	Stade AthlÃ©tique d'Epinal	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2003-2004
-2002/03	French Lower Division (real: regional league)	SC Tinqueux	11580	SC Tinqueux	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
-2002/03	French Lower Division (real: regional league)	UF Argentan	820	UF Argentan	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
-2002/03	French Lower Division (real: regional league)	US Fécamp	3961	US FÃ©camp	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
-2002/03	French Lower Division (real: regional league)	US Saint-Omer	9964	US Saint-Omer	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
-2002/03	French Lower Division (real: regional league)	USM Senlis	10339	USM Senlis	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002
-2002/03	French Lower Division (real: regional league)	Lusitanos de Saint-Maur	6846	Lusitanos de Saint-Maur	French National	https://fr.wikipedia.org/wiki/Union_sportive_Lusitanos_de_Saint-Maur
-2002/03	French Lower Division (real: regional league)	CEP Poitiers	8880	CEP Poitiers	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2002-2003
 2003/04	CFA 2	US Lesquin				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2003-2004
 2003/04	CFA 2	Amiens SC (B)				https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2003-2004
 2003/04	CFA 2	FUSC Bois-Guillaume	1712	Bois-Guillaume	French Lower Division	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2003-2004
