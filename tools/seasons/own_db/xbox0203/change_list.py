@@ -464,8 +464,7 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None):
         kind = "1-moves" if new != pt["club"] and new is not None else "2-releases" if new != pt["club"] else \
             "3-dates"
         if job_differs and pt["role"] != px["role"]:
-            if new != pt["club"] or (pt["joined"], pt["cend"]) != (px["joined"], px["cend"]) or job_differs:
-                planned.append((kind, t, x, new, HELD, job_note + ": " + NO_ROW))
+            planned.append((kind, t, x, new, HELD, job_note + ": " + NO_ROW))
             continue
         q22 = JOB_Q22 + ", " if job_differs else ""
         if kind == "2-releases":
@@ -489,7 +488,7 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None):
     before = duplicate_pairs(T)
     in_pair = {i for k in before for i in k}
     planned = [(kind, t, x, new, HELD, "the 3.9.68 row is one of a template duplicate pair: " + pair_text(t, before))
-               if dec == APPLIED and kind != "3-dates" and t in in_pair else (kind, t, x, new, dec, why)
+               if dec == APPLIED and t in in_pair else (kind, t, x, new, dec, why)
                for kind, t, x, new, dec, why in planned]
     notes["dup_before"], notes["dup_rounds"] = before, []
     while True:
@@ -540,8 +539,10 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None):
                     major="yes" if m else "no", ca_3968=RT[t]["ca"], ca_xbox=RX[x]["ca"], pa_3968=RT[t]["pa"],
                     pa_xbox=RX[x]["pa"], world_3968=RT[t]["rep"][WORLD], world_xbox=RX[x]["rep"][WORLD],
                     fields=len(diffs), changes="; ".join(f"{f} {a}>{b}" for f, a, b in diffs),
-                    rule="Q9: the Xbox rating changes are applied" + ("" if m else " (not a major player)"),
-                    decision=APPLIED))
+                    rule=("the 3.9.68 row is one of a template duplicate pair: " + pair_text(t, before)) if t in in_pair
+                    else ("Q25" + (", Q26 clear match" if t in q26 else "") + ": the Xbox rating changes apply"
+                          + ("" if m else " (not a major player)")),
+                    decision=HELD if t in in_pair else APPLIED))
     order = [r["rep"][HOME] >= r["rep"][CURRENT] >= r["rep"][WORLD] for r in RT.values()]
     local = [r for r in RT.values() if r["rep"][HOME] >= 50]
     notes["rep_order"] = round(100 * sum(order) / max(1, len(order)))
@@ -689,10 +690,11 @@ FIELDS["2-releases"] = FIELDS["3-dates"] = FIELDS["1-moves"]
 
 def write_tsv(path, fields, rows):
     with open(path, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fields, delimiter="\t", lineterminator="\n", extrasaction="raise")
+        w = csv.DictWriter(f, fields, delimiter="\t", lineterminator="\n", extrasaction="raise",
+                           quoting=csv.QUOTE_NONE, quotechar=None)
         w.writeheader()
         for r in rows:
-            w.writerow({k: str(v).replace("\t", " ").replace("\n", " ") for k, v in r.items()})
+            w.writerow({k: str(v).replace("\t", " ").replace("\n", " ").replace("\r", " ") for k, v in r.items()})
 
 
 def count(rows, kind, dec=None):
@@ -780,10 +782,20 @@ def summary(rows, notes):
              "nation: " + ", ".join(f"{n} {c}" for n, c in sorted(collections.Counter(
                  r["nation_name"] for r in second).items(), key=lambda kv: (-kv[1], kv[0]))) + ".")
     L.append(f"5. Q25 (rating changes of clear matches): {count(rows, '4-ratings', APPLIED)} applied, "
-             f"{sum(1 for r in rows['4-ratings'] if r['major'] == 'no')} of them for players who are not major.")
+             f"{sum(1 for r in rows['4-ratings'] if r['major'] == 'no')} of them for players who are not major, and "
+             f"{sum(1 for r in rows['4-ratings'] if 'Q26' in r['rule'])} of them for Q26 clear matches (the list "
+             f"before the answers had the dated matches only). Held: {count(rows, '4-ratings', HELD)}, rows of "
+             "template duplicate pairs.")
     L.append(f"6. Q26 (unknown date of birth, the name once in each set with the same nation): {notes['q26']} more "
              f"clear matches. They give {sum(1 for r in allp if r['rule'].startswith('Q26') or 'Q26 clear' in r['rule'])} "
              f"rows of kinds 1 to 3. Unclear rows left: {len(rows['7-unclear'])}, all held.")
+    L.append("   Turkish groups (Q11): the Xbox groups are " + ", ".join(f"{n} ({c} clubs)" for _, n, c in
+                                                                    notes["groups"]) + ". They are held: the "
+             "build needs three free 3.9.68 competition rows and adds no rows. The 3.9.68 rows with no club and no "
+             "Xbox row are " + (", ".join(f"{n} ({i})" for i, n in notes["unused_comps"]) or "none") + ". They "
+             "are not free: the game finds them by name (an error box at load when one is missing) and clubs hold "
+             "them as last division (build_2002.py, step 6). Only two Turkish rows are free. This needs your "
+             "decision (spec, Open decisions).")
     L.append(f"7. Q27 (no Xbox nation): {sum(1 for r in rows['6-names'] if r['rule'].startswith('Q27'))} clubs keep "
              "the 3.9.68 nation.")
     tp = rows["8-template-pairs"]

@@ -99,7 +99,8 @@ def put_date(b, o, day, year):
     struct.pack_into("<hH", b, o, day, year)
 
 
-def main(argv):
+def main(argv, keep_out=()):
+    """keep_out: staff ids that stay out of the pool (Summer 2002: the people whom the change list changed)."""
     db, report = argv[0], argv[1]
     target = int(argv[2]) if len(argv) > 2 else TARGET
     first = int(argv[3]) if len(argv) > 3 else FIRST_SEASON
@@ -134,6 +135,7 @@ def main(argv):
     for r in staff:
         y = struct.unpack_from("<H", r, 0x12)[0]
         if (r[0x5f] == 1 and i32(r, 0x39) == -1 and i32(r, 0x24) in no_nat and i32(r, np_link) >= 0
+                and i32(r, 0) not in keep_out
                 and r[0x3d] in (5, 8, 9, 10) and first - 70 <= y <= first - 26):
             pool[(i32(r, 0x1a), r[0x3d])].append(i32(r, 0))
     slots = sorted(((i16(clubs[c], 0x80), c, job) for (c, job), n in missing.items() for _ in range(n)),

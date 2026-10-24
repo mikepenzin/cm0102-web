@@ -8,8 +8,9 @@ clean-3968/Data beside it. The data stays outside the repo; this test reads it o
 
 Checks (spec docs/specs/2026-10-24-summer-2002-db-spec.md, Testing):
 - every applied row of the change list is in the folder: club, join date, contract end and job of kinds 1 to 3
-  (through ids.tsv, the staff ids after the duplicate merge; a free non-player whom staff_slots.py placed is at
-  the club and dates of his staff-slots.tsv row), ratings of kind 4, divisions of kind 5, the club name of kind 6;
+  (through ids.tsv, the staff ids after the duplicate merge; staff_slots.py places none of these people), ratings
+  of kind 4, divisions of kind 5, the club name of kind 6, and an applied row of another kind fails;
+- nothing else changes (check_untouched);
 - duplicates.py check passes with kept-pairs.tsv, and no table has more rows than 3.9.68;
 - known facts: Celestini at Olympique Marseille, Fiorentina is Florentia Viola, Rooney at Everton with current
   ability 135, Ronaldo (the "Ronaldo" of the highest current ability, born 1976) at Real Madrid C.F.;
@@ -85,9 +86,9 @@ def check_changes(F, changes, work):
             t = ids[int(row["id_3968"])]
             r = st[t]
             club = i32(r, 0x39)
-            if club != int(row["new_club_id"]) and not (int(row["new_club_id"]) == -1 and t in placed):
+            if club != int(row["new_club_id"]) or t in placed:
                 bad.append((kind, row["person"], "club", club, row["new_club_id"]))
-            if t not in placed and (iso(cmdb1.date_at(r, 0x3e)), iso(cmdb1.date_at(r, 0x46))) != (
+            if (iso(cmdb1.date_at(r, 0x3e)), iso(cmdb1.date_at(r, 0x46))) != (
                     row["joined_xbox"], row["cend_xbox"]):
                 bad.append((kind, row["person"], "dates", cmdb1.date_at(r, 0x3e), cmdb1.date_at(r, 0x46)))
             if row["take_job"] == "yes":
@@ -108,14 +109,59 @@ def check_changes(F, changes, work):
             if i32(clubs[int(row["id_3968"])], 0x57) != int(row["new_division_id"]):
                 bad.append(("division", row["club"]))
             n += 1
+    for kind in ("7-unclear",):
+        bad += [(kind, "applied", r["person"]) for r in read_tsv(os.path.join(changes, kind + ".tsv"))
+                if r["decision"] == "applied"]
     for row in read_tsv(os.path.join(changes, "6-names.tsv")):
-        if row["decision"] == "applied" and row["item"] == "club name":
+        if row["decision"] == "applied" and row["item"] != "club name":
+            bad.append(("an applied name row that the build does not write", row["item"]))
+        elif row["decision"] == "applied":
             r = clubs[int(row["id_3968"])]
             if f"{cmdb.cstr(r, 4, 51)} / {cmdb.cstr(r, 0x38, 26)}" != row["value_xbox"]:
                 bad.append(("club name", row["value_xbox"]))
             n += 1
     print(f"applied rows checked: {n}")
     return bad
+
+
+def check_untouched(F, T, changes, work):
+    """Nothing else changes: a staff row that no applied row, merge or staff_slots.py placement touched keeps its
+    3.9.68 fields (+0x04 to +0x61 and the links +0x91 to +0x9d) and ratings, and a club keeps every field outside
+    its staff lists, its division (when an applied row sets it) and its names (the same)."""
+    bad = []
+    ids = {int(r["old"]): int(r["new"]) for r in read_tsv(os.path.join(work, "ids.tsv"))}
+    placed = {int(r["staff id"]) for r in read_tsv(os.path.join(work, "staff-slots.tsv"))}
+    count = {}
+    for n in ids.values():
+        count[n] = count.get(n, 0) + 1
+    listed = {int(r["id_3968"]) for k in ("1-moves", "2-releases", "3-dates")
+              for r in read_tsv(os.path.join(changes, k + ".tsv")) if r["decision"] == "applied"}
+    rated = {int(r["id_3968"]) for r in read_tsv(os.path.join(changes, "4-ratings.tsv")) if r["decision"] == "applied"}
+    ts, fs, tp, fp = T.rows(6), F.rows(6), T.rows(10), F.rows(10)
+    checked = 0
+    for t, n in ids.items():
+        if count[n] > 1 or n in placed:
+            continue
+        a, b = ts[t], fs[n]
+        if t not in listed and (bytes(a[4:0x61]) != bytes(b[4:0x61]) or bytes(a[0x91:0x9d]) != bytes(b[0x91:0x9d])):
+            bad.append(("staff row changed", t, n))
+        if t not in rated and a[0x5f] & 2 and bytes(tp[i32(a, 0x91)][5:0x45]) != bytes(fp[i32(b, 0x91)][5:0x45]):
+            bad.append(("ratings changed", t, n))
+        checked += 1
+    div = {int(r["id_3968"]) for r in read_tsv(os.path.join(changes, "5-leagues.tsv")) if r["decision"] == "applied"}
+    named = {int(r["id_3968"]) for r in read_tsv(os.path.join(changes, "6-names.tsv")) if r["decision"] == "applied"}
+    for a, b in zip(T.rows(0), F.rows(0)):
+        c = i32(a, 0)
+        keep = bytearray(a)
+        keep[0x9b:0x230] = b[0x9b:0x230]
+        if c in div:
+            keep[0x57:0x5b] = b[0x57:0x5b]
+        if c in named:
+            keep[4:0x52] = b[4:0x52]
+        if bytes(keep) != bytes(b):
+            bad.append(("club row changed", c))
+    print(f"untouched staff rows checked: {checked}")
+    return bad[:20]
 
 
 def check_facts(F):
@@ -149,7 +195,9 @@ def same_builds(root, out, template):
             shutil.copytree(os.path.join(root, "changes"), ch)
             res = subprocess.run([sys.executable, "-P", "-s", script, ch, os.path.join(root, "disc", "data"),
                                   template, os.path.join(t, "out-" + seed), os.path.join(t, "work-" + seed),
-                                  "--no-turkish-groups"], env=dict(os.environ, PYTHONHASHSEED=seed),
+                                  "--no-turkish-groups"],
+                                 env={k: v for k, v in os.environ.items() if not k.startswith("PYTHON")} | dict(
+                                     PYTHONHASHSEED=seed),
                                  capture_output=True, text=True, cwd=t)
             if res.returncode:
                 return [("build with seed " + seed, res.stdout[-500:], res.stderr[-500:])]
@@ -176,7 +224,7 @@ def main(argv):
         print("SKIP: the Summer 2002 data is not here")
         return 0
     F, T = cmdb1.open_folder(out), cmdb1.open_folder(template)
-    bad = check_changes(F, changes, work) + check_facts(F)
+    bad = check_changes(F, changes, work) + check_untouched(F, T, changes, work) + check_facts(F)
     bad += [("more rows than 3.9.68", t) for t, e in F.idx.items() if e["count"] > T.idx[t]["count"]]
     with contextlib.redirect_stdout(io.StringIO()) as log:
         if duplicates.check(out, os.path.join(changes, "kept-pairs.tsv")):

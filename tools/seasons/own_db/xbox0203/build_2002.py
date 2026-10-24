@@ -34,7 +34,8 @@ that the duplicate merge removes. A change that would need a new row stops the b
    that duplicates.kept_apart calls two people. It runs again until no other pair is left. The kept pairs, with
    their ids after the merge, go to <changes>/kept-pairs.tsv, the list that duplicates.py check accepts.
 8. The folder is written, then staff_slots.py (first season 2002, Q12) fills empty staff slots until a new game
-   with every league selected stays under the staff limit, and duplicates.py check runs with kept-pairs.tsv.
+   with every league selected stays under the staff limit, with nobody whom the list changed, and duplicates.py
+   check runs with kept-pairs.tsv. An applied row of a kind that no step writes stops the build.
 
 Work folder: merge.tsv (each kept row and the rows merged into it), ids.tsv (old staff id, new staff id),
 staff-slots.tsv, duplicates-check.txt and build.txt (the counts).
@@ -57,7 +58,7 @@ import cmdb1  # noqa: E402
 import duplicates  # noqa: E402
 import staff_slots  # noqa: E402
 from change_list import SLOTS, outside_repo, slot_keys  # noqa: E402
-from cmdb1 import need, put, put_bytes, u  # noqa: E402
+from cmdb1 import put, put_bytes, u  # noqa: E402
 from convert import check_squad_lists  # noqa: E402
 
 FIRST_SEASON = 2002                     # the dates are real dates (Q12)
@@ -66,6 +67,11 @@ RATINGS = (0x05, 0x45)                  # player row: abilities, reputations, po
 GROUPS = "Turkish 2. Division Category B Group "
 KEY_TABLE = os.path.join(REPO, "src", "cm3", "key_ids_table.c")
 SEASON_NATION = "Turkey"
+
+
+def need(cond, msg):
+    if not cond:
+        raise SystemExit("build_2002: " + msg)
 
 
 def i32(r, o):
@@ -212,8 +218,9 @@ def apply_names(F, X, changes, log):
     xc = {i32(r, 0): r for r in X.rows(0)}
     n = 0
     for row in read_tsv(os.path.join(changes, "6-names.tsv")):
-        if row["decision"] != "applied" or row["item"] != "club name":
+        if row["decision"] != "applied":
             continue
+        need(row["item"] == "club name", f"names: the build does not know the applied row {row['item']!r}")
         t, x = int(row["id_3968"]), int(row["id_xbox"])
         need(t in tc and x in xc, f"names: club {t} or Xbox club {x} is not in the data")
         r, xr = tc[t], xc[x]
@@ -246,7 +253,7 @@ def exe_strings(exe):
                 end = b.find(b"\0", o)
                 need(end >= 0, f"{exe}: no end of the string at {addr:#x}")
                 return b[o:end].decode("latin1")
-        raise SystemExit(f"cmdb1: {exe}: {addr:#x} is in no section")
+        raise SystemExit(f"build_2002: {exe}: {addr:#x} is in no section")
     return at
 
 
@@ -290,7 +297,7 @@ def apply_groups(F, X, exe, skip, log):
     need(len(free) >= len(groups), f"Turkish groups: only {len(free)} free Turkish rows ({free}) for "
                                    f"{len(groups)} groups, and the build adds no rows (--no-turkish-groups "
                                    "leaves the groups out)")
-    raise SystemExit("cmdb1: Turkish groups: free rows exist, but the member clubs are not decided in the list")
+    raise SystemExit("build_2002: Turkish groups: free rows exist, but the member clubs are not decided in the list")
 
 
 # ---- step 7: duplicates
@@ -382,7 +389,14 @@ def main(argv):
         h.write("old\tnew\n")
         h.writelines(f"{i}\t{j}\n" for i, j in sorted(ids.items()))
     write_kept(os.path.join(a.changes, "kept-pairs.tsv"), cmdb1.open_folder(a.out), kept)
-    staff_slots.main([a.out, os.path.join(a.work, "staff-slots.tsv"), str(staff_slots.TARGET), str(FIRST_SEASON)])
+    for kind in ("7-unclear",):
+        need(not any(r["decision"] == "applied" for r in read_tsv(os.path.join(a.changes, kind + ".tsv"))),
+             f"{kind}: the build does not know applied rows of this kind")
+    # People whom the list changed keep its values: staff_slots.py takes no one of them into its pool.
+    listed = {ids[int(r["id_3968"])] for k in ("1-moves", "2-releases", "3-dates")
+              for r in read_tsv(os.path.join(a.changes, k + ".tsv")) if r["decision"] == "applied"}
+    staff_slots.main([a.out, os.path.join(a.work, "staff-slots.tsv"), str(staff_slots.TARGET), str(FIRST_SEASON)],
+                     keep_out=listed)
     saved = sys.stdout
     with open(os.path.join(a.work, "duplicates-check.txt"), "w", encoding="utf-8") as h:
         sys.stdout = h

@@ -273,6 +273,90 @@ def merge_cases(t, F):
     return bad
 
 
+def build2(path):
+    """A format 2 folder (110-byte staff rows, preferences table 22), for the merge path of the 2004/05 and 2006/07
+    builds: Jo Pair three times, Zed Last twice, the two Andy Evans (merged here, as format 2 keeps no pair apart)."""
+    def staff(i, f, sn, dob, club, job, flags, pl, pref, npl):
+        r = bytearray(110)
+        struct.pack_into("<iiii", r, 0, i, f, sn, -1)
+        struct.pack_into("<hH", r, 0x10, *dob)
+        struct.pack_into("<ii", r, 0x1a, 0, 0)
+        struct.pack_into("<i", r, 0x24, -1)
+        struct.pack_into("<i", r, 0x39, club)
+        r[0x3d], r[0x5f] = job, flags
+        struct.pack_into("<iii", r, 0x61, pl, pref, npl)
+        return r
+
+    def pref(i, fav=()):
+        r = bytearray(52)
+        struct.pack_into("<i", r, 0, i)
+        for j in range(6):
+            struct.pack_into("<i", r, 4 + 4 * j, -1)
+            struct.pack_into("<i", r, 0x1c + 4 * j, fav[j] if j < len(fav) else -1)
+        return r
+    st = [staff(0, 0, 0, (61, 1979), 0, 11, 2, 0, 0, -1), staff(1, 0, 0, (62, 1979), -1, 11, 2, 1, 1, -1),
+          staff(2, 1, 1, (328, 1975), 1, 11, 2, 2, 2, -1), staff(3, 1, 1, (90, 1978), 1, 11, 2, 3, 3, -1),
+          staff(4, 3, 3, (100, 1950), 0, 5, 1, -1, 4, 0), staff(5, 2, 2, (200, 1980), 1, 11, 2, 4, 5, -1),
+          staff(6, 0, 0, (61, 1979), 1, 11, 2, 5, 6, -1), staff(7, 2, 2, (201, 1980), -1, 11, 2, 6, 7, -1)]
+    prefs = [pref(i, (7,) if i == 4 else ()) for i in range(8)]
+    npr = np_row(0, fav=(7,))
+    clubs = [club_row(0, "Home", 1, [0], 4), club_row(1, "Away", 1, [2, 3, 5, 6])]
+    hist = b"".join(struct.pack("<iiHiBBB", n, sn, 2000 + n, 0, 0, 1, 0) for n, sn in ((0, 1), (1, 7), (2, 6)))
+    award = bytearray(58)
+    struct.pack_into("<i", award, 0x0a + 8, 7)
+    struct.pack_into("<i", award, 0x0a + 24, -1)
+    struct.pack_into("<i", award, 0x0a + 40, -1)
+    files = {"nation.dat": nation_row(0, "X"), "club.dat": b"".join(clubs), "nat_club.dat": b"",
+             "first_names.dat": b"".join(name_row(n, i) for i, n in enumerate(FIRST)),
+             "second_names.dat": b"".join(name_row(n, i) for i, n in enumerate(SECOND)), "common_names.dat": b"",
+             "staff.dat": b"".join(st) + bytes(npr) + bytes(70 * 7) + b"".join(prefs),
+             "staff_history.dat": hist, "staff_comp_history.dat": bytes(award)}
+    n = 8
+    entries = [(4, "nation.dat", 1, 0, 2), (0, "club.dat", 2, 0, 2), (1, "nat_club.dat", 0, 0, 2),
+               (13, "first_names.dat", 4, 0, 1), (14, "second_names.dat", 4, 0, 1), (15, "common_names.dat", 0, 0, 1),
+               (6, "staff.dat", n, 0, 2), (9, "staff.dat", 1, n * 110, 2), (10, "staff.dat", 7, n * 110 + 68, 2),
+               (22, "staff.dat", 8, n * 110 + 68 + 490, 1), (17, "staff_history.dat", 3, 0, 1),
+               (18, "staff_comp_history.dat", 1, 0, 1)]
+    ib = bytearray(8)
+    for tid, f, cnt, off, ver in entries:
+        ib += cs(f, 51) + struct.pack("<iiii", tid, cnt, off, ver)
+    files["index.dat"] = bytes(ib)
+    os.makedirs(path)
+    for f, b in files.items():
+        with open(os.path.join(path, f), "wb") as h:
+            h.write(b)
+
+
+def format2_cases(t):
+    """The format 2 merge (duplicates.merge) gives what it gave before the format 1 work (checked once against the
+    old code): four rows merged, ids equal to row numbers, and the favourites, award and careers of Zed's second
+    row (7, the last row) follow him to his keeper 5."""
+    bad = []
+    db = os.path.join(t, "f2")
+    build2(db)
+    saved = sys.stdout
+    sys.stdout = open(os.devnull, "w")
+    try:
+        n = duplicates.merge(db, db, db, os.path.join(t, "f2.tsv"))
+    finally:
+        sys.stdout.close()
+        sys.stdout = saved
+    F = duplicates.Folder(db)
+    st, prefs = F.rows(6), F.rows(22)
+    if n != 4 or F.idx[6]["count"] != 4 or [i32(r, 0) for r in st] != [0, 1, 2, 3]:
+        bad.append(("format 2 merge", n, [i32(r, 0) for r in st]))
+    if [i32(r, 0x65) for r in st] != [0, 1, 2, 3] or F.idx[22]["count"] != 4:
+        bad.append(("format 2 preferences rows", [i32(r, 0x65) for r in st], F.idx[22]["count"]))
+    names = [(i32(r, 4), i32(r, 0x39)) for r in st]
+    zed = names.index((2, 1))
+    ann = names.index((3, 0))
+    if i32(prefs[ann], 0x1c) != zed or i32(F.rows(9)[0], 0x23) != zed or i32(F.rows(18)[0], 0x12) != zed:
+        bad.append(("format 2 references", names, i32(prefs[ann], 0x1c), i32(F.rows(18)[0], 0x12)))
+    if sorted(i32(r, 4) for r in F.rows(17)) != sorted([0, zed]):
+        bad.append(("format 2 careers", [i32(r, 4) for r in F.rows(17)]))
+    return bad
+
+
 def main():
     bad = []
     with tempfile.TemporaryDirectory() as t:
@@ -280,6 +364,7 @@ def main():
         more, F = build_cases(t)
         bad += more
         bad += merge_cases(t, F)
+        bad += format2_cases(t)
     for x in bad:
         print("FAIL", x)
     print("PASS" if not bad else f"FAILED: {len(bad)}")
