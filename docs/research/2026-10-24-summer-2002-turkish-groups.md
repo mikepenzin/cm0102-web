@@ -92,7 +92,7 @@ G5, each of G1 to G3 holding 2 to 18) and from +0x2c == 2 after it (saved with t
 | 0x9006c0 | builds nothing |
 | chain 0x8fe250 | the original's calls less slots 2 and 3 |
 | 0x8fe3a0 | the pool of the Lower Division first (every club, as 0x8fe3a6..0x8fe474, so no club that goes down comes back; with too few clubs for the free places, the Turkish clubs with no division too), then the relegated rows of the three tables down; above 52 clubs, the lowest places too; then the pool fills the tier to 52 (0x4afbd0, 0x6830b0), and a shortfall is logged |
-| deal 0x8fe580 | three parts (18, 17, 17 for 52); a club keeps its group while it has room (a club back from Category A keeps its old one); the others, sorted by 0x53fe50 as the original, fill the places left |
+| deal 0x8fe580 | three parts (18, 17, 17 for 52); a club keeps its group while it has room (a club back from Category A keeps its old one); a new club whose real group of the coming season is known (2003/04 and 2004/05, two sources each, `2026-10-25-turkish-b-groups-2003-2005.tsv`) takes it while it has room; the others, sorted by 0x53fe50 as the original, fill the places left |
 
 Any other database has no tag rows, so every wrap runs the original (the form needs the three rows by name). A
 load keeps the places of each table: League::load reads +0xbe..+0xc1 at 0x6886d7 and the save writes them at
@@ -112,5 +112,6 @@ change; `tests/seasons/turkish_groups_run.py` reads them.
   North zone. The real tier had three winners and no champion.
 - The original's sort 0x53fe50 is not regional (a test deal of 2003/04 put Iğdır, Istanbul and Bursa clubs in
   one group), so the form does not re-deal: the clubs keep their 2002/03 groups, and only the new clubs take the
-  places by that sort. The form stays three groups in every later season (the real tier had five groups again from 2005/06 and two from 2010/11; the
+  places: their real group in 2003/04 and 2004/05 where two sources give it (94 rows of clubs that the data has),
+  else by that sort (a club with no known group, every season from 2005/06, or a group already full). The form stays three groups in every later season (the real tier had five groups again from 2005/06 and two from 2010/11; the
   spec leaves a Turkish structure change out of scope).
