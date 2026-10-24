@@ -470,7 +470,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2009/10	Segunda Divisão Zona Centro	Académico Viseu	215	Clube Académico de Futebol	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2009%E2%80%9310_Segunda_Divis%C3%A3o
 2009/10	Segunda Divisão Zona Centro	AC Marinhense	7103	Atlético Clube Marinhense	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2009%E2%80%9310_Segunda_Divis%C3%A3o
 2009/10	Segunda Divisão Zona Centro	Oliveira do Bairro SC	8101	Oliveira do Bairro Sport Clube	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2009%E2%80%9310_Segunda_Divis%C3%A3o
-2009/10	Segunda Divisão Zona Centro	Vitória FC do Pico	12546	Vitória Futebol Clube	Portuguese Premier League	https://en.wikipedia.org/wiki/2009%E2%80%9310_Segunda_Divis%C3%A3o
+2009/10	Segunda Divisão Zona Centro	Vitória FC do Pico				https://en.wikipedia.org/wiki/2009%E2%80%9310_Segunda_Divis%C3%A3o
 2009/10	Segunda Divisão Zona Centro	GDR Monsanto				https://en.wikipedia.org/wiki/2009%E2%80%9310_Segunda_Divis%C3%A3o
 2009/10	Segunda Divisão Zona Sul	União da Madeira	11914	Clube Futebol União Madeira	Portuguese Second League	https://en.wikipedia.org/wiki/2009%E2%80%9310_Segunda_Divis%C3%A3o
 2009/10	Segunda Divisão Zona Sul	Atlético CP	989	Atlético Clube de Portugal	Portuguese Second Division B South	https://en.wikipedia.org/wiki/2009%E2%80%9310_Segunda_Divis%C3%A3o
@@ -529,7 +529,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2010/11	Segunda Divisão Zona Norte	FC Vizela	12566	Futebol Clube Vizela	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2010%E2%80%9311_Segunda_Divis%C3%A3o
 2010/11	Segunda Divisão Zona Norte	Macedo Cavaleiros	6879	Clube Atlético Macedo Cavaleiros	A Lower Division	https://en.wikipedia.org/wiki/2010%E2%80%9311_Segunda_Divis%C3%A3o
 2010/11	Segunda Divisão Zona Norte	AD Camacha	2152	Associação Desportiva da Camacha	Portuguese Second Division B South	https://en.wikipedia.org/wiki/2010%E2%80%9311_Segunda_Divis%C3%A3o
-2010/11	Segunda Divisão Zona Norte	AD Oliveirense	8239	União Desportiva Oliveirense	Portuguese Second League	https://en.wikipedia.org/wiki/2010%E2%80%9311_Segunda_Divis%C3%A3o
+2010/11	Segunda Divisão Zona Norte	AD Oliveirense				https://en.wikipedia.org/wiki/2010%E2%80%9311_Segunda_Divis%C3%A3o
 2010/11	Segunda Divisão Zona Norte	Merelinense FC	7269	Merelinense Futebol Clube	Portuguese Third Division	https://en.wikipedia.org/wiki/2010%E2%80%9311_Segunda_Divis%C3%A3o
 2010/11	Segunda Divisão Zona Norte	GD Ribeirão	9528	Grupo Desportivo Ribeirão	Portuguese Third Division	https://en.wikipedia.org/wiki/2010%E2%80%9311_Segunda_Divis%C3%A3o
 2010/11	Segunda Divisão Zona Norte	CF Caniçal	13049	Clube de Futebol Caniçal	A Lower Division	https://en.wikipedia.org/wiki/2010%E2%80%9311_Segunda_Divis%C3%A3o
@@ -589,7 +589,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2011/12	Liga de Honra	Desportivo das Aves	1092	Clube Desportivo das Aves	Portuguese Second League	https://en.wikipedia.org/wiki/2011%E2%80%9312_Liga_de_Honra
 2011/12	Liga de Honra	Naval 1º de Maio	7794	Associação Naval 1º de Maio	Portuguese Premier League	https://en.wikipedia.org/wiki/2011%E2%80%9312_Liga_de_Honra
 2011/12	Liga de Honra	Belenenses	1457	C.F. Os Belenenses	Portuguese Second League	https://en.wikipedia.org/wiki/2011%E2%80%9312_Liga_de_Honra
-2011/12	Liga de Honra	Oliveirense	13922	Associação Desportiva Oliveirense	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2011%E2%80%9312_Liga_de_Honra
+2011/12	Liga de Honra	Oliveirense	8239	União Desportiva Oliveirense	Portuguese Second League	https://en.wikipedia.org/wiki/2011%E2%80%9312_Liga_de_Honra
 2011/12	Liga de Honra	Trofense	11811	Clube Desportivo Trofense	Portuguese Second League	https://en.wikipedia.org/wiki/2011%E2%80%9312_Liga_de_Honra
 2011/12	Liga de Honra	Penafiel	8668	Futebol Clube de Penafiel	Portuguese Second League	https://en.wikipedia.org/wiki/2011%E2%80%9312_Liga_de_Honra
 2011/12	Liga de Honra	Atlético CP	989	Atlético Clube de Portugal	Portuguese Second League	https://en.wikipedia.org/wiki/2011%E2%80%9312_Liga_de_Honra
@@ -671,7 +671,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2012/13	Segunda Liga	Desportivo das Aves	1092	Clube Desportivo das Aves	Portuguese Second League	https://en.wikipedia.org/wiki/2012%E2%80%9313_Segunda_Liga
 2012/13	Segunda Liga	Portimonense	8981	Portimonense Sporting Clube	Portuguese Second Division B South	https://en.wikipedia.org/wiki/2012%E2%80%9313_Segunda_Liga
 2012/13	Segunda Liga	Benfica B	1500	Sport Lisboa e Benfica B	Portuguese Second League	https://en.wikipedia.org/wiki/2012%E2%80%9313_Segunda_Liga
-2012/13	Segunda Liga	Oliveirense	13922	Associação Desportiva Oliveirense	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2012%E2%80%9313_Segunda_Liga
+2012/13	Segunda Liga	Oliveirense	8239	União Desportiva Oliveirense	Portuguese Second League	https://en.wikipedia.org/wiki/2012%E2%80%9313_Segunda_Liga
 2012/13	Segunda Liga	Penafiel	8668	Futebol Clube de Penafiel	Portuguese Second League	https://en.wikipedia.org/wiki/2012%E2%80%9313_Segunda_Liga
 2012/13	Segunda Liga	Tondela	11653	Clube Desportivo de Tondela	Portuguese Second League	https://en.wikipedia.org/wiki/2012%E2%80%9313_Segunda_Liga
 2012/13	Segunda Liga	Santa Clara	10123	Clube Desportivo Santa Clara	Portuguese Second League	https://en.wikipedia.org/wiki/2012%E2%80%9313_Segunda_Liga
@@ -767,7 +767,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2013/14	Segunda Liga	Santa Clara	10123	Clube Desportivo Santa Clara	Portuguese Second League	https://en.wikipedia.org/wiki/2013%E2%80%9314_Segunda_Liga
 2013/14	Segunda Liga	Sporting da Covilhã	10824	Sporting Clube da Covilhã	Portuguese Second League	https://en.wikipedia.org/wiki/2013%E2%80%9314_Segunda_Liga
 2013/14	Segunda Liga	Leixões	6472	Leixões Sport Clube	Portuguese Second League	https://en.wikipedia.org/wiki/2013%E2%80%9314_Segunda_Liga
-2013/14	Segunda Liga	Oliveirense	4020	Associação Desportiva Oliveirense	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2013%E2%80%9314_Segunda_Liga
+2013/14	Segunda Liga	Oliveirense	8239	União Desportiva Oliveirense	Portuguese Second League	https://en.wikipedia.org/wiki/2013%E2%80%9314_Segunda_Liga
 2013/14	Segunda Liga	Trofense	11811	Clube Desportivo Trofense	Portuguese Second League	https://en.wikipedia.org/wiki/2013%E2%80%9314_Segunda_Liga
 2013/14	Segunda Liga	Braga B	1816	Sporting Clube de Braga B	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2013%E2%80%9314_Segunda_Liga
 2013/14	Segunda Liga	Marítimo B	7112	Clube Sport Marítimo B	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2013%E2%80%9314_Segunda_Liga
@@ -867,7 +867,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2014/15	Segunda Liga	Leixões	6472	Leixões Sport Clube	Portuguese Second League	https://en.wikipedia.org/wiki/2014%E2%80%9315_Segunda_Liga
 2014/15	Segunda Liga	Marítimo B	7112	Clube Sport Marítimo B	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2014%E2%80%9315_Segunda_Liga
 2014/15	Segunda Liga	Olhanense	8211	Sporting Clube Olhanense	Portuguese Second League	https://en.wikipedia.org/wiki/2014%E2%80%9315_Segunda_Liga
-2014/15	Segunda Liga	Oliveirense	4020	Associação Desportiva Oliveirense	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2014%E2%80%9315_Segunda_Liga
+2014/15	Segunda Liga	Oliveirense	8239	União Desportiva Oliveirense	Portuguese Second League	https://en.wikipedia.org/wiki/2014%E2%80%9315_Segunda_Liga
 2014/15	Segunda Liga	Oriental	8329	Clube Oriental de Lisboa	Portuguese Second League	https://en.wikipedia.org/wiki/2014%E2%80%9315_Segunda_Liga
 2014/15	Segunda Liga	Portimonense	8981	Portimonense Sporting Clube	Portuguese Second League	https://en.wikipedia.org/wiki/2014%E2%80%9315_Segunda_Liga
 2014/15	Segunda Liga	Sporting da Covilhã	10824	Sporting Clube da Covilhã	Portuguese Second League	https://en.wikipedia.org/wiki/2014%E2%80%9315_Segunda_Liga
@@ -970,7 +970,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2015/16	LigaPro	Leixões	6472	Leixões Sport Clube	Portuguese Second League	https://en.wikipedia.org/wiki/2015%E2%80%9316_LigaPro
 2015/16	LigaPro	Mafra	6951	Clube Desportivo de Mafra	Portuguese Second League	https://en.wikipedia.org/wiki/2015%E2%80%9316_LigaPro
 2015/16	LigaPro	Olhanense	8211	Sporting Clube Olhanense	Portuguese Second League	https://en.wikipedia.org/wiki/2015%E2%80%9316_LigaPro
-2015/16	LigaPro	Oliveirense	4020	Associação Desportiva Oliveirense	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2015%E2%80%9316_LigaPro
+2015/16	LigaPro	Oliveirense	8239	União Desportiva Oliveirense	Portuguese Second League	https://en.wikipedia.org/wiki/2015%E2%80%9316_LigaPro
 2015/16	LigaPro	Oriental	8329	Clube Oriental de Lisboa	Portuguese Second League	https://en.wikipedia.org/wiki/2015%E2%80%9316_LigaPro
 2015/16	LigaPro	Penafiel	8668	Futebol Clube de Penafiel	Portuguese Second League	https://en.wikipedia.org/wiki/2015%E2%80%9316_LigaPro
 2015/16	LigaPro	Portimonense	8981	Portimonense Sporting Clube	Portuguese Second League	https://en.wikipedia.org/wiki/2015%E2%80%9316_LigaPro
@@ -1120,7 +1120,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2016/17	Campeonato de Portugal Série D	Lusitano de Vildemoinhos	1911	Lusitano Futebol Clube Vildemoinhos	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2016%E2%80%9317_Campeonato_de_Portugal
 2016/17	Campeonato de Portugal Série D	Mortágua	1900	Mortágua Futebol Clube	Portuguese Third Division	https://en.wikipedia.org/wiki/2016%E2%80%9317_Campeonato_de_Portugal
 2016/17	Campeonato de Portugal Série D	Pampilhosa	4088	Futebol Clube Pampilhosa	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2016%E2%80%9317_Campeonato_de_Portugal
-2016/17	Campeonato de Portugal Série D	Recreio de Águeda	9200	Recreio Desportivo de Águeda	A Lower Division	https://en.wikipedia.org/wiki/2016%E2%80%9317_Campeonato_de_Portugal
+2016/17	Campeonato de Portugal Série D	Recreio de Águeda	5242	Recreio Desportivo de Águeda	Portuguese Third Division	https://en.wikipedia.org/wiki/2016%E2%80%9317_Campeonato_de_Portugal
 2016/17	Campeonato de Portugal Série D	Tourizense	5604	Grupo Desportivo Tourizense	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2016%E2%80%9317_Campeonato_de_Portugal
 2016/17	Campeonato de Portugal Série E	Benfica e Castelo Branco	1143	Sport Benfica e Castelo Branco	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2016%E2%80%9317_Campeonato_de_Portugal
 2016/17	Campeonato de Portugal Série E	Carapinheirense	8753	Clube Desportivo Carapinheirense	Portuguese Third Division	https://en.wikipedia.org/wiki/2016%E2%80%9317_Campeonato_de_Portugal
@@ -1172,7 +1172,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2017/18	LigaPro	Gil Vicente	4390	Gil Vicente Futebol Clube	Portuguese Second League	https://en.wikipedia.org/wiki/2017%E2%80%9318_LigaPro
 2017/18	LigaPro	Leixões	6472	Leixões Sport Clube	Portuguese Second League	https://en.wikipedia.org/wiki/2017%E2%80%9318_LigaPro
 2017/18	LigaPro	Nacional	7710	Clube Desportivo Nacional	Portuguese Second League	https://en.wikipedia.org/wiki/2017%E2%80%9318_LigaPro
-2017/18	LigaPro	Oliveirense	4020	Associação Desportiva Oliveirense	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2017%E2%80%9318_LigaPro
+2017/18	LigaPro	Oliveirense	8239	União Desportiva Oliveirense	Portuguese Second League	https://en.wikipedia.org/wiki/2017%E2%80%9318_LigaPro
 2017/18	LigaPro	Penafiel	8668	Futebol Clube de Penafiel	Portuguese Second League	https://en.wikipedia.org/wiki/2017%E2%80%9318_LigaPro
 2017/18	LigaPro	Porto B	8986	Futebol Clube do Porto B	Portuguese Second League	https://en.wikipedia.org/wiki/2017%E2%80%9318_LigaPro
 2017/18	LigaPro	Real	7162	Real Sport Club Massamá	Portuguese Second League	https://en.wikipedia.org/wiki/2017%E2%80%9318_LigaPro
@@ -1216,7 +1216,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2017/18	Campeonato de Portugal Série B	Pedras Rubras	8650	Futebol Clube Pedras Rubras	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
 2017/18	Campeonato de Portugal Série C	U. Leiria	6468	União Desportiva de Leiria	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
 2017/18	Campeonato de Portugal Série C	Gafanha	4268	Grupo Desportivo da Gafanha	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
-2017/18	Campeonato de Portugal Série C	Águeda	9200	Recreio Desportivo de Águeda	A Lower Division	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
+2017/18	Campeonato de Portugal Série C	Águeda	5242	Recreio Desportivo de Águeda	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
 2017/18	Campeonato de Portugal Série C	Lusitano Vildemoinhos	1911	Lusitano Futebol Clube Vildemoinhos	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
 2017/18	Campeonato de Portugal Série C	Anadia	701	Anadia Futebol Clube	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
 2017/18	Campeonato de Portugal Série C	Sertanense	10362	Sertanense Futebol Clube	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
@@ -1264,7 +1264,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2017/18	Campeonato de Portugal Série E	Lusitano VRSA	6845	Lusitano Futebol Clube VRSA	Portuguese Second Division B South	https://en.wikipedia.org/wiki/2017%E2%80%9318_Campeonato_de_Portugal
 2018/19	Campeonato de Portugal Série A	AD Oliveirense	4020	AD Oliveirense	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2018%E2%80%9319_Campeonato_de_Portugal
 2018/19	Campeonato de Portugal Série A	Caçadores das Taipas	9377	Clube Caçadores das Taipas	A Lower Division	https://en.wikipedia.org/wiki/2018%E2%80%9319_Campeonato_de_Portugal
-2018/19	Campeonato de Portugal Série A	Chaves B	8237	GD Chaves Satelite	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2018%E2%80%9319_Campeonato_de_Portugal
+2018/19	Campeonato de Portugal Série A	Chaves B				https://en.wikipedia.org/wiki/2018%E2%80%9319_Campeonato_de_Portugal
 2018/19	Campeonato de Portugal Série A	Fafe	3902	AD Fafe	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2018%E2%80%9319_Campeonato_de_Portugal
 2018/19	Campeonato de Portugal Série A	Felgueiras	3970	FC Felgueiras 1932	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2018%E2%80%9319_Campeonato_de_Portugal
 2018/19	Campeonato de Portugal Série A	Gil Vicente	4390	Gil Vicente FC	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2018%E2%80%9319_Campeonato_de_Portugal
@@ -1442,7 +1442,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2020/21	Campeonato de Portugal Série C	Trofense	2435	CD Trofense	Portuguese Third Division	https://en.wikipedia.org/wiki/2020%E2%80%9321_Campeonato_de_Portugal
 2020/21	Campeonato de Portugal Série C	União da Madeira	5544	CF União Madeira	Portuguese Second Division B North	https://en.wikipedia.org/wiki/2020%E2%80%9321_Campeonato_de_Portugal
 2020/21	Campeonato de Portugal Série C	Vila Real	10761	SC Vila Real	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2020%E2%80%9321_Campeonato_de_Portugal
-2020/21	Campeonato de Portugal Série D	Águeda	9200	Recreio Desportivo de Águeda	A Lower Division	https://en.wikipedia.org/wiki/2020%E2%80%9321_Campeonato_de_Portugal
+2020/21	Campeonato de Portugal Série D	Águeda	5242	RD Águeda	Portuguese Third Division	https://en.wikipedia.org/wiki/2020%E2%80%9321_Campeonato_de_Portugal
 2020/21	Campeonato de Portugal Série D	Anadia	701	Anadia FC	Portuguese Third Division	https://en.wikipedia.org/wiki/2020%E2%80%9321_Campeonato_de_Portugal
 2020/21	Campeonato de Portugal Série D	Beira-Mar	1442	SC Beira-Mar	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2020%E2%80%9321_Campeonato_de_Portugal
 2020/21	Campeonato de Portugal Série D	Canelas 2010	3807	CF Canelas 2010	Portuguese Second Division B Central	https://en.wikipedia.org/wiki/2020%E2%80%9321_Campeonato_de_Portugal

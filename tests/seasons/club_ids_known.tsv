@@ -1,0 +1,134 @@
+flag	club	id	reason
+real	New York Red Bulls	7323	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Club Social y Deportivo Flandria	4065	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+exact	Ehime FC	3477	two records of the club with near-identical names; the J-League 2 place sits on neither or on the other one in this database; left as built, open
+exact	Tochigi SC	11622	two records of the club with near-identical names; the J-League 2 place sits on neither or on the other one in this database; left as built, open
+real	FC Seoul	767	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Jeju United	1962	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	América Futebol Clube (Rio Grande do Norte)	663	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Paulista Futebol Clube	3704	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+nodiv	Ferroviário Atlético Clube (Ceará)	3999	the other record shares only a place word (a state, a reserve side) with the real name; this club has no division record in the database
+real	São Gonçalo Futebol Clube (Rio Grande do Norte)	10177	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+nodiv	Boa Esporte Clube	5479	the other record shares only a place word (a state, a reserve side) with the real name; this club has no division record in the database
+real	Boa Esporte Clube	5479	Ituiutaba Esporte Clube took the name Boa Esporte in 2011 (Wikipedia, Ituiutaba EC)
+real	Associação Desportiva Ferroviária Vale do Rio Doce	3049	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+nodiv	Macaé Esporte Futebol Clube	6935	the other record shares only a place word (a state, a reserve side) with the real name; this club has no division record in the database
+nodiv	São Raimundo Esporte Clube (Roraima)	10189	the other record shares only a place word (a state, a reserve side) with the real name; this club has no division record in the database
+real	Sport Club Corinthians Paranaense	7015	the 2006 Serie C page lists J. Malucelli (Curitiba) under the article Sport Club Corinthians Paranaense: the club of the record Malutrom (renamed J. Malucelli 2005, Corinthians Paranaense 2009 to 2012)
+real	Associação Desportiva Recreativa Cultural Icasa	1259	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Americana Futebol Ltda.	1861	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	América Futebol Clube (Belo Horizonte)	660	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Betim Esporte Clube	5412	Ipatinga FC moved to Betim and was renamed Betim EC for 2013 (Wikipedia, Ipatinga FC; Tribuna de Minas 2012)
+real	Cuiabá Esporte Clube	3835	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Sociedade Esportiva e Recreativa Caxias do Sul	2309	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Red Bull Bragantino	1818	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Osasco Sporting	8166	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Coritiba Foot Ball Club	2733	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Associação Atlética Aparecidense	775	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Athletic Club (Minas Gerais)	10191	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Associação Desportiva Confiança	2696	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	FC Vestsjælland	10631	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Elite 3000	4971	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	AFC Eskilstuna	6133	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	FC Rosengård	7007	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Entente SSG	10973	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Croix de Savoie	4271	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+ambig	Gazeléc Ajaccio FCO	4322	two records with one name: 4322 has the town Ajaccio and the French National place; 329 has neither
+real	US Quevilly-Rouen	9186	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	ES Troyes AC	1448	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Aviron Bayonnais	1414	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+exact	Poitiers	8880	a second record with a near-identical name or a reserve side; the row holds the record that fits the division or place (reviewed by town and division)
+exact	Vitré	143	a second record with a near-identical name or a reserve side; the row holds the record that fits the division or place (reviewed by town and division)
+real	Union Sportive Créteil Football	2798	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	US Quevillaise	9186	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+exact	CMS Oissel	8177	a second record with a near-identical name or a reserve side; the row holds the record that fits the division or place (reviewed by town and division)
+real	AC Cambrésien	2158	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Éveil mendois F	7258	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	FC Flérien	4072	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	FCM Vire-Saint-Germain	12525	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Aviron bayonnais	1414	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+ambig	US Montagnarde	7508	US Montagnarde is the club of Inzinzac-Lochrist (id 7508); 11959 is a namesake at La Montagne
+nodiv	RC Strasbourg	11140	the other record shares only a place word (a state, a reserve side) with the real name; this club has no division record in the database
+real	ES Pennoise	13566	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+ambig	Saint-Pryvé Saint-Hilaire FC	9965	two records with one name; 9965 is the one the other seasons use
+real	Stade rennais (B)	9619	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	FC Dieppois	3082	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Stade rennais FC (B)	9619	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	RC Fléchois	6292	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+exact	Besançon	9936	a second record with a near-identical name or a reserve side; the row holds the record that fits the division or place (reviewed by town and division)
+real	Lyon-La Duchère (B)	6855	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	FC dieppois	3082	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Rodez AF (B)	10476	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Union sportive philibertine football	10396	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Villefranche SJB FC	7363	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	UF Touraine	10503	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Rot Weiss Ahlen	302	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+nodiv	Dynamo Dresden	3363	the other record shares only a place word (a state, a reserve side) with the real name; this club has no division record in the database
+real	VfB Stuttgart II	12402	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+ambig	Hallescher FC	11020	two records with one name; 11020 holds the Regional place of 2011/12 and is the one the other seasons use
+real	VfB Stuttgart II	4500	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Egaleo	309	Egaleo is A.O. Aigaleo, in the databases Aigaleo City / AO Aigaleo / AO Egaleo (Wikipedia, Egaleo F.C.)
+real	AEL	6379	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Egaleo	5319	Egaleo is A.O. Aigaleo, in the databases Aigaleo City / AO Aigaleo / AO Egaleo (Wikipedia, Egaleo F.C.)
+exact	AEK Athens Β	8549	a second record with a near-identical name or a reserve side; the row holds the record that fits the division or place (reviewed by town and division)
+real	GKS Bogdanka	6432	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Međimurje	2128	NK Cakovec is Medimurje Cakovec in the research name
+ambig	Graničar Županja	4545	4545 is the Zupanja club (town Zupanja); 4546 is the Kotoriba club
+exact	HFC Haarlem	4760	a second record with a near-identical name or a reserve side; the row holds the record that fits the division or place (reviewed by town and division)
+real	HFC Haarlem	4760	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Moeskroen	3091	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	STVV	10556	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	RWS Brussels	1682	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Club NXT	11176	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Club NXT	5147	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	SL16 FC	10438	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+ambig	RFC Union La Calamine	6284	two records with one name; 6284 has the town Kelmis and the Third Division B place
+real	WS Brussels	1682	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Tessenderlo	11116	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Tessenderlo	4668	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Zébra Élites	10426	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Cuoiocappiano	2214	Cuoiopelli Cappiano Romaiano was formed in 2003 by the merger of Cuoiopelli and Cappiano Romaiano; the databases hold the parts (Wikipedia, Cuoiovaldarno RFC)
+real	Pergocrema	2796	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Portosummaga	8990	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Cuoiocappiano	740	Cuoiopelli Cappiano Romaiano was formed in 2003 by the merger of Cuoiopelli and Cappiano Romaiano; the databases hold the parts (Wikipedia, Cuoiovaldarno RFC)
+real	Sudtirol	265	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Jippo	5621	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Klubi-04	3801	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Ull/Kisa	7924	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Øygarden	7857	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Sporting CP B	10920	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Sporting CP	10915	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Atlético CP	989	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+nodiv	Real	7162	the other record shares only a place word (a state, a reserve side) with the real name; this club has no division record in the database
+exact	Oliveirense	4020	two clubs: UD Oliveirense (professional, id 8239) and AD Oliveirense (amateur); the row is a list of the amateur league or has the amateur record
+ambig	Recreio de Águeda	5242	two records with one name; 5242 is the record in the Third Division
+ambig	Águeda	5242	two records with one name; 5242 is the record in the Third Division
+real	Oryol	8326	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+exact	Olimpiyets Nizhny Novgorod	7847	a second record with a near-identical name or a reserve side; the row holds the record that fits the division or place (reviewed by town and division)
+real	Hacettepe Spor	2938	the 2007/08 club was Genclerbirligi OFTAS (the former Darica Genclerbirligi), renamed Hacettepe SK on 18 July 2008 (Wikipedia, Hacettepe SK)
+real	TKİ Tavşanlı Linyitspor	11399	the same record is named Tavsancilspor in the 2009 and 2010 databases and Tavsanli Linyitspor from 2011
+real	Diyarbakır Bld. Diskispor	2883	the better-matching record is a reserve team, a namesake or the first team of the same name; the row holds the right club (name, town and division of the record checked)
+real	Vanspor	1316	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Broomhill	9211	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	Atlético Madrileño	954	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	UCD	11923	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+real	UCD	3532	the record is the same club under an older, merged, local-language or sponsor name (town and division of the record fit); no other record of the nation is a better match
+twice	Međimurje | Čakovec	2128	NK Cakovec is Medimurje Cakovec in the research name
+twice	AD Oliveirense | Oliveirense	4020	one club with two spellings of its name
+twice	Spartans | The Spartans	10887	one club with two spellings of its name
+twice	Spartans | The Spartans	4150	one club with two spellings of its name
+twice	Inter	5377	two nations: Inter (Milan) in Italy and FC Inter Turku in Finland
+twice	Oliveirense	4020	two clubs: UD Oliveirense (professional, id 8239) and AD Oliveirense (amateur); the row is a list of the amateur league or has the amateur record
+blip	Ehime FC	3477	two records of the club with near-identical names; the J-League 2 place sits on neither or on the other one in this database; left as built, open
+blip	Boa Esporte Clube	5479	Ituiutaba Esporte Clube took the name Boa Esporte in 2011 (Wikipedia, Ituiutaba EC)
+blip	Betim Esporte Clube	5412	Ipatinga FC moved to Betim and was renamed Betim EC for 2013 (Wikipedia, Ipatinga FC; Tribuna de Minas 2012)
+blip	AS Saint-Étienne (B)	10972	a reserve row; the record is the reserve side
+blip	GD Beira-Mar	5263	Grupo Desportivo Beira-Mar is a different club from Sport Clube Beira-Mar
+blip	AD Oliveirense	13922	two clubs: UD Oliveirense (professional, id 8239) and AD Oliveirense (amateur); the row is a list of the amateur league or has the amateur record
+blip	AD Oliveirense	4020	two clubs: UD Oliveirense (professional, id 8239) and AD Oliveirense (amateur); the row is a list of the amateur league or has the amateur record
+blip	Oliveirense	4020	two clubs: UD Oliveirense (professional, id 8239) and AD Oliveirense (amateur); the row is a list of the amateur league or has the amateur record
+blip	Marítimo C	7111	a reserve row; the records are the B and first teams
+blip	Oliveirense	8239	two clubs: UD Oliveirense (professional, id 8239) and AD Oliveirense (amateur); the row is a list of the amateur league or has the amateur record
+blip	Yeni Malatyaspor	6991	Malatya Belediyespor was renamed Yeni Malatyaspor; Malatyaspor (6992) is the older club
+blip	Erzurumspor	10574	not settled: 10574 Erzurumspor FK or 3630 Buyuksehir Belediye Erzurumspor, both from one rename; left as built (open for lead 4)
+real	Lisma-Mordovia Saransk	11242	Svetotekhnika Saransk was renamed Lisma-Mordovia (RSSSF Russia 2003); Biokhimik-Mordovia (1601, Insar) is another club
