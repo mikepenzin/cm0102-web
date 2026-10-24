@@ -320,6 +320,41 @@ static int two_leg_final(uint32_t obj, const char *file)
     return r && r->playoffs_text && strstr(r->playoffs_text, "two-legged final");
 }
 
+/* RECOMP_TEST_PLAYOFF_LEVEL=1 (tests only): the two legs of the two-leg final are processed as a level tie. Leg 1 is
+ * processed as 1-1. Leg 2 as 0-0 (level on aggregate, away goals off), and when its match flags ask for extra time
+ * and penalties (bits 0x3, 0x51f696 and 0x51c1c9) the result block gets what the engine would give: 0-0 in extra
+ * time and penalties 5-4. Without those flags nothing decides the tie, as in the old fault (Cup.cpp 1450). The
+ * result block of the fixture is +0x43..+0x4c: goals at 90 minutes +0, +1, extra time +4, +5, penalties +6, +7
+ * (copied into the tie at 0x14.., 0x51a2c0..; the tie code reads 0x14/0x15, 0x18/0x19, 0x1a/0x1b at 0x51f2f0). */
+static uint32_t test_stage;
+static int test_final_seen;
+
+void o_0051a150(void);
+RT_WRAP(0051a150, playoff_level_test)
+{
+    static int on = -1;
+    if (on < 0) on = getenv("RECOMP_TEST_PLAYOFF_LEVEL") && *getenv("RECOMP_TEST_PLAYOFF_LEVEL") == '1';
+    uint32_t fx = rd32(g_mem, cpu.esp + 4);
+    if (on && test_stage && cpu.ecx == test_stage && fx && (int16_t)rd16(g_mem, fx + 0x34) == 1) {
+        uint32_t b = fx + 0x43;
+        uint16_t flags = rd16(g_mem, fx + 0x38);
+        int leg = ++test_final_seen;
+        for (int i = 0; i < 10; i++) g_mem[b + (uint32_t)i] = 0;
+        if (leg == 1) {
+            g_mem[b] = 1;
+            g_mem[b + 1] = 1;
+        } else if ((flags & 3u) == 3u) {
+            g_mem[b + 6] = 5;
+            g_mem[b + 7] = 4;
+        }
+        fprintf(stderr, "recomp: playoffs: test: final leg %d forced %s, match flags %04x%s\n", leg,
+                leg == 1 ? "1-1" : "0-0 level on aggregate", flags,
+                leg == 1 ? "" : (flags & 3u) == 3u ? ", extra time 0-0 and penalties 5-4 given"
+                                                    : ", no extra time or penalties asked for");
+    }
+    o_0051a150();
+}
+
 /* Builds the play-off stage of a marked league on the day its table is complete. */
 static void build_stage(uint32_t obj)
 {
@@ -372,6 +407,14 @@ static void build_stage(uint32_t obj)
         g_mem[f + 0x21] = 2;
         g_mem[f + 0x22] = FINAL_LEG_DAYS;
         wr16(g_mem, f + 0xd, rd16(g_mem, table + 0xd) & 0xffu);
+        /* The deciding flags +0xf: after the first leg the round's +0xf is OR'd into the second leg's flags
+         * (Cup::process_fixture 0x51a6b3 into 0x521d76; the doc 2026-10-17-cup-round-record.md section 3: normally 3,
+         * extra time and penalties). The semi-finals have 3 (0x572b0f), but the one-match final of the table has 0
+         * (0x572b92: its flags 3 are in +0xd, 0x572b78). Without it the second leg had no extra time and no
+         * penalties, a level tie went to replays (0x51a6e0..0x51a803) and the third match boxed (Cup.cpp 1450,
+         * 0x51aa0d..0x51aac5; the Segunda play-off, day 175 of 2012). */
+        if (!getenv("RECOMP_TEST_PLAYOFF_OLD_FINAL"))      /* tests only: the old final, to see the fault again */
+            wr16(g_mem, f + 0xf, rd16(g_mem, table + 0xf));
     }
     uint32_t list = rt_unwinding ? 0 : game_malloc(4 * PLAYOFF_CLUBS);
     if (!list) {
@@ -391,6 +434,8 @@ static void build_stage(uint32_t obj)
     call_this(F_CUP_STAGE, stage, 15, args);
     if (rt_unwinding) return;
     wr32(g_mem, rd32(g_mem, obj + COMP_STAGES), stage);
+    test_stage = stage;
+    test_final_seen = 0;
     game_free(list);
     game_free(table);
     uint32_t r0[1] = {0};
