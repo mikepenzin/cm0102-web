@@ -38,6 +38,7 @@ sys.path.insert(0, os.path.join(HERE, "xbox0203"))
 import cmdb  # noqa: E402
 import cmdb1  # noqa: E402
 import duplicates  # noqa: E402
+from build_2002 import FREE_ROWS  # noqa: E402
 from change_list import REPO  # noqa: E402
 from read_xbox0203 import FM_JOB  # noqa: E402
 
@@ -210,7 +211,17 @@ def check_structure(F, T, out):
         bad.append(("data files", len(dats)))
     comps = lambda X: {i32(r, 0): cmdb.cstr(r, 4, 51) for r in X.rows(12)}
     cf, ct = comps(F), comps(T)
-    bad += [("competition row", c, ct[c], cf.get(c)) for c in sorted(ct) if cf.get(c) != ct[c]]
+    renamed = {c for c in ct if ct[c] in FREE_ROWS and cf.get(c, "").startswith(GROUPS)}   # slice 5, step 6
+    bad += [("competition row", c, ct[c], cf.get(c)) for c in sorted(ct) if cf.get(c) != ct[c] and c not in renamed]
+    if len(renamed) != len(FREE_ROWS):
+        bad.append(("Turkish group rows in the free rows", sorted(renamed)))
+    # One competition array: club comps 0 to n - 1, then the nation comps from n (ids as 3.9.68), so no id clashes.
+    club_ids = [i32(r, 0) for r in F.rows(12)]
+    nation_ids = [i32(r, 0) for r in F.rows(16)]
+    if club_ids != list(range(len(club_ids))) or nation_ids != list(range(len(club_ids), len(club_ids) + len(nation_ids))):
+        bad.append(("competition ids clash or have gaps", len(club_ids), nation_ids[:3]))
+    if nation_ids != [i32(r, 0) for r in T.rows(16)]:
+        bad.append(("nation competition ids moved",))
     count = lambda X: collections.Counter(i32(r, 0x57) for r in X.rows(0) if i32(r, 0x57) >= 0)
     nf, nt = count(F), count(T)
     bad += [("division count", ct.get(d, d), nt[d], nf[d]) for d in sorted(set(nf) | set(nt)) if nf[d] != nt[d]]
@@ -223,27 +234,33 @@ def check_structure(F, T, out):
 
 
 def check_groups(F, T):
-    """Slice 5 (Q16, Q29): the three Xbox group rows follow the 3.9.68 rows of club_comp.dat (Turkey), 18, 17 and 17
-    Turkish clubs carry their group tag (club +0x60, unused for them in 3.9.68) and no other club does. The tagged
-    clubs keep their divisions (check_structure)."""
+    """Slice 5 (Q16, Q29, Q43): the three Xbox group rows fill the free rows of 3.9.68 (FREE_ROWS, nation Turkey), 18,
+    17 and 17 Turkish clubs carry their group tag (club +0x60, unused for them in 3.9.68) and no other club does. The
+    tagged clubs keep their divisions (check_structure)."""
     bad = []
-    n = T.idx[12]["count"]
+    old = {cmdb.cstr(r, 4, 51): i32(r, 0) for r in T.rows(12)}
     rows = {i32(r, 0): r for r in F.rows(12)}
     nations = {i32(r, 0): cmdb.cstr(r, 4, 51) for r in F.rows(4)}
-    for k, (letter, size) in enumerate(SIZES.items()):
-        r = rows.get(n + k)
+    ids = []
+    for (letter, size), free in zip(SIZES.items(), FREE_ROWS):
+        cid = old.get(free, -1)
+        r = rows.get(cid)
         if r is None or cmdb.cstr(r, 4, 51) != GROUPS + letter or nations.get(i32(r, 0x5d)) != "Turkey":
-            bad.append(("Turkish group row", n + k, r is not None and cmdb.cstr(r, 4, 51)))
-    tags = collections.Counter(i32(r, 0x60) for r in F.rows(0) if n <= i32(r, 0x60) < n + len(SIZES))
-    if [tags[n + k] for k in range(len(SIZES))] != list(SIZES.values()):
+            bad.append(("Turkish group row", cid, r is not None and cmdb.cstr(r, 4, 51)))
+        ids.append(cid)
+    tags = collections.Counter(i32(r, 0x60) for r in F.rows(0) if i32(r, 0x60) in ids)
+    if [tags[c] for c in ids] != list(SIZES.values()):
         bad.append(("Turkish group tags", dict(tags)))
-    old = {i32(r, 0): i32(r, 0x60) for r in T.rows(0)}
+    was = {i32(r, 0): i32(r, 0x60) for r in T.rows(0)}
     bad += [("group tag over a 3.9.68 tag", i32(r, 0)) for r in F.rows(0)
-            if n <= i32(r, 0x60) < n + len(SIZES) and old.get(i32(r, 0)) not in (-1, -2)]
+            if i32(r, 0x60) in ids and was.get(i32(r, 0)) not in (-1, -2)]
     nat = {i32(r, 0): nations.get(i32(r, 0x53)) for r in F.rows(0)}
-    bad += [("group tag of a club not of Turkey", c) for c in (i32(r, 0) for r in F.rows(0)
-                                                            if n <= i32(r, 0x60) < n + len(SIZES)) if nat[c] != "Turkey"]
-    print(f"Turkish groups checked: {sum(tags.values())} clubs")
+    bad += [("group tag of a club not of Turkey", c) for c in (i32(r, 0) for r in F.rows(0) if i32(r, 0x60) in ids)
+            if nat[c] != "Turkey"]
+    refs = collections.Counter(i32(r, o) for t in (0, 1) for r in F.rows(t) for o in (0x57, 0x5b))
+    refs.update(i32(r, 4) for t in (19, 20) for r in F.rows(t))
+    bad += [("a group row has other references", c, refs[c]) for c in ids if refs[c]]
+    print(f"Turkish groups checked: {sum(tags.values())} clubs in rows {ids}")
     return bad
 
 
@@ -310,8 +327,7 @@ def main(argv):
     bad = check_changes(F, changes, work) + check_untouched(F, T, changes, work) + check_facts(F)
     bad += check_structure(F, T, out)
     bad += check_groups(F, T)
-    bad += [("more rows than 3.9.68", t) for t, e in F.idx.items()
-            if e["count"] > T.idx[t]["count"] + (len(SIZES) if t == 12 else 0)]
+    bad += [("more rows than 3.9.68", t) for t, e in F.idx.items() if e["count"] > T.idx[t]["count"]]
     with contextlib.redirect_stdout(io.StringIO()) as log:
         if duplicates.check(out, os.path.join(changes, "kept-pairs.tsv")):
             bad.append(("duplicates.py check", log.getvalue().splitlines()[-1]))

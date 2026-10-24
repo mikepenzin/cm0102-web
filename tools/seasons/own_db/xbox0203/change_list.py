@@ -42,7 +42,8 @@ answer takes it, the 3.9.68 value stays).
   sources confirm are kept, and Q36 and Q37 name the rest by club id. division_new holds the division taken.
 - Kind 6 names and competitions: club names and nations that differ, clubs and competitions in one set only, and
   the clubs of the Xbox Turkish Category B groups (Q11). The Fiorentina name (Q5) applies. The three groups apply
-  (Q29, slice 5): the build adds the three Xbox group rows and tags each member club with its group (club +0x60);
+  (Q29, Q43, slice 5): the build puts the three Xbox group rows into free 3.9.68 rows and tags each member club with
+  its group (club +0x60);
   the club's division stays (Q39, kind 5), and the game makes the groups (build_2002.py, step 6). Q27: a club with no
   nation on
   the Xbox keeps its 3.9.68 nation. Every other row is held.
@@ -84,8 +85,8 @@ TURKISH_GROUPS = "Turkish 2. Division Category B"
 APPLIED, HELD, KEPT = "applied", "held", "kept"
 WIPED = "the Xbox data has no contract end, 3.9.68 has one"
 JOB_Q22 = "Q22: the Xbox job too"
-GROUPS_ROW = ("Q11, Q29: three Turkish Category B groups. The build adds the Xbox group row at the end of the "
-              "competition table (build_2002.py, step 6)")
+GROUPS_ROW = ("Q11, Q29, Q43: three Turkish Category B groups. The build puts the Xbox group row into a free "
+              "3.9.68 competition row, no row added (build_2002.py, step 6)")
 GROUPS_MEMBER = ("Q11, Q29: a club of the Xbox group. The build sets its group tag (club +0x60) to the group row, its "
                  "division stays (Q39), and the game plays the group (season_tur_groups.c)")
 NO_ROW = ("Q22 takes the Xbox job, but the 3.9.68 row has no player or non-player row for it and slice 3 adds "
@@ -821,8 +822,8 @@ def summary(rows, notes):
              f"clear matches. They give {sum(1 for r in allp if r['rule'].startswith('Q26') or 'Q26 clear' in r['rule'])} "
              f"rows of kinds 1 to 3. Unclear rows left: {len(rows['7-unclear'])}, all held.")
     L.append("   Turkish groups (Q11): the Xbox groups are " + ", ".join(f"{n} ({c} clubs)" for _, n, c in
-                                                                    notes["groups"]) + ". They apply (Q29): the "
-             "build adds the three rows and tags the member clubs, and the game plays the groups (slice 5). The "
+                                                                    notes["groups"]) + ". They apply (Q29, Q43): the "
+             "build puts the three rows into free 3.9.68 rows and tags the member clubs, and the game plays the groups (slice 5). The "
              "3.9.68 rows with no club and no Xbox row are " +
              (", ".join(f"{n} ({i})" for i, n in notes["unused_comps"]) or "none") + ". They stay: the game finds "
              "the five Turkish group rows by name (an error box at load when one is missing).")

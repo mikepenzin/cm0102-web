@@ -26,5 +26,6 @@ Turkey, or no nation with a Turkish name), two are free: 287 "Turkish 2. Divison
 "Turkish 2. Division". Free rows of other nations: 159 Northern Irish County Antrim Shield (the season history
 table names it, src/recomp_rt/win/season_history_table.c), 219 PreLibertadores and 233 Korean All-Star Cup.
 
-Q29 settled the way forward (slice 5): the build adds the three Xbox rows at the end of the table and tags the
-member clubs, and no row is reused. See `2026-10-24-summer-2002-turkish-groups.md`.
+Q29 and Q43 settled the way forward (slice 5): the build puts the three Xbox rows into the free rows 287, 288 and 233
+and tags the member clubs. No row is added (nation comp ids follow the club comp ids). See
+`2026-10-24-summer-2002-turkish-groups.md`.

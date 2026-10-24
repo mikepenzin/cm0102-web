@@ -49,19 +49,23 @@ Club +0x60 is the regional group field of the data (Argentine zones, Croatian th
 3.9.68 leaves it at -2 for every Turkish club, and the original game overwrites it for the clubs of G1 to G5 in
 its first-season merge. So it can carry the real group without any effect on the original game.
 
-The build adds the three Xbox rows "Turkish 2. Division Category B Group A", "B" and "C" at the end of
-club_comp.dat (ids 433, 434, 435; the file holds only table 12, so one count in index.dat changes) and tags the
-52 member clubs with their row. The Xbox groups are the real 2002/03 groups club by club (checked by name against
+The build puts the three Xbox rows "Turkish 2. Division Category B Group A", "B" and "C" into the free 3.9.68 rows
+287 ("Turkish 2. Divison Category B Group 1"), 288 ("Turkish 2. Division") and 233 ("Korean All-Star Cup"), and
+tags the 52 member clubs with their row (Q43). Each free row has no club that points at it (+0x57, +0x5b, +0x60),
+no history row (club and nation comp history +0x04) and a name that is no key name (`2026-10-24-summer-2002-turkish-
+group-rows.md`); the build checks the first two again. No row is added, because the game keeps one competition
+array, club comps then nation comps, with ids in that order: in 3.9.68 the club comps are 0 to 432 and the nation
+comps 433 to 451 (nation_comp.dat +0x00), and the nation comp history (+0x04) names the nation comps by those ids.
+A first build added three rows at the end of club_comp.dat (ids 433 to 435). They took the ids of the first three
+nation comps, so the nation comp history pointed three rows too early (found by slice 4's history_fill.py, 13 rows
+lost), and a 2002/03 game stopped at fifa_rankings..cpp 222 in August 2002 (0x58d1ad), also with the groups off. The Xbox groups are the real 2002/03 groups club by club (checked by name against
 `xbox-0203-work/league-check/B-turkey-result.tsv` and the 2002/03 rows of `rus-tur-clubs.tsv`: 18, 17, 17, no
 difference). The colour, continent and nation ids of the Xbox rows name the same rows in 3.9.68, so the rows are
-copied as they are but their ids. Only club.dat (bytes +0x60 to +0x63 of 52 clubs), club_comp.dat and index.dat
-differ from the build without the groups. No free row is reused, so the 3.9.68 rows 287 and 288 stay as they are.
+copied as they are but their ids. Only club.dat (bytes +0x60 to +0x63 of 52 clubs) and club_comp.dat (the three
+rows) differ from the build without the groups; index.dat and staff.dat are the same.
+`tools/seasons/own_db/test_summer_2002.py` fails on any clash of club and nation comp ids.
 
-The three rows move one window of the original: set_key_ids 0x601a40 runs the club comp name chain over the rows
-0 to count - 128 (`add eax, -0x7f` at 0x604248), so with 436 rows it reads three more rows (306 to 308). They are
-Irish cups whose names are no key names, so no key id changes.
-
-This is why the data side adds rows and the code makes the groups: the key rows G1 to G5 cannot change their
+This is why the data side reuses rows and the code makes the groups: the key rows G1 to G5 cannot change their
 counts (Q39 and the original game), the Xbox rows give the names Q16 asks for, and the game code needs only a
 tag that it reads once.
 

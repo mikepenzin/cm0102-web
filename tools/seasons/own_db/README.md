@@ -114,13 +114,14 @@ is held (`move_key`).
 ## 2002/03 (Summer 2002), slice 3: the build
 
 `xbox0203/build_2002.py` copies the 3.9.68 files and patches the format 1 rows in place with the applied rows of
-the list: staff clubs, dates and jobs, ratings, the club lists, divisions and the Florentia Viola name. It adds only
-the three Turkish group rows. Then `duplicates.merge_folder` merges the template's duplicate pairs (Q28) and keeps the pairs of two people
+the list: staff clubs, dates and jobs, ratings, the club lists, divisions and the Florentia Viola name. It adds no
+row. Then `duplicates.merge_folder` merges the template's duplicate pairs (Q28) and keeps the pairs of two people
 (`duplicates.kept_apart`) on `<changes>/kept-pairs.tsv`. Then `staff_slots.py` fills empty staff slots (first
 season 2002, Q12) and `duplicates.py check` runs with that list. The header of the script gives the steps.
 
-The Turkish groups (Q11, Q29, slice 5): the build adds the three Xbox rows "Turkish 2. Division Category B Group
-A" to "C" at the end of club_comp.dat and tags each of the 52 member clubs with its row (club +0x60). Club
+The Turkish groups (Q11, Q29, Q43, slice 5): the build puts the three Xbox rows "Turkish 2. Division Category B
+Group A" to "C" into the free 3.9.68 rows 287, 288 and 233 and tags each of the 52 member clubs with its row (club
++0x60). No row is added: nation comp ids follow the club comp ids in one array. Club
 divisions stay (Q39), so the original game plays its five groups of 10, and this game plays the three groups
 (`docs/research/2026-10-24-summer-2002-turkish-groups.md`). `--no-turkish-groups` builds without them.
 
