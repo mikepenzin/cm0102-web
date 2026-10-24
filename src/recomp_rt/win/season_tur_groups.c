@@ -37,8 +37,8 @@
  *   0x684640, staff records 0x686940, news 0x48c6d0; the club array and the final positions read the three tables;
  * - the season change: the chain moves the three group winners up and Category A's relegated clubs down (the
  *   original's calls less slots 2 and 3), the exchange sends the relegated rows to the Lower Division and fills the
- *   division back to its size from the Lower Division (0x4afbd0), and the deal sorts by 0x53fe50 as the original and
- *   cuts the list into three groups (18, 17, 17 for 52).
+ *   division back to its size from the Lower Division (0x4afbd0), and the deal keeps each club in its group and
+ *   gives the new clubs the places left (18, 17, 17 for 52).
  * Any other database (no such rows) runs the original. */
 #include "win.h"
 #include "../rt_host.h"
@@ -679,20 +679,28 @@ RT_WRAP(008fe250, tur_chain)
         uint32_t row = rd32(g_mem, a + OBJ_TABLE) + (uint32_t)i * ROW_SIZE;
         if (g_mem[row + ROW_STATUS] == 3) down[ndown++] = rd32(g_mem, row);
     }
+    /* The rows that go up, read before 0x689c80, which marks each moved row with 0xff (0x689df4, 0x689dff). */
+    uint32_t up_club[GROUPS * 4];
+    int up_group[GROUPS * 4], up_place[GROUPS * 4], nup = 0;
+    for (int k = 0; k < GROUPS; k++)
+        for (int i = 0; i < table_clubs(t[k]) && nup < GROUPS * 4; i++) {
+            uint32_t row = rd32(g_mem, t[k] + OBJ_TABLE) + (uint32_t)i * ROW_SIZE;
+            if (g_mem[row + ROW_STATUS] == 1) {
+                up_club[nup] = rd32(g_mem, row);
+                up_group[nup] = k;
+                up_place[nup++] = i + 1;
+            }
+        }
     for (int k = 0; k < GROUPS; k++) {
         uint32_t q[6] = {a, t[k], 1, 0, 0xffffffffu, 0xffffffffu};
         if (a && t[k] && !rt_unwinding) call_this(F_PROMOTE, self, 6, q);
     }
     if (rt_unwinding) return;
     int year = (int16_t)rd16(g_mem, obj + 0x40u);
-    for (int k = 0; k < GROUPS; k++)
-        for (int i = 0; i < table_clubs(t[k]); i++) {
-            uint32_t row = rd32(g_mem, t[k] + OBJ_TABLE) + (uint32_t)i * ROW_SIZE, club = rd32(g_mem, row);
-            if (g_mem[row + ROW_STATUS] == 1)
-                fprintf(stderr, "recomp: turkish groups: %d/%02d Group %c place %d up: %.51s (%s)\n", year,
-                        (year + 1) % 100, LETTER[k], i + 1, win_str(club + 4u),
-                        rd32(g_mem, club + CLUB_DIVISION) == a_rec ? "Category A" : "not moved");
-        }
+    for (int u = 0; u < nup; u++)
+        fprintf(stderr, "recomp: turkish groups: %d/%02d Group %c place %d up: %.51s (%s)\n", year, (year + 1) % 100,
+                LETTER[up_group[u]], up_place[u], win_str(up_club[u] + 4u),
+                rd32(g_mem, up_club[u] + CLUB_DIVISION) == a_rec ? "Category A" : "not moved");
     for (int i = 0; i < ndown; i++)
         fprintf(stderr, "recomp: turkish groups: %d/%02d Category A down: %.51s (%s)\n", year, (year + 1) % 100,
                 win_str(down[i] + 4u), rd32(g_mem, down[i] + CLUB_DIVISION) == b_rec ? "Category B" : "not moved");
@@ -781,8 +789,11 @@ RT_WRAP(008fe3a0, tur_exchange)
 }
 
 /* tur_first_assign_third_tier_groups 0x8fe580 (thiscall): up to 50 clubs of the division sorted by 0x53fe50, ten to
- * each of G1 to G5. The form: the same sort, then G1, G2 and G3 in turn take a third each (the first groups one
- * more when the count does not divide: 18, 17, 17 for 52). */
+ * each of G1 to G5 (the sort is not regional: a 2003/04 run of this deal mixed Igdir, Istanbul and Bursa in one
+ * group). The form keeps the real 2002/03 regions: the sizes are three parts (18, 17, 17 for 52; the first groups
+ * one more when the count does not divide); a club whose group (+0x60) is G1, G2 or G3 keeps it while the group has
+ * room, in the order of the club table (a club back from Category A keeps its old group too); the other clubs,
+ * sorted by 0x53fe50 as the original, take the places left, Group A first. */
 void o_008fe580(void);
 RT_WRAP(008fe580, tur_deal)
 {
@@ -791,22 +802,37 @@ RT_WRAP(008fe580, tur_deal)
         o_008fe580();
         return;
     }
-    uint32_t b = rd32(g_mem, obj + OBJ_RECORD), list = game_malloc(4u * 64u);
+    uint32_t b = rd32(g_mem, obj + OBJ_RECORD), g[GROUPS], list = game_malloc(4u * 64u);
+    for (int k = 0; k < GROUPS; k++) g[k] = group_record(k);
     int n = 0;
     for (int i = 0, c = club_count(); list && i < c && n < 64; i++)
         if (rd32(g_mem, club_at(i) + CLUB_DIVISION) == b) wr32(g_mem, list + 4u * (uint32_t)n++, club_at(i));
-    if (list && n > 0 && !rt_unwinding) {
-        uint32_t q[4] = {list, (uint32_t)n, 4u, F_BY_LONGITUDE};
+    int size[GROUPS], have[GROUPS] = {0, 0, 0}, rest = 0, kept = 0;
+    for (int k = 0; k < GROUPS; k++) size[k] = n / GROUPS + (k < n % GROUPS);
+    for (int i = 0; list && i < n; i++) {     /* the clubs that keep their group; the rest move to the front */
+        uint32_t club = rd32(g_mem, list + 4u * (uint32_t)i), tag = rd32(g_mem, club + CLUB_GROUP);
+        int k = tag == g[0] ? 0 : tag == g[1] ? 1 : tag == g[2] ? 2 : -1;
+        if (k >= 0 && have[k] < size[k]) {
+            have[k]++;
+            kept++;
+        } else {
+            wr32(g_mem, club + CLUB_GROUP, 0);
+            wr32(g_mem, list + 4u * (uint32_t)rest++, club);
+        }
+    }
+    if (list && rest > 1 && !rt_unwinding) {
+        uint32_t q[4] = {list, (uint32_t)rest, 4u, F_BY_LONGITUDE};
         call_cdecl(F_QSORT, 4, q);
     }
-    int size[GROUPS], at = 0;
-    for (int k = 0; k < GROUPS; k++) size[k] = n / GROUPS + (k < n % GROUPS);
-    for (int k = 0; list && k < GROUPS && !rt_unwinding; k++) {
-        uint32_t g = group_record(k);
-        for (int i = 0; i < size[k]; i++, at++) wr32(g_mem, rd32(g_mem, list + 4u * (uint32_t)at) + CLUB_GROUP, g);
+    for (int i = 0, k = 0; list && i < rest && !rt_unwinding; i++) {
+        while (k < GROUPS - 1 && have[k] >= size[k]) k++;
+        wr32(g_mem, rd32(g_mem, list + 4u * (uint32_t)i) + CLUB_GROUP, g[k]);
+        have[k]++;
     }
     game_free(list);
     if (rt_unwinding) return;
+    fprintf(stderr, "recomp: turkish groups: deal of %d clubs: %d keep their group, %d new; %d, %d and %d\n", n, kept,
+            rest, have[0], have[1], have[2]);
     if (size[0] > MAX_GROUP || size[GROUPS - 1] < MIN_GROUP)
         fprintf(stderr, "recomp: turkish groups: %d clubs make groups of %d to %d\n", n, size[GROUPS - 1], size[0]);
     rt_ret_stdcall(0, 0);

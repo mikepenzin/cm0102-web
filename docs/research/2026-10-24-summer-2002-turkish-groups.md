@@ -92,7 +92,7 @@ G5, each of G1 to G3 holding 2 to 18) and from +0x2c == 2 after it (saved with t
 | 0x9006c0 | builds nothing |
 | chain 0x8fe250 | the original's calls less slots 2 and 3 |
 | 0x8fe3a0 | the pool of the Lower Division first (every club, as 0x8fe3a6..0x8fe474, so no club that goes down comes back), then the relegated rows of the three tables down; at more clubs than the season's size, the lowest places too; then the pool fills the tier back to its size (0x4afbd0, 0x6830b0) |
-| deal 0x8fe580 | the original's sort (0x53fe50), then three parts: 18, 17, 17 for 52 |
+| deal 0x8fe580 | three parts (18, 17, 17 for 52); a club keeps its group while it has room (a club back from Category A keeps its old one); the others, sorted by 0x53fe50 as the original, fill the places left |
 
 Any other database has no tag rows, so every wrap runs the original (the form needs the three rows by name). A
 load keeps the places of each table: League::load reads +0xbe..+0xc1 at 0x6886d7 and the save writes them at
@@ -106,6 +106,7 @@ change; `tests/seasons/turkish_groups_run.py` reads them.
 
 - The honours of the division (its champion in the history) go to the Group A winner, as PorSecondB records its
   North zone. The real tier had three winners and no champion.
-- The groups after 2002/03 come from the original's sort by longitude, not the real regions, and the form stays
-  three groups in every later season (the real tier had five groups again from 2005/06 and two from 2010/11; the
+- The original's sort 0x53fe50 is not regional (a test deal of 2003/04 put Iğdır, Istanbul and Bursa clubs in
+  one group), so the form does not re-deal: the clubs keep their 2002/03 groups, and only the new clubs take the
+  places by that sort. The form stays three groups in every later season (the real tier had five groups again from 2005/06 and two from 2010/11; the
   spec leaves a Turkish structure change out of scope).
