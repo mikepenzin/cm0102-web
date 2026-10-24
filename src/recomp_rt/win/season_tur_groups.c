@@ -204,24 +204,18 @@ static void group_counts(int counts[5])
     }
 }
 
-/* The three group rows of the data (Summer 2002), by name, or 0 (Q16: the form needs them). Kept for the record
- * table and its count, so a new game with another database looks again. */
+/* The three group rows of the data (Summer 2002), by name, or 0 (Q16: the form needs them). Read each time: the
+ * loader frees and allocates the record table again for each database, so a kept pointer could name another row. */
 static int group_rows(uint32_t tag[GROUPS])
 {
-    static uint32_t at_comps, at_count, found[GROUPS];
     uint32_t comps = rd32(g_mem, COMPS), count = rd32(g_mem, COMP_COUNT);
-    if (comps != at_comps || count != at_count) {
-        at_comps = comps;
-        at_count = count;
-        for (int k = 0; k < GROUPS; k++) found[k] = 0;
-        for (uint32_t i = 0; readable(comps) && i < count && i < 4096u; i++) {
-            uint32_t r = comps + i * COMP_SIZE;
-            for (int k = 0; k < GROUPS; k++)
-                if (!found[k] && !strncmp(win_str(r + 4u), GROUP_NAMES[k], 52)) found[k] = r;
-        }
+    for (int k = 0; k < GROUPS; k++) tag[k] = 0;
+    for (uint32_t i = 0; readable(comps) && i < count && i < 4096u; i++) {
+        uint32_t r = comps + i * COMP_SIZE;
+        for (int k = 0; k < GROUPS; k++)
+            if (!tag[k] && !strncmp(win_str(r + 4u), GROUP_NAMES[k], 52)) tag[k] = r;
     }
-    for (int k = 0; k < GROUPS; k++) tag[k] = found[k];
-    return found[0] && found[1] && found[2];
+    return tag[0] && tag[1] && tag[2];
 }
 
 /* 1 when the clubs make three groups: none in G4 or G5, G1 to G3 each from MIN_GROUP to MAX_GROUP. */
@@ -651,8 +645,7 @@ RT_WRAP(009006c0, tur_group_advance)
 static uint32_t form_object(void)
 {
     uint32_t obj = object_of(KEY_B);
-    return obj && groups_on() && rd32(g_mem, obj) == TSB_VTABLE && rd32(g_mem, obj + OBJ_STAGE_COUNT) == FORM_SLOTS
-               ? obj : 0;
+    return obj && form(obj) && rd32(g_mem, obj + OBJ_STAGE_COUNT) == FORM_SLOTS ? obj : 0;
 }
 
 /* TurFirst::process_promotion_relegation_chain 0x8fe250 (thiscall (arg), ret 4): the positions of the three
@@ -743,6 +736,7 @@ RT_WRAP(008fe3a0, tur_exchange)
     }
     int npool = 0, c = club_count();
     uint32_t pool = game_malloc(4u * (uint32_t)(c > 0 ? c : 1));
+    if (!pool && !rt_unwinding) fprintf(stderr, "recomp: turkish groups: no memory for the pool: no club comes up\n");
     for (int i = 0; pool && i < c; i++) {
         uint32_t club = club_at(i);
         if (rd32(g_mem, club + CLUB_DIVISION) == lower && rd32(g_mem, club + CLUB_NATION))
@@ -803,6 +797,7 @@ RT_WRAP(008fe580, tur_deal)
         return;
     }
     uint32_t b = rd32(g_mem, obj + OBJ_RECORD), g[GROUPS], list = game_malloc(4u * 64u);
+    if (!list && !rt_unwinding) fprintf(stderr, "recomp: turkish groups: no memory for the deal: no club changes group\n");
     for (int k = 0; k < GROUPS; k++) g[k] = group_record(k);
     int n = 0;
     for (int i = 0, c = club_count(); list && i < c && n < 64; i++)
@@ -833,6 +828,8 @@ RT_WRAP(008fe580, tur_deal)
     if (rt_unwinding) return;
     fprintf(stderr, "recomp: turkish groups: deal of %d clubs: %d keep their group, %d new; %d, %d and %d\n", n, kept,
             rest, have[0], have[1], have[2]);
+    /* The exchange keeps the division at the size of the season played (its cut), and the first season caps each
+     * group at MAX_GROUP, so the parts stay within MIN_GROUP to MAX_GROUP; this line would show a break of that. */
     if (size[0] > MAX_GROUP || size[GROUPS - 1] < MIN_GROUP)
         fprintf(stderr, "recomp: turkish groups: %d clubs make groups of %d to %d\n", n, size[GROUPS - 1], size[0]);
     rt_ret_stdcall(0, 0);

@@ -86,11 +86,13 @@ def check_summer(log, first, last):
     real = real_groups()
     with open(log, encoding="latin-1") as h:
         text = h.read()
-    bad += [f"runtime warning: {w}" for w in re.findall(r"recomp: turkish groups: (?:no dates for|\d+ clubs make groups of)[^\n]*", text)]
+    warn = r"recomp: turkish groups: (?:no dates for|\d+ clubs make groups of|no memory)[^\n]*"
+    bad += [f"runtime warning: {w}" for w in re.findall(warn, text)]
     m = re.search(r"turkish groups: three groups of \d+, \d+ and \d+ clubs; (\d+) tagged clubs stay", text)
     if not m:
         return bad + ["no line of the first-season groups"]
     stayed = int(m.group(1))
+    missing_all = []
     for k, n in SIZES.items():
         got = groups.get((first, k))
         if not got:
@@ -101,9 +103,9 @@ def check_summer(log, first, last):
         wrong = [c for c in got[1] if any(c in real[j] for j in SIZES if j != k)]
         if wrong:
             bad.append(f"{first} Group {k}: real clubs of another group: {wrong}")
-        missing = sorted(real[k] - set(got[1]))
-        if len(missing) > stayed:
-            bad.append(f"{first} Group {k}: real clubs missing {missing}, more than the {stayed} that stay elsewhere")
+        missing_all += sorted(real[k] - set(got[1]))
+    if len(missing_all) > stayed:
+        bad.append(f"{first}: real clubs missing {missing_all}, more than the {stayed} that stay elsewhere")
     for y in range(first, last):
         nxt = {k: set(groups.get((y + 1, k), (0, []))[1]) for k in SIZES}
         everyone = set().union(*nxt.values())
@@ -162,7 +164,8 @@ def main(argv):
         if ref:
             runs.append(("other-ref", os.path.abspath(ref), None, 2002, 2003))
         else:
-            print("note: without --ref-build the other run checks only that no groups line appears")
+            print("the other run needs --ref-build <program of main>: it proves Q152 against it")
+            return 2
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
         futures = {r[0]: pool.submit(run_one, r[0], r[1], game, r[2], r[3], r[4], keep,
                                      {"RECOMP_TURKISH_GROUPS": "off"} if r[0] == "summer-off" else None) for r in runs}
