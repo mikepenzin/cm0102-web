@@ -672,19 +672,15 @@ RT_WRAP(008fe250, tur_chain)
         uint32_t row = rd32(g_mem, a + OBJ_TABLE) + (uint32_t)i * ROW_SIZE;
         if (g_mem[row + ROW_STATUS] == 3) down[ndown++] = rd32(g_mem, row);
     }
-    /* The rows that go up, read before 0x689c80, which marks each moved row with 0xff (0x689df4, 0x689dff): a row of
-     * the lower table goes up when its status is not 0 and not 5 (0x689cbd..0x689cc7); 3 is a relegated row. */
-    uint32_t up_club[GROUPS * 4];
-    int up_group[GROUPS * 4], up_place[GROUPS * 4], nup = 0;
+    /* The clubs of the three tables with their place, read before 0x689c80 (which marks each moved row with 0xff,
+     * 0x689df4, 0x689dff); after it a club whose division is Category A has gone up. */
+    uint32_t was_club[GROUPS * MAX_GROUP];
+    int was_group[GROUPS * MAX_GROUP], was_place[GROUPS * MAX_GROUP], nwas = 0;
     for (int k = 0; k < GROUPS; k++)
-        for (int i = 0; i < table_clubs(t[k]) && nup < GROUPS * 4; i++) {
-            uint32_t row = rd32(g_mem, t[k] + OBJ_TABLE) + (uint32_t)i * ROW_SIZE;
-            uint8_t status = g_mem[row + ROW_STATUS];
-            if (status && status != 5 && status != 3) {
-                up_club[nup] = rd32(g_mem, row);
-                up_group[nup] = k;
-                up_place[nup++] = i + 1;
-            }
+        for (int i = 0; i < table_clubs(t[k]) && nwas < GROUPS * MAX_GROUP; i++) {
+            was_club[nwas] = row_club(t[k], i);
+            was_group[nwas] = k;
+            was_place[nwas++] = i + 1;
         }
     for (int k = 0; k < GROUPS; k++) {
         uint32_t q[6] = {a, t[k], 1, 0, 0xffffffffu, 0xffffffffu};
@@ -692,10 +688,10 @@ RT_WRAP(008fe250, tur_chain)
     }
     if (rt_unwinding) return;
     int year = (int16_t)rd16(g_mem, obj + 0x40u);
-    for (int u = 0; u < nup; u++)
-        fprintf(stderr, "recomp: turkish groups: %d/%02d Group %c place %d up: %.51s (%s)\n", year, (year + 1) % 100,
-                LETTER[up_group[u]], up_place[u], win_str(up_club[u] + 4u),
-                rd32(g_mem, up_club[u] + CLUB_DIVISION) == a_rec ? "Category A" : "not moved");
+    for (int u = 0; u < nwas; u++)
+        if (a_rec && rd32(g_mem, was_club[u] + CLUB_DIVISION) == a_rec)
+            fprintf(stderr, "recomp: turkish groups: %d/%02d Group %c place %d up: %.51s (Category A)\n", year,
+                    (year + 1) % 100, LETTER[was_group[u]], was_place[u], win_str(was_club[u] + 4u));
     for (int i = 0; i < ndown; i++)
         fprintf(stderr, "recomp: turkish groups: %d/%02d Category A down: %.51s (%s)\n", year, (year + 1) % 100,
                 win_str(down[i] + 4u), rd32(g_mem, down[i] + CLUB_DIVISION) == b_rec ? "Category B" : "not moved");
