@@ -113,5 +113,6 @@ change; `tests/seasons/turkish_groups_run.py` reads them.
 - The original's sort 0x53fe50 is not regional (a test deal of 2003/04 put Iğdır, Istanbul and Bursa clubs in
   one group), so the form does not re-deal: the clubs keep their 2002/03 groups, and only the new clubs take the
   places: their real group in 2003/04 and 2004/05 where two sources give it (94 rows of clubs that the data has),
-  else by that sort (a club with no known group, every season from 2005/06, or a group already full). The form stays three groups in every later season (the real tier had five groups again from 2005/06 and two from 2010/11; the
-  spec leaves a Turkish structure change out of scope).
+  else by that sort (a club with no known group, every season from 2005/06, or a group already full). The form
+  stays three groups in every later season (the real tier had five groups again from 2005/06 and two from
+  2010/11; the spec leaves a Turkish structure change out of scope).
