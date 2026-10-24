@@ -96,7 +96,9 @@
 
 /* The credit of each database (Q147, Q269, Q340): the official data sets credit Sports Interactive, and every
  * Update Team database, October 2003 and September 2005 included, credits the Update Team. Our own season
- * databases (Summer 2004 and Summer 2006, Q351) take their facts from Football Manager and their ratings from the Update Team.
+ * databases Summer 2004 and Summer 2006 (Q351) take their facts from Football Manager and their ratings from the Update Team.
+ * Summer 2002 takes its facts from SI's Xbox data of Championship Manager: Season 02/03 and its ratings from 3.9.68
+ * (Summer 2002 spec, Q13).
  * Never a person's name in the code. One table, so a later change is one line. */
 typedef struct { const char *name; const char *credit; } Credit;
 static const Credit credits[] = {
@@ -105,6 +107,7 @@ static const Credit credits[] = {
     {"3.9.65", "Data by Sports Interactive"},
     {"Summer 2004", "Bosman Edition database, ratings by the CM 01/02 Update Team"},
     {"Summer 2006", "Bosman Edition database, ratings by the CM 01/02 Update Team"},
+    {"Summer 2002", "Bosman Edition database, data by Sports Interactive"},
 };
 #define CREDIT_UPDATE_TEAM "Database by the CM 01/02 Update Team"
 #define CREDIT_CUSTOM "Your own database"
@@ -261,7 +264,9 @@ int season_screen_year(void)
     if (!season_code_on()) return SEASONS_FIRST;
     const char *db = options_string(OPT_DATABASE);
     int opt = option_season();
-    int official = opt == 2002 ? 2002 : 2001;           /* 3.9.68 is the data of both official tiles */
+    /* 3.9.68 is the data of the 2001/02 tile. Before Summer 2002 it was the data of the 2002/03 tile too, so the
+     * option values of such a choice (database = 3.9.68, season = 2002/03) still start 3.9.68 in 2002/03. */
+    int official = opt == 2002 ? 2002 : 2001;
     if (strncmp(db, "folder:", 7)) return strcmp(db, "3.9.68") ? 2001 : official;
     int exists;
     const SeasonKnownDb *k = folder_db(db + 7, &exists);
@@ -936,7 +941,7 @@ static int choose_apply(void)
         const SeasonsEntry *s = &list.season[sel];
         year = s->start_year;
         if (!s->database) return 0;
-        if (year <= 2002) {
+        if (year == SEASONS_FIRST) {
             snprintf(value, sizeof value, "3.9.68");
         } else {
             SeasonsPrepare r;

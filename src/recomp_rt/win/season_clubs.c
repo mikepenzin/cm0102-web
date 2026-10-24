@@ -719,6 +719,14 @@ static void move_clubs(int season)
                     div[t].filled_own, div[t].filled_left, div[t].filled_up, div[t].filled_pool, div[t].filled_spare, div[t].filled_lower, div[t].stand_in,
                     div[t].open, div[t].want, div[t].n0);
     }
+    /* Test switch RECOMP_CLUB_DUMP=<file>: one line per club with its id, name and division after the moves. */
+    const char *dump = getenv("RECOMP_CLUB_DUMP");
+    FILE *df = dump && *dump ? host_fopen(dump, "w") : NULL;
+    for (int i = 0; df && i < count; i++)
+        if (!club[i].national)
+            fprintf(df, "%d\t%s\t%s\n", club[i].id, win_str(club[i].at + CLUB_NAME),
+                    club[i].div ? win_str(club[i].div + COMP_NAME) : "none");
+    if (df) fclose(df);
     fprintf(stderr, "recomp: club moves of %d/%02d: %d divisions with a list (%d whole), %d clubs moved, %d left "
                     "their division, %d cut to the class count, %d listed clubs not in this database (%d found by "
                     "the plain name), %d divisions not in it, %d divisions short, %d divisions with another class "

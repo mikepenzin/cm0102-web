@@ -271,7 +271,7 @@ void seasons_db_scan_in(const char *game_dir, const char *save_dir, SeasonsList 
         s->start_year = SEASONS_FIRST + i;
         snprintf(s->label, sizeof s->label, "%04d/%02d", s->start_year, (s->start_year + 1) % 100);
         s->decade = seasons_db_decade(s->start_year);
-        if (s->start_year <= 2002) {
+        if (s->start_year == SEASONS_FIRST) {     /* 2002/03 has Summer 2002 since 0.6.0 (Summer 2002 spec, slice 4) */
             s->database = "3.9.68";
             s->status = SEASONS_OFFICIAL;
         } else {
@@ -478,7 +478,7 @@ SeasonsPrepareStatus seasons_db_prepare_in(const char *game_dir, const char *sav
         snprintf(r->error, sizeof r->error, "There is no such season.");
         return r->status;
     }
-    if (year <= 2002) return r->status = SEASONS_PREPARE_OFFICIAL;
+    if (year == SEASONS_FIRST) return r->status = SEASONS_PREPARE_OFFICIAL;
     const SeasonKnownDb *row = seasons_db_for_season(year);
     if (!row) {
         r->status = SEASONS_PREPARE_NO_DATABASE;

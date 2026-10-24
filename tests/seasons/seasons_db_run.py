@@ -3,11 +3,14 @@
 
 Usage:
     python3 -I tests/seasons/seasons_db_run.py <seasons_db_test> <folder of source zips>
-        [--databases <folder of unpacked databases>]
+        [--databases <folder of unpacked databases>] [--own-dbs <folder of our own source zips>]
 
 <seasons_db_test> is the test program that ctest builds (build/seasons_db_test). <folder of source zips> is
 test-fixtures/databases/zips. With --databases (test-fixtures/databases) the run also checks the version
 list: a known extra version in Databases shows on its season, and a folder of unknown content shows as Custom.
+With --own-dbs (the folder of the release input --own-dbs, which holds Summer 2002.zip) the run also checks the
+2002/03 tile (Summer 2002 spec, slice 4): its zip shows as in the download with no other version, the first pick
+unpacks Summer 2002, and a copy of the 3.9.68 data in Databases is no version of 2002/03 (Q417).
 
 The run makes two season zips with tools/release/make_season_zips.py (October 2003 and September 2012) in a
 new folder, and checks:
@@ -99,6 +102,7 @@ def main(argv):
         return 2
     tool, zips = os.path.abspath(argv[0]), os.path.abspath(argv[1])
     dbs = os.path.abspath(argv[argv.index("--databases") + 1]) if "--databases" in argv else None
+    own = os.path.abspath(argv[argv.index("--own-dbs") + 1]) if "--own-dbs" in argv else None
     work = tempfile.mkdtemp(prefix="cm0102-seasons-")
     try:
         only = [a for n in NAMES for a in ("--only", n)]
@@ -139,8 +143,8 @@ def main(argv):
             shutil.copy(os.path.join(out1, n + ".zip"), os.path.join(game, "Seasons", n + ".zip"))
 
         rows, custom = scan(tool, game, save)
-        check(len(rows) == 25 and rows["2001/02"][0] == STATUS["OFFICIAL"] and rows["2002/03"][0] == STATUS["OFFICIAL"],
-              "scan: 25 seasons, 2001/02 and 2002/03 official")
+        check(len(rows) == 25 and rows["2001/02"][0] == STATUS["OFFICIAL"], "scan: 25 seasons, 2001/02 official")
+        check(rows["2002/03"][0] == STATUS["MISSING"], "scan: 2002/03 (Summer 2002) has no zip in this game folder")
         check(rows["2003/04"][0] == STATUS["IN_DOWNLOAD"] and rows["2012/13"][0] == STATUS["IN_DOWNLOAD"],
               "scan: the two zips show as in the download")
         check(rows["2004/05"][0] == STATUS["MISSING"] and rows["2006/07"][0] == STATUS["MISSING"],
@@ -282,6 +286,31 @@ def main(argv):
         os.unlink(os.path.join(game, "Seasons", "October 2003.zip"))
         status, name, unpacked, err = prepare(tool, game, save, 2003)
         check(status == PREPARE["OK"] and unpacked == 0, "an unpacked season starts without its zip")
+
+        # the 2002/03 tile with Summer 2002 (slice 4 of the Summer 2002 spec)
+        if own:
+            out3 = os.path.join(work, "z3")
+            r = subprocess.run([sys.executable, "-I", MAKE, "--season-dbs", own, "--out", out3, "--only", "Summer 2002"],
+                               capture_output=True, text=True)
+            check(r.returncode == 0, f"make_season_zips.py Summer 2002: {r.stdout.splitlines()[-1:] or r.stderr[-200:]}")
+            shutil.copy(os.path.join(out3, "Summer 2002.zip"), os.path.join(game, "Seasons", "Summer 2002.zip"))
+            base = os.path.join(save, "Databases", "Plain 3.9.68")
+            shutil.copytree("/Users/max/Projects/cm0102/clean-3968/Data", base)
+            rows, custom = scan(tool, game, save)
+            check(rows["2002/03"] == (STATUS["IN_DOWNLOAD"], "") and "Plain 3.9.68" not in custom,
+                  f"scan: 2002/03 has Summer 2002 in the download and no other version ({rows['2002/03']})")
+            status, name, unpacked, err = prepare(tool, game, save, 2002)
+            check(status == PREPARE["OK"] and name == "Summer 2002" and unpacked == 1,
+                  f"prepare 2002: Summer 2002 unpacked once ({status} {name!r} {err})")
+            out, _ = run(tool, "identify", os.path.join(save, "Databases", "Summer 2002"))
+            check(out == "Summer 2002", f"identify: the unpacked folder is Summer 2002 ({out})")
+            out, _ = run(tool, "identify", base)
+            check(out == "3.9.68", f"identify: the plain data is still 3.9.68 ({out})")
+            rows, custom = scan(tool, game, save)
+            check(rows["2002/03"] == (STATUS["UNPACKED"], ""), f"scan: 2002/03 shows as unpacked ({rows['2002/03']})")
+            shutil.rmtree(base)
+        else:
+            print("note  no --own-dbs: the 2002/03 check is skipped")
 
         # versions and Custom, with databases from the fixtures
         if dbs:

@@ -10,11 +10,11 @@ tools/release/make_season_zips.py and a new game folder: links to the files of <
 those zips, as in a download. Each run has a new user folder, -seed 1, the test clock and classic mode.
 
 Runs, played at the same time (one per era, Q240):
-    2002    Original era: the 2002/03 tile (3.9.68 data, no unpack)
     2003    2000s: the 2003/04 tile (October 2003)
     2010    2010s: the 2010/11 tile (September 2010 ODB)
     2021    early 2020s: the 2021/22 tile (October 2021)
     2025    league phase: the 2025/26 tile (December 2025)
+    2002    with --own-zips: the 2002/03 tile (Summer 2002, our own database, Summer 2002 spec slice 4)
     2004    with --own-zips: the 2004/05 tile (Summer 2004, our own database, Q351)
     2006    with --own-zips: the 2006/07 tile (Summer 2006, our own database, Q351). <folder> holds the source
             zips of the converted folders; it is a second source of make_season_zips.py.
@@ -65,7 +65,7 @@ NEXT_FOLDER = "click 470 415"
 EARLIER = "click 327 415"
 CUSTOM_FOLDERS = ("A Custom", "B Custom")
 # year: (database value, zip to make or None)
-RUNS = {2002: ("3.9.68", None), 2003: ("folder:October 2003", "October 2003"),
+RUNS = {2003: ("folder:October 2003", "October 2003"),
         2010: ("folder:September 2010 ODB", "September 2010 ODB"), 2021: ("folder:October 2021", "October 2021"),
         2025: ("folder:December 2025", "December 2025")}
 
@@ -157,6 +157,7 @@ def main(argv):
     shots = os.path.abspath(argv[argv.index("--shots") + 1]) if "--shots" in argv else None
     own = os.path.abspath(argv[argv.index("--own-zips") + 1]) if "--own-zips" in argv else None
     if own:
+        RUNS[2002] = ("folder:Summer 2002", "Summer 2002")
         RUNS[2004] = ("folder:Summer 2004", "Summer 2004")
         RUNS[2006] = ("folder:Summer 2006", "Summer 2006")
     if shots:

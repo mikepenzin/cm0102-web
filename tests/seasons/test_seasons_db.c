@@ -197,21 +197,23 @@ static void test_table(void)
         rows++;
     }
     fclose(f);
-    CHECK(rows == seasons_known_count && rows == 51);
+    CHECK(rows == seasons_known_count && rows == 52);
 #endif
-    /* 23 season databases, none for 2001 and 2002 (the official data); every signature is unique. Summer 2004 and
-     * Summer 2006 are our own (Q351). Every season from 2003/04 on has one, so the screen's "No database" tile
-     * cannot appear with these tables (this loop fails first). Summer 2004 has the club.dat size of September 2005
-     * and Summer 2006 that of November 2007 (the template keeps every club), with other staff.dat sizes, so the
-     * check also compares the hashes. */
+    /* 24 season databases, none for 2001 (the official data); every signature is unique. Summer 2002, Summer 2004
+     * and Summer 2006 are our own (Q351; Summer 2002 spec, slice 4: the 2002/03 tile starts Summer 2002). Every
+     * season from 2002/03 on has one, so the screen's "No database" tile cannot appear with these tables (this
+     * loop fails first). Summer 2002 has the club.dat size of 3.9.68, Summer 2004 that of September 2005 and
+     * Summer 2006 that of November 2007 (the template keeps every club), with other staff.dat sizes, so the check
+     * also compares the hashes. */
     int have = 0;
     for (int y = SEASONS_FIRST; y < SEASONS_FIRST + SEASONS_COUNT; y++) {
         const SeasonKnownDb *k = seasons_db_for_season(y);
         have += k != NULL;
-        if (y == 2001 || y == 2002) CHECK(!k);
+        if (y == 2001) CHECK(!k);
         else CHECK(k && k->season == y);
     }
-    CHECK(have == 23);
+    CHECK(have == 24);
+    CHECK(!strcmp(seasons_db_for_season(2002)->name, "Summer 2002"));
     for (int i = 0; i < seasons_known_count; i++)
         for (int j = i + 1; j < seasons_known_count; j++)
             CHECK(seasons_known_dbs[i].club_size != seasons_known_dbs[j].club_size ||
@@ -235,7 +237,7 @@ static void test_prepare_without_zip(void)
     SeasonsPrepare r;
     memset(&r, 0, sizeof r);
     CHECK(seasons_db_prepare_in(game, save, 2001, &r) == SEASONS_PREPARE_OFFICIAL);
-    CHECK(seasons_db_prepare_in(game, save, 2002, &r) == SEASONS_PREPARE_OFFICIAL);
+    CHECK(seasons_db_prepare_in(game, save, 2002, &r) == SEASONS_PREPARE_NO_ZIP && r.error[0] && !r.name[0]);
     CHECK(seasons_db_prepare_in(game, save, 2004, &r) == SEASONS_PREPARE_NO_ZIP);
     CHECK(seasons_db_prepare_in(game, save, 2006, &r) == SEASONS_PREPARE_NO_ZIP);
     CHECK(seasons_db_prepare_in(game, save, 2026, &r) == SEASONS_PREPARE_NO_DATABASE && r.error[0]);
@@ -256,7 +258,9 @@ static void test_prepare_without_zip(void)
     CHECK(host_stat(dbs, &st) != 0 && host_stat(tmp, &st) != 0);
     SeasonsList *list = malloc(sizeof *list);
     seasons_db_scan_in(game, save, list);
-    CHECK(list->season[0].status == SEASONS_OFFICIAL && list->season[1].status == SEASONS_OFFICIAL);
+    CHECK(list->season[0].status == SEASONS_OFFICIAL && !strcmp(list->season[0].database, "3.9.68"));
+    CHECK(list->season[1].status == SEASONS_MISSING && !strcmp(list->season[1].database, "Summer 2002") &&
+          list->season[1].extra_count == 0);
     CHECK(list->season[2].status == SEASONS_IN_DOWNLOAD && !strcmp(list->season[2].database, "October 2003"));
     CHECK(list->season[3].status == SEASONS_MISSING && !strcmp(list->season[3].database, "Summer 2004"));
     CHECK(list->season[4].status == SEASONS_MISSING && list->season[5].status == SEASONS_MISSING);

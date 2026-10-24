@@ -1927,6 +1927,7 @@ const SeasonDateShifts season_date_shifts[] = {
     {"3.9.60", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0u, 0},
     {"3.9.65", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0u, 0},
     {"3.9.68", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0u, 0},
+    {"Summer 2002", 0, 0, 1, 0, 0, 0, 0, 0, 0, 0u, 0},
     {"October 2003", 0, 0, 2, 0, 0, 0, 2, 74, last_October_2003, 0u, 0},
     {"Summer 2004", 3, 3, 3, 0, 3, 0, 0, 0, 0, 0u, 0},
     {"September 2005", 3, 0, 4, 0, 3, 0, 4, 103, last_September_2005, 172302u, kept_September_2005},
@@ -1976,4 +1977,4 @@ const SeasonDateShifts season_date_shifts[] = {
     {"May 2026", 24, 24, 24, 1, 24, 24, 0, 0, 0, 0u, 0},
 };
 
-const int season_date_shifts_count = 50;
+const int season_date_shifts_count = 51;

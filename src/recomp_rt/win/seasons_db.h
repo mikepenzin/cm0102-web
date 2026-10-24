@@ -1,7 +1,7 @@
 /* Season databases in the download (0.6.0 slice 14; spec docs/specs/2026-10-16-seasons-0.6.0-spec.md,
  * "Seasons and databases").
  *
- * The download holds the 23 season databases of docs/research/2026-10-16-season-database-table.md as zips,
+ * The download holds the 24 season databases of docs/research/2026-10-16-season-database-table.md as zips,
  * Seasons/<name>.zip in the game folder (win_game_dir). A season database is "unpacked" when the save folder
  * holds it in Databases/<name> (dbfolders.h). The first pick of a season unpacks its zip once.
  *
@@ -32,7 +32,7 @@
 /* What a known database is. */
 typedef enum {
     SEASONS_ROLE_OFFICIAL_VERSION,  /* 3.9.60 and 3.9.65: other versions of the 2001/02 data */
-    SEASONS_ROLE_OFFICIAL_BASE,     /* 3.9.68: the data of 2001/02 and 2002/03 */
+    SEASONS_ROLE_OFFICIAL_BASE,     /* 3.9.68: the data of 2001/02 (and of old 2002/03 games) */
     SEASONS_ROLE_SEASON,            /* the database that a season uses */
     SEASONS_ROLE_EXTRA,             /* an extra database of a season: shown as a version choice (Q252, Q257) */
     SEASONS_ROLE_NOT_SEASON         /* the Empty database: no clubs, no game */
@@ -49,7 +49,7 @@ typedef struct {
 } SeasonKnownDb;
 
 extern const SeasonKnownDb seasons_known_dbs[];     /* seasons_table.c */
-extern const int seasons_known_count;               /* 51 */
+extern const int seasons_known_count;               /* 52 */
 
 /* The three decades of the Choose Season screen (layout C, Q346): a season belongs to the decade of the year
  * it starts in. The names and the colours belong to the screen; the names are in one table (seasons_db.c). */
@@ -64,7 +64,7 @@ const char *seasons_db_decade_name(SeasonsDecade decade);    /* "2000s", "2010s"
 
 /* The status of a season's tile. */
 typedef enum {
-    SEASONS_OFFICIAL,               /* 2001/02 and 2002/03: the official data sets, always there */
+    SEASONS_OFFICIAL,               /* 2001/02: the official data sets, always there */
     SEASONS_UNPACKED,               /* the database is in Databases: a start needs no unpack */
     SEASONS_IN_DOWNLOAD,            /* Seasons/<name>.zip is there: the first start unpacks it */
     SEASONS_NO_DATABASE,            /* no database exists for the season (none since Q351) */
@@ -83,7 +83,7 @@ typedef struct {
     char label[16];                 /* "2003/04" */
     SeasonsDecade decade;
     const char *database;           /* the name of the season's database: "October 2003", "3.9.68" for the
-                                       two official seasons, NULL when no database exists */
+                                       official season 2001/02, NULL when no database exists */
     SeasonsStatus status;
     char folder[DBFOLDER_NAME];     /* with SEASONS_UNPACKED: the folder in Databases that holds it */
     int extra_count;                /* known extra databases of this season in Databases (the
@@ -106,8 +106,8 @@ const SeasonKnownDb *seasons_db_identify(const char *folder);
 /* The row of the table with this name, or NULL. */
 const SeasonKnownDb *seasons_db_known(const char *name);
 
-/* The season database row of a season (SEASONS_ROLE_SEASON), or NULL for 2001, 2002 and the seasons that
- * have none. */
+/* The season database row of a season (SEASONS_ROLE_SEASON), or NULL for 2001 and the seasons that have
+ * none. */
 const SeasonKnownDb *seasons_db_for_season(int start_year);
 
 /* Fills the list from the game folder and the Databases folder. The versions of 2001/02 (season[0].extra) are
@@ -120,7 +120,7 @@ void seasons_db_scan_in(const char *game_dir, const char *save_dir, SeasonsList 
 
 typedef enum {
     SEASONS_PREPARE_OK,             /* r->name is a usable folder of Databases */
-    SEASONS_PREPARE_OFFICIAL,       /* 2001 and 2002: no folder, the official data set applies */
+    SEASONS_PREPARE_OFFICIAL,       /* 2001: no folder, the official data set applies */
     SEASONS_PREPARE_NO_DATABASE,    /* the season has no database, or the year is out of range */
     SEASONS_PREPARE_NO_ZIP,         /* the database is not in Databases and Seasons/<name>.zip is missing */
     SEASONS_PREPARE_FAILED          /* the unpack failed (r->error says why); no folder that looks whole is left */
