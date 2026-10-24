@@ -10,8 +10,10 @@ The runs (the season jump of tests/seasons/rules_report_check.py, Select All les
 League(s) screen, so Turkey plays; the runtime's lines "recomp: turkish groups: ...",
 src/recomp_rt/win/season_tur_groups.c):
     summer  a 2002/03 start with the Summer 2002 folder, to the end of 2004/05 (two season changes):
-            - 2002/03: Groups A, B and C hold 18, 17 and 17 clubs, the real clubs of the 2002/03 rows of
-              docs/research/rules-0.6.0/rus-tur-clubs.tsv (by their database names);
+            - 2002/03: Groups A, B and C hold 18, 17 and 17 clubs; each real club of the 2002/03 rows of
+              docs/research/rules-0.6.0/rus-tur-clubs.tsv (by its database name) that the game places is in its
+              real group, and a group misses no more real clubs than the runtime keeps in another division (the
+              club moves of a season game keep two of them in Category A, where real clubs are missing);
             - each season change: each group sends its winner (place 1) to Category A and its last two to the Lower
               Division, Category A sends its relegated clubs to Category B, and nothing stays "not moved";
             - the next season: 18, 17 and 17 clubs again, none of the promoted or relegated clubs, every club that
@@ -79,6 +81,11 @@ def check_summer(log, first, last):
     groups, ups, downs, a_downs, boxes = read_log(log)
     bad = [f"message box: {b}" for b in boxes]
     real = real_groups()
+    with open(log, encoding="latin-1") as h:
+        m = re.search(r"turkish groups: three groups of \d+, \d+ and \d+ clubs; (\d+) tagged clubs stay", h.read())
+    if not m:
+        return bad + ["no line of the first-season groups"]
+    stayed = int(m.group(1))
     for k, n in SIZES.items():
         got = groups.get((first, k))
         if not got:
@@ -86,9 +93,12 @@ def check_summer(log, first, last):
             continue
         if got[0] != n or len(got[1]) != n:
             bad.append(f"{first} Group {k}: {got[0]} clubs, not {n}")
-        if set(got[1]) != real[k]:
-            bad.append(f"{first} Group {k}: not the real clubs: more {sorted(set(got[1]) - real[k])}, "
-                       f"less {sorted(real[k] - set(got[1]))}")
+        wrong = [c for c in got[1] if any(c in real[j] for j in SIZES if j != k)]
+        if wrong:
+            bad.append(f"{first} Group {k}: real clubs of another group: {wrong}")
+        missing = sorted(real[k] - set(got[1]))
+        if len(missing) > stayed:
+            bad.append(f"{first} Group {k}: real clubs missing {missing}, more than the {stayed} that stay elsewhere")
     for y in range(first, last):
         nxt = {k: set(groups.get((y + 1, k), (0, []))[1]) for k in SIZES}
         everyone = set().union(*nxt.values())

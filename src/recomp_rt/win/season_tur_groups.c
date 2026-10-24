@@ -275,9 +275,10 @@ static void log_groups(uint32_t obj)
 
 /* TurFirst::create_table 0x8fddc0 (thiscall): in the first season (+0x40 is the start year, the compare at
  * 0x8fddce) the original moves the clubs of G1 to G5 into Category B. Before it, with the three tag rows in the
- * data, each tagged club in G1 to G5, the Lower Division, Category B or no division goes to G1, G2 or G3, and each
- * untagged club of G1 to G5 goes to the Lower Division (+0x60 cleared). A tagged club of another division (the
- * club moves of a season game have placed it in Category A, for example) stays, its tag cleared. */
+ * data, each tagged club in G1 to G5, the Lower Division, Category B or no division goes to G1, G2 or G3. A tagged
+ * club of another division stays, its tag cleared: in a 2002/03 season game the club moves fill Category A with two
+ * real Category B clubs (Siirt, Batman) where real Category A clubs are missing from the database. Untagged clubs
+ * of G1 to G5 fill the places those clubs leave, then go to the Lower Division (+0x60 cleared). */
 void o_008fddc0(void);
 RT_WRAP(008fddc0, tur_first_table)
 {
@@ -308,7 +309,8 @@ RT_WRAP(008fddc0, tur_first_table)
         o_008fddc0();
         return;
     }
-    int in[GROUPS] = {0, 0, 0}, out = 0, kept = 0;
+    int in[GROUPS] = {0, 0, 0}, out = 0, kept = 0, filled = 0, nspare = 0;
+    static int spare[4096];             /* untagged clubs of the five groups, in the order of the club table */
     for (int i = 0; i < n; i++) {
         uint32_t club = club_at(i), div = rd32(g_mem, club + CLUB_DIVISION), t = rd32(g_mem, club + CLUB_GROUP);
         int k = t == tag[0] ? 0 : t == tag[1] ? 1 : t == tag[2] ? 2 : -1;
@@ -323,14 +325,30 @@ RT_WRAP(008fddc0, tur_first_table)
                 kept++;
             }
             wr32(g_mem, club + CLUB_GROUP, 0);
-        } else if (in_groups) {
-            wr32(g_mem, club + CLUB_DIVISION, lower);
-            wr32(g_mem, club + CLUB_GROUP, 0);
+        } else if (in_groups && nspare < 4096) {
+            spare[nspare++] = i;
+        }
+    }
+    /* A group short of its tagged count (a tagged club that stays in another division) takes untagged clubs of the
+     * five groups, the group with the most places left first; the others go to the Lower Division. */
+    for (int s = 0; s < nspare; s++) {
+        uint32_t club = club_at(spare[s]);
+        int best = -1;
+        for (int k = 0; k < GROUPS; k++)
+            if (in[k] < tagged[k] && in[k] < MAX_GROUP && (best < 0 || tagged[k] - in[k] > tagged[best] - in[best]))
+                best = k;
+        wr32(g_mem, club + CLUB_DIVISION, best >= 0 ? g[best] : lower);
+        wr32(g_mem, club + CLUB_GROUP, 0);
+        if (best >= 0) {
+            in[best]++;
+            filled++;
+        } else {
             out++;
         }
     }
-    fprintf(stderr, "recomp: turkish groups: three groups of %d, %d and %d clubs; %d clubs of the five groups to "
-            "the Lower Division, %d tagged clubs kept in another division\n", in[0], in[1], in[2], out, kept);
+    fprintf(stderr, "recomp: turkish groups: three groups of %d, %d and %d clubs; %d tagged clubs stay in another "
+            "division, %d clubs of the five groups fill their places, %d go to the Lower Division\n", in[0], in[1],
+            in[2], kept, filled, out);
     o_008fddc0();
 }
 
