@@ -27,7 +27,9 @@ answer takes it, the 3.9.68 value stays).
   without the squad, or without the club, the 3.9.68 club stays.
 - Full lists (slot_holds): a person who would join a club list of his job (squad, manager, coaches, chairman and
   so on) that is full in 3.9.68, and whose holders stay, is held. The game needs each person in the list of his
-  job (convert.check_squad_lists).
+  job (convert.check_squad_lists). Q39: four holders that the Xbox data lacks, and that a public source puts
+  elsewhere in July 2002, leave their place (HOLDERS_Q39, kind 2 rows with no Xbox row), so the Xbox manager
+  takes it: Mutti at Reggina, Acebal at Sporting Gijón, Csábi at Vasas and Paneira at Serzedelo.
 - Kind 4 ratings: the rating rows that differ for clear matches. Major player: current ability 140 or more, or
   world reputation 150 or more, in either set (Q8). World reputation is the i16 at +0x0d of the player row. The
   summary gives the proof and its limit. Q25: the rating changes of all clear matches apply, major or not.
@@ -368,6 +370,14 @@ def rating_diffs(rt, rx):
 
 # The club lists of club.dat that hold staff by job (convert.JOB_LISTS, plus chairman and directors): key, offset
 # and size. "p" is the squad list (convert.in_squad).
+HOLDERS_Q39 = {
+    106378: ("Luigi De Canio took over Reggina on 8 November 2002, after Bortolo Mutti, the manager from summer 2002 "
+             "(Gli Eroi del Calcio)"),
+    143366: ("Antonio Maceda took over Sporting Gijón after José María Acebal was sacked on 7 October 2002 "
+             "(Wikipedia)"),
+    38259: "Manu Ferrera was not at Vasas: József Csábi was its manager from 8 July 2002 (Nemzeti Sport)",
+    5905: "Vítor Paneira managed Serzedelo in 2002/03 (Wikipedia, no month given)",
+}
 SLOTS = {"p": (0xd7, 50), "m": (0xcf, 1), "a": (0xd3, 1), "c": (0x19f, 5), "s": (0x1b3, 7), "ph": (0x1cf, 3),
          "chair": (0xbf, 1), "dir": (0xc3, 3)}
 OTHER_JOBS = {1: "chair", 2: "dir", 3: "dir", 4: "dir"}
@@ -438,7 +448,7 @@ def slot_holds(planned, raw):
                    for kind, t, x, new, dec, why in planned]
 
 
-def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None):
+def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None, holders=None):
     """All rows of the change list: {kind file: [row dict]}, and the notes for summary.md."""
     T, X = ft["people_all"], fx["people_all"]
     TC, XC = ft["clubs"], fx["clubs"]
@@ -504,13 +514,19 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None):
         planned = [(kind, t, x, new, HELD, "the move makes a new duplicate pair: " + pair_text(t, new_pairs))
                    if dec == APPLIED and kind != "3-dates" and t in in_new else (kind, t, x, new, dec, why)
                    for kind, t, x, new, dec, why in planned]
+    # Q39 (Max, 2026-10-24): holders that the Xbox data lacks and that a public source puts elsewhere in July 2002
+    # leave their place, so the Xbox newcomer can take it. They have no Xbox row (x is None) and become free.
+    for t, why in sorted((holders or {}).items()):
+        need(T[t]["club"] is not None and T[t]["club"] >= 0, f"Q39: staff {t} has no club in 3.9.68")
+        planned.append(("2-releases", t, None, None, APPLIED, "Q39 (Max): " + why))
     if raw:
         planned, notes["full_lists"] = slot_holds(planned, raw)
     for kind, t, x, new, dec, why in planned:
-        pt, px = T[t], X[x]
+        pt = T[t]
+        px = X[x] if x is not None else dict(pt, club=None, role="-", job="-")    # Q39: no Xbox row, dates stay
         jx = px["joined"]
         summer = bool(kind == "1-moves" and jx and SUMMER[0] <= jx <= SUMMER[1])
-        rows[kind].append(dict(person=who(pt), born=d(pt["dob"]), id_3968=t, id_xbox=x,
+        rows[kind].append(dict(person=who(pt), born=d(pt["dob"]), id_3968=t, id_xbox=x if x is not None else -1,
                                club_3968=club_name(TC, pt["club"]), club_xbox=club_name(XC, px["club"]),
                                new_club_id=new if new is not None else -1,
                                joined_3968=d(pt["joined"]), joined_xbox=d(jx), cend_3968=d(pt["cend"]),
@@ -932,7 +948,7 @@ def main(argv):
     need(set(div_t) == set(ft["clubs"]) and set(div_x) == set(fx["clubs"]),
          "the club ids of the data folders and the facts differ: rerun read_xbox0203.py")
     rows, notes = build(ft, fx, div_t, comps_t, div_x, comps_x, club_table_rows(rules),
-                        (cmdb1.open_folder(dt), cmdb1.open_folder(dx)))
+                        (cmdb1.open_folder(dt), cmdb1.open_folder(dx)), HOLDERS_Q39)
     nations = ft["nations"]
     for r in rows["5-leagues"]:
         r["nation_name"] = nations[r["nation"]][0] if r["nation"] in nations else "(no club id)"

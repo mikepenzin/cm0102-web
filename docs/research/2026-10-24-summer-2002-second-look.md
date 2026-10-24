@@ -65,8 +65,8 @@ record has no player data (Q22). Sources: `s2002-holds/out-holds.tsv`.
 | Dinis Vital, Lusitano GC manager | Full manager place | Last Lusitano spell 2000 to 2002. | Keep 3.9.68. |
 | Colin Gie, Derek Almond, Maxime Roche, Joël Le Hir, Rémi Ribault, Gilles Watelle, Bob Jan Hillen, Jarosław Pers, Mikael Martinsson, Virgílio Martins, Eliseu | Full lists | No public source found. | Keep 3.9.68. |
 
-The four "apply" rows need one new step in the change list: a list of named holders who leave a place, with the
-source of each. It is not built. Max's yes comes first.
+Max said yes to the four "apply" rows (Q39, 2026-10-24). `change_list.HOLDERS_Q39` releases the four holders
+(kind 2 rows with no Xbox row, dates kept), and the four managers then take the free places.
 
 ## 3. Found on the way (not changed)
 

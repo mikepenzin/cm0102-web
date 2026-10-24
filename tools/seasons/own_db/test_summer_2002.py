@@ -89,7 +89,8 @@ def check_changes(F, changes, work):
             if club != int(row["new_club_id"]) or t in placed:
                 bad.append((kind, row["person"], "club", club, row["new_club_id"]))
             if (iso(cmdb1.date_at(r, 0x3e)), iso(cmdb1.date_at(r, 0x46))) != (
-                    row["joined_xbox"], row["cend_xbox"]):
+                    (row["joined_xbox"], row["cend_xbox"]) if row["id_xbox"] != "-1"
+                    else (row["joined_3968"], row["cend_3968"])):           # Q39 holders keep their dates
                 bad.append((kind, row["person"], "dates", cmdb1.date_at(r, 0x3e), cmdb1.date_at(r, 0x46)))
             if row["take_job"] == "yes":
                 role, code = row["job_xbox"].split()
