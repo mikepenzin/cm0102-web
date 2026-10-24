@@ -17,7 +17,7 @@ src/recomp_rt/win/season_tur_groups.c):
             - each season change: each group sends its winner (place 1) to Category A and its last two to the Lower
               Division, Category A sends its relegated clubs to Category B, and nothing stays "not moved";
             - the next season: 18, 17 and 17 clubs again, none of the promoted or relegated clubs, every club that
-              Category A relegated;
+              Category A relegated, and each club that stays in Category B in its group;
             - the run ends with code 0 and no message box.
     other   a 2002/03 start with the game's own 3.9.68 data to the end of 2003/04 (one season change): no line of the
             groups (the five groups of 10 of the original). With --ref-build the same run of that program gives the
@@ -120,6 +120,10 @@ def check_summer(log, first, last):
             for r in u + d:
                 if r[3] in everyone:
                     bad.append(f"{y + 1}: {r[3]} moved but is in the groups")
+        before = {c: k for k in SIZES for c in groups.get((y, k), (0, []))[1]}
+        moved = sorted(c for k in SIZES for c in nxt[k] if c in before and before[c] != k)
+        if moved:
+            bad.append(f"{y + 1}: clubs that stay in Category B changed group: {moved[:6]}")
         ad = [r for r in a_downs if r[0] == y]
         if not ad or any(r[2] != "Category B" for r in ad):
             bad.append(f"{y}: Category A relegated {ad}")
