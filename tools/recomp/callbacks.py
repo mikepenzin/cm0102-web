@@ -22,6 +22,13 @@ CALLBACK_FILES = ("picker.c", "assistant.c", "commentary.c", "holiday_next.c", "
 
 # address: (bytes of the first eight, name)
 CALLBACKS = {
+    # O288 (fixture_season_end.c, not in CALLBACK_FILES: it compares return addresses of 0x5abb10's calls): the free
+    # day before a season change for a match moved for a call-up.
+    0x549EF0: ("668b442404568b74", "Date::Date (day of the year, year), ret 8"),
+    0x54A3F0: ("565733ffb81f85eb", "Date::get_weekday, 0 Monday..6 Sunday"),
+    0x5AF2F0: ("8b44240485c07476", "FIXTURE_MANAGER::get_time_slice (comp, weekday), ret 8"),
+    0x5AD780: ("6aff68c997950064", "FIXTURE_MANAGER::find_fixture_clashes (fixture, &severity, flag), ret 0xc"),
+    0x68D280: ("8b4102568b742408", "LLIST::remove_node (node), ret 4"),
     # O260 A15 (call_up_news.c): the repeats of the national squads before the call-up news.
     0x76C060: ("51535532c0565788", "national_teams_remove_duplicate_squad_entries (nation), ret 4"),
     # Slice 21c (season_super_cups.c): the clubs and rounds of the super cups.

@@ -45,6 +45,7 @@
 #include "season.h"
 #include "season_change.h"
 #include "season_cups.h"
+#include "fixture_season_end.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -329,7 +330,7 @@ static void log_fixture_years(const char *when)
 /* FIXTURE_MANAGER::add_fixture 0x5aa680 (thiscall: the fixture, then a flag; the fixture's year at +0x28 and day
  * at +0x2a, as insert_fixture 0x5ab259 and 0x5ab2f0 read them). Test log only: a fixture of the year 2999 or later,
  * or any fixture while a constructor runs with SEASON_CUPS_NEVER, gives a line "fixture added", which
- * tests/seasons/cup_breaks_run.py does not allow. The call always runs the original. */
+ * tests/seasons/cup_breaks_run.py does not allow. The call runs the original through fixture_season_end.c (O288). */
 void o_005aa680(void);
 RT_WRAP(005aa680, cup_breaks_add_fixture)
 {
@@ -342,7 +343,7 @@ RT_WRAP(005aa680, cup_breaks_add_fixture)
                     rd32(g_mem, cpu.esp),
                     never_obj ? " in a constructor that waits for ever" : "");
     }
-    o_005aa680();
+    fixture_season_end_add_fixture();
 }
 
 static void breaks_new_game(int start_year)
