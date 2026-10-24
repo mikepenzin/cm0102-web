@@ -104,7 +104,40 @@ python3 -I xbox0203/change_list.py "<facts-xbox>" "<facts-3968>" "<xbox data>" "
 python3 -I test_change_list.py
 ```
 
-The build of the database (slice 3) waits for Max's answers on the list.
+The list applies Max's answers Q21 to Q28: each row is applied, kept (an answer keeps the 3.9.68 value) or held
+(no answer takes it). The league rows that no answer settles go to `leagues-second-look.tsv`, sorted by nation.
+
+## 2002/03 (Summer 2002), slice 3: the build
+
+`xbox0203/build_2002.py` copies the 3.9.68 files and patches the format 1 rows in place with the applied rows of
+the list: staff clubs, dates and jobs, ratings, the club lists, divisions and the Florentia Viola name. It adds no
+row. Then `duplicates.merge_folder` merges the template's duplicate pairs (Q28) and keeps the pairs of two people
+(`duplicates.kept_apart`) on `<changes>/kept-pairs.tsv`. Then `staff_slots.py` fills empty staff slots (first
+season 2002, Q12) and `duplicates.py check` runs with that list. The header of the script gives the steps.
+
+The Turkish groups (Q11) need three free 3.9.68 competition rows, and 3.9.68 has two: the five "Turkish 2.
+Division Group" rows are key names of the game (an error box at load when one is missing) and the last division
+of 53 clubs. With `--exe <cm0102.exe>` the script proves this and stops. `--no-turkish-groups` builds without
+the groups, and the clubs keep their 3.9.68 groups.
+
+| Placeholder | What it is |
+|---|---|
+| `<out>` | the new database folder, named `Summer 2002` |
+| `<work>` | a new folder for the reports (merge, ids, staff slots, the duplicate check) |
+
+```bash
+python3 -I xbox0203/build_2002.py "<changes>" "<xbox data>" "<3.9.68 Data>" "<out>" "<work>" --no-turkish-groups
+python3 -I duplicates.py check "<out>" "<changes>/kept-pairs.tsv"
+python3 -I test_build_2002.py
+python3 -I test_summer_2002.py [<work root>]
+```
+
+`test_build_2002.py` checks the writer, the steps and the format 1 merge on synthetic folders.
+`test_summer_2002.py` is the pipeline seam: it reads `<work root>/changes`, `build/Summer 2002`,
+`build/summer-2002-work` and `disc/data` (default: `xbox-0203-work` beside the main checkout), checks every
+applied row, the duplicate check and the known facts, and builds twice with `PYTHONHASHSEED` 1 and 2 (with
+`python3 -P -s`) to show the same files. It skips when the data is absent. The zips come from
+`release-dbs/make_zip2002.sh`, outside the repo.
 
 ## Mapping of FM ratings (key players only)
 

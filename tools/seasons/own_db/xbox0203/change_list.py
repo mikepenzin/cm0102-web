@@ -7,31 +7,47 @@ The facts folders come from read_xbox0203.py. The script reads the data folders 
 docs/research/rules-0.6.0 of the repo) gives the 2002/03 rows of the *-clubs.tsv files. The data is untrusted
 input. Nothing from it runs. The out folder must be outside the repo. Commit no Xbox data and nothing made from it.
 
-Rules (spec docs/specs/2026-10-24-summer-2002-db-spec.md, Decisions):
+Rules (spec docs/specs/2026-10-24-summer-2002-db-spec.md, Decisions, with Max's answers Q21 to Q28 of
+2026-10-24). A row is "applied" (the build takes it), "kept" (an answer keeps the 3.9.68 value) or "held" (no
+answer takes it, the 3.9.68 value stays).
 - Match: a person matches when his normalised first name, surname and date of birth (cmdb.norm) give exactly one
-  row in each set. The date must be known (year above 1900) and the nation must be the same. Every other person
-  is unclear. He keeps his 3.9.68 record (kind 7).
+  row in each set. The date must be known (year above 1900) and the nation must be the same. Q26: a person with
+  an unknown date of birth whose name is once in each set with the same nation is a clear match too. Every other
+  person is unclear and keeps his 3.9.68 record (kind 7). People only on Xbox are not added.
 - Clubs: the club ids of the two sets differ, because rows are added, removed or sorted in another place. Clubs
   map by name and nation (map_clubs). Clubs of one name in several rows, and a club in one set only, map by squad.
-- Kind 1 moves and kind 3 dates: a clear match takes the Xbox club, join date and contract end (Q3). The row is
-  held when the job differs or when the Xbox data has no contract end in place of a known one.
+  The squad map uses the dated matches only.
+- Kind 1 moves and kind 3 dates: a clear match takes the Xbox club, join date and contract end (Q3). Q21: a move
+  with no Xbox contract end takes the Xbox club with no contract end (a date row of that kind is held). Q22: a row
+  whose job differs takes the Xbox job too (take_job), but a job that needs a player row where the 3.9.68 row has
+  none (or a non-player row) is held, as the build adds no rows.
 - Kind 2 releases: a club in 3.9.68 and none on Xbox. The release applies only on a clear match (Q4, Q10, Q14).
   It also needs the club's squad in the Xbox data (release_guard), as the Xbox copy drops the people of many
-  small clubs. A squad counts when the Xbox data has at least half as many people at the club as 3.9.68.
+  small clubs. A squad counts when the Xbox data has at least half as many people at the club as 3.9.68. Q23:
+  without the squad, or without the club, the 3.9.68 club stays.
+- Full lists (slot_holds): a person who would join a club list of his job (squad, manager, coaches, chairman and
+  so on) that is full in 3.9.68, and whose holders stay, is held. The game needs each person in the list of his
+  job (convert.check_squad_lists).
 - Kind 4 ratings: the rating rows that differ for clear matches. Major player: current ability 140 or more, or
   world reputation 150 or more, in either set (Q8). World reputation is the i16 at +0x0d of the player row. The
-  summary gives the proof and its limit. The rating changes apply (Q9). A row of a player who is not major says so.
+  summary gives the proof and its limit. Q25: the rating changes of all clear matches apply, major or not.
 - Kind 5 leagues: every club whose division differs between the 3.9.68 club.dat, the Xbox club.dat and the
-  2002/03 club-table row, and every club-table row with no club id. All are held for Max (Q15).
+  2002/03 club-table row, and every club-table row with no club id (Q15). Q24 (league_decision): the Xbox league
+  where the Xbox data and the club table agree, the 3.9.68 league where the club table agrees with 3.9.68. The
+  rest go to leagues-second-look.tsv, sorted by nation, and keep the 3.9.68 league in this build.
 - Kind 6 names and competitions: club names and nations that differ, clubs and competitions in one set only, and
-  the clubs of the Xbox Turkish Category B groups (Q11). The Fiorentina name (Q5) and the three groups apply. The
-  group of each club is a league decision, so it is held in kind 6 and in kind 5. Every other row is held.
+  the clubs of the Xbox Turkish Category B groups (Q11). The Fiorentina name (Q5) applies. The three groups are
+  held: 3.9.68 has two free Turkish competition rows, not three (build_2002.py, step 6). The group of each club is
+  a league decision, so it is held in kind 6 and in kind 5. Q27: a club with no nation on
+  the Xbox keeps its 3.9.68 nation. Every other row is held.
 - Duplicates (Q14): no change adds a row. duplicates.find (people.py rules and the same-club rule) runs on the
   3.9.68 people before and after the applied club changes. A change that makes a new pair is held, and so is a
   change of a row in a template pair, as both rows of one person must move together. This repeats until no new
-  pair is left. The template pairs go to 8-template-pairs.tsv, as duplicates.py check stops the build on them.
+  pair is left. The template pairs go to 8-template-pairs.tsv. Q28: the build merges each pair by the 2006/07
+  rules, except a pair that duplicates.kept_apart calls two people ("kept").
 
-Output: one TSV per kind (1-moves.tsv to 8-template-pairs.tsv) and summary.md, with counts and the held rows.
+Output: one TSV per kind (1-moves.tsv to 8-template-pairs.tsv), leagues-second-look.tsv and summary.md, with
+counts and the rows still held.
 """
 import collections
 import csv
@@ -48,6 +64,7 @@ import cmdb  # noqa: E402
 import cmdb1  # noqa: E402
 import duplicates  # noqa: E402
 from cmdb1 import need, u  # noqa: E402
+from convert import JOB_LISTS, PLAYER_JOBS  # noqa: E402
 
 RULES = os.path.join(REPO, "docs", "research", "rules-0.6.0")
 SEASON = "2002/03"
@@ -58,8 +75,13 @@ MIN_SQUAD_MAP = 3                           # clear matches that map a club in o
 PLACEHOLDER_JOIN = datetime.date(1996, 1, 2)    # a join date that both sets give to many people
 EXAMPLES = ("Fabio Celestini", "Vitaly Kutuzov", "Stephen Lovell")    # named in the research doc
 TURKISH_GROUPS = "Turkish 2. Division Category B"
-APPLIED, HELD = "applied", "held"
+APPLIED, HELD, KEPT = "applied", "held", "kept"
 WIPED = "the Xbox data has no contract end, 3.9.68 has one"
+JOB_Q22 = "Q22: the Xbox job too"
+GROUPS_WAIT = ("Q11: three Turkish Category B groups (slice 5 code). Held: 3.9.68 has only two free Turkish "
+               "competition rows, and the build adds no rows (build_2002.py, step 6)")
+NO_ROW = ("Q22 takes the Xbox job, but the 3.9.68 row has no player or non-player row for it and slice 3 adds "
+          "no rows")
 
 
 # ---- people
@@ -75,12 +97,14 @@ def name_key(p):
     return (cmdb.norm(p["fn"]), cmdb.norm(p["sn"]))
 
 
-def match_people(T, X):
+def match_people(T, X, q26=False):
     """Clear matches and unclear people. T and X are people_all lists (3.9.68, Xbox).
 
     Returns (pairs, unclear): pairs {3.9.68 index: Xbox index}; unclear a list of (reason, [3.9.68 indexes],
     [Xbox indexes]) for each Xbox person that has no clear match and each name and date that is in more than one
-    row. A 3.9.68 person with no Xbox row is not unclear: the Xbox copy lacks him and he keeps his record (Q2)."""
+    row. A 3.9.68 person with no Xbox row is not unclear: the Xbox copy lacks him and he keeps his record (Q2).
+    q26: a person with an unknown date of birth whose name is once in each set with the same nation is a clear
+    match (Q26), so he is in pairs and not in unclear."""
     bt, bx = collections.defaultdict(list), collections.defaultdict(list)
     for i, p in enumerate(T):
         k = person_key(p)
@@ -117,6 +141,9 @@ def match_people(T, X):
             if not ts:
                 why = "unknown date of birth, only on Xbox"
             elif len(ts) == 1 and names_x[name_key(p)] == 1 and T[ts[0]]["nat"] == p["nat"]:
+                if q26 and ts[0] not in pairs:
+                    pairs[ts[0]] = i
+                    continue
                 why = "unknown date of birth, the name is once in each set with the same nation"
             else:
                 why = "unknown date of birth, the name is in several rows"
@@ -274,6 +301,19 @@ def real_division(label):
     return label
 
 
+def league_decision(a, b, vs, real, comp_ids):
+    """(decision, rule, 3.9.68 competition id or -1) of a league row by Q24. a and b are the 3.9.68 and Xbox
+    division names, vs the Xbox division against the 2002/03 club table, real the table's game divisions."""
+    if vs == "agrees" and a != b:
+        if b in comp_ids:
+            return APPLIED, "Q24: the Xbox data and the club table agree, the Xbox league", comp_ids[b]
+        return HELD, ("Q24 second look: the Xbox league agrees with the club table, but 3.9.68 has no "
+                      "competition of that name (the Turkish groups wait for the group rows)"), -1
+    if a in real:
+        return KEPT, "Q24: the club table agrees with 3.9.68, the 3.9.68 league stays", -1
+    return HELD, "Q24 second look: no rule settles the row, the 3.9.68 league stays in this build", -1
+
+
 def club_table_rows(rules):
     out = []
     for f in sorted(os.listdir(rules)):
@@ -290,7 +330,7 @@ def club_table_rows(rules):
 
 def load(folder):
     out = {}
-    for n in ("people_all", "clubs", "ratings"):
+    for n in ("people_all", "clubs", "ratings", "nations"):
         with open(os.path.join(folder, n + ".pkl"), "rb") as f:
             out[n] = pickle.load(f)
     return out
@@ -323,47 +363,129 @@ def rating_diffs(rt, rx):
     return out
 
 
-def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
+# The club lists of club.dat that hold staff by job (convert.JOB_LISTS, plus chairman and directors): key, offset
+# and size. "p" is the squad list (convert.in_squad).
+SLOTS = {"p": (0xd7, 50), "m": (0xcf, 1), "a": (0xd3, 1), "c": (0x19f, 5), "s": (0x1b3, 7), "ph": (0x1cf, 3),
+         "chair": (0xbf, 1), "dir": (0xc3, 3)}
+OTHER_JOBS = {1: "chair", 2: "dir", 3: "dir", 4: "dir"}
+FULL = ("the club's list for that job is full in 3.9.68 and its holders stay: the newcomers of the highest ability "
+        "take the free places")
+
+
+def slot_keys(flags, job):
+    """The SLOTS keys of a staff row with these flags (+0x5f) and job byte (+0x3d)."""
+    out = ["p"] if flags == 2 or (flags == 3 and job in PLAYER_JOBS) else []
+    if flags in (1, 3):
+        k = JOB_LISTS.get(job, OTHER_JOBS.get(job))
+        if k:
+            out.append(k)
+    return out
+
+
+def slot_holds(planned, raw):
+    """Holds the applied rows whose person would join a full club list. raw = (3.9.68 folder, Xbox folder),
+    cmdb1.Folder1. A holder of a list who leaves it (another club or job) frees his place first. A held row keeps
+    the 3.9.68 club, dates and job, which can fill a place again, so the check repeats until nothing changes.
+    When newcomers outnumber the free places, those of the highest 3.9.68 ability (current ability of a player,
+    the non-player ability +0x04 of the others) take them: Celestini goes to Olympique Marseille, whose 3.9.68
+    squad keeps three players that the Xbox data lacks (Q2).
+    Returns the planned rows and the number held."""
+    T, X = raw
+    st, xs, tp, tn = T.rows(6), X.rows(6), T.rows(10), T.rows(9)
+
+    def ability(t):
+        """Current ability of a player (player row +0x05), else the ability of a non-player (+0x04)."""
+        r = st[t]
+        if r[0x5f] & 2 and 0 <= u("<i", r, 0x91)[0] < len(tp):
+            return u("<h", tp[u("<i", r, 0x91)[0]], 5)[0]
+        n = u("<i", r, 0x99)[0]
+        return u("<h", tn[n], 4)[0] if r[0x5f] & 1 and 0 <= n < len(tn) else 0
+    lists = {}
+    for r in T.rows(0):
+        c = u("<i", r, 0)[0]
+        for k, (o, n) in SLOTS.items():
+            lists[(c, k)] = [v for v in u(f"<{n}i", r, o) if v >= 0]
+    held = 0
+    while True:
+        final = {}                                  # staff id -> (club, job) after the applied rows
+        for kind, t, x, new, dec, why in planned:
+            if dec == APPLIED:
+                job = xs[x][0x3d] if why.startswith(JOB_Q22) else st[t][0x3d]
+                final[t] = (new if new is not None else -1, job)
+        place = collections.defaultdict(list)
+        for (c, k), ids in lists.items():
+            for v in ids:
+                fc, fj = final.get(v, (u("<i", st[v], 0x39)[0], st[v][0x3d]))
+                if fc == c and k in slot_keys(st[v][0x5f], fj):
+                    place[(c, k)].append(v)          # a holder who stays
+        come = collections.defaultdict(list)
+        for t, (c, j) in sorted(final.items()):
+            for k in slot_keys(st[t][0x5f], j):
+                if c >= 0 and t not in place[(c, k)]:
+                    come[(c, k)].append(t)
+        over = set()
+        for key, ts in come.items():
+            room = SLOTS[key[1]][1] - len(place[key])
+            ts = sorted(ts, key=lambda t: (-ability(t), t))
+            over |= set(ts[max(room, 0):])
+        if not over:
+            return planned, held
+        held += len(over)
+        planned = [(kind, t, x, new, HELD, FULL) if dec == APPLIED and t in over else (kind, t, x, new, dec, why)
+                   for kind, t, x, new, dec, why in planned]
+
+
+def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None):
     """All rows of the change list: {kind file: [row dict]}, and the notes for summary.md."""
     T, X = ft["people_all"], fx["people_all"]
     TC, XC = ft["clubs"], fx["clubs"]
-    pairs, unclear = match_people(T, X)
-    cmap, squad_maps, only_t, only_x = map_clubs(TC, XC, pairs, T, X)
+    strict, _ = match_people(T, X)
+    pairs, unclear = match_people(T, X, q26=True)
+    q26 = set(pairs) - set(strict)
+    cmap, squad_maps, only_t, only_x = map_clubs(TC, XC, strict, T, X)      # the club map uses dated matches
     cmap_t = {t: x for x, t in cmap.items()}
     xsquads = collections.Counter(p["club"] for p in X if p["club"] is not None)
     tsquads = collections.Counter(p["club"] for p in T if p["club"] is not None)
     rows = collections.defaultdict(list)
-    notes = dict(pairs=len(pairs), squad_maps=squad_maps, only_t=only_t, only_x=only_x,
+    notes = dict(pairs=len(pairs), q26=len(q26), squad_maps=squad_maps, only_t=only_t, only_x=only_x,
                  placeholder=sum(1 for x in pairs.values() if X[x]["joined"] == PLACEHOLDER_JOIN))
 
-    # Kinds 1 to 3: club, join date and contract end of clear matches.
+    # Kinds 1 to 3: club, join date and contract end of clear matches, with Max's answers Q21 to Q23 and Q26.
     planned = []
     for t, x in sorted(pairs.items()):
         pt, px = T[t], X[x]
         new = cmap.get(px["club"]) if px["club"] is not None else None
+        tag = "Q26 clear match" if t in q26 else "clear match"
         if px["club"] is not None and new is None:
             planned.append(("1-moves", t, x, None, HELD, "the Xbox club is not in 3.9.68"))
             continue
         job_differs = (pt["role"], pt["job"]) != (px["role"], px["job"])
         job_note = f"the job differs (3.9.68 {pt['role']} {pt['job']}, Xbox {px['role']} {px['job']}, FM codes)"
-        if new != pt["club"] and job_differs:
-            planned.append(("2-releases" if new is None else "1-moves", t, x, new, HELD,
-                            job_note + ": Q3 takes the club and dates, not the job"))
-        elif new != pt["club"]:
-            if new is None:
-                ok, why = release_guard(t, x, pairs, T, xsquads, tsquads, cmap_t)
-                planned.append(("2-releases", t, x, None, APPLIED if ok else HELD, why))
-            elif pt["cend"] and not px["cend"]:
-                planned.append(("1-moves", t, x, new, HELD, WIPED))
+        kind = "1-moves" if new != pt["club"] and new is not None else "2-releases" if new != pt["club"] else \
+            "3-dates"
+        if job_differs and pt["role"] != px["role"]:
+            if new != pt["club"] or (pt["joined"], pt["cend"]) != (px["joined"], px["cend"]) or job_differs:
+                planned.append((kind, t, x, new, HELD, job_note + ": " + NO_ROW))
+            continue
+        q22 = JOB_Q22 + ", " if job_differs else ""
+        if kind == "2-releases":
+            ok, why = release_guard(t, x, pairs, T, xsquads, tsquads, cmap_t)
+            planned.append((kind, t, x, None, APPLIED if ok else HELD, q22 + (why if ok else "Q23: " + why +
+                                                                                ", the 3.9.68 club stays")))
+        elif kind == "1-moves":
+            if pt["cend"] and not px["cend"]:
+                planned.append((kind, t, x, new, APPLIED, q22 + "Q21: " + WIPED + ", the Xbox club with no "
+                                "contract end"))
             else:
-                planned.append(("1-moves", t, x, new, APPLIED, "clear match: Xbox club, join date, contract end"))
+                planned.append((kind, t, x, new, APPLIED, q22 + tag + ": Xbox club, join date, contract end"))
         elif (pt["joined"], pt["cend"]) != (px["joined"], px["cend"]):
             if pt["cend"] and not px["cend"]:
-                planned.append(("3-dates", t, x, new, HELD, WIPED))
+                planned.append((kind, t, x, new, HELD, q22 + WIPED + ", same club: no answer takes it (Q21 is "
+                                "for moves)"))
             else:
-                planned.append(("3-dates", t, x, new, APPLIED, "clear match, same club: Xbox join date, contract end"))
+                planned.append((kind, t, x, new, APPLIED, q22 + tag + ", same club: Xbox join date, contract end"))
         elif job_differs:
-            planned.append(("3-dates", t, x, new, HELD, job_note + ", same club and dates: Q3 does not take the job"))
+            planned.append((kind, t, x, new, APPLIED, q22 + "same club and dates"))
     before = duplicate_pairs(T)
     in_pair = {i for k in before for i in k}
     planned = [(kind, t, x, new, HELD, "the 3.9.68 row is one of a template duplicate pair: " + pair_text(t, before))
@@ -380,6 +502,8 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
         planned = [(kind, t, x, new, HELD, "the move makes a new duplicate pair: " + pair_text(t, new_pairs))
                    if dec == APPLIED and kind != "3-dates" and t in in_new else (kind, t, x, new, dec, why)
                    for kind, t, x, new, dec, why in planned]
+    if raw:
+        planned, notes["full_lists"] = slot_holds(planned, raw)
     for kind, t, x, new, dec, why in planned:
         pt, px = T[t], X[x]
         jx = px["joined"]
@@ -390,14 +514,19 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
                                joined_3968=d(pt["joined"]), joined_xbox=d(jx), cend_3968=d(pt["cend"]),
                                cend_xbox=d(px["cend"]), job_3968=f"{pt['role']} {pt['job']}",
                                job_xbox=f"{px['role']} {px['job']}", summer_2002="yes" if summer else "",
+                               take_job="yes" if dec == APPLIED and why.startswith(JOB_Q22) else "",
                                rule=why, decision=dec))
     touched = {t for kind, t, x, new, dec, why in planned}
+    srows = staff_rows(T)
     for (a, b), why in sorted(before.items()):
+        two = duplicates.kept_apart(srows[a], srows[b])
         rows["8-template-pairs"].append(dict(
             id_a=a, person_a=who(T[a]), born_a=d(T[a]["dob"]), club_a=club_name(TC, T[a]["club"]), id_b=b,
             person_b=who(T[b]), born_b=d(T[b]["dob"]), club_b=club_name(TC, T[b]["club"]), found=why,
             xbox_change="yes" if a in touched or b in touched else "",
-            rule="Q14: duplicates.py check stops the build while a pair is left", decision=HELD))
+            rule=("Q28: two people (" + two + "), kept apart on kept-pairs.tsv") if two else
+            "Q28: one person, the build merges the rows (duplicates.merge_folder)",
+            decision=KEPT if two else APPLIED))
 
     # Kind 4: ratings.
     RT, RX = ft["ratings"], fx["ratings"]
@@ -428,6 +557,8 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
         if r["db_club_id"].strip().lstrip("-").isdigit():
             table_by_club.setdefault(int(r["db_club_id"]), []).append(r)
     known = set(comps_t.values()) | set(comps_x.values())
+    names_t = collections.Counter(comps_t.values())
+    comp_ids = {v: k for k, v in comps_t.items() if names_t[v] == 1}    # 3.9.68 competition id of a unique name
     for t in sorted(TC):
         x = cmap_t.get(t)
         a = dname(div_t, comps_t, t)
@@ -441,12 +572,13 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
         else:
             vs = "differs" if tab else "-"
         if a != b or vs not in ("agrees", "-"):
+            dec, why, new_div = league_decision(a, b, vs, real, comp_ids)
             rows["5-leagues"].append(dict(
                 club=TC[t]["long"], id_3968=t, id_xbox=x if x is not None else -1, nation=TC[t]["nat"],
                 division_3968=a, division_xbox=b, table_label=" | ".join(sorted({r["division"] for r in tab})) or "-",
                 table_division=" | ".join(real) or "-", xbox_vs_table=vs,
                 table_db_division=" | ".join(sorted({r["db_division"] or "none" for r in tab})) or "-",
-                rule="Q15: every difference goes to Max", decision=HELD))
+                new_division_id=new_div, rule=why, decision=dec))
     notes["table_rows"] = len(table_rows)
     notes["table_no_id"] = 0
     for r in table_rows:
@@ -456,8 +588,8 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
             rows["5-leagues"].append(dict(
                 club=r["club"], id_3968=-1, id_xbox=-1, nation="-", division_3968="-", division_xbox="-",
                 table_label=r["division"], table_division=rd if rd in known else "?", xbox_vs_table="no club id",
-                table_db_division=r["db_division"] or "none",
-                rule="Q15: the club-table row names no club of the database", decision=HELD))
+                table_db_division=r["db_division"] or "none", new_division_id=-1,
+                rule="Q24 second look: the club-table row names no club of the database", decision=HELD))
 
     # Kind 6: names and competitions.
     for x, t in sorted(cmap.items(), key=lambda kv: kv[1]):
@@ -471,7 +603,9 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
         if TC[t]["nat"] != XC[x]["nat"]:
             rows["6-names"].append(dict(
                 item="club nation", id_3968=t, id_xbox=x, value_3968=TC[t]["nat"], value_xbox=XC[x]["nat"],
-                rule="a nation change that the spec does not name", decision=HELD))
+                **(dict(rule="Q27: the Xbox club has no nation, the 3.9.68 nation stays", decision=KEPT)
+                   if XC[x]["nat"] < 0 else dict(rule="a nation change that the spec does not name",
+                                                 decision=HELD))))
     for t in only_t:
         rows["6-names"].append(dict(item="club only in 3.9.68", id_3968=t, id_xbox=-1, value_3968=TC[t]["long"],
                                     value_xbox="-", rule="the template keeps all its clubs (Q2)", decision=HELD))
@@ -492,9 +626,9 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
                 item="competition", id_3968=it, id_xbox=ix,
                 value_3968=f"{name} ({used_t[it]} clubs)" if it >= 0 else "-",
                 value_xbox=f"{name} ({used_x[ix]} clubs)" if ix >= 0 else "-",
-                rule="Q11: three Turkish Category B groups (slice 5 code)" if turk else
+                rule=GROUPS_WAIT if turk else
                 "a competition row in 3.9.68 only, with no club: slice 3 may reuse it" if unused else
-                "a competition change that the spec does not name", decision=APPLIED if turk else HELD))
+                "a competition change that the spec does not name", decision=HELD))
             if unused:
                 notes["unused_comps"].append((it, name))
             if turk:
@@ -532,17 +666,18 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows):
                 joined_xbox=d(px["joined"]) if px else "-", cend_xbox=d(px["cend"]) if px else "-",
                 differs="yes" if differs else "",
                 ratings_differ="yes" if x is not None and any(ratings_differ(t, x) for t in ts) else "",
-                rule="Q11, Q14: unclear, the 3.9.68 record stays", decision=HELD))
+                rule="Q26: unclear, the 3.9.68 record stays", decision=HELD))
     return rows, notes
 
 
 FIELDS = {
     "1-moves": ["person", "born", "id_3968", "id_xbox", "club_3968", "club_xbox", "new_club_id", "joined_3968",
-                "joined_xbox", "cend_3968", "cend_xbox", "job_3968", "job_xbox", "summer_2002", "rule", "decision"],
+                "joined_xbox", "cend_3968", "cend_xbox", "job_3968", "job_xbox", "summer_2002", "take_job", "rule",
+                "decision"],
     "4-ratings": ["person", "born", "id_3968", "id_xbox", "club_3968", "major", "ca_3968", "ca_xbox", "pa_3968",
                   "pa_xbox", "world_3968", "world_xbox", "fields", "changes", "rule", "decision"],
-    "5-leagues": ["club", "id_3968", "id_xbox", "nation", "division_3968", "division_xbox", "table_label",
-                  "table_division", "xbox_vs_table", "table_db_division", "rule", "decision"],
+    "5-leagues": ["club", "id_3968", "id_xbox", "nation", "nation_name", "division_3968", "division_xbox", "table_label",
+                  "table_division", "xbox_vs_table", "table_db_division", "new_division_id", "rule", "decision"],
     "6-names": ["item", "id_3968", "id_xbox", "value_3968", "value_xbox", "rule", "decision"],
     "7-unclear": ["reason", "person", "born", "ids_3968", "clubs_3968", "id_xbox", "club_xbox", "joined_xbox",
                   "cend_xbox", "differs", "ratings_differ", "rule", "decision"],
@@ -579,14 +714,17 @@ def summary(rows, notes):
     L = ["# Summer 2002 change list", "",
          "Made by `tools/seasons/own_db/xbox0203/change_list.py` from the Xbox facts (Championship Manager: Season "
          "02/03, SI) and the 3.9.68 template. Each TSV row names the person or club, the 3.9.68 value, the Xbox "
-         "value, the rule and the decision. A held row keeps its 3.9.68 value until you decide.", "",
-         "## Counts", "", "| Kind | File | Rows | Applied | Held |", "|---|---|---|---|---|"]
+         "value, the rule and the decision. Max's answers Q21 to Q28 (2026-10-24) are applied, so the decisions "
+         "are final: applied rows go into the build, kept rows keep the 3.9.68 value by an answer, and held rows "
+         "keep the 3.9.68 value because no answer takes them.", "",
+         "## Counts", "", "| Kind | File | Rows | Applied | Kept | Held |", "|---|---|---|---|---|---|"]
     names = {"1-moves": "Club moves", "2-releases": "Releases", "3-dates": "Join and contract dates, same club",
              "4-ratings": "Rating changes", "5-leagues": "Club league differences",
              "6-names": "Club names and competitions", "7-unclear": "Unclear people",
              "8-template-pairs": "Template duplicate pairs"}
     for k, n in names.items():
-        L.append(f"| {n} | {k}.tsv | {count(rows, k)} | {count(rows, k, APPLIED)} | {count(rows, k, HELD)} |")
+        L.append(f"| {n} | {k}.tsv | {count(rows, k)} | {count(rows, k, APPLIED)} | {count(rows, k, KEPT)} | "
+                 f"{count(rows, k, HELD)} |")
     mv = rows["1-moves"]
     summer = sum(1 for r in mv if r["summer_2002"] == "yes")
     club_to_club = [r for r in mv if r["club_3968"] != "-"]
@@ -621,43 +759,42 @@ def summary(rows, notes):
                 L.append(f"- {r['person']}: unclear ({r['reason']}). Held.")
         if not hits:
             L.append(f"- {name}: not in the moves.")
-    L += ["", "## Rows that need your decision", "", "A held row keeps its 3.9.68 value unless you decide.", ""]
+    L += ["", "## Answers (Q21 to Q28) and the rows still held", ""]
     held = {k: [r for r in rows[k] if r["decision"] == HELD] for k in names}
-    L.append(f"1. Releases held: {len(held['2-releases'])} ({reasons(held['2-releases'])}).")
-    wiped = [n for n in EXAMPLES if any(r["rule"] == WIPED for r in find_rows(rows, "1-moves", n))]
-    L.append(f"2. Moves held: {len(held['1-moves'])} ({reasons(held['1-moves'])}). The rows with no Xbox contract "
-             f"end include: {', '.join(wiped) or 'none of the examples'}. Choose per row: the Xbox club with no "
-             "contract end, the Xbox club with the 3.9.68 contract end, or no change.")
-    L.append(f"3. Date rows held: {len(held['3-dates'])} ({reasons(held['3-dates'])}).")
+    allp = [r for k in ("1-moves", "2-releases", "3-dates") for r in rows[k]]
+    by_q = lambda q: sum(1 for r in allp if r["decision"] == APPLIED and q in r["rule"])  # noqa: E731
+    L.append(f"1. Q21 (a move with no Xbox contract end takes the Xbox club with no contract end): {by_q('Q21')} "
+             "moves applied.")
+    L.append(f"2. Q22 (the Xbox job too): {sum(1 for r in allp if r['take_job'])} rows applied with the Xbox job. "
+             f"Held: {sum(1 for r in allp if NO_ROW in r['rule'])}, where the Xbox job needs a player row that the "
+             "3.9.68 row lacks (slice 3 adds no rows).")
+    L.append(f"   Full club lists: {notes.get('full_lists', 0)} applied rows are held because the person would join "
+             "a club list (squad, manager, coaches and so on) that is full in 3.9.68 and whose holders stay.")
+    L.append(f"3. Q23 (no Xbox squad, or no Xbox club): {sum(1 for r in allp if r['rule'].startswith('Q23') or 'Q23:' in r['rule'])} "
+             "releases keep the 3.9.68 club.")
     lg = rows["5-leagues"]
-    a_b = sum(1 for r in lg if r["division_3968"] != r["division_xbox"])
-    L.append(f"4. League differences: {len(lg)} rows. {a_b} differ between 3.9.68 and Xbox. Xbox against the club "
-             "table: " + ", ".join(f"{v} {k}" for k, v in collections.Counter(r["xbox_vs_table"] for r in lg)
-                                   .most_common()) + ". Answer per nation or per row with the division of the "
-             "club. The most common patterns (3.9.68, Xbox, club table):")
-    pat = collections.Counter((r["division_3968"], r["division_xbox"], r["table_division"]) for r in lg)
-    L += [f"   - {n}: {a}, {b}, {c}" for (a, b, c), n in pat.most_common(12)]
-    L.append(f"5. Names and competitions held: {len(held['6-names'])} ({reasons(held['6-names'])}). The members of "
-             "the Turkish groups are held here and in the league rows, so one answer covers both.")
-    rt = rows["4-ratings"]
-    notmaj = sum(1 for r in rt if r["major"] == "no")
-    unc_rt = sum(1 for r in rows["7-unclear"] if r["ratings_differ"])
-    L.append(f"6. Rating changes: {len(rt)}, of them {notmaj} for players who are not major. The spec applies the "
-             "Xbox rating changes (Q9), but research Q3 named major players only. Confirm that the changes of the "
-             f"other players apply too. {unc_rt} more rating changes belong to unclear people (kind 7). They are "
-             "held.")
-    unc = rows["7-unclear"]
-    only_xbox = sum(1 for r in unc if "only on Xbox" in r["reason"] or r["reason"] == "nation differs")
-    L.append(f"7. Unclear people: {len(unc)} rows ({reasons(unc, 'reason')}). "
-             f"{sum(1 for r in unc if r['differs'])} of them have another club, dates or ratings on Xbox. Not "
-             f"listed: {sum(notes['unclear_same'].values())} people with an unknown date whose 3.9.68 namesake has "
-             "the same club, dates and ratings. One group answer is possible: apply the rows \"unknown date of "
-             "birth, the name is once in each set with the same nation\". People only on Xbox, with the one whose "
-             f"nation differs: {only_xbox} rows (the research counted 26).")
+    second = [r for r in lg if r["decision"] == HELD]
+    L.append(f"4. Q24 (leagues): {count(rows, '5-leagues', APPLIED)} clubs take the Xbox league, "
+             f"{count(rows, '5-leagues', KEPT)} keep the 3.9.68 league because the club table agrees with it, and "
+             f"{len(second)} rows go to leagues-second-look.tsv (they keep the 3.9.68 league in this build). Per "
+             "nation: " + ", ".join(f"{n} {c}" for n, c in sorted(collections.Counter(
+                 r["nation_name"] for r in second).items(), key=lambda kv: (-kv[1], kv[0]))) + ".")
+    L.append(f"5. Q25 (rating changes of clear matches): {count(rows, '4-ratings', APPLIED)} applied, "
+             f"{sum(1 for r in rows['4-ratings'] if r['major'] == 'no')} of them for players who are not major.")
+    L.append(f"6. Q26 (unknown date of birth, the name once in each set with the same nation): {notes['q26']} more "
+             f"clear matches. They give {sum(1 for r in allp if r['rule'].startswith('Q26') or 'Q26 clear' in r['rule'])} "
+             f"rows of kinds 1 to 3. Unclear rows left: {len(rows['7-unclear'])}, all held.")
+    L.append(f"7. Q27 (no Xbox nation): {sum(1 for r in rows['6-names'] if r['rule'].startswith('Q27'))} clubs keep "
+             "the 3.9.68 nation.")
     tp = rows["8-template-pairs"]
-    L.append(f"8. Template duplicate pairs: {len(tp)}, of them {sum(1 for r in tp if r['xbox_change'])} with a "
-             "row that the Xbox data changes (held). `duplicates.py check` stops the build while a pair is left. "
-             "Slice 3 must merge them as the 2006/07 build did, or you allow some as two people.")
+    L.append(f"8. Q28 (template pairs): {count(rows, '8-template-pairs', APPLIED)} pairs are one person and the "
+             f"build merges them, {count(rows, '8-template-pairs', KEPT)} are two people by duplicates.kept_apart. "
+             "The build writes kept-pairs.tsv with the ids after the merge.")
+    L.append("")
+    L.append(f"Still held: moves {len(held['1-moves'])} ({reasons(held['1-moves'])}); releases "
+             f"{len(held['2-releases'])} ({reasons(held['2-releases'])}); dates {len(held['3-dates'])} "
+             f"({reasons(held['3-dates'])}); names and competitions {len(held['6-names'])} "
+             f"({reasons(held['6-names'])}).")
     L += ["", "## Duplicates (Q14)", "",
           f"Template pairs by the duplicates.py rules: {len(notes['dup_before'])}. A change of a row in a template "
           "pair is held. Rounds of new pairs that the applied club changes made, each held before the next round: "
@@ -668,28 +805,9 @@ def summary(rows, notes):
           + (", ".join(f"Xbox {x} to 3.9.68 {t} ({n} of {m} people)" for x, t, n, m in notes["squad_maps"]) or "none")
           + f". Clubs only in 3.9.68: {len(notes['only_t'])}. Only on Xbox: {len(notes['only_x'])}. Club table rows "
           f"of 2002/03: {notes['table_rows']}, of them {notes['table_no_id']} with no club id (held in kind 5).", "",
-          "## Note for slice 3", "",
-          "match.py, leagues.py and convert.py read format 2 only (cmdb.Folder). The changes are edits of existing "
-          "rows. So slice 3 most likely patches the 3.9.68 format 1 files in place and adds no row. That needs:", "",
-          "- A format 1 writer in cmdb1.py. It writes the staff rows (157 bytes) and the player rows (70 bytes) back "
-          "at the same offsets, with the bounds checks of the reader.",
-          "- Staff fields: club (+0x39, i32, the new_club_id column), join date (+0x3e) and contract end (+0x46). "
-          "Dates are day of year and year (cmdb1.to_date in reverse). Day 365 stays as read.",
-          "- Player fields: current and potential ability (+5, +7), the three reputations (+9 home, +0x0b current, "
-          "+0x0d world), 12 position bytes from +0x0f and 42 attribute bytes from +0x1b.",
-          "- club.dat: the long name (+4, 51 bytes) and short name (+0x38, 26 bytes) of Fiorentina. The club lists "
-          "(+0x9b to +0x1e0, duplicates.CLUB_STAFF) of the old and the new club of each move and release, so that "
-          "the squad lists agree with the staff rows (convert.check_squad_lists). The division (+0x57) of each "
-          "league decision.",
-          "- club_comp.dat: the Xbox groups are "
-          + ", ".join(f"{n} (Xbox id {i}, {c} clubs)" for i, n, c in notes["groups"])
-          + ". The 3.9.68 rows with no club and no Xbox row are "
-          + (", ".join(f"{n} ({i})" for i, n in notes["unused_comps"]) or "none")
-          + ". Slice 3 can give three unused rows the names of the groups and point the clubs' +0x57 at them. Then "
-          "no row is added or removed. First check that no other table points at those rows (history, rules, "
-          "nation data). Slice 5 owns the game code for the groups.",
-          "- index.dat: no count changes, as no row is added.",
-          "- The template pairs (item 8) need a format 1 merge, or `duplicates.py` must read format 1.", ""]
+          "## The build (slice 3)", "",
+          "`xbox0203/build_2002.py` patches a copy of the 3.9.68 files in place with the applied rows of these "
+          "files and adds no row. Its header gives the steps and the checks."]
     return "\n".join(L)
 
 
@@ -714,10 +832,17 @@ def main(argv):
     div_t, comps_t = read_divisions(dt)
     need(set(div_t) == set(ft["clubs"]) and set(div_x) == set(fx["clubs"]),
          "the club ids of the data folders and the facts differ: rerun read_xbox0203.py")
-    rows, notes = build(ft, fx, div_t, comps_t, div_x, comps_x, club_table_rows(rules))
+    rows, notes = build(ft, fx, div_t, comps_t, div_x, comps_x, club_table_rows(rules),
+                        (cmdb1.open_folder(dt), cmdb1.open_folder(dx)))
+    nations = ft["nations"]
+    for r in rows["5-leagues"]:
+        r["nation_name"] = nations[r["nation"]][0] if r["nation"] in nations else "(no club id)"
     os.makedirs(out, exist_ok=True)
     for kind, fields in FIELDS.items():
         write_tsv(os.path.join(out, kind + ".tsv"), fields, rows[kind])
+    second = sorted((r for r in rows["5-leagues"] if r["decision"] == HELD),
+                    key=lambda r: (r["nation_name"], r["club"], r["id_3968"]))
+    write_tsv(os.path.join(out, "leagues-second-look.tsv"), FIELDS["5-leagues"], second)
     text = summary(rows, notes)
     with open(os.path.join(out, "summary.md"), "w", encoding="utf-8") as f:
         f.write(text + "\n")

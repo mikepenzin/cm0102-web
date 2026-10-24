@@ -76,6 +76,93 @@ X = [
     squad(("Moss", "Fern", "Reed"), 1992, 7)
 
 
+def league_cases():
+    """Q24: the Xbox league where the Xbox data and the club table agree, the 3.9.68 league where the table agrees
+    with 3.9.68, else the second look."""
+    ids = {"Top": 1, "Second": 2}
+    bad = []
+    for a, b, vs, real, want in (("Second", "Top", "agrees", ["Top"], (cl.APPLIED, 1)),
+                                 ("Second", "Top", "differs", ["Second"], (cl.KEPT, -1)),
+                                 ("Second", "Top", "-", [], (cl.HELD, -1)),
+                                 ("Second", "Group A", "agrees", ["Group A"], (cl.HELD, -1)),
+                                 ("Second", "Top", "differs", ["Third"], (cl.HELD, -1))):
+        dec, why, div = cl.league_decision(a, b, vs, real, ids)
+        if (dec, div) != want or not why.startswith("Q24"):
+            bad.append(("league decision", a, b, vs, real, dec, div))
+    return bad
+
+
+class Rows:
+    """A folder stand-in for slot_holds: rows(6) staff, rows(0) clubs, rows(9) non-player rows, rows(10) players."""
+    def __init__(self, staff, clubs):
+        self.t = {6: staff, 0: clubs}
+
+    def rows(self, tid):
+        return self.t[tid]
+
+
+def slot_cases():
+    """A manager who moves into a club whose manager stays is held. A manager who leaves frees the place."""
+    import struct
+
+    def staff(i, club, job, flags=1):
+        r = bytearray(157)
+        struct.pack_into("<i", r, 0, i)
+        struct.pack_into("<i", r, 0x39, club)
+        r[0x3d], r[0x5f] = job, flags
+        return r
+
+    def club(i, manager):
+        r = bytearray(581)
+        struct.pack_into("<i", r, 0, i)
+        for o in range(0x9b, 0x1e0 + 80, 4):
+            struct.pack_into("<i", r, o, -1)
+        struct.pack_into("<i", r, 0xcf, manager)
+        return r
+    T = Rows([staff(0, 0, 5), staff(1, 1, 5), staff(2, -1, 5), staff(3, -1, 5)], [club(0, 0), club(1, 1)])
+    T.t[9], T.t[10] = [], []
+    for k, r in enumerate(T.t[6]):
+        struct.pack_into("<i", r, 0x91, -1)
+        struct.pack_into("<i", r, 0x99, k)
+        n = bytearray(68)
+        struct.pack_into("<h", n, 4, 10 * k)
+        T.t[9].append(n)
+    X = Rows([staff(0, 0, 5), staff(1, -1, 5), staff(2, 0, 5), staff(3, 1, 5)], [])
+    planned = [("2-releases", 1, 1, None, cl.APPLIED, "clear match"),     # club 1's manager leaves
+               ("1-moves", 2, 2, 0, cl.APPLIED, "clear match"),           # club 0's manager stays: held
+               ("1-moves", 3, 3, 1, cl.APPLIED, "clear match")]           # takes the free place: applied
+    out, held = cl.slot_holds(planned, (T, X))
+    got = [(t, dec) for _, t, _, _, dec, _ in out]
+    bad = []
+    if got != [(1, cl.APPLIED), (2, cl.HELD), (3, cl.APPLIED)] or held != 1:
+        bad.append(("slot holds", got, held))
+    # Two newcomers for one free place: the one of the higher ability (staff 3, ability 30) takes it.
+    planned = [("2-releases", 1, 1, None, cl.APPLIED, "clear match"), ("1-moves", 2, 2, 1, cl.APPLIED, "clear match"),
+               ("1-moves", 3, 3, 1, cl.APPLIED, "clear match")]
+    got = [(t, dec) for _, t, _, _, dec, _ in cl.slot_holds(planned, (T, X))[0]]
+    if got != [(1, cl.APPLIED), (2, cl.HELD), (3, cl.APPLIED)]:
+        bad.append(("slot holds by ability", got))
+    if cl.slot_keys(2, 11) != ["p"] or cl.slot_keys(3, 12) != ["p", "m"] or cl.slot_keys(1, 3) != ["dir"]:
+        bad.append(("slot keys", cl.slot_keys(2, 11), cl.slot_keys(3, 12), cl.slot_keys(1, 3)))
+    return bad
+
+
+def pair_cases():
+    """Q28: duplicates.kept_apart keeps pairs that are two people and merges the rest."""
+    def x(dob, common=""):
+        return dict(first="Andy", second="Evans", common=common, dob=dob)
+    bad = []
+    for a, b, two in ((x((328, 1975)), x((90, 1978)), True),               # 25 Nov 1975 and 1 Apr 1978
+                      (x((12, 1981)), x((30, 1981)), False),                # 13 and 31 January: digits swapped
+                      (x((309, 1972)), x((161, 1972)), False),              # 6 November and 11 June: day and month
+                      (x((200, 1979)), x((200, 1978)), False),              # one digit of the year
+                      (x((0, 1900), "Toni"), x((0, 1900), "Toni II"), True),
+                      (x((0, 1900), "Luís Carlos"), x((0, 1900), "Luiz Carlos"), False)):
+        if bool(cl.duplicates.kept_apart(a, b)) != two:
+            bad.append(("kept apart", a, b, two))
+    return bad
+
+
 def main():
     bad = []
     pairs, unclear = cl.match_people(T, X)
@@ -113,13 +200,14 @@ def main():
     dec = {(k, r["id_3968"]): (r["decision"], r["rule"]) for k in ("1-moves", "2-releases", "3-dates")
            for r in rows[k]}
     cases = [(("1-moves", 0), cl.APPLIED, "clear match"), (("2-releases", 1), cl.APPLIED, "clear match"),
-             (("2-releases", 5), cl.HELD, "the Xbox data keeps no squad"),
+             (("2-releases", 5), cl.HELD, "Q23: the Xbox data keeps no squad"),
+             (("1-moves", 4), cl.APPLIED, "Q26 clear match"),
              (("1-moves", 8), cl.HELD, "the move makes a new duplicate pair"),
              (("1-moves", 10), cl.APPLIED, "clear match"),
              (("1-moves", 11), cl.HELD, "the 3.9.68 row is one of a template duplicate pair"),
              (("1-moves", 13), cl.HELD, "the job differs"), (("1-moves", 14), cl.HELD, "the Xbox club is not"),
              (("3-dates", 15), cl.APPLIED, "clear match, same club"), (("3-dates", 16), cl.HELD, cl.WIPED),
-             (("1-moves", 17), cl.HELD, cl.WIPED)]
+             (("1-moves", 17), cl.APPLIED, "Q21: " + cl.WIPED)]
     for key, want_dec, why in cases:
         got = dec.get(key)
         if not got or got[0] != want_dec or not got[1].startswith(why):
@@ -127,8 +215,12 @@ def main():
     if [r["id_a"] for r in rows["8-template-pairs"]] != [2, 11] or notes["dup_rounds"] != [1]:
         bad.append(("template pairs or rounds", rows["8-template-pairs"], notes["dup_rounds"]))
     held = {r["person"] for r in rows["7-unclear"]}
-    if not {"Cid Twin", "Dan Nodate", "Fay Nation", "Hal New"} <= held:
-        bad.append(("unclear rows", held))
+    if not {"Cid Twin", "Fay Nation", "Hal New"} <= held or "Dan Nodate" in held:
+        bad.append(("unclear rows (Dan Nodate is a Q26 match)", held))
+    q26, _ = cl.match_people(T, X, q26=True)
+    if q26.get(4) != 3 or any(q26.get(t) != x for t, x in want.items()):
+        bad.append(("Q26 match", q26.get(4)))
+    bad += league_cases() + slot_cases() + pair_cases()
     names = [r for r in rows["6-names"] if r["item"] == "club name"]
     if [(r["id_3968"], r["decision"]) for r in names] != [(4, cl.HELD)]:
         bad.append(("name rows", names))
