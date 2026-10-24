@@ -672,13 +672,15 @@ RT_WRAP(008fe250, tur_chain)
         uint32_t row = rd32(g_mem, a + OBJ_TABLE) + (uint32_t)i * ROW_SIZE;
         if (g_mem[row + ROW_STATUS] == 3) down[ndown++] = rd32(g_mem, row);
     }
-    /* The rows that go up, read before 0x689c80, which marks each moved row with 0xff (0x689df4, 0x689dff). */
+    /* The rows that go up, read before 0x689c80, which marks each moved row with 0xff (0x689df4, 0x689dff): a row of
+     * the lower table goes up when its status is not 0 and not 5 (0x689cbd..0x689cc7); 3 is a relegated row. */
     uint32_t up_club[GROUPS * 4];
     int up_group[GROUPS * 4], up_place[GROUPS * 4], nup = 0;
     for (int k = 0; k < GROUPS; k++)
         for (int i = 0; i < table_clubs(t[k]) && nup < GROUPS * 4; i++) {
             uint32_t row = rd32(g_mem, t[k] + OBJ_TABLE) + (uint32_t)i * ROW_SIZE;
-            if (g_mem[row + ROW_STATUS] == 1) {
+            uint8_t status = g_mem[row + ROW_STATUS];
+            if (status && status != 5 && status != 3) {
                 up_club[nup] = rd32(g_mem, row);
                 up_group[nup] = k;
                 up_place[nup++] = i + 1;
