@@ -17,7 +17,7 @@ src/recomp_rt/win/season_tur_groups.c):
             - each season change: each group sends its winner (place 1) to Category A and its last two to the Lower
               Division, Category A sends its relegated clubs to Category B, and nothing stays "not moved";
             - the next season: 18, 17 and 17 clubs again, none of the promoted or relegated clubs, every club that
-              Category A relegated;
+              Category A relegated, and each club that stays in Category B in its group;
             - the run ends with code 0 and no message box.
     other   a 2002/03 start with the game's own 3.9.68 data to the end of 2003/04 (one season change): no line of the
             groups (the five groups of 10 of the original). With --ref-build the same run of that program gives the
@@ -86,11 +86,13 @@ def check_summer(log, first, last):
     real = real_groups()
     with open(log, encoding="latin-1") as h:
         text = h.read()
-    bad += [f"runtime warning: {w}" for w in re.findall(r"recomp: turkish groups: (?:no dates for|\d+ clubs make groups of)[^\n]*", text)]
+    warn = r"recomp: turkish groups: (?:no dates for|\d+ clubs make groups of|no memory)[^\n]*"
+    bad += [f"runtime warning: {w}" for w in re.findall(warn, text)]
     m = re.search(r"turkish groups: three groups of \d+, \d+ and \d+ clubs; (\d+) tagged clubs stay", text)
     if not m:
         return bad + ["no line of the first-season groups"]
     stayed = int(m.group(1))
+    missing_all = []
     for k, n in SIZES.items():
         got = groups.get((first, k))
         if not got:
@@ -101,9 +103,9 @@ def check_summer(log, first, last):
         wrong = [c for c in got[1] if any(c in real[j] for j in SIZES if j != k)]
         if wrong:
             bad.append(f"{first} Group {k}: real clubs of another group: {wrong}")
-        missing = sorted(real[k] - set(got[1]))
-        if len(missing) > stayed:
-            bad.append(f"{first} Group {k}: real clubs missing {missing}, more than the {stayed} that stay elsewhere")
+        missing_all += sorted(real[k] - set(got[1]))
+    if len(missing_all) > stayed:
+        bad.append(f"{first}: real clubs missing {missing_all}, more than the {stayed} that stay elsewhere")
     for y in range(first, last):
         nxt = {k: set(groups.get((y + 1, k), (0, []))[1]) for k in SIZES}
         everyone = set().union(*nxt.values())
@@ -120,6 +122,10 @@ def check_summer(log, first, last):
             for r in u + d:
                 if r[3] in everyone:
                     bad.append(f"{y + 1}: {r[3]} moved but is in the groups")
+        before = {c: k for k in SIZES for c in groups.get((y, k), (0, []))[1]}
+        moved = sorted(c for k in SIZES for c in nxt[k] if c in before and before[c] != k)
+        if moved:
+            bad.append(f"{y + 1}: clubs that stay in Category B changed group: {moved[:6]}")
         ad = [r for r in a_downs if r[0] == y]
         if not ad or any(r[2] != "Category B" for r in ad):
             bad.append(f"{y}: Category A relegated {ad}")
@@ -158,7 +164,8 @@ def main(argv):
         if ref:
             runs.append(("other-ref", os.path.abspath(ref), None, 2002, 2003))
         else:
-            print("note: without --ref-build the other run checks only that no groups line appears")
+            print("the other run needs --ref-build <program of main>: it proves Q152 against it")
+            return 2
     with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
         futures = {r[0]: pool.submit(run_one, r[0], r[1], game, r[2], r[3], r[4], keep,
                                      {"RECOMP_TURKISH_GROUPS": "off"} if r[0] == "summer-off" else None) for r in runs}

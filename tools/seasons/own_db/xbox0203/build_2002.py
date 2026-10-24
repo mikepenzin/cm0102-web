@@ -1,6 +1,7 @@
 """Build the Summer 2002 database: a copy of the 3.9.68 files with the applied rows of the change list.
 
 Usage: python3 -I build_2002.py <changes> <xbox data> <3.9.68 Data> <out folder> <work folder> [--no-turkish-groups]
+                                [--exe <cm0102.exe>]
 
 <changes> is the folder of change_list.py (with Max's answers Q21 to Q28 applied). The two data folders are read
 only, and the out folder (the new database, "Summer 2002") and the work folder (reports) must be new and outside
@@ -23,7 +24,8 @@ that the duplicate merge removes. A change that would need a new row stops the b
 5. Names (kind 6): the long name (+0x04, 51 bytes) and short name (+0x38, 26 bytes) of Fiorentina come from the
    Xbox row (Florentia Viola, Q5).
 6. Turkish groups (Q11, Q16, Q29, Q43, slice 5): the three Xbox rows "Turkish 2. Division Category B Group A", "B"
-   and "C" replace the free rows 287, 288 and 233 (FREE_ROWS; no club and no history row points at them), and the
+   and "C" replace the free rows 287, 288 and 233 (FREE_ROWS; no club and no history row points at them, and with
+   --exe <cm0102.exe> their names are checked against the key names of set_key_ids 0x601a40), and the
    group tag (club +0x60) of each member club of kind 6 names its row. No row is added: nation comp ids follow the
    club comp ids in one array, so an added row would move them. Club divisions stay (Q39): the original game plays its five groups of 10 from the
    divisions G1 to G5 (its first-season merge overwrites +0x60 of those clubs), and this game plays the three groups
@@ -43,9 +45,12 @@ import argparse
 import collections
 import csv
 import os
+import re
+import struct
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+KEY_TABLE = os.path.realpath(os.path.join(HERE, "..", "..", "..", "..", "src", "cm3", "key_ids_table.c"))
 OWN_DB = os.path.dirname(HERE)
 sys.path.insert(0, OWN_DB)
 sys.path.insert(0, HERE)
@@ -247,6 +252,37 @@ def apply_names(F, X, changes, log):
 FREE_ROWS = ("Turkish 2. Divison Category B Group 1", "Turkish 2. Division", "Korean All-Star Cup")
 
 
+def exe_strings(exe):
+    """A reader of zero-ended strings at virtual addresses of a PE file."""
+    b = open(exe, "rb").read()
+    need(len(b) > 0x40 and b[:2] == b"MZ", f"{exe} is not an exe")
+    pe = struct.unpack_from("<I", b, 0x3c)[0]
+    need(pe + 0xf8 <= len(b) and b[pe:pe + 4] == b"PE\0\0", f"{exe} has no PE header")
+    n, osz = struct.unpack_from("<H", b, pe + 6)[0], struct.unpack_from("<H", b, pe + 20)[0]
+    base = struct.unpack_from("<I", b, pe + 24 + 28)[0]
+    secs = [struct.unpack_from("<IIII", b, pe + 24 + osz + 40 * i + 8) for i in range(n)]
+
+    def at(addr):
+        rva = addr - base
+        for vs, va, rs, ra in secs:
+            if va <= rva < va + min(vs, rs):
+                o = ra + rva - va
+                end = b.find(b"\0", o)
+                need(end >= 0, f"{exe}: no end of the string at {addr:#x}")
+                return b[o:end].decode("latin1")
+        raise SystemExit(f"build_2002: {exe}: {addr:#x} is in no section")
+    return at
+
+
+def key_names(exe):
+    """The club comp names that the game's set_key_ids looks for (lower case)."""
+    text = open(KEY_TABLE, encoding="utf-8").read()
+    body = text.split("const key_id_entry_t g_key_club_comp_chain[] = {")
+    need(len(body) == 2, f"{KEY_TABLE} has no club comp chain")
+    at = exe_strings(exe)
+    return {at(int(a, 16)).lower() for a in re.findall(r"\{(0x[0-9a-f]+),", body[1].split("};")[0])}
+
+
 def comp_refs(F):
     """Every club comp id that the clubs (+0x57, +0x5b, +0x60) and the club and nation comp history rows (+0x04)
     hold."""
@@ -261,7 +297,7 @@ def comp_refs(F):
     return used
 
 
-def apply_groups(F, X, changes, skip, log):
+def apply_groups(F, X, changes, skip, log, exe=None):
     """Q11, Q16, Q29: the three Xbox group rows replace the free rows FREE_ROWS (the Xbox row as it is but its id: the
     colour, continent and nation ids name the same rows in both sets), and each member club's group tag (club +0x60,
     unused for Turkish clubs in 3.9.68) names its group row. No row is added and no id moves. Club divisions stay
@@ -286,6 +322,7 @@ def apply_groups(F, X, changes, skip, log):
     for r in F.rows(12):
         by_name.setdefault(cmdb.cstr(r, 4, 51), []).append(r)
     used = comp_refs(F)
+    keys = key_names(exe) if exe else None
     target = {}
     for (name, xid), free in zip(groups, FREE_ROWS):
         found = by_name.get(free, [])
@@ -293,6 +330,7 @@ def apply_groups(F, X, changes, skip, log):
         r = found[0]
         cid = i32(r, 0)
         need(not used[cid], f"Turkish groups: row {cid} {free!r} is not free ({used[cid]} references)")
+        need(keys is None or free.lower() not in keys, f"Turkish groups: row {cid} {free!r} is a key name of the game")
         put_bytes(r, 4, bytes(xrows[xid][4:]))     # the whole row but its id
         target[name] = cid
     clubs = {i32(r, 0): r for r in F.rows(0)}
@@ -368,6 +406,7 @@ def main(argv):
     ap.add_argument("out")
     ap.add_argument("work")
     ap.add_argument("--no-turkish-groups", action="store_true")
+    ap.add_argument("--exe")
     a = ap.parse_args(argv)
     for p in (a.out, a.work):
         need(outside_repo(p), f"{p} must be outside the repo")
@@ -382,7 +421,7 @@ def main(argv):
     fix_lists(F, changed, log)
     apply_divisions(F, a.changes, log)
     apply_names(F, X, a.changes, log)
-    apply_groups(F, X, a.changes, a.no_turkish_groups, log)
+    apply_groups(F, X, a.changes, a.no_turkish_groups, log, a.exe)
     for f, b in F.raw.items():
         need(len(b) == sizes[f], f"{f} changed its length before the merge: a row was added")
     os.makedirs(a.work)

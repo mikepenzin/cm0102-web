@@ -38,6 +38,7 @@ sys.path.insert(0, os.path.join(HERE, "xbox0203"))
 import cmdb  # noqa: E402
 import cmdb1  # noqa: E402
 import duplicates  # noqa: E402
+import build_2002  # noqa: E402
 from build_2002 import FREE_ROWS  # noqa: E402
 from change_list import REPO  # noqa: E402
 from read_xbox0203 import FM_JOB  # noqa: E402
@@ -260,6 +261,12 @@ def check_groups(F, T):
     refs = collections.Counter(i32(r, o) for t in (0, 1) for r in F.rows(t) for o in (0x57, 0x5b))
     refs.update(i32(r, 4) for t in (19, 20) for r in F.rows(t))
     bad += [("a group row has other references", c, refs[c]) for c in ids if refs[c]]
+    exe = os.path.join(ROOT, "clean-3968", "cm0102.exe")
+    if os.path.exists(exe):                 # set_key_ids 0x601a40 finds key competitions by name
+        keys = build_2002.key_names(exe)
+        bad += [("a free row is a key name", n) for n in FREE_ROWS if n.lower() in keys]
+    else:
+        bad.append(("no cm0102.exe for the key name check", exe))
     print(f"Turkish groups checked: {sum(tags.values())} clubs in rows {ids}")
     return bad
 
