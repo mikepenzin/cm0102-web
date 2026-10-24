@@ -156,6 +156,12 @@ def main(argv):
         folder = os.path.join(save, "Databases", "October 2003")
         check(status == PREPARE["OK"] and name == "October 2003" and unpacked == 1, f"prepare 2003: unpacked once ({status} {name!r} {err})")
         check(sorted(os.listdir(folder)) == sorted(FILES), "the unpacked folder holds the 20 data files and nothing else")
+        # Keep club.dat and staff.dat "changed a moment ago" for the cache check below, also on a slow machine: a time a
+        # little ahead of now is never 2 seconds older than the hash (under load the hash can start 2 seconds after
+        # the unpack, and the cache then keeps the folder, as it should).
+        soon = time.time() + 120
+        for n in ("club.dat", "staff.dat"):
+            os.utime(os.path.join(folder, n), (soon, soon))
         out, _ = run(tool, "identify", folder)
         check(out == "October 2003", f"identify: the unpacked folder is October 2003 ({out})")
         rows_tsv = {}
