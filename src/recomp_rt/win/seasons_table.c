@@ -13,7 +13,7 @@ const SeasonKnownDb seasons_known_dbs[] = {
      "32da1bc33450a1c73d9e3f4ffcd11fde2866ba7ff0f228f4effb2052856ecd87",
      "297d674bdb512546f2c12c174600ea2ba91768dfe4f97bcb6767e39eb99db8b4"},
     {"Summer 2002", "n/a", 2002, SEASONS_ROLE_SEASON, 7677334u, 38397752u,
-     "f39a8bcc0ea8e813e5ee7b4e67b645dd3111ebe7e29d31a82a8e4e0f50915fa7",
+     "0e5986a4b3afce0442ce96f1a82c555b78bb98e91636ecaea1e6124648156046",
      "7fdccf0c1c32decfc4e9bb0b6b9b94edc1d5c9bd77eef8637ec6ccca651b37da"},
     {"October 2003", "n/a", 2003, SEASONS_ROLE_SEASON, 7678496u, 39458260u,
      "44d237b423f1c63ea8a3d63e53ff24b0c865c3ff1fa9cf17f8a7af247adfaa5f",
