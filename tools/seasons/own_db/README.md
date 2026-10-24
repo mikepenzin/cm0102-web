@@ -94,10 +94,10 @@ Each run prints the counts and the known facts: Henry (Arsenal, with his ratings
 
 ## 2002/03 (Summer 2002), slice 2: the change list
 
-`xbox0203/change_list.py` writes what the Xbox facts change in the 3.9.68 template, for Max to read before the
-build: one TSV per kind (club moves, releases, dates, ratings, league differences, names and competitions, unclear
-people) and `summary.md` with the counts and the rows that need his decision. Its header gives the rules. `<changes>`
-is a new folder outside the repo.
+`xbox0203/change_list.py` writes what the Xbox facts change in the 3.9.68 template. Max reads it before the build.
+It writes one TSV per kind: club moves, releases, dates, ratings, league differences, names and competitions,
+unclear people and template duplicate pairs. `summary.md` gives the counts and the rows that need his decision.
+The header of the script gives the rules. `<changes>` is a new folder outside the repo.
 
 ```bash
 python3 -I xbox0203/change_list.py "<facts-xbox>" "<facts-3968>" "<xbox data>" "<3.9.68 Data>" "<changes>"
