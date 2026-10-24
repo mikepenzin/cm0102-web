@@ -114,7 +114,7 @@ def apply_staff(F, X, changes, log):
             if row["decision"] != "applied":
                 continue
             t, x, new = int(row["id_3968"]), int(row["id_xbox"]), int(row["new_club_id"])
-            if x == -1:                                 # Q39: a holder leaves his place, no Xbox row, dates stay
+            if x == -1:                                 # Q40: a holder leaves his place, no Xbox row, dates stay
                 need(kind == "2-releases" and new == -1 and 0 <= t < len(st), f"{kind}: row {t} has no Xbox row")
                 need(person(F, tn, st[t]) == row["person"], f"{kind}: staff {t} is not {row['person']}")
                 changed.setdefault(t, i32(st[t], 0x39))

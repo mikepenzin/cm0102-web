@@ -27,8 +27,8 @@ answer takes it, the 3.9.68 value stays).
   without the squad, or without the club, the 3.9.68 club stays.
 - Full lists (slot_holds): a person who would join a club list of his job (squad, manager, coaches, chairman and
   so on) that is full in 3.9.68, and whose holders stay, is held. The game needs each person in the list of his
-  job (convert.check_squad_lists). Q39: four holders that the Xbox data lacks, and that a public source puts
-  elsewhere in July 2002, leave their place (HOLDERS_Q39, kind 2 rows with no Xbox row), so the Xbox manager
+  job (convert.check_squad_lists). Q40: four holders that the Xbox data lacks, and that a public source puts
+  elsewhere in July 2002, leave their place (HOLDERS_Q40, kind 2 rows with no Xbox row), so the Xbox manager
   takes it: Mutti at Reggina, Acebal at Sporting Gijón, Csábi at Vasas and Paneira at Serzedelo.
 - Kind 4 ratings: the rating rows that differ for clear matches. Major player: current ability 140 or more, or
   world reputation 150 or more, in either set (Q8). World reputation is the i16 at +0x0d of the player row. The
@@ -370,7 +370,7 @@ def rating_diffs(rt, rx):
 
 # The club lists of club.dat that hold staff by job (convert.JOB_LISTS, plus chairman and directors): key, offset
 # and size. "p" is the squad list (convert.in_squad).
-HOLDERS_Q39 = {
+HOLDERS_Q40 = {
     106378: ("Luigi De Canio took over Reggina on 8 November 2002, after Bortolo Mutti, the manager from summer 2002 "
              "(Gli Eroi del Calcio)"),
     143366: ("Antonio Maceda took over Sporting Gijón after José María Acebal was sacked on 7 October 2002 "
@@ -514,16 +514,16 @@ def build(ft, fx, div_t, comps_t, div_x, comps_x, table_rows, raw=None, holders=
         planned = [(kind, t, x, new, HELD, "the move makes a new duplicate pair: " + pair_text(t, new_pairs))
                    if dec == APPLIED and kind != "3-dates" and t in in_new else (kind, t, x, new, dec, why)
                    for kind, t, x, new, dec, why in planned]
-    # Q39 (Max, 2026-10-24): holders that the Xbox data lacks and that a public source puts elsewhere in July 2002
+    # Q40 (Max, 2026-10-24): holders that the Xbox data lacks and that a public source puts elsewhere in July 2002
     # leave their place, so the Xbox newcomer can take it. They have no Xbox row (x is None) and become free.
     for t, why in sorted((holders or {}).items()):
-        need(T[t]["club"] is not None and T[t]["club"] >= 0, f"Q39: staff {t} has no club in 3.9.68")
-        planned.append(("2-releases", t, None, None, APPLIED, "Q39 (Max): " + why))
+        need(T[t]["club"] is not None and T[t]["club"] >= 0, f"Q40: staff {t} has no club in 3.9.68")
+        planned.append(("2-releases", t, None, None, APPLIED, "Q40 (Max): " + why))
     if raw:
         planned, notes["full_lists"] = slot_holds(planned, raw)
     for kind, t, x, new, dec, why in planned:
         pt = T[t]
-        px = X[x] if x is not None else dict(pt, club=None, role="-", job="-")    # Q39: no Xbox row, dates stay
+        px = X[x] if x is not None else dict(pt, club=None, role="-", job="-")    # Q40: no Xbox row, dates stay
         jx = px["joined"]
         summer = bool(kind == "1-moves" and jx and SUMMER[0] <= jx <= SUMMER[1])
         rows[kind].append(dict(person=who(pt), born=d(pt["dob"]), id_3968=t, id_xbox=x if x is not None else -1,
@@ -801,6 +801,9 @@ def summary(rows, notes):
              f"{len(second)} rows go to leagues-second-look.tsv (they keep the 3.9.68 league in this build). Per "
              "nation: " + ", ".join(f"{n} {c}" for n, c in sorted(collections.Counter(
                  r["nation_name"] for r in second).items(), key=lambda kv: (-kv[1], kv[0]))) + ".")
+    if "swaps" in notes:
+        L.append(f"   Q39 (every division keeps its 3.9.68 club count): {notes['swaps']} swaps and chains applied, "
+                 f"{notes['unpaired']} moves held with no partner (on leagues-second-look.tsv).")
     if "league_left" in notes:
         L.append(f"   Q33 to Q37 (the league check with two sources per row, --league-check): applied in the counts "
                  f"above. Checked rows that no answer settles: {notes['league_left']}.")
@@ -921,6 +924,116 @@ def league_check(rows5, path, div_t, comps_t, TC, nations):
     return left
 
 
+# ---- Q39 (Max, 2026-10-24): every division keeps its 3.9.68 club count
+
+FIN_GROUPS = ("Finnish First Division North", "Finnish First Division South")
+FIN_GROUP_OF = {8116: "Finnish First Division North",       # Oulun Luistinseura, Oulu, up from Kakkonen North
+                12164: "Finnish First Division North"}      # Vaasan Palloseura, Vaasa, down from the Veikkausliiga
+NONE_NODE = "none"
+
+
+def read_ranks(path):
+    """({competition id: rank +0x69}, {club id: reputation +0x80}) of a format 1 data folder."""
+    F = cmdb1.open_folder(path)
+    ranks = {u("<i", r, 0)[0]: u("<h", r, 0x69)[0] for r in F.rows(12)}
+    rep = {u("<i", r, 0)[0]: u("<h", r, 0x80)[0] for t in (0, 1) for r in F.rows(t)}
+    return ranks, rep
+
+
+def balance(rows5, div_t, comps_t, ranks, rep):
+    """Q39: applies the league moves only as swaps, so that every division keeps its 3.9.68 club count (the
+    original's create_table takes a fixed count, season_clubs.c CLASS_SIZE). A move pairs with a move the other
+    way between the same two divisions (higher reputation first up, lower first down), then the moves left form
+    chains (a to b, b to c, c to a; "no division" counts as one more node). A move with no partner is held and
+    the club keeps its 3.9.68 league. Finland keeps its North and South groups: the checked "Finnish First
+    Division" (one Ykkönen group from 2003) is the club's 3.9.68 group, or FIN_GROUP_OF. Returns the held rows."""
+    ids = {v: k for k, v in comps_t.items()}
+
+    def node(d):
+        return d if d >= 0 else NONE_NODE
+
+    def rank(n):
+        return ranks.get(n, -999) if n != NONE_NODE else -1000
+
+    moves = []
+    for r in rows5:
+        if r["decision"] != APPLIED:
+            continue
+        c = int(r["id_3968"])
+        src, dst = node(div_t.get(c, -2)), node(int(r["new_division_id"]))
+        if dst != NONE_NODE and comps_t[dst] == "Finnish First Division":
+            if src != NONE_NODE and comps_t[src] in FIN_GROUPS:
+                r.update(new_division_id=-1, division_new="", decision=KEPT,
+                         rule=r["rule"] + "; Q39: Finland keeps its North and South groups, the club stays in its "
+                         "3.9.68 group")
+                continue
+            need(c in FIN_GROUP_OF, f"Q39: no Finnish group for club {c}")
+            dst = ids[FIN_GROUP_OF[c]]
+            r.update(new_division_id=dst, division_new=FIN_GROUP_OF[c],
+                     rule=r["rule"] + "; Q39: the Finnish First Division group " + FIN_GROUP_OF[c])
+        if src == dst:
+            r.update(new_division_id=-1, division_new="", decision=KEPT, rule=r["rule"] + ", the 3.9.68 league stays")
+            continue
+        up = rank(dst) > rank(src)
+        moves.append(dict(row=r, src=src, dst=dst, key=(-rep.get(c, 0) if up else rep.get(c, 0), c)))
+    left = sorted(moves, key=lambda m: m["key"])
+    taken = []
+    # Swaps between two divisions.
+    by_pair = collections.defaultdict(list)
+    for m in left:
+        by_pair[(m["src"], m["dst"])].append(m)
+    for (a, b), there in sorted(by_pair.items(), key=lambda kv: str(kv[0])):
+        if str(a) < str(b):
+            back = by_pair.get((b, a), [])
+            for x, y in zip(there, back):
+                taken.append([x, y])
+    used = {id(m) for cyc in taken for m in cyc}
+    left = [m for m in left if id(m) not in used]
+    # Chains of three and more moves.
+    while True:
+        out = collections.defaultdict(list)
+        for m in left:
+            out[m["src"]].append(m)
+        cycle = None
+        for start in sorted(out, key=str):
+            stack = [(start, [])]
+            seen = set()
+            while stack and cycle is None:
+                n, path = stack.pop()
+                for m in out.get(n, []):
+                    if m["dst"] == start:
+                        cycle = path + [m]
+                        break
+                    if m["dst"] not in seen and len(path) < 8:
+                        seen.add(m["dst"])
+                        stack.append((m["dst"], path + [m]))
+            if cycle:
+                break
+        if not cycle:
+            break
+        taken.append(cycle)
+        used = {id(m) for m in cycle}
+        left = [m for m in left if id(m) not in used]
+    for cyc in taken:
+        names = [m["row"]["club"] for m in cyc]
+        for m in cyc:
+            others = ", ".join(n for n in names if n != m["row"]["club"])
+            m["row"]["rule"] += ("; Q39: swap with " if len(cyc) == 2 else "; Q39: chain of moves with ") + others
+    for m in left:
+        r = m["row"]
+        r.update(new_division_id=-1, decision=HELD,         # division_new keeps the checked division, for the list
+                 rule=r["rule"] + "; Q39 held: no swap partner, so the division would change its club count; "
+                 "the 3.9.68 league stays")
+    # Every division keeps its count.
+    delta = collections.Counter()
+    for r in rows5:
+        if r["decision"] == APPLIED:
+            delta[node(div_t.get(int(r["id_3968"]), -2))] -= 1
+            delta[node(int(r["new_division_id"]))] += 1
+    need(all(v == 0 for k, v in delta.items() if k != NONE_NODE), f"Q39: a division changes its count: {delta}")
+    return [m["row"] for m in left], len(taken)
+
+
 def outside_repo(path):
     """True when path is outside this checkout and outside the main checkout of a worktree."""
     path = os.path.realpath(path)
@@ -948,7 +1061,7 @@ def main(argv):
     need(set(div_t) == set(ft["clubs"]) and set(div_x) == set(fx["clubs"]),
          "the club ids of the data folders and the facts differ: rerun read_xbox0203.py")
     rows, notes = build(ft, fx, div_t, comps_t, div_x, comps_x, club_table_rows(rules),
-                        (cmdb1.open_folder(dt), cmdb1.open_folder(dx)), HOLDERS_Q39)
+                        (cmdb1.open_folder(dt), cmdb1.open_folder(dx)), HOLDERS_Q40)
     nations = ft["nations"]
     for r in rows["5-leagues"]:
         r["nation_name"] = nations[r["nation"]][0] if r["nation"] in nations else "(no club id)"
@@ -956,6 +1069,9 @@ def main(argv):
         notes["league_left"] = len(league_check(rows["5-leagues"], check, div_t, comps_t, ft["clubs"], nations))
     for r in rows["5-leagues"]:
         r.setdefault("division_new", r["division_xbox"] if r["decision"] == APPLIED else "")
+    ranks, rep = read_ranks(dt)
+    unpaired, notes["swaps"] = balance(rows["5-leagues"], div_t, comps_t, ranks, rep)
+    notes["unpaired"] = len(unpaired)
     os.makedirs(out, exist_ok=True)
     for kind, fields in FIELDS.items():
         write_tsv(os.path.join(out, kind + ".tsv"), fields, rows[kind])

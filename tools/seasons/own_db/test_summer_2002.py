@@ -12,16 +12,21 @@ Checks (spec docs/specs/2026-10-24-summer-2002-db-spec.md, Testing):
   of kind 4, divisions of kind 5, the club name of kind 6, and an applied row of another kind fails;
 - nothing else changes (check_untouched);
 - duplicates.py check passes with kept-pairs.tsv, and no table has more rows than 3.9.68;
+- Q38, Q39 (check_structure): the 20 data files, every 3.9.68 competition row with its name, every division
+  with its 3.9.68 club count, and at least the 2001 class count (season_clubs.c CLASS_SIZE) in each class
+  division, so the original makes every table at load;
 - known facts: Celestini at Olympique Marseille, Fiorentina is Florentia Viola, Rooney at Everton with current
   ability 135, Ronaldo (the "Ronaldo" of the highest current ability, born 1976) at Real Madrid C.F.;
 - two builds with different PYTHONHASHSEED values (python3 -P -s, as -I ignores the seed) give the same files as
   the folder.
 """
+import collections
 import contextlib
 import csv
 import filecmp
 import io
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -90,7 +95,7 @@ def check_changes(F, changes, work):
                 bad.append((kind, row["person"], "club", club, row["new_club_id"]))
             if (iso(cmdb1.date_at(r, 0x3e)), iso(cmdb1.date_at(r, 0x46))) != (
                     (row["joined_xbox"], row["cend_xbox"]) if row["id_xbox"] != "-1"
-                    else (row["joined_3968"], row["cend_3968"])):           # Q39 holders keep their dates
+                    else (row["joined_3968"], row["cend_3968"])):           # Q40 holders keep their dates
                 bad.append((kind, row["person"], "dates", cmdb1.date_at(r, 0x3e), cmdb1.date_at(r, 0x46)))
             if row["take_job"] == "yes":
                 role, code = row["job_xbox"].split()
@@ -165,6 +170,39 @@ def check_untouched(F, T, changes, work):
     return bad[:20]
 
 
+def class_sizes():
+    """{division name: club count of a 2001 start} of the classes in season_clubs.c CLASS_SIZE."""
+    text = open(os.path.join(REPO, "src", "recomp_rt", "win", "season_clubs.c"), encoding="utf-8").read()
+    body = text[text.index("static const ClassSize CLASS_SIZE[] = {"):]
+    body = body[:body.index("};")]
+    return {m[0]: int(m[3]) for m in re.findall(r'\{"([^"]+)", "([a-z_0-9]+)", (\d+), (\d+)\}', body)}
+
+
+def check_structure(F, T, out):
+    """Q39 and Q38: the folder holds the 20 data files, every competition of 3.9.68 keeps its row and name (the
+    original finds 168 to 172 and others by name at load), every division keeps its 3.9.68 club count, and each
+    division of a class in season_clubs.c CLASS_SIZE holds at least the count of a 2001 start, so create_table
+    makes its table (0x56ed95..0x56edab) in the original."""
+    bad = []
+    dats = [f for f in os.listdir(out) if f.endswith(".dat")]
+    if len(dats) != 20:
+        bad.append(("data files", len(dats)))
+    comps = lambda X: {i32(r, 0): cmdb.cstr(r, 4, 51) for r in X.rows(12)}
+    cf, ct = comps(F), comps(T)
+    bad += [("competition row", c, ct[c], cf.get(c)) for c in sorted(ct) if cf.get(c) != ct[c]]
+    count = lambda X: collections.Counter(i32(r, 0x57) for r in X.rows(0) if i32(r, 0x57) >= 0)
+    nf, nt = count(F), count(T)
+    bad += [("division count", ct.get(d, d), nt[d], nf[d]) for d in sorted(set(nf) | set(nt)) if nf[d] != nt[d]]
+    sizes, by_name = class_sizes(), {v: k for k, v in cf.items()}
+    if len(sizes) < 50:
+        bad.append(("CLASS_SIZE rows read", len(sizes)))
+    for name, n in sorted(sizes.items()):
+        if name not in by_name or nf[by_name[name]] < n:
+            bad.append(("class size", name, n, nf.get(by_name.get(name), 0)))
+    print(f"classes checked: {len(sizes)}, divisions checked: {len(nt)}")
+    return bad
+
+
 def check_facts(F):
     bad = []
     names = {cmdb.cstr(r, 4, 51) for r in F.rows(0)}
@@ -226,6 +264,7 @@ def main(argv):
         return 0
     F, T = cmdb1.open_folder(out), cmdb1.open_folder(template)
     bad = check_changes(F, changes, work) + check_untouched(F, T, changes, work) + check_facts(F)
+    bad += check_structure(F, T, out)
     bad += [("more rows than 3.9.68", t) for t, e in F.idx.items() if e["count"] > T.idx[t]["count"]]
     with contextlib.redirect_stdout(io.StringIO()) as log:
         if duplicates.check(out, os.path.join(changes, "kept-pairs.tsv")):
