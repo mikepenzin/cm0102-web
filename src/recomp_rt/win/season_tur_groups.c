@@ -314,14 +314,18 @@ RT_WRAP(008fddc0, tur_first_table)
     for (int i = 0; i < n; i++) {
         uint32_t club = club_at(i), div = rd32(g_mem, club + CLUB_DIVISION), t = rd32(g_mem, club + CLUB_GROUP);
         int k = t == tag[0] ? 0 : t == tag[1] ? 1 : t == tag[2] ? 2 : -1;
-        int in_groups = 0;
+        int in_groups = 0, in_row = -1;
         for (int j = 0; j < 5; j++)
             if (div && div == g[j]) in_groups = 1;
+        for (int j = 0; j < GROUPS; j++)
+            if (div && div == tag[j]) in_row = j;   /* the club moves of a season game place listed clubs there */
+        if (k < 0) k = in_row;
         if (k >= 0) {
-            if ((!div || div == lower || div == b || in_groups) && in[k] < MAX_GROUP) {
+            if ((!div || div == lower || div == b || in_groups || in_row >= 0) && in[k] < MAX_GROUP) {
                 wr32(g_mem, club + CLUB_DIVISION, g[k]);
                 in[k]++;
             } else {
+                if (in_row >= 0) wr32(g_mem, club + CLUB_DIVISION, lower);   /* no object plays the row */
                 kept++;
             }
             wr32(g_mem, club + CLUB_GROUP, 0);
