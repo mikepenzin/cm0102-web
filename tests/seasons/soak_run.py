@@ -92,7 +92,7 @@ def leg_env(program, game, user, home, shots, steps, last, report, extra):
     table = rrc.rules_table(program, game)
     return dict(os.environ, HOME=home, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", RECOMP_NO_BOX="1",
                 RECOMP_USER_DIR=user, RECOMP_FIXED_CLOCK="1", RECOMP_SEASON_JUMP=str(last), RECOMP_SCREEN_LOG="1",
-                RECOMP_RULES_REPORT=report, RECOMP_RULES_TABLE=table,
+                RECOMP_RULES_REPORT=report, RECOMP_RULES_TABLE=table, RECOMP_SEASON_INTL_LOG="1",
                 RECOMP_SCRIPT="; ".join(smoke_run.scaled_steps("classic", shots, steps)), **extra)
 
 
