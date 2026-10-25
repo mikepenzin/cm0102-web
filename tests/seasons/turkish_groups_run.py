@@ -175,6 +175,19 @@ def run_saveload(program, game, database, keep):
     return bad + check_summer(log, 2002, 2003), log
 
 
+def ref_with_tables(ref, program):
+    """The reference program in a folder beside the season tables of the build under test (a link to each), so the
+    two runs read the same rules and names tables (rules_report_check.rules_table looks next to the program): a
+    lone reference binary would run with no table, and its report would differ in every season name."""
+    tables = os.path.join(os.path.dirname(program), "seasons")
+    if os.path.isdir(os.path.join(os.path.dirname(ref), "seasons")) or not os.path.isdir(tables):
+        return ref
+    d = tempfile.mkdtemp(prefix="cm0102-turkey-ref-")
+    os.symlink(ref, os.path.join(d, os.path.basename(ref)))
+    os.symlink(tables, os.path.join(d, "seasons"))
+    return os.path.join(d, os.path.basename(ref))
+
+
 def main(argv):
     if len(argv) < 3:
         print(__doc__)
@@ -206,7 +219,7 @@ def main(argv):
     if only in (None, "other"):
         runs.append(("other", program, None, 2002, 2003))
         if ref:
-            runs.append(("other-ref", os.path.abspath(ref), None, 2002, 2003))
+            runs.append(("other-ref", ref_with_tables(os.path.abspath(ref), program), None, 2002, 2003))
         else:
             print("the other run needs --ref-build <program of main>: it proves Q152 against it")
             return 2
