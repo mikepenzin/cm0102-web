@@ -18,6 +18,9 @@
 2017	bench	ita_cup (Coppa Italia), row ita-285: game 9, table 12 (12)
 2017	bench	ita_ser_a (Serie A), row ita-274: game 9, table 12 (12)
 2017	bench	ita_ser_b (Serie B), row ita-275: game 9, table 12 (12 (inference: Lega B assembly asked for 12 "from next season" in July 2017))
+2017	bench	ita_ser_c1a (Serie C girone A), row ita-281: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
+2017	bench	ita_ser_c1b (Serie C girone B), row ita-282: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
+2017	bench	ita_ser_c2a (Serie C girone C), row ita-283: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
 2017	bench	ita_super (Supercoppa Italiana), row ita-287: game 9, table 12 (12)
 2017	bench	world_club_champ (FIFA Club World Cup), row club-world-306: game 7, table 12 (12)
 2017	bench	world_cup (FIFA World Cup), row int-world-194: game 7, table 12 (12)
@@ -25,7 +28,6 @@
 2017	clubs	asia_club_champ (AFC Champions League), row club-world-317: game 16, table 32 (32)
 2017	clubs	bel_first (Belgian First Division A), row hol-bel-216: game 18, table 16 (16)
 2017	clubs	bel_second (Belgian First Division B), row hol-bel-217: game 18, table 8 (8)
-2017	clubs	bra_champ_cup (Copa dos Campeões), row bra-206: game 3, table 0 (0)
 2017	clubs	bra_cup (Copa do Brasil), row bra-152: game 71, table 91 (91)
 2017	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-98: game 7, table 20 (20)
 2017	clubs	bra_reg_gaucho (Campeonato Gaúcho), row bra-557: game 17, table 12 (12)
@@ -36,7 +38,7 @@
 2017	clubs	conmebol_liber (Copa Libertadores), row club-world-308: game 4, table 47 (47)
 2017	clubs	cro_a1 (Prva HNL), row gre-pol-cro-341: game 16, table 10 (10)
 2017	clubs	cro_a2a (Druga HNL), row gre-pol-cro-368: game 16, table 12 (12)
-2017	clubs	den_first (Danish 1st Division), row den-swe-99: game 15, table 12 (12)
+2017	clubs	den_first (Danish 1st Division), row den-swe-99: game 16, table 12 (12)
 2017	clubs	den_prm (Danish Superliga), row den-swe-98: game 12, table 14 (14)
 2017	clubs	den_second (Danish 2nd Divisions), row den-swe-100: game 16, table 24 (24)
 2017	clubs	fra_third (Championnat National), row fra-148: game 20, table 17 (17)
@@ -45,7 +47,7 @@
 2017	clubs	gre_second (Football League), row gre-pol-cro-71: game 14, table 18 (18)
 2017	clubs	hol_first (Eerste Divisie), row hol-bel-211: game 18, table 20 (20)
 2017	clubs	ita_c1_super (Supercoppa Serie C), row ita-288: game 2, table 3 (3)
-2017	clubs	ita_c_cup (Coppa Italia Serie C), row ita-286: game 5, table 57 (57)
+2017	clubs	ita_c_cup (Coppa Italia Serie C), row ita-286: game 3, table 57 (57)
 2017	clubs	ita_cup (Coppa Italia), row ita-285: game 4, table 78 (78)
 2017	clubs	ita_ser_a (Serie A), row ita-274: game 18, table 20 (20)
 2017	clubs	ita_ser_b (Serie B), row ita-275: game 20, table 22 (22)
@@ -83,8 +85,6 @@
 2017	down	ger_second (2. Bundesliga), row ger-210: game 4 (+0 play-off places), table 2 (2)
 2017	down	gre_second (Football League), row gre-pol-cro-71: game 2 (+0 play-off places), table 6 (6 (bottom six))
 2017	down	ita_ser_b (Serie B), row ita-275: game 4 (+0 play-off places), table 3 (3 direct + play-out 4th-last v 5th-last (two legs; not held if gap over 4 points)
-2017	down	ita_ser_c1a (Italian Serie C1/A), row ita-276: game 1 (+4 play-off places), table na (n/a)
-2017	down	ita_ser_c1b (Italian Serie C1/B), row ita-277: game 1 (+4 play-off places), table na (n/a)
 2017	down	jap_j2 (J2 League), row aus-jap-kor-233: game 0 (+0 play-off places), table 2 (2)
 2017	down	nir_first (NIFL Championship), row wal-nir-irl-411: game 0 (+0 play-off places), table 1 (1 (pos 12))
 2017	down	nor_first (OBOS-ligaen), row nor-fin-163: game 4 (+0 play-off places), table 2 (15th-16th (2))
@@ -92,13 +92,8 @@
 2017	no_row	record_utils ('B' International): no table row
 2017	no_row	record_utils (Reserve): no table row
 2017	no_row	record_utils (Under 21 International): no table row
-2017	not_held	bra_champ_cup (Copa dos Campeões), row bra-206: the game holds 2017, the table says not held
 2017	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-395: the game holds 2017, the table says not held
 2017	not_held	euro_champ_qual (UEFA European Championship qualifying), row int-continental-178: the game holds 2018, the table says not held
-2017	not_held	ger_lge_cup (DFL-Ligapokal), row ger-219: the game holds 2017, the table says not held
-2017	not_held	gre_super (Greek Super Cup), row gre-pol-cro-98: the game holds 2017, the table says not held
-2017	not_held	ita_ser_c1a (Italian Serie C1/A), row ita-276: the game holds 2017, the table says not held
-2017	not_held	ita_ser_c1b (Italian Serie C1/B), row ita-277: the game holds 2017, the table says not held
 2017	not_in_game	arg-usa-206 argentina_rules 'Argentina' (Argentina)
 2017	not_in_game	arg-usa-71 new 'Copa Argentina' (Argentina)
 2017	not_in_game	arg-usa-98 new 'Supercopa Argentina' (Argentina)
@@ -118,10 +113,6 @@
 2017	not_in_game	ger-211 ger_regional '3. Liga' (Germany)
 2017	not_in_game	ger-220 new 'DFL-Supercup' (Germany)
 2017	not_in_game	gre-pol-cro-449 new 'Croatian Football Super Cup' (Croatia)
-2017	not_in_game	ita-281 new 'Serie C girone A' (Italy)
-2017	not_in_game	ita-282 new 'Serie C girone B' (Italy)
-2017	not_in_game	ita-283 new 'Serie C girone C' (Italy)
-2017	not_in_game	nor-fin-165 new 'Mesterfinalen' (Norway)
 2017	not_in_game	uefa-129 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2017	playoffs	arg_second (Primera B Nacional), row arg-usa-44: game 0 up and 0 down play-off places, table 8 and 0 ('Torneo Reducido of 2nd to 9th: one-leg quarter-finals, two-leg semi-finals and f')
 2017	playoffs	bel_second (Belgian First Division B), row hol-bel-217: game 0 up and 1 down play-off places, table 0 and 0 ('top three of the aggregate table (not promoted) to the Europa League play-offs')
@@ -136,8 +127,9 @@
 2017	playoffs	ger_first (Bundesliga), row ger-209: game 0 up and 0 down play-off places, table 0 and 1 ('16th v 2. Bundesliga 3rd, two legs, away goals rule, extra time and penalties')
 2017	playoffs	ger_second (2. Bundesliga), row ger-210: game 0 up and 0 down play-off places, table 1 and 1 ('3rd v Bundesliga 16th; 16th v 3. Liga 3rd; two legs, away goals rule')
 2017	playoffs	ita_ser_b (Serie B), row ita-275: game 0 up and 0 down play-off places, table 6 and 0 ('3rd to 8th regardless of the points gap: one-leg preliminary round (5v8, 6v7) at')
-2017	playoffs	ita_ser_c1a (Italian Serie C1/A), row ita-276: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
-2017	playoffs	ita_ser_c1b (Italian Serie C1/B), row ita-277: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
+2017	playoffs	ita_ser_c1a (Serie C girone A), row ita-281: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
+2017	playoffs	ita_ser_c1b (Serie C girone B), row ita-282: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
+2017	playoffs	ita_ser_c2a (Serie C girone C), row ita-283: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
 2017	playoffs	jap_j1 (J1 League), row aus-jap-kor-206: game 0 up and 0 down play-off places, table 0 and 1 ('16th v the J2 play-off winner, one match (J1 entry play-off)')
 2017	playoffs	jap_j2 (J2 League), row aus-jap-kor-233: game 0 up and 0 down play-off places, table 4 and 0 ('3rd to 6th play-off; winner plays J1 16th in one match (J1 entry play-off)')
 2017	playoffs	nir_first (NIFL Championship), row wal-nir-irl-411: game 1 up and 0 down play-off places, table 2 and 1 ('pos 2,3: promotion play-off; pos 11: relegation play-off')
@@ -154,5 +146,3 @@
 2017	up	fin_first (Ykkönen), row nor-fin-168: game 2 (+0 play-off places), table 1 (1st (1))
 2017	up	fra_third (Championnat National), row fra-148: game 3 (+0 play-off places), table 2 (2)
 2017	up	gre_cup (Greek Football Cup), row gre-pol-cro-17: game 2 (+0 play-off places), table na (n/a)
-2017	up	ita_ser_c1a (Italian Serie C1/A), row ita-276: game 1 (+4 play-off places), table na (n/a)
-2017	up	ita_ser_c1b (Italian Serie C1/B), row ita-277: game 1 (+4 play-off places), table na (n/a)

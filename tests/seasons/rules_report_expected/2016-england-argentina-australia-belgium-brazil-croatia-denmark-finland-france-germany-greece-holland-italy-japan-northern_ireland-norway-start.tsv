@@ -15,6 +15,9 @@
 2016	bench	hol_super (Johan Cruyff Shield), row hol-bel-201: game 9, table 12 (12)
 2016	bench	ita_c_cup (Coppa Italia Lega Pro), row ita-269: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
 2016	bench	ita_ser_a (Serie A), row ita-257: game 9, table 12 (12)
+2016	bench	ita_ser_c1a (Lega Pro girone A), row ita-264: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
+2016	bench	ita_ser_c1b (Lega Pro girone B), row ita-265: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
+2016	bench	ita_ser_c2a (Lega Pro girone C), row ita-266: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
 2016	bench	world_club_champ (FIFA Club World Cup), row club-world-287: game 7, table 12 (12)
 2016	clubs	african_nations (Africa Cup of Nations), row int-continental-172: game 0, table 16 (16)
 2016	clubs	arg_prm (Primera División), row arg-usa-16: game 20, table 30 (30)
@@ -22,7 +25,6 @@
 2016	clubs	asia_club_champ (AFC Champions League), row club-world-298: game 16, table 32 (32)
 2016	clubs	bel_first (Belgian First Division A), row hol-bel-203: game 18, table 16 (16)
 2016	clubs	bel_second (Belgian First Division B), row hol-bel-204: game 18, table 8 (8)
-2016	clubs	bra_champ_cup (Copa dos Campeões), row bra-205: game 3, table 0 (0)
 2016	clubs	bra_cup (Copa do Brasil), row bra-151: game 71, table 91 (91)
 2016	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-97: game 7, table 20 (20)
 2016	clubs	bra_reg_bahia (Campeonato Baiano), row bra-448: game 10, table 11 (11)
@@ -34,7 +36,7 @@
 2016	clubs	conmebol_liber (Copa Libertadores), row club-world-289: game 4, table 47 (47)
 2016	clubs	cro_a1 (Prva HNL), row gre-pol-cro-340: game 16, table 10 (10)
 2016	clubs	cro_a2a (Druga HNL), row gre-pol-cro-367: game 16, table 12 (12)
-2016	clubs	den_first (Danish 1st Division), row den-swe-93: game 15, table 12 (12)
+2016	clubs	den_first (Danish 1st Division), row den-swe-93: game 16, table 12 (12)
 2016	clubs	den_prm (Danish Superliga), row den-swe-92: game 12, table 14 (14)
 2016	clubs	den_second (Danish 2nd Divisions), row den-swe-94: game 16, table 24 (24)
 2016	clubs	fifa_confed (FIFA Confederations Cup), row int-world-190: game 0, table 8 (8)
@@ -44,7 +46,7 @@
 2016	clubs	gre_second (Football League), row gre-pol-cro-70: game 14, table 18 (18)
 2016	clubs	hol_first (Eerste Divisie), row hol-bel-198: game 18, table 20 (20)
 2016	clubs	ita_c1_super (Supercoppa di Lega Pro), row ita-271: game 2, table 3 (3)
-2016	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-269: game 5, table 60 (60)
+2016	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-269: game 3, table 60 (60)
 2016	clubs	ita_cup (Coppa Italia), row ita-268: game 4, table 78 (78)
 2016	clubs	ita_ser_a (Serie A), row ita-257: game 18, table 20 (20)
 2016	clubs	ita_ser_b (Serie B), row ita-258: game 20, table 22 (22)
@@ -83,8 +85,9 @@
 2016	down	gre_second (Football League), row gre-pol-cro-70: game 2 (+0 play-off places), table 4 (4 (bottom four))
 2016	down	hol_first (Eerste Divisie), row hol-bel-198: game 0 (+0 play-off places), table 1 (1 (20th) only if the Tweede Divisie champion is eligible and applies)
 2016	down	ita_ser_b (Serie B), row ita-258: game 4 (+0 play-off places), table 3 (3 direct + play-out 4th-last v 5th-last (two legs; not held if gap over 4 points)
-2016	down	ita_ser_c1a (Italian Serie C1/A), row ita-259: game 1 (+4 play-off places), table na (n/a)
-2016	down	ita_ser_c1b (Italian Serie C1/B), row ita-260: game 1 (+4 play-off places), table na (n/a)
+2016	down	ita_ser_c1a (Lega Pro girone A), row ita-264: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 16th-19th, two legs; not held if gap over 8 points)
+2016	down	ita_ser_c1b (Lega Pro girone B), row ita-265: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 16th-19th, two legs; not held if gap over 8 points)
+2016	down	ita_ser_c2a (Lega Pro girone C), row ita-266: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 16th-19th, two legs; not held if gap over 8 points)
 2016	down	jap_j1 (J1 League), row aus-jap-kor-205: game 2 (+0 play-off places), table 3 (3)
 2016	down	jap_j2 (J2 League), row aus-jap-kor-232: game 0 (+0 play-off places), table 2 (2)
 2016	down	nir_first (NIFL Championship), row wal-nir-irl-386: game 0 (+0 play-off places), table 1 (1 (pos 12))
@@ -93,12 +96,7 @@
 2016	no_row	record_utils ('B' International): no table row
 2016	no_row	record_utils (Reserve): no table row
 2016	no_row	record_utils (Under 21 International): no table row
-2016	not_held	bra_champ_cup (Copa dos Campeões), row bra-205: the game holds 2016, the table says not held
 2016	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-394: the game holds 2016, the table says not held
-2016	not_held	ger_lge_cup (DFL-Ligapokal), row ger-206: the game holds 2016, the table says not held
-2016	not_held	gre_super (Greek Super Cup), row gre-pol-cro-97: the game holds 2016, the table says not held
-2016	not_held	ita_ser_c1a (Italian Serie C1/A), row ita-259: the game holds 2016, the table says not held
-2016	not_held	ita_ser_c1b (Italian Serie C1/B), row ita-260: the game holds 2016, the table says not held
 2016	not_in_game	arg-usa-205 argentina_rules 'Argentina' (Argentina)
 2016	not_in_game	arg-usa-70 new 'Copa Argentina' (Argentina)
 2016	not_in_game	arg-usa-97 new 'Supercopa Argentina' (Argentina)
@@ -119,10 +117,6 @@
 2016	not_in_game	ger-198 ger_regional '3. Liga' (Germany)
 2016	not_in_game	ger-207 new 'DFL-Supercup' (Germany)
 2016	not_in_game	gre-pol-cro-448 new 'Croatian Football Super Cup' (Croatia)
-2016	not_in_game	ita-264 new 'Lega Pro girone A' (Italy)
-2016	not_in_game	ita-265 new 'Lega Pro girone B' (Italy)
-2016	not_in_game	ita-266 new 'Lega Pro girone C' (Italy)
-2016	not_in_game	nor-fin-155 new 'Mesterfinalen' (Norway)
 2016	not_in_game	uefa-121 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2016	playoffs	bel_second (Belgian First Division B), row hol-bel-204: game 0 up and 1 down play-off places, table 0 and 0 ('top three of the aggregate table (not promoted) to the Europa League play-offs')
 2016	playoffs	bel_third (Belgian First Amateur Division), row hol-bel-205: game 0 up and 1 down play-off places, table 4 and 0 ('top four promotion play-offs')
@@ -136,8 +130,9 @@
 2016	playoffs	ger_first (Bundesliga), row ger-196: game 0 up and 0 down play-off places, table 0 and 1 ('16th v 2. Bundesliga 3rd, two legs, away goals rule, extra time and penalties')
 2016	playoffs	ger_second (2. Bundesliga), row ger-197: game 0 up and 0 down play-off places, table 1 and 1 ('3rd v Bundesliga 16th; 16th v 3. Liga 3rd; two legs, away goals rule')
 2016	playoffs	ita_ser_b (Serie B), row ita-258: game 0 up and 0 down play-off places, table 6 and 0 ('3rd to 8th, but only clubs within 14 points of the 3rd take part (2 to 6 clubs);')
-2016	playoffs	ita_ser_c1a (Italian Serie C1/A), row ita-259: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
-2016	playoffs	ita_ser_c1b (Italian Serie C1/B), row ita-260: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
+2016	playoffs	ita_ser_c1a (Lega Pro girone A), row ita-264: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 2nd to 10th of each group + Coppa Italia Lega Pro winner; three phases')
+2016	playoffs	ita_ser_c1b (Lega Pro girone B), row ita-265: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 2nd to 10th of each group + Coppa Italia Lega Pro winner; three phases')
+2016	playoffs	ita_ser_c2a (Lega Pro girone C), row ita-266: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 2nd to 10th of each group + Coppa Italia Lega Pro winner; three phases')
 2016	playoffs	jap_j2 (J2 League), row aus-jap-kor-232: game 0 up and 0 down play-off places, table 4 and 0 ('3rd to 6th: single-match semi-finals and final at the higher-placed club; a draw')
 2016	playoffs	nir_first (NIFL Championship), row wal-nir-irl-386: game 1 up and 0 down play-off places, table 2 and 1 ('pos 2,3: promotion play-off; pos 11: relegation play-off')
 2016	playoffs	nor_first (OBOS-ligaen), row nor-fin-153: game 1 up and 0 down play-off places, table 4 and 1 ('3rd-6th single-leg knockout; winner v top-flight 14th, two legs. 14th v 2. divis')
@@ -152,5 +147,3 @@
 2016	up	fin_first (Ykkönen), row nor-fin-158: game 2 (+0 play-off places), table 1 (1st (1))
 2016	up	fra_third (Championnat National), row fra-139: game 3 (+0 play-off places), table 2 (2)
 2016	up	gre_cup (Greek Football Cup), row gre-pol-cro-16: game 2 (+0 play-off places), table na (n/a)
-2016	up	ita_ser_c1a (Italian Serie C1/A), row ita-259: game 1 (+4 play-off places), table na (n/a)
-2016	up	ita_ser_c1b (Italian Serie C1/B), row ita-260: game 1 (+4 play-off places), table na (n/a)

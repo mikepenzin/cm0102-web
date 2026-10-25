@@ -19,6 +19,9 @@
 2020	bench	ita_cup (Coppa Italia), row ita-336: game 9, table 12 (12)
 2020	bench	ita_ser_a (Serie A), row ita-325: game 9, table 12 (12)
 2020	bench	ita_ser_b (Serie B), row ita-326: game 9, table 12 (12 (inference: Lega B assembly asked for 12 "from next season" in July 2017))
+2020	bench	ita_ser_c1a (Serie C girone A), row ita-332: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
+2020	bench	ita_ser_c1b (Serie C girone B), row ita-333: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
+2020	bench	ita_ser_c2a (Serie C girone C), row ita-334: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
 2020	bench	ita_super (Supercoppa Italiana), row ita-338: game 9, table 12 (12)
 2020	bench	new_recopa (Recopa Sudamericana), row club-world-369: game 9, table 12 (12)
 2020	bench	new_sudamericana (Copa Sudamericana), row club-world-368: game 9, table 12 (12)
@@ -28,7 +31,6 @@
 2020	clubs	arg_second (Primera Nacional), row arg-usa-47: game 25, table 35 (35)
 2020	clubs	asia_club_champ (AFC Champions League), row club-world-374: game 16, table 40 (40)
 2020	clubs	bel_second (Belgian First Division B), row hol-bel-256: game 18, table 8 (8)
-2020	clubs	bra_champ_cup (Copa dos Campeões), row bra-209: game 3, table 0 (0)
 2020	clubs	bra_cup (Copa do Brasil), row bra-155: game 71, table 92 (92)
 2020	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-101: game 7, table 20 (20)
 2020	clubs	bra_reg_gaucho (Campeonato Gaúcho), row bra-560: game 17, table 12 (12)
@@ -56,7 +58,7 @@
 2020	clubs	nir_first (NIFL Championship), row wal-nir-irl-486: game 10, table 12 (12)
 2020	clubs	nir_prm (NIFL Premiership), row wal-nir-irl-485: game 10, table 12 (12)
 2020	clubs	nor_prm (Eliteserien), row nor-fin-192: game 14, table 16 (16)
-2020	clubs	uefa_cup (UEFA Europa League), row uefa-157: game 158, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
+2020	clubs	uefa_cup (UEFA Europa League), row uefa-157: game 161, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
 2020	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-234: game 50, table 40 (40)
 2020	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-235: game 0, table 40 (40)
 2020	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-233: game 24, table 30 (30, then 6)
@@ -75,8 +77,9 @@
 2020	down	ger_second (2. Bundesliga), row ger-249: game 4 (+0 play-off places), table 2 (2)
 2020	down	gre_prm (Super League 1), row gre-pol-cro-47: game 2 (+0 play-off places), table 1 (1 (14th))
 2020	down	ita_ser_b (Serie B), row ita-326: game 4 (+0 play-off places), table 3 (3 direct (18th-20th) + play-out 16th v 17th (two legs; not held if gap over 4 po)
-2020	down	ita_ser_c1a (Italian Serie C1/A), row ita-327: game 1 (+4 play-off places), table na (n/a)
-2020	down	ita_ser_c1b (Italian Serie C1/B), row ita-328: game 1 (+4 play-off places), table na (n/a)
+2020	down	ita_ser_c1a (Serie C girone A), row ita-332: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers (positions 16th-19th: inference from 2014/1)
+2020	down	ita_ser_c1b (Serie C girone B), row ita-333: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers (positions 16th-19th: inference from 2014/1)
+2020	down	ita_ser_c2a (Serie C girone C), row ita-334: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers (positions 16th-19th: inference from 2014/1)
 2020	down	jap_j1 (J1 League), row aus-jap-kor-209: game 2 (+0 play-off places), table 4 (4)
 2020	down	jap_j2 (J2 League), row aus-jap-kor-236: game 0 (+0 play-off places), table 4 (4)
 2020	down	nir_first (NIFL Championship), row wal-nir-irl-486: game 0 (+0 play-off places), table 1 (1 (pos 12; inference from the rules of 2019/20 and 2021/22))
@@ -85,18 +88,7 @@
 2020	no_row	record_utils ('B' International): no table row
 2020	no_row	record_utils (Reserve): no table row
 2020	no_row	record_utils (Under 21 International): no table row
-2020	not_held	bel_super (Belgian Super Cup), row hol-bel-260: the game holds 2020, the table says not held
-2020	not_held	bra_champ_cup (Copa dos Campeões), row bra-209: the game holds 2020, the table says not held
 2020	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-398: the game holds 2020, the table says not held
-2020	not_held	fra_lge_cup (Coupe de la Ligue), row fra-179: the game holds 2020, the table says not held
-2020	not_held	ger_lge_cup (DFL-Ligapokal), row ger-258: the game holds 2020, the table says not held
-2020	not_held	gre_super (Greek Super Cup), row gre-pol-cro-101: the game holds 2020, the table says not held
-2020	not_held	hol_super (Johan Cruyff Shield), row hol-bel-253: the game holds 2020, the table says not held
-2020	not_held	ita_c_cup (Coppa Italia Serie C), row ita-337: the game holds 2020, the table says not held
-2020	not_held	ita_ser_c1a (Italian Serie C1/A), row ita-327: the game holds 2020, the table says not held
-2020	not_held	ita_ser_c1b (Italian Serie C1/B), row ita-328: the game holds 2020, the table says not held
-2020	not_held	nir_charity (Charity Shield), row wal-nir-irl-490: the game holds 2020, the table says not held
-2020	not_held	nir_lge_cup (NIFL Cup), row wal-nir-irl-489: the game holds 2020, the table says not held
 2020	not_held	olympics (Football at the Summer Olympics), row int-world-239: the game holds 2020, the table says not held
 2020	not_held	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-236: the game holds 2020, the table says not held
 2020	not_in_game	arg-usa-128 new 'Trofeo de Campeones' (Argentina)
@@ -119,9 +111,6 @@
 2020	not_in_game	ger-259 new 'DFL-Supercup' (Germany)
 2020	not_in_game	gre-pol-cro-452 new 'Croatian Football Super Cup' (Croatia)
 2020	not_in_game	int-continental-212 new '2020-21 UEFA Nations League' (UEFA)
-2020	not_in_game	ita-332 new 'Serie C girone A' (Italy)
-2020	not_in_game	ita-333 new 'Serie C girone B' (Italy)
-2020	not_in_game	ita-334 new 'Serie C girone C' (Italy)
 2020	not_in_game	uefa-153 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2020	playoffs	bel_second (Belgian First Division B), row hol-bel-256: game 0 up and 1 down play-off places, table 1 and 0 ('runner-up v top-flight 17th')
 2020	playoffs	bel_third (Belgian National Division 1), row hol-bel-257: game 0 up and 1 down play-off places, table 0 and 0 ('n/a')
@@ -136,8 +125,9 @@
 2020	playoffs	hol_first (Eerste Divisie), row hol-bel-250: game 0 up and 0 down play-off places, table 6 and 0 ('six clubs (3rd to 8th or period winners) with the Eredivisie 16th; knockout for ')
 2020	playoffs	hol_prm (Eredivisie), row hol-bel-249: game 0 up and 2 down play-off places, table 0 and 1 ('16th to the promotion/relegation play-offs with six Eerste Divisie clubs; places')
 2020	playoffs	ita_ser_b (Serie B), row ita-326: game 0 up and 0 down play-off places, table 6 and 0 ('3rd to 8th regardless of the points gap: one-leg preliminary round (5v8, 6v7) at')
-2020	playoffs	ita_ser_c1a (Italian Serie C1/A), row ita-327: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
-2020	playoffs	ita_ser_c1b (Italian Serie C1/B), row ita-328: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
+2020	playoffs	ita_ser_c1a (Serie C girone A), row ita-332: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
+2020	playoffs	ita_ser_c1b (Serie C girone B), row ita-333: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
+2020	playoffs	ita_ser_c2a (Serie C girone C), row ita-334: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
 2020	playoffs	nir_first (NIFL Championship), row wal-nir-irl-486: game 1 up and 0 down play-off places, table 1 and 1 ('pos 2: promotion play-off with the Premiership 11th; pos 11: relegation play-off')
 2020	playoffs	nor_first (OBOS-ligaen), row nor-fin-193: game 1 up and 0 down play-off places, table 4 and 1 ('3rd-6th single-leg knockout; winner v top-flight 14th, one match on neutral grou')
 2020	subs_used	asia_club_champ (AFC Champions League), row club-world-374: game 3, table 5 (5, a sixth in extra time)
@@ -161,5 +151,3 @@
 2020	up	gre_cup (Greek Football Cup), row gre-pol-cro-20: game 2 (+0 play-off places), table na (n/a)
 2020	up	gre_second (Super League 2), row gre-pol-cro-74: game 2 (+0 play-off places), table 1 (1 (1st of play-off round))
 2020	up	hol_first (Eerste Divisie), row hol-bel-250: game 1 (+0 play-off places), table 2 (2 (champion and runner-up; Jong teams cannot be promoted))
-2020	up	ita_ser_c1a (Italian Serie C1/A), row ita-327: game 1 (+4 play-off places), table na (n/a)
-2020	up	ita_ser_c1b (Italian Serie C1/B), row ita-328: game 1 (+4 play-off places), table na (n/a)
