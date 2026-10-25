@@ -32,9 +32,11 @@
  * leagues: their fixtures come from League::create_fixtures 0x6835c0 (add_fixture calls at 0x683a55 and 0x683dee)
  * and, for the South American section, WcSouthAmericanLeague::add_fixed_fixture (0x9225c1). Their days follow the
  * original's templates moved to each cycle, so they also fall on UEFA days: in a 2006 game the CONCACAF and
- * CONMEBOL matches of 5 August 2009 (with the Under 21 matches of the same pairs the day before,
- * ReserveComp::add_b_or_under21_fixture, the add_fixture call at 0x7e6a48) put Internazionale's internationals on
- * duty for its Europa League tie of 6 August (clash 21); real: CONCACAF 12 August, CONMEBOL 5 and 9 September. In a
+ * CONMEBOL matches of 5 August 2009 put Internazionale's internationals on duty for its Europa League tie of
+ * 6 August (clash 21); real: CONCACAF 12 August, CONMEBOL 5 and 9 September. The Under 21 match of the same pair
+ * comes the day before the senior match (ReserveComp::add_b_or_under21_fixture, the add_fixture call at 0x7e6a48),
+ * so it is not moved here: on the senior match's own day it stops add_fixture's clash test at Database.cpp 13471
+ * (0x53b964; seen when this code moved one). In a
  * season game, a fixture of two national sides from those calls, in a competition that is not a finals tournament
  * (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day within 10 days on which neither
  * side has a national match yet (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two
@@ -232,7 +234,7 @@ static int side_busy(uint32_t a, uint32_t b, int y, int doy)
 /* From the add_fixture wrap (season_kind_cup_breaks.c): ret is the return address of the add_fixture call. */
 void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
 {
-    static const uint32_t calls[] = {0x00683a5au, 0x00683df3u, 0x009225c6u, 0x007e6a4du};
+    static const uint32_t calls[] = {0x00683a5au, 0x00683df3u, 0x009225c6u};
     int from = 0;
     for (unsigned k = 0; k < sizeof calls / sizeof calls[0]; k++) from |= ret == calls[k];
     if (!from || !season_game_changes() || !readable(fix)) return;
