@@ -140,6 +140,10 @@ if(NOT WIN32)
     add_test(NAME season_nl_table COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tools/seasons/make_nl.py" --check)
     add_test(NAME season_uefa_dates_table COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tools/seasons/make_uefa_dates.py"
         --check)
+    add_executable(season_uefa_dates_test tests/seasons/test_season_uefa_dates.c
+        src/recomp_rt/win/season_uefa_dates_table.c src/recomp_rt/win/season_uefa_ko_lookup.c)
+    target_include_directories(season_uefa_dates_test PRIVATE src/recomp_rt/win)
+    add_test(NAME season_uefa_dates COMMAND season_uefa_dates_test)
     add_executable(season_nl_test tests/seasons/test_season_nl.c src/recomp_rt/win/season_nl_rules.c
         src/recomp_rt/win/season_nl_table.c)
     target_include_directories(season_nl_test PRIVATE src/recomp_rt/win)
