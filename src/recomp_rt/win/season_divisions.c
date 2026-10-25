@@ -1211,6 +1211,9 @@ RT_WRAP(005eb120, gre_swap)
      * rules), so the group of a 2021 game (October 2021 database) held 2021 for ever and the league check of gate (a)
      * run 8 found Super League 2 South at edition 2021 at the end of 2022/23. With changing rules on next is now + 1. */
     if (held) {
+        /* A group behind the National B Division (a save of a game that the old rule left at 2021) takes the finished
+         * year first, so its start makes the edition now + 1, as divisions_before does for a group that comes back. */
+        if ((int16_t)rd16(g_mem, group + OBJ_YEAR) < now) wr16(g_mem, group + OBJ_YEAR, (uint16_t)now);
         if ((int16_t)rd16(g_mem, group + OBJ_YEAR) < now + 1) vcall(group, 0x8);
     } else {
         /* No group next season: it stays idle with its finished season and waits with the year before its next
