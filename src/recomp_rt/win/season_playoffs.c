@@ -501,8 +501,10 @@ RT_WRAP(00686940, playoff_result)
 {
     if (marked(cpu.ecx) && g_mem[cpu.esp + 0xc] != 0xff) {
         if (getenv("RECOMP_PLAYOFF_LOG"))
-            fprintf(stderr, "recomp: playoffs: %s: result club %x code %d stage %d, day %d of %d\n",
-                    season_change_file(cpu.ecx), rd32(g_mem, cpu.esp + 4), (int8_t)g_mem[cpu.esp + 8],
+            fprintf(stderr, "recomp: playoffs: %s: result club %x (%.30s) code %d stage %d, day %d of %d\n",
+                    season_change_file(cpu.ecx), rd32(g_mem, cpu.esp + 4),
+                    readable(rd32(g_mem, cpu.esp + 4)) ? win_str(rd32(g_mem, cpu.esp + 4) + 4) : "?",
+                    (int8_t)g_mem[cpu.esp + 8],
                     (int8_t)g_mem[cpu.esp + 0xc], (int16_t)rd16(g_mem, GAME_DATE), (int16_t)rd16(g_mem, GAME_DATE + 2));
         rt_jump(F_ENG_RESULT);
         return;
