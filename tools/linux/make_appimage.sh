@@ -28,6 +28,17 @@ while [ $# -gt 0 ]; do
 done
 [ -f "$GAME/cm0102.exe" ] && [ -d "$GAME/Data" ] || { echo "make_appimage.sh: give --game <clean files>." >&2; exit 2; }
 command -v docker >/dev/null || { echo "make_appimage.sh: Docker is not installed." >&2; exit 2; }
+# The memory of Docker's VM. The build peaked at 4.0 GiB in the container (25 October 2026: recomp.py 1.6 GB, then
+# ninja's parallel compile of the 128 shards), and the release dry run of 0.6.0 was killed at the recomp step when
+# recomp.py held 8.9 GB in an 8 GiB VM. Stop early with a clear message when the VM has less than 6 GiB. Colima:
+# `colima start --arch aarch64 --cpu 6 --memory 8 --vm-type vz --vz-rosetta` (8 GiB shows as 7.7 GiB).
+MIN_GIB=6
+MEM=$(docker info --format '{{.MemTotal}}' 2>/dev/null || echo 0)
+if [ "${MEM:-0}" -lt $((MIN_GIB * 1024 * 1024 * 1024)) ]; then
+    echo "make_appimage.sh: Docker's VM has $((MEM / 1024 / 1024)) MiB of memory; the Linux build needs at least $MIN_GIB GiB." >&2
+    echo "make_appimage.sh: with Colima: colima stop, then colima start --arch aarch64 --cpu 6 --memory 8 --vm-type vz --vz-rosetta" >&2
+    exit 2
+fi
 GAME="$(cd "$GAME" && pwd)"
 [ -n "$MANIFEST" ] || MANIFEST="$REPO/tools/clean_files/manifest.tsv"
 [ -f "$MANIFEST" ] || { echo "make_appimage.sh: no manifest file $MANIFEST." >&2; exit 2; }
