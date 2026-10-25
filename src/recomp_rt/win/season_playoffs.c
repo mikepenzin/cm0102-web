@@ -93,6 +93,17 @@
 #define ROUND_SIZE 0x68u
 #define PLAYOFF_DAYS 12                 /* the last match on day 11 after the table is complete */
 #define FINAL_LEG_DAYS 3                /* a two-leg final: the second leg 3 days after the first (0x425f99) */
+
+/* The days between the two legs of the Segunda's final in the season that starts in `year`. The real gap was 3 days
+ * in 2010/11 to 2019/20 and longer from 2020/21 (final legs 13 and 20 June 2021, 11 and 19 June 2022, 11 and 17 June
+ * 2023, 16 and 23 June 2024, 15 and 21 June 2025, 14 and 20 June 2026: 7, 8, 6, 7, 6, 6 days; each with es.wikipedia
+ * and a news page, lead-notes/research/segunda-final-legs-2020-2025.md). Later seasons keep the last gap. */
+static int final_gap(int year)
+{
+    static const int gap[] = {7, 8, 6, 7, 6, 6};              /* 2020/21 to 2025/26 */
+    if (year < 2020) return FINAL_LEG_DAYS;
+    return gap[year >= 2025 ? 5 : year - 2020];
+}
 #define NO_WEEKDAY 0xffffffffu          /* Date::Date 0x549f70 keeps the date for weekday -1 (src/si/date.c) */
 
 static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
@@ -407,7 +418,7 @@ static void build_stage(uint32_t obj)
      * the play-off normally ends after day 170 and the early exit that stood here (gate (b), eee3e71a: 7 seasons of
      * Spain with 12 to 15 days left, O151/O259) skipped a play-off that the wait covers. Now only a play-off that
      * the wait cannot cover goes up directly: a net that does not act at the real dates. */
-    int span = PLAYOFF_DAYS + (two ? FINAL_LEG_DAYS : 0);
+    int span = PLAYOFF_DAYS + (two ? final_gap((int)year) : 0);
     if (left >= 0 && (getenv("RECOMP_TEST_PLAYOFF_OLD_NOTIME") ? span >= left : span > left + WAIT_DAYS)) {
         fprintf(stderr, "recomp: playoffs: %s %u: %d days to the season change, no time for the play-off; place %d "
                         "goes up\n", file, year, left, rows[0] + 1);
@@ -439,12 +450,12 @@ static void build_stage(uint32_t obj)
     if (two) {
         /* A two-leg final at the clubs' grounds, as the semi-finals of this table (+0x21 2 legs and +0x22 4 days
          * between them, 0x572b1c, 0x572b20) and the two-leg final of BraChampCup::create_schedule 0x425c10 (+0x89 2
-         * at 0x425f92, +0x8a 3 days at 0x425f99, venue 0 at 0x425f38). 3 days here, so that the play-off ends 15
-         * days after the table. The final's tie rule (+0xd) is that of the semi-finals without their fixed pairs
+         * at 0x425f92, +0x8a 3 days at 0x425f99, venue 0 at 0x425f38). final_gap() days here (3 to 2019/20, so that the play-off ends 15
+         * days after the table). The final's tie rule (+0xd) is that of the semi-finals without their fixed pairs
          * flag 0x200 (0x572af3). Inference: +0x21 is the count of legs and +0x22 the days between them. */
         uint32_t f = table + ROUND_SIZE;
         g_mem[f + 0x21] = 2;
-        g_mem[f + 0x22] = FINAL_LEG_DAYS;
+        g_mem[f + 0x22] = (uint8_t)final_gap((int)year);
         wr16(g_mem, f + 0xd, rd16(g_mem, table + 0xd) & 0xffu);
         /* The deciding flags +0xf: after the first leg the round's +0xf is OR'd into the second leg's flags
          * (Cup::process_fixture 0x51a6b3 into 0x521d76; the doc 2026-10-17-cup-round-record.md section 3: normally 3,
