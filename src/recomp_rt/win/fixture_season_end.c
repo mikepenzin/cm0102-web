@@ -18,7 +18,15 @@
  * came after day 170, so the Superliga was not complete on its update day and started 2023/24 a year late (gate (a)
  * run 7; Denmark alone has too few call-ups to show it).
  *
- * So in a season game, only for the call of 0x5abbd2: when the new date of 0x5ab510 is on or after the competition's
+ * The clash code moves matches too (den-stall-2, run 8, 2021 start, 2022/23): a call-up move put Randers FC v FC
+ * Copenhagen on day 169 of 2023, the add_fixture that followed (flag 1, 0x5abbdc) found a clash and moved it with its
+ * own call of 0x5ab510 (0x5aa96e) to day 171, and the Superliga missed its update day of 170 again. So the rule
+ * covers the moves of 0x5ab510 that take a match away from a clash or a call-up, each with the add_fixture (flag 0)
+ * and the news that follow it (SITES): the call-up move 0x5abbd2, add_fixture's move of the new fixture 0x5aa96e and
+ * of a weaker stored one 0x5aaa25, and resolve_same_day_clash 0x5ae55c, 0x5ae5d8. The other calls (a date today or
+ * past at 0x5aa729, an abandoned match 0x6b6084, the cup and manager calls) keep the original.
+ *
+ * So in a season game, for those calls: when the new date of 0x5ab510 is on or after the competition's
  * next update day, the match goes to the last free day before that update day, after the old date and not before
  * today + 2 (0x5ab929..0x5ab935). A day is free by 0x5ab510's own test (0x5ab9b6..0x5ab9f2): with the slice of
  * get_time_slice 0x5af2f0, find_fixture_clashes 0x5ad780 gives no clash, or the severity 1, or a severity below the
@@ -28,10 +36,10 @@
  * add_fixture inserts it without its clash moves (flag 0 with the try count 0xae2a40 at 10, as add_fixture does
  * after its tenth try), and no "fixture moved" news is queued. The club plays without its called-up players, as a
  * league plays at the end of its season. When the old date is today or past, the new date of 0x5ab510 stays.
- * The other 11 calls of 0x5ab510, the base game and RECOMP_SEASON_CODE=off keep the original (Q152).
+ * The other 7 calls of 0x5ab510, the base game and RECOMP_SEASON_CODE=off keep the original (Q152).
  *
- * Test switch RECOMP_TEST_FIXTURE_HOLD (season games only): "log" prints each call-up move; "1" also takes the new
- * date of each call-up move later in the same year as the update day, so that the free day search and the kept date
+ * Test switch RECOMP_TEST_FIXTURE_HOLD (season games only): "log" prints each covered move; "1" also takes the new
+ * date of each covered move later in the same year as the update day, so that the free day search and the kept date
  * act on every such move (forced case of the retest). */
 #include "win.h"
 #include "../rt.h"
@@ -58,9 +66,20 @@
 #define FIX_PRIORITY 0x3au
 #define FIX_SLICE 0x3fu
 
-#define CALLUP_NEW_DATE 0x005abbd7u     /* return address of the call at 0x5abbd2 */
-#define CALLUP_ADD 0x005abbe1u          /* of add_fixture at 0x5abbdc */
-#define CALLUP_NEWS 0x005abbf0u         /* of queue_fixture_moved_news at 0x5abbeb */
+/* The moves of a fixture that the rule covers: the return addresses of the call of 0x5ab510, of the add_fixture that
+ * follows it and of the queue_fixture_moved_news after that (0 for none). */
+typedef struct {
+    uint32_t new_date, add, news;
+    const char *what;
+} MoveSite;
+static const MoveSite SITES[] = {
+    {0x005abbd7u, 0x005abbe1u, 0x005abbf0u, "call-up"},              /* 0x5abb10: 0x5abbd2, 0x5abbdc, 0x5abbeb */
+    {0x005aa973u, 0x005aa97du, 0, "clash"},                         /* add_fixture moves the new fixture: 0x5aa96e, 0x5aa978 */
+    {0x005aaa2au, 0x005aaa38u, 0x005aaa4bu, "clash"},               /* add_fixture moves a weaker stored one: 0x5aaa25, 0x5aaa33, 0x5aaa46 */
+    {0x005ae561u, 0x005ae56fu, 0x005ae57eu, "same-day clash"},      /* resolve_same_day_clash: 0x5ae55c, 0x5ae56a, 0x5ae579 */
+    {0x005ae5ddu, 0x005ae5ebu, 0x005ae5fau, "same-day clash"},      /* resolve_same_day_clash: 0x5ae5d8, 0x5ae5e6, 0x5ae5f5 */
+};
+#define SITE_COUNT ((int)(sizeof SITES / sizeof SITES[0]))
 
 #define DATE_NEW 0x00549ef0u            /* Date::Date (day of the year, year), ret 8 */
 #define DATE_WEEKDAY 0x0054a3f0u        /* Date::get_weekday, 0 Monday..6 Sunday */
@@ -70,7 +89,8 @@
 #define GAME_DELETE 0x00944c94u         /* operator delete, cdecl */
 #define LIST_REMOVE_NODE 0x0068d280u    /* LLIST::remove_node (node), ret 4 */
 
-static uint32_t kept;           /* the fixture that keeps its date, between 0x5abbd2 and 0x5abbeb */
+static uint32_t kept;           /* the fixture that keeps its date, from its 0x5ab510 call to its add (and news) */
+static int kept_site;
 
 /* RECOMP_TEST_FIXTURE_HOLD: 0 off, 1 "log", 2 "1" (forced). */
 static int test_mode(void)
@@ -156,12 +176,14 @@ void o_005ab510(void);
 
 RT_WRAP(005ab510, fixture_new_date)
 {
-    uint32_t fix = rt_arg(0), manager = cpu.ecx;
-    if (rd32(g_mem, cpu.esp) != CALLUP_NEW_DATE || !season_game_changes() || !readable(fix)) {
+    uint32_t fix = rt_arg(0), manager = cpu.ecx, ret = rd32(g_mem, cpu.esp);
+    int site = 0;
+    while (site < SITE_COUNT && SITES[site].new_date != ret) site++;
+    if (site == SITE_COUNT || !season_game_changes() || !readable(fix)) {
         o_005ab510();
         return;
     }
-    kept = 0;
+    kept = 0;               /* a kept fixture's add and news come before the next covered move (none nests there) */
     int year = (int16_t)rd16(g_mem, fix + FIX_YEAR), day = (int16_t)rd16(g_mem, fix + FIX_DAY);
     uint8_t slice = g_mem[fix + FIX_SLICE];
     uint16_t legs = rd16(g_mem, LEG_CHECKS);
@@ -171,8 +193,8 @@ RT_WRAP(005ab510, fixture_new_date)
     int last = update_day(rec);
     int new_year = (int16_t)rd16(g_mem, fix + FIX_YEAR), new_day = (int16_t)rd16(g_mem, fix + FIX_DAY);
     if (test_mode())
-        fprintf(stderr, "recomp: fixtures: test: a call-up move of %.40s from day %d of %d to day %d of %d (update "
-                        "day %d)\n", win_str(rec + 4), day, year, new_day, new_year, last);
+        fprintf(stderr, "recomp: fixtures: test: a %s move of %.40s from day %d of %d to day %d of %d (update "
+                        "day %d)\n", SITES[site].what, win_str(rec + 4), day, year, new_day, new_year, last);
     if (test_mode() == 2 && new_year == year && new_day > day) last = new_day;
     if (last < 0) return;
     int last_year = day < last ? year : year + 1;
@@ -188,8 +210,8 @@ RT_WRAP(005ab510, fixture_new_date)
         if (!before(year, day, y, d) || before(y, d, min_year, min_day)) break;
         if (free_day(manager, fix, y, d)) {
             fprintf(stderr, "recomp: fixtures: a match of %.40s moves from day %d of %d to day %d of %d, before its "
-                            "season change on day %d (the call-up move gave day %d of %d)\n",
-                    name, day, year, d, y, last, new_day, new_year);
+                            "season change on day %d (the %s move gave day %d of %d)\n",
+                    name, day, year, d, y, last, SITES[site].what, new_day, new_year);
             return;
         }
         if (rt_unwinding) return;
@@ -212,9 +234,10 @@ RT_WRAP(005ab510, fixture_new_date)
         if (rt_unwinding) return;
     }
     kept = fix;
+    kept_site = site;
     fprintf(stderr, "recomp: fixtures: a match of %.40s stays on day %d of %d (no free day before its season change "
-                    "on day %d; the call-up move gave day %d of %d)\n",
-            name, day, year, last, new_day, new_year);
+                    "on day %d; the %s move gave day %d of %d)\n",
+            name, day, year, last, SITES[site].what, new_day, new_year);
 }
 
 /* add_fixture 0x5aa680 (its wrap is in season_kind_cup_breaks.c): the call at 0x5abbdc for a kept fixture inserts
@@ -223,11 +246,12 @@ void o_005aa680(void);
 
 void fixture_season_end_add_fixture(void)
 {
-    if (!kept || rt_arg(0) != kept || rd32(g_mem, cpu.esp) != CALLUP_ADD) {
+    if (!kept || rt_arg(0) != kept || rd32(g_mem, cpu.esp) != SITES[kept_site].add) {
         o_005aa680();
         return;
     }
     uint16_t tries = rd16(g_mem, ADD_TRIES);
+    if (!SITES[kept_site].news) kept = 0;       /* no news call follows */
     wr32(g_mem, cpu.esp + 8u, 0);
     wr16(g_mem, ADD_TRIES, 10);
     o_005aa680();
@@ -239,7 +263,7 @@ void o_005aac70(void);
 
 RT_WRAP(005aac70, fixture_moved_news)
 {
-    if (kept && rt_arg(0) == kept && rd32(g_mem, cpu.esp) == CALLUP_NEWS) {
+    if (kept && rt_arg(0) == kept && rd32(g_mem, cpu.esp) == SITES[kept_site].news) {
         kept = 0;
         rt_ret_stdcall(0, 3);
         return;
