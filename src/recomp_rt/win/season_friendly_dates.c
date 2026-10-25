@@ -197,10 +197,10 @@ static int national_side(uint32_t club)
 /* 1 when a side of the nation of club a or club b (senior, B or Under 21: club +0x53, as the friendly arranger
  * reads it at 0x5cbf59) has a national match (fixture types 0 and 1) on day doy of year y, or (holes 1) when a
  * fixture of any list of the day (types 0 to 34: the type is comp_active_key_nation_of_fixture's entry index, as
- * insert_fixture 0x5ab2e3..0x5ab301 files it) has no club at +0x1c or +0x20: add_fixture's clash test reads each fixture of the days
- * around a new one (find_fixture_clashes 0x5ad780, comp_active_key_nation_of_fixture 0x48dd70) and stops at the
- * box Database.cpp 13471 for a missing club (database_is_national_team 0x53b900, 0x53b90a); seen when this code
- * moved Canada v Panama of 2016 next to such a fixture. */
+ * insert_fixture 0x5ab2e3..0x5ab301 files it) has no club at +0x1c or +0x20: add_fixture's clash test reads each
+ * fixture of the days around a new one (find_fixture_clashes 0x5ad780, comp_active_key_nation_of_fixture 0x48dd70)
+ * and stops at the box Database.cpp 13471 for a missing club (database_is_national_team 0x53b900, 0x53b90a);
+ * seen when this code moved Canada v Panama of 2016 next to such a fixture. */
 static int side_busy(uint32_t a, uint32_t b, int y, int doy, int holes)
 {
     uint32_t na = rd32(g_mem, a + 0x53), nb = rd32(g_mem, b + 0x53);
