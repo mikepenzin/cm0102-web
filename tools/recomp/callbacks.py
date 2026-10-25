@@ -17,8 +17,7 @@ CALLBACK_FILES = ("picker.c", "assistant.c", "commentary.c", "holiday_next.c", "
                   "season_change.c", "season_kind_club_world.c", "season_comps.c", "season_bra_states.c",
                   "season_super_cups.c", "season_new_cups.c", "season_cup_groups.c",
                   "season_club_cups.c", "season_playoffs.c", "season_nl.c", "season_nl_euro.c", "season_nl_wc.c",
-                  "season_gold_cup.c", "season_divisions.c", "season_tur_groups.c", "screen_sweep.c",
-                  "season_friendly_dates.c")
+                  "season_gold_cup.c", "season_divisions.c", "season_tur_groups.c", "screen_sweep.c")
                                 # in src/recomp_rt/win
 
 # address: (bytes of the first eight, name)
@@ -64,8 +63,11 @@ CALLBACKS = {
     0x521F10: ("668b4c240c81ec00", "cup round: match slot (rec, round, slot, weekday, time, 3, flag)"),
     0x53B3D0: ("8b44240481ec0002", "database_get_national_team (nation)"),
     0x549F70: ("81ec000200005657", "Date::Date (this, day, month0, year, weekday)"),
-    # Row A18 (season_friendly_dates.c): the order of the friendly date rows, the compare function of 0x5cc510's qsort.
+    # Row A18 (season_friendly_dates.c, not in CALLBACK_FILES: it compares return addresses of add_fixture's calls):
+    # the compare function of 0x5cc510's qsort of the friendly date rows, and the qualifying matches on FIFA days.
     0x5CC610: ("8b442404568b7424", "friendly date row compare (row a, row b), the qsort of 0x5cc5dd"),
+    0x76D940: ("8b44240485c07454", "national_teams_is_finals_comp (record), stdcall"),
+    0x5AE6A0: ("8b54240c8b442404", "fix_man_get_fixture_list_for_date (this, Date *, slice, type)"),
     0x68A160: ("8b4c24148b442418", "league_round_set_date (rounds, i, day, month0, yoff, weekday, flag, year, 0)"),
     0x68A1C0: ("81ec000200005356", "league_round_set_match_slot (rounds, i, 0, -1, -1, -1, 0)"),
     # Slice 26 (season_kind_club_world.c): the knockout of the FIFA Club World Championship.

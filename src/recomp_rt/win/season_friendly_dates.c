@@ -26,7 +26,20 @@
  * none: its continent becomes -2, which no continent has, so the arranger pairs no one on it. (-1 would be wrong:
  * the arranger reads a continent of -1 as every continent, 0x5cc060..0x5cc070.) After the last year of
  * the list, the days of its last year move on by 364 days a year (plus 7 when that drifts over 3 days), as the UEFA
- * dates do (O381). The rows are sorted again. The base game keeps the original's table (Q152). */
+ * dates do (O381). The rows are sorted again. The base game keeps the original's table (Q152).
+ *
+ * The qualifying matches (O390, option Q). The qualifying groups of the World Cup and the European Championship are
+ * leagues: their fixtures come from League::create_fixtures 0x6835c0 (add_fixture calls at 0x683a55 and 0x683dee)
+ * and, for the South American section, WcSouthAmericanLeague::add_fixed_fixture (0x9225c1). Their days follow the
+ * original's templates moved to each cycle, so they also fall on UEFA days: in a 2006 game the CONCACAF and
+ * CONMEBOL matches of 5 August 2009 (with the Under 21 matches of the same pairs the day before,
+ * ReserveComp::add_b_or_under21_fixture, the add_fixture call at 0x7e6a48) put Internazionale's internationals on
+ * duty for its Europa League tie of 6 August (clash 21); real: CONCACAF 12 August, CONMEBOL 5 and 9 September. In a
+ * season game, a fixture of two national sides from those calls, in a competition that is not a finals tournament
+ * (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day within 10 days on which neither
+ * side has a national match yet (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two
+ * matches of a window so take two days. With no such day the fixture keeps its date. Two-legged qualifying ties
+ * (Cup::create_tie_fixtures) keep theirs, so a second leg never comes before its first. */
 #include "win.h"
 #include "season_names.h"
 
@@ -39,6 +52,15 @@
 #define F_DATE 0x00549f70u              /* Date::Date, thiscall (day, month 0 to 11, year, weekday; -1 the date) */
 #define F_QSORT 0x00945333u
 #define F_ROW_ORDER 0x005cc610u
+#define F_FINALS 0x0076d940u             /* national_teams_is_finals_comp, stdcall (record) ret 4 */
+#define F_DAY_LIST 0x005ae6a0u           /* fix_man_get_fixture_list_for_date, thiscall (Date *, slice, type) */
+#define F_LIST_FREE 0x0068d040u
+#define F_DELETE 0x00944c94u
+#define FIXTURES 0xae2a58u
+#define CLUBS 0xae23b4u
+#define CLUB_COUNT 0xae235cu
+#define NATION_COUNT 0xae2350u
+#define CLUB_SIZE 0x245u
 #define NO_CONTINENT 0xfffffffeu        /* -2: no continent has it (-1 is every continent at 0x5cc060) */
 
 typedef struct {
@@ -141,3 +163,102 @@ RT_WRAP(005cc510, friendly_set_row_dates)
         fprintf(stderr, "recomp: friendlies: %d rows on the real FIFA day of their month, %d already on it, %d not "
                         "used (no FIFA day that month)\n", moved, kept, dropped);
 }
+
+/* ---- The qualifying matches ---- */
+
+/* The real FIFA match days of year y, as days of the year (after the list: its last year moved on, as fifa_day). */
+static int fifa_doys(int y, int *out, int max)
+{
+    int n = 0;
+    for (int m = 1; m <= 12; m++)
+        for (int want = 1; want <= 31; want += 3) {
+            int d = fifa_day(y, m, want);
+            if (!d) continue;
+            int doy = day_of_year(y, m, d), seen = 0;
+            for (int k = 0; k < n; k++) seen |= out[k] == doy;
+            if (!seen && n < max) out[n++] = doy;
+        }
+    return n;
+}
+
+static int national_side(uint32_t club)
+{
+    uint32_t clubs = rd32(g_mem, CLUBS);
+    int count = (int32_t)rd32(g_mem, CLUB_COUNT), nations = (int32_t)rd32(g_mem, NATION_COUNT);
+    if (!readable(club) || !clubs || club < clubs) return 0;
+    int i = (int)((club - clubs) / CLUB_SIZE);
+    return i < count && i >= count - 2 * nations;
+}
+
+/* 1 when club a or club b has a national match (fixture types 0 and 1) on day doy of year y. */
+static int side_busy(uint32_t a, uint32_t b, int y, int doy)
+{
+    int busy = 0;
+    for (int slice = 0; slice < 3 && !busy && !rt_unwinding; slice++)
+        for (int type = 0; type < 2 && !busy && !rt_unwinding; type++) {
+            uint32_t saved_esp = cpu.esp;
+            cpu.esp -= 16;
+            uint32_t date = cpu.esp;
+            wr16(g_mem, date, (uint16_t)doy);
+            wr16(g_mem, date + 2, (uint16_t)y);
+            wr32(g_mem, date + 4, 0);
+            Cpu saved = cpu;
+            cpu.ecx = rd32(g_mem, FIXTURES);
+            uint32_t args[3] = {date, (uint32_t)slice, (uint32_t)type};
+            uint32_t list = rt_callback(F_DAY_LIST, 3, args);
+            if (rt_unwinding) return 1;
+            cpu = saved;
+            cpu.esp = saved_esp;
+            for (uint32_t node = readable(list) ? rd32(g_mem, list + 2) : 0, k = 0; readable(node) && k < 4000;
+                 node = rd32(g_mem, node + 6), k++) {
+                uint32_t f = rd32(g_mem, node);
+                if (!readable(f)) continue;
+                uint32_t h = rd32(g_mem, f + 0x1c), w = rd32(g_mem, f + 0x20);
+                if (h == a || h == b || w == a || w == b) busy = 1;
+            }
+            if (readable(list)) {
+                cpu.ecx = list;
+                rt_callback(F_LIST_FREE, 0, NULL);
+                if (rt_unwinding) return 1;
+                uint32_t del[1] = {list};
+                rt_callback(F_DELETE, 1, del);
+                if (rt_unwinding) return 1;
+                cpu = saved;
+            }
+        }
+    return busy;
+}
+
+/* From the add_fixture wrap (season_kind_cup_breaks.c): ret is the return address of the add_fixture call. */
+void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
+{
+    static const uint32_t calls[] = {0x00683a5au, 0x00683df3u, 0x009225c6u, 0x007e6a4du};
+    int from = 0;
+    for (unsigned k = 0; k < sizeof calls / sizeof calls[0]; k++) from |= ret == calls[k];
+    if (!from || !season_game_changes() || !readable(fix)) return;
+    uint32_t home = rd32(g_mem, fix + 0x1c), away = rd32(g_mem, fix + 0x20), rec = rd32(g_mem, fix + 0x14);
+    if (!national_side(home) || !national_side(away) || !readable(rec)) return;
+    Cpu saved = cpu;
+    uint32_t a[1] = {rec};
+    uint32_t finals = rt_callback(F_FINALS, 1, a) & 0xff;
+    if (rt_unwinding) return;
+    cpu = saved;
+    if (finals) return;
+    int y = (int16_t)rd16(g_mem, fix + 0x28), d = (int16_t)rd16(g_mem, fix + 0x2a), doys[64];
+    int n = fifa_doys(y, doys, 64);
+    for (int k = 0; k < n; k++)
+        if (doys[k] == d) return;                               /* on a FIFA day already */
+    for (int dist = 1; dist <= 10 && !rt_unwinding; dist++)
+        for (int sign = -1; sign <= 1; sign += 2) {
+            int c = d + sign * dist, ok = 0;
+            for (int k = 0; k < n; k++) ok |= doys[k] == c;
+            if (!ok || side_busy(home, away, y, c)) continue;
+            if (rt_unwinding) return;
+            wr16(g_mem, fix + 0x2a, (uint16_t)c);
+            if (getenv("RECOMP_SCREEN_LOG"))
+                fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s moves from day %d to the FIFA day %d of %d\n",
+                        win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, c, y);
+            return;
+        }
+}
+
