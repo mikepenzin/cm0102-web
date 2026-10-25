@@ -91,10 +91,13 @@ def check_summer(log, first, last):
         text = h.read()
     warn = r"recomp: turkish groups: (?:no dates for|\d+ clubs make groups of|no memory)[^\n]*"
     bad += [f"runtime warning: {w}" for w in re.findall(warn, text)]
-    m = re.search(r"turkish groups: three groups of \d+, \d+ and \d+ clubs; (\d+) tagged clubs stay", text)
+    m = re.search(r"turkish groups: three groups of \d+, \d+ and \d+ clubs; (\d+) tagged clubs stay in another "
+                  r"division, (\d+) clubs of the five groups fill their places", text)
     if not m:
         return bad + ["no line of the first-season groups"]
     stayed = int(m.group(1))
+    if stayed or int(m.group(2)):           # O259: the fill of a short group is a net; it must not act
+        bad.append(f"{first}: {stayed} tagged clubs stay in another division and {m.group(2)} fill their places")
     missing_all = []
     for k, n in SIZES.items():
         got = groups.get((first, k))

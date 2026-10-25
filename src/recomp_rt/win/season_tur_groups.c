@@ -43,6 +43,7 @@
 #include "win.h"
 #include "../rt_host.h"
 #include "season.h"
+#include "season_tur_groups.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -249,6 +250,14 @@ static int group_rows(uint32_t tag[GROUPS])
             if (!tag[k] && !strncmp(win_str(r + 4u), GROUP_NAMES[k], 52)) tag[k] = r;
     }
     return tag[0] && tag[1] && tag[2];
+}
+
+int season_tur_groups_tagged(uint32_t club)
+{
+    uint32_t tag[GROUPS];
+    if (!groups_on() || !readable(club) || !group_rows(tag)) return 0;
+    uint32_t t = rd32(g_mem, club + CLUB_GROUP);
+    return t && (t == tag[0] || t == tag[1] || t == tag[2]);
 }
 
 /* 1 when the clubs make three groups: none in G4 or G5, G1 to G3 each from MIN_GROUP to MAX_GROUP. */

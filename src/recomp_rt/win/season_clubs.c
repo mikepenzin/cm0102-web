@@ -3,6 +3,7 @@
 #include "win.h"
 #include "season.h"
 #include "season_clubs.h"
+#include "season_tur_groups.h"
 #include "season_names.h"
 #include "season_records.h"
 #include "season_rules.h"
@@ -364,6 +365,7 @@ static int fill_takes(const Club *c, const Division *div, int ncomps, uint32_t c
                       uint32_t spare1, uint32_t spare2, uint32_t cup_pool_nation)
 {
     if (c->kept || c->national || c->nation != d->nation || c->div == d->at) return 0;
+    if (season_tur_groups_tagged(c->at)) return 0;      /* Summer 2002: the first season places it in its group */
     int t = c->db_div >= comps ? (int)((c->db_div - comps) / COMP_SIZE) : -1;
     int reserve_ok = !reserve_name(win_str(c->at + CLUB_NAME)) || d->missing_reserve;
     if (group == 0)                     /* a club that left a division of a higher rank */
@@ -632,6 +634,9 @@ static void move_clubs(int season)
         for (int i = 0; i < count && now < d->want; i++) {
             Club *c = &club[i];
             if (c->kept || c->national || c->nation != d->nation || c->div || c->db_div != d->at) continue;
+            /* Summer 2002: a club that the data tags for a Category B group (club +0x60) plays there; a database
+             * place of another division does not keep it (two such clubs in Category A left two groups short). */
+            if (season_tur_groups_tagged(c->at)) continue;
             c->div = d->at;
             now++;
             d->filled_own++;
