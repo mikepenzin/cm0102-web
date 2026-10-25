@@ -99,6 +99,13 @@ def read():
         if draw <= last:
             moved.append(f"{comp} {year} {rnd}: draw {draw} after the round before, the day after {last}")
             rows[(comp, year, rnd)] = (last + datetime.timedelta(days=1), leg1, leg2)
+    # The game's season ends on 1 June: the end of season report and the season's history (a final on 1 June or
+    # later has no winner then). Such a final (Champions League 2019, 2023, 2024) is played on 31 May.
+    for (comp, year, rnd), (draw, leg1, leg2) in list(rows.items()):
+        end = datetime.date(year + 1, 5, 31)
+        if rnd == "final" and leg1 > end:
+            moved.append(f"{comp} {year} final: {leg1} is after the game's season, played on {end}")
+            rows[(comp, year, rnd)] = (draw, end, leg2)
     for (comp, year, rnd), (draw, leg1, leg2) in rows.items():
         if not draw <= leg1 or (leg2 and not leg1 < leg2):
             fail(f"{comp} {year} {rnd}: dates out of order")
