@@ -90,6 +90,7 @@
 #define GROUPS 3
 #define MIN_GROUP 2
 #define MAX_GROUP 18                /* 2 (n - 1) dates fit in the 36 of stages -1 and 4 up to 18 clubs */
+#define TIER_CLUBS 52               /* the division's size in every season: the 18, 17 and 17 of 2002/03 (Q16) */
 
 #define F_MALLOC 0x00944e46u
 #define F_FREE 0x009452cau
@@ -98,6 +99,7 @@
 #define F_PICK 0x004afbd0u          /* cdecl (list, count, need): the best `need` clubs first (0x8fe40b) */
 #define F_MOVE 0x006830b0u          /* League::move_club_to_division, thiscall (club, record, 1), ret 0xc */
 #define F_RELEGATE 0x006831a0u      /* League::relegate_club_to_division, thiscall (club, record, 1), ret 0xc */
+#define F_SENIOR 0x00540a50u        /* the senior side of a club, cdecl (club, &flag, 1) */
 #define F_PROMOTE 0x00689c80u       /* league_promote_and_relegate (upper, lower, expire, pairwise, up, down) */
 #define F_SCHEDULE 0x008ff7e0u      /* TurSecondB::create_schedule (stage, &count, &code, &flag), ret 0x10 */
 #define F_POSITIONS3 0x007d2cd0u    /* PorSecondB::set_predicted_positions: own table and slots 0, 1 */
@@ -111,6 +113,37 @@ static const char *const GROUP_NAMES[GROUPS] = {
     "Turkish 2. Division Category B Group B",
     "Turkish 2. Division Category B Group C",
 };
+
+/* The real groups of 2003/04 and 2004/05 (0 A, 1 B, 2 C) by club id, from two public sources each
+ * (docs/research/2026-10-25-turkish-b-groups-2003-2005.tsv: tr.wikipedia with RSSSF tur04, tr.wikipedia with the
+ * TFF tables; the rows of clubs that the data has). A club new to the division takes its real group of the coming
+ * season when that group has room. */
+typedef struct { int16_t season; int8_t group; int32_t club; } RealGroup;
+static const RealGroup REAL_GROUPS[] = {
+    {2003, 0, 3749}, {2003, 0, 1960}, {2003, 0, 12130}, {2003, 0, 7811}, {2003, 0, 7130}, {2003, 0, 3372},
+    {2003, 0, 12963}, {2003, 0, 6198}, {2003, 0, 4684}, {2003, 0, 1146}, {2003, 0, 2745}, {2003, 0, 10307},
+    {2003, 0, 7627}, {2003, 0, 5361}, {2003, 0, 1116}, {2003, 0, 6886}, {2003, 1, 10207}, {2003, 1, 5818},
+    {2003, 1, 5845}, {2003, 1, 8324}, {2003, 1, 12975}, {2003, 1, 2938}, {2003, 1, 6016}, {2003, 1, 1985},
+    {2003, 1, 743}, {2003, 1, 13168}, {2003, 1, 3747}, {2003, 1, 7014}, {2003, 1, 2188}, {2003, 1, 42},
+    {2003, 1, 652}, {2003, 1, 4238}, {2003, 2, 7082}, {2003, 2, 245}, {2003, 2, 4911}, {2003, 2, 4240},
+    {2003, 2, 11276}, {2003, 2, 9800}, {2003, 2, 355}, {2003, 2, 5704}, {2003, 2, 3628}, {2003, 2, 10111},
+    {2003, 2, 2583}, {2003, 2, 1148}, {2003, 2, 10515}, {2003, 2, 3630}, {2003, 2, 7335}, {2003, 2, 5310},
+    {2004, 0, 12130}, {2004, 0, 5361}, {2004, 0, 4684}, {2004, 0, 7627}, {2004, 0, 8105}, {2004, 0, 8671},
+    {2004, 0, 7811}, {2004, 0, 5498}, {2004, 0, 7130}, {2004, 0, 1960}, {2004, 0, 1146}, {2004, 0, 12963},
+    {2004, 0, 6198}, {2004, 0, 1116}, {2004, 0, 4377}, {2004, 0, 2745}, {2004, 1, 8324}, {2004, 1, 3747},
+    {2004, 1, 6016}, {2004, 1, 3372}, {2004, 1, 5818}, {2004, 1, 12975}, {2004, 1, 13168}, {2004, 1, 2188},
+    {2004, 1, 2938}, {2004, 1, 5845}, {2004, 1, 7014}, {2004, 1, 42}, {2004, 1, 743}, {2004, 1, 1985},
+    {2004, 1, 10307}, {2004, 2, 4240}, {2004, 2, 10515}, {2004, 2, 11276}, {2004, 2, 245}, {2004, 2, 37},
+    {2004, 2, 4911}, {2004, 2, 10111}, {2004, 2, 9800}, {2004, 2, 2583}, {2004, 2, 3630}, {2004, 2, 1148},
+    {2004, 2, 355}, {2004, 2, 5704}, {2004, 2, 3628}, {2004, 2, 5822},
+};
+
+static int real_group(int season, int32_t club)
+{
+    for (size_t i = 0; i < sizeof REAL_GROUPS / sizeof REAL_GROUPS[0]; i++)
+        if (REAL_GROUPS[i].season == season && REAL_GROUPS[i].club == club) return REAL_GROUPS[i].group;
+    return -1;
+}
 
 static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
 
@@ -722,23 +755,43 @@ RT_WRAP(008fe3a0, tur_exchange)
     }
     uint32_t b = rd32(g_mem, obj + OBJ_RECORD), lower = record_of(KEY_LOWER), t[GROUPS];
     tables_of(obj, t);
-    int want = 0, most = 0, down = 0, cut = 0, up = 0;
-    for (int k = 0; k < GROUPS; k++) {
-        int n = table_clubs(t[k]);
-        want += n;
-        if (n > most) most = n;
-    }
+    int want = TIER_CLUBS, most = 0, down = 0, cut = 0, up = 0, spare = 0;
+    for (int k = 0; k < GROUPS; k++)
+        if (table_clubs(t[k]) > most) most = table_clubs(t[k]);
     if (!readable(b) || !lower) {
         rt_ret_stdcall(0, 0);
         return;
     }
     int npool = 0, c = club_count();
-    uint32_t pool = game_malloc(4u * (uint32_t)(c > 0 ? c : 1));
+    uint32_t pool = game_malloc(4u * (uint32_t)(c + 1));            /* every club, then a scratch word */
     if (!pool && !rt_unwinding) fprintf(stderr, "recomp: turkish groups: no memory for the pool: no club comes up\n");
     for (int i = 0; pool && i < c; i++) {
         uint32_t club = club_at(i);
         if (rd32(g_mem, club + CLUB_DIVISION) == lower && rd32(g_mem, club + CLUB_NATION))
             wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
+    }
+    /* A Lower Division too small for the free places: the Turkish clubs with no division join the pool (as Q523's
+     * pools of the new tiers), so the division keeps its size; a reserve side whose senior side plays in the division
+     * stays out, as there (season_divisions.c group_pool_club, after 0x8504c9..0x8504ec). */
+    uint32_t nation = table_clubs(t[0]) ? rd32(g_mem, row_club(t[0], 0) + CLUB_NATION) : 0;
+    int relegated = 0;
+    for (int k = 0; k < GROUPS; k++)
+        for (int i = 0; i < table_clubs(t[k]); i++) {
+            uint32_t row = rd32(g_mem, t[k] + OBJ_TABLE) + (uint32_t)i * ROW_SIZE;
+            if (g_mem[row + ROW_STATUS] == 3 && rd32(g_mem, rd32(g_mem, row) + CLUB_DIVISION) == b) relegated++;
+        }
+    int free_places = want - (division_clubs(b) - relegated);     /* the places left after the relegation */
+    for (int i = 0; pool && nation && npool < free_places && i < c; i++) {
+        uint32_t club = club_at(i);
+        if (rd32(g_mem, club + CLUB_DIVISION) || rd32(g_mem, club + CLUB_NATION) != nation) continue;
+        uint32_t flag_at = pool + 4u * (uint32_t)c;
+        wr32(g_mem, flag_at, 0);
+        uint32_t a[3] = {club, flag_at, 1};
+        uint32_t senior = call_cdecl(F_SENIOR, 3, a);
+        if (rt_unwinding) return;
+        if (senior && !rd32(g_mem, flag_at) && rd32(g_mem, senior + CLUB_DIVISION) == b) continue;
+        wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
+        spare++;
     }
     for (int k = 0; k < GROUPS && !rt_unwinding; k++)
         for (int i = 0; i < table_clubs(t[k]) && !rt_unwinding; i++) {
@@ -775,8 +828,11 @@ RT_WRAP(008fe3a0, tur_exchange)
     }
     game_free(pool);
     if (rt_unwinding) return;
-    fprintf(stderr, "recomp: turkish groups: %d relegated, %d cut, %d up from the Lower Division of %d, %d clubs\n",
-            down, cut, up, npool, division_clubs(b));
+    fprintf(stderr, "recomp: turkish groups: %d relegated, %d cut, %d up from the Lower Division of %d (%d with no "
+            "division), %d clubs\n", down, cut, up, npool, spare, division_clubs(b));
+    if (division_clubs(b) != want)
+        fprintf(stderr, "recomp: turkish groups: the division holds %d clubs, not %d: too few clubs to fill it\n",
+                division_clubs(b), want);
     rt_ret_stdcall(0, 0);
 }
 
@@ -784,7 +840,8 @@ RT_WRAP(008fe3a0, tur_exchange)
  * each of G1 to G5 (the sort is not regional: a 2003/04 run of this deal mixed Igdir, Istanbul and Bursa in one
  * group). The form keeps the real 2002/03 regions: the sizes are three parts (18, 17, 17 for 52; the first groups
  * one more when the count does not divide); a club whose group (+0x60) is G1, G2 or G3 keeps it while the group has
- * room, in the order of the club table (a club back from Category A keeps its old group too); the other clubs,
+ * room, in the order of the club table (a club back from Category A keeps its old group too); a new club with a
+ * real group of the coming season (REAL_GROUPS, 2003/04 and 2004/05) takes it while it has room; the other clubs,
  * sorted by 0x53fe50 as the original, take the places left, Group A first. */
 void o_008fe580(void);
 RT_WRAP(008fe580, tur_deal)
@@ -813,6 +870,19 @@ RT_WRAP(008fe580, tur_deal)
             wr32(g_mem, list + 4u * (uint32_t)rest++, club);
         }
     }
+    int season = (int16_t)rd16(g_mem, obj + 0x40u) + 1, real = 0, others = 0;
+    for (int i = 0; list && i < rest; i++) {   /* a club with a known real group of the coming season takes it */
+        uint32_t club = rd32(g_mem, list + 4u * (uint32_t)i);
+        int k = real_group(season, (int32_t)rd32(g_mem, club));
+        if (k >= 0 && have[k] < size[k]) {
+            wr32(g_mem, club + CLUB_GROUP, g[k]);
+            have[k]++;
+            real++;
+        } else {
+            wr32(g_mem, list + 4u * (uint32_t)others++, club);
+        }
+    }
+    rest = others;
     if (list && rest > 1 && !rt_unwinding) {
         uint32_t q[4] = {list, (uint32_t)rest, 4u, F_BY_LONGITUDE};
         call_cdecl(F_QSORT, 4, q);
@@ -824,8 +894,8 @@ RT_WRAP(008fe580, tur_deal)
     }
     game_free(list);
     if (rt_unwinding) return;
-    fprintf(stderr, "recomp: turkish groups: deal of %d clubs: %d keep their group, %d new; %d, %d and %d\n", n, kept,
-            rest, have[0], have[1], have[2]);
+    fprintf(stderr, "recomp: turkish groups: deal of %d clubs: %d keep their group, %d new in their real group, %d "
+            "more; %d, %d and %d\n", n, kept, real, rest, have[0], have[1], have[2]);
     /* The exchange keeps the division at the size of the season played (its cut), and the first season caps each
      * group at MAX_GROUP, so the parts stay within MIN_GROUP to MAX_GROUP; this line would show a break of that. */
     if (size[0] > MAX_GROUP || size[GROUPS - 1] < MIN_GROUP)

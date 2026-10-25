@@ -4,7 +4,7 @@ the season core case of the groups, promotion and relegation across two season c
 
 Usage:
     python3 tests/seasons/turkish_groups_run.py <cm0102_recomp> <game folder> --database "<Summer 2002 folder>"
-        [--only summer|other|summer-off] [--ref-build <program>] [--keep <folder>] [--jobs n]
+        [--only summer|other|saveload|summer-off] [--ref-build <program>] [--keep <folder>] [--jobs n]
 
 The runs (the season jump of tests/seasons/rules_report_check.py, Select All less the 15 other rows of the Select
 League(s) screen, so Turkey plays; the runtime's lines "recomp: turkish groups: ...",
@@ -22,6 +22,9 @@ src/recomp_rt/win/season_tur_groups.c):
     other   a 2002/03 start with the game's own 3.9.68 data to the end of 2003/04 (one season change): no line of the
             groups (the five groups of 10 of the original). With --ref-build the same run of that program gives the
             same rules report, so the change does not touch another database.
+    saveload  (only with --only saveload) the summer game as tests/seasons/soak_run.py legs of 200 days: a save in
+            January 2003, a new program loads it and plays to the end of 2003/04; the summer checks over the two
+            legs' logs (the season change of 2003 comes after the load, so the loaded game keeps its three groups).
     summer-off  (only with --only summer-off) the summer game with RECOMP_TURKISH_GROUPS=off, to tell whether a fault
             of the summer run is the groups' own.
 A message box stops a run at once (its code is "box").
@@ -123,6 +126,12 @@ def check_summer(log, first, last):
                 if r[3] in everyone:
                     bad.append(f"{y + 1}: {r[3]} moved but is in the groups")
         before = {c: k for k in SIZES for c in groups.get((y, k), (0, []))[1]}
+        stay = sum(1 for k in SIZES for c in nxt[k] if c in before)
+        deal = re.findall(r"recomp: turkish groups: deal of \d+ clubs: (\d+) keep their group", text)
+        back = len([r for r in a_downs if r[0] == y])     # a club back from Category A keeps its old group too
+        if len(deal) <= y - first or not stay <= int(deal[y - first]) <= stay + back:
+            bad.append(f"{y + 1}: the deal kept {deal[y - first] if len(deal) > y - first else 'no'} clubs in their "
+                       f"group, but {stay} stay (a lost group tag after a load would show here)")
         moved = sorted(c for k in SIZES for c in nxt[k] if c in before and before[c] != k)
         if moved:
             bad.append(f"{y + 1}: clubs that stay in Category B changed group: {moved[:6]}")
@@ -141,6 +150,44 @@ def run_one(name, program, game, database, year, last, keep, env=None):
     return code, report, os.path.join(work, "stderr.txt")
 
 
+def run_saveload(program, game, database, keep):
+    """The save and load in the middle of 2002/03 (soak_run.py legs), then the checks of the summer run."""
+    import subprocess
+    work = os.path.join(keep, "saveload") if keep else tempfile.mkdtemp(prefix="cm0102-turkey-saveload-")
+    r = subprocess.run([sys.executable, os.path.join(HERE, "soak_run.py"), program, game, "--keep", work,
+                        "--start", "2002", "--last", "2003", "--leg-days", "200", "--changing-rules", "off",
+                        "--database", database, "--nations", ",".join(["all"] + OTHERS)],
+                       capture_output=True, text=True)
+    log = os.path.join(work, "legs.txt")
+    with open(log, "w", encoding="latin-1") as out:
+        for leg in ("leg00", "leg01"):
+            path = os.path.join(work, leg, "stderr.txt")
+            if os.path.exists(path):
+                with open(path, encoding="latin-1") as h:
+                    out.write(h.read())
+    bad = [] if r.returncode == 0 else [f"soak_run.py ended with code {r.returncode}: {r.stdout[-300:]}"]
+    if not os.path.exists(os.path.join(work, "leg00", "user", "samesave.sav")):
+        bad.append("leg 0 left no save")
+    leg1 = os.path.join(work, "leg01", "stderr.txt")
+    with open(leg1 if os.path.exists(leg1) else log, encoding="latin-1") as h:
+        if "recomp: turkish groups: 2002/03 Group A place 1 up" not in h.read():
+            bad.append("the loaded game (leg 1) made no season change of the groups")
+    return bad + check_summer(log, 2002, 2003), log
+
+
+def ref_with_tables(ref, program):
+    """The reference program in a folder beside the season tables of the build under test (a link to each), so the
+    two runs read the same rules and names tables (rules_report_check.rules_table looks next to the program): a
+    lone reference binary would run with no table, and its report would differ in every season name."""
+    tables = os.path.join(os.path.dirname(program), "seasons")
+    if os.path.isdir(os.path.join(os.path.dirname(ref), "seasons")) or not os.path.isdir(tables):
+        return ref
+    d = tempfile.mkdtemp(prefix="cm0102-turkey-ref-")
+    os.symlink(ref, os.path.join(d, os.path.basename(ref)))
+    os.symlink(tables, os.path.join(d, "seasons"))
+    return os.path.join(d, os.path.basename(ref))
+
+
 def main(argv):
     if len(argv) < 3:
         print(__doc__)
@@ -157,12 +204,22 @@ def main(argv):
             print("--database <Summer 2002 folder> is needed for the summer run")
             return 2
         runs.append(("summer", program, database, 2002, 2004))
+    if only == "saveload":
+        if not database:
+            print("--database <Summer 2002 folder> is needed for the saveload run")
+            return 2
+        bad, log = run_saveload(program, game, database, keep)
+        for f in bad:
+            print("FAIL  saveload: " + f)
+        print(f"saveload: log {log}")
+        print("PASS" if not bad else f"FAILED: {len(bad)}")
+        return 1 if bad else 0
     if only == "summer-off":                # the same game with the groups off: is a fault the groups' own?
         runs.append(("summer-off", program, database, 2002, 2004))
     if only in (None, "other"):
         runs.append(("other", program, None, 2002, 2003))
         if ref:
-            runs.append(("other-ref", os.path.abspath(ref), None, 2002, 2003))
+            runs.append(("other-ref", ref_with_tables(os.path.abspath(ref), program), None, 2002, 2003))
         else:
             print("the other run needs --ref-build <program of main>: it proves Q152 against it")
             return 2
