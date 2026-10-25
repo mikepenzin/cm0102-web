@@ -35,14 +35,12 @@
  * CONMEBOL matches of 5 August 2009 put Internazionale's internationals on duty for its Europa League tie of
  * 6 August (clash 21); real: CONCACAF 12 August, CONMEBOL 5 and 9 September. The Under 21 match of the same pair
  * comes the day before the senior match (ReserveComp::add_b_or_under21_fixture, the add_fixture call at 0x7e6a48),
- * so it is not moved here: on the senior match's own day it stops add_fixture's clash test at Database.cpp 13471
- * (0x53b964; seen when this code moved one). In a
- * season game, a fixture of two national sides from those calls, in a competition that is not a finals tournament
- * (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day within 10 days on which no side
- * of either nation (senior, B, Under 21) has a national match yet (fix_man_get_fixture_list_for_date 0x5ae6a0,
- * fixture types 0 and 1), and near which (two days either way) no fixture of those lists lacks a club. A side's two
- * matches of a window so take two days. With no such day the fixture keeps its date. Two-legged qualifying ties
- * (Cup::create_tie_fixtures) keep theirs, so a second leg never comes before its first. */
+ * so it is not moved here. In a season game, a fixture of two national sides from those calls, in a competition that
+ * is not a finals tournament (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day
+ * within 10 days on which no side of either nation (senior, B, Under 21) has a national match yet
+ * (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two matches of a window so take two
+ * days. With no such day the fixture keeps its date. Two-legged qualifying ties (Cup::create_tie_fixtures) keep
+ * theirs, so a second leg never comes before its first. */
 #include "win.h"
 #include "season_names.h"
 
@@ -56,11 +54,9 @@
 #define F_QSORT 0x00945333u
 #define F_ROW_ORDER 0x005cc610u
 #define F_FINALS 0x0076d940u             /* national_teams_is_finals_comp, stdcall (record) ret 4 */
-#define F_DAY_LIST 0x005ae6a0u           /* fix_man_get_fixture_list_for_date, thiscall (Date *, slice, type) */
-#define F_LIST_FREE 0x0068d040u
-#define F_DELETE 0x00944c94u
+#define F_DAY_LIST 0x005ae6a0u           /* fix_man_get_fixture_list_for_date, thiscall (Date *, slice, type): the
+                                         * store's own list of the day (0x5abfd7..0x5abfda), not a copy */
 #define FIXTURES 0xae2a58u
-#define ENTRY_TYPES 35                  /* the fixture lists of a day: one per type, the entry index of 0x48dd70 */
 #define CLUBS 0xae23b4u
 #define CLUB_COUNT 0xae235cu
 #define NATION_COUNT 0xae2350u
@@ -195,18 +191,13 @@ static int national_side(uint32_t club)
 }
 
 /* 1 when a side of the nation of club a or club b (senior, B or Under 21: club +0x53, as the friendly arranger
- * reads it at 0x5cbf59) has a national match (fixture types 0 and 1) on day doy of year y, or (holes 1) when a
- * fixture of any list of the day (types 0 to 34: the type is comp_active_key_nation_of_fixture's entry index, as
- * insert_fixture 0x5ab2e3..0x5ab301 files it) has no club at +0x1c or +0x20: add_fixture's clash test reads each
- * fixture of the days around a new one (find_fixture_clashes 0x5ad780, comp_active_key_nation_of_fixture 0x48dd70)
- * and stops at the box Database.cpp 13471 for a missing club (database_is_national_team 0x53b900, 0x53b90a);
- * seen when this code moved Canada v Panama of 2016 next to such a fixture. */
-static int side_busy(uint32_t a, uint32_t b, int y, int doy, int holes)
+ * reads it at 0x5cbf59) has a national match (fixture types 0 and 1) on day doy of year y. */
+static int side_busy(uint32_t a, uint32_t b, int y, int doy)
 {
     uint32_t na = rd32(g_mem, a + 0x53), nb = rd32(g_mem, b + 0x53);
     int busy = 0;
     for (int slice = 0; slice < 3 && !busy && !rt_unwinding; slice++)
-        for (int type = 0; type < (holes ? ENTRY_TYPES : 2) && !busy && !rt_unwinding; type++) {
+        for (int type = 0; type < 2 && !busy && !rt_unwinding; type++) {
             uint32_t saved_esp = cpu.esp;
             cpu.esp -= 16;
             uint32_t date = cpu.esp;
@@ -226,21 +217,9 @@ static int side_busy(uint32_t a, uint32_t b, int y, int doy, int holes)
                 if (!readable(f)) continue;
                 uint32_t h = rd32(g_mem, f + 0x1c), w = rd32(g_mem, f + 0x20);
                 uint32_t nh = readable(h) ? rd32(g_mem, h + 0x53) : 0, nw = readable(w) ? rd32(g_mem, w + 0x53) : 0;
-                if (holes) {
-                    if (!readable(h) || !readable(w)) busy = 1;
-                } else if (h == a || h == b || w == a || w == b || (nh && (nh == na || nh == nb)) ||
-                           (nw && (nw == na || nw == nb))) {
+                if (h == a || h == b || w == a || w == b || (nh && (nh == na || nh == nb)) ||
+                    (nw && (nw == na || nw == nb)))
                     busy = 1;
-                }
-            }
-            if (readable(list)) {
-                cpu.ecx = list;
-                rt_callback(F_LIST_FREE, 0, NULL);
-                if (rt_unwinding) return 1;
-                uint32_t del[1] = {list};
-                rt_callback(F_DELETE, 1, del);
-                if (rt_unwinding) return 1;
-                cpu = saved;
             }
         }
     return busy;
@@ -269,11 +248,8 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
         for (int sign = -1; sign <= 1; sign += 2) {
             int c = d + sign * dist, ok = 0;
             for (int k = 0; k < n; k++) ok |= doys[k] == c;
-            if (!ok || side_busy(home, away, y, c, 0)) continue;
-            int hole = 0;
-            for (int e = c - 2; e <= c + 2 && !hole && !rt_unwinding; e++) hole = side_busy(home, away, y, e, 1);
+            if (!ok || side_busy(home, away, y, c)) continue;
             if (rt_unwinding) return;
-            if (hole) continue;
             wr16(g_mem, fix + 0x2a, (uint16_t)c);
             if (getenv("RECOMP_SCREEN_LOG"))
                 fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s moves from day %d to the FIFA day %d of %d\n",
