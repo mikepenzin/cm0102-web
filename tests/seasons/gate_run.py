@@ -130,11 +130,23 @@ def stop(pid):
 
 
 def alive(pid):
+    """1 while the soak runs. A soak that this runner started is its child, and an ended child stays a zombie until
+    it is reaped: os.kill(pid, 0) succeeds for a zombie, so the runner waited for ever after its soaks ended and wrote
+    no result row (O369 soaks, run 8). So: reap it (waitpid WNOHANG), then the signal test, then the process state
+    of ps (a zombie of another parent, state Z). soak_of and my_soaks read the command lines of ps, which a zombie
+    no longer has, so the slot count, the skip of a running start and this test agree."""
+    try:
+        done, _ = os.waitpid(pid, os.WNOHANG)
+        if done == pid:
+            return False
+    except ChildProcessError:
+        pass                                # not a child of this runner: a soak of an earlier runner
     try:
         os.kill(pid, 0)
-        return True
     except ProcessLookupError:
         return False
+    state = lines(["ps", "-o", "stat=", "-p", str(pid)])
+    return bool(state) and not state[0].strip().startswith("Z")
 
 
 def at_end(err, end):
