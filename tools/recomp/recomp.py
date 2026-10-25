@@ -154,6 +154,43 @@ def main(argv):
     if args.all:
         entries += sorted(data_pointers(image, known_set))
 
+    gen = os.path.join(args.out, "gen")
+    os.makedirs(gen, exist_ok=True)
+    stats = collections.Counter()
+    unhandled = collections.Counter()
+    unhandled_at = []
+    features = collections.Counter()
+    mnemonics = collections.Counter()
+    referenced = set()
+
+    def names(addr):
+        referenced.add(addr)
+        return fname(addr)
+
+    # Each function is translated as soon as it is analysed, and its decoded instructions are then dropped (from the
+    # Function and from the analyser's decode cache): the capstone instructions of the whole game held at once took
+    # 8.3 to 8.9 GB, more than the 8 GiB of the release's Linux container (gate (d), the dry run of a2330b34 was
+    # "Killed" at recomp.stamp). A Function keeps its calls, tails, returns and bad, which the analysis of other
+    # functions reads (Analyzer.noreturn); the translation of a function reads only its own instructions, so the C
+    # text does not change. The shards are written from the bodies in address order, as before.
+    bodies = {}
+    per = {}
+    t_translate = 0.0
+
+    def translate(e, f):
+        nonlocal t_translate
+        t = time.time()
+        # A wrapped function: the translation is o_<address>, and the runtime's f_<address> calls it.
+        w = FunctionWriter(f, image, names, own_name=oname(e) if e in wrapped else None)
+        bodies[e] = w.write()
+        # The figures of the report, added up in address order after the loop (the order of the old run).
+        per[e] = (len(f.insns), w.handled, len(f.bad), len(f.tables),
+                  collections.Counter(insn.mnemonic for insn in f.insns.values()), w.unhandled, w.features)
+        for a in f.insns:
+            an.forget(a)
+        f.insns = {}
+        t_translate += time.time() - t
+
     funcs = {}
     resume = set()
     work = list(dict.fromkeys(entries))
@@ -180,41 +217,22 @@ def main(argv):
                 work.append(a + insn.size)
         if not args.no_follow:
             work.extend(t for t in (f.calls | f.tails) if t not in funcs)
-    t_analysis = time.time() - t_start
-
-    # Translate
-    t0 = time.time()
-    gen = os.path.join(args.out, "gen")
-    os.makedirs(gen, exist_ok=True)
-    stats = collections.Counter()
-    unhandled = collections.Counter()
-    unhandled_at = []
-    features = collections.Counter()
-    mnemonics = collections.Counter()
-    referenced = set()
-
-    def names(addr):
-        referenced.add(addr)
-        return fname(addr)
-
-    bodies = {}
-    for e in sorted(funcs):
-        f = funcs[e]
-        # A wrapped function: the translation is o_<address>, and the runtime's f_<address> calls it.
-        w = FunctionWriter(f, image, names, own_name=oname(e) if e in wrapped else None)
-        bodies[e] = w.write()
+        translate(e, f)
+    for e in sorted(per):
+        n, handled, bad, tables, mn, unh, feats = per[e]
         stats["functions"] += 1
-        stats["instructions"] += len(f.insns)
-        stats["handled"] += w.handled
-        stats["decode_stops"] += len(f.bad)
-        stats["jump_tables"] += len(f.tables)
-        for insn in f.insns.values():
-            mnemonics[insn.mnemonic] += 1
-        for a, text, why in w.unhandled:
+        stats["instructions"] += n
+        stats["handled"] += handled
+        stats["decode_stops"] += bad
+        stats["jump_tables"] += tables
+        mnemonics.update(mn)
+        for a, text, why in unh:
             unhandled[text.split()[0]] += 1
             unhandled_at.append((a, text, why))
-        for x in w.features:
+        for x in feats:
             features[x] += 1
+    t_analysis = time.time() - t_start - t_translate
+    t0 = time.time()
 
     # Functions that are called but neither translated nor replaced (with --no-follow).
     missing = sorted(a for a in referenced if a not in funcs and a not in replaced)
@@ -279,7 +297,7 @@ def main(argv):
         for name, (a, _) in sorted(CALL_SITES.items()):
             out.write(f"const uint32_t rt_site_{name} = 0x{a + 5:x}u;\n")
     files.append(os.path.join(gen, "table.c"))
-    t_translate = time.time() - t0
+    t_translate += time.time() - t0
     if args.all:
         lost = sorted((set(PATCHES) | set(INSNS) | TRUE_WIDTH) - PATCHED)
         if lost:
