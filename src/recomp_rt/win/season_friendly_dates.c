@@ -1,4 +1,4 @@
-/* The August date of international friendlies in a season game (row A18 of the 0.6.0 release test, O375).
+/* The July and August dates of international friendlies in a season game (row A18 of the 0.6.0 release test, O375).
  *
  * Friendly::build_international_date_table 0x5ca4f0 (called once, from Friendly::Friendly 0x5c1f80 at 0x5c2180)
  * writes 110 rows of 0x14 bytes at [this + 0x34ec], count [this + 0x34f0]: +0 a weekday code, +1 the day, +2 the
@@ -10,17 +10,21 @@
  * continent (docs/research/2026-10-18-national-team-comps.md, section 7).
  *
  * The August rows (South America 16/8, Africa 17/8 and 18/8, North America 25/8) fall on a Wednesday from about 13
- * to 21 August. In a season game that is often a qualifying match day of the Champions League or the Europa League,
+ * to 21 August, the July rows (Oceania 10/7 and 25/7, Africa 24/7, North America 25/7, South America 26/7) in late
+ * July. In a season game that is often a qualifying match day of the Champions League or the Europa League,
  * and NationalTeams::can_schedule_club_fixture 0x776fc0 then refuses the club's tie when more than two of its
  * players are on international duty within a day: FIXTURE_MANAGER::find_fixture_clashes 0x5ad780 gives clash 21
  * (0x5adb6b), and add_fixture 0x5aa680 moves the tie a week (0x5ab510 at 0x5aa96e). In a 2006 game (gate (b) run on
  * eee3e71a, 2009/10) the Champions League third qualifying round tie Aalborg v Borussia Dortmund moved from 19 to
- * 26 August, so its losers reached the Europa League after the play-off draw was due (row A18, "drawn late").
+ * 26 August, so its losers reached the Europa League after the play-off draw was due (row A18, "drawn late"); in
+ * 2016/17 the second qualifying round tie Keflavik v Espanyol moved from 27 July and each round after it followed.
  *
  * The real FIFA calendar has one August date, a Wednesday, up to 2013, and none from 2014 (results of that day
  * counted in eloratings.net and the martj42 international results list, both read 25 October 2026; for 2013 and
- * 2014 also the FIFA International Match Calendar 2013-18). In a season game each August row gets the real date of
- * its year, or none: from 2014 its continent becomes -1, which no nation has, so the arranger pairs no one on it.
+ * 2014 also the FIFA International Match Calendar 2013-18), and no July date in any year from 2001 to 2026 (at most
+ * three friendlies on a July day in both lists). In a season game each August row gets the real date of its year,
+ * or none, and each July row none: such a row's continent becomes -1, which no nation has, so the arranger pairs no
+ * one on it.
  * The rows are sorted again. The base game keeps the original's table (Q152). */
 #include "win.h"
 #include "season_names.h"
@@ -31,6 +35,7 @@
 #define ROWS 0x34ecu
 #define ROW_COUNT 0x34f0u
 #define ROW_SIZE 0x14u
+#define JULY 6
 #define AUGUST 7
 #define F_DATE 0x00549f70u              /* Date::Date, thiscall (day, month 0 to 11, year, weekday; -1 the date) */
 #define F_QSORT 0x00945333u
@@ -58,8 +63,8 @@ RT_WRAP(005cc510, friendly_set_row_dates)
     Cpu saved = cpu;
     for (int i = 0; i < count && !rt_unwinding; i++) {
         uint32_t row = rows + ROW_SIZE * (uint32_t)i;
-        if (g_mem[row + 2] != AUGUST) continue;
-        int year = (int16_t)rd16(g_mem, row + 3 + 2), day = fifa_august_day(year);
+        if (g_mem[row + 2] != AUGUST && g_mem[row + 2] != JULY) continue;
+        int year = (int16_t)rd16(g_mem, row + 3 + 2), day = g_mem[row + 2] == AUGUST ? fifa_august_day(year) : 0;
         if (!day) {
             wr32(g_mem, row + 0xc, 0xffffffffu);
             dropped++;
@@ -78,6 +83,6 @@ RT_WRAP(005cc510, friendly_set_row_dates)
     if (rt_unwinding) return;
     cpu = saved;
     if (getenv("RECOMP_SCREEN_LOG"))
-        fprintf(stderr, "recomp: friendlies: %d August rows on the real FIFA date, %d August rows not used (no FIFA "
-                        "date)\n", moved, dropped);
+        fprintf(stderr, "recomp: friendlies: %d August rows on the real FIFA date, %d July and August rows not used "
+                        "(no FIFA date)\n", moved, dropped);
 }
