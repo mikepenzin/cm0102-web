@@ -13,7 +13,14 @@
  * from the nearest division above. So the cup keeps its count and the class's round table. A domestic cup is one
  * whose entrants are all of one nation (club +0x53); the UEFA cups, whose empty places take clubs later
  * (season_uefa_qual.c put_club), are not, and a cup with no club yet (it takes its clubs later, for example the FA
- * Cup) is left. It writes a log line for each cup with empty places. The base game (2001/02, changing rules off)
+ * Cup) is left. It writes a log line for each cup with empty places, except the UEFA Cup class (vtable 0x970790:
+ * the UEFA Cup, the Europa League and, as a second object, the Conference League). Its empty places are those its
+ * hand-overs fill later: the Champions League and Europa League losers (season_uefa_qual.c put_losers), the
+ * play-off hand-over (0x585a02), the group thirds and, to 2008/09, the Intertoto Cup winners. In gate (b) on
+ * eee3e71a the line came once a season in every start, and every edition then drew its group stage or league phase
+ * full (40, 48, 32 or 36 clubs) and had a winner. A place that stays empty shows at the draw instead ("UEFA Cup
+ * groups: N clubs, not M" and "league phase: N clubs, not 36" in season_uefa_cup.c) and in the report's
+ * uefa rows, which uefa_access_run.py checks. The base game (2001/02, changing rules off)
  * and RECOMP_SEASON_CODE=off get none of it (Q152, Q342). */
 #include "win.h"
 #include "season.h"
@@ -26,6 +33,7 @@
 
 #define CUP_TEAMS 0x3eu
 #define CUP_TEAM_LIST 0xa7u
+#define UEFA_CUP_VTABLE 0x00970790u
 #define ENTRY 6u
 #define CLUBS 0xae23b4u
 #define CLUB_COUNT 0xae235cu
@@ -89,6 +97,7 @@ void season_cup_fill_entrants(uint32_t cup)
     if (!empty) return;
     if (empty == count) return;                          /* a cup that takes its clubs later */
     if (nation < 0 || other) {
+        if (rd32(g_mem, cup) == UEFA_CUP_VTABLE) return;   /* its hand-overs fill the places later (see above) */
         fprintf(stderr, "recomp: cup entrants: %s (%.40s) %d: %d of %d places empty, not filled (clubs of %d other "
                 "nations)\n", season_change_file(cup), win_str(rec + 4), (int16_t)rd16(g_mem, cup + 0x40), empty, count,
                 other);
