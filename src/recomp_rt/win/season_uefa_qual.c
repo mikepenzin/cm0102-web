@@ -51,6 +51,7 @@
 #include "season.h"
 #include "season_uefa.h"
 #include "season_cups.h"
+#include "season_names.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -230,6 +231,60 @@ static const Level EL_LEVELS[] = {
 };
 #define CL_N ((int)(sizeof CL_LEVELS / sizeof CL_LEVELS[0]))
 #define EL_N ((int)(sizeof EL_LEVELS / sizeof EL_LEVELS[0]))
+
+/* The dates of a running season (row A18 of the 0.6.0 release test, O375). The dates above fit a new game, which
+ * starts on a Saturday from 10 to 16 July. A running game makes the season's tables at the season change, on day
+ * 171 (20 or 21 June), so its qualifying rounds can keep the real calendar's shape: Q1 from about 1 July, a week
+ * between rounds, the August FIFA date free between Q3 and the play-offs, and the play-offs over by 30 August,
+ * before the September window. With the dates above, every Wednesday from mid-July to early September held a round:
+ * the August friendly date (season_friendly_dates.c) fell on the Champions League Q3 second leg or the Q2/Q3 legs
+ * around it, and the Europa League play-off second legs (first week of September) on the September window. A club
+ * with more than two players on duty within a day then has its tie moved a week (can_schedule_club_fixture
+ * 0x776fc0, clash 21 in find_fixture_clashes 0x5ad780, the move at 0x5aa96e), and a Champions League Q3 tie moved a
+ * week brought its losers to the Europa League after the play-off draw was due (gate (b) run on eee3e71a: 2009/10,
+ * 2015/16, 2016/17, 2027/28, 2028/29). Real 2009/10: Q1 30 June and 7 July, Q2 14 and 21 July, Q3 28 July and
+ * 4 August, FIFA date 12 August, play-offs 18 and 25 August (Europa League play-offs 20 and 27 August); real
+ * 2025/26: Q1 8 July, Q3 5 and 12 August, play-offs 19 and 26 August (en.wikipedia.org pages "2009-10 UEFA Champions
+ * League qualifying", "2009-10 UEFA Europa League qualifying", "2025-26 UEFA Champions League qualifying", read
+ * 25 October 2026). The dates of a running season, each a whole
+ * number of weeks from the others, so the weekday move keeps their order:
+ *   Champions League: Q1 1 July, Q2 15 July, Q3 29 July, play-offs 19 August (draws 6 days before). A season whose
+ *   Champions League has a preliminary round (2018/19 to 2023/24: semi-finals 26 June, final 29 June) starts Q1 on
+ *   8 July, so Q1 comes 3 or more days after the final: Q2 22 July, Q3 5 August, play-offs 19 August (no August
+ *   FIFA date in those seasons).
+ *   Europa League and Conference League: a day after the Champions League round of the same name (draws 7 days
+ *   before). With a Europa League preliminary round (2018/19 to 2020/21) that round plays 25 June and 2 July and
+ *   Q1 starts 9 July.
+ * The last legs: Champions League play-off second legs on the Wednesday nearest 26 August (23 to 29 August), Europa
+ * and Conference League a day later, before the first September FIFA date of every season from 2009 (28 August
+ * 2017 is a Monday window start; its matches were from 31 August). The start season of a game keeps the dates above. */
+typedef struct {
+    int code;
+    int draw[2], match[2];              /* day, month 0 to 11 */
+} RunDate;
+static const RunDate RUN_CL[] = {{250, {25, 5}, {1, 6}}, {260, {9, 6}, {15, 6}}, {270, {23, 6}, {29, 6}},
+                                 {220, {13, 7}, {19, 7}}};
+static const RunDate RUN_CL_PR[] = {{250, {2, 6}, {8, 6}}, {260, {16, 6}, {22, 6}}, {270, {30, 6}, {5, 7}},
+                                    {220, {13, 7}, {19, 7}}};
+static const RunDate RUN_EL[] = {{250, {25, 5}, {2, 6}}, {260, {9, 6}, {16, 6}}, {270, {23, 6}, {30, 6}},
+                                 {220, {13, 7}, {20, 7}}};
+static const RunDate RUN_EL_PR[] = {{240, {21, 5}, {25, 5}}, {250, {2, 6}, {9, 6}}, {260, {16, 6}, {23, 6}},
+                                    {270, {30, 6}, {6, 7}}, {220, {13, 7}, {20, 7}}};
+
+/* d: draw day, draw month, match day, match month; replaced in a running season. */
+static void run_dates(char comp, const SeasonUefa *r, int code, int year, int d[4])
+{
+    if (!r || !season_game_changes() || year == season_start_year()) return;
+    int cl_pr = season_uefa_code_clubs(r, 'c', SEASON_UEFA_CL_PR) > 0;
+    int el_pr = comp == 'e' && season_uefa_code_clubs(r, 'e', SEASON_UEFA_EL_PR) > 0;
+    const RunDate *t = comp == 'c' ? (cl_pr ? RUN_CL_PR : RUN_CL) : (el_pr || cl_pr ? RUN_EL_PR : RUN_EL);
+    int n = comp == 'c' ? 4 : (el_pr || cl_pr ? 5 : 4);
+    for (int k = 0; k < n; k++)
+        if (t[k].code == code) {
+            d[0] = t[k].draw[0], d[1] = t[k].draw[1], d[2] = t[k].match[0], d[3] = t[k].match[1];
+            return;
+        }
+}
 
 typedef struct {
     int n;                              /* entrants of the list */
@@ -492,7 +547,9 @@ uint32_t season_uefa_cl_qual_table(uint32_t cl, int *rounds_out, uint32_t *name_
         wr16(g_mem, rec + 0x1e, (uint16_t)L.first[i]);
         g_mem[rec + 0x21] = (uint8_t)lv->legs;
         g_mem[rec + 0x22] = (uint8_t)lv->gap;
-        set_dates(t, i, lv->draw[0], lv->draw[1], lv->match[0], lv->match[1], lv->weekday, year);
+        int d[4] = {lv->draw[0], lv->draw[1], lv->match[0], lv->match[1]};
+        run_dates('c', r, lv->round_code, (int)year, d);
+        set_dates(t, i, d[0], d[1], d[2], d[3], lv->weekday, year);
     }
     game_free(orig);
     if (rt_unwinding || !t) return 0;
@@ -769,7 +826,9 @@ static uint32_t cup_qual_table(uint32_t uc, char comp, uint32_t rec, int *rounds
         wr16(g_mem, x + 0x1e, (uint16_t)L.first[i]);
         g_mem[x + 0x21] = (uint8_t)lv->legs;
         g_mem[x + 0x22] = (uint8_t)lv->gap;
-        set_dates(t, i, lv->draw[0], lv->draw[1], lv->match[0], lv->match[1], lv->weekday, year);
+        int d[4] = {lv->draw[0], lv->draw[1], lv->match[0], lv->match[1]};
+        run_dates(comp, r, lv->round_code, (int)year, d);
+        set_dates(t, i, d[0], d[1], d[2], d[3], lv->weekday, year);
     }
     if (rt_unwinding || !t) return 0;
     season_uefa_no_away_goals(t, L.rounds, (int)year);
