@@ -126,6 +126,11 @@ def check_summer(log, first, last):
                 if r[3] in everyone:
                     bad.append(f"{y + 1}: {r[3]} moved but is in the groups")
         before = {c: k for k in SIZES for c in groups.get((y, k), (0, []))[1]}
+        stay = sum(1 for k in SIZES for c in nxt[k] if c in before)
+        deal = re.findall(r"recomp: turkish groups: deal of \d+ clubs: (\d+) keep their group", text)
+        if len(deal) <= y - first or int(deal[y - first]) != stay:
+            bad.append(f"{y + 1}: the deal kept {deal[y - first] if len(deal) > y - first else 'no'} clubs in their "
+                       f"group, but {stay} stay (a lost group tag after a load would show here)")
         moved = sorted(c for k in SIZES for c in nxt[k] if c in before and before[c] != k)
         if moved:
             bad.append(f"{y + 1}: clubs that stay in Category B changed group: {moved[:6]}")

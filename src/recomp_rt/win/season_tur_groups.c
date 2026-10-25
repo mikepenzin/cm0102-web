@@ -99,6 +99,7 @@
 #define F_PICK 0x004afbd0u          /* cdecl (list, count, need): the best `need` clubs first (0x8fe40b) */
 #define F_MOVE 0x006830b0u          /* League::move_club_to_division, thiscall (club, record, 1), ret 0xc */
 #define F_RELEGATE 0x006831a0u      /* League::relegate_club_to_division, thiscall (club, record, 1), ret 0xc */
+#define F_SENIOR 0x00540a50u        /* the senior side of a club, cdecl (club, &flag, 1) */
 #define F_PROMOTE 0x00689c80u       /* league_promote_and_relegate (upper, lower, expire, pairwise, up, down) */
 #define F_SCHEDULE 0x008ff7e0u      /* TurSecondB::create_schedule (stage, &count, &code, &flag), ret 0x10 */
 #define F_POSITIONS3 0x007d2cd0u    /* PorSecondB::set_predicted_positions: own table and slots 0, 1 */
@@ -762,7 +763,7 @@ RT_WRAP(008fe3a0, tur_exchange)
         return;
     }
     int npool = 0, c = club_count();
-    uint32_t pool = game_malloc(4u * (uint32_t)(c > 0 ? c : 1));
+    uint32_t pool = game_malloc(4u * (uint32_t)(c + 1));            /* every club, then a scratch word */
     if (!pool && !rt_unwinding) fprintf(stderr, "recomp: turkish groups: no memory for the pool: no club comes up\n");
     for (int i = 0; pool && i < c; i++) {
         uint32_t club = club_at(i);
@@ -770,7 +771,8 @@ RT_WRAP(008fe3a0, tur_exchange)
             wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
     }
     /* A Lower Division too small for the free places: the Turkish clubs with no division join the pool (as Q523's
-     * pools of the new tiers), so the division keeps its size. */
+     * pools of the new tiers), so the division keeps its size; a reserve side whose senior side plays in the division
+     * stays out, as there (season_divisions.c group_pool_club, after 0x8504c9..0x8504ec). */
     uint32_t nation = table_clubs(t[0]) ? rd32(g_mem, row_club(t[0], 0) + CLUB_NATION) : 0;
     int relegated = 0;
     for (int k = 0; k < GROUPS; k++)
@@ -781,10 +783,15 @@ RT_WRAP(008fe3a0, tur_exchange)
     int free_places = want - (division_clubs(b) - relegated);     /* the places left after the relegation */
     for (int i = 0; pool && nation && npool < free_places && i < c; i++) {
         uint32_t club = club_at(i);
-        if (!rd32(g_mem, club + CLUB_DIVISION) && rd32(g_mem, club + CLUB_NATION) == nation) {
-            wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
-            spare++;
-        }
+        if (rd32(g_mem, club + CLUB_DIVISION) || rd32(g_mem, club + CLUB_NATION) != nation) continue;
+        uint32_t flag_at = pool + 4u * (uint32_t)c;
+        wr32(g_mem, flag_at, 0);
+        uint32_t a[3] = {club, flag_at, 1};
+        uint32_t senior = call_cdecl(F_SENIOR, 3, a);
+        if (rt_unwinding) return;
+        if (senior && !rd32(g_mem, flag_at) && rd32(g_mem, senior + CLUB_DIVISION) == b) continue;
+        wr32(g_mem, pool + 4u * (uint32_t)npool++, club);
+        spare++;
     }
     for (int k = 0; k < GROUPS && !rt_unwinding; k++)
         for (int i = 0; i < table_clubs(t[k]) && !rt_unwinding; i++) {
