@@ -23,7 +23,8 @@
  * The fix, in a season game: each row takes the real FIFA match day of its month and year that lies nearest to its
  * own day (season_fifa_days, from the results of each day counted in two lists, season_fifa_days_table.c). A month
  * with no FIFA match day that year (July in every year, August from 2014, January and most Decembers) gives the row
- * none: its continent becomes -1, which no nation has, so the arranger pairs no one on it. After the last year of
+ * none: its continent becomes -2, which no continent has, so the arranger pairs no one on it. (-1 would be wrong:
+ * the arranger reads a continent of -1 as every continent, 0x5cc060..0x5cc070.) After the last year of
  * the list, the days of its last year move on by 364 days a year (plus 7 when that drifts over 3 days), as the UEFA
  * dates do (O381). The rows are sorted again. The base game keeps the original's table (Q152). */
 #include "win.h"
@@ -38,6 +39,7 @@
 #define F_DATE 0x00549f70u              /* Date::Date, thiscall (day, month 0 to 11, year, weekday; -1 the date) */
 #define F_QSORT 0x00945333u
 #define F_ROW_ORDER 0x005cc610u
+#define NO_CONTINENT 0xfffffffeu        /* -2: no continent has it (-1 is every continent at 0x5cc060) */
 
 typedef struct {
     short year;
@@ -115,7 +117,7 @@ RT_WRAP(005cc510, friendly_set_row_dates)
         if (month < 1 || month > 12) continue;
         int day = fifa_day(year, month, g_mem[row + 1]);
         if (!day) {
-            wr32(g_mem, row + 0xc, 0xffffffffu);
+            wr32(g_mem, row + 0xc, NO_CONTINENT);
             dropped++;
             continue;
         }
