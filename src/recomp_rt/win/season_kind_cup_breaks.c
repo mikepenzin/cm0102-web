@@ -331,10 +331,12 @@ static void log_fixture_years(const char *when)
  * at +0x2a, as insert_fixture 0x5ab259 and 0x5ab2f0 read them). Test log only: a fixture of the year 2999 or later,
  * or any fixture while a constructor runs with SEASON_CUPS_NEVER, gives a line "fixture added", which
  * tests/seasons/cup_breaks_run.py does not allow. The call runs the original through fixture_season_end.c (O288). */
+void season_playoffs_fixture_log(uint32_t f);
 void o_005aa680(void);
 RT_WRAP(005aa680, cup_breaks_add_fixture)
 {
     season_records_fixture_log(rt_arg(0), rd32(g_mem, cpu.esp));     /* test log of slice 15b's fix */
+    season_playoffs_fixture_log(rt_arg(0));
     if (logging() && season_code_on()) {
         uint32_t f = rt_arg(0);
         int year = f >= 0x10000u && f < 0xfff00000u ? (int16_t)rd16(g_mem, f + 0x28) : 0;

@@ -355,6 +355,37 @@ RT_WRAP(0051a150, playoff_level_test)
     o_0051a150();
 }
 
+/* RECOMP_TEST_PLAYOFF_FIXTURES=1 (tests only), called from the add_fixture wrap (season_kind_cup_breaks.c): the first
+ * match day of each season of the First Division, the Second Division and the Copa del Rey of Spain, to compare a
+ * season whose change waited for the play-off with one that did not (the fixture's competition record +0x14, its
+ * year +0x28 and day +0x2a). A line each time an earlier day arrives for a competition and season. */
+void season_playoffs_fixture_log(uint32_t f)
+{
+    static int on = -1;
+    static struct { uint32_t rec; int key, when; } seen[96];
+    static int n;
+    if (on < 0) on = getenv("RECOMP_TEST_PLAYOFF_FIXTURES") && *getenv("RECOMP_TEST_PLAYOFF_FIXTURES") == '1';
+    if (!on || !readable(f)) return;
+    uint32_t rec = rd32(g_mem, f + 0x14);
+    if (!readable(rec)) return;
+    const char *name = (const char *)g_mem + rec + 4;
+    if (strncmp(name, "Primera", 7) && strncmp(name, "Segunda Divisi", 14) && strncmp(name, "Copa del Rey", 12) &&
+        strncmp(name, "Spanish", 7))
+        return;
+    int y = (int16_t)rd16(g_mem, f + 0x28), d = (int16_t)rd16(g_mem, f + 0x2a);
+    if (y < 1990 || y > 2100 || d < 0 || d > 366) return;
+    int key = d >= 180 ? y : y - 1, when = y * 400 + d, i;
+    for (i = 0; i < n; i++)
+        if (seen[i].rec == rec && seen[i].key == key) break;
+    if (i == n) {
+        if (n == 96) return;
+        seen[n].rec = rec; seen[n].key = key; seen[n].when = 1 << 30; n++;
+    }
+    if (when >= seen[i].when) return;
+    seen[i].when = when;
+    fprintf(stderr, "recomp: fixtures: %.30s season %d: first match day %d of %d\n", name, key, d, y);
+}
+
 /* Builds the play-off stage of a marked league on the day its table is complete. */
 static void build_stage(uint32_t obj)
 {
@@ -369,7 +400,15 @@ static void build_stage(uint32_t obj)
                                      row_club(obj, rows[1])};
     for (int i = 0; i < PLAYOFF_CLUBS; i++)
         if (!readable(clubs[i])) left = -1;
-    if (left >= 0 && left <= PLAYOFF_DAYS + (two ? FINAL_LEG_DAYS : 0)) {
+    /* The play-off needs PLAYOFF_DAYS (+ the second leg of a two-leg final) after the table. When it ends after the
+     * update day, the season change waits for it (season_playoffs_hold, up to WAIT_DAYS late, as in 2012: the Segunda's
+     * final came 4 days after Spain's update day 170). The real Segunda ends on the first weekend of June and its
+     * play-off final comes in the third week (2013/14: the league on 8 June, the final legs on 19 and 22 June), so
+     * the play-off normally ends after day 170 and the early exit that stood here (gate (b), eee3e71a: 7 seasons of
+     * Spain with 12 to 15 days left, O151/O259) skipped a play-off that the wait covers. Now only a play-off that
+     * the wait cannot cover goes up directly: a net that does not act at the real dates. */
+    int span = PLAYOFF_DAYS + (two ? FINAL_LEG_DAYS : 0);
+    if (left >= 0 && (getenv("RECOMP_TEST_PLAYOFF_OLD_NOTIME") ? span >= left : span > left + WAIT_DAYS)) {
         fprintf(stderr, "recomp: playoffs: %s %u: %d days to the season change, no time for the play-off; place %d "
                         "goes up\n", file, year, left, rows[0] + 1);
         promote_first(obj, rows[0]);
