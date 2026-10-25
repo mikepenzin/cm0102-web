@@ -19,6 +19,7 @@ ends the program after the end report of --last (season_report.c).
 The checks of each leg:
     - no message box of the game in its log (RECOMP_SCREEN_LOG prints "recomp: message box from", waits.c): the
       script stops the game by its PID at the first one, so a box does not wait for the timeout
+    - no line of the season change net (O288, season_playoffs.c): a league that was not complete on its update day
     - the program ends with code 0
     - a leg that must save leaves samesave.sav in its user folder
 At the end: the last leg's rules report holds the end of --last, and over the reports of all legs every
@@ -45,6 +46,18 @@ import smoke_run  # noqa: E402
 
 HOLD = "/Users/max/Projects/cm0102/run-logs/HOLD"
 BOX = "recomp: message box from"
+NET = "recomp: season change net:"     # O288's net (season_playoffs.c entry_unfinished): it must never act
+
+
+def first_net(log):
+    try:
+        with open(log, encoding="latin-1") as f:
+            for line in f:
+                if line.startswith(NET):
+                    return line.strip()
+    except OSError:
+        pass
+    return None
 
 
 def arg(argv, name, default=None):
@@ -176,8 +189,11 @@ def main(argv):
             code, took, box = load_leg(o, work, save, save_days)
         saved = os.path.join(work, "user", smoke_run.SAVE_NAME)
         result = "ok"
+        net = first_net(os.path.join(work, "stderr.txt"))
         if box:
             result = "box"
+        elif net:
+            result, box = "net", net
         elif code != 0:
             result = f"code {code}"
         elif save_days and not os.path.exists(saved):

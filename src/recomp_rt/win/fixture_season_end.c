@@ -78,7 +78,9 @@ static const MoveSite SITES[] = {
     {0x005aaa2au, 0x005aaa38u, 0x005aaa4bu, "clash"},               /* add_fixture moves a weaker stored one: 0x5aaa25, 0x5aaa33, 0x5aaa46 */
     {0x005ae561u, 0x005ae56fu, 0x005ae57eu, "same-day clash"},      /* resolve_same_day_clash: 0x5ae55c, 0x5ae56a, 0x5ae579 */
     {0x005ae5ddu, 0x005ae5ebu, 0x005ae5fau, "same-day clash"},      /* resolve_same_day_clash: 0x5ae5d8, 0x5ae5e6, 0x5ae5f5 */
+    {0, 0x005aeddbu, 0x005aedf1u, "nearby"},                        /* move_nearby_club_fixtures, no 0x5ab510 */
 };
+#define SITE_NEARBY 5
 #define SITE_COUNT ((int)(sizeof SITES / sizeof SITES[0]))
 
 #define DATE_NEW 0x00549ef0u            /* Date::Date (day of the year, year), ret 8 */
@@ -238,6 +240,81 @@ RT_WRAP(005ab510, fixture_new_date)
     fprintf(stderr, "recomp: fixtures: a match of %.40s stays on day %d of %d (no free day before its season change "
                     "on day %d; the %s move gave day %d of %d)\n",
             name, day, year, last, SITES[site].what, new_day, new_year);
+}
+
+/* The moves by one day that set the date with no call of 0x5ab510 (den-stall-2, lead 4 under O259):
+ *   - move_nearby_club_fixtures 0x5ae9d0 moves a club's fixture two days after a new international one a day later
+ *     (0x5aed12: add_days 1 on a copy at its esp+0x38, the old one at esp+0x88), then remove_fixture (0x5aedc8),
+ *     add_fixture (copy, 0) (0x5aedd6) and the moved news (0x5aedec). Its branch for a fixture two days before
+ *     moves it a day earlier (0x5aeb5f, sub_days), which cannot cross.
+ *   - League::move_fixtures_for_tv 0x685640 sets a TV date at its esp+0x1c and esp+0x1e (0x685894..0x685964, a
+ *     weekday near the old date), copies the fixture to esp+0x50 (0x685aae), sends the TV news to both clubs
+ *     (News::send_to_club_manager 0x7861e0 at 0x685bf3 and 0x685c0b), then removes the fixture (0x685c23), writes
+ *     the TV date into the copy (0x685c28..0x685c3a) and adds it with flag 1 (0x685c79).
+ * Either can take a match on the day before its competition's update day to that day or later. A move of one day has
+ * no free day between, so the match keeps its date: the nearby move gets the old date back in its copy at the
+ * remove, with no news and no clash moves at its add; the TV move gets the old date back in its date variable at the
+ * first TV news, and neither TV news is sent. */
+static int tv_kept;
+
+void o_005abc30(void);
+RT_WRAP(005abc30, fixture_remove)
+{
+    uint32_t ret = rd32(g_mem, cpu.esp), old = rt_arg(0);
+    if (ret != 0x005aedcdu || !season_game_changes() || !readable(old)) {
+        o_005abc30();
+        return;
+    }
+    uint32_t copy = cpu.esp + 8u + 0x38u;               /* the caller's esp after the call, + 0x38 */
+    int year = (int16_t)rd16(g_mem, old + FIX_YEAR), day = (int16_t)rd16(g_mem, old + FIX_DAY);
+    int new_year = (int16_t)rd16(g_mem, copy + FIX_YEAR), new_day = (int16_t)rd16(g_mem, copy + FIX_DAY);
+    int last = update_day(rd32(g_mem, old + FIX_COMP));
+    int last_year = day < last ? year : year + 1;
+    int today_year = (int16_t)rd16(g_mem, TODAY + 2u), today = (int16_t)rd16(g_mem, TODAY);
+    o_005abc30();
+    if (rt_unwinding || last < 0 || before(new_year, new_day, last_year, last) || !before(today_year, today, year, day))
+        return;
+    wr16(g_mem, copy + FIX_YEAR, (uint16_t)year);
+    wr16(g_mem, copy + FIX_DAY, (uint16_t)day);
+    g_mem[copy + FIX_SLICE] = g_mem[old + FIX_SLICE];
+    kept = copy;
+    kept_site = SITE_NEARBY;
+    fprintf(stderr, "recomp: fixtures: a match of %.40s stays on day %d of %d (the nearby move gave day %d of %d, on or "
+                    "after its season change on day %d)\n", win_str(rd32(g_mem, old + FIX_COMP) + 4), day, year,
+            new_day, new_year, last);
+}
+
+void o_007861e0(void);
+RT_WRAP(007861e0, fixture_tv_news)
+{
+    uint32_t ret = rd32(g_mem, cpu.esp);
+    if ((ret != 0x00685bf8u && ret != 0x00685c10u) || !season_game_changes()) {
+        o_007861e0();
+        return;
+    }
+    uint32_t frame = cpu.esp + 12u, fix = frame + 0x50u;       /* the caller's esp after the call (ret 8) */
+    if (ret == 0x00685bf8u) {
+        tv_kept = 0;
+        int year = (int16_t)rd16(g_mem, fix + FIX_YEAR), day = (int16_t)rd16(g_mem, fix + FIX_DAY);
+        int new_year = (int16_t)rd16(g_mem, frame + 0x1eu), new_day = (int16_t)rd16(g_mem, frame + 0x1cu);
+        int last = update_day(rd32(g_mem, fix + FIX_COMP));
+        int last_year = day < last ? year : year + 1;
+        int today_year = (int16_t)rd16(g_mem, TODAY + 2u), today = (int16_t)rd16(g_mem, TODAY);
+        if (last >= 0 && !before(new_year, new_day, last_year, last) && before(today_year, today, year, day)) {
+            wr16(g_mem, frame + 0x1eu, (uint16_t)year);
+            wr16(g_mem, frame + 0x1cu, (uint16_t)day);
+            tv_kept = 1;
+            fprintf(stderr, "recomp: fixtures: a match of %.40s stays on day %d of %d (the TV move gave day %d of %d, on "
+                            "or after its season change on day %d)\n", win_str(rd32(g_mem, fix + FIX_COMP) + 4), day,
+                    year, new_day, new_year, last);
+        }
+    }
+    if (tv_kept) {
+        if (ret == 0x00685c10u) tv_kept = 0;
+        rt_ret_stdcall(0, 2);
+        return;
+    }
+    o_007861e0();
 }
 
 /* add_fixture 0x5aa680 (its wrap is in season_kind_cup_breaks.c): the call at 0x5abbdc for a kept fixture inserts
