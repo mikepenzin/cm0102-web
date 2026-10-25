@@ -128,7 +128,8 @@ def check_summer(log, first, last):
         before = {c: k for k in SIZES for c in groups.get((y, k), (0, []))[1]}
         stay = sum(1 for k in SIZES for c in nxt[k] if c in before)
         deal = re.findall(r"recomp: turkish groups: deal of \d+ clubs: (\d+) keep their group", text)
-        if len(deal) <= y - first or int(deal[y - first]) != stay:
+        back = len([r for r in a_downs if r[0] == y])     # a club back from Category A keeps its old group too
+        if len(deal) <= y - first or not stay <= int(deal[y - first]) <= stay + back:
             bad.append(f"{y + 1}: the deal kept {deal[y - first] if len(deal) > y - first else 'no'} clubs in their "
                        f"group, but {stay} stay (a lost group tag after a load would show here)")
         moved = sorted(c for k in SIZES for c in nxt[k] if c in before and before[c] != k)
