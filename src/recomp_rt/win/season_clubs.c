@@ -412,6 +412,7 @@ static void move_clubs(int season)
         }
     if (first < 0) first = 0, last = -1;        /* no list: only the counts of CLASS_SIZE */
     int log = getenv("RECOMP_CLUB_LOG") && *getenv("RECOMP_CLUB_LOG");
+    season_tur_groups_scan();                   /* the Summer 2002 group rows, for season_tur_groups_tagged */
     uint32_t table = rd32(g_mem, CLUBS), comps = rd32(g_mem, COMPS);
     int count = (int)rd32(g_mem, CLUB_COUNT), ncomps = (int)rd32(g_mem, COMP_COUNT);
     int national_from = count - 2 * (int)rd32(g_mem, NATION_COUNT);

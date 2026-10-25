@@ -252,12 +252,20 @@ static int group_rows(uint32_t tag[GROUPS])
     return tag[0] && tag[1] && tag[2];
 }
 
-int season_tur_groups_tagged(uint32_t club)
+static uint32_t scanned[GROUPS];     /* the rows of the last season_tur_groups_scan, or 0 */
+
+void season_tur_groups_scan(void)
 {
     uint32_t tag[GROUPS];
-    if (!groups_on() || !readable(club) || !group_rows(tag)) return 0;
+    int on = groups_on() && group_rows(tag);
+    for (int k = 0; k < GROUPS; k++) scanned[k] = on ? tag[k] : 0;
+}
+
+int season_tur_groups_tagged(uint32_t club)
+{
+    if (!scanned[0] || !readable(club)) return 0;
     uint32_t t = rd32(g_mem, club + CLUB_GROUP);
-    return t && (t == tag[0] || t == tag[1] || t == tag[2]);
+    return t && (t == scanned[0] || t == scanned[1] || t == scanned[2]);
 }
 
 /* 1 when the clubs make three groups: none in G4 or G5, G1 to G3 each from MIN_GROUP to MAX_GROUP. */
