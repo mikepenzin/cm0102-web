@@ -73,9 +73,15 @@ tag that it reads once.
 
 With the season code on and the three tag rows present, TurFirst::create_table (wrap of 0x8fddc0) puts each
 tagged club of G1 to G5, the Lower Division, Category B or no division into G1, G2 or G3 before the original's
-merge, and each untagged club of G1 to G5 into the Lower Division. A tagged club elsewhere stays (in a 2002/03
-season game the club moves have already put the real Category A clubs in place, so the five tagged clubs that the
-data holds in Category A for Q39 come to Category B). The tags are cleared.
+merge, and each untagged club of G1 to G5 into the Lower Division. The tags are cleared. In a 2002/03 season game
+the club moves (`season_clubs.c`) run before it. They put the real Category A clubs in place, and Category A keeps
+its class count of 20 (a cup does not allow fewer, `2026-10-18-league-sizes.md`), while the real list has 18. The
+moves fill such places with the division's own database clubs first, and the data holds five tagged clubs in
+Category A for Q39 (Siirt, Batman and three more). So the moves pass over a club whose tag names a group row
+(`season_tur_groups_tagged`, in that step and in `fill_takes`), and all five come to their groups. Before this, gate
+(b) of eee3e71a kept Siirt and Batman in Category A, and two untagged clubs filled their group places (O259: that
+fill is a net, and `turkish_groups_run.py` now fails when it acts). A tagged club that still stays in another
+division is logged with the count of the fill.
 
 TurSecondB then plays its three-group form, known from the clubs at construction (no club of Category B in G4 or
 G5, each of G1 to G3 holding 2 to 18) and from +0x2c == 2 after it (saved with the game):
