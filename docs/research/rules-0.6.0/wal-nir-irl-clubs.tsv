@@ -45,9 +45,9 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Irish Premier Division	Cork City	2741	Cork City	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
 2002/03	Irish Premier Division	Longford Town	6729	Longford Town	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
 2002/03	Irish Premier Division	St Patrick's Athletic	11003	Saint Patrick's Athletic	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
-2002/03	Irish Premier Division	Waterford United	12706	Waterford United	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
+2002/03	Irish Premier Division	Waterford United	12706	Waterford United	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
 2002/03	Irish Premier Division	Shamrock Rovers	10430	Shamrock Rovers	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
-2002/03	Irish Premier Division	Drogheda United	3281	Drogheda United	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
+2002/03	Irish Premier Division	Drogheda United	3281	Drogheda United	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
 2002/03	Irish Premier Division	Derry City	3044	Derry City	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
 2002/03	Irish Premier Division	UCD	11923	University College Dublin	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_Premier_Division
 2002/03	Irish First Division	Dublin City	3297	Dublin City F.C.	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
@@ -56,11 +56,11 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Irish First Division	Limerick	6583	Limerick F.C.	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
 2002/03	Irish First Division	Kildare County	5977	Kildare County F.C.	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
 2002/03	Irish First Division	Sligo Rovers	10660	Sligo Rovers	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
-2002/03	Irish First Division	Galway United	4287	Galway United	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
+2002/03	Irish First Division	Galway United	4287	Galway United	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
 2002/03	Irish First Division	Cobh Ramblers	2631	Cobh Ramblers	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
 2002/03	Irish First Division	Athlone Town	972	Athlone Town	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
 2002/03	Irish First Division	Dundalk	3329	Dundalk F.C.	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
-2002/03	Irish First Division	Monaghan United	7491	Monaghan United	Irish Premier Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
+2002/03	Irish First Division	Monaghan United	7491	Monaghan United	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
 2002/03	Irish First Division	Kilkenny City	5982	Kilkenny City A.F.C.	Irish First Division	https://en.wikipedia.org/wiki/2003_League_of_Ireland_First_Division
 2003/04	Welsh Premier Division	Rhyl	9520	Rhyl	Welsh Premier Division	https://en.wikipedia.org/wiki/2003%E2%80%9304_Welsh_Premier_League
 2003/04	Welsh Premier Division	Total Network Solutions	11278	Total Network Solutions	Welsh Premier Division	https://en.wikipedia.org/wiki/2003%E2%80%9304_Welsh_Premier_League
