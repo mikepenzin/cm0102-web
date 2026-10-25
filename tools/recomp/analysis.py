@@ -62,6 +62,12 @@ class Analyzer:
         self._cache[addr] = insn
         return insn
 
+    def forget(self, addr):
+        """Drops the decoded instruction at addr from the cache (recomp.py, after the function is translated: the
+        capstone instructions of the whole game do not fit the release's Linux container). A later decode of addr
+        decodes it again, the same."""
+        self._cache.pop(addr, None)
+
     def function(self, entry):
         if entry in self._functions:
             return self._functions[entry]
