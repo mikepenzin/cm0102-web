@@ -205,4 +205,25 @@ const char *season_uefa_stage_name(uint32_t obj, int season, int id);
  * a season whose row has no away goals rule. The game only. */
 void season_uefa_no_away_goals(uint32_t table, int rounds, int season);
 
+/* O259: the real dates of the UEFA knockout rounds, one row per competition ('c' Champions League, 'u' UEFA Cup and
+ * Europa League, 'k' Conference League), season and round kind (SEASON_UEFA_KO_*), from
+ * docs/research/rules-0.6.0/uefa-ko-dates.tsv (season_uefa_dates_table.c, made by tools/seasons/make_uefa_dates.py).
+ * Months 0 to 11, year offsets from the season's first year, gap the days from the first leg to the second (0 for
+ * the final). */
+enum { SEASON_UEFA_KO_PO, SEASON_UEFA_KO_R16, SEASON_UEFA_KO_QF, SEASON_UEFA_KO_SF, SEASON_UEFA_KO_FINAL };
+typedef struct {
+    char comp;
+    int season, round, draw_day, draw_month, draw_year, day, month, year_off, gap;
+} SeasonUefaKoDate;
+extern const SeasonUefaKoDate season_uefa_ko_dates_table[];
+extern const int season_uefa_ko_dates_count;
+
+/* The row of comp, season and round kind, or NULL. */
+const SeasonUefaKoDate *season_uefa_ko_date(char comp, int season, int round);
+
+/* season_uefa_dates.c, the game only: the draw date, the first leg and the days to the second leg of each round r
+ * of a knockout round table from the rows of comp and season (kinds[r] its round kind). A round with no row keeps
+ * its dates. Returns the count of rounds it dated. */
+int season_uefa_ko_dates(uint32_t table, char comp, int season, const int *kinds, int rounds);
+
 #endif

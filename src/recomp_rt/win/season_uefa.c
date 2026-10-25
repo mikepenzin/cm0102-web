@@ -227,6 +227,12 @@ static uint32_t ko_table(uint32_t cl, uint32_t *name_id)
     uint32_t m[9] = {t, 0, 20, 1, 1, 2, 2, year, 0};
     if (!rt_unwinding) call_cdecl(F_MATCH_DATE, 9, m);
     if (!rt_unwinding) season_uefa_no_away_goals(t, 4, (int)year);
+    /* O259: the real dates of the season (season_uefa_dates.c); a round with no row keeps the dates above. */
+    static const int kinds[4] = {SEASON_UEFA_KO_R16, SEASON_UEFA_KO_QF, SEASON_UEFA_KO_SF, SEASON_UEFA_KO_FINAL};
+    int dated = rt_unwinding ? 0 : season_uefa_ko_dates(t, 'c', (int)year, kinds, 4);
+    if (!rt_unwinding)
+        fprintf(stderr, "recomp: uefa: Champions League %u/%02u: knockout dates of %d of 4 rounds from the dates "
+                        "table\n", year, (year + 1) % 100, dated);
     return rt_unwinding ? 0 : t;
 }
 
@@ -432,6 +438,13 @@ static uint32_t league_ko_table(uint32_t cl, uint32_t *name_id)
     uint32_t m1[9] = {t, 1, 5, 2, 1, 2, 2, year, 0};
     if (!rt_unwinding) call_cdecl(F_MATCH_DATE, 9, m1);
     if (!rt_unwinding) season_uefa_no_away_goals(t, LEAGUE_KO_ROUNDS, (int)year);
+    /* O259: the real dates of the season (season_uefa_dates.c); a round with no row keeps the dates above. */
+    static const int kinds[LEAGUE_KO_ROUNDS] = {SEASON_UEFA_KO_PO, SEASON_UEFA_KO_R16, SEASON_UEFA_KO_QF,
+                                                SEASON_UEFA_KO_SF, SEASON_UEFA_KO_FINAL};
+    int dated = rt_unwinding ? 0 : season_uefa_ko_dates(t, 'c', (int)year, kinds, LEAGUE_KO_ROUNDS);
+    if (!rt_unwinding)
+        fprintf(stderr, "recomp: uefa: Champions League %u/%02u: knockout dates of %d of %d rounds from the dates "
+                        "table\n", year, (year + 1) % 100, dated, LEAGUE_KO_ROUNDS);
     return rt_unwinding ? 0 : t;
 }
 

@@ -706,6 +706,13 @@ static uint32_t ko_table(uint32_t uc, int ko_po)
         set_date(t, r, dates[r][0], dates[r][1], dates[r][2], dates[r][3], dates[r][4], dates[r][5],
                  r == KO_ROUNDS - 1 ? 4 : 0, year);
     if (!rt_unwinding) season_uefa_no_away_goals(t, KO_ROUNDS, (int)year);
+    /* O259: the real dates of the season (season_uefa_dates.c); a round with no row keeps the dates above. */
+    static const int kinds[KO_ROUNDS] = {SEASON_UEFA_KO_PO, SEASON_UEFA_KO_R16, SEASON_UEFA_KO_QF, SEASON_UEFA_KO_SF,
+                                         SEASON_UEFA_KO_FINAL};
+    int dated = rt_unwinding ? 0 : season_uefa_ko_dates(t, is_uc(uc) == 'k' ? 'k' : 'u', (int)year, kinds, KO_ROUNDS);
+    if (!rt_unwinding)
+        fprintf(stderr, "recomp: uefa: %s %u/%02u: knockout dates of %d of %d rounds from the dates table\n",
+                uc_name(uc), year, (year + 1) % 100, dated, KO_ROUNDS);
     return rt_unwinding ? 0 : t;
 }
 

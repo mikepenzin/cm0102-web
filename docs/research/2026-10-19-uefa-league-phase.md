@@ -116,7 +116,7 @@ With changing rules on, the kind `uefa` writes for 2024/25: "The Champions Leagu
 - Q544: the league phase pots use the European seed (entry code, then reputation), as Q411. The holder is not put first in pot 1, and the match days do not follow the home and away run rule of Art. 17.02.
 - Q545: the money of the league phase and knockout phase is the original's group and phase 2 money.
 - Q546: the places byte of the league phase table is 8 (places 1 to 8 marked as through).
-- Q547: the match days and knockout dates of 2024/25 serve every season from 2024/25.
+- Q547: the match days and knockout dates of 2024/25 serve every season from 2024/25. Update of 25 October 2026 (O259, lead 4, Max's approval of all decisions): the knockout dates are the real dates of each season wherever UEFA has published them (2024/25, 2025/26 and the 2026/27 match dates), and a later season takes the last published season's dates moved to the same weekdays, as Q542 does for formats. The table and its sources: `docs/research/rules-0.6.0/uefa-ko-dates.tsv`, `docs/research/2026-10-25-uefa-ko-dates.md`. The league phase match days stay those of 2024/25.
 
 ## The stage name
 
