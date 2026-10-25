@@ -52,11 +52,6 @@
 2017	no_row	record_utils (Under 21 International): no table row
 2017	no_row	spa_lower (Spanish Lower Division): no table row
 2017	not_held	euro_champ_qual (UEFA European Championship qualifying), row int-continental-178: the game holds 2018, the table says not held
-2017	not_held	ire_super_cup (FAI Super Cup), row wal-nir-irl-424: the game holds 2017, the table says not held
-2017	not_held	kor_league_cup (Korean League Cup), row aus-jap-kor-449: the game holds 2017, the table says not held
-2017	not_held	kor_super_cup (Korean Super Cup), row aus-jap-kor-395: the game holds 2017, the table says not held
-2017	not_held	pol_lge_cup (Polish League Cup), row gre-pol-cro-233: the game holds 2017, the table says not held
-2017	not_held	wel_prm_cup (FAW Premier Cup), row wal-nir-irl-409: the game holds 2017, the table says not held
 2017	not_in_game	arg-usa-368 usa_rules 'United States' (United States)
 2017	not_in_game	aus-jap-kor-314 korea_rules 'n/a' (South Korea)
 2017	not_in_game	club-world-308 conmebol_liber 'Copa Libertadores' (CONMEBOL)
@@ -68,7 +63,6 @@
 2017	not_in_game	int-continental-181 new '2017 CONCACAF Gold Cup' (CONCACAF)
 2017	not_in_game	por-147 por_second_b 'Campeonato de Portugal' (Portugal)
 2017	not_in_game	por-152 new 'Taça da Liga (Taça CTT)' (Portugal)
-2017	not_in_game	rus-tur-287 new 'Turkish Super Cup' (Turkey)
 2017	not_in_game	rus-tur-98 new 'Russian Super Cup' (Russia)
 2017	not_in_game	spa-129 spain_rules 'n/a' (Spain)
 2017	not_in_game	spa-132 spa_second_b 'Segunda División B' (Spain)

@@ -19,6 +19,9 @@
 2019	bench	ita_cup (Coppa Italia), row ita-319: game 9, table 12 (12)
 2019	bench	ita_ser_a (Serie A), row ita-308: game 9, table 12 (12)
 2019	bench	ita_ser_b (Serie B), row ita-309: game 9, table 12 (12 (inference: Lega B assembly asked for 12 "from next season" in July 2017))
+2019	bench	ita_ser_c1a (Serie C girone A), row ita-315: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
+2019	bench	ita_ser_c1b (Serie C girone B), row ita-316: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
+2019	bench	ita_ser_c2a (Serie C girone C), row ita-317: game 9, table 12 (12 (inference: already 12 in Lega Pro by July 2017))
 2019	bench	ita_super (Supercoppa Italiana), row ita-321: game 9, table 12 (12)
 2019	bench	new_recopa (Recopa Sudamericana), row club-world-350: game 9, table 12 (12)
 2019	bench	new_sudamericana (Copa Sudamericana), row club-world-349: game 9, table 12 (12)
@@ -29,7 +32,6 @@
 2019	clubs	asia_club_champ (AFC Champions League), row club-world-355: game 16, table 29 (29)
 2019	clubs	bel_first (Belgian First Division A), row hol-bel-242: game 18, table 16 (16)
 2019	clubs	bel_second (Belgian First Division B), row hol-bel-243: game 18, table 8 (8)
-2019	clubs	bra_champ_cup (Copa dos Campeões), row bra-208: game 3, table 0 (0)
 2019	clubs	bra_cup (Copa do Brasil), row bra-154: game 71, table 91 (91)
 2019	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-100: game 7, table 20 (20)
 2019	clubs	bra_reg_gaucho (Campeonato Gaúcho), row bra-559: game 17, table 12 (12)
@@ -48,7 +50,7 @@
 2019	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-19: game 4, table 84 (84)
 2019	clubs	gre_second (Super League 2), row gre-pol-cro-73: game 14, table 12 (12)
 2019	clubs	hol_first (Eerste Divisie), row hol-bel-237: game 18, table 20 (20)
-2019	clubs	ita_c_cup (Coppa Italia Serie C), row ita-320: game 5, table 60 (60)
+2019	clubs	ita_c_cup (Coppa Italia Serie C), row ita-320: game 3, table 60 (60)
 2019	clubs	ita_cup (Coppa Italia), row ita-319: game 4, table 78 (78)
 2019	clubs	ita_ser_a (Serie A), row ita-308: game 18, table 20 (20)
 2019	clubs	jap_j1 (J1 League), row aus-jap-kor-208: game 16, table 18 (18)
@@ -61,7 +63,7 @@
 2019	clubs	nir_lge_cup (NIFL Cup), row wal-nir-irl-464: game 5, table 36 (36)
 2019	clubs	nir_prm (NIFL Premiership), row wal-nir-irl-460: game 10, table 12 (12)
 2019	clubs	nor_prm (Eliteserien), row nor-fin-182: game 14, table 16 (16)
-2019	clubs	uefa_cup (UEFA Europa League), row uefa-149: game 158, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
+2019	clubs	uefa_cup (UEFA Europa League), row uefa-149: game 161, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
 2019	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-222: game 50, table 54 (54 entrants)
 2019	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-223: game 0, table 40 (40)
 2019	clubs	world_club_champ (FIFA Club World Cup), row club-world-344: game 0, table 7 (7)
@@ -78,8 +80,9 @@
 2019	down	ger_second (2. Bundesliga), row ger-236: game 4 (+0 play-off places), table 2 (2)
 2019	down	gre_prm (Super League 1), row gre-pol-cro-46: game 2 (+0 play-off places), table 1 (1 (14th))
 2019	down	ita_ser_b (Serie B), row ita-309: game 4 (+0 play-off places), table 3 (3 direct (18th-20th) + play-out 16th v 17th (two legs; not held if gap over 4 po)
-2019	down	ita_ser_c1a (Italian Serie C1/A), row ita-310: game 1 (+4 play-off places), table na (n/a)
-2019	down	ita_ser_c1b (Italian Serie C1/B), row ita-311: game 1 (+4 play-off places), table na (n/a)
+2019	down	ita_ser_c1a (Serie C girone A), row ita-315: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers (positions 16th-19th: inference from 2014/1)
+2019	down	ita_ser_c1b (Serie C girone B), row ita-316: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers (positions 16th-19th: inference from 2014/1)
+2019	down	ita_ser_c2a (Serie C girone C), row ita-317: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers (positions 16th-19th: inference from 2014/1)
 2019	down	jap_j1 (J1 League), row aus-jap-kor-208: game 2 (+0 play-off places), table 0 (0)
 2019	down	nir_first (NIFL Championship), row wal-nir-irl-461: game 0 (+0 play-off places), table 1 (1 (pos 12))
 2019	down	nor_first (OBOS-ligaen), row nor-fin-183: game 4 (+0 play-off places), table 2 (15th-16th (2))
@@ -89,14 +92,7 @@
 2019	no_row	record_utils ('B' International): no table row
 2019	no_row	record_utils (Reserve): no table row
 2019	no_row	record_utils (Under 21 International): no table row
-2019	not_held	bra_champ_cup (Copa dos Campeões), row bra-208: the game holds 2019, the table says not held
 2019	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-397: the game holds 2019, the table says not held
-2019	not_held	ger_lge_cup (DFL-Ligapokal), row ger-245: the game holds 2019, the table says not held
-2019	not_held	gre_super (Greek Super Cup), row gre-pol-cro-100: the game holds 2019, the table says not held
-2019	not_held	ita_c1_super (Supercoppa Serie C), row ita-322: the game holds 2019, the table says not held
-2019	not_held	ita_ser_c1a (Italian Serie C1/A), row ita-310: the game holds 2019, the table says not held
-2019	not_held	ita_ser_c1b (Italian Serie C1/B), row ita-311: the game holds 2019, the table says not held
-2019	not_held	nir_charity (Charity Shield), row wal-nir-irl-465: the game holds 2019, the table says not held
 2019	not_held	nor_cup (Norgesmesterskapet), row nor-fin-184: the game holds 2019, the table says not held
 2019	not_held	olympics (Football at the Summer Olympics), row int-world-227: the game holds 2020, the table says not held
 2019	not_held	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-221: the game holds 2020, the table says not held
@@ -124,9 +120,6 @@
 2019	not_in_game	ger-237 ger_regional '3. Liga' (Germany)
 2019	not_in_game	ger-246 new 'DFL-Supercup' (Germany)
 2019	not_in_game	gre-pol-cro-451 new 'Croatian Football Super Cup' (Croatia)
-2019	not_in_game	ita-315 new 'Serie C girone A' (Italy)
-2019	not_in_game	ita-316 new 'Serie C girone B' (Italy)
-2019	not_in_game	ita-317 new 'Serie C girone C' (Italy)
 2019	not_in_game	uefa-145 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2019	playoffs	bel_third (Belgian First Amateur Division), row hol-bel-244: game 0 up and 1 down play-off places, table 4 and 0 ('top four promotion play-offs')
 2019	playoffs	cro_a1 (Prva HNL), row gre-pol-cro-343: game 0 up and 0 down play-off places, table 0 and 1 ('9th: relegation play-off v second tier runner-up')
@@ -141,8 +134,9 @@
 2019	playoffs	gre_second (Super League 2), row gre-pol-cro-73: game 0 up and 0 down play-off places, table 1 and 0 ('2nd: promotion play-off')
 2019	playoffs	hol_prm (Eredivisie), row hol-bel-236: game 0 up and 2 down play-off places, table 0 and 1 ('16th to the promotion/relegation play-offs with Eerste Divisie clubs')
 2019	playoffs	ita_ser_b (Serie B), row ita-309: game 0 up and 0 down play-off places, table 6 and 0 ('3rd to 8th regardless of the points gap: one-leg preliminary round (5v8, 6v7) at')
-2019	playoffs	ita_ser_c1a (Italian Serie C1/A), row ita-310: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
-2019	playoffs	ita_ser_c1b (Italian Serie C1/B), row ita-311: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
+2019	playoffs	ita_ser_c1a (Serie C girone A), row ita-315: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
+2019	playoffs	ita_ser_c1b (Serie C girone B), row ita-316: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
+2019	playoffs	ita_ser_c2a (Serie C girone C), row ita-317: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
 2019	playoffs	nir_first (NIFL Championship), row wal-nir-irl-461: game 1 up and 0 down play-off places, table 1 and 1 ('pos 2: promotion play-off with the Premiership 11th; pos 11: relegation play-off')
 2019	playoffs	nor_first (OBOS-ligaen), row nor-fin-183: game 1 up and 0 down play-off places, table 4 and 1 ('3rd-6th single-leg knockout; winner v top-flight 14th, one match on neutral grou')
 2019	subs_used	asia_club_champ (AFC Champions League), row club-world-355: game 3, table 5 (5, a sixth in extra time)
@@ -163,5 +157,3 @@
 2019	up	gre_cup (Greek Football Cup), row gre-pol-cro-19: game 2 (+0 play-off places), table na (n/a)
 2019	up	gre_second (Super League 2), row gre-pol-cro-73: game 2 (+0 play-off places), table 1 (1 (1st))
 2019	up	hol_first (Eerste Divisie), row hol-bel-237: game 1 (+0 play-off places), table 2 (2 (champion and runner-up; Jong teams cannot be promoted))
-2019	up	ita_ser_c1a (Italian Serie C1/A), row ita-310: game 1 (+4 play-off places), table na (n/a)
-2019	up	ita_ser_c1b (Italian Serie C1/B), row ita-311: game 1 (+4 play-off places), table na (n/a)

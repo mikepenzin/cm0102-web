@@ -12,7 +12,7 @@
 2018	clubs	african_nations (Africa Cup of Nations), row int-continental-194: game 0, table 24 (24)
 2018	clubs	asia_club_champ (AFC Champions League), row club-world-336: game 16, table 32 (32)
 2018	clubs	asia_nations (AFC Asian Cup), row int-continental-196: game 0, table 24 (24)
-2018	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-189: game 5, table 55 (55)
+2018	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-189: game 6, table 55 (55)
 2018	clubs	goldcup (Copa América), row int-continental-198: game 0, table 12 (12)
 2018	clubs	ire_chal_cup (FAI Cup), row wal-nir-irl-444: game 42, table 40 (40)
 2018	clubs	ire_lge_cup (League of Ireland Cup), row wal-nir-irl-445: game 3, table 23 (23)
@@ -26,7 +26,7 @@
 2018	clubs	swe_prm (Allsvenskan), row den-swe-266: game 14, table 16 (16)
 2018	clubs	tur_second (TFF 1. Lig), row rus-tur-207: game 20, table 18 (18)
 2018	clubs	tur_second_b (TFF 2. Lig), row rus-tur-234: game 10, table 36 (36)
-2018	clubs	uefa_cup (UEFA Europa League), row uefa-141: game 158, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
+2018	clubs	uefa_cup (UEFA Europa League), row uefa-141: game 161, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
 2018	clubs	usa_mls (Major League Soccer), row arg-usa-234: game 4, table 24 (24)
 2018	clubs	usa_open_cup (Lamar Hunt U.S. Open Cup), row arg-usa-288: game 32, table 80 (80 or more)
 2018	clubs	wel_first (Welsh Premier League), row wal-nir-irl-429: game 18, table 12 (12)
@@ -48,11 +48,6 @@
 2018	no_row	record_utils (Reserve): no table row
 2018	no_row	record_utils (Under 21 International): no table row
 2018	no_row	spa_lower (Spanish Lower Division): no table row
-2018	not_held	ire_super_cup (FAI Super Cup), row wal-nir-irl-449: the game holds 2018, the table says not held
-2018	not_held	kor_league_cup (Korean League Cup), row aus-jap-kor-450: the game holds 2018, the table says not held
-2018	not_held	kor_super_cup (Korean Super Cup), row aus-jap-kor-396: the game holds 2018, the table says not held
-2018	not_held	pol_lge_cup (Polish League Cup), row gre-pol-cro-234: the game holds 2018, the table says not held
-2018	not_held	wel_prm_cup (FAW Premier Cup), row wal-nir-irl-434: the game holds 2018, the table says not held
 2018	not_in_game	arg-usa-369 usa_rules 'United States' (United States)
 2018	not_in_game	aus-jap-kor-315 korea_rules 'n/a' (South Korea)
 2018	not_in_game	club-world-327 conmebol_liber 'Copa Libertadores' (CONMEBOL)
@@ -66,7 +61,6 @@
 2018	not_in_game	int-continental-193 new '2019-20 CONCACAF Nations League qualifying' (CONCACAF)
 2018	not_in_game	por-156 por_second_b 'Campeonato de Portugal' (Portugal)
 2018	not_in_game	por-161 new 'Taça da Liga (Allianz Cup)' (Portugal)
-2018	not_in_game	rus-tur-288 new 'Turkish Super Cup' (Turkey)
 2018	not_in_game	rus-tur-99 new 'Russian Super Cup' (Russia)
 2018	not_in_game	spa-137 spain_rules 'n/a' (Spain)
 2018	not_in_game	spa-140 spa_second_b 'Segunda División B' (Spain)

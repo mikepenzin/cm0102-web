@@ -16,7 +16,6 @@
 2015	clubs	bel_first (Belgian Pro League), row hol-bel-190: game 18, table 16 (16)
 2015	clubs	bel_second (Belgian Second Division), row hol-bel-191: game 18, table 17 (17)
 2015	clubs	bel_third (Belgian Third Division), row hol-bel-192: game 16, table 37 (37 (A 18, B 19))
-2015	clubs	bra_champ_cup (Copa dos Campeões), row bra-204: game 3, table 0 (0)
 2015	clubs	bra_cup (Copa do Brasil), row bra-150: game 71, table 86 (86)
 2015	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-96: game 7, table 20 (20)
 2015	clubs	bra_reg_bahia (Campeonato Baiano), row bra-447: game 10, table 12 (12)
@@ -40,7 +39,7 @@
 2015	clubs	gre_second (Football League), row gre-pol-cro-69: game 14, table 18 (18)
 2015	clubs	hol_first (Eerste Divisie), row hol-bel-185: game 18, table 19 (19)
 2015	clubs	ita_c1_super (Supercoppa di Lega Pro), row ita-254: game 2, table 3 (3)
-2015	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-252: game 5, table 53 (53)
+2015	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-252: game 3, table 53 (53)
 2015	clubs	ita_cup (Coppa Italia), row ita-251: game 4, table 78 (78)
 2015	clubs	ita_ser_a (Serie A), row ita-240: game 18, table 20 (20)
 2015	clubs	ita_ser_b (Serie B), row ita-241: game 20, table 22 (22)
@@ -77,8 +76,9 @@
 2015	down	ger_second (2. Bundesliga), row ger-184: game 4 (+0 play-off places), table 2 (2)
 2015	down	gre_second (Football League), row gre-pol-cro-69: game 2 (+0 play-off places), table 4 (4 (bottom four))
 2015	down	ita_ser_b (Serie B), row ita-241: game 4 (+0 play-off places), table 3 (3 direct + play-out 4th-last v 5th-last (two legs; not held if gap over 4 points)
-2015	down	ita_ser_c1a (Italian Serie C1/A), row ita-242: game 1 (+4 play-off places), table na (n/a)
-2015	down	ita_ser_c1b (Italian Serie C1/B), row ita-243: game 1 (+4 play-off places), table na (n/a)
+2015	down	ita_ser_c1a (Lega Pro girone A), row ita-247: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 14th-17th, two legs)
+2015	down	ita_ser_c1b (Lega Pro girone B), row ita-248: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 14th-17th, two legs)
+2015	down	ita_ser_c2a (Lega Pro girone C), row ita-249: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 14th-17th, two legs)
 2015	down	jap_j1 (J1 League), row aus-jap-kor-204: game 2 (+0 play-off places), table 3 (3)
 2015	down	jap_j2 (J2 League), row aus-jap-kor-231: game 0 (+0 play-off places), table 1 (1; 21st v J3 runner-up in a promotion/relegation series)
 2015	down	nir_first (NIFL Championship 1), row wal-nir-irl-361: game 0 (+0 play-off places), table 3 (3 (pos 12,13,14))
@@ -86,12 +86,7 @@
 2015	no_row	record_utils ('B' International): no table row
 2015	no_row	record_utils (Reserve): no table row
 2015	no_row	record_utils (Under 21 International): no table row
-2015	not_held	bra_champ_cup (Copa dos Campeões), row bra-204: the game holds 2015, the table says not held
 2015	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-393: the game holds 2015, the table says not held
-2015	not_held	ger_lge_cup (DFL-Ligapokal), row ger-193: the game holds 2015, the table says not held
-2015	not_held	gre_super (Greek Super Cup), row gre-pol-cro-96: the game holds 2015, the table says not held
-2015	not_held	ita_ser_c1a (Italian Serie C1/A), row ita-242: the game holds 2015, the table says not held
-2015	not_held	ita_ser_c1b (Italian Serie C1/B), row ita-243: the game holds 2015, the table says not held
 2015	not_held	olympics (Football at the Summer Olympics), row int-world-179: the game holds 2016, the table says not held
 2015	not_held	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-171: the game holds 2016, the table says not held
 2015	not_in_game	arg-usa-204 argentina_rules 'Argentina' (Argentina)
@@ -114,9 +109,6 @@
 2015	not_in_game	ger-185 ger_regional '3. Liga' (Germany)
 2015	not_in_game	ger-194 new 'DFL-Supercup' (Germany)
 2015	not_in_game	gre-pol-cro-447 new 'Croatian Football Super Cup' (Croatia)
-2015	not_in_game	ita-247 new 'Lega Pro girone A' (Italy)
-2015	not_in_game	ita-248 new 'Lega Pro girone B' (Italy)
-2015	not_in_game	ita-249 new 'Lega Pro girone C' (Italy)
 2015	not_in_game	nor-fin-150 new 'Liigacup' (Finland)
 2015	not_in_game	uefa-113 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2015	playoffs	bel_second (Belgian Second Division), row hol-bel-191: game 0 up and 1 down play-off places, table 0 and 0 ('none')
@@ -127,8 +119,6 @@
 2015	playoffs	ger_first (Bundesliga), row ger-183: game 0 up and 0 down play-off places, table 0 and 1 ('16th v 2. Bundesliga 3rd, two legs, away goals rule, extra time and penalties')
 2015	playoffs	ger_second (2. Bundesliga), row ger-184: game 0 up and 0 down play-off places, table 1 and 1 ('3rd v Bundesliga 16th; 16th v 3. Liga 3rd; two legs, away goals rule')
 2015	playoffs	ita_ser_b (Serie B), row ita-241: game 0 up and 0 down play-off places, table 6 and 0 ('3rd to 8th, but only clubs within 14 points of the 3rd take part (2 to 6 clubs);')
-2015	playoffs	ita_ser_c1a (Italian Serie C1/A), row ita-242: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
-2015	playoffs	ita_ser_c1b (Italian Serie C1/B), row ita-243: game 4 up and 4 down play-off places, table 0 and 0 ('n/a')
 2015	playoffs	jap_j2 (J2 League), row aus-jap-kor-231: game 0 up and 0 down play-off places, table 4 and 0 ('3rd to 6th: single-match semi-finals and final at the higher-placed club; a draw')
 2015	playoffs	nor_first (OBOS-ligaen), row nor-fin-143: game 1 up and 0 down play-off places, table 4 and 0 ('3rd-6th single-leg knockout; winner v Tippeligaen 14th, two legs')
 2015	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-527: game 3, table 6 (6)
@@ -140,5 +130,3 @@
 2015	up	cro_a2a (Druga HNL), row gre-pol-cro-366: game 0 (+0 play-off places), table 1 (1 (1st))
 2015	up	fin_first (Ykkönen), row nor-fin-148: game 2 (+0 play-off places), table 1 (1st (1))
 2015	up	gre_cup (Greek Football Cup), row gre-pol-cro-15: game 2 (+0 play-off places), table na (n/a)
-2015	up	ita_ser_c1a (Italian Serie C1/A), row ita-242: game 1 (+4 play-off places), table na (n/a)
-2015	up	ita_ser_c1b (Italian Serie C1/B), row ita-243: game 1 (+4 play-off places), table na (n/a)

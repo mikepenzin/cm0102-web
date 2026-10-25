@@ -6,7 +6,6 @@
 2020	bench	eur_super_cup (UEFA Super Cup), row uefa-160: game 9, table 12 (12)
 2020	bench	ire_chal_cup (FAI Cup), row wal-nir-irl-494: game 5, table 9 (9 (inference from final line-ups))
 2020	bench	rus_first (Football National League), row rus-tur-47: game 9, table 12 (12)
-2020	bench	sco_lge_cup (Scottish League Cup), row sco-159: game 5, table 9 (9)
 2020	bench	spa_first (Primera División), row spa-154: game 9, table 12 (12 (23-man squad))
 2020	bench	spa_second (Segunda División), row spa-155: game 9, table 12 (12 (23-man squad))
 2020	bench	tur_first (Süper Lig), row rus-tur-182: game 9, table 10 (10 (21-man matchday list from 2017–18))
@@ -21,16 +20,14 @@
 2020	clubs	pol_first (Ekstraklasa), row gre-pol-cro-209: game 8, table 16 (16)
 2020	clubs	por_cup (Taça de Portugal), row por-177: game 164, table 165 (165)
 2020	clubs	rus_first (Football National League), row rus-tur-47: game 18, table 22 (22)
-2020	clubs	sco_chal_cup (Scottish Challenge Cup), row sco-160: game 30, table 0 (0)
 2020	clubs	sco_fa_cup (Scottish Cup), row sco-158: game 50, table 106 (106 (planned; clubs could decline))
 2020	clubs	sco_lge_cup (Scottish League Cup), row sco-159: game 42, table 44 (44)
 2020	clubs	spa_cup (Copa del Rey), row spa-159: game 83, table 126 (126 clubs)
-2020	clubs	spa_super (Supercopa de España), row spa-160: game 2, table 4 (4)
 2020	clubs	swe_prm (Allsvenskan), row den-swe-278: game 14, table 16 (16)
 2020	clubs	tur_first (Süper Lig), row rus-tur-182: game 18, table 21 (21)
 2020	clubs	tur_second (TFF 1. Lig), row rus-tur-209: game 20, table 18 (18)
 2020	clubs	tur_second_b (TFF 2. Lig), row rus-tur-236: game 10, table 39 (39)
-2020	clubs	uefa_cup (UEFA Europa League), row uefa-157: game 158, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
+2020	clubs	uefa_cup (UEFA Europa League), row uefa-157: game 161, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
 2020	clubs	usa_mls (Major League Soccer), row arg-usa-236: game 4, table 27 (27)
 2020	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-234: game 50, table 40 (40)
 2020	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-235: game 0, table 40 (40)
@@ -55,20 +52,8 @@
 2020	no_row	record_utils (Reserve): no table row
 2020	no_row	record_utils (Under 21 International): no table row
 2020	no_row	spa_lower (Spanish Lower Division): no table row
-2020	not_held	ire_leinster_cup (Leinster Senior Cup), row wal-nir-irl-496: the game holds 2020, the table says not held
-2020	not_held	ire_lge_cup (League of Ireland Cup), row wal-nir-irl-495: the game holds 2020, the table says not held
-2020	not_held	ire_munster_cup (Munster Senior Cup), row wal-nir-irl-497: the game holds 2020, the table says not held
-2020	not_held	ire_super_cup (FAI Super Cup), row wal-nir-irl-499: the game holds 2020, the table says not held
-2020	not_held	kor_league_cup (Korean League Cup), row aus-jap-kor-452: the game holds 2020, the table says not held
-2020	not_held	kor_super_cup (Korean Super Cup), row aus-jap-kor-398: the game holds 2020, the table says not held
 2020	not_held	olympics (Football at the Summer Olympics), row int-world-239: the game holds 2020, the table says not held
-2020	not_held	pol_lge_cup (Polish League Cup), row gre-pol-cro-236: the game holds 2020, the table says not held
-2020	not_held	sco_chal_cup (Scottish Challenge Cup), row sco-160: the game holds 2020, the table says not held
-2020	not_held	usa_open_cup (Lamar Hunt U.S. Open Cup), row arg-usa-290: the game holds 2020, the table says not held
 2020	not_held	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-236: the game holds 2020, the table says not held
-2020	not_held	wel_cup (Welsh Cup), row wal-nir-irl-482: the game holds 2020, the table says not held
-2020	not_held	wel_lge_cup (Welsh League Cup), row wal-nir-irl-483: the game holds 2020, the table says not held
-2020	not_held	wel_prm_cup (FAW Premier Cup), row wal-nir-irl-484: the game holds 2020, the table says not held
 2020	not_in_game	arg-usa-371 usa_rules 'United States' (United States)
 2020	not_in_game	aus-jap-kor-317 korea_rules 'n/a' (South Korea)
 2020	not_in_game	club-world-365 conmebol_liber 'Copa Libertadores' (CONMEBOL)
@@ -80,8 +65,6 @@
 2020	not_in_game	int-continental-212 new '2020-21 UEFA Nations League' (UEFA)
 2020	not_in_game	por-174 por_second_b 'Campeonato de Portugal' (Portugal)
 2020	not_in_game	por-179 new 'Taça da Liga (Allianz Cup)' (Portugal)
-2020	not_in_game	rus-tur-101 new 'Russian Super Cup' (Russia)
-2020	not_in_game	rus-tur-290 new 'Turkish Super Cup' (Turkey)
 2020	not_in_game	spa-153 spain_rules 'n/a' (Spain)
 2020	not_in_game	spa-156 spa_second_b 'Segunda División B' (Spain)
 2020	not_in_game	uefa-153 uefa_seeding 'UEFA access list and seeding' (UEFA)
@@ -103,8 +86,8 @@
 2020	subs_used	ire_chal_cup (FAI Cup), row wal-nir-irl-494: game 3, table 5 (5 (inference from final line-ups))
 2020	subs_used	pol_cup (Polish Cup), row gre-pol-cro-182: game 3, table 5 (5)
 2020	subs_used	por_cup (Taça de Portugal), row por-177: game 3, table 5 (5 (inference: IFAB temporary rule of 2020, permanent from 2022; FPF adoption not)
-2020	subs_used	sco_lge_cup (Scottish League Cup), row sco-159: game 3, table 5 (5 (plus a sixth in extra time))
 2020	subs_used	spa_cup (Copa del Rey), row spa-159: game 3, table 5 (5 (inference))
+2020	subs_used	spa_super (Supercopa de España), row spa-160: game 3, table 5 (5 (inference))
 2020	subs_used	swe_cup (Svenska Cupen), row den-swe-281: game 3, table 5 (5)
 2020	subs_used	world_club_champ (FIFA Club World Cup), row club-world-363: game 3, table 5 (5, a sixth in extra time)
 2020	up	pol_first (Ekstraklasa), row gre-pol-cro-209: game 4 (+0 play-off places), table na (n/a)

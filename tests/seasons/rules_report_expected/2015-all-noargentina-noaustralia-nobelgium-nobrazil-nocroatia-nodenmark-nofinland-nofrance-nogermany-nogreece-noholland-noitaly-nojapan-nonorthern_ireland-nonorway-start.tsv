@@ -47,13 +47,8 @@
 2015	no_row	record_utils (Reserve): no table row
 2015	no_row	record_utils (Under 21 International): no table row
 2015	no_row	spa_lower (Spanish Lower Division): no table row
-2015	not_held	ire_super_cup (FAI Super Cup), row wal-nir-irl-374: the game holds 2015, the table says not held
-2015	not_held	kor_league_cup (Korean League Cup), row aus-jap-kor-447: the game holds 2015, the table says not held
-2015	not_held	kor_super_cup (Korean Super Cup), row aus-jap-kor-393: the game holds 2015, the table says not held
 2015	not_held	olympics (Football at the Summer Olympics), row int-world-179: the game holds 2016, the table says not held
-2015	not_held	pol_lge_cup (Polish League Cup), row gre-pol-cro-231: the game holds 2015, the table says not held
 2015	not_held	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-171: the game holds 2016, the table says not held
-2015	not_held	wel_prm_cup (FAW Premier Cup), row wal-nir-irl-359: the game holds 2015, the table says not held
 2015	not_in_game	arg-usa-366 usa_rules 'United States' (United States)
 2015	not_in_game	aus-jap-kor-312 korea_rules 'n/a' (South Korea)
 2015	not_in_game	club-world-270 conmebol_liber 'Copa Libertadores' (CONMEBOL)
@@ -64,8 +59,6 @@
 2015	not_in_game	int-continental-159 new '2015 CONCACAF Gold Cup' (CONCACAF)
 2015	not_in_game	por-129 por_second_b 'Campeonato de Portugal' (Portugal)
 2015	not_in_game	por-134 new 'Taça da Liga (Taça CTT)' (Portugal)
-2015	not_in_game	rus-tur-285 new 'Turkish Super Cup' (Turkey)
-2015	not_in_game	rus-tur-96 new 'Russian Super Cup' (Russia)
 2015	not_in_game	spa-113 spain_rules 'n/a' (Spain)
 2015	not_in_game	spa-116 spa_second_b 'Segunda División B' (Spain)
 2015	not_in_game	uefa-113 uefa_seeding 'UEFA access list and seeding' (UEFA)
