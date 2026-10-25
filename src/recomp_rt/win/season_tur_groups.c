@@ -343,10 +343,11 @@ static void log_groups(uint32_t obj)
 
 /* TurFirst::create_table 0x8fddc0 (thiscall): in the first season (+0x40 is the start year, the compare at
  * 0x8fddce) the original moves the clubs of G1 to G5 into Category B. Before it, with the three tag rows in the
- * data, each tagged club in G1 to G5, the Lower Division, Category B or no division goes to G1, G2 or G3. A tagged
- * club of another division stays, its tag cleared: in a 2002/03 season game the club moves fill Category A with two
- * real Category B clubs (Siirt, Batman) where real Category A clubs are missing from the database. Untagged clubs
- * of G1 to G5 fill the places those clubs leave, then go to the Lower Division (+0x60 cleared). */
+ * data, each tagged club in G1 to G5, the Lower Division, Category B or no division goes to G1, G2 or G3. The club
+ * moves of a season game keep no tagged club in another division (season_tur_groups_tagged in season_clubs.c). A
+ * tagged club that is still in another division stays, its tag cleared, and untagged clubs of G1 to G5 fill its
+ * place (a net, logged; turkish_groups_run.py fails when it acts); the other untagged clubs of G1 to G5 go to the
+ * Lower Division (+0x60 cleared). */
 void o_008fddc0(void);
 RT_WRAP(008fddc0, tur_first_table)
 {
