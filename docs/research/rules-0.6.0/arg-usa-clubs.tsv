@@ -11,13 +11,13 @@ season	division	club	db_club_id	db_club	db_division	source
 2001/02	Major League Soccer	San Jose Earthquakes	10053	San Jose Earthquakes	American Major League	https://en.wikipedia.org/wiki/2002_Major_League_Soccer_season
 2002/03	Primera B Nacional	Club Almagro	596	Almagro	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
 2002/03	Primera B Nacional	Almirante Brown de Arrecifes	1933	Almirante Brown de Arrecifes	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
-2002/03	Primera B Nacional	Argentinos Juniors	825	Argentinos Juniors	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
+2002/03	Primera B Nacional	Argentinos Juniors	825	Argentinos Juniors	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
 2002/03	Primera B Nacional	Atlético de Rafaela	9308	Atlético Rafaela	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
-2002/03	Primera B Nacional	Club Atlético Belgrano	1462	Belgrano de Córdoba	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
-2002/03	Primera B Nacional	Comisión de Actividades Infantiles	2037	Comisión de Actividades Infantiles	Argentine Third Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
+2002/03	Primera B Nacional	Club Atlético Belgrano	1462	Belgrano de Córdoba	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
+2002/03	Primera B Nacional	Comisión de Actividades Infantiles	2037	Comisión de Actividades Infantiles	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
 2002/03	Primera B Nacional	Defensa y Justicia	2964	Defensa y Justicia	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
 2002/03	Primera B Nacional	Defensores de Belgrano	2970	Defensores de Belgrano	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
-2002/03	Primera B Nacional	Deportivo Español	3650	Deportivo Español	Argentine Third Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
+2002/03	Primera B Nacional	Deportivo Español	3650	Deportivo Español	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
 2002/03	Primera B Nacional	Club El Porvenir	9007	El Porvenir	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
 2002/03	Primera B Nacional	Gimnasia y Esgrima de Concepción del Uruguay	4393	Gimnasia y Esgrima de Concepción del Uruguay	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
 2002/03	Primera B Nacional	Gimnasia y Esgrima de Jujuy	4394	Gimnasia y Esgrima de Jujuy	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Primera_B_Nacional
@@ -39,7 +39,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Major League Soccer	New York Red Bulls	7323	NYNJ Metrostars	American Major League	https://en.wikipedia.org/wiki/2003_Major_League_Soccer_season
 2002/03	Major League Soccer	New England Revolution	7885	New England Revolution	American Major League	https://en.wikipedia.org/wiki/2003_Major_League_Soccer_season
 2002/03	Major League Soccer	San Jose Earthquakes	10053	San Jose Earthquakes	American Major League	https://en.wikipedia.org/wiki/2003_Major_League_Soccer_season
-2002/03	Primera División	Arsenal de Sarandí	873	Arsenal de Sarandí	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
+2002/03	Primera División	Arsenal de Sarandí	873	Arsenal de Sarandí	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
 2002/03	Primera División	Banfield	1298	Banfield	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
 2002/03	Primera División	Boca Juniors	1693	Boca Juniors	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
 2002/03	Primera División	Chacarita Juniors	2389	Chacarita Juniors	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
@@ -51,7 +51,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Primera División	Lanús	6372	Lanús	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
 2002/03	Primera División	Nueva Chicago	8070	Nueva Chicago	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
 2002/03	Primera División	Newell's Old Boys	7909	Newell's Old Boys	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
-2002/03	Primera División	Olimpo	8236	Olimpo de Bahía Blanca	Argentine Second Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
+2002/03	Primera División	Olimpo	8236	Olimpo de Bahía Blanca	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
 2002/03	Primera División	Racing Club	9259	Racing Club	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
 2002/03	Primera División	Rosario Central	2336	Rosario Central	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División
 2002/03	Primera División	River Plate	9589	River Plate	Argentine Premier Division	https://en.wikipedia.org/wiki/2002–03_Argentine_Primera_División

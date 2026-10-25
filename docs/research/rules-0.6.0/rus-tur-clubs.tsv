@@ -1,7 +1,7 @@
 season	division	club	db_club_id	db_club	db_division	source
 2002/03	Russian Premier Division (real: Premier League)	CSKA Moscow	2090	CSKA Moscow	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
 2002/03	Russian Premier Division (real: Premier League)	Zenit St. Petersburg	13122	Zenith St. Petersburg	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
-2002/03	Russian Premier Division (real: Premier League)	Rubin Kazan	9735	Rubin Kazan	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
+2002/03	Russian Premier Division (real: Premier League)	Rubin Kazan	9735	Rubin Kazan	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
 2002/03	Russian Premier Division (real: Premier League)	Lokomotiv Moscow	6703	Lokomotiv Moscow	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
 2002/03	Russian Premier Division (real: Premier League)	Shinnik Yaroslavl	10464	Shinnik Yaroslavl	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
 2002/03	Russian Premier Division (real: Premier League)	Dynamo Moscow	3127	Dinamo Moscow	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
@@ -14,7 +14,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Russian Premier Division (real: Premier League)	Spartak-Alania Vladikavkaz	520	Alania Vladikavkaz	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
 2002/03	Russian Premier Division (real: Premier League)	Torpedo-Metallurg Moscow	11707	FC Torpedo-ZiL Moscow	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
 2002/03	Russian Premier Division (real: Premier League)	Uralan Elista	12112	Uralan Elista	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
-2002/03	Russian Premier Division (real: Premier League)	Chernomorets Novorossiysk	2467	Chernomorets Novorossiysk	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
+2002/03	Russian Premier Division (real: Premier League)	Chernomorets Novorossiysk	2467	Chernomorets Novorossiysk	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_Premier_League
 2003/04	Russian Premier Division (real: Premier League)	Lokomotiv Moscow	6703	Lokomotiv Moscow	Russian Premier Division	https://en.wikipedia.org/wiki/2004_Russian_Premier_League
 2003/04	Russian Premier Division (real: Premier League)	CSKA Moscow	2090	CSKA Moscow	Russian Premier Division	https://en.wikipedia.org/wiki/2004_Russian_Premier_League
 2003/04	Russian Premier Division (real: Premier League)	Krylia Sovetov Samara	6182	Krylja Sovetov Samara	Russian Premier Division	https://en.wikipedia.org/wiki/2004_Russian_Premier_League
@@ -224,10 +224,10 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Russian First Division (real: First Division)	Tom Tomsk	11644	Tom Tomsk	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
 2002/03	Russian First Division (real: First Division)	Terek Grozny	11467	Terek Grozny	Russian Second Division - South	https://en.wikipedia.org/wiki/2003_Russian_First_Division
 2002/03	Russian First Division (real: First Division)	Dynamo St. Petersburg	3132	Dinamo St. Petersburg	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
-2002/03	Russian First Division (real: First Division)	Anzhi Makhachkala	770	Anzhi Makhachkala	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
+2002/03	Russian First Division (real: First Division)	Anzhi Makhachkala	770	Anzhi Makhachkala	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
 2002/03	Russian First Division (real: First Division)	Baltika Kaliningrad	1277	Baltika Kaliningrad	Russian Second Division - West	https://en.wikipedia.org/wiki/2003_Russian_First_Division
 2002/03	Russian First Division (real: First Division)	Metallurg Lipetsk	7301	Metallurg Lipetsk	Russian Second Division - Central	https://en.wikipedia.org/wiki/2003_Russian_First_Division
-2002/03	Russian First Division (real: First Division)	Sokol Saratov	10737	Sokol Saratov	Russian Premier Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
+2002/03	Russian First Division (real: First Division)	Sokol Saratov	10737	Sokol Saratov	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
 2002/03	Russian First Division (real: First Division)	SKA-Khabarovsk	9882	SKA-Energia Khabarovsk	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
 2002/03	Russian First Division (real: First Division)	Lokomotiv Chita	6695	Lokomotiv Chita	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
 2002/03	Russian First Division (real: First Division)	Khimki	5953	FC Khimki	Russian First Division	https://en.wikipedia.org/wiki/2003_Russian_First_Division
@@ -575,12 +575,12 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Turkish Premier Division (real: Süper Lig)	MKE Ankaragücü	744	MKE Ankaragücü	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
 2002/03	Turkish Premier Division (real: Süper Lig)	İstanbulspor	5461	Istanbulspor A.S.	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
 2002/03	Turkish Premier Division (real: Süper Lig)	Denizlispor	2997	Denizlispor	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
-2002/03	Turkish Premier Division (real: Süper Lig)	Adanaspor	236	Adanaspor A.S.	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
+2002/03	Turkish Premier Division (real: Süper Lig)	Adanaspor	236	Adanaspor A.S.	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
 2002/03	Turkish Premier Division (real: Süper Lig)	Samsunspor	10028	Samsunspor	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
-2002/03	Turkish Premier Division (real: Süper Lig)	Elazığspor	3516	Elazigspor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
+2002/03	Turkish Premier Division (real: Süper Lig)	Elazığspor	3516	Elazigspor	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
 2002/03	Turkish Premier Division (real: Süper Lig)	Diyarbakırspor	2865	Diyarbakirspor	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
 2002/03	Turkish Premier Division (real: Süper Lig)	Bursaspor	2010	Bursaspor	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
-2002/03	Turkish Premier Division (real: Süper Lig)	Altay	614	Altay	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
+2002/03	Turkish Premier Division (real: Süper Lig)	Altay	614	Altay	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
 2002/03	Turkish Premier Division (real: Süper Lig)	Göztepe A.Ş.	4377	Göztepe A.S.	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
 2002/03	Turkish Premier Division (real: Süper Lig)	Kocaelispor	6061	Kocaelispor	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_S%C3%BCper_Lig
 2003/04	Turkish Premier Division (real: Süper Lig)	Fenerbahçe	3979	Fenerbahçe SK	Turkish Premier Division	https://en.wikipedia.org/wiki/2003%E2%80%9304_S%C3%BCper_Lig
@@ -773,17 +773,17 @@ season	division	club	db_club_id	db_club	db_division	source
 2024/25	Turkish Premier Division (real: Süper Lig)	Hatayspor	4911	Hatayspor	Turkish Premier Division	https://en.wikipedia.org/wiki/2024%E2%80%9325_S%C3%BCper_Lig
 2024/25	Turkish Premier Division (real: Süper Lig)	Adana Demirspor	37	Adana Demirspor	Turkish Premier Division	https://en.wikipedia.org/wiki/2024%E2%80%9325_S%C3%BCper_Lig
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Konyaspor	6103	Kombassan Konyaspor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
-2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Çaykur Rizespor	2034	Çaykur Rizespor	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
+2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Çaykur Rizespor	2034	Çaykur Rizespor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Akçaabat Sebatspor	41	Akçaabat Sebatspor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Sivasspor	10573	Sivasspor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Kayserispor	5873	Kayserispor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Sakaryaspor	9977	Sakaryaspor A.S.	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	B.B. Ankaraspor	745	Büyüksehir Belediye Ankaraspor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
-2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Manisaspor	7048	Vestel Manisaspor	Turkish 2. Division Category B G2	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
-2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Yozgatspor	13032	Yimpas Yozgatspor A.S.	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
-2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Adana Demirspor	37	Adana Demirspor	Turkish 2. Division Category B G3	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
-2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Antalyaspor	757	Antalyaspor A.S.	Turkish Premier Division	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
-2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Mersin İdman Yurdu	6883	Mersin Idman Yurdu	Turkish 2. Division Category B G1	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
+2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Manisaspor	7048	Vestel Manisaspor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
+2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Yozgatspor	13032	Yimpas Yozgatspor A.S.	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
+2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Adana Demirspor	37	Adana Demirspor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
+2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Antalyaspor	757	Antalyaspor A.S.	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
+2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Mersin İdman Yurdu	6883	Mersin Idman Yurdu	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	İzmirspor	5498	Izmirspor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	İstanbul B.B.	2023	Istanbul Büyüksehir Belediye Spor	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
 2002/03	Turkish 2. Division Category A (real: 2. Lig Category A)	Çanakkale Dardanelspor	2937	Dardanelspor A.S.	Turkish 2. Division Category A	https://en.wikipedia.org/wiki/2002%E2%80%9303_Turkish_Second_League_Category_A
@@ -1157,8 +1157,8 @@ season	division	club	db_club_id	db_club	db_division	source
 2024/25	Turkish 2. Division Category A (real: TFF 1. Lig)	Yeni Malatyaspor	6992	Yeni Malatyaspor	Turkish 2. Division Category B G3	https://en.wikipedia.org/wiki/2024%E2%80%9325_TFF_1._Lig
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Karşıyaka	5844	Karsiyaka	Turkish 2. Division Category B G2	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Marmaris Belediyespor	7130	Marmaris Bld. Gençlikspor	Turkish 2. Division Category B G2	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Bursa Merinosspor	1146	Bursa Merinosspor A.S.	Turkish Lower Division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Aydınspor	1116	Aydinspor	Turkish 2. Division Category A	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Bursa Merinosspor	1146	Bursa Merinosspor A.S.	Turkish 2. Division Category B G2	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Aydınspor	1116	Aydinspor	Turkish 2. Division Category B G2	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Bucaspor	1960	Bucaspor	Turkish 2. Division Category B G2	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	İnegölspor	5361	Inegölspor	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Yıldırım Bosnaspor	12963	Yildirim Bosnaspor	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
@@ -1166,7 +1166,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Muğlaspor	7627	Muglaspor	no division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Eskişehirspor	3372	Eskisehirspor	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Küçükköyspor	6198	Küçükköyspor	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Fatih Karagümrük	3749	Fatih Karagümrük	Turkish Lower Division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Fatih Karagümrük	3749	Fatih Karagümrük	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Mustafakemalpaşaspor	6886	Mustafa Kemalpasaspor	Turkish 2. Division Category B G2	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Antalya Kepezspor	5911	Antalya Kepezspor	Turkish 2. Division Category B G2	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Güngören Belediyespor	4684	Güngören Belediyespor	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
@@ -1174,31 +1174,31 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Gaziosmanpaşa	4239	Gaziosmanpasa	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group A)	Kütahyaspor	6224	Kütahyaspor	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Türk Telekom	11435	Türk Telekomspor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Zonguldakspor	13168	Zonguldakspor	Turkish Lower Division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Zonguldakspor	13168	Zonguldakspor	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Sarıyer	10207	Sariyer Spor Kulübü	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Ankara Demirspor	743	Ankara Demirspor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Kartalspor	5845	Kartalspor	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Çankırı Belediyespor	2188	Çankiri Belediyespor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Orduspor	8324	Orduspor	Turkish Lower Division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Orduspor	8324	Orduspor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Maltepespor	7014	Maltepespor	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Darıca Gençlerbirliği	2938	Darica Gençlerbirligi	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Anadolu Üsküdar 1908	42	Anadolu Üsküdar 1908 Spor	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Kardemir Karabükspor	5818	Kardemir Demir-Çelik Karabükspor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Eyüpspor	3747	Eyüpspor	Turkish Lower Division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Eyüpspor	3747	Eyüpspor	Turkish 2. Division Category B G3	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Amasyaspor	652	Amasyaspor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Bulancakspor	1985	Bulancakspor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	MKE Kırıkkalespor	6016	MKE Kirikkalespor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Çubukspor	2844	Çubukspor	no division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group B)	Tokatspor	11627	Tokatspor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Kayseri Erciyesspor	3608	Erciyesspor	Turkish 2. Division Category A	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Hatayspor	4911	Hatayspor	Turkish 2. Division Category A	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Kayseri Erciyesspor	3608	Erciyesspor	Turkish 2. Division Category B G4	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Hatayspor	4911	Hatayspor	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Şanlıurfaspor	9800	Sanliurfaspor	Turkish 2. Division Category B G5	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Gaziantep BB	4240	Gaziantep Büyüksehir Belediyespor	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Tarsus İdman Yurdu	11276	Tarsus Idman Yurdu	Turkish Lower Division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Tarsus İdman Yurdu	11276	Tarsus Idman Yurdu	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Kahramanmaraşspor	5704	Kahramanmarasspor	Turkish 2. Division Category B G5	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Adıyamanspor	245	Adiyamanspor	Turkish Lower Division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Adıyamanspor	245	Adiyamanspor	Turkish 2. Division Category B G1	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Batman Petrolspor	1148	Batman Petrolspor	Turkish 2. Division Category A	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
-2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Şanlıurfa Belediyespor	10111	Sanliurfa Belediyespor	Turkish Lower Division	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
+2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Şanlıurfa Belediyespor	10111	Sanliurfa Belediyespor	Turkish 2. Division Category B G5	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Iğdırspor	5310	Igdir Belediyespor	Turkish 2. Division Category B G5	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Mardinspor	7082	Mardinspor	Turkish 2. Division Category B G5	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi
 2002/03	Turkish 2. Division Category B (real: 2. Lig Category B, Group C)	Erzincanspor	3628	Erzincanspor	Turkish 2. Division Category B G5	https://tr.wikipedia.org/wiki/2002-03_2._Futbol_Ligi_B_Kategorisi

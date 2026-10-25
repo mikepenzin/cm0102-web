@@ -25,7 +25,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Veikkausliiga	Allianssi Vantaa	57	AC Vantaan Allianssi	Finnish Premier Division	https://en.wikipedia.org/wiki/2003_Veikkausliiga
 2002/03	Veikkausliiga	FC Inter Turku	5386	FC Inter	Finnish Premier Division	https://en.wikipedia.org/wiki/2003_Veikkausliiga
 2002/03	Veikkausliiga	Jaro Jakobstad	5563	FF Jaro	Finnish Premier Division	https://en.wikipedia.org/wiki/2003_Veikkausliiga
-2002/03	Veikkausliiga	TPS Turku	11306	Jalkapallo TPS	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Veikkausliiga
+2002/03	Veikkausliiga	TPS Turku	11306	Jalkapallo TPS	Finnish Premier Division	https://en.wikipedia.org/wiki/2003_Veikkausliiga
 2002/03	Veikkausliiga	FC Jokerit	3801	FC Jokerit	Finnish First Division South	https://en.wikipedia.org/wiki/2003_Veikkausliiga
 2002/03	Veikkausliiga	FC Hämeenlinna	3793	FC Hämeenlinna	Finnish Premier Division	https://en.wikipedia.org/wiki/2003_Veikkausliiga
 2002/03	Veikkausliiga	FC Jazz Pori	3798	FC Jazz	Finnish Premier Division	https://en.wikipedia.org/wiki/2003_Veikkausliiga
@@ -35,7 +35,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Ykkönen	RoPS Rovaniemi	9603	Rovaniemen Palloseura	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
 2002/03	Ykkönen	FC Viikingit Helsinki	12454	FC Viikingit	Finnish First Division South	https://en.wikipedia.org/wiki/2003_Ykkönen
 2002/03	Ykkönen	FC Honka Espoo	5137	FC Honka	Finnish First Division South	https://en.wikipedia.org/wiki/2003_Ykkönen
-2002/03	Ykkönen	VPS Vaasa	12164	Vaasan Palloseura	Finnish Premier Division	https://en.wikipedia.org/wiki/2003_Ykkönen
+2002/03	Ykkönen	VPS Vaasa	12164	Vaasan Palloseura	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
 2002/03	Ykkönen	Kraft Närpiö	7766	IF Kraft	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
 2002/03	Ykkönen	VG-62 Naantali	12155	VG-62	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
 2002/03	Ykkönen	AC Oulu	11488	Oulun Tervarit	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
@@ -43,7 +43,7 @@ season	division	club	db_club_id	db_club	db_division	source
 2002/03	Ykkönen	PP-70 Tampere	8463	Tampereen Peli-Pojat-70	Finnish First Division South	https://en.wikipedia.org/wiki/2003_Ykkönen
 2002/03	Ykkönen	GBK Kokkola	4248	Gamlakarleby Bollklubb	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
 2002/03	Ykkönen	FC Kuusankoski	3812	FC Kuusankoski	Finnish First Division South	https://en.wikipedia.org/wiki/2003_Ykkönen
-2002/03	Ykkönen	OLS Oulu	8116	Oulun Luistinseura	Finnish Second Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
+2002/03	Ykkönen	OLS Oulu	8116	Oulun Luistinseura	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
 2002/03	Ykkönen	FC Korsholm Mustasaari	3808	FC Korsholm	Finnish First Division North	https://en.wikipedia.org/wiki/2003_Ykkönen
 2003/04	Veikkausliiga	Haka	3791	FC Haka Valkeakoski	Finnish Premier Division	https://en.wikipedia.org/wiki/2004_Veikkausliiga
 2003/04	Veikkausliiga	AC Allianssi	57	AC Vantaan Allianssi	Finnish Premier Division	https://en.wikipedia.org/wiki/2004_Veikkausliiga
