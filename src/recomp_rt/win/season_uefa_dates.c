@@ -23,15 +23,6 @@
 
 static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
 
-const SeasonUefaKoDate *season_uefa_ko_date(char comp, int season, int round)
-{
-    for (int i = 0; i < season_uefa_ko_dates_count; i++) {
-        const SeasonUefaKoDate *d = &season_uefa_ko_dates_table[i];
-        if (d->comp == comp && d->season == season && d->round == round) return d;
-    }
-    return NULL;
-}
-
 /* Date::Date into a scratch block below the frame: the s16 day of the year and the s16 year. */
 static int make_date(int day, int month, int year, int *doy, int *yr)
 {

@@ -218,8 +218,13 @@ typedef struct {
 extern const SeasonUefaKoDate season_uefa_ko_dates_table[];
 extern const int season_uefa_ko_dates_count;
 
-/* The row of comp, season and round kind, or NULL. */
+/* The row of comp, season and round kind; for a season after the table, the last row moved to that season's
+ * weekdays (a final after 31 May on 31 May); NULL for a season before the table. */
 const SeasonUefaKoDate *season_uefa_ko_date(char comp, int season, int round);
+
+/* 1 the first time a knockout table of comp and season is dated (one log line per season, though rank_teams and the
+ * Schedule tab build the table again), else 0. */
+int season_uefa_ko_dates_log(char comp, int season);
 
 /* season_uefa_dates.c, the game only: the draw date, the first leg and the days to the second leg of each round r
  * of a knockout round table from the rows of comp and season (kinds[r] its round kind). A round with no row keeps

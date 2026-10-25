@@ -710,7 +710,7 @@ static uint32_t ko_table(uint32_t uc, int ko_po)
     static const int kinds[KO_ROUNDS] = {SEASON_UEFA_KO_PO, SEASON_UEFA_KO_R16, SEASON_UEFA_KO_QF, SEASON_UEFA_KO_SF,
                                          SEASON_UEFA_KO_FINAL};
     int dated = rt_unwinding ? 0 : season_uefa_ko_dates(t, is_uc(uc) == 'k' ? 'k' : 'u', (int)year, kinds, KO_ROUNDS);
-    if (!rt_unwinding)
+    if (!rt_unwinding && season_uefa_ko_dates_log(is_uc(uc) == 'k' ? 'k' : 'u', (int)year))
         fprintf(stderr, "recomp: uefa: %s %u/%02u: knockout dates of %d of %d rounds from the dates table\n",
                 uc_name(uc), year, (year + 1) % 100, dated, KO_ROUNDS);
     return rt_unwinding ? 0 : t;
