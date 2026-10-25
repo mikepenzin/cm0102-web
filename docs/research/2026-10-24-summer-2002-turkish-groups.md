@@ -110,6 +110,11 @@ change; `tests/seasons/turkish_groups_run.py` reads them.
 
 ## Differences from the real league
 
+- Category A plays 20 clubs in every season, the real 2002/03 list 18 (rus-tur-191): the size floor of slice 18
+  (`tools/recomp/league_sizes.py` FLOORS, TurCup 0x8fcb90 takes 64 entrants from fixed places), an accepted limit
+  of 0.6.0 (lead 4, 2026-10-25, as O7 for the Danish First Division). The club moves fill its two extra places from
+  clubs that the group tags do not hold.
+
 - The division keeps 52 clubs (18, 17, 17) in every season (TIER_CLUBS): the exchange cuts or fills to that size,
   and takes Turkish clubs with no division when the Lower Division has too few. The real league had 51 clubs in
   three groups of 17 in 2003/04 and 2004/05 (rus-tur-219, rus-tur-220).
