@@ -115,34 +115,49 @@ static const char *const GROUP_NAMES[GROUPS] = {
     "Turkish 2. Division Category B Group C",
 };
 
-/* The real groups of 2003/04 and 2004/05 (0 A, 1 B, 2 C) by club id, from two public sources each
+/* The real groups of 2003/04 and 2004/05 (0 A, 1 B, 2 C) by the club's database name, from two public sources each
  * (docs/research/2026-10-25-turkish-b-groups-2003-2005.tsv: tr.wikipedia with RSSSF tur04, tr.wikipedia with the
  * TFF tables; the rows of clubs that the data has). A club new to the division takes its real group of the coming
- * season when that group has room. */
-typedef struct { int16_t season; int8_t group; int32_t club; } RealGroup;
+ * season when that group has room. By name: the club id at +0 is not the database id in a running game (Adana
+ * Demirspor, 37 in the data, held 19 in a 2004 run). */
+typedef struct { int16_t season; int8_t group; const char *name; } RealGroup;
 static const RealGroup REAL_GROUPS[] = {
-    {2003, 0, 3749}, {2003, 0, 1960}, {2003, 0, 12130}, {2003, 0, 7811}, {2003, 0, 7130}, {2003, 0, 3372},
-    {2003, 0, 12963}, {2003, 0, 6198}, {2003, 0, 4684}, {2003, 0, 1146}, {2003, 0, 2745}, {2003, 0, 10307},
-    {2003, 0, 7627}, {2003, 0, 5361}, {2003, 0, 1116}, {2003, 0, 6886}, {2003, 1, 10207}, {2003, 1, 5818},
-    {2003, 1, 5845}, {2003, 1, 8324}, {2003, 1, 12975}, {2003, 1, 2938}, {2003, 1, 6016}, {2003, 1, 1985},
-    {2003, 1, 743}, {2003, 1, 13168}, {2003, 1, 3747}, {2003, 1, 7014}, {2003, 1, 2188}, {2003, 1, 42},
-    {2003, 1, 652}, {2003, 1, 4238}, {2003, 2, 7082}, {2003, 2, 245}, {2003, 2, 4911}, {2003, 2, 4240},
-    {2003, 2, 11276}, {2003, 2, 9800}, {2003, 2, 355}, {2003, 2, 5704}, {2003, 2, 3628}, {2003, 2, 10111},
-    {2003, 2, 2583}, {2003, 2, 1148}, {2003, 2, 10515}, {2003, 2, 3630}, {2003, 2, 7335}, {2003, 2, 5310},
-    {2004, 0, 12130}, {2004, 0, 5361}, {2004, 0, 4684}, {2004, 0, 7627}, {2004, 0, 8105}, {2004, 0, 8671},
-    {2004, 0, 7811}, {2004, 0, 5498}, {2004, 0, 7130}, {2004, 0, 1960}, {2004, 0, 1146}, {2004, 0, 12963},
-    {2004, 0, 6198}, {2004, 0, 1116}, {2004, 0, 4377}, {2004, 0, 2745}, {2004, 1, 8324}, {2004, 1, 3747},
-    {2004, 1, 6016}, {2004, 1, 3372}, {2004, 1, 5818}, {2004, 1, 12975}, {2004, 1, 13168}, {2004, 1, 2188},
-    {2004, 1, 2938}, {2004, 1, 5845}, {2004, 1, 7014}, {2004, 1, 42}, {2004, 1, 743}, {2004, 1, 1985},
-    {2004, 1, 10307}, {2004, 2, 4240}, {2004, 2, 10515}, {2004, 2, 11276}, {2004, 2, 245}, {2004, 2, 37},
-    {2004, 2, 4911}, {2004, 2, 10111}, {2004, 2, 9800}, {2004, 2, 2583}, {2004, 2, 3630}, {2004, 2, 1148},
-    {2004, 2, 355}, {2004, 2, 5704}, {2004, 2, 3628}, {2004, 2, 5822},
+    {2003, 0, "Fatih Karag\374mr\374k"}, {2003, 0, "Bucaspor"}, {2003, 0, "UMPAS Usakspor A.S."},
+    {2003, 0, "Nazilli Belediyespor"}, {2003, 0, "Marmaris Bld. Gen\347likspor"}, {2003, 0, "Eskisehirspor"},
+    {2003, 0, "Yildirim Bosnaspor"}, {2003, 0, "K\374\347\374kk\366yspor"}, {2003, 0, "G\374ng\366ren Belediyespor"},
+    {2003, 0, "Bursa Merinosspor A.S."}, {2003, 0, "\307orluspor"}, {2003, 0, "Sekerspor"}, {2003, 0, "Muglaspor"},
+    {2003, 0, "Ineg\366lspor"}, {2003, 0, "Aydinspor"}, {2003, 0, "Mustafa Kemalpasaspor"},
+    {2003, 1, "Sariyer Spor Kul\374b\374"}, {2003, 1, "Kardemir Demir-\307elik Karab\374kspor"},
+    {2003, 1, "Kartalspor"}, {2003, 1, "Orduspor"}, {2003, 1, "Yalovaspor"}, {2003, 1, "Darica Gen\347lerbirligi"},
+    {2003, 1, "MKE Kirikkalespor"}, {2003, 1, "Bulancakspor"}, {2003, 1, "Ankara Demirspor"},
+    {2003, 1, "Zonguldakspor"}, {2003, 1, "Ey\374pspor"}, {2003, 1, "Maltepespor"},
+    {2003, 1, "\307ankiri Belediyespor"}, {2003, 1, "Anadolu \334sk\374dar 1908 Spor"}, {2003, 1, "Amasyaspor"},
+    {2003, 1, "G\374m\374shane Doganspor"}, {2003, 2, "Mardinspor"}, {2003, 2, "Adiyamanspor"},
+    {2003, 2, "Hatayspor"}, {2003, 2, "Gaziantep B\374y\374ksehir Belediyespor"}, {2003, 2, "Tarsus Idman Yurdu"},
+    {2003, 2, "Sanliurfaspor"}, {2003, 2, "Aksarayspor"}, {2003, 2, "Kahramanmarasspor"}, {2003, 2, "Erzincanspor"},
+    {2003, 2, "Sanliurfa Belediyespor"}, {2003, 2, "Cizrespor"}, {2003, 2, "Batman Petrolspor"},
+    {2003, 2, "Siirt JETPAspor"}, {2003, 2, "Erzurumspor"}, {2003, 2, "Mezitlispor"}, {2003, 2, "Igdir Belediyespor"},
+    {2004, 0, "UMPAS Usakspor A.S."}, {2004, 0, "Ineg\366lspor"}, {2004, 0, "G\374ng\366ren Belediyespor"},
+    {2004, 0, "Muglaspor"}, {2004, 0, "Oyak Renaultspor"}, {2004, 0, "Pendikspor"}, {2004, 0, "Nazilli Belediyespor"},
+    {2004, 0, "Izmirspor"}, {2004, 0, "Marmaris Bld. Gen\347likspor"}, {2004, 0, "Bucaspor"},
+    {2004, 0, "Bursa Merinosspor A.S."}, {2004, 0, "Yildirim Bosnaspor"}, {2004, 0, "K\374\347\374kk\366yspor"},
+    {2004, 0, "Aydinspor"}, {2004, 0, "G\366ztepe A.S."}, {2004, 0, "\307orluspor"}, {2004, 1, "Orduspor"},
+    {2004, 1, "Ey\374pspor"}, {2004, 1, "MKE Kirikkalespor"}, {2004, 1, "Eskisehirspor"},
+    {2004, 1, "Kardemir Demir-\307elik Karab\374kspor"}, {2004, 1, "Yalovaspor"}, {2004, 1, "Zonguldakspor"},
+    {2004, 1, "\307ankiri Belediyespor"}, {2004, 1, "Darica Gen\347lerbirligi"}, {2004, 1, "Kartalspor"},
+    {2004, 1, "Maltepespor"}, {2004, 1, "Anadolu \334sk\374dar 1908 Spor"}, {2004, 1, "Ankara Demirspor"},
+    {2004, 1, "Bulancakspor"}, {2004, 1, "Sekerspor"}, {2004, 2, "Gaziantep B\374y\374ksehir Belediyespor"},
+    {2004, 2, "Siirt JETPAspor"}, {2004, 2, "Tarsus Idman Yurdu"}, {2004, 2, "Adiyamanspor"},
+    {2004, 2, "Adana Demirspor"}, {2004, 2, "Hatayspor"}, {2004, 2, "Sanliurfa Belediyespor"},
+    {2004, 2, "Sanliurfaspor"}, {2004, 2, "Cizrespor"}, {2004, 2, "Erzurumspor"}, {2004, 2, "Batman Petrolspor"},
+    {2004, 2, "Aksarayspor"}, {2004, 2, "Kahramanmarasspor"}, {2004, 2, "Erzincanspor"}, {2004, 2, "Karamanspor"},
 };
 
-static int real_group(int season, int32_t club)
+static int real_group(int season, uint32_t club)
 {
     for (size_t i = 0; i < sizeof REAL_GROUPS / sizeof REAL_GROUPS[0]; i++)
-        if (REAL_GROUPS[i].season == season && REAL_GROUPS[i].club == club) return REAL_GROUPS[i].group;
+        if (REAL_GROUPS[i].season == season && !strncmp(win_str(club + 4u), REAL_GROUPS[i].name, 51))
+            return REAL_GROUPS[i].group;
     return -1;
 }
 
@@ -891,7 +906,9 @@ RT_WRAP(008fe580, tur_deal)
     int season = (int16_t)rd16(g_mem, obj + 0x40u) + 1, real = 0, others = 0;
     for (int i = 0; list && i < rest; i++) {   /* a club with a known real group of the coming season takes it */
         uint32_t club = rd32(g_mem, list + 4u * (uint32_t)i);
-        int k = real_group(season, (int32_t)rd32(g_mem, club));
+        int k = real_group(season, club);
+        fprintf(stderr, "recomp: turkish groups: %d/%02d new: %.51s: real group %c%s\n", season, (season + 1) % 100,
+                win_str(club + 4u), k >= 0 ? LETTER[k] : '-', k >= 0 && have[k] >= size[k] ? ", full" : "");
         if (k >= 0 && have[k] < size[k]) {
             wr32(g_mem, club + CLUB_GROUP, g[k]);
             have[k]++;

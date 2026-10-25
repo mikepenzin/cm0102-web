@@ -138,6 +138,9 @@ def check_summer(log, first, last):
         moved = sorted(c for k in SIZES for c in nxt[k] if c in before and before[c] != k)
         if moved:
             bad.append(f"{y + 1}: clubs that stay in Category B changed group: {moved[:6]}")
+        for name, k in re.findall(rf"recomp: turkish groups: {y + 1}/\d\d new: (.*): real group ([ABC])\n", text):
+            if name not in nxt[k]:
+                bad.append(f"{y + 1}: {name} has the real group {k} but is not in it")
         ad = [r for r in a_downs if r[0] == y]
         if not ad or any(r[2] != "Category B" for r in ad):
             bad.append(f"{y}: Category A relegated {ad}")
