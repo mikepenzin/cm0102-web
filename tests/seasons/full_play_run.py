@@ -108,6 +108,7 @@ def run_leg(o, work, save, days):
                RECOMP_USER_DIR=user, RECOMP_FIXED_CLOCK="1", RECOMP_SCREEN_LOG="1",
                RECOMP_SAVE_AFTER_DAYS=str(days), RECOMP_START_SEASON=str(o["start"]),
                RECOMP_RULES_REPORT=os.path.join(work, "report.tsv"), RECOMP_RULES_TABLE=table,
+               RECOMP_SEASON_INTL_LOG="1",
                RECOMP_SCRIPT="; ".join(smoke_run.scaled_steps("classic", shots, steps)))
     wait_for_room()
     t0 = time.time()
