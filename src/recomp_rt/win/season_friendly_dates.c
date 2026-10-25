@@ -38,8 +38,9 @@
  * so it is not moved here: on the senior match's own day it stops add_fixture's clash test at Database.cpp 13471
  * (0x53b964; seen when this code moved one). In a
  * season game, a fixture of two national sides from those calls, in a competition that is not a finals tournament
- * (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day within 10 days on which neither
- * side has a national match yet (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two
+ * (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day within 10 days on which no side
+ * of either nation (senior, B, Under 21) has a national match yet (fix_man_get_fixture_list_for_date 0x5ae6a0,
+ * fixture types 0 and 1). A side's two
  * matches of a window so take two days. With no such day the fixture keeps its date. Two-legged qualifying ties
  * (Cup::create_tie_fixtures) keep theirs, so a second leg never comes before its first. */
 #include "win.h"
@@ -192,9 +193,11 @@ static int national_side(uint32_t club)
     return i < count && i >= count - 2 * nations;
 }
 
-/* 1 when club a or club b has a national match (fixture types 0 and 1) on day doy of year y. */
+/* 1 when a side of the nation of club a or club b (senior, B or Under 21: club +0x53, as the friendly arranger
+ * reads it at 0x5cbf59) has a national match (fixture types 0 and 1) on day doy of year y. */
 static int side_busy(uint32_t a, uint32_t b, int y, int doy)
 {
+    uint32_t na = rd32(g_mem, a + 0x53), nb = rd32(g_mem, b + 0x53);
     int busy = 0;
     for (int slice = 0; slice < 3 && !busy && !rt_unwinding; slice++)
         for (int type = 0; type < 2 && !busy && !rt_unwinding; type++) {
@@ -216,7 +219,10 @@ static int side_busy(uint32_t a, uint32_t b, int y, int doy)
                 uint32_t f = rd32(g_mem, node);
                 if (!readable(f)) continue;
                 uint32_t h = rd32(g_mem, f + 0x1c), w = rd32(g_mem, f + 0x20);
-                if (h == a || h == b || w == a || w == b) busy = 1;
+                uint32_t nh = readable(h) ? rd32(g_mem, h + 0x53) : 0, nw = readable(w) ? rd32(g_mem, w + 0x53) : 0;
+                if (h == a || h == b || w == a || w == b || (nh && (nh == na || nh == nb)) ||
+                    (nw && (nw == na || nw == nb)))
+                    busy = 1;
             }
             if (readable(list)) {
                 cpu.ecx = list;
