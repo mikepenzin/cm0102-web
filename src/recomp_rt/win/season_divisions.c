@@ -1206,8 +1206,15 @@ RT_WRAP(005eb120, gre_swap)
      * the constructor sets its year and makes its table (0x5eb35e). A second start put it one year ahead (seed 3 of
      * the 0.6.0 long games, made in 2013): it then took its class's places (2 up) where GrePrm relegated 1 to
      * it, and at the 2015 end the Greek Cup had fewer than its 44 clubs (gre_cup.cpp 802, 0x5e9c24). */
+    /* The edition it starts is the year after the National B Division's finished one (now + 1), not the rules season
+     * next: with changing rules off next_season_of gives the start season for every change (Q232: the start season's
+     * rules), so the group of a 2021 game (October 2021 database) held 2021 for ever and the league check of gate (a)
+     * run 8 found Super League 2 South at edition 2021 at the end of 2022/23. With changing rules on next is now + 1. */
     if (held) {
-        if ((int16_t)rd16(g_mem, group + OBJ_YEAR) < next) vcall(group, 0x8);
+        /* A group behind the National B Division (a save of a game that the old rule left at 2021) takes the finished
+         * year first, so its start makes the edition now + 1, as divisions_before does for a group that comes back. */
+        if ((int16_t)rd16(g_mem, group + OBJ_YEAR) < now) wr16(g_mem, group + OBJ_YEAR, (uint16_t)now);
+        if ((int16_t)rd16(g_mem, group + OBJ_YEAR) < now + 1) vcall(group, 0x8);
     } else {
         /* No group next season: it stays idle with its finished season and waits with the year before its next
          * edition (2998 when none comes), as the rule kind's before hook does (review 2: its start_new_season would
