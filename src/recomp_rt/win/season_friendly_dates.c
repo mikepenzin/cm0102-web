@@ -20,9 +20,9 @@
  * July row) and each round after it followed; in 2015/16 the Europa League tie Gent v Juventus on 26 April got clash
  * 21 too (an April row). The real FIFA calendar keeps its match days off the UEFA days.
  *
- * The fix, in a season game: each row takes the real FIFA match day of its month and year that lies nearest to its
- * own day (season_fifa_days, from the results of each day counted in two lists, season_fifa_days_table.c). A month
- * with no FIFA match day that year (July in every year, August from 2014, January and most Decembers) gives the row
+ * The fix, in a running season of a season game: each row takes the real FIFA match day of its month and year that
+ * lies nearest to its own day (season_fifa_days, from the results of each day counted in two lists,
+ * season_fifa_days_table.c). A month with no FIFA match day that year (July in every year, August from 2014, January and most Decembers) gives the row
  * none: its continent becomes -2, which no continent has, so the arranger pairs no one on it. (-1 would be wrong:
  * the arranger reads a continent of -1 as every continent, 0x5cc060..0x5cc070.) After the last year of
  * the list, the days of its last year move on by 364 days a year (plus 7 when that drifts over 3 days), as the UEFA
@@ -51,6 +51,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define ROWS 0x34ecu
 #define ROW_COUNT 0x34f0u
@@ -84,11 +85,54 @@ static int fifa_day(int y, int m, int want) { return season_fifa_day(y, m, want)
 
 void o_005cc510(void);
 
+static uint32_t friendly_obj;            /* the Friendly object of the game (0x5cc510's this) */
+static int moved_season = -1;           /* the season whose start moved the rows */
+static int pending_count;               /* the qualifiers that wait for the first running season (route M) */
+static void move_pending(void);
+
+/* The season of today: from 1 July, today's year. */
+static int season_now(void)
+{
+    int y = (int16_t)rd16(g_mem, GAME_DATE + 2), m, d;
+    season_from_day_of_year(y, (int16_t)rd16(g_mem, GAME_DATE), &m, &d);
+    return m >= 7 ? y : y - 1;
+}
+
+static void snap_rows(uint32_t self);
+
+/* Running seasons only (O405, lead 4, 26 October 2026): in the start season the table stays the original's, as
+ * that season keeps the original's qualifying and international dates. The table holds the rows of later seasons
+ * from the start, and moving them changed a 2001/02 new game with changing rules in its first week (same-save
+ * new-game set: Friendly.tmp and the national squads). So the rows move when the game is in a running season:
+ * here when the table is made or loaded in one, else at the first day of the first running season
+ * (season_friendly_dates_day, from the daily season pass 0x5d5ae0). */
 RT_WRAP(005cc510, friendly_set_row_dates)
 {
     uint32_t self = cpu.ecx;
     o_005cc510();
     if (rt_unwinding || !season_game_changes() || !readable(self)) return;
+    friendly_obj = self;
+    if (season_now() <= season_start_year()) return;    /* a new game makes the table on 1 January of its year */
+    moved_season = season_now();
+    snap_rows(self);
+}
+
+void season_friendly_dates_day(void)
+{
+    if (!season_game_changes()) return;
+    int now = season_now();
+    if (now <= season_start_year()) return;
+    if (friendly_obj && readable(friendly_obj) && now != moved_season) {
+        moved_season = now;
+        snap_rows(friendly_obj);
+    }
+    if (!rt_unwinding && pending_count) move_pending();
+}
+
+void season_friendly_dates_reset(void) { friendly_obj = 0, moved_season = -1, pending_count = 0; }
+
+static void snap_rows(uint32_t self)
+{
     uint32_t rows = rd32(g_mem, self + ROWS);
     int count = (int32_t)rd32(g_mem, self + ROW_COUNT), moved = 0, kept = 0, dropped = 0;
     if (!readable(rows) || count <= 0 || count > 400) return;
@@ -201,6 +245,171 @@ static int side_busy(uint32_t a, uint32_t b, int y, int doy)
     return busy;
 }
 
+/* The FIFA day a qualifier of club home v club away on day d of year y moves to: the nearest free one of the same
+ * year, 2 or more days after today; d when it is on one already; -1 when none is free. */
+static int fifa_target(uint32_t home, uint32_t away, int y, int d)
+{
+    int doys[FIFA_DOYS_MAX], n = fifa_doys(y, doys, FIFA_DOYS_MAX);
+    for (int k = 0; k < n; k++)
+        if (doys[k] == d) return d;                             /* on a FIFA day already */
+    int today_year = (int16_t)rd16(g_mem, GAME_DATE + 2), today = (int16_t)rd16(g_mem, GAME_DATE);
+    for (int dist = 1; dist <= SNAP_DAYS && !rt_unwinding; dist++)
+        for (int sign = -1; sign <= 1; sign += 2) {
+            int c = d + sign * dist, ok = 0;
+            if (c < 0 || c >= days_in(y) || (y == today_year && c < today + 2) || y < today_year) continue;
+            for (int k = 0; k < n; k++) ok |= doys[k] == c;
+            if (!ok || side_busy(home, away, y, c)) continue;
+            return rt_unwinding ? -1 : c;
+        }
+    return -1;
+}
+
+static void log_move(uint32_t rec, uint32_t home, uint32_t away, int d, int c, int y, const char *how)
+{
+    if (!getenv("RECOMP_SCREEN_LOG")) return;
+    if (c >= 0)
+        fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s moves from day %d to the FIFA day %d of %d%s\n",
+                win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, c, y, how);
+    else
+        fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s stays on day %d of %d (no free FIFA day after "
+                        "today)%s\n", win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, y, how);
+}
+
+/* ---- The qualifiers of later seasons made in the start season (route M, lead 4, 26 October 2026) ----
+ *
+ * In the start season the snap moves nothing, so that season stays the base game's (the same-save new-game set).
+ * A qualifier it makes for a later season waits in this list (competition record id, the two clubs' indexes, its
+ * date). On the first day of the first running season (season_friendly_dates_day) each one moves to its FIFA day
+ * as the original moves a stored fixture (League::move_fixtures_for_tv 0x685640: a copy of the fixture,
+ * FIXTURE_MANAGER::remove_fixture 0x5abc30, the new date, add_fixture 0x5aa680). The list is in the season part of
+ * the save (season_change.c), so a start-season save loaded later moves them once, and a save made after the move
+ * holds none. */
+#define F_REMOVE 0x005abc30u                /* FIXTURE_MANAGER::remove_fixture, thiscall (Fixture *) ret 4 */
+#define F_ADD 0x005aa680u                   /* FIXTURE_MANAGER::add_fixture, thiscall (Fixture *, 1) ret 8 */
+#define FIXTURE_SIZE 0x4f
+#define PENDING_MAX 4096
+
+typedef struct {
+    uint32_t rec_id, home, away;            /* home and away: club indexes */
+    int16_t year, day;
+} Pending;
+static Pending pending[PENDING_MAX];
+
+static int club_index(uint32_t club) { return (int)((club - rd32(g_mem, CLUBS)) / CLUB_SIZE); }
+
+/* The stored fixture of a pending entry: the lists of its day (slices 0 to 2, fixture types 0 and 1). */
+static uint32_t find_pending(const Pending *p)
+{
+    uint32_t clubs = rd32(g_mem, CLUBS);
+    for (int slice = 0; slice < 3 && !rt_unwinding; slice++)
+        for (int type = 0; type < 2 && !rt_unwinding; type++) {
+            uint32_t saved_esp = cpu.esp;
+            cpu.esp -= 16;
+            uint32_t date = cpu.esp;
+            wr16(g_mem, date, (uint16_t)p->day);
+            wr16(g_mem, date + 2, (uint16_t)p->year);
+            wr32(g_mem, date + 4, 0);
+            Cpu saved = cpu;
+            cpu.ecx = rd32(g_mem, FIXTURES);
+            uint32_t args[3] = {date, (uint32_t)slice, (uint32_t)type};
+            uint32_t list = rt_callback(F_DAY_LIST, 3, args);
+            if (rt_unwinding) return 0;
+            cpu = saved;
+            cpu.esp = saved_esp;
+            for (uint32_t node = readable(list) ? rd32(g_mem, list + 2) : 0, k = 0; readable(node) && k < 4000;
+                 node = rd32(g_mem, node + 6), k++) {
+                uint32_t f = rd32(g_mem, node), rec = readable(f) ? rd32(g_mem, f + 0x14) : 0;
+                if (readable(rec) && rd32(g_mem, rec) == p->rec_id &&
+                    rd32(g_mem, f + 0x1c) == clubs + CLUB_SIZE * p->home &&
+                    rd32(g_mem, f + 0x20) == clubs + CLUB_SIZE * p->away)
+                    return f;
+            }
+        }
+    return 0;
+}
+
+static void move_pending(void)
+{
+    int moved = 0, stayed = 0, gone = 0;
+    for (int i = 0; i < pending_count && !rt_unwinding; i++) {
+        uint32_t f = find_pending(&pending[i]);
+        if (rt_unwinding) return;
+        if (!f) {
+            gone++;
+            continue;
+        }
+        uint32_t home = rd32(g_mem, f + 0x1c), away = rd32(g_mem, f + 0x20), rec = rd32(g_mem, f + 0x14);
+        int y = pending[i].year, d = pending[i].day, c = fifa_target(home, away, y, d);
+        if (rt_unwinding) return;
+        if (c == d) continue;
+        if (c < 0) {
+            stayed++;
+            log_move(rec, home, away, d, -1, y, " (made in the start season)");
+            continue;
+        }
+        uint32_t saved_esp = cpu.esp;
+        cpu.esp -= 0x60;
+        uint32_t copy = cpu.esp;
+        memcpy(g_mem + copy, g_mem + f, FIXTURE_SIZE);
+        Cpu saved = cpu;
+        cpu.ecx = rd32(g_mem, FIXTURES);
+        uint32_t r[1] = {copy};
+        rt_callback(F_REMOVE, 1, r);
+        if (rt_unwinding) return;
+        cpu = saved;
+        wr16(g_mem, copy + 0x2a, (uint16_t)c);
+        cpu.ecx = rd32(g_mem, FIXTURES);
+        uint32_t a[2] = {copy, 1};
+        rt_callback(F_ADD, 2, a);
+        if (rt_unwinding) return;
+        cpu = saved;
+        cpu.esp = saved_esp;
+        moved++;
+        log_move(rec, home, away, d, c, y, " (made in the start season)");
+    }
+    if (getenv("RECOMP_SCREEN_LOG"))
+        fprintf(stderr, "recomp: intl dates: %d qualifiers made in the start season: %d moved, %d stay, %d no longer "
+                        "stored\n", pending_count, moved, stayed, gone);
+    pending_count = 0;
+}
+
+uint32_t season_friendly_part_size(void) { return pending_count ? 4u + 16u * (uint32_t)pending_count : 0u; }
+
+void season_friendly_part_write(uint8_t *out)
+{
+    uint32_t n = (uint32_t)pending_count;
+    memcpy(out, &n, 4);
+    for (int i = 0; i < pending_count; i++) {
+        uint8_t *e = out + 4 + 16 * i;
+        memcpy(e, &pending[i].rec_id, 4);
+        memcpy(e + 4, &pending[i].home, 4);
+        memcpy(e + 8, &pending[i].away, 4);
+        memcpy(e + 12, &pending[i].year, 2);
+        memcpy(e + 14, &pending[i].day, 2);
+    }
+}
+
+/* Reads the list from the season part (n bytes after its other fields; 0 in a save before row A18). */
+int season_friendly_part_read(const uint8_t *in, uint32_t n)
+{
+    pending_count = 0;
+    if (!n) return 1;
+    uint32_t count;
+    if (n < 4) return 0;
+    memcpy(&count, in, 4);
+    if (count > PENDING_MAX || (n - 4) / 16 < count) return 0;
+    for (uint32_t i = 0; i < count; i++) {
+        const uint8_t *e = in + 4 + 16 * i;
+        memcpy(&pending[i].rec_id, e, 4);
+        memcpy(&pending[i].home, e + 4, 4);
+        memcpy(&pending[i].away, e + 8, 4);
+        memcpy(&pending[i].year, e + 12, 2);
+        memcpy(&pending[i].day, e + 14, 2);
+    }
+    pending_count = (int)count;
+    return 1;
+}
+
 /* From the add_fixture wrap (season_kind_cup_breaks.c): ret is the return address of the add_fixture call. */
 void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
 {
@@ -208,15 +417,14 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     int from = 0;
     for (unsigned k = 0; k < sizeof calls / sizeof calls[0]; k++) from |= ret == calls[k];
     if (!from || !season_game_changes() || !readable(fix)) return;
-    /* Running seasons only (O375, lead 4, 26 October 2026): a match of the start season keeps the original's date,
-     * as that season keeps the original's qualifying dates (season_uefa_qual.c, run_dates). In 2008 the qualifiers
-     * on the FIFA days of 6 and 10 September met the start season's Champions League groups (Liverpool fielded 7 at
-     * Bordeaux, match_eng.cpp 652). The season of the match's own date (from 1 July, its year), so a qualifier of a
-     * later season made in the start season moves (with the season of today, a 2023 start stopped at
-     * match_eng.cpp 612 in March 2026: England B with no players). */
-    int fix_year = (int16_t)rd16(g_mem, fix + 0x28), fix_month, fix_day;
-    from_day_of_year(fix_year, (int16_t)rd16(g_mem, fix + 0x2a), &fix_month, &fix_day);
-    if ((fix_month >= 7 ? fix_year : fix_year - 1) == season_start_year()) return;
+    /* Running seasons only (O375, O405, lead 4, 26 October 2026): a match of the start season keeps the original's
+     * date, as that season keeps the original's qualifying dates (season_uefa_qual.c, run_dates). In 2008 the
+     * qualifiers on the FIFA days of 6 and 10 September met the start season's Champions League groups (Liverpool
+     * fielded 7 at Bordeaux, match_eng.cpp 652). The season of the match's own date (from 1 July, its year); a match
+     * before the start season (the run to the start date of a new game, 0x5cc850) keeps its date too. */
+    int y = (int16_t)rd16(g_mem, fix + 0x28), d = (int16_t)rd16(g_mem, fix + 0x2a), fix_month, fix_day;
+    from_day_of_year(y, d, &fix_month, &fix_day);
+    if ((fix_month >= 7 ? y : y - 1) <= season_start_year()) return;
     uint32_t home = rd32(g_mem, fix + 0x1c), away = rd32(g_mem, fix + 0x20), rec = rd32(g_mem, fix + 0x14);
     if (!national_side(home) || !national_side(away) || !readable(rec)) return;
     Cpu saved = cpu;
@@ -225,25 +433,15 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     if (rt_unwinding) return;
     cpu = saved;
     if (finals) return;
-    int y = (int16_t)rd16(g_mem, fix + 0x28), d = (int16_t)rd16(g_mem, fix + 0x2a), doys[FIFA_DOYS_MAX];
-    int n = fifa_doys(y, doys, FIFA_DOYS_MAX);
-    for (int k = 0; k < n; k++)
-        if (doys[k] == d) return;                               /* on a FIFA day already */
-    int today_year = (int16_t)rd16(g_mem, GAME_DATE + 2), today = (int16_t)rd16(g_mem, GAME_DATE);
-    for (int dist = 1; dist <= SNAP_DAYS && !rt_unwinding; dist++)
-        for (int sign = -1; sign <= 1; sign += 2) {
-            int c = d + sign * dist, ok = 0;
-            if (c < 0 || c >= days_in(y) || (y == today_year && c < today + 2) || y < today_year) continue;
-            for (int k = 0; k < n; k++) ok |= doys[k] == c;
-            if (!ok || side_busy(home, away, y, c)) continue;
-            if (rt_unwinding) return;
-            wr16(g_mem, fix + 0x2a, (uint16_t)c);
-            if (getenv("RECOMP_SCREEN_LOG"))
-                fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s moves from day %d to the FIFA day %d of %d\n",
-                        win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, c, y);
-            return;
-        }
-    if (!rt_unwinding && getenv("RECOMP_SCREEN_LOG"))
-        fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s stays on day %d of %d (no free FIFA day after today)\n",
-                win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, y);
+    /* Made in the start season: it waits for the first running season (route M), the start season unchanged. */
+    if (season_now() <= season_start_year()) {
+        if (pending_count < PENDING_MAX)
+            pending[pending_count++] = (Pending){rd32(g_mem, rec), (uint32_t)club_index(home),
+                                                 (uint32_t)club_index(away), (int16_t)y, (int16_t)d};
+        return;
+    }
+    int c = fifa_target(home, away, y, d);
+    if (rt_unwinding || c == d) return;
+    if (c >= 0) wr16(g_mem, fix + 0x2a, (uint16_t)c);
+    log_move(rec, home, away, d, c, y, "");
 }
