@@ -632,6 +632,7 @@ void season_playoffs_rules(uint32_t obj)
 static int16_t held_day[ENTRY_COUNT];
 static int held[ENTRY_COUNT];
 static int logged[ENTRY_COUNT];         /* the day of the last log line of an entry, +1 */
+static int held_net[ENTRY_COUNT];       /* 1 while an entry waits through the net (entry_unfinished) */
 
 /* The marked leagues of an entry with a built stage and a year before the game year. 0: none; 1: all their
  * stages are complete; 2: one is not (*file gets its file). */
@@ -653,9 +654,31 @@ static int entry_playoffs(int e, int year, const char **file)
     return seen;
 }
 
+/* The net of O288 (den-stall-2, lead 4 under O259: it must never act). A plain league of an entry that is not
+ * complete on the entry's update day misses the change and runs a season late (the Danish leagues in gate (a) runs 7
+ * and 8: a league match moved past the update day). fixture_season_end.c keeps the moves of the game before the
+ * update day at the source. If a plain league is still not complete, the entry waits as for a play-off (at most
+ * WAIT_DAYS), with a line "season change net" that soak_run.py counts as a failed leg. 0: no plain league in the
+ * wait; 1: all are complete; 2: one is not (*file gets its file). */
+static int entry_unfinished(int e, int year, const char **file)
+{
+    uint32_t buf[COMPS_MAX];
+    int n = season_change_entry_comps(e, buf, COMPS_MAX), seen = 0;
+    for (int i = 0; i < n && !rt_unwinding; i++) {
+        if (!plain_league(buf[i]) || marked(buf[i]) || (int16_t)rd16(g_mem, buf[i] + COMP_YEAR) >= year) continue;
+        seen = 1;
+        uint32_t vt = rd32(g_mem, buf[i]), args[2] = {1, 1};
+        if (!(call_this(rd32(g_mem, vt + 0x10), buf[i], 2, args) & 0xff)) {   /* check_complete(1, 1) */
+            *file = season_change_file(buf[i]);
+            return 2;
+        }
+    }
+    return seen;
+}
+
 int season_playoffs_hold(void)
 {
-    if (!playoffs_on()) return 0;
+    if (!season_game_changes()) return 0;
     int today = (int16_t)rd16(g_mem, GAME_DATE), year = (int16_t)rd16(g_mem, GAME_DATE + 2), any = 0;
     for (int e = 0; e < ENTRY_COUNT && !rt_unwinding; e++) {
         uint32_t at = ENTRIES + (uint32_t)e * ENTRY_SIZE;
@@ -663,22 +686,33 @@ int season_playoffs_hold(void)
         held[e] = 0;
         if (upd < 0 || upd >= LATE_DAY || today < upd || today - upd > WAIT_DAYS) continue;
         const char *file = "";
-        int state = entry_playoffs(e, year, &file);
+        int p = playoffs_on() ? entry_playoffs(e, year, &file) : 0;
+        /* The net only for an entry with a plain league that is not complete on its update day itself. */
+        const char *f2 = "";
+        int u = today == upd || held_net[e] ? entry_unfinished(e, year, &f2) : 0;
+        if (today == upd) held_net[e] = u == 2;
+        int net = held_net[e];
+        int state = p == 2 || (net && u == 2) ? 2 : p || (net && u) ? 1 : 0;
+        if (net && p != 2) file = f2;
         if (!state) continue;
         if (today == upd && state == 2) {
             held_day[e] = (int16_t)upd;
             held[e] = 1;
             wr16(g_mem, at + ENTRY_UPDATE_DAY, 0xffffu);
             if (logged[e] != today + 1)
-                fprintf(stderr, "recomp: playoffs: entry %d waits for the play-off of %s (update day %d of %d)\n", e,
-                        file, upd, year);
+                fprintf(stderr, net ? "recomp: season change net: entry %d waits for %s, not complete on its update "
+                                      "day %d of %d\n"
+                                    : "recomp: playoffs: entry %d waits for the play-off of %s (update day %d of %d)\n",
+                        e, file, upd, year);
         } else if (today > upd && (state == 1 || today - upd == WAIT_DAYS)) {
             held_day[e] = (int16_t)upd;
             held[e] = 1;
             wr16(g_mem, at + ENTRY_UPDATE_DAY, (uint16_t)today);
             if (logged[e] != today + 1)
-                fprintf(stderr, "recomp: playoffs: entry %d changes its season on day %d of %d, %d days late%s\n", e,
-                        today, year, today - upd, state == 2 ? " (the play-off is not complete)" : "");
+                fprintf(stderr, "recomp: %s: entry %d changes its season on day %d of %d, %d days late%s\n",
+                        net ? "season change net" : "playoffs", e, today, year, today - upd,
+                        state == 2 ? " (not complete)" : "");
+            held_net[e] = 0;
         }
         if (held[e]) logged[e] = today + 1;
         any |= held[e];
