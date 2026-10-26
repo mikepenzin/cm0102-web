@@ -37,10 +37,11 @@
  * comes the day before the senior match (ReserveComp::add_b_or_under21_fixture, the add_fixture call at 0x7e6a48),
  * so it is not moved here. In a season game, a fixture of two national sides from those calls, in a competition that
  * is not a finals tournament (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day
- * within 60 days, 2 or more days after today, on which no side of either nation (senior, B, Under 21) has a national
- * match yet (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two matches of a window so
- * take two days. 60 days reach a July matchday (CONMEBOL on 6 July 2016 met a Champions League tie: no FIFA day in
- * July, the nearest ones are early June and early September). With no such day the fixture keeps its date. Two-legged
+ * of the same year, 2 or more days after today, on which no side of either nation (senior, B, Under 21) has a
+ * national match yet (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two matches of a
+ * window so take two days. The search covers the whole year: a July matchday made after the June window has its
+ * nearest free day in September (CONMEBOL on 6 July 2016 met a Champions League tie, CONCACAF on 12 July 2028 a
+ * Europa League tie 71 days before the window). With no such day the fixture keeps its date (logged). Two-legged
  * qualifying ties (Cup::create_tie_fixtures) keep theirs, so a second leg never comes before its first. */
 #include "win.h"
 #include "season_names.h"
@@ -60,7 +61,8 @@
 #define FIXTURES 0xae2a58u
 #define GAME_DATE 0xae2c90u             /* s16 day of the year, s16 year */
 #define FIFA_DOYS_MAX 128               /* FIFA days of one year, at most */
-#define SNAP_DAYS 60                    /* the search for a FIFA day, either way */
+#define SNAP_DAYS 366                   /* the search for a FIFA day, either way: the whole year (the gap from
+                                         * the June to the September window is 107 days, 168 in a World Cup year) */
 #define CLUBS 0xae23b4u
 #define CLUB_COUNT 0xae235cu
 #define NATION_COUNT 0xae2350u
@@ -268,5 +270,7 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
                         win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, c, y);
             return;
         }
+    if (!rt_unwinding && getenv("RECOMP_SCREEN_LOG"))
+        fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s stays on day %d of %d (no free FIFA day after today)\n",
+                win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, y);
 }
-
