@@ -103,42 +103,7 @@ int season_uefa_league_sort(uint32_t *clubs, int n)
     return !rt_unwinding;
 }
 
-/* ---- The match days ----
- *
- * The real match days of each published season, and for a later season those of the last published one (Q547,
- * update of 26 October 2026, O378): the Champions League on Wednesdays (its Tuesday and Wednesday matches in one
- * day), the Europa League and Conference League on Thursdays. Weekday 2 and 3 as the original's Champions League
- * and UEFA Cup round dates (0x584171, 0x9026a4): league_round_set_date 0x68a160 moves a date of a later year to
- * the nearest such weekday. From 2026/27 FIFA's September window is a double window (21 September to 6 October
- * 2026, FIFA Men's International Match Calendar 2023-2030), so the 2024/25 days would put matchdays 1 and 2 of
- * a later season in it (a duty move of Lyon v Hajduk Split on 20 September 2028 in a test game).
- * Sources: 2024/25 docs/research/2026-10-18-uefa-access-and-round-names.md (Slice 25, Task C). 2025/26 and
- * 2026/27: uefa.com fixture pages of each competition, with laligaexpert.com (2025/26 Europa League and
- * Conference League), tntsports.co.uk (2025/26 Champions League), si.com (2026/27 Champions League) and
- * flashscore.com (2026/27 Europa League and Conference League), read 26 October 2026. A matchday over several days
- * takes its Wednesday (Champions League) or Thursday. */
-static const SeasonLeagueDay CL_DAYS[3][8] = {
-    {{18, 8, 0}, {2, 9, 0}, {23, 9, 0}, {6, 10, 0}, {27, 10, 0}, {11, 11, 0}, {22, 0, 1}, {29, 0, 1}},  /* 2024/25 */
-    {{17, 8, 0}, {1, 9, 0}, {22, 9, 0}, {5, 10, 0}, {26, 10, 0}, {10, 11, 0}, {21, 0, 1}, {28, 0, 1}},  /* 2025/26 */
-    {{9, 8, 0}, {14, 9, 0}, {21, 9, 0}, {4, 10, 0}, {25, 10, 0}, {9, 11, 0}, {20, 0, 1}, {27, 0, 1}},   /* 2026/27 */
-};
-static const SeasonLeagueDay EL_DAYS[3][8] = {
-    {{26, 8, 0}, {3, 9, 0}, {24, 9, 0}, {7, 10, 0}, {28, 10, 0}, {12, 11, 0}, {23, 0, 1}, {30, 0, 1}},
-    {{25, 8, 0}, {2, 9, 0}, {23, 9, 0}, {6, 10, 0}, {27, 10, 0}, {11, 11, 0}, {22, 0, 1}, {29, 0, 1}},
-    {{17, 8, 0}, {15, 9, 0}, {22, 9, 0}, {5, 10, 0}, {26, 10, 0}, {10, 11, 0}, {21, 0, 1}, {28, 0, 1}},
-};
-static const SeasonLeagueDay ECL_DAYS[3][6] = {
-    {{3, 9, 0}, {24, 9, 0}, {7, 10, 0}, {28, 10, 0}, {12, 11, 0}, {19, 11, 0}},
-    {{2, 9, 0}, {23, 9, 0}, {6, 10, 0}, {27, 10, 0}, {11, 11, 0}, {18, 11, 0}},
-    {{15, 9, 0}, {22, 9, 0}, {5, 10, 0}, {26, 10, 0}, {10, 11, 0}, {17, 11, 0}},
-};
-
-const SeasonLeagueDay *season_uefa_league_days(char comp, int season, int *weekday)
-{
-    int k = season <= 2024 ? 0 : season == 2025 ? 1 : 2;
-    *weekday = comp == 'c' ? 2 : 3;
-    return comp == 'c' ? CL_DAYS[k] : comp == 'k' ? ECL_DAYS[k] : EL_DAYS[k];
-}
+/* ---- The match days: season_uefa_days.c (season_uefa_league_days) ---- */
 
 /* ---- The fixed list of the stage that is being made ---- */
 

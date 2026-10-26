@@ -35,15 +35,18 @@
  * CONMEBOL matches of 5 August 2009 put Internazionale's internationals on duty for its Europa League tie of
  * 6 August (clash 21); real: CONCACAF 12 August, CONMEBOL 5 and 9 September. The Under 21 match of the same pair
  * comes the day before the senior match (ReserveComp::add_b_or_under21_fixture, the add_fixture call at 0x7e6a48),
- * so it is not moved here. In a season game, a fixture of two national sides from those calls, in a competition that
- * is not a finals tournament (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day
- * of the same year, 2 or more days after today, on which no side of either nation (senior, B, Under 21) has a
- * national match yet (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two matches of a
+ * so it is not moved here. In a running season of a season game, a fixture of two national sides from those calls,
+ * in a competition that is not a finals tournament (national_teams_is_finals_comp 0x76d940), moves to the nearest
+ * real FIFA match day of the same year, 2 or more days after today, on which no side of either nation (senior, B,
+ * Under 21) has a national match yet and no continental club match is played (fix_man_get_fixture_list_for_date
+ * 0x5ae6a0, all fixture types). A side's two matches of a
  * window so take two days. The search covers the whole year: a July matchday made after the June window has its
  * nearest free day in September (CONMEBOL on 6 July 2016 met a Champions League tie, CONCACAF on 12 July 2028 a
  * Europa League tie 71 days before the window). With no such day the fixture keeps its date (logged). Two-legged
  * qualifying ties (Cup::create_tie_fixtures) keep theirs, so a second leg never comes before its first. */
 #include "win.h"
+#include "season.h"
+#include "season_uefa_days.h"
 #include "season_names.h"
 
 #include <stdio.h>
@@ -59,6 +62,7 @@
 #define F_DAY_LIST 0x005ae6a0u           /* fix_man_get_fixture_list_for_date, thiscall (Date *, slice, type): the
                                          * store's own list of the day (0x5abfd7..0x5abfda), not a copy */
 #define FIXTURES 0xae2a58u
+#define TYPE_COUNT 0xb64738u              /* s8: the fixture types of a day (key nation entries) */
 #define GAME_DATE 0xae2c90u             /* s16 day of the year, s16 year */
 #define FIFA_DOYS_MAX 128               /* FIFA days of one year, at most */
 #define SNAP_DAYS 366                   /* the search for a FIFA day, either way: the whole year (the gap from
@@ -69,64 +73,14 @@
 #define CLUB_SIZE 0x245u
 #define NO_CONTINENT 0xfffffffeu        /* -2: no continent has it (-1 is every continent at 0x5cc060) */
 
-typedef struct {
-    short year;
-    signed char month, day;             /* month 1 to 12 */
-} FifaDay;
-extern const FifaDay season_fifa_days[];
-extern const int season_fifa_day_count;
 
 static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
 
 static int is_leap(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }
 static int days_in(int y) { return is_leap(y) ? 366 : 365; }
-static int day_of_year(int y, int m, int d)     /* m 1 to 12, 0 is 1 January */
-{
-    static const int before[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
-    return before[m - 1] + d - 1 + (m > 2 && is_leap(y));
-}
-static void from_day_of_year(int y, int doy, int *m, int *d)
-{
-    static const int len[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int k = 0;
-    for (; k < 11; k++) {
-        int n = len[k] + (k == 1 && is_leap(y));
-        if (doy < n) break;
-        doy -= n;
-    }
-    *m = k + 1;
-    *d = doy + 1;
-}
-
-/* The real FIFA day of month m (1 to 12) in year y nearest to day `want`, or 0 when the month has none. */
-static int fifa_day(int y, int m, int want)
-{
-    int last = 0;
-    for (int i = 0; i < season_fifa_day_count; i++)
-        if (season_fifa_days[i].year > last) last = season_fifa_days[i].year;
-    int best = 0;
-    if (y <= last) {
-        for (int i = 0; i < season_fifa_day_count; i++) {
-            const FifaDay *f = &season_fifa_days[i];
-            if (f->year == y && f->month == m && (!best || abs(f->day - want) < abs(best - want))) best = f->day;
-        }
-        return best;
-    }
-    /* After the list: the last year's days, 364 days a year later (plus 7 when the drift passes 3 days). */
-    int shift = 364 * (y - last), drift = 0;
-    for (int k = last; k < y; k++) drift += days_in(k) - 364;
-    while (drift > 3) shift += 7, drift -= 7;
-    for (int i = 0; i < season_fifa_day_count; i++) {
-        const FifaDay *f = &season_fifa_days[i];
-        if (f->year != last) continue;
-        int doy = day_of_year(last, f->month, f->day) + shift, yy = last;
-        while (doy >= days_in(yy)) doy -= days_in(yy), yy++;
-        int mm, dd;
-        from_day_of_year(yy, doy, &mm, &dd);
-        if (yy == y && mm == m && (!best || abs(dd - want) < abs(best - want))) best = dd;
-    }
-    return best;
-}
+#define day_of_year season_day_of_year
+#define from_day_of_year season_from_day_of_year
+static int fifa_day(int y, int m, int want) { return season_fifa_day(y, m, want); }
 
 void o_005cc510(void);
 
@@ -202,14 +156,20 @@ static int national_side(uint32_t club)
     return i < count && i >= count - 2 * nations;
 }
 
-/* 1 when a side of the nation of club a or club b (senior, B or Under 21: club +0x53, as the friendly arranger
- * reads it at 0x5cbf59) has a national match (fixture types 0 and 1) on day doy of year y. */
+/* 1 when day doy of year y is taken for a qualifier of club a v club b: a side of the nation of a or b (senior, B
+ * or Under 21: club +0x53, as the friendly arranger reads it at 0x5cbf59) has a national match that day, or the day
+ * holds a continental club match. A continental club competition has no nation (record +0x5d, as
+ * comp_active_key_nation_of_fixture 0x48dd70 reads it) and two club sides; the friendlies (priority 1) aside. A
+ * qualifier (fixture priority +0x3a: 10) does not move such a tie (Champions League 8, Europa League 7) when
+ * add_fixture 0x5aa680 stores it, and the tie then loses its internationals (Liverpool fielded 7 at Bordeaux on
+ * 6 September 2008, match_eng.cpp 652). The day lists of all types (count: the s8 at 0xb64738, key nation entries). */
 static int side_busy(uint32_t a, uint32_t b, int y, int doy)
 {
     uint32_t na = rd32(g_mem, a + 0x53), nb = rd32(g_mem, b + 0x53);
-    int busy = 0;
+    int busy = 0, types = (int8_t)g_mem[TYPE_COUNT];
+    if (types < 2 || types > 40) types = 2;
     for (int slice = 0; slice < 3 && !busy && !rt_unwinding; slice++)
-        for (int type = 0; type < 2 && !busy && !rt_unwinding; type++) {
+        for (int type = 0; type < types && !busy && !rt_unwinding; type++) {
             uint32_t saved_esp = cpu.esp;
             cpu.esp -= 16;
             uint32_t date = cpu.esp;
@@ -232,6 +192,10 @@ static int side_busy(uint32_t a, uint32_t b, int y, int doy)
                 if (h == a || h == b || w == a || w == b || (nh && (nh == na || nh == nb)) ||
                     (nw && (nw == na || nw == nb)))
                     busy = 1;
+                uint32_t rec = rd32(g_mem, f + 0x14);
+                if (readable(rec) && !rd32(g_mem, rec + 0x5d) && g_mem[f + 0x3a] >= 2 && !national_side(h) &&
+                    !national_side(w))
+                    busy = 1;                                   /* a continental club match */
             }
         }
     return busy;
@@ -244,6 +208,13 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     int from = 0;
     for (unsigned k = 0; k < sizeof calls / sizeof calls[0]; k++) from |= ret == calls[k];
     if (!from || !season_game_changes() || !readable(fix)) return;
+    /* Running seasons only (O375, lead 4, 26 October 2026): the start season keeps the original's international
+     * dates, as it keeps the original's qualifying dates (season_uefa_qual.c, run_dates). Its Champions League
+     * groups keep the original's days, and in 2008 the qualifiers on the FIFA days of 6 and 10 September met them
+     * (Liverpool fielded 7 at Bordeaux, match_eng.cpp 652). The season of today: from 1 July, today's year. */
+    int now_year = (int16_t)rd16(g_mem, GAME_DATE + 2), now_month, now_day;
+    from_day_of_year(now_year, (int16_t)rd16(g_mem, GAME_DATE), &now_month, &now_day);
+    if ((now_month >= 7 ? now_year : now_year - 1) == season_start_year()) return;
     uint32_t home = rd32(g_mem, fix + 0x1c), away = rd32(g_mem, fix + 0x20), rec = rd32(g_mem, fix + 0x14);
     if (!national_side(home) || !national_side(away) || !readable(rec)) return;
     Cpu saved = cpu;

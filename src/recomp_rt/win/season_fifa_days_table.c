@@ -10,12 +10,10 @@
  * April 2026 issue, read 26 October 2026).
  * July is left out: no FIFA July date in any year (two qualifier days of 2011 aside, at most three friendlies on
  * a July day). */
-#include <stddef.h>
+#include "season_uefa_days.h"
 
-typedef struct {
-    short year;
-    signed char month, day;
-} FifaDay;
+#include <stddef.h>
+#include <stdlib.h>
 
 const FifaDay season_fifa_days[] = {
     {2001, 2, 28}, {2001, 3, 24}, {2001, 3, 28}, {2001, 4, 25}, {2001, 6, 2}, {2001, 6, 6}, {2001, 8, 15},
@@ -98,3 +96,54 @@ const FifaDay season_fifa_days[] = {
     {2030, 11, 19},
 };
 const int season_fifa_day_count = (int)(sizeof season_fifa_days / sizeof season_fifa_days[0]);
+
+static int is_leap(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }
+static int days_in(int y) { return is_leap(y) ? 366 : 365; }
+
+int season_day_of_year(int y, int m, int d)
+{
+    static const int before[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+    return before[m - 1] + d - 1 + (m > 2 && is_leap(y));
+}
+
+void season_from_day_of_year(int y, int doy, int *m, int *d)
+{
+    static const int len[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int k = 0;
+    for (; k < 11; k++) {
+        int n = len[k] + (k == 1 && is_leap(y));
+        if (doy < n) break;
+        doy -= n;
+    }
+    *m = k + 1;
+    *d = doy + 1;
+}
+
+int season_fifa_day(int y, int m, int want)
+{
+    int last = 0;
+    for (int i = 0; i < season_fifa_day_count; i++)
+        if (season_fifa_days[i].year > last) last = season_fifa_days[i].year;
+    int best = 0;
+    if (y <= last) {
+        for (int i = 0; i < season_fifa_day_count; i++) {
+            const FifaDay *f = &season_fifa_days[i];
+            if (f->year == y && f->month == m && (!best || abs(f->day - want) < abs(best - want))) best = f->day;
+        }
+        return best;
+    }
+    /* After the list: the last year's days, 364 days a year later (plus 7 when the drift passes 3 days). */
+    int shift = 364 * (y - last), drift = 0;
+    for (int k = last; k < y; k++) drift += days_in(k) - 364;
+    while (drift > 3) shift += 7, drift -= 7;
+    for (int i = 0; i < season_fifa_day_count; i++) {
+        const FifaDay *f = &season_fifa_days[i];
+        if (f->year != last) continue;
+        int doy = season_day_of_year(last, f->month, f->day) + shift, yy = last;
+        while (doy >= days_in(yy)) doy -= days_in(yy), yy++;
+        int mm, dd;
+        season_from_day_of_year(yy, doy, &mm, &dd);
+        if (yy == y && mm == m && (!best || abs(dd - want) < abs(best - want))) best = dd;
+    }
+    return best;
+}

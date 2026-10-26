@@ -32,6 +32,7 @@
 #include "season_uefa.h"
 #include "season_cups.h"
 #include "season_uefa_league.h"
+#include "season_uefa_days.h"
 #include "season_playoffs.h"
 #include "season_load.h"
 
@@ -468,18 +469,14 @@ static int uc_group_entrants(uint32_t uc, uint32_t *clubs, int max)
  * the Champions League's phase 1 at 0x583ed8, read "Phase 1 Group A"). */
 static uint32_t uc_group_name(int g) { return 0x41fu + (uint32_t)g; }
 
-/* The match days of the groups (Thursdays, month 0 to 11). 5 days: 21 October, 4 and 25 November, 2 and 16
- * December (UEFA Cup 2004/05). 6 days: 17 September, 1 and 22 October, 5 November, 2 and 17 December (Europa
- * League 2009/10, row uefa-69 of the rules table). */
-static const int GROUP_DATES_5[5][2] = {{21, 9}, {4, 10}, {25, 10}, {2, 11}, {16, 11}};
-static const int GROUP_DATES_6[6][2] = {{17, 8}, {1, 9}, {22, 9}, {5, 10}, {2, 11}, {17, 11}};
-
+/* The match days of the groups: season_uefa_days.c (season_uefa_group_days). */
 static uint32_t group_table(uint32_t year, int days)
 {
-    const int (*dates)[2] = days == 6 ? GROUP_DATES_6 : GROUP_DATES_5;
+    const SeasonLeagueDay *dates = season_uefa_group_days((int)year, days);
     uint32_t t = game_malloc((uint32_t)days * GROUP_ROUND_SIZE);
     for (int d = 0; t && d < days && !rt_unwinding; d++) {
-        uint32_t a[9] = {t, (uint32_t)d, (uint32_t)dates[d][0], (uint32_t)dates[d][1], 0, WEEKDAY_UC, 2, year, 0};
+        uint32_t a[9] = {t, (uint32_t)d, (uint32_t)dates[d].day, (uint32_t)dates[d].month,
+                         (uint32_t)dates[d].year_off, WEEKDAY_UC, 2, year, 0};
         call_cdecl(F_GROUP_DATE, 9, a);
         uint32_t s[7] = {t, (uint32_t)d, 0, 0xffffffffu, 0xffffffffu, 0xffffffffu, 0};
         if (!rt_unwinding) call_cdecl(F_GROUP_SLOT, 7, s);
