@@ -408,6 +408,11 @@ RT_WRAP(0060efd0, match_comp_key_id)
 
 /* ---- The save part ---- */
 
+void season_friendly_dates_reset(void);
+uint32_t season_friendly_part_size(void);       /* season_friendly_dates.c */
+void season_friendly_part_write(uint8_t *out);
+int season_friendly_part_read(const uint8_t *in, uint32_t n);
+
 void season_change_reset(void)
 {
     for (int i = 0; i < news_count; i++) free(news[i].text);
@@ -417,14 +422,16 @@ void season_change_reset(void)
     season_cup_groups_reset();          /* slice 21c: the big stage arrays of the cups with groups */
     season_intl_qual_reset();           /* load sweep: the World Cup play-off ties of the last game */
     season_uefa_league_reset();         /* load sweep: the league phase list of a stage being made */
+    season_friendly_dates_reset();      /* row A18: the Friendly object of the last game */
     season_point = 0;
     creating = 0;                               /* also when a longjmp left create_game */
 }
 
 uint32_t season_change_part_size(void)
 {
-    if (!news_count && !rename_count && season_point <= season_start_year()) return 0;
-    uint32_t n = 4 + 4 + (uint32_t)rename_count * (4 + NAME_ROOM) + 4;
+    uint32_t pending = season_friendly_part_size();
+    if (!news_count && !rename_count && season_point <= season_start_year() && !pending) return 0;
+    uint32_t n = 4 + 4 + (uint32_t)rename_count * (4 + NAME_ROOM) + 4 + pending;
     for (int i = 0; i < news_count; i++) n += 12 + news[i].len;
     return n;
 }
@@ -451,6 +458,7 @@ void season_change_part_write(uint8_t *out)
         at += 4 + NAME_ROOM;
     }
     put32(out + at, (uint32_t)season_point);
+    season_friendly_part_write(out + at + 4);   /* row A18: the qualifiers that wait for the first running season */
 }
 
 int season_change_part_read(const uint8_t *in, uint32_t n)
@@ -498,7 +506,8 @@ int season_change_part_read(const uint8_t *in, uint32_t n)
     uint32_t point = get32(in + at);
     if (point && (point < SEASON_FIRST_YEAR || point > SEASON_LAST_YEAR + 1)) return 0;
     season_point = (int)point;
-    return 1;
+    at += 4;
+    return season_friendly_part_read(in + at, n - at);   /* row A18; nothing more in a save before it */
 }
 
 /* ---- The news item ---- */
@@ -734,8 +743,12 @@ static void update_pass(void);
 
 /* game_season_update_pass, cdecl (): at the end of every day. Slice 19: an entry's change waits for its play-off
  * (season_playoffs.c). */
+void season_friendly_dates_day(void);   /* season_friendly_dates.c: row A18, the friendly table of a running season */
+
 RT_WRAP(005d5ae0, season_update_pass)
 {
+    season_friendly_dates_day();
+    if (rt_unwinding) return;
     int held = season_playoffs_hold();
     update_pass();
     season_playoffs_release(held);
