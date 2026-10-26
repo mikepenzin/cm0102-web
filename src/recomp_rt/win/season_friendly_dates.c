@@ -37,10 +37,11 @@
  * comes the day before the senior match (ReserveComp::add_b_or_under21_fixture, the add_fixture call at 0x7e6a48),
  * so it is not moved here. In a season game, a fixture of two national sides from those calls, in a competition that
  * is not a finals tournament (national_teams_is_finals_comp 0x76d940), moves to the nearest real FIFA match day
- * within 10 days on which no side of either nation (senior, B, Under 21) has a national match yet
- * (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two matches of a window so take two
- * days. With no such day the fixture keeps its date. Two-legged qualifying ties (Cup::create_tie_fixtures) keep
- * theirs, so a second leg never comes before its first. */
+ * within 60 days, 2 or more days after today, on which no side of either nation (senior, B, Under 21) has a national
+ * match yet (fix_man_get_fixture_list_for_date 0x5ae6a0, fixture types 0 and 1). A side's two matches of a window so
+ * take two days. 60 days reach a July matchday (CONMEBOL on 6 July 2016 met a Champions League tie: no FIFA day in
+ * July, the nearest ones are early June and early September). With no such day the fixture keeps its date. Two-legged
+ * qualifying ties (Cup::create_tie_fixtures) keep theirs, so a second leg never comes before its first. */
 #include "win.h"
 #include "season_names.h"
 
@@ -57,6 +58,8 @@
 #define F_DAY_LIST 0x005ae6a0u           /* fix_man_get_fixture_list_for_date, thiscall (Date *, slice, type): the
                                          * store's own list of the day (0x5abfd7..0x5abfda), not a copy */
 #define FIXTURES 0xae2a58u
+#define GAME_DATE 0xae2c90u             /* s16 day of the year, s16 year */
+#define SNAP_DAYS 60                    /* the search for a FIFA day, either way */
 #define CLUBS 0xae23b4u
 #define CLUB_COUNT 0xae235cu
 #define NATION_COUNT 0xae2350u
@@ -244,9 +247,11 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     int n = fifa_doys(y, doys, 64);
     for (int k = 0; k < n; k++)
         if (doys[k] == d) return;                               /* on a FIFA day already */
-    for (int dist = 1; dist <= 10 && !rt_unwinding; dist++)
+    int today_year = (int16_t)rd16(g_mem, GAME_DATE + 2), today = (int16_t)rd16(g_mem, GAME_DATE);
+    for (int dist = 1; dist <= SNAP_DAYS && !rt_unwinding; dist++)
         for (int sign = -1; sign <= 1; sign += 2) {
             int c = d + sign * dist, ok = 0;
+            if (c < 0 || c >= days_in(y) || (y == today_year && c < today + 2) || y < today_year) continue;
             for (int k = 0; k < n; k++) ok |= doys[k] == c;
             if (!ok || side_busy(home, away, y, c)) continue;
             if (rt_unwinding) return;
