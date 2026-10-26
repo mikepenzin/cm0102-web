@@ -67,7 +67,9 @@ The match days are the real days of each published season, and a later season ta
 |---|---|---|---|
 | 2024/25 and before | 18 Sep, 2 Oct, 23 Oct, 6 Nov, 27 Nov, 11 Dec, 22 Jan, 29 Jan | 26 Sep, 3 Oct, 24 Oct, 7 Nov, 28 Nov, 12 Dec, 23 Jan, 30 Jan | 3 Oct, 24 Oct, 7 Nov, 28 Nov, 12 Dec, 19 Dec |
 | 2025/26 | 17 Sep, 1 Oct, 22 Oct, 5 Nov, 26 Nov, 10 Dec, 21 Jan, 28 Jan | 25 Sep, 2 Oct, 23 Oct, 6 Nov, 27 Nov, 11 Dec, 22 Jan, 29 Jan | 2 Oct, 23 Oct, 6 Nov, 27 Nov, 11 Dec, 18 Dec |
-| 2026/27 and later | 9 Sep, 14 Oct, 21 Oct, 4 Nov, 25 Nov, 9 Dec, 20 Jan, 27 Jan | 17 Sep, 15 Oct, 22 Oct, 5 Nov, 26 Nov, 10 Dec, 21 Jan, 28 Jan | 15 Oct, 22 Oct, 5 Nov, 26 Nov, 10 Dec, 17 Dec |
+| 2026/27 | 9 Sep, 14 Oct, 21 Oct, 4 Nov, 25 Nov, 9 Dec, 20 Jan, 27 Jan | 17 Sep, 15 Oct, 22 Oct, 5 Nov, 26 Nov, 10 Dec, 21 Jan, 28 Jan | 15 Oct, 22 Oct, 5 Nov, 26 Nov, 10 Dec, 17 Dec |
+
+A later season carries the 2026/27 days as the knockout dates are carried after their table (364 days a year, 7 more when a date has come more than 3 days early; first into 2027/28, then on), so each first knockout draw stays after the last league day. A carried day that meets a FIFA day (within a day of one, or inside a window) moves a week on, and the days after it stay a week apart: matchday 5 of 2028/29 (22 November, the day after the November window) is played on 29 November. ctest season_uefa_days checks every season to 2030/31.
 
 Sources: 2025/26 and 2026/27 from the uefa.com fixture pages of each competition, with a second source for each: tntsports.co.uk (2025/26 Champions League), laligaexpert.com (2025/26 Europa League and Conference League), si.com (2026/27 Champions League) and flashscore.com (2026/27 Europa League and Conference League), all read 26 October 2026. UEFA published its own Europa League and Conference League days for both seasons, so none of them is taken from the Champions League week.
 

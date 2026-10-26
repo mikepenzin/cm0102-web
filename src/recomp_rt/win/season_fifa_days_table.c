@@ -5,7 +5,8 @@
  * and the martj42 list (https://raw.githubusercontent.com/martj42/international_results/master/results.csv), both read
  * 25 October 2026; the counts are in docs/research/2026-10-25-fifa-match-days.tsv. 2027 to 2030: the match days of
  * each window of the FIFA Men's International Match Calendar 2023-2030, Thursday to Tuesday as in the windows of
- * 2023 to 2026 (and the second Thursday to Tuesday of each four-match September window)
+ * 2023 to 2026 (and the second Thursday to Tuesday of each four-match September window); so is the November 2026
+ * window (9 to 17 November), not yet played when the lists were read
  * (https://digitalhub.fifa.com/m/3123d37097318f7f/original/Men-s-International-Match-Calendar-2023-2030_EN.pdf,
  * April 2026 issue, read 26 October 2026).
  * July is left out: no FIFA July date in any year (two qualifier days of 2011 aside, at most three friendlies on
@@ -75,7 +76,7 @@ const FifaDay season_fifa_days[] = {
     {2025, 11, 14}, {2025, 11, 15}, {2025, 11, 18}, {2026, 3, 26}, {2026, 3, 27}, {2026, 3, 28}, {2026, 3, 31},
     {2026, 6, 5}, {2026, 6, 6}, {2026, 6, 9}, {2026, 9, 24}, {2026, 9, 25}, {2026, 9, 26}, {2026, 9, 27},
     {2026, 9, 28}, {2026, 9, 29}, {2026, 10, 1}, {2026, 10, 2}, {2026, 10, 3}, {2026, 10, 4}, {2026, 10, 5},
-    {2026, 10, 6},
+    {2026, 10, 6}, {2026, 11, 12}, {2026, 11, 13}, {2026, 11, 14}, {2026, 11, 15}, {2026, 11, 16}, {2026, 11, 17},
     {2027, 3, 25}, {2027, 3, 26}, {2027, 3, 27}, {2027, 3, 28}, {2027, 3, 29}, {2027, 3, 30}, {2027, 6, 10},
     {2027, 6, 11}, {2027, 6, 12}, {2027, 6, 13}, {2027, 6, 14}, {2027, 6, 15}, {2027, 9, 23}, {2027, 9, 24},
     {2027, 9, 25}, {2027, 9, 26}, {2027, 9, 27}, {2027, 9, 28}, {2027, 9, 30}, {2027, 10, 1}, {2027, 10, 2},

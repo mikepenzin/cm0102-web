@@ -423,6 +423,12 @@ year	month	day	weekday	matches_E	matches_M	kind
 2026	10	4	Sun	20	19	mixed
 2026	10	5	Mon	21	23	qualifier
 2026	10	6	Tue	26	26	mixed
+2026	11	12	Thu	0	0	calendar
+2026	11	13	Fri	0	0	calendar
+2026	11	14	Sat	0	0	calendar
+2026	11	15	Sun	0	0	calendar
+2026	11	16	Mon	0	0	calendar
+2026	11	17	Tue	0	0	calendar
 2027	3	25	Thu	0	0	calendar
 2027	3	26	Fri	0	0	calendar
 2027	3	27	Sat	0	0	calendar

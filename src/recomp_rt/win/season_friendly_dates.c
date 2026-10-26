@@ -208,13 +208,15 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     int from = 0;
     for (unsigned k = 0; k < sizeof calls / sizeof calls[0]; k++) from |= ret == calls[k];
     if (!from || !season_game_changes() || !readable(fix)) return;
-    /* Running seasons only (O375, lead 4, 26 October 2026): the start season keeps the original's international
-     * dates, as it keeps the original's qualifying dates (season_uefa_qual.c, run_dates). Its Champions League
-     * groups keep the original's days, and in 2008 the qualifiers on the FIFA days of 6 and 10 September met them
-     * (Liverpool fielded 7 at Bordeaux, match_eng.cpp 652). The season of today: from 1 July, today's year. */
-    int now_year = (int16_t)rd16(g_mem, GAME_DATE + 2), now_month, now_day;
-    from_day_of_year(now_year, (int16_t)rd16(g_mem, GAME_DATE), &now_month, &now_day);
-    if ((now_month >= 7 ? now_year : now_year - 1) == season_start_year()) return;
+    /* Running seasons only (O375, lead 4, 26 October 2026): a match of the start season keeps the original's date,
+     * as that season keeps the original's qualifying dates (season_uefa_qual.c, run_dates). In 2008 the qualifiers
+     * on the FIFA days of 6 and 10 September met the start season's Champions League groups (Liverpool fielded 7 at
+     * Bordeaux, match_eng.cpp 652). The season of the match's own date (from 1 July, its year), so a qualifier of a
+     * later season made in the start season moves (with the season of today, a 2023 start stopped at
+     * match_eng.cpp 612 in March 2026: England B with no players). */
+    int fix_year = (int16_t)rd16(g_mem, fix + 0x28), fix_month, fix_day;
+    from_day_of_year(fix_year, (int16_t)rd16(g_mem, fix + 0x2a), &fix_month, &fix_day);
+    if ((fix_month >= 7 ? fix_year : fix_year - 1) == season_start_year()) return;
     uint32_t home = rd32(g_mem, fix + 0x1c), away = rd32(g_mem, fix + 0x20), rec = rd32(g_mem, fix + 0x14);
     if (!national_side(home) || !national_side(away) || !readable(rec)) return;
     Cpu saved = cpu;
