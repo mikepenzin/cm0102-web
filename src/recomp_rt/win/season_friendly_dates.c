@@ -59,6 +59,7 @@
                                          * store's own list of the day (0x5abfd7..0x5abfda), not a copy */
 #define FIXTURES 0xae2a58u
 #define GAME_DATE 0xae2c90u             /* s16 day of the year, s16 year */
+#define FIFA_DOYS_MAX 128               /* FIFA days of one year, at most */
 #define SNAP_DAYS 60                    /* the search for a FIFA day, either way */
 #define CLUBS 0xae23b4u
 #define CLUB_COUNT 0xae235cu
@@ -172,15 +173,21 @@ RT_WRAP(005cc510, friendly_set_row_dates)
 /* The real FIFA match days of year y, as days of the year (after the list: its last year moved on, as fifa_day). */
 static int fifa_doys(int y, int *out, int max)
 {
-    int n = 0;
-    for (int m = 1; m <= 12; m++)
-        for (int want = 1; want <= 31; want += 3) {
-            int d = fifa_day(y, m, want);
-            if (!d) continue;
-            int doy = day_of_year(y, m, d), seen = 0;
-            for (int k = 0; k < n; k++) seen |= out[k] == doy;
-            if (!seen && n < max) out[n++] = doy;
-        }
+    static int cached_year = -1, cached_n, cached[FIFA_DOYS_MAX];
+    if (y != cached_year) {
+        cached_n = 0;
+        for (int m = 1; m <= 12; m++)
+            for (int want = 1; want <= 31; want++) {          /* every day: a window month holds up to 12 */
+                int d = fifa_day(y, m, want);
+                if (!d) break;
+                int doy = day_of_year(y, m, d), seen = 0;
+                for (int k = 0; k < cached_n; k++) seen |= cached[k] == doy;
+                if (!seen && cached_n < FIFA_DOYS_MAX) cached[cached_n++] = doy;
+            }
+        cached_year = y;
+    }
+    int n = cached_n < max ? cached_n : max;
+    for (int k = 0; k < n; k++) out[k] = cached[k];
     return n;
 }
 
@@ -243,8 +250,8 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     if (rt_unwinding) return;
     cpu = saved;
     if (finals) return;
-    int y = (int16_t)rd16(g_mem, fix + 0x28), d = (int16_t)rd16(g_mem, fix + 0x2a), doys[64];
-    int n = fifa_doys(y, doys, 64);
+    int y = (int16_t)rd16(g_mem, fix + 0x28), d = (int16_t)rd16(g_mem, fix + 0x2a), doys[FIFA_DOYS_MAX];
+    int n = fifa_doys(y, doys, FIFA_DOYS_MAX);
     for (int k = 0; k < n; k++)
         if (doys[k] == d) return;                               /* on a FIFA day already */
     int today_year = (int16_t)rd16(g_mem, GAME_DATE + 2), today = (int16_t)rd16(g_mem, GAME_DATE);
