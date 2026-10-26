@@ -48,9 +48,9 @@ typedef struct {
     int day, month, year_off;       /* month 0 to 11; year_off 1 for a match day in the second calendar year */
 } SeasonLeagueDay;
 
-/* The match days of comp ('c' Champions League, 'e' Europa League, 'k' Conference League) and their weekday
- * argument of league_round_set_date 0x68a160. */
-const SeasonLeagueDay *season_uefa_league_days(char comp, int *weekday);
+/* The match days of comp ('c' Champions League, 'e' Europa League, 'k' Conference League) in the season that
+ * starts in year season, and their weekday argument of league_round_set_date 0x68a160. */
+const SeasonLeagueDay *season_uefa_league_days(char comp, int season, int *weekday);
 
 /* The round table of a league phase (days match days of 0x41 bytes, game memory), or 0. */
 uint32_t season_uefa_league_table(uint32_t year, int days, const SeasonLeagueDay *dates, int weekday);

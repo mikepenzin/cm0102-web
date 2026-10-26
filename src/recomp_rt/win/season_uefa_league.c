@@ -103,23 +103,7 @@ int season_uefa_league_sort(uint32_t *clubs, int n)
     return !rt_unwinding;
 }
 
-/* ---- The match days ----
- *
- * The match days of 2024/25 (docs/research/2026-10-18-uefa-access-and-round-names.md, section Slice 25, Task C),
- * for every season (Q547): the Champions League on Wednesdays (its Tuesday and Wednesday matches in one day), the
- * Europa League and Conference League on Thursdays. Weekday 2 and 3 as the original's Champions League and UEFA
- * Cup round dates (0x584171, 0x9026a4). */
-static const SeasonLeagueDay CL_DAYS[8] = {{18, 8, 0}, {2, 9, 0}, {23, 9, 0}, {6, 10, 0}, {27, 10, 0}, {11, 11, 0},
-                                           {22, 0, 1}, {29, 0, 1}};
-static const SeasonLeagueDay EL_DAYS[8] = {{26, 8, 0}, {3, 9, 0}, {24, 9, 0}, {7, 10, 0}, {28, 10, 0}, {12, 11, 0},
-                                           {23, 0, 1}, {30, 0, 1}};
-static const SeasonLeagueDay ECL_DAYS[6] = {{3, 9, 0}, {24, 9, 0}, {7, 10, 0}, {28, 10, 0}, {12, 11, 0}, {19, 11, 0}};
-
-const SeasonLeagueDay *season_uefa_league_days(char comp, int *weekday)
-{
-    *weekday = comp == 'c' ? 2 : 3;
-    return comp == 'c' ? CL_DAYS : comp == 'k' ? ECL_DAYS : EL_DAYS;
-}
+/* ---- The match days: season_uefa_days.c (season_uefa_league_days) ---- */
 
 /* ---- The fixed list of the stage that is being made ---- */
 

@@ -73,7 +73,7 @@ The callers (23 calls in 12 functions) only put the text on a screen, into a new
 
 ## Other limits
 
-1. Dates: the group stages of both cups keep the original's weeks where they can (Champions League groups to 7 November).
+1. Dates: the group stages of both cups keep the original's weeks where they can (Champions League groups to 7 November). Update of 26 October 2026 (A18, lead 4): in a season game the Champions League groups of 2002/03 to 2023/24, the UEFA Cup groups of 2007/08 and the Europa League and Conference League groups of 2009/10 to 2023/24 take their real days (`season_uefa_days.c`, sources in `docs/research/2026-10-26-uefa-group-dates.tsv` and `2026-10-26-uefa-group-dates-el.tsv`); ctest season_uefa_days checks every running season against the FIFA days.
 2. The UEFA Cup's stage objects are not freed when a game ends (the class's destructor 0x9024d0 knows no stages). The game's memory of that game is freed with it.
 3. The Intertoto Cup after 2008 is slice 23's (with slice 16's interface to idle a competition).
 

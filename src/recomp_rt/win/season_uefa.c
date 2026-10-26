@@ -30,6 +30,7 @@
 #include "season_uefa.h"
 #include "season_round_names.h"
 #include "season_uefa_league.h"
+#include "season_uefa_days.h"
 #include "season_comps.h"
 
 #include <stdio.h>
@@ -56,6 +57,7 @@
 #define F_PRIZE_NEWS 0x0048e3e0u        /* Comp::send_prize_money_news, thiscall, 7 arguments */
 #define F_CUP_STAGE 0x00522e00u         /* Cup_Stage::Cup_Stage, thiscall, 15 arguments */
 #define F_SET_UP_ROUND 0x0051c800u      /* Cup::set_up_round, thiscall (round) */
+#define F_GROUP_DATE 0x0068a160u        /* league_round_set_date, cdecl (table, round, day, month, year+, weekday, time, year, 0) */
 #define F_ROUND_TABLE 0x00583c50u       /* EuropeanCup::create_round_table, thiscall (stage, &rounds, &name, &league) */
 #define F_DRAW_DATE 0x00521e60u         /* cup_set_round_draw_date, cdecl (table, round, day, month, year+, weekday, year) */
 #define F_MATCH_DATE 0x00521eb0u        /* cup_set_round_match_date, cdecl (..., weekday, time, year, venue) */
@@ -499,7 +501,7 @@ static void draw_league(uint32_t cl)
         return;
     }
     int weekday = 0;
-    const SeasonLeagueDay *days = season_uefa_league_days('c', &weekday);
+    const SeasonLeagueDay *days = season_uefa_league_days('c', (int)year, &weekday);
     uint32_t st = season_uefa_league_make(cl, clubs, r->cl_league, 0, LEAGUE_NAME, days, weekday);
     if (rt_unwinding || !st) return;
     wr32(g_mem, rd32(g_mem, cl + 0xc), st);
@@ -638,7 +640,7 @@ RT_WRAP(00583c50, cl_round_table)
         const SeasonUefa *r = season_uefa_row((int16_t)rd16(g_mem, cl + 0x40));
         int weekday = 0, rounds = r && r->cl_league ? r->cl_league : 8;
         if (stage == 0) {
-            const SeasonLeagueDay *days = season_uefa_league_days('c', &weekday);
+            const SeasonLeagueDay *days = season_uefa_league_days('c', (int16_t)rd16(g_mem, cl + 0x40), &weekday);
             t = season_uefa_league_table((uint32_t)(int16_t)rd16(g_mem, cl + 0x40), rounds, days, weekday);
             name_id = LEAGUE_NAME;
         } else {
@@ -666,6 +668,23 @@ RT_WRAP(00583c50, cl_round_table)
         }
     }
     o_00583c50();
+    /* Row A18: the real group days of the season (season_uefa_days.c) in place of the original's 2001 days, in the
+     * group stages of phase 1 (stages 0 to 7) and, while the format keeps it, phase 2 (8 to 11). The original's days
+     * met FIFA days in most seasons (Liverpool fielded 7 at Bordeaux on 10 September 2008, match_eng.cpp 652). */
+    uint32_t t = cpu.eax;
+    if (rt_unwinding || !readable(t) || stage < 0 || stage > 11 || league_layout(cl)) return;
+    if (stage >= 8 && (round_of_16_layout(cl) || stage_count(cl) != STAGES_ORIGINAL)) return;
+    int year = (int16_t)rd16(g_mem, cl + 0x40);
+    if (!season_uefa_row(year)) return;
+    SeasonLeagueDay days[6];
+    int wd[6];
+    if (!season_uefa_cl_group_days(year, stage < 8 ? 1 : 2, stage < 8 ? stage >= 4 : stage >= 10, days, wd)) return;
+    for (int r = 0; r < 6 && !rt_unwinding; r++) {
+        uint32_t a[9] = {t, (uint32_t)r, (uint32_t)days[r].day, (uint32_t)days[r].month, (uint32_t)days[r].year_off,
+                         (uint32_t)wd[r], 2, (uint32_t)year, 0};
+        call_cdecl(F_GROUP_DATE, 9, a);
+    }
+    if (!rt_unwinding) cpu.eax = t;
 }
 
 /* EuropeanCup::advance_stage, thiscall (). */

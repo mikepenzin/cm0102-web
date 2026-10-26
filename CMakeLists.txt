@@ -193,6 +193,13 @@ if(NOT WIN32)
         src/recomp_rt/win/season_uefa_lookup.c)
     target_include_directories(season_uefa_test PRIVATE src/recomp_rt/win)
     add_test(NAME season_uefa COMMAND season_uefa_test)
+    # Row A18: the UEFA group and league phase days of every running season against the FIFA days.
+    add_executable(season_uefa_days_test tests/seasons/test_season_uefa_days.c src/recomp_rt/win/season_uefa_days.c
+        src/recomp_rt/win/season_fifa_days_table.c src/recomp_rt/win/season_uefa_table.c
+        src/recomp_rt/win/season_uefa_lookup.c src/recomp_rt/win/season_uefa_dates_table.c
+        src/recomp_rt/win/season_uefa_ko_lookup.c)
+    target_include_directories(season_uefa_days_test PRIVATE src/recomp_rt/win)
+    add_test(NAME season_uefa_days COMMAND season_uefa_days_test)
     # The UEFA league phase draw (0.6.0 slice 25): pots, opponents, nation rules and match days.
     add_executable(season_uefa_league_test tests/seasons/test_season_uefa_league.c
         src/recomp_rt/win/season_uefa_league_draw.c)

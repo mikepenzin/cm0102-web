@@ -47,6 +47,8 @@
 #include "season_cups.h"
 #include "fixture_season_end.h"
 
+void season_fifa_snap_fixture(uint32_t fix, uint32_t ret);   /* season_friendly_dates.c */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -336,6 +338,8 @@ void o_005aa680(void);
 RT_WRAP(005aa680, cup_breaks_add_fixture)
 {
     season_records_fixture_log(rt_arg(0), rd32(g_mem, cpu.esp));     /* test log of slice 15b's fix */
+    season_fifa_snap_fixture(rt_arg(0), rd32(g_mem, cpu.esp));        /* row A18: qualifiers on FIFA days */
+    if (rt_unwinding) return;
     season_playoffs_fixture_log(rt_arg(0));
     if (logging() && season_code_on()) {
         uint32_t f = rt_arg(0);

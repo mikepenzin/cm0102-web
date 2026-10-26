@@ -33,4 +33,4 @@ Rows with one source (the note says so): Europa League 2005/06 and 2006/07 round
 
 ## Q547
 
-Updated (lead 4, 25 October 2026): the knockout dates are real per season wherever UEFA has published them, and later seasons take the last published season's dates moved to the same weekdays (as Q542). The league phase match days stay those of 2024/25.
+Updated (lead 4, 25 October 2026): the knockout dates are real per season wherever UEFA has published them, and later seasons take the last published season's dates moved to the same weekdays (as Q542). Updated again (A18, 26 October 2026): the league phase match days follow the same rule (docs/research/2026-10-19-uefa-league-phase.md).
