@@ -494,7 +494,7 @@ a { color: inherit; }
 <section class="screen" id="next" aria-labelledby="next-title">
   <div class="inner">
     <h2 class="bar" id="next-title">The road to <em>1.0</em></h2>
-    <p class="lead" data-in>The big changes come first: seasons now, then network play, then the features players asked for most. The last two releases add nothing new, so the game has time to settle before 1.0.0.</p>
+    <p class="lead" data-in>The big changes come first: seasons now, then network play, then the features players asked for most. The last two releases add no big features, so the game has time to settle before 1.0.0. Options that change the game's rules come after 1.0.</p>
     <div class="plans" data-plans>
       <div class="panel" data-in>
         <h3 class="sub">Version 0.6.0</h3>
@@ -504,6 +504,8 @@ a { color: inherit; }
           <li>The game moves with the years: rules and leagues of each season</li>
           <li>European cups of each season</li>
           <li>New international competitions</li>
+          <li>Summer 2002 database on the 2002/03 tile</li>
+          <li>Turkish 2. Lig B in three groups with the Summer 2002 database</li>
         </ul>
       </div>
       <div class="panel" data-in>
@@ -517,22 +519,48 @@ a { color: inherit; }
         <h3 class="sub">Version 0.8.0</h3>
         <p class="plan-note">The features players asked for most, plus the Android version. We also work out the best way to play on an iPhone.</p>
         <ul>
-          <li>Bigger text in widescreen and in the left bar</li>
-          <li>Expand your stadium or build a new one</li>
-          <li>Club badges, competition logos and player faces</li>
-          <li>Player attributes grouped into categories</li>
-          <li>A polygon chart of each player's attributes</li>
-          <li>A way to play on iPhone</li>
           <li>Android version</li>
+          <li>A way to play on iPhone</li>
+          <li>A polygon chart of each player's attributes</li>
+          <li>Player attributes grouped into categories</li>
+          <li>Club badges, competition logos and player faces</li>
+          <li>Expand your stadium or build a new one</li>
+          <li>Money that grows with the years: wages, fees and club income</li>
+          <li>Pick the starting XI and subs on the tactics screen</li>
+          <li>Saved teams: store an XI and subs, load them with one click</li>
+          <li>Keep each player's last scout rating</li>
+          <li>Green, yellow and red for each player's positions</li>
+          <li>Faster processing, with more processor cores if possible</li>
         </ul>
       </div>
       <div class="panel" data-in>
         <h3 class="sub">Version 0.9.0</h3>
         <p class="plan-note">No new features. This release fixes what the earlier ones turn up, and it smooths the small things that get in the way during a long save.</p>
+        <ul>
+          <li>Bigger text in widescreen and in the left bar</li>
+          <li>Load last save from the front screen</li>
+          <li>Newest saves at the top of the Load list</li>
+          <li>Assistant views: plan with injured players and hide grey players</li>
+          <li>Quick sim of a match day</li>
+          <li>A commentary speed between Very Fast and Fastest</li>
+          <li>Colours for match ratings</li>
+          <li>Smaller card icons on the match screen</li>
+          <li>The window stays responsive while the game works</li>
+        </ul>
       </div>
       <div class="panel" data-in>
         <h3 class="sub">Version 1.0.0</h3>
         <p class="plan-note">The finished game: no known game-breaking bugs on Mac, Windows or Linux, and a full test of every season before it goes out.</p>
+      </div>
+      <div class="panel" data-in>
+        <h3 class="sub">After 1.0</h3>
+        <p class="plan-note">Options that change the game's rules, and bigger data work. We look at these once 1.0.0 is out.</p>
+        <ul>
+          <li>Removing Foreign Player Limits</li>
+          <li>Rule options: work permits, attribute caps and regens</li>
+          <li>More leagues</li>
+          <li>Install databases of seasons before 2001</li>
+        </ul>
       </div>
     </div>
     <p class="follow" data-in><a href="https://github.com/maxevans60/cm0102-bosman-edition/milestones">Follow progress on GitHub</a>.</p>
@@ -649,7 +677,8 @@ document.documentElement.classList.add('js');
   fetch(api + 'milestones?state=open&per_page=20')
     .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
     .then(function (ms) {
-      ms.sort(function (a, b) { return a.title.localeCompare(b.title, undefined, { numeric: true }); });
+      // Version numbers first, then named milestones such as "After 1.0".
+      ms.sort(function (a, b) { return !/^\d/.test(a.title) - !/^\d/.test(b.title) || a.title.localeCompare(b.title, undefined, { numeric: true }); });
       return Promise.all(ms.map(function (m) {
         return fetch(api + 'issues?milestone=' + m.number + '&state=all&labels=enhancement&per_page=50')
           .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
@@ -661,7 +690,7 @@ document.documentElement.classList.add('js');
       if (!groups.length) return;
       document.querySelector('[data-plans]').innerHTML = groups.map(function (g) {
         g.issues.sort(function (a, b) { return (a.state === 'closed') - (b.state === 'closed') || a.number - b.number; });
-        return '<div class="panel"><h3 class="sub">Version ' + esc(g.title) + '</h3>' +
+        return '<div class="panel"><h3 class="sub">' + (/^\d/.test(g.title) ? 'Version ' : '') + esc(g.title) + '</h3>' +
           (g.note ? '<p class="plan-note">' + esc(g.note) + '</p>' : '') +
           (g.issues.length ? '<ul>' + g.issues.map(function (i) {
             var done = i.state === 'closed';
