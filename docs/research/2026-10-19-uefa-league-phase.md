@@ -61,7 +61,15 @@ The end of the stage. `League::check_complete` 0x689ad0 wants the played count o
 
 The other arguments are those of the original's group draws (3, 1, 8, year, stage, name, 0xf, 2, 0, 8, then 0 and 2), apart from the order bytes. The groups pass 4, 1, 2, 0: code 4 starts a head-to-head pass before the sort (0x682850..0x682877), the sort compares points (+0x19, comparator 0x683410), and for clubs level on points code 1 compares goal difference (row +0x15 minus +0x17) and code 2 goals scored (+0x15) (0x68a535..0x68a556). The league phase ranks level clubs by goal difference, then goals scored, with no head-to-head (regulations 2024/25, Art. 18), so it passes 1, 2, 0, 0. The next criteria of Art. 18 (away goals, wins, away wins) have no code in the game. The places byte is 8: the clubs of places 1 to 8 go straight to the round of 16 (inference: the byte marks the places that go through, as 2 in a group of 4).
 
-The match days are those of 2024/25 for every season (Q547): the Champions League on Wednesdays (18 September to 29 January), the Europa League on Thursdays (26 September to 30 January), the Conference League on Thursdays (3 October to 19 December).
+The match days are the real days of each published season, and a later season takes those of the last published season, moved to the same weekday (Q547, update of 26 October 2026): the Champions League on Wednesdays, the Europa League and Conference League on Thursdays. A matchday over several days takes its Wednesday or Thursday.
+
+| Season | Champions League | Europa League | Conference League |
+|---|---|---|---|
+| 2024/25 and before | 18 Sep, 2 Oct, 23 Oct, 6 Nov, 27 Nov, 11 Dec, 22 Jan, 29 Jan | 26 Sep, 3 Oct, 24 Oct, 7 Nov, 28 Nov, 12 Dec, 23 Jan, 30 Jan | 3 Oct, 24 Oct, 7 Nov, 28 Nov, 12 Dec, 19 Dec |
+| 2025/26 | 17 Sep, 1 Oct, 22 Oct, 5 Nov, 26 Nov, 10 Dec, 21 Jan, 28 Jan | 25 Sep, 2 Oct, 23 Oct, 6 Nov, 27 Nov, 11 Dec, 22 Jan, 29 Jan | 2 Oct, 23 Oct, 6 Nov, 27 Nov, 11 Dec, 18 Dec |
+| 2026/27 and later | 9 Sep, 14 Oct, 21 Oct, 4 Nov, 25 Nov, 9 Dec, 20 Jan, 27 Jan | 17 Sep, 15 Oct, 22 Oct, 5 Nov, 26 Nov, 10 Dec, 21 Jan, 28 Jan | 15 Oct, 22 Oct, 5 Nov, 26 Nov, 10 Dec, 17 Dec |
+
+Sources: 2025/26 and 2026/27 from the uefa.com fixture pages of each competition, with a second source for each: tntsports.co.uk (2025/26 Champions League), laligaexpert.com (2025/26 Europa League and Conference League), si.com (2026/27 Champions League) and flashscore.com (2026/27 Europa League and Conference League), all read 26 October 2026. UEFA published its own Europa League and Conference League days for both seasons, so none of them is taken from the Champions League week.
 
 ## The draw (season_uefa_league_draw.c)
 
@@ -116,7 +124,7 @@ With changing rules on, the kind `uefa` writes for 2024/25: "The Champions Leagu
 - Q544: the league phase pots use the European seed (entry code, then reputation), as Q411. The holder is not put first in pot 1, and the match days do not follow the home and away run rule of Art. 17.02.
 - Q545: the money of the league phase and knockout phase is the original's group and phase 2 money.
 - Q546: the places byte of the league phase table is 8 (places 1 to 8 marked as through).
-- Q547: the match days and knockout dates of 2024/25 serve every season from 2024/25. Update of 25 October 2026 (O259, lead 4, Max's approval of all decisions): the knockout dates are the real dates of each season wherever UEFA has published them (2024/25, 2025/26 and the 2026/27 match dates), and a later season takes the last published season's dates moved to the same weekdays, as Q542 does for formats. The table and its sources: `docs/research/rules-0.6.0/uefa-ko-dates.tsv`, `docs/research/2026-10-25-uefa-ko-dates.md`. The league phase match days stay those of 2024/25.
+- Q547: the match days and knockout dates of 2024/25 serve every season from 2024/25. Update of 25 October 2026 (O259, lead 4, Max's approval of all decisions): the knockout dates are the real dates of each season wherever UEFA has published them (2024/25, 2025/26 and the 2026/27 match dates), and a later season takes the last published season's dates moved to the same weekdays, as Q542 does for formats. The table and its sources: `docs/research/rules-0.6.0/uefa-ko-dates.tsv`, `docs/research/2026-10-25-uefa-ko-dates.md`. Update of 26 October 2026 (A18, lead 4, O378): the league phase match days are also the real days of each published season (2024/25, 2025/26, 2026/27), and later seasons take the 2026/27 days on the same weekdays. From 2026 FIFA's September window is a double window (21 September to 6 October 2026, 18 September to 3 October 2028), and the 2024/25 days put matchdays 1 and 2 in it: in a 2025 test game Lyon v Hajduk Split (20 September 2028) moved for its players' CONCACAF qualifiers.
 
 ## The stage name
 

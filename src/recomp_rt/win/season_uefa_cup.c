@@ -422,7 +422,7 @@ RT_WRAP(009025c0, uc_round_table)
         else if (kind == 'e' && qual_sizes(uc, r, &q1, &q2, &r1)) t = qual_table(uc, q1, q2, r1), rounds = 3;
     } else if (stage < f.groups && f.league) {
         int weekday = 0;
-        const SeasonLeagueDay *days = season_uefa_league_days((char)kind, &weekday);
+        const SeasonLeagueDay *days = season_uefa_league_days((char)kind, (int)year, &weekday);
         t = season_uefa_league_table(year, f.days, days, weekday), rounds = f.days, name = (int)uc_group_name(0), league = 1;
     } else if (stage < f.groups) {
         t = group_table(year, f.days), rounds = f.days, name = (int)uc_group_name(stage), league = 1;
@@ -553,7 +553,7 @@ static void draw_league_stage(uint32_t uc, const UcGroups *f)
         return;
     }
     int weekday = 0;
-    const SeasonLeagueDay *days = season_uefa_league_days((char)is_uc(uc), &weekday);
+    const SeasonLeagueDay *days = season_uefa_league_days((char)is_uc(uc), (int)year, &weekday);
     uint32_t st = season_uefa_league_make(uc, clubs, f->league, 0, uc_group_name(0), days, weekday);
     if (rt_unwinding || !st) return;
     wr32(g_mem, rd32(g_mem, uc + 0xc), st);

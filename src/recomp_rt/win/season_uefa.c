@@ -499,7 +499,7 @@ static void draw_league(uint32_t cl)
         return;
     }
     int weekday = 0;
-    const SeasonLeagueDay *days = season_uefa_league_days('c', &weekday);
+    const SeasonLeagueDay *days = season_uefa_league_days('c', (int)year, &weekday);
     uint32_t st = season_uefa_league_make(cl, clubs, r->cl_league, 0, LEAGUE_NAME, days, weekday);
     if (rt_unwinding || !st) return;
     wr32(g_mem, rd32(g_mem, cl + 0xc), st);
@@ -638,7 +638,7 @@ RT_WRAP(00583c50, cl_round_table)
         const SeasonUefa *r = season_uefa_row((int16_t)rd16(g_mem, cl + 0x40));
         int weekday = 0, rounds = r && r->cl_league ? r->cl_league : 8;
         if (stage == 0) {
-            const SeasonLeagueDay *days = season_uefa_league_days('c', &weekday);
+            const SeasonLeagueDay *days = season_uefa_league_days('c', (int16_t)rd16(g_mem, cl + 0x40), &weekday);
             t = season_uefa_league_table((uint32_t)(int16_t)rd16(g_mem, cl + 0x40), rounds, days, weekday);
             name_id = LEAGUE_NAME;
         } else {
