@@ -218,6 +218,15 @@ if(NOT WIN32)
         src/recomp_rt/win/season_bra_names.c src/recomp_rt/win/season_bra_states_table.c)
     target_include_directories(season_bra_states_test PRIVATE src/recomp_rt/win)
     add_test(NAME season_bra_states COMMAND season_bra_states_test)
+    # The zone fill table of the Argentine clubs (O259 net B2, O375): the committed table matches zones.tsv, its lookup,
+    # and every club of the second division has a zone record or a row in each start (skips without the databases).
+    add_test(NAME season_arg_zones_table COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tools/seasons/make_arg_zones.py" --check)
+    add_executable(season_arg_zones_test tests/seasons/test_season_arg_zones.c
+        src/recomp_rt/win/season_arg_zones.c src/recomp_rt/win/season_arg_zones_table.c)
+    target_include_directories(season_arg_zones_test PRIVATE src/recomp_rt/win)
+    add_test(NAME season_arg_zones COMMAND season_arg_zones_test)
+    add_test(NAME season_arg_zones_check COMMAND python3 -I "${CMAKE_SOURCE_DIR}/tests/seasons/arg_zones_check.py")
+    set_tests_properties(season_arg_zones_check PROPERTIES SKIP_RETURN_CODE 77)
     # The substitute rule lookup (0.6.0 slice 17).
     add_executable(season_subs_test tests/seasons/test_season_subs.c src/recomp_rt/win/season_subs_rule.c
         src/recomp_rt/win/season_rules.c src/recomp_rt/host/posix.c)

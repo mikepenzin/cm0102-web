@@ -4,6 +4,7 @@
 #include "season.h"
 #include "season_clubs.h"
 #include "season_tur_groups.h"
+#include "season_arg_zones.h"
 #include "season_names.h"
 #include "season_records.h"
 #include "season_rules.h"
@@ -23,6 +24,7 @@
 #define CLUB_COUNT 0xae235cu
 #define NATION_COUNT 0xae2350u      /* the last 2 x nations rows are national teams (0x53b900) */
 #define CLUB_SIZE 0x245u
+#define CLUB_ZONE 0x60u             /* zone record of an Argentine club (club_comp pointer; 0 when the data has none) */
 #define CLUB_NAME 4u                /* long name, 52 bytes */
 #define CLUB_NATION 0x53u           /* nation pointer */
 #define CLUB_DIVISION 0x57u         /* club_comp pointer */
@@ -711,6 +713,26 @@ static void move_clubs(int season)
             if (club[i].db_div) wr32(g_mem, club[i].at + CLUB_LAST_DIVISION, club[i].db_div);
             moved++;
         }
+    }
+    /* O259 net B2 (O375): a club of the Argentine second division that the database holds with no zone record (club
+     * +0x60) takes the zone that a later database gives it (season_arg_zones.h). ArgSecond::fill_league_table
+     * 0x407cd0 counts only clubs with a zone record, so without it the division is a club short and its table takes
+     * a club with no nation (virtual_staff.cpp 195). Only that division counts the zone, so no other club changes. */
+    uint32_t second = 0;
+    for (int k = 0; k < ncomps; k++)
+        if (same_name(div[k].at + COMP_NAME, "Argentine Second Division")) second = div[k].at;
+    for (int i = 0; second && i < count; i++) {
+        if (club[i].div != second || club[i].national || rd32(g_mem, club[i].at + CLUB_ZONE)) continue;
+        char zone = season_arg_zone_of(season, club[i].id, win_str(club[i].at + CLUB_NAME));
+        const char *zone_name = zone == 'M' ? "Argentine Metropolitan Zone" : zone == 'I' ? "Argentine Interior Zone" : NULL;
+        for (int k = 0; zone_name && k < ncomps; k++)
+            if (same_name(div[k].at + COMP_NAME, zone_name)) {
+                wr32(g_mem, club[i].at + CLUB_ZONE, div[k].at);
+                if (log)
+                    fprintf(stderr, "recomp: club moves: %s takes the zone record %s (zone fill table)\n",
+                            win_str(club[i].at + CLUB_NAME), zone_name);
+                break;
+            }
     }
     int lists = 0, whole = 0;
     for (int t = 0; t < ncomps; t++) {
