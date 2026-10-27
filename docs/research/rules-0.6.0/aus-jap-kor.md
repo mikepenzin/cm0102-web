@@ -185,7 +185,7 @@ Disagreements: none. Fields with no source: none.
 
 ## Pass 2
 
-Date: 2026-10-17. Decision agent. Rules: the section "Pass 2" of `research-brief-0.6.0.md` and Q268 to Q331 of the spec. `rules_lint.py` gives 0 problems before and after.
+Date: 2026-10-17. Decision agent. Rules: the section "Pass 2" of the 0.6.0 research brief (kept outside the repo) and Q268 to Q331 of the spec. `rules_lint.py` gives 0 problems before and after.
 
 ### No new tiers (Q331, Q288)
 

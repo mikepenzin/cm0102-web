@@ -4,7 +4,7 @@ Date 2026-10-16. This check compares every function name and address in the 0.6.
 
 ## Scope and method
 
-- Docs: `rules-0.6.0/` (all 118 files), `research-brief-0.6.0.md`, `2026-10-16-season-database-table.md` and the four `2026-10-16-sweep-*.md` docs. They cite 994 distinct functions at 3,474 places.
+- Docs: `rules-0.6.0/` (all 118 files), the 0.6.0 research brief (kept outside the repo), `2026-10-16-season-database-table.md` and the four `2026-10-16-sweep-*.md` docs. They cite 994 distinct functions at 3,474 places.
 - Names: `function-map/names.tsv` in the working tree, with the committed waves to sweep-w17 (b57d7fb) and the uncommitted rows of sweep-w18: 3,960 Opus rows. The map changed twice while this check ran. A later wave can turn more skipped rows into Opus rows.
 - Evidence: the dossiers in `funcmap-work/dossiers/` and the clean 3.9.68 exe (vtables and instructions read with pefile and capstone).
 - A row with model `haiku` or `slot copy` is not yet an Opus name. I skipped those and list them below.
@@ -71,7 +71,7 @@ The same miscount was in four more rows of that table. I fixed them too:
 
 - Spanish non-EU limit (0x859570): the First Division and the competition with key id 0x9cf740 get 4 in 2000 and 3 in every later season. Other competitions get 3 in 2001 and 2002 and 2 later. The note gave only the second rule.
 
-`research-brief-0.6.0.md`
+the 0.6.0 research brief (kept outside the repo)
 
 - The brief said that the function map has first-pass names and that its work folder is gone. It now says which rows are checked names.
 
@@ -104,4 +104,4 @@ I did not edit the generated docs.
 
 ## Files
 
-Every in-scope doc is untracked: `rules-0.6.0/`, `research-brief-0.6.0.md`, `2026-10-16-season-database-table.md` and the four sweep docs. This report is untracked too. I committed nothing. The `hol-bel.md` fix of the other check is still uncommitted.
+Every in-scope doc is untracked: `rules-0.6.0/`, the 0.6.0 research brief (kept outside the repo), `2026-10-16-season-database-table.md` and the four sweep docs. This report is untracked too. I committed nothing. The `hol-bel.md` fix of the other check is still uncommitted.

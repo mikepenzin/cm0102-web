@@ -30,7 +30,7 @@ If a new test prints its failure in another form, add the pattern to `ERROR_PATT
 - Read the log file when the short view is not enough. Put `RAW=1` at the start of a command only when you need the full output in the reply.
 - grep stops at 100 lines. Use `-l` or `-c` first.
 - Name a screenshot `-full.png` when you need the full size, for example to read small widescreen text.
-- Each slice agent reads `docs/research/brief-0.6.0/shared.md` and its own slice file.
+- Each slice agent reads the shared brief and its own slice file (in `/Users/max/Projects/cm0102/lead-notes/`, outside the repo).
 - The slice-build skill has the fix-round rules and the session-state files.
 
 ## Measuring

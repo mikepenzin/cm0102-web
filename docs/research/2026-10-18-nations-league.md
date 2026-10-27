@@ -1,6 +1,6 @@
 # The Nations Leagues and the Euro qualifying paths (0.6.0 slice 28)
 
-Date 2026-10-18. Original: `clean-3968/cm0102.exe` 3.9.68, virtual addresses. Spec: `docs/specs/2026-10-16-seasons-0.6.0-spec.md`, slice 28, Q169, Q248, Q277, Q278, Q288, Q368. Build brief: `docs/research/build-brief-0.6.0.md`, slice 28.
+Date 2026-10-18. Original: `clean-3968/cm0102.exe` 3.9.68, virtual addresses. Spec: `docs/specs/2026-10-16-seasons-0.6.0-spec.md`, slice 28, Q169, Q248, Q277, Q278, Q288, Q368. Build brief: the build brief (kept outside the repo), slice 28.
 
 Research of this slice:
 

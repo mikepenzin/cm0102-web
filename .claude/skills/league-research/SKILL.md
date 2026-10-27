@@ -22,7 +22,7 @@ This is how the 0.6.0 rules table was made (slices 1 to 10 of `docs/specs/2026-1
 
 ## 2. One shared brief
 
-Add the league to `docs/research/research-brief-0.6.0.md` or copy it for a new release. Every agent gets the same brief. It fixes:
+Add the league to the research brief, `/Users/max/Projects/cm0102/lead-notes/repo-moved/docs/research/research-brief-0.6.0.md` (outside the repo), or copy it for a new release. Every agent gets the same brief. It fixes:
 - the TSV columns: `id season real_season nation comp_file comp tier name clubs up down playoffs split format subs_used bench foreign work_permit registration windows notes sources`;
 - the `sources` form, `field=URL ; field=URL` or `all=URL`, with a page read on the day for every filled fact;
 - the club moves file `<part>-clubs.tsv` (`season division club db_club_id db_club db_division source`) and its pool (clubs with no division, clubs in lower or spare divisions, clubs of database divisions whose tier has ended);

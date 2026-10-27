@@ -1,6 +1,6 @@
 # Season database table (slice 3)
 
-Date 2026-10-16. Slice 3 of `docs/specs/2026-10-16-seasons-0.6.0-spec.md` (Q234, Q250, Q253, Q256, Q263, Q264). Brief: `docs/research/research-brief-0.6.0.md`. For Max to approve.
+Date 2026-10-16. Slice 3 of `docs/specs/2026-10-16-seasons-0.6.0-spec.md` (Q234, Q250, Q253, Q256, Q263, Q264). Brief: the 0.6.0 research brief (kept outside the repo). For Max to approve.
 
 ## Result
 

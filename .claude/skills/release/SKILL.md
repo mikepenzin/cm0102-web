@@ -21,7 +21,7 @@ The checkout must be clean, untracked files too. If another session has files in
 git worktree add --detach /Users/max/Projects/cm0102/wt-release-x.y.z <commit>
 ```
 
-Then run `tools/release/make_release.sh` with the paths in `docs/HANDOVER.md` ("How to make a release"). Colima must run for the Linux step (`colima status`). Write the log to a file and wait on the job. Read the log for the Mac, Windows and Linux steps and the site assets.
+Then run `tools/release/make_release.sh` with the paths in the handover, `/Users/max/Projects/cm0102/lead-notes/repo-moved/docs/HANDOVER.md` (outside the repo), section "How to make a release". Colima must run for the Linux step (`colima status`). Write the log to a file and wait on the job. Read the log for the Mac, Windows and Linux steps and the site assets.
 
 ## 3. Publish
 
@@ -35,5 +35,5 @@ Only after Max says yes in this conversation for this release. Run the same comm
 ## 4. After
 
 - Posts: use the `release-posts` skill.
-- Mark the spec `Status: Shipped`. Update `docs/HANDOVER.md`: the release, the next work, Max's open manual checks.
+- Mark the spec `Status: Shipped`. Update the handover (outside the repo): the release, the next work, Max's open manual checks.
 - Ask Max before you remove the build worktrees.

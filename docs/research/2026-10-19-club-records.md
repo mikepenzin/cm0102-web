@@ -1,6 +1,6 @@
 # Real club records for missing top and second tier clubs (0.6.0 slice 15b)
 
-Date 2026-10-19. Original: `clean-3968/cm0102.exe` 3.9.68, virtual addresses. Spec: `docs/specs/2026-10-16-seasons-0.6.0-spec.md` (Q359, Q361, Q362, Q387, Q404). Brief: `docs/research/brief-0.6.0/slice-15b.md`. Evidence of the club table: `docs/research/2026-10-19-club-table-users.md` (cited below as "table users"). Research: `docs/research/club-records-0.6.0/`.
+Date 2026-10-19. Original: `clean-3968/cm0102.exe` 3.9.68, virtual addresses. Spec: `docs/specs/2026-10-16-seasons-0.6.0-spec.md` (Q359, Q361, Q362, Q387, Q404). Brief: the slice brief (kept outside the repo). Evidence of the club table: `docs/research/2026-10-19-club-table-users.md` (cited below as "table users"). Research: `docs/research/club-records-0.6.0/`.
 
 ## Which clubs
 

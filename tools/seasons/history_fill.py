@@ -5,7 +5,7 @@ Usage:
     python3 -I tools/seasons/history_fill.py <3.9.68 Data folder> <folder of database folders> [--rules <folder>]
         [--write]
 
-Reads the research table docs/research/history-0.6.0/<part>.tsv (brief.md there gives the columns) and, for
+Reads the research table docs/research/history-0.6.0/<part>.tsv (the research brief, kept outside the repo, gives the columns) and, for
 each database, decides which researched rows the game adds at a new game in the database's season:
 
 - the row is `held = yes`, its label year is 2002 or later, and the database has the competition;

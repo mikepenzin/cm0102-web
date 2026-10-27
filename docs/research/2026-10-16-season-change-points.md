@@ -1,7 +1,7 @@
 # Season rules: change points 2001 to 2026
 
 Date 2026-10-16. Research for the season screen (0.5.0, Q165 in
-`docs/research/2026-10-15-season-screen-decisions.md`). No code changes.
+the season screen decision notes (kept outside the repo)). No code changes.
 
 Goal: each season that the player chooses (2001/02 to 2025/26) gets the rules and league structures of that
 year. The rules change at known change points, not every year. The official 2001/02 and 2002/03 games stay as

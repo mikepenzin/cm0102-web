@@ -5,19 +5,21 @@ description: Builds the slices of a Bosman Edition release spec with parallel wo
 
 # Slice build
 
-The lead session plans, briefs, reviews and merges. Agents build. Read `docs/HANDOVER.md`, the spec and its research first.
+The lead session plans, briefs, reviews and merges. Agents build. Read the handover, `/Users/max/Projects/cm0102/lead-notes/repo-moved/docs/HANDOVER.md` (outside the repo), then the spec and its research.
+
+Never commit briefs, hand-over notes, session state or messages to Max. They stay in `/Users/max/Projects/cm0102/lead-notes/`.
 
 ## 1. Before any agent starts
 
 1. Check the spec says `Status: Ready` with no open decisions. If not, stop and use the grilling skill.
 2. Add any shared test tool that every slice needs to main first, and commit it. Example: `smoke_run.py --same-save --save start.sav` was added before the 0.5.0 slices.
-3. Write one brief, `docs/research/build-brief-x.y.z.md`, from the template of the last one. It holds the shared facts (paths, build commands, the main build to compare with), the same-save checks (see the same-save skill), one paragraph per slice with its research file, its test seam and its option, the files that two slices share, and the rules. Commit it to main.
-4. Write the review brief, `docs/research/review-brief-x.y.z.md`, with two angles: spec (does it do what the spec says, can it change a decision, does off give the original) and standards (memory, registers, wrong call sites, file writes, Windows and Mac, comments and evidence). Commit it.
+3. Write one brief, `/Users/max/Projects/cm0102/lead-notes/briefs/build-brief-x.y.z.md`, from the template of the last one (old briefs: `/Users/max/Projects/cm0102/lead-notes/repo-moved/docs/research/`). It holds the shared facts (paths, build commands, the main build to compare with), the same-save checks (see the same-save skill), one paragraph per slice with its research file, its test seam and its option, the files that two slices share, and the rules.
+4. Write the review brief, `/Users/max/Projects/cm0102/lead-notes/briefs/review-brief-x.y.z.md`, with two angles: spec (does it do what the spec says, can it change a decision, does off give the original) and standards (memory, registers, wrong call sites, file writes, Windows and Mac, comments and evidence).
 
 ## 2. Start the agents
 
 - One agent per slice, `isolation: worktree`, run in the background. Opus for anything a player sees, judgement or the recompiler. Sonnet for a routine slice with a clear brief.
-- The prompt names the slice and says: "First run `git merge main` (the worktree can be cut from an older commit), then read `docs/research/build-brief-x.y.z.md` and follow it." Without the merge, a worktree may miss the brief and the shared test tools, and a flag such as `--save` is ignored without an error.
+- The prompt names the slice and says: "First run `git merge main` (the worktree can be cut from an older commit), then read `/Users/max/Projects/cm0102/lead-notes/briefs/build-brief-x.y.z.md` and follow it." Without the merge, a worktree may miss the shared test tools, and a flag such as `--save` is ignored without an error.
 - A slice that depends on others starts when they are on main.
 - Tell the build agent to write or update the slice's session-state file (`/Users/max/Projects/cm0102/lead-notes/session-states/slice-NN.md`) before it stops. A fresh fix agent reads that file.
 - Tell every agent the output rules in section 6.
@@ -39,7 +41,7 @@ The lead session plans, briefs, reviews and merges. Agents build. Read `docs/HAN
 ## 5. Report
 
 - Record each of Max's answers in the spec under Decisions.
-- Update `docs/HANDOVER.md`: what is merged, what is next, open questions.
+- Update the handover (outside the repo): what is merged, what is next, open questions.
 - Put every question for Max in full in the last message, after the wrap-up box.
 
 ## 6. Output rules for agents
