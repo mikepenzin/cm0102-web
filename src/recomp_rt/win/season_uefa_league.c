@@ -113,6 +113,8 @@ static uint32_t pending_stage, pending_list;
 void season_uefa_league_reset(void) { pending_stage = pending_list = 0; }
 
 void o_006835c0(void);
+void season_fifa_stage_begin(uint32_t league);  /* season_friendly_dates.c */
+void season_fifa_stage_end(void);
 
 /* League::create_fixtures, thiscall () returning 1 or 0. Only the league phase stage that is being made gets the
  * list; every other league runs as it is. The one wrap of 0x6835c0: slice 21b's cup that waits for ever makes no
@@ -130,7 +132,9 @@ RT_WRAP(006835c0, league_create_fixtures)
         wr32(g_mem, league + 0xea, pending_list);
         pending_stage = pending_list = 0;
     }
+    season_fifa_stage_begin(league);        /* O259: a qualifier's FIFA day stays within its stage */
     o_006835c0();
+    season_fifa_stage_end();
 }
 
 /* The fixed list of the draw (new[] of the game: the count, then the entries), or 0. */
