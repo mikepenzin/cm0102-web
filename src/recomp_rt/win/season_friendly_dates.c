@@ -245,9 +245,18 @@ static int side_busy(uint32_t a, uint32_t b, int y, int doy)
     return busy;
 }
 
+/* The last match day of the qualifying stage whose fixtures are being made (League::create_fixtures 0x6835c0, see
+ * season_fifa_stage_begin), or none (end_year 0). A qualifier does not move past it: the snap's search of the whole
+ * year moved the AFC first round of the 2006 cycle from May 2005 (days 121 to 146) to the FIFA days of October and
+ * November (280, 315, 319), past the start of its final round (day 230), so the final round was made on day 319 with
+ * its days gone, the AFC fifth's tie with CONCACAF's fourth ended after the World Cup draw, and the World Cup nets of
+ * rows A8 to A11 acted (gate (a) run 8 on 8e58c44a, 2003 and 2007 starts; gate (b) 2002 and 2006 starts). */
+static int end_year, end_day;
+
 /* The FIFA day a qualifier of club home v club away on day d of year y moves to: the nearest free one of the same
- * year, 2 or more days after today; d when it is on one already; -1 when none is free. */
-static int fifa_target(uint32_t home, uint32_t away, int y, int d)
+ * year, 2 or more days after today and not after day ey/ed (its stage's last match day; ey 0: none); d when it is on
+ * one already; -1 when none is free. */
+static int fifa_target_by(uint32_t home, uint32_t away, int y, int d, int ey, int ed)
 {
     int doys[FIFA_DOYS_MAX], n = fifa_doys(y, doys, FIFA_DOYS_MAX);
     for (int k = 0; k < n; k++)
@@ -257,11 +266,17 @@ static int fifa_target(uint32_t home, uint32_t away, int y, int d)
         for (int sign = -1; sign <= 1; sign += 2) {
             int c = d + sign * dist, ok = 0;
             if (c < 0 || c >= days_in(y) || (y == today_year && c < today + 2) || y < today_year) continue;
+            if (ey && (y > ey || (y == ey && c > ed)) && c > d) continue;      /* past its stage's last day */
             for (int k = 0; k < n; k++) ok |= doys[k] == c;
             if (!ok || side_busy(home, away, y, c)) continue;
             return rt_unwinding ? -1 : c;
         }
     return -1;
+}
+
+static int fifa_target(uint32_t home, uint32_t away, int y, int d)
+{
+    return fifa_target_by(home, away, y, d, end_year, end_day);
 }
 
 static void log_move(uint32_t rec, uint32_t home, uint32_t away, int d, int c, int y, const char *how)
@@ -292,6 +307,7 @@ static void log_move(uint32_t rec, uint32_t home, uint32_t away, int d, int c, i
 typedef struct {
     uint32_t rec_id, home, away;            /* home and away: club indexes */
     int16_t year, day;
+    int16_t end_year, end_day;              /* its stage's last match day (end_year 0: none, a save before it) */
 } Pending;
 static Pending pending[PENDING_MAX];
 
@@ -339,7 +355,8 @@ static void move_pending(void)
             continue;
         }
         uint32_t home = rd32(g_mem, f + 0x1c), away = rd32(g_mem, f + 0x20), rec = rd32(g_mem, f + 0x14);
-        int y = pending[i].year, d = pending[i].day, c = fifa_target(home, away, y, d);
+        int y = pending[i].year, d = pending[i].day,
+            c = fifa_target_by(home, away, y, d, pending[i].end_year, pending[i].end_day);
         if (rt_unwinding) return;
         if (c == d) continue;
         if (c < 0) {
@@ -373,19 +390,24 @@ static void move_pending(void)
     pending_count = 0;
 }
 
-uint32_t season_friendly_part_size(void) { return pending_count ? 4u + 16u * (uint32_t)pending_count : 0u; }
+/* The list in the season part: the count, then 20 bytes an entry (16 in a save before the stage bound: record id,
+ * home, away, year, day; then the stage's last year and day). */
+#define ENTRY 20u
+uint32_t season_friendly_part_size(void) { return pending_count ? 4u + ENTRY * (uint32_t)pending_count : 0u; }
 
 void season_friendly_part_write(uint8_t *out)
 {
     uint32_t n = (uint32_t)pending_count;
     memcpy(out, &n, 4);
     for (int i = 0; i < pending_count; i++) {
-        uint8_t *e = out + 4 + 16 * i;
+        uint8_t *e = out + 4 + ENTRY * (uint32_t)i;
         memcpy(e, &pending[i].rec_id, 4);
         memcpy(e + 4, &pending[i].home, 4);
         memcpy(e + 8, &pending[i].away, 4);
         memcpy(e + 12, &pending[i].year, 2);
         memcpy(e + 14, &pending[i].day, 2);
+        memcpy(e + 16, &pending[i].end_year, 2);
+        memcpy(e + 18, &pending[i].end_day, 2);
     }
 }
 
@@ -397,14 +419,20 @@ int season_friendly_part_read(const uint8_t *in, uint32_t n)
     uint32_t count;
     if (n < 4) return 0;
     memcpy(&count, in, 4);
-    if (count > PENDING_MAX || (n - 4) / 16 < count) return 0;
+    uint32_t size = count && (n - 4) / count >= ENTRY ? ENTRY : 16u;   /* 16: a save before the stage bound */
+    if (count > PENDING_MAX || (n - 4) / size < count) return 0;
     for (uint32_t i = 0; i < count; i++) {
-        const uint8_t *e = in + 4 + 16 * i;
+        const uint8_t *e = in + 4 + size * i;
         memcpy(&pending[i].rec_id, e, 4);
         memcpy(&pending[i].home, e + 4, 4);
         memcpy(&pending[i].away, e + 8, 4);
         memcpy(&pending[i].year, e + 12, 2);
         memcpy(&pending[i].day, e + 14, 2);
+        pending[i].end_year = pending[i].end_day = 0;
+        if (size == ENTRY) {
+            memcpy(&pending[i].end_year, e + 16, 2);
+            memcpy(&pending[i].end_day, e + 18, 2);
+        }
     }
     pending_count = (int)count;
     return 1;
@@ -437,7 +465,8 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     if (season_now() <= season_start_year()) {
         if (pending_count < PENDING_MAX)
             pending[pending_count++] = (Pending){rd32(g_mem, rec), (uint32_t)club_index(home),
-                                                 (uint32_t)club_index(away), (int16_t)y, (int16_t)d};
+                                                 (uint32_t)club_index(away), (int16_t)y, (int16_t)d,
+                                                 (int16_t)end_year, (int16_t)end_day};
         return;
     }
     int c = fifa_target(home, away, y, d);
@@ -445,3 +474,21 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     if (c >= 0) wr16(g_mem, fix + 0x2a, (uint16_t)c);
     log_move(rec, home, away, d, c, y, "");
 }
+
+/* League::create_fixtures 0x6835c0 of a league (the wrap in season_uefa_league.c): its last match day bounds the
+ * snap of its fixtures. The round table +0xba holds +0xa9 records of 0x41 bytes (0x683a82, 0x683a7a); a record's date
+ * is its day of the year (+0) in the league's year +0x40 plus the year offset at +2 (0x6839f8..0x683a10). */
+void season_fifa_stage_begin(uint32_t league)
+{
+    end_year = end_day = 0;
+    uint32_t t = rd32(g_mem, league + 0xba);
+    int n = (int16_t)rd16(g_mem, league + 0xa9), base = (int16_t)rd16(g_mem, league + 0x40);
+    if (!readable(t) || n < 1 || n > 200) return;
+    for (int r = 0; r < n; r++) {
+        uint32_t rec = t + 0x41u * (uint32_t)r;
+        int y = base + (int16_t)rd16(g_mem, rec + 2), d = (int16_t)rd16(g_mem, rec);
+        if (y > end_year || (y == end_year && d > end_day)) end_year = y, end_day = d;
+    }
+}
+
+void season_fifa_stage_end(void) { end_year = end_day = 0; }
