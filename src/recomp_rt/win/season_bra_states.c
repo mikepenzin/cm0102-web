@@ -604,22 +604,27 @@ STATE_DEF(season_bra_state_ms, "Sul-Mato-Grossense state championship", "new_sul
 STATE_DEF(season_bra_state_to, "Tocantinense state championship", "new_tocantinense_state_championship",
           "Campeonato Tocantinense", 2, "Tocantinense");
 
-/* ---- The day fixtures screen ---- */
+/* ---- The competitions menu rows ---- */
 
 void o_00403350(void);
 
-/* Area::layout 0x403350 (thiscall, no argument) stops with "Area..cpp 507" when an area wants more than 30 rows on
- * a page (+0xbac, 0x4033ec..0x403451); with more rows than a page it makes a scrollbar (0x4034bb..0x4034c7). The day
- * fixtures screen (build_day_fixtures_screen 0x717db0) asks for a page of all its lines: with the 15 state
- * championships of a season game a day in January can hold more than 30. In a season game a page of more than 30
- * rows becomes 30, so the screen scrolls. The base game never asks for more (it would stop at the box). */
+/* Area::layout 0x403350 (thiscall, no argument) stops with "Area..cpp 507" when an area wants more than 30 rows on a
+ * page (+0xbac, 0x4033ec..0x403451). The cause that made it act (O259, guard B6): the Competitions menu of the side bar
+ * (Nations A-J, Brazil) listed the 29 competitions of Brazil, a separator and Awards, 31 rows of 21 pixels, more than
+ * the 30 rows and than the 600 pixels of the classic screen (hovering over Brazil with only this clamp stopped at
+ * "Area..cpp 838"). It is not the day fixtures screen: the first draw after a start or a load lays out the two menus
+ * of the guard line. Fixed at the source in menu_rows.c: a menu of more than 24 competitions has a sub menu More, so
+ * no menu wants more than 27 rows. This wrap stays as a logged net: a page of more than 30 rows becomes 30. It is not
+ * expected to act. The base game never asks for more (it would stop at the box). */
 RT_WRAP(00403350, area_layout)
 {
     uint32_t area = cpu.ecx;
     if (season_comps_on() && readable(area) && g_mem[area + 0xbac] > 30) {
         static int said;
-        if (!said++) fprintf(stderr, "recomp: brazil states: a screen area of %d rows a page shows 30\n",
-                             g_mem[area + 0xbac]);
+        if (said++ < 5)
+            fprintf(stderr, "recomp: screen rows: net: an area of %d rows a page shows 30 (area %x, called from %x, "
+                            "day %d of %d); the menus keep to 27 rows in menu_rows.c\n", g_mem[area + 0xbac], area,
+                    rd32(g_mem, cpu.esp), (int16_t)rd16(g_mem, 0xae2c90u), (int16_t)rd16(g_mem, 0xae2c92u));
         g_mem[area + 0xbac] = 30;
     }
     o_00403350();
