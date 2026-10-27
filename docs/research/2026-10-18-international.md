@@ -1,6 +1,6 @@
 # International competitions in the original (0.6.0 slice 27)
 
-Date 2026-10-18. Original: `clean-3968/cm0102.exe` 3.9.68, virtual addresses. Spec: `docs/specs/2026-10-16-seasons-0.6.0-spec.md`, slice 27, Q248, Q276, Q277, Q288, Q366, Q367. Build brief: `docs/research/build-brief-0.6.0.md`, slice 27. Sweep: `docs/research/2026-10-16-sweep-international.md` (named "sweep" below).
+Date 2026-10-18. Original: `clean-3968/cm0102.exe` 3.9.68, virtual addresses. Spec: `docs/specs/2026-10-16-seasons-0.6.0-spec.md`, slice 27, Q248, Q276, Q277, Q288, Q366, Q367. Build brief: the build brief (kept outside the repo), slice 27. Sweep: `docs/research/2026-10-16-sweep-international.md` (named "sweep" below).
 
 Code: `src/recomp_rt/win/season_intl.h`, `season_intl_rules.c` (editions and rules, no game memory), `season_intl.c` (host table, Australia, the rule kind), `season_intl_table.c` (made by `tools/seasons/make_intl.py`), the sites in `tools/recomp/seasons.py`. Tests: `tests/seasons/test_season_intl.c` (ctest `season_intl`), ctest `season_intl_table`, `tests/seasons/season_intl_run.py`.
 

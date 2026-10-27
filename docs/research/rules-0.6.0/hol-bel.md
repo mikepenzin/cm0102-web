@@ -1,6 +1,6 @@
 # Rules table: Holland and Belgium (slice 6, part hol-bel)
 
-Date 2026-10-16. Research only. Brief: `docs/research/research-brief-0.6.0.md`.
+Date 2026-10-16. Research only. Brief: the 0.6.0 research brief (kept outside the repo).
 
 Files:
 
@@ -189,7 +189,7 @@ Lint after the pass: 0 problems.
 
 ## Pass 2
 
-Date: 2026-10-17. Decision agent. Brief: section "Pass 2" of `docs/research/research-brief-0.6.0.md`, decisions Q268 to Q331 in the spec. Row ids are kept. Lint after the pass: 0 problems (0 before).
+Date: 2026-10-17. Decision agent. Brief: section "Pass 2" of the 0.6.0 research brief (kept outside the repo), decisions Q268 to Q331 in the spec. Row ids are kept. Lint after the pass: 0 problems (0 before).
 
 ### 1. No new tiers (Q331, Q288)
 

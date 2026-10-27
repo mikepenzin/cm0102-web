@@ -1,6 +1,6 @@
 # Rules table, slice 8: Argentina, Brazil, the United States, Australia, Japan and South Korea
 
-Slice 8 of `docs/specs/2026-10-16-seasons-0.6.0-spec.md`, researched on 2026-10-16 and 2026-10-17. Brief: `research-brief-0.6.0.md`. The rows cover the seasons 2001/02 to 2027/28 and follow Max's decisions Q268 to Q331 in the spec.
+Slice 8 of `docs/specs/2026-10-16-seasons-0.6.0-spec.md`, researched on 2026-10-16 and 2026-10-17. Brief: the 0.6.0 research brief (kept outside the repo). The rows cover the seasons 2001/02 to 2027/28 and follow Max's decisions Q268 to Q331 in the spec.
 
 ## Files
 
@@ -26,4 +26,4 @@ Field verdicts count the latest verdict of each checked field of a row that stil
 6. A second-source agent and a retry looked for a second publisher for every fact that only one publisher stated.
 7. Pass 3 applied Max's answers Q332 to Q339 (Brazilian state championships, the Suruga Bank Championship, the CONCACAF Champions Cup places, the English academy sides, play-offs against tiers that left the game).
 
-The open questions for Max are in `2026-10-16-seasons-research-for-max.md`.
+The open questions for Max are in the list of questions for Max (kept outside the repo).

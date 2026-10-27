@@ -197,7 +197,7 @@ Disagreements: none. Notes on the pages:
 
 ## Pass 2
 
-Date 2026-10-17. Decision agent. Rules: the "Pass 2" section of `research-brief-0.6.0.md` and Q268 to Q331 of the spec. Row ids and row order are unchanged. `rules_lint.py` gives 1 problem for this part before and after (rus-tur-324 `foreign`, no 2027/28 source).
+Date 2026-10-17. Decision agent. Rules: the "Pass 2" section of the 0.6.0 research brief (kept outside the repo) and Q268 to Q331 of the spec. Row ids and row order are unchanged. `rules_lint.py` gives 1 problem for this part before and after (rus-tur-324 `foreign`, no 2027/28 source).
 
 ### 1. No new tiers and no new nations (Q331, Q288)
 

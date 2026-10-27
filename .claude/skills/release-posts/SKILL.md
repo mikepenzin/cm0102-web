@@ -15,7 +15,7 @@ Each release gets two posts in the Bosman Edition thread on the champman0102 for
 
 - The release section of `CHANGELOG.md` (the facts).
 - The spec of the release in `docs/specs/` (what each feature does, and its option name and default).
-- `docs/requests.md`: credit each player whose request ships, by name and where they asked (for example "gundenaf on Reddit").
+- `/Users/max/Projects/cm0102/lead-notes/repo-moved/docs/requests.md` (outside the repo): credit each player whose request ships, by name and where they asked (for example "gundenaf on Reddit").
 - `gh release list`: the dates of earlier releases for the list in the original post.
 - The previous `/Users/max/Projects/cm0102/release-*-posts.md` (the voice and the layout to follow).
 
@@ -54,7 +54,7 @@ The champman0102 forum uses BBCode. Write both forum posts in it, ready to paste
 - Claim only what the tests show. Do not write "no feature changes the game's decisions" unless the release's same-save checks show it for every option. Say which options take effect only at the next start.
 - Do not write "no fan patches" in the original post, and do not list exceptions to the same-game rule there (Max removed both from the 0.5.0 post). The changelog keeps the details.
 - No public text names patch authors, even when a feature follows their patch.
-- End the thread post with what comes next (from the roadmap in `docs/HANDOVER.md`) and the line asking for bug reports with the computer and the clicks. From 0.6.0 on, that line and the bug report line of the original post also say: for a picture or window problem, press Ctrl+Shift+D (Cmd+Shift+D on a Mac) and paste the display report.
+- End the thread post with what comes next (from the roadmap in the handover, `/Users/max/Projects/cm0102/lead-notes/repo-moved/docs/HANDOVER.md` (outside the repo)) and the line asking for bug reports with the computer and the clicks. From 0.6.0 on, that line and the bug report line of the original post also say: for a picture or window problem, press Ctrl+Shift+D (Cmd+Shift+D on a Mac) and paste the display report.
 - British English. No exclamation marks. Apply the humanizer skill to both posts before you show them to Max: fix every §1 to §5 tell, and remove dashes and bold labels on list items. The bold "Update: x.y.z is out" line of the Reddit update is the one bold line.
 - Write the release date (the day of the publish) in the original post. Never leave a placeholder.
-- After Max posts, add the shipped version to the rows of `docs/requests.md`.
+- After Max posts, add the shipped version to the rows of that requests file.

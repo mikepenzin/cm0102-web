@@ -1,6 +1,6 @@
 # Second-source check of part arg-usa
 
-Check of `arg-usa.tsv` (378 rows) and a spot check of `arg-usa-clubs.tsv`. Research of 2026-10-16. Brief: `docs/research/research-brief-0.6.0.md`. The first agent's files are not changed. The verdicts are in `arg-usa.check.tsv`.
+Check of `arg-usa.tsv` (378 rows) and a spot check of `arg-usa-clubs.tsv`. Research of 2026-10-16. Brief: the 0.6.0 research brief (kept outside the repo). The first agent's files are not changed. The verdicts are in `arg-usa.check.tsv`.
 
 ## Method
 

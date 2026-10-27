@@ -1,6 +1,6 @@
 # Competition history between 2001 and the start season (slice 11c)
 
-Date 2026-10-17. Slice 11c of `docs/specs/2026-10-16-seasons-0.6.0-spec.md` (Q347). Research process: the `league-research` skill. Brief of the research agents: `docs/research/history-0.6.0/brief.md`. Tool: `tools/seasons/history_gaps.py`. Research table: `docs/research/history-0.6.0/<part>.tsv`, checks `<part>.check.tsv`.
+Date 2026-10-17. Slice 11c of `docs/specs/2026-10-16-seasons-0.6.0-spec.md` (Q347). Research process: the `league-research` skill. Brief of the research agents: the history research brief (kept outside the repo). Tool: `tools/seasons/history_gaps.py`. Research table: `docs/research/history-0.6.0/<part>.tsv`, checks `<part>.check.tsv`.
 
 ## 1. The history rows
 
@@ -57,7 +57,7 @@ Over all databases, 347 competitions (by kind, name and nation) hold history row
 
 ## 2. The research
 
-One Opus agent per part researched every competition and label year of `targets.tsv` (`docs/research/history-0.6.0/brief.md`). A second agent checked every filled field against a page of another publisher (`<part>.check.tsv`, `.check.md`). A reconcile agent settled the disagreements with a third source (`reconcile.tsv`, `reconcile.md`).
+One Opus agent per part researched every competition and label year of `targets.tsv` (by the history research brief, kept outside the repo). A second agent checked every filled field against a page of another publisher (`<part>.check.tsv`, `.check.md`). A reconcile agent settled the disagreements with a third source (`reconcile.tsv`, `reconcile.md`).
 
 | Part | Rows | held yes | not held | unknown |
 |---|---|---|---|---|

@@ -1,6 +1,6 @@
 # Rules table part arg-usa: Argentina and the United States
 
-Slice 8 of `docs/specs/2026-10-16-seasons-0.6.0-spec.md`. Research of 2026-10-16. Brief: `docs/research/research-brief-0.6.0.md`.
+Slice 8 of `docs/specs/2026-10-16-seasons-0.6.0-spec.md`. Research of 2026-10-16. Brief: the 0.6.0 research brief (kept outside the repo).
 
 Files:
 

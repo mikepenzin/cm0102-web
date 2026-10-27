@@ -1,6 +1,6 @@
 # Play-offs, splits and calendar changes in existing divisions (0.6.0 slice 19)
 
-Date 2026-10-18. Original: `clean-3968/cm0102.exe` 3.9.68, virtual addresses. Spec: `docs/specs/2026-10-16-seasons-0.6.0-spec.md` (slice 19; Q247, Q249, Q272 to Q282, Q284, Q292, Q337, Q338). Brief: `docs/research/build-brief-0.6.0.md`, slice 19. Code: `tools/seasons/encode_leagues.py`, `src/recomp_rt/win/season_league.h`, `season_league_table.c`. Tests: `tests/seasons/test_encode_leagues.py` (ctest `season_encode_leagues`), the rules report (`tests/seasons/rules_report_check.py`).
+Date 2026-10-18. Original: `clean-3968/cm0102.exe` 3.9.68, virtual addresses. Spec: `docs/specs/2026-10-16-seasons-0.6.0-spec.md` (slice 19; Q247, Q249, Q272 to Q282, Q284, Q292, Q337, Q338). Brief: the build brief (kept outside the repo), slice 19. Code: `tools/seasons/encode_leagues.py`, `src/recomp_rt/win/season_league.h`, `season_league_table.c`. Tests: `tests/seasons/test_encode_leagues.py` (ctest `season_encode_leagues`), the rules report (`tests/seasons/rules_report_check.py`).
 
 ## The encoding
 

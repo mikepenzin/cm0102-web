@@ -96,7 +96,7 @@ Disagreements: none. Fields with no source: none.
 
 ## Pass 2
 
-Date 2026-10-17. Decision agent, by the "Pass 2" rules of `docs/research/research-brief-0.6.0.md` and Q268 to Q331 of the spec.
+Date 2026-10-17. Decision agent, by the "Pass 2" rules of the 0.6.0 research brief (kept outside the repo) and Q268 to Q331 of the spec.
 
 1. **No new tiers (Q331), no new nations (Q288).** No change. This part has no tiers. Every row is a file of the original (`world_cup`, the six `wc_*` sections, `fifa_confed`, `olympics`, `host_country`) or the inter-confederation play-offs, which the original builds inside the section files (point 3). No row needs a nation that the game cannot select. The national teams come from the season database, and the build adds no nation record. Kosovo has club records in the databases from October 2016, Gibraltar from October 2015 and Montenegro from September 2011 (`research-0.6.0/db-divisions/*.clubs.tsv`). A member that a season database lacks does not play in that season.
 2. **Conflicts and open points.** The Reconcile section has no conflict. No point in this part waits for Max. The Unknowns section lists facts that no page gave. They are not decisions, and the second-source pass takes the single-source facts.
