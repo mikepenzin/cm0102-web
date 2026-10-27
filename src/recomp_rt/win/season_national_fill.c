@@ -213,7 +213,14 @@ void season_national_fill(uint32_t fixture)
  * and the top-up 0x90dae0 gives a nation with +0x88 above 500 no virtual players (0x90dd5d), so the strong
  * nations reach the squad check short (Belgium 11, Denmark 12, Republic of Ireland 13 squad slots). After the original picks
  * either squad, the under-21 squad of the nation loses every player of the senior squad and is made up to
- * U21_SQUAD at once (u21_without_seniors), so it never reaches its match short. */
+ * U21_SQUAD at once (u21_without_seniors), so it never reaches its match short.
+ *
+ * Players with a second nationality (staff +0x1e) can also sit in the squad of another nation: the senior pick of
+ * that nation does not look at France's under-21 squad. Gate (a) run 8, 2020 start (November 2020): on day 241 of
+ * 2020 France U21 had 27 squad slots and 14 players it could field; 12 of the others were in the senior squads of
+ * Cameroon, Morocco, Burkina Faso, Comoros, Togo, Egypt, The Congo and Algeria (the fill net of fill_side acted). So
+ * the under-21 squad also loses the players of any other national squad, and it is made up until U21_SQUAD of its
+ * players can play (not injured), as fill_side counts them. */
 
 static uint32_t side_of(uint32_t nation, int u21)
 {
@@ -255,18 +262,27 @@ static void u21_without_seniors(uint32_t nation)
 {
     uint32_t senior = side_of(nation, 0), u21 = side_of(nation, 1);
     if (!readable(senior) || !readable(u21)) return;
-    int out = 0, have = 0;
-    for (uint32_t j = 0; j < SQUAD; j++) {
-        uint32_t sp = rd32(g_mem, u21 + CLUB_SQUAD + 4 * j);
-        if (sp && in_squad(senior, sp)) {
-            wr32(g_mem, u21 + CLUB_SQUAD + 4 * j, 0);
-            out++;
-        } else if (sp)
-            have++;
-    }
-    if (have >= U21_SQUAD) return;
     uint32_t *busy = NULL;
     int nbusy = called_up(u21, &busy), in = 0, born_from = (int)rd16(g_mem, GAME_YEAR) - 21;
+    int out = 0, out_other = 0, have = 0;
+    for (uint32_t j = 0; j < SQUAD && !rt_unwinding; j++) {
+        uint32_t sp = rd32(g_mem, u21 + CLUB_SQUAD + 4 * j);
+        if (!sp) continue;
+        if (in_squad(senior, sp) || bsearch(&sp, busy, (size_t)nbusy, sizeof *busy, by_address)) {
+            wr32(g_mem, u21 + CLUB_SQUAD + 4 * j, 0);
+            if (in_squad(senior, sp)) out++;
+            else out_other++;
+        } else if (!injured(sp))
+            have++;
+    }
+    if (have >= U21_SQUAD || rt_unwinding) {
+        free(busy);
+        if (out || out_other)
+            fprintf(stderr, "recomp: national fill: %.50s under-21 squad: %d players of the senior squad and %d of "
+                            "other national squads leave (%d can play)\n", (char *)(g_mem + u21 + 4), out, out_other,
+                    have);
+        return;
+    }
     uint32_t staff = rd32(g_mem, STAFF), count = rd32(g_mem, STAFF_COUNT);
     while (have + in < U21_SQUAD && !rt_unwinding) {
         uint32_t best = 0;
@@ -288,9 +304,10 @@ static void u21_without_seniors(uint32_t nation)
         in++;
     }
     free(busy);
-    if (out || in)
-        fprintf(stderr, "recomp: national fill: %.50s under-21 squad: %d players of the senior squad leave, %d others "
-                        "join (now %d)\n", (char *)(g_mem + u21 + 4), out, in, have + in);
+    if (out || out_other || in)
+        fprintf(stderr, "recomp: national fill: %.50s under-21 squad: %d players of the senior squad and %d of other "
+                        "national squads leave, %d others join (now %d can play)\n", (char *)(g_mem + u21 + 4), out,
+                out_other, in, have + in);
 }
 
 /* Called by the wrap of NationalTeams::select_squad 0x76c120 (season_intl_euro.c) after the original. */
