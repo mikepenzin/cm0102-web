@@ -43,9 +43,26 @@ static int game_day(void)
 
 void o_005cde40(void);
 
+/* RECOMP_SCREEN_LOG: a line with the game date at a human turn 7 or more game days after the last such line. The
+ * screen log (waits.c) prints a line only when the screen changes, and the stall check of the test runs reads the
+ * date from those lines (tests/seasons/full_play_run.py). A manager with no club on holiday sees one news screen a
+ * week, the same text when no new headline came: in the 2025 gate (b) start (leg 1, December 2026) the days went
+ * on but no line came for 20 minutes, and the run stopped as a stall. Only the log changes. */
+static void date_log_turn(void)
+{
+    static int on = -1, last = -1000000;
+    if (on < 0) on = getenv("RECOMP_SCREEN_LOG") != NULL;
+    int today = game_day();
+    if (!on || today - last < 7) return;
+    last = today;
+    fprintf(stderr, "recomp: game date %d/%d at a human turn\n", (int16_t)rd16(g_mem, GAME_DATE),
+            (int16_t)rd16(g_mem, GAME_DATE + 2));
+}
+
 /* The human turn, cdecl (short *last date): 1 while the turn goes on. */
 RT_WRAP(005cde40, human_turn)
 {
+    date_log_turn();
     holiday_next_turn();
     season_log_turn();
     season_dates_log_turn();
