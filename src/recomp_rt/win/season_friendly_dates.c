@@ -100,7 +100,18 @@ static int season_now(void)
 
 static void snap_rows(uint32_t self);
 
-/* Running seasons only (O405, lead 4, 26 October 2026): in the start season the table stays the original's, as
+/* 1 when season s keeps the original's international calendar: the start season of a 2001 start (O405: a 2001/02 new
+ * game with changing rules is the base game in its first season, the same-save new-game set), and the run to its
+ * start date. A start in a later year has no base game to match: its start season takes the real calendar as a
+ * running one does (the 2011 start: the original's South American friendly day, 17 August 2011, moved Vaslui v
+ * Benfica a week for duty, and the Europa League play-off draw came late, gate (a) run 8 on b6a4c3ad). */
+static int keeps_original(int s)
+{
+    return s < season_start_year() || (s == season_start_year() && season_start_year() == SEASON_FIRST_YEAR);
+}
+
+/* Running seasons only (O405, lead 4, 26 October 2026; keeps_original): in the start season of a 2001 start the
+ * table stays the original's, as
  * that season keeps the original's qualifying and international dates. The table holds the rows of later seasons
  * from the start, and moving them changed a 2001/02 new game with changing rules in its first week (same-save
  * new-game set: Friendly.tmp and the national squads). So the rows move when the game is in a running season:
@@ -112,7 +123,7 @@ RT_WRAP(005cc510, friendly_set_row_dates)
     o_005cc510();
     if (rt_unwinding || !season_game_changes() || !readable(self)) return;
     friendly_obj = self;
-    if (season_now() <= season_start_year()) return;    /* a new game makes the table on 1 January of its year */
+    if (keeps_original(season_now())) return;           /* a new game makes the table on 1 January of its year */
     moved_season = season_now();
     snap_rows(self);
 }
@@ -121,7 +132,7 @@ void season_friendly_dates_day(void)
 {
     if (!season_game_changes()) return;
     int now = season_now();
-    if (now <= season_start_year()) return;
+    if (keeps_original(now)) return;
     if (friendly_obj && readable(friendly_obj) && now != moved_season) {
         moved_season = now;
         snap_rows(friendly_obj);
@@ -376,7 +387,8 @@ static void log_move(uint32_t rec, uint32_t home, uint32_t away, int d, int c, i
 
 /* ---- The qualifiers of later seasons made in the start season (route M, lead 4, 26 October 2026) ----
  *
- * In the start season the snap moves nothing, so that season stays the base game's (the same-save new-game set).
+ * In the start season of a 2001 start the snap moves nothing, so that season stays the base game's (the same-save
+ * new-game set).
  * A qualifier it makes for a later season waits in this list (competition record id, the two clubs' indexes, its
  * date). On the first day of the first running season (season_friendly_dates_day) each one moves to its FIFA day
  * as the original moves a stored fixture (League::move_fixtures_for_tv 0x685640: a copy of the fixture,
@@ -539,7 +551,7 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
      * before the start season (the run to the start date of a new game, 0x5cc850) keeps its date too. */
     int y = (int16_t)rd16(g_mem, fix + 0x28), d = (int16_t)rd16(g_mem, fix + 0x2a), fix_month, fix_day;
     from_day_of_year(y, d, &fix_month, &fix_day);
-    if ((fix_month >= 7 ? y : y - 1) <= season_start_year()) return;
+    if (keeps_original(fix_month >= 7 ? y : y - 1)) return;
     uint32_t home = rd32(g_mem, fix + 0x1c), away = rd32(g_mem, fix + 0x20), rec = rd32(g_mem, fix + 0x14);
     if (!national_side(home) || !national_side(away) || !readable(rec)) return;
     Cpu saved = cpu;
@@ -549,7 +561,7 @@ void season_fifa_snap_fixture(uint32_t fix, uint32_t ret)
     cpu = saved;
     if (finals) return;
     /* Made in the start season: it waits for the first running season (route M), the start season unchanged. */
-    if (season_now() <= season_start_year()) {
+    if (keeps_original(season_now())) {
         if (pending_count < PENDING_MAX)
             pending[pending_count++] = (Pending){rd32(g_mem, rec), (uint32_t)club_index(home),
                                                  (uint32_t)club_index(away), (int16_t)y, (int16_t)d,

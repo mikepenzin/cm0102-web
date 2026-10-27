@@ -257,7 +257,7 @@ static const Level EL_LEVELS[] = {
  *   Q1 starts 9 July.
  * The last legs: Champions League play-off second legs on the Wednesday nearest 26 August (23 to 29 August), Europa
  * and Conference League a day later, before the first September FIFA date of every season from 2009 (28 August
- * 2017 is a Monday window start; its matches were from 31 August). The start season of a game keeps the dates above. */
+ * 2017 is a Monday window start; its matches were from 31 August). The start season of a 2001 game keeps the dates above. */
 typedef struct {
     int code;
     int draw[2], match[2];              /* day, month 0 to 11 */
@@ -274,7 +274,10 @@ static const RunDate RUN_EL_PR[] = {{240, {21, 5}, {25, 5}}, {250, {2, 6}, {9, 6
 /* d: draw day, draw month, match day, match month; replaced in a running season. */
 static void run_dates(char comp, const SeasonUefa *r, int code, int year, int d[4])
 {
-    if (!r || !season_game_changes() || year == season_start_year()) return;
+    /* The start season of a 2001 start keeps the dates above (O405, the base game); a later start's start season
+     * takes these too (season_friendly_dates.c, keeps_original): its rounds before the start date are played in the
+     * run to the start date (game_run_to_start_date 0x5cc850), as the original plays its own. */
+    if (!r || !season_game_changes() || (year == season_start_year() && year == SEASON_FIRST_YEAR)) return;
     int cl_pr = season_uefa_code_clubs(r, 'c', SEASON_UEFA_CL_PR) > 0;
     int el_pr = comp == 'e' && season_uefa_code_clubs(r, 'e', SEASON_UEFA_EL_PR) > 0;
     const RunDate *t = comp == 'c' ? (cl_pr ? RUN_CL_PR : RUN_CL) : (el_pr || cl_pr ? RUN_EL_PR : RUN_EL);
