@@ -207,6 +207,8 @@ static int national_side(uint32_t club)
  * qualifier (fixture priority +0x3a: 10) does not move such a tie (Champions League 8, Europa League 7) when
  * add_fixture 0x5aa680 stores it, and the tie then loses its internationals (Liverpool fielded 7 at Bordeaux on
  * 6 September 2008, match_eng.cpp 652). The day lists of all types (count: the s8 at 0xb64738, key nation entries). */
+static char busy_why[160];              /* what side_busy found last (for the stay line) */
+
 static int side_busy(uint32_t a, uint32_t b, int y, int doy)
 {
     uint32_t na = rd32(g_mem, a + 0x53), nb = rd32(g_mem, b + 0x53);
@@ -233,13 +235,17 @@ static int side_busy(uint32_t a, uint32_t b, int y, int doy)
                 if (!readable(f)) continue;
                 uint32_t h = rd32(g_mem, f + 0x1c), w = rd32(g_mem, f + 0x20);
                 uint32_t nh = readable(h) ? rd32(g_mem, h + 0x53) : 0, nw = readable(w) ? rd32(g_mem, w + 0x53) : 0;
-                if (h == a || h == b || w == a || w == b || (nh && (nh == na || nh == nb)) ||
-                    (nw && (nw == na || nw == nb)))
-                    busy = 1;
                 uint32_t rec = rd32(g_mem, f + 0x14);
-                if (readable(rec) && !rd32(g_mem, rec + 0x5d) && g_mem[f + 0x3a] >= 2 && !national_side(h) &&
-                    !national_side(w))
-                    busy = 1;                                   /* a continental club match */
+                int nat = h == a || h == b || w == a || w == b || (nh && (nh == na || nh == nb)) ||
+                          (nw && (nw == na || nw == nb));
+                int cont = !nat && readable(rec) && !rd32(g_mem, rec + 0x5d) && g_mem[f + 0x3a] >= 2 &&
+                           !national_side(h) && !national_side(w);    /* a continental club match */
+                if (nat || cont) {
+                    busy = 1;
+                    snprintf(busy_why, sizeof busy_why, "%s %.30s v %.30s (%.40s)", nat ? "national" : "club",
+                             readable(h) ? win_str(h + 4) : "-", readable(w) ? win_str(w + 4) : "-",
+                             readable(rec) ? win_str(rec + 4) : "?");
+                }
             }
         }
     return busy;
@@ -279,6 +285,85 @@ static int fifa_target(uint32_t home, uint32_t away, int y, int d)
     return fifa_target_by(home, away, y, d, end_year, end_day);
 }
 
+/* Players of nation n or m in the squad of club c (staff +0x1a or the second nationality +0x1e; +0x61 a player row). */
+static int players_of(uint32_t c, uint32_t n, uint32_t m)
+{
+    int k = 0;
+    for (uint32_t j = 0; j < 50; j++) {
+        uint32_t sp = rd32(g_mem, c + 0xd7 + 4 * j);
+        if (!readable(sp) || !readable(rd32(g_mem, sp + 0x61))) continue;
+        uint32_t a = rd32(g_mem, sp + 0x1a), b = rd32(g_mem, sp + 0x1e);
+        k += (a && (a == n || a == m)) || (b && (b == n || b == m));
+    }
+    return k;
+}
+
+/* The ties of continental club competitions within a day of day d of year y whose club holds more than two players
+ * of nation n or m: the original's duty rule (NationalTeams::can_schedule_club_fixture 0x776fc0) meets those. */
+static char duty_first[160];            /* the first such tie (for the stay line) */
+
+static int duty_ties(uint32_t n, uint32_t m, int y, int d)
+{
+    duty_first[0] = 0;
+    int count = 0, types = (int8_t)g_mem[TYPE_COUNT];
+    if (types < 2 || types > 40) types = 2;
+    for (int dd = d - 1; dd <= d + 1 && !rt_unwinding; dd++)
+        for (int slice = 0; slice < 3 && !rt_unwinding; slice++)
+            for (int type = 0; type < types && !rt_unwinding; type++) {
+                uint32_t saved_esp = cpu.esp;
+                cpu.esp -= 16;
+                uint32_t date = cpu.esp;
+                wr16(g_mem, date, (uint16_t)dd);
+                wr16(g_mem, date + 2, (uint16_t)y);
+                wr32(g_mem, date + 4, 0);
+                Cpu saved = cpu;
+                cpu.ecx = rd32(g_mem, FIXTURES);
+                uint32_t args[3] = {date, (uint32_t)slice, (uint32_t)type};
+                uint32_t list = rt_callback(F_DAY_LIST, 3, args);
+                if (rt_unwinding) return count;
+                cpu = saved;
+                cpu.esp = saved_esp;
+                for (uint32_t node = readable(list) ? rd32(g_mem, list + 2) : 0, k = 0; readable(node) && k < 4000;
+                     node = rd32(g_mem, node + 6), k++) {
+                    uint32_t f = rd32(g_mem, node), rec = readable(f) ? rd32(g_mem, f + 0x14) : 0;
+                    if (!readable(rec) || rd32(g_mem, rec + 0x5d) || g_mem[f + 0x3a] < 2) continue;
+                    uint32_t h = rd32(g_mem, f + 0x1c), w = rd32(g_mem, f + 0x20);
+                    if (national_side(h) || national_side(w)) continue;
+                    if ((readable(h) && players_of(h, n, m) > 2) || (readable(w) && players_of(w, n, m) > 2)) {
+                        if (!count++)
+                            snprintf(duty_first, sizeof duty_first, ": %.40s %.30s v %.30s on day %d", win_str(rec + 4),
+                                     readable(h) ? win_str(h + 4) : "-", readable(w) ? win_str(w + 4) : "-", dd);
+                    }
+                }
+            }
+    return count;
+}
+
+/* The line of a qualifier that keeps its date (info): each FIFA day it could take and what holds it, and the
+ * continental club ties of clubs with more than two of the nations' players within a day of the kept day. */
+static void stay_info(uint32_t rec, uint32_t home, uint32_t away, int d, int y, const char *how)
+{
+    int doys[FIFA_DOYS_MAX], n = fifa_doys(y, doys, FIFA_DOYS_MAX), reach = 0;
+    int today_year = (int16_t)rd16(g_mem, GAME_DATE + 2), today = (int16_t)rd16(g_mem, GAME_DATE);
+    char held[600] = "";
+    size_t at = 0;
+    for (int k = 0; k < n && !rt_unwinding; k++) {
+        int c = doys[k];
+        if (c == d || (y == today_year && c < today + 2) || y < today_year) continue;
+        if (end_year && (y > end_year || (y == end_year && c > end_day)) && c > d) continue;
+        reach++;
+        busy_why[0] = 0;
+        if (!side_busy(home, away, y, c)) snprintf(busy_why, sizeof busy_why, "free");
+        if (at < sizeof held - 1)
+            at += (size_t)snprintf(held + at, sizeof held - at, "%sday %d: %s", reach > 1 ? "; " : "", c, busy_why);
+    }
+    int ties = rt_unwinding ? 0 : duty_ties(rd32(g_mem, home + 0x53), rd32(g_mem, away + 0x53), y, d);
+    fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s keeps day %d of %d (info): %d FIFA days in reach of its "
+                    "stage%s%s; %d continental club ties within a day of it have a club with more than two of the "
+                    "nations' players%s%s\n", win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, y, reach,
+            reach ? ", " : "", held, ties, ties ? duty_first : "", how);
+}
+
 static void log_move(uint32_t rec, uint32_t home, uint32_t away, int d, int c, int y, const char *how)
 {
     if (!getenv("RECOMP_SCREEN_LOG")) return;
@@ -286,8 +371,7 @@ static void log_move(uint32_t rec, uint32_t home, uint32_t away, int d, int c, i
         fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s moves from day %d to the FIFA day %d of %d%s\n",
                 win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, c, y, how);
     else
-        fprintf(stderr, "recomp: intl dates: %.40s %.30s v %.30s stays on day %d of %d (no free FIFA day after "
-                        "today)%s\n", win_str(rec + 4), win_str(home + 4), win_str(away + 4), d, y, how);
+        stay_info(rec, home, away, d, y, how);
 }
 
 /* ---- The qualifiers of later seasons made in the start season (route M, lead 4, 26 October 2026) ----
@@ -361,7 +445,10 @@ static void move_pending(void)
         if (c == d) continue;
         if (c < 0) {
             stayed++;
+            int ey = end_year, ed = end_day;                                    /* its stage, for the stay line */
+            end_year = pending[i].end_year, end_day = pending[i].end_day;
             log_move(rec, home, away, d, -1, y, " (made in the start season)");
+            end_year = ey, end_day = ed;
             continue;
         }
         uint32_t saved_esp = cpu.esp;
