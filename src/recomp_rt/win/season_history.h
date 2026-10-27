@@ -1,7 +1,9 @@
 /* Competition history between 2001 and the start season (0.6.0 slice 11c, Q347).
  *
  * The season databases before 2010/11 hold no competition history between 2001 and the season before the
- * start. At the database load of a new game in the season of such a database, after the year shift of slice
+ * start. (Four databases of 2010/11 and 2011/12 hold no US Open Cup row at all, though Con_Champ::pick_clubs
+ * 0x4c11a0 reads its newest winner for CONCACAF place 1: plan.tsv gives them the researched US Open Cup rows only,
+ * tools/seasons/history_fill.py, GAP_COMPETITIONS.) At the database load of a new game in the season of such a database, after the year shift of slice
  * 11b, the game adds the researched rows (docs/research/history-0.6.0/, the research of each fact with its
  * sources) to the history table in memory. The database files stay unchanged. A loaded save needs nothing: it
  * holds the rows.

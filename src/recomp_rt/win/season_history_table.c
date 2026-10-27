@@ -34298,6 +34298,63 @@ static const SeasonHistRow rows_14[] = {
     {"Confederations Cup", 2001, {"France", "Japan", "Australia", "Japan"}, {"", "", "", ""}},
     {"Copa America", 2001, {"Colombia", "Mexico", "Honduras", "Colombia"}, {"", "", "", ""}},
 };
+static const SeasonHistClear clears_15[] = {
+};
+static const SeasonHistRow rows_15[] = {
+    {"US Open Cup", 2002, {"Columbus Crew", "Los Angeles Galaxy", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2003, {"Chicago Fire", "NY/NJ Metrostars", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2004, {"Kansas City Wizards", "Chicago Fire", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2005, {"Los Angeles Galaxy", "Dallas Burn", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2006, {"Chicago Fire", "Los Angeles Galaxy", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2007, {"New England Revolution", "Dallas Burn", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2008, {"Washington DC United", "Charleston Battery", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2009, {"Seattle Sounders", "Washington DC United", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2010, {"Seattle Sounders", "Columbus Crew", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2001, {"Los Angeles Galaxy", "New England Revolution", "", ""}, {"United States", "United States", "", ""}},
+};
+static const SeasonHistClear clears_16[] = {
+};
+static const SeasonHistRow rows_16[] = {
+    {"US Open Cup", 2002, {"Columbus Crew", "Los Angeles Galaxy", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2003, {"Chicago Fire", "NY/NJ Metrostars", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2004, {"Kansas City Wizards", "Chicago Fire", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2005, {"Los Angeles Galaxy", "Dallas Burn", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2006, {"Chicago Fire", "Los Angeles Galaxy", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2007, {"New England Revolution", "Dallas Burn", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2008, {"Washington DC United", "Charleston Battery", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2009, {"Seattle Sounders", "Washington DC United", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2010, {"Seattle Sounders", "Columbus Crew", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2001, {"Los Angeles Galaxy", "New England Revolution", "", ""}, {"United States", "United States", "", ""}},
+};
+static const SeasonHistClear clears_17[] = {
+};
+static const SeasonHistRow rows_17[] = {
+    {"US Open Cup", 2002, {"Columbus Crew", "Los Angeles Galaxy", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2003, {"Chicago Fire", "NY/NJ Metrostars", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2004, {"Kansas City Wizards", "Chicago Fire", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2005, {"Los Angeles Galaxy", "Dallas Burn", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2006, {"Chicago Fire", "Los Angeles Galaxy", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2007, {"New England Revolution", "Dallas Burn", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2008, {"Washington DC United", "Charleston Battery", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2009, {"Seattle Sounders", "Washington DC United", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2010, {"Seattle Sounders", "Columbus Crew", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2001, {"Los Angeles Galaxy", "New England Revolution", "", ""}, {"United States", "United States", "", ""}},
+};
+static const SeasonHistClear clears_18[] = {
+};
+static const SeasonHistRow rows_18[] = {
+    {"US Open Cup", 2002, {"Columbus Crew", "Los Angeles Galaxy", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2003, {"Chicago Fire", "NY/NJ Metrostars", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2004, {"Kansas City Wizards", "Chicago Fire", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2005, {"Los Angeles Galaxy", "Dallas Burn", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2006, {"Chicago Fire", "Los Angeles Galaxy", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2007, {"New England Revolution", "Dallas Burn", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2008, {"Washington DC United", "Charleston Battery", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2009, {"Seattle Sounders", "Washington DC United", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2010, {"Seattle Sounders", "Columbus Crew", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2011, {"Seattle Sounders", "Chicago Fire", "", ""}, {"United States", "United States", "", ""}},
+    {"US Open Cup", 2001, {"Los Angeles Galaxy", "New England Revolution", "", ""}, {"United States", "United States", "", ""}},
+};
 const SeasonHistDb season_history_dbs[] = {
     {"3.9.68", 2002, clears_0, 553, rows_0, 416},
     {"Summer 2002", 2002, clears_1, 553, rows_1, 416},
@@ -34314,5 +34371,9 @@ const SeasonHistDb season_history_dbs[] = {
     {"February 2010 ODB", 2009, clears_12, 1575, rows_12, 1324},
     {"June 2010", 2009, clears_13, 1573, rows_13, 1322},
     {"September 2009", 2009, clears_14, 1456, rows_14, 1255},
+    {"April 2011 SIM", 2010, clears_15, 0, rows_15, 10},
+    {"December 2010 SIM", 2010, clears_16, 0, rows_16, 10},
+    {"September 2010 ODB", 2010, clears_17, 0, rows_17, 10},
+    {"March 2012 SIM", 2011, clears_18, 0, rows_18, 11},
 };
-const int season_history_dbs_count = 15;
+const int season_history_dbs_count = 19;

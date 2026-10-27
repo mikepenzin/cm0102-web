@@ -18,6 +18,12 @@ year shift of slice 11b (tools/seasons/history_gaps.py): `add` (the database has
 and second clubs), `differ` (another result). The clubs and national sides are matched by their full name in the
 database, then by their short name, within the nation of the competition first.
 
+Gap rows (row CONCACAF place 1, lead 4, 27 October 2026): a database of 2010/11 or later holds its own history,
+which the game keeps. Where it holds no row at all of a competition in GAP_COMPETITIONS, the kept researched rows
+of that competition are added (`add`, nothing cleared). The US Open Cup: Con_Champ::pick_clubs 0x4c11a0 gives
+CONCACAF place 1 to its newest winner (0x4afd80), and September 2010 ODB, December 2010 SIM, April 2011 SIM and
+March 2012 SIM hold no US Open Cup row.
+
 --write writes docs/research/history-0.6.0/fill-report.tsv (counts per database) and unmatched.tsv (names that do
 not match in a database). The files hold competition and club names only.
 """
@@ -198,6 +204,56 @@ def resolve(names, name, nation, kind):
     return d.club(i), d.text(4, nat) if nat >= 0 else ""
 
 
+GAP_COMPETITIONS = ("US Open Cup",)
+
+
+def gap_databases(dbroot):
+    """[(name, start year, folder)] of the databases of 2010/11 and later, in season order."""
+    sigs = {(int(r["club_size"]), r["club_sha256"], int(r["staff_size"]), r["staff_sha256"]): r
+            for r in hg.read_tsv(hg.SIGS)}
+    out = []
+    for sub in sorted(os.listdir(dbroot)):
+        p = os.path.join(dbroot, sub)
+        r = hg.identify(p, sigs) if os.path.isdir(p) else None
+        if not r or r["data_season"] in ("none", "n/a") or r["role"] in ("official version", "official base"):
+            continue
+        start = int(r["data_season"][:4])
+        if start >= 2010:
+            out.append((r["database"], start, p))
+    return sorted(out, key=lambda x: (x[1], x[0]))
+
+
+def gap_rows(name, start, folder, rows, ref, alias, plan, report):
+    """The gap rows of one database of 2010/11 or later (see the top)."""
+    d = hg.Data(folder)
+    held = {d.comp(cid)[1] for cid, *_ in d.history()}
+    comps = {}
+    for cid in range(d.count(12)):
+        c = d.comp(cid)
+        if c:
+            comps.setdefault(c[1], (cid, c[2]))
+    names = Names(d, ref, alias)
+    added = 0
+    for comp in GAP_COMPETITIONS:
+        if comp in held or comp not in comps:
+            continue
+        for r in rows:
+            if r["competition"] != comp or r["nation"] != comps[comp][1] or not r.get("label", "").isdigit():
+                continue
+            if not kept(r, start):
+                continue
+            places = [resolve(names, r.get(f, ""), r["nation"], r["kind"]) for f in ("first", "second", "third", "host")]
+            if places[0] is None or not places[0][0]:
+                continue
+            places = [v or ("", "") for v in places]
+            plan.append("\t".join(["add", name, str(start), comp, r["label"], r.get("part", ""), "add"]
+                                  + [x for v in places for x in v]))
+            added += 1
+    if added:
+        report.append("\t".join(map(str, [name, start, added, added, added, 0, 0, 0, 0, 0, 0, 0])))
+        print(report[-1], flush=True)
+
+
 PLAN_COLS = ["action", "database", "start_year", "competition", "label", "part", "result", "first", "first_nation",
              "second", "second_nation", "third", "third_nation", "host", "host_nation"]
 
@@ -281,6 +337,8 @@ def main(argv):
         report.append("\t".join(map(str, [name, start, n["range"], n["kept"], n["add"], n["agree"], n["differ"],
                                           n["nocomp"], n["um_first"], n["um_other"], n["cleared"], n["kept_db"]])))
         print(report[-1], flush=True)
+    for name, start, folder in gap_databases(argv[1]):
+        gap_rows(name, start, folder, rows, ref, alias, plan, report)
     um = ["database\tnation\tname\trows"] + ["\t".join([a, b, c, str(k)]) for (a, b, c), k in sorted(unmatched.items())]
     print(f"{len(unmatched)} unmatched names (database, name)")
     vl = ["database\tname\tdatabase_name"] + ["\t".join(x) for x in sorted(via)]
