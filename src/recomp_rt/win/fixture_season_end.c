@@ -36,6 +36,16 @@
  * add_fixture inserts it without its clash moves (flag 0 with the try count 0xae2a40 at 10, as add_fixture does
  * after its tenth try), and no "fixture moved" news is queued. The club plays without its called-up players, as a
  * league plays at the end of its season. When the old date is today or past, the new date of 0x5ab510 stays.
+ * A kept date keeps its clash, and that is harmless (lead 4 check, 27 October 2026). In a 2007 start (Select All,
+ * November 2007, leg 2008/09) four Primera División (Spain) matches of the last round sat on 18 June 2009 (day 169;
+ * update day 170): Sevilla v Atlético de Madrid, Barcelona v Cádiz, Real Madrid v Celta, Valencia v Murcia. Spain
+ * played the Confederations Cup on days 166, 168 and 171. On the clash with Spain v South Africa (day 168, severity
+ * 10 against priority 2) add_fixture moved each to day 171, so the rule kept day 169: no day lies between the old date
+ * and the update day. All four matches and Spain's three matches were played, the clubs without their players on
+ * duty for Spain (the team pick leaves out players on duty, get_international_duty_club 0x7757d0; the duty window of
+ * a finals squad runs from 10 days before its first match, select_squad 0x76c120, so from day 156 no day would have
+ * had them). The rule moves no match before its old date, as 0x5ab510 does not. No box and no forfeit: the Primera División was complete on
+ * day 170 and started 2009/10 on time (exact replay, run-logs/hold-primera).
  * The other 7 calls of 0x5ab510, the base game and RECOMP_SEASON_CODE=off keep the original (Q152).
  *
  * Test switch RECOMP_TEST_FIXTURE_HOLD (season games only): "log" prints each covered move; "1" also takes the new
