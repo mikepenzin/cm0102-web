@@ -11,8 +11,9 @@ season's rules). The runs:
     2010    September 2010 ODB, the season 2010/11 (the format of 2009/10 to 2017/18)
     2018    October 2018, the season 2018/19 (a preliminary round, paths from Q2, four group places for the top
             four associations: England's four clubs in the group stage)
-    load2018  October 2018: the game saves 20 days after the start (late July 2018, before the Champions League's
-            second qualifying round ends), a new program loads the save and plays to the end of the season (slice
+    load2018  October 2018: the game saves 10 days after the start (23 July 2018, before the Champions League's
+            second qualifying round: from row A18 a start season after 2001 plays the real qualifying days, Q2 on 25
+            July and 1 August), a new program loads the save and plays to the end of the season (slice
             23 review 2: the draws after a load read the direct clubs of the list +0x14)
     load    September 2010 ODB: the game saves 30 days after the start (August 2010, inside the qualifying
             rounds), a new program loads the save and plays to 1 June 2011; both cups play their group stages and
@@ -183,7 +184,7 @@ RUNS = {
     "2010": run_season("2010", 2010, "September 2010 ODB", 76, LABELS_2009, None, "250 260 270 220"),
     "2018": run_season("2018", 2018, "October 2018", 79, LABELS_2018, 4, "240 230 250 260 270 220"),
     "load": run_load,
-    "load2018": load_run(2018, "October 2018", 20, "load2018"),
+    "load2018": load_run(2018, "October 2018", 10, "load2018"),
     "2013": run_2013,
     "repeat": run_repeat,
 }
