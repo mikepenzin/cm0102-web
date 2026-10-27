@@ -922,8 +922,10 @@ RT_WRAP(004c11a0, con_champ_pick)
     uint32_t list = rd32(g_mem, obj + CLUB_LIST_AT);
     /* An original place stays empty when its list of ConChamp::select_qualified_clubs is shorter than its share
      * (Mexico 2, the regional groups of nation +0x75 = 7 and 6, 3 and 1, the MLS 1; 0x4c12be..0x4c1309) or the MLS
-     * record has no placed club (0x4afd80, 0x4c13a6). No tested database leaves one empty (guard review row A27);
-     * the log names such a place, and the fill below gives it a club. */
+     * record has no placed club (0x4afd80, 0x4c13a6). Place 1 is the newest winner of the US Open Cup (key 0x9cf728):
+     * four databases of 2010/11 and 2011/12 hold no US Open Cup row (a 2010 start in gate run 8), and the history
+     * fill gives them the researched rows (season_history.h, plan.tsv gap rows). The log names a place that still
+     * finds no club, and the fill below gives it one (guard review row A27). */
     for (int i = 0; list && i < CON_CHAMP_ORIGINAL; i++)
         if (!rd32(g_mem, list + 6u * (uint32_t)i))
             fprintf(stderr, "recomp: concacaf champions %d: the original's place %d has no club, the net fills it\n",

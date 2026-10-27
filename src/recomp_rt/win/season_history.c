@@ -28,6 +28,9 @@
 #define CLUB_COUNT 0xae235cu
 #define CLUB_SIZE 0x245u
 #define NAME_LEN 51u
+#define CLUB_COMPS_PTR 0xae23d0u   /* the club competition records */
+#define CLUB_COMP_COUNT 0xae2378u
+#define CLUB_COMP_SIZE 0x6bu
 
 #define GROW_HISTORY 0x00527f60u   /* database_grow_comp_history_table (count): blank rows at the end, 1 on success */
 
@@ -178,6 +181,15 @@ static uint32_t find_comp(const char *want)
 {
     for (uint32_t k = 0; k < n_comps; k++)
         if (!strcmp(comps[k].name, want)) return comps[k].ptr;
+    /* A club competition with no history row in the database (the gap rows of plan.tsv: the US Open Cup of four
+     * databases from 2010/11, whose newest winner Con_Champ::pick_clubs 0x4c11a0 reads for its place 1 through
+     * 0x4afd80): the club competition records, [0xae23d0], 0x6b bytes, count [0xae2378], the long name at +4. */
+    uint32_t base = rd32(g_mem, CLUB_COMPS_PTR), n = rd32(g_mem, CLUB_COMP_COUNT);
+    char name[NAME_LEN + 1];
+    for (uint32_t i = 0; base && i < n && i < 100000u; i++) {
+        text_at(base + i * CLUB_COMP_SIZE + 4, name, sizeof name);
+        if (!strcmp(name, want)) return base + i * CLUB_COMP_SIZE;
+    }
     return 0;
 }
 
