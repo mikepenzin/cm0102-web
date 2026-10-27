@@ -120,6 +120,11 @@ never from November 2020 (2 to 3 percent). Measured on the test databases, 2026-
     main's build without this slice met it on the same day, and the rerun of this slice did not: not this slice.
   - 2001 (changing rules off): no line of this slice.
   - load: a save on day 75 of 2015 (16 March, inside the state season), loaded, 60 more days, saved: no box.
-- The day fixtures screen gave one area of 31 rows a page in the 2001-on run (now 30, scrolls).
+- The two areas of 31 rows a page in the 2001-on run are menus, not the day fixtures screen (found 27 October 2026,
+  O259): the Competitions menu of the side bar lists the competitions of a nation, a separator and Awards, and Brazil's
+  has 29 competitions (the original's 17 and the 12 state championships of this slice), so 31 rows of 21 pixels
+  (651 pixels). `menu_rows.c` makes the 25th competition of a menu open a sub menu "More" (an item with a child area
+  as the nation items have, `ScreenManager::add_menu_area` 0x415600 and `add_menu_item` 0x415640), so a menu has 27
+  rows at most. The wrap of `Area::layout` (Q609) stays as a logged net and does not act.
 - Same-save (Q342): `smoke_run.py <program> <game> --same-save` with `--save start.sav`, `--save prematch.sav` and a new game,
   runs again, season-code-off, kinds-base (and rules-off for the new game): every run equal to normal.
