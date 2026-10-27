@@ -615,7 +615,8 @@ void o_00403350(void);
  * "Area..cpp 838"). It is not the day fixtures screen: the first draw after a start or a load lays out the two menus
  * of the guard line. Fixed at the source in menu_rows.c: a menu of more than 24 competitions has a sub menu More, so
  * no menu wants more than 27 rows. This wrap stays as a logged net: a page of more than 30 rows becomes 30. It is not
- * expected to act. The base game never asks for more (it would stop at the box). */
+ * expected to act. It does not save a menu taller than 599 pixels: that one stops with "Area..cpp 838" on hover. The base
+ * game never asks for more (it would stop at the box). */
 RT_WRAP(00403350, area_layout)
 {
     uint32_t area = cpu.ecx;
