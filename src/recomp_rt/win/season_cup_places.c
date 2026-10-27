@@ -125,7 +125,19 @@ RT_WRAP(00638e30, regional_munster_clubs)
  * 0x7c8870, round byte 1) in the places from 36. With the October 2003 database 15 clubs have the top division as
  * their last division, so place 51 stayed empty (2003 start, gate (a) run 6; match_eng..cpp 652). The top places
  * then also take the clubs whose division of this season (+0x57) is the top division and that are not in the list,
- * by reputation: the cup gets the top division of the season it is played in. */
+ * by reputation: the cup gets the top division of the season it is played in.
+ *
+ * With changing rules on, the 2003 club moves leave no club of this season's top division outside the list (gate (a)
+ * run 8 on eee3e71a, 2003 start): the clubs that went down from the top division are in the top places by their last
+ * division, the clubs that came up are in the Second Division places, and the 16th club of 2002/03 has another last
+ * division in the database. So "cup places: pol_cup 2003: 1 of 52 places empty, 0 from this season's top division",
+ * and the cup entrants guard (season_cup_entrants.c) filled place 51. The empty top places then take the next clubs
+ * of the cup's own pools, as the original fills the list: this season's Second Division ([0x9cf85c]), then the Lower
+ * Division ([0x9cf868], the pool of 0x7c87b4..0x7c880a), by reputation, with the round byte of the top places (1), so
+ * the rounds keep their counts. In the 2003 start every Second Division club is in the list, so a Lower Division club
+ * takes place 51. */
+#define KEY_POL_SECOND 0x9cf85cu
+#define KEY_POL_LOWER 0x9cf868u
 void o_007c8550(void);
 
 RT_WRAP(007c8550, places_pol_cup)
@@ -135,6 +147,10 @@ RT_WRAP(007c8550, places_pol_cup)
     if (rt_unwinding) return;
     uint32_t eax = cpu.eax;
     int count = readable(cup) ? (int16_t)rd16(g_mem, cup + CUP_TEAMS) : 0;
-    if (count > 36) top_up(cup, KEY_POL_TOP, 36, count, count, 1, "pol_cup", "this season's top division");
+    if (count > 36) {
+        top_up(cup, KEY_POL_TOP, 36, count, count, 1, "pol_cup", "this season's top division");
+        top_up(cup, KEY_POL_SECOND, 36, count, count, 1, "pol_cup", "this season's Second Division");
+        top_up(cup, KEY_POL_LOWER, 36, count, count, 1, "pol_cup", "the Lower Division");
+    }
     cpu.eax = eax;
 }
