@@ -1,20 +1,23 @@
-/* A competitions menu of 30 rows at most (O259, guard B6, the day screen check of 27 October 2026).
+/* A competitions menu of 27 rows at most for a nation (O259, guard B6, the day screen check of 27 October 2026).
  *
  * Area::layout 0x403350 stops with "Area..cpp 507" for an area of more than 30 rows (+0xbac, 0x4033ec..0x403451).
  * The Competitions menu of the side bar (Nations A-J and K-Z, one sub menu for each nation) is built by the function
  * that calls ScreenManager::add_menu_area 0x415600 and add_menu_item 0x415640 at 0x75f836..0x75f977: one item for
  * each competition of the nation (link type 2000, 0x75f883), then a separator (0x761260) and the Awards item (link
  * 2004, 0x75f8de). The menu of Brazil has 29 competitions since slice 20e (Serie A, B and C, the 24 state
- * championships and the two cups), so with the separator and Awards it wants 31 rows. The original's nations have 14
- * at most. (Found with a test log of add_menu_item on the areas 16 and 26, the two menus of the guard line, which came
- * from the first draw after each start or load: the area create call 0x415638, rect 0, then the 31 items.)
+ * championships and the two cups), so with the separator and Awards it wants 31 rows. The original's Brazil has 17
+ * competitions, and no other nation of the original has more. (Found with a test log of add_menu_item on the areas
+ * 16 and 26, the two menus of the guard line, which came from the first draw after each start or load: the area
+ * create call 0x415638, rect 0, then the 31 items.)
  *
  * A menu also has to fit the screen: a row is 21 pixels (the 31 rows of Brazil gave a rect of 193 x 651 pixels, more
  * than the 600 of the classic screen, and the first hover over Brazil with the clamp of 30 rows stopped with the box
  * "Area..cpp 838"). So in a season game the 25th competition item of a menu opens a sub menu "More" (an item with a
  * child area, as the nation items have), and the competitions after it go into that area. The menu then has 24
- * competitions, More, the separator and Awards: 27 rows (567 pixels) at most. The sub menu has the rest. Menus with fewer competitions, and the base
- * game, are not touched. */
+ * competitions, More, the separator and Awards: 27 rows (567 pixels) at most for a nation menu. The sub menu has the
+ * rest. A continent entry (World Cup, International and the like) can add a second separator, Awards and one more
+ * item, so its menu can reach 28 to 30 rows with More (today the International menu has 9 items). Menus with fewer
+ * competitions, and the base game, are not touched. */
 #include "win.h"
 #include "season.h"
 #include "season_comps.h"
@@ -58,7 +61,6 @@ static uint32_t add_area(uint32_t item)
     return r;
 }
 
-/* ScreenManager::add_menu_area 0x415600: a new area starts with no items and no sub menu. */
 /* ScreenManager::add_menu_area 0x415600: a new area starts with no items and no sub menu. */
 RT_WRAP(00415600, menu_rows_area)
 {
