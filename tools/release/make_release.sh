@@ -127,7 +127,18 @@ python3 -I "$REPO/tools/mac/check_package.py" "$DMG" ${CHECK_ARGS[@]+"${CHECK_AR
 cp "$DMG" "$OUT/"
 
 echo "== Windows"
-cmake -B "$REPO/build-win" -DCMAKE_TOOLCHAIN_FILE="$REPO/packaging/windows/mingw-w64-x86_64.cmake" \
+# The source is this checkout (-S): with -B only, cmake takes the current folder as the source of a new build folder,
+# so a dry run started in another checkout built that checkout's code (gate (d) on 61bbb76d: the exe had version
+# 0.5.0, the main checkout's, and the setup name was the 0.5.0 one). A build-win made from another source stops here.
+CACHE="$REPO/build-win/CMakeCache.txt"
+if [ -f "$CACHE" ]; then
+    HOME_DIR="$(sed -n 's/^CMAKE_HOME_DIRECTORY:INTERNAL=//p' "$CACHE")"
+    if [ "$HOME_DIR" != "$REPO" ]; then
+        echo "make_release.sh: $REPO/build-win was made from $HOME_DIR, not from this checkout. Remove that folder and run again." >&2
+        exit 1
+    fi
+fi
+cmake -S "$REPO" -B "$REPO/build-win" -DCMAKE_TOOLCHAIN_FILE="$REPO/packaging/windows/mingw-w64-x86_64.cmake" \
     -DSDL2_DIR="$SDL_MINGW/x86_64-w64-mingw32/lib/cmake/SDL2" -DCM0102_EXE="$GAME/cm0102.exe" \
     -DCM0102_GAME_DIR="$GAME" >/dev/null
 cmake --build "$REPO/build-win" -j --target windows_installer
