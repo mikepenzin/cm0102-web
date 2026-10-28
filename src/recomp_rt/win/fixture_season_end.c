@@ -46,6 +46,15 @@
  * a finals squad runs from 10 days before its first match, select_squad 0x76c120, so from day 156 no day would have
  * had them). The rule moves no match before its old date, as 0x5ab510 does not. No box and no forfeit: the Primera División was complete on
  * day 170 and started 2009/10 on time (exact replay, run-logs/hold-primera).
+ * A cup tie has a second bound: its next round's match day (jap-cup-stall, gate (b) 2006 on ec579543). The Emperor's
+ * Cup plays its rounds a week apart in December and its final on 2 January, with Japan's update day 24. In 2009 the
+ * round 3 tie Yokohama F Marinos v Jubilo Iwata (day 346) was moved by clashes on days 340, 343 and 346 to days 349,
+ * 356 and 363, past round 4's day 353. Each later tie of its winner was made after its own date, and add_fixture's
+ * move of a past date (0x5aa729) keeps the weekday, so each round went a week on: the final came on day 26 of 2010,
+ * the cup was not complete on day 24 and held edition 2009 for a year. So a covered move of a cup tie takes the last
+ * free day before the next round's match day (the same search), when that day comes before the update day bound.
+ * When no day is free, the move of 0x5ab510 stays (logged). The tie is found by its two clubs in a drawn tie of the
+ * cup's round table (next_round_day).
  * The other 7 calls of 0x5ab510, the base game and RECOMP_SEASON_CODE=off keep the original (Q152).
  *
  * Test switch RECOMP_TEST_FIXTURE_HOLD (season games only): "log" prints each covered move; "1" also takes the new
@@ -146,6 +155,47 @@ static int update_day(uint32_t rec)
 
 static int before(int y1, int d1, int y2, int d2) { return y1 < y2 || (y1 == y2 && d1 < d2); }
 
+/* A tie of a cup round with a next round: 1 with the next round's match day in *y and *d. The cup is the object of
+ * record rec (COMP_OBJECTS); a Cup holds its rounds at +0x3c (s16), the round table at +0xa3 (records of 0x68: match
+ * day s16 +3, year offset s8 +5 from the year +0x40, tie count s16 +0x1a; Cup::draw_round 0x51c410, 0x51c473 and
+ * 0x51c569..0x51c580), the ties of round r at [+0xad] + 4r (0x35 bytes each: home and away places s16 +0 and +2,
+ * drawn +0x34; 0x51c449..0x51c4b7) and the places at +0xa7 (6 bytes each, the club +0; 0x51c485..0x51c491). The
+ * fixture is a tie of round r when a drawn tie of r has its two clubs (fixture +0x1c and +0x20). A league object
+ * has none of these, so no tie matches. */
+#define FIX_HOME 0x1cu
+#define FIX_AWAY 0x20u
+static int next_round_day(uint32_t rec, uint32_t fix, int *y, int *d)
+{
+    uint32_t table = rd32(g_mem, COMP_OBJECTS);
+    if (!readable(rec) || !readable(table)) return 0;
+    int32_t id = (int32_t)rd32(g_mem, rec);
+    if (id < 0 || id > 0xffff) return 0;
+    uint32_t cup = rd32(g_mem, table + 4u * (uint32_t)id);
+    if (!readable(cup)) return 0;
+    uint32_t rounds_at = rd32(g_mem, cup + 0xa3u), ties_at = rd32(g_mem, cup + 0xadu), places = rd32(g_mem, cup + 0xa7u);
+    int rounds = (int16_t)rd16(g_mem, cup + 0x3cu);
+    uint32_t home = rd32(g_mem, fix + FIX_HOME), away = rd32(g_mem, fix + FIX_AWAY);
+    if (rounds < 2 || rounds > 32 || !readable(rounds_at) || !readable(ties_at) || !readable(places) || !home || !away)
+        return 0;
+    for (int r = 0; r + 1 < rounds; r++) {
+        uint32_t ties = rd32(g_mem, ties_at + 4u * (uint32_t)r);
+        int n = (int16_t)rd16(g_mem, rounds_at + 0x68u * (uint32_t)r + 0x1au);
+        if (!readable(ties) || n < 1 || n > 512) continue;
+        for (int k = 0; k < n; k++) {
+            uint32_t tie = ties + 0x35u * (uint32_t)k;
+            int h = (int16_t)rd16(g_mem, tie), a = (int16_t)rd16(g_mem, tie + 2u);
+            if (!g_mem[tie + 0x34u] || h < 0 || a < 0) continue;
+            uint32_t ch = rd32(g_mem, places + 6u * (uint32_t)h), ca = rd32(g_mem, places + 6u * (uint32_t)a);
+            if (!((ch == home && ca == away) || (ch == away && ca == home))) continue;
+            uint32_t next = rounds_at + 0x68u * (uint32_t)(r + 1);
+            *d = (int16_t)rd16(g_mem, next + 3u);
+            *y = (int16_t)rd16(g_mem, cup + 0x40u) + (int8_t)g_mem[next + 5u];
+            return *d >= 0 && *d < 366;
+        }
+    }
+    return 0;
+}
+
 static int days_in(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0 ? 366 : 365; }
 
 /* 1 when day d of year y is free for the fixture: it gets that date and the slice of get_time_slice, and
@@ -208,8 +258,15 @@ RT_WRAP(005ab510, fixture_new_date)
         fprintf(stderr, "recomp: fixtures: test: a %s move of %.40s from day %d of %d to day %d of %d (update "
                         "day %d)\n", SITES[site].what, win_str(rec + 4), day, year, new_day, new_year, last);
     if (test_mode() == 2 && new_year == year && new_day > day) last = new_day;
-    if (last < 0) return;
     int last_year = day < last ? year : year + 1;
+    /* A cup tie stays before its next round's match day (jap-cup-stall). */
+    int round_year, round_day, cup_tie = next_round_day(rec, fix, &round_year, &round_day) &&
+                                         before(year, day, round_year, round_day);
+    if (cup_tie && (last < 0 || before(round_year, round_day, last_year, last)))
+        last_year = round_year, last = round_day;
+    else
+        cup_tie = 0;
+    if (last < 0) return;
     uint8_t new_slice = g_mem[fix + FIX_SLICE];
     if (before(new_year, new_day, last_year, last)) return;
     int today_year = (int16_t)rd16(g_mem, TODAY + 2u), today = (int16_t)rd16(g_mem, TODAY);
@@ -222,11 +279,21 @@ RT_WRAP(005ab510, fixture_new_date)
         if (!before(year, day, y, d) || before(y, d, min_year, min_day)) break;
         if (free_day(manager, fix, y, d)) {
             fprintf(stderr, "recomp: fixtures: a match of %.40s moves from day %d of %d to day %d of %d, before its "
-                            "season change on day %d (the %s move gave day %d of %d)\n",
-                    name, day, year, d, y, last, SITES[site].what, new_day, new_year);
+                            "%s on day %d (the %s move gave day %d of %d)\n",
+                    name, day, year, d, y, cup_tie ? "next round" : "season change", last, SITES[site].what,
+                    new_day, new_year);
             return;
         }
         if (rt_unwinding) return;
+    }
+    if (cup_tie) {
+        wr16(g_mem, fix + FIX_YEAR, (uint16_t)new_year);
+        wr16(g_mem, fix + FIX_DAY, (uint16_t)new_day);
+        g_mem[fix + FIX_SLICE] = new_slice;
+        fprintf(stderr, "recomp: fixtures: a match of %.40s goes to day %d of %d after its next round on day %d of %d "
+                        "(no free day before it, old day %d of %d)\n",
+                name, new_day, new_year, last, last_year, day, year);
+        return;
     }
     if (!before(today_year, today, year, day)) {
         wr16(g_mem, fix + FIX_YEAR, (uint16_t)new_year);
