@@ -728,7 +728,10 @@ def league_steps(nations, extra):
                 out += ["wait screen:0x81e8d0", "2500 click 705 572"]   # Select Start Season: Next (England)
             continue
         if many and s in ("wait typing", "wait first-news"):
-            s += " 1800000"                                         # the game is made after the start season
+            # The game is made after the run to the start date. A 2025 start with all nations took 1226 to 1676 s on
+            # the gates and passed 1800 s under the load of gate (a) and gate (b) together (ec579543, a b6a4c3ad
+            # build the same to 0.1 s), so the wait is an hour. A hang still fails.
+            s += " 3600000"
         if many and s == "1000 click 155 163":
             s = "2000 click 155 188"                                # Select Team: Arsenal, below the Nation box
         out.append(s)
