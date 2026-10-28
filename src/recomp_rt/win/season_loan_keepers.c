@@ -17,7 +17,7 @@
  * So in a season game, a loan out of a goalkeeper (rating KEEPER_FROM or more) by an AI club that has 3 or fewer
  * goalkeepers at the club (staff +0x39) takes the original's own rejection: the squad count at 0x8c23fd reads as
  * full. The parent club is the club of the player's main contract (CONTRACT_MANAGER::get_contract 0x4cf5a0, +4).
- * Logged. The base game keeps the original (Q152). */
+ * Logged once a staff member (AI clubs make the same offer again). The base game keeps the original (Q152). */
 #include "win.h"
 #include "season.h"
 #include "season_names.h"
@@ -73,7 +73,8 @@ static int keepers_at(uint32_t club)
     return n;
 }
 
-static int full_squad_once;             /* the next squad count at 0x8c23fd reads as full */
+static int full_squad_once;
+static unsigned char logged[1u << 17];  /* staff ids already logged */             /* the next squad count at 0x8c23fd reads as full */
 
 void o_008c2180(void);
 
@@ -93,9 +94,11 @@ RT_WRAP(008c2180, loan_keepers)
             cpu = saved;
             if (n <= KEEPERS_KEPT) {
                 full_squad_once = 1;
-                fprintf(stderr, "recomp: loan keepers: %.30s keeps its goalkeeper, staff %u (%d at the club): the "
+                uint32_t id = (staff - rd32(g_mem, 0xae23bcu)) / 0x6eu;
+                if (id < sizeof logged && !logged[id]++)
+                    fprintf(stderr, "recomp: loan keepers: %.30s keeps its goalkeeper, staff %u (%d at the club): the "
                                 "loan to %.30s is turned down\n", win_str(parent + 4),
-                        (staff - rd32(g_mem, 0xae23bcu)) / 0x6eu, n,
+                        id, n,
                         win_str(rd32(g_mem, CLUBS) + rd32(g_mem, offer + 8) * 0x245u + 4));
             }
         }
