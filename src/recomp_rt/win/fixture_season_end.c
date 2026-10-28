@@ -54,7 +54,10 @@
  * the cup was not complete on day 24 and held edition 2009 for a year. So a covered move of a cup tie takes the last
  * free day before the next round's match day (the same search), when that day comes before the update day bound.
  * When no day is free, the move of 0x5ab510 stays (logged). The tie is found by its two clubs in a drawn tie of the
- * cup's round table (next_round_day).
+ * cup's round table (next_round_day). The bound covers one more call for cup ties only: add_fixture's move of a
+ * fixture dated before today (0x5aa729). With the first fix the replay still had two round 5 ties of the Club World
+ * Cup clubs made after their day 356, moved to day 363, past round 6 on day 360 (final on day 12 of 2010). Other
+ * fixtures keep that call's original move.
  * The other 7 calls of 0x5ab510, the base game and RECOMP_SEASON_CODE=off keep the original (Q152).
  *
  * Test switch RECOMP_TEST_FIXTURE_HOLD (season games only): "log" prints each covered move; "1" also takes the new
@@ -90,6 +93,7 @@
 typedef struct {
     uint32_t new_date, add, news;
     const char *what;
+    int cup_only;               /* 1: only a cup tie's next round bound applies, other fixtures keep the original */
 } MoveSite;
 static const MoveSite SITES[] = {
     {0x005abbd7u, 0x005abbe1u, 0x005abbf0u, "call-up"},              /* 0x5abb10: 0x5abbd2, 0x5abbdc, 0x5abbeb */
@@ -98,6 +102,7 @@ static const MoveSite SITES[] = {
     {0x005ae561u, 0x005ae56fu, 0x005ae57eu, "same-day clash"},      /* resolve_same_day_clash: 0x5ae55c, 0x5ae56a, 0x5ae579 */
     {0x005ae5ddu, 0x005ae5ebu, 0x005ae5fau, "same-day clash"},      /* resolve_same_day_clash: 0x5ae5d8, 0x5ae5e6, 0x5ae5f5 */
     {0, 0x005aeddbu, 0x005aedf1u, "nearby"},                        /* move_nearby_club_fixtures, no 0x5ab510 */
+    {0x005aa72eu, 0, 0, "past date", 1},                            /* add_fixture, a date before today: 0x5aa729 */
 };
 #define SITE_NEARBY 5
 #define SITE_COUNT ((int)(sizeof SITES / sizeof SITES[0]))
@@ -262,10 +267,11 @@ RT_WRAP(005ab510, fixture_new_date)
     /* A cup tie stays before its next round's match day (jap-cup-stall). */
     int round_year, round_day, cup_tie = next_round_day(rec, fix, &round_year, &round_day) &&
                                          before(year, day, round_year, round_day);
-    if (cup_tie && (last < 0 || before(round_year, round_day, last_year, last)))
+    if (cup_tie && (last < 0 || SITES[site].cup_only || before(round_year, round_day, last_year, last)))
         last_year = round_year, last = round_day;
     else
         cup_tie = 0;
+    if (SITES[site].cup_only && !cup_tie) return;
     if (last < 0) return;
     uint8_t new_slice = g_mem[fix + FIX_SLICE];
     if (before(new_year, new_day, last_year, last)) return;
