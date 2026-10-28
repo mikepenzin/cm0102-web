@@ -73,8 +73,8 @@ static int keepers_at(uint32_t club)
     return n;
 }
 
-static int full_squad_once;
-static unsigned char logged[1u << 17];  /* staff ids already logged */             /* the next squad count at 0x8c23fd reads as full */
+static int full_squad_once;             /* the next squad count at 0x8c23fd reads as full */
+static unsigned char logged[1u << 17];  /* staff ids already logged */
 
 void o_008c2180(void);
 
