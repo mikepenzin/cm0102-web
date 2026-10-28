@@ -240,6 +240,11 @@ def not_played(r):
     return NOT_PLAYED in (r.get("notes") or "")
 
 
+# The calendar-year leagues whose start report (1 August) is not read by league_stalls: they hold the year before at
+# 1 August and move on by the end of the season (run 8b, 2019 start: arg_prm 2020 at the 2021/22 start, 2021 at its end).
+CALENDAR_START_FILES = {"arg_prm", "arg_second"}
+
+
 def league_stalls(comps, rows=None):
     """Gate check (O278, O282): the divisions whose edition does not move on from one season to the next. comps: the
     comp lines of one or more reports, the legs of a soak in leg order. A division is a file of a table row with a
@@ -289,6 +294,8 @@ def league_stalls(comps, rows=None):
         for season in sorted(starts):
             before = ends.get(season - 1)
             if season in ends or before is None or before > season - 1 or not held(key[1], season):
+                continue
+            if key[1] in CALENDAR_START_FILES:
                 continue
             # The object moved on by 1 August in this run: at two or more other season starts it holds the
             # season's own year, and at no other start an earlier one.
