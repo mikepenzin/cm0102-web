@@ -106,6 +106,10 @@ if(NOT WIN32)
         src/recomp_rt/host/posix.c)
     target_include_directories(options_test PRIVATE src/recomp_rt/win)
     add_test(NAME options COMMAND options_test)
+    # The engine worker protocol (worker_proto.c): commands, JSON lines and the line reader.
+    add_executable(worker_test tests/worker/test_worker.c src/recomp_rt/win/worker_proto.c)
+    target_include_directories(worker_test PRIVATE src/recomp_rt/win)
+    add_test(NAME worker COMMAND worker_test)
     add_executable(dbfolders_test tests/dbfolders/test_dbfolders.c src/recomp_rt/win/dbfolders.c
         src/recomp_rt/host/posix.c)
     target_include_directories(dbfolders_test PRIVATE src/recomp_rt/win)
