@@ -1,0 +1,13 @@
+{
+  "name": "cm0102-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Serves the browser build of the recompiled CM 01/02 and the player's game files; the game runs in the browser.",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.js"
+  },
+  "license": "GPL-3.0-only"
+}

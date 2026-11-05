@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CM 01/02 in the Browser</title>
+<style>
+  :root { --bg: #0e1114; --panel: #171b20; --text: #e7eaee; --muted: #9aa4b1; --line: #2b323b; --accent: #3fae6e; --bad: #f97066; }
+  :root[data-theme="light"] { --bg: #f5f6f8; --panel: #ffffff; --text: #1a1e23; --muted: #5c6672; --line: #dde1e6; --accent: #1f6f43; --bad: #b42318; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: flex; flex-direction: column; }
+  header { display: flex; gap: 12px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+  header b { font-size: 15px; }
+  #status { color: var(--muted); flex: 1; min-width: 200px; }
+  button { font: inherit; padding: 6px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #0b1a11; font-weight: 600; }
+  #stage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 8px; position: relative; }
+  canvas { display: block; max-width: 100%; max-height: 100%; background: #000; outline: none; }
+  #overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; max-width: 560px; width: 100%; }
+  .box h1 { font-size: 18px; margin: 0 0 8px; }
+  .box p { margin: 0 0 12px; color: var(--muted); }
+  .box.error { border-color: var(--bad); }
+  .box.error h1 { color: var(--bad); }
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  ul { margin: 0 0 12px; padding-left: 18px; color: var(--muted); }
+  details { border-top: 1px solid var(--line); background: var(--panel); }
+  summary { padding: 6px 16px; cursor: pointer; color: var(--muted); }
+  #log { margin: 0; padding: 4px 16px 10px; max-height: 30vh; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--muted); white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<header>
+  <b>CM 01/02 in the Browser</b>
+  <span id="status">Loading…</span>
+  <button id="fullscreen" hidden>Full screen</button>
+</header>
+<div id="stage">
+  <canvas id="canvas" tabindex="0" width="800" height="600" aria-label="The game"></canvas>
+  <div id="overlay"></div>
+</div>
+<details>
+  <summary>Engine log</summary>
+  <pre id="log"></pre>
+</details>
+<script type="module" src="loader.js"></script>
+</body>
+</html>

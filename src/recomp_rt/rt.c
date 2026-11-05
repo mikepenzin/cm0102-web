@@ -22,13 +22,21 @@ uint32_t rt_image_size(void) { return image_size; }
 static uint32_t u32_at(const uint8_t *p) { uint32_t v; memcpy(&v, p, 4); return v; }
 static uint16_t u16_at(const uint8_t *p) { uint16_t v; memcpy(&v, p, 2); return v; }
 
+#ifdef __EMSCRIPTEN__
+uint8_t *rt_web_memory(void);   /* host/web.c: the guest addresses are the wasm memory itself */
+#endif
+
 void rt_init(const char *exe_path)
 {
+#ifdef __EMSCRIPTEN__
+    g_mem = rt_web_memory();
+#else
     /* 4 GB and a page, so that an access at the top of the 32-bit space stays inside. */
     size_t span = (size_t)1 << 32;
     void *m = host_reserve(span + 0x10000);
     if (!m) rt_fatal("cannot reserve 4 GB of address space");
     g_mem = m;
+#endif
 
     FILE *f = host_fopen(exe_path, "rb");
     if (!f) rt_fatal("cannot open %s", exe_path);
