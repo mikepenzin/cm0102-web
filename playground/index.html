@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engine Playground</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1a1e23; --muted: #5c6672; --line: #dde1e6; --soft: #eef1f4;
+    --accent: #1f6f43; --accent-text: #ffffff; --bad: #b42318; --warn: #9a6700; --good: #1f6f43; --info: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101317; --panel: #191e24; --text: #e7eaee; --muted: #9aa4b1; --line: #2b323b; --soft: #222831;
+      --accent: #3fae6e; --accent-text: #0b1a11; --bad: #f97066; --warn: #e3b341; --good: #3fae6e; --info: #7ca5ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101317; --panel: #191e24; --text: #e7eaee; --muted: #9aa4b1; --line: #2b323b; --soft: #222831;
+    --accent: #3fae6e; --accent-text: #0b1a11; --bad: #f97066; --warn: #e3b341; --good: #3fae6e; --info: #7ca5ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  button { font: inherit; padding: 7px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  button:disabled { opacity: .45; cursor: default; }
+  input { font: inherit; padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--text); width: 120px; }
+  header { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1280px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .club { font-weight: 650; font-size: 16px; }
+  .facts { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .facts b { color: var(--text); font-weight: 600; }
+  .spacer { flex: 1; }
+  .busy { color: var(--warn); font-weight: 600; min-width: 120px; }
+  nav { max-width: 1280px; margin: 0 auto; padding: 0 16px; display: flex; gap: 4px; overflow-x: auto; }
+  nav button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 10px; color: var(--muted); }
+  nav button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .badge { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; background: var(--bad); color: #fff; font-size: 11px; text-align: center; }
+  main { max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-width: 0; }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  .note { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+  .banner { padding: 9px 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--line); background: var(--soft); }
+  .banner.refused { border-color: var(--bad); color: var(--bad); }
+  .banner.match { border-color: var(--info); }
+  .banner.decision { border-color: var(--warn); }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; border-top: 0; }
+  td.num, th.num { text-align: right; }
+  .link { background: none; border: 0; padding: 0; color: var(--info); text-decoration: underline; text-underline-offset: 2px; }
+  .cond { display: inline-block; width: 60px; height: 7px; background: var(--soft); border-radius: 4px; vertical-align: middle; margin-right: 6px; overflow: hidden; }
+  .cond i { display: block; height: 100%; background: var(--good); }
+  .st-Fit { color: var(--good); } .st-Tired { color: var(--warn); } .st-Injured { color: var(--bad); font-weight: 600; }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-top: 12px; background: var(--soft); }
+  .attrs { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 4px 16px; margin-top: 8px; }
+  .attrs span { display: flex; justify-content: space-between; }
+  .news { border-top: 1px solid var(--line); padding: 10px 0; }
+  .news:first-of-type { border-top: 0; }
+  .news .when { color: var(--muted); font-size: 12px; }
+  .news .title { font-weight: 600; }
+  .choices { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .answered { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .live { margin-top: 12px; }
+  .score { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; margin: 4px 0 8px; }
+  .lines { max-height: 320px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--soft); }
+  .lines div { padding: 2px 0; }
+  .lines .goal-us { color: var(--good); font-weight: 600; }
+  .lines .goal-them { color: var(--bad); font-weight: 600; }
+  .log { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; max-height: 70vh; overflow-y: auto; }
+  .log div { padding: 3px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+  .log .call { color: var(--info); } .log .answer { color: var(--good); } .log .refused { color: var(--bad); } .log .event { color: var(--warn); }
+  .log .stale { text-decoration: line-through; }
+  .log details summary { cursor: pointer; }
+  .log pre { margin: 4px 0 0; white-space: pre-wrap; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <span class="club" id="club">…</span>
+    <span class="facts" id="facts"></span>
+    <span class="busy" id="busy" role="status"></span>
+    <span class="spacer"></span>
+    <button class="primary" data-continue="1">+1 day</button>
+    <button data-continue="7">+7 days</button>
+    <button data-continue="match">To next match</button>
+    <button id="save">Save</button>
+    <button id="load">Load</button>
+    <button id="new">New game</button>
+  </div>
+  <nav role="tablist">
+    <button role="tab" data-tab="squad">Squad</button>
+    <button role="tab" data-tab="transfers">Transfers</button>
+    <button role="tab" data-tab="inbox">Inbox<span id="decisions"></span></button>
+    <button role="tab" data-tab="matches">Matches</button>
+    <button role="tab" data-tab="table">Table</button>
+  </nav>
+</header>
+<main>
+  <section class="panel">
+    <div id="banner"></div>
+    <div id="view"></div>
+  </section>
+  <aside class="panel">
+    <h2>Engine traffic</h2>
+    <p class="note">Every call, answer, refusal and event between the page and the engine, newest first. A struck-out line is stale.</p>
+    <div class="log" id="log"></div>
+  </aside>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
