@@ -27,6 +27,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __EMSCRIPTEN__
+void rt_web_heap_top(uint32_t top);   /* host/web.c: the browser's memory reaches the new top */
+#define HEAP_GREW() rt_web_heap_top(heap_top)
+#else
+#define HEAP_GREW() ((void)0)
+#endif
+
 int rt_heap_bump = 0;
 static uint32_t heap_top = RT_HEAP_BASE;
 static uint32_t carve_addr, carve_room;         /* after the join at the end of the arena: the span that small
@@ -118,6 +125,7 @@ static uint32_t heap_end(void)
         const char *s = getenv("RECOMP_HEAP_START_MB");
         unsigned long start = s && *s ? strtoul(s, NULL, 10) : 0;
         if (start && start < (RT_HEAP_ARENA >> 21) * 3 / 2 && heap_top == RT_HEAP_BASE) heap_top += (uint32_t)start << 20;
+        HEAP_GREW();
         const char *v = getenv("RECOMP_HEAP_ARENA_MB");
         unsigned long mb = v && *v ? strtoul(v, NULL, 10) : 0;
         arena_end = RT_HEAP_BASE + (mb && mb < (RT_HEAP_ARENA >> 20) ? (uint32_t)mb << 20 : RT_HEAP_ARENA);
@@ -150,6 +158,7 @@ static uint32_t from_top(uint32_t room, uint32_t end)
     uint32_t a = heap_top + HDR;
     if ((uint64_t)heap_top + HDR + room > (uint64_t)end) return 0;
     heap_top += HDR + room;
+    HEAP_GREW();
     return a;
 }
 
@@ -378,6 +387,7 @@ uint32_t rt_alloc(uint32_t size)
     uint32_t addr = heap_top;
     heap_top += ((size ? size : 1) + 15) & ~15u;
     if (heap_top > RT_HEAP_BASE + RT_HEAP_SIZE) rt_fatal("heap full");
+    HEAP_GREW();
     size_put(addr, size);
     return addr;
 }

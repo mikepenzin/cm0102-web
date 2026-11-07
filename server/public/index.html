@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CM 01/02 Server</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1b1f24; --muted: #5d6673; --line: #dde1e6;
+    --accent: #1f6f43; --accent-text: #ffffff; --bad: #b42318; --busy: #9a6700;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #111418; --panel: #1a1f25; --text: #e7eaee; --muted: #9aa4b1; --line: #2c333c;
+      --accent: #3fae6e; --accent-text: #0b1a11; --bad: #f97066; --busy: #e3b341;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111418; --panel: #1a1f25; --text: #e7eaee; --muted: #9aa4b1; --line: #2c333c;
+    --accent: #3fae6e; --accent-text: #0b1a11; --bad: #f97066; --busy: #e3b341;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  form { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  input { flex: 1 1 220px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); font: inherit; }
+  button { padding: 9px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--text); font: inherit; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  .game { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .name { font-weight: 600; }
+  .date { font-variant-numeric: tabular-nums; font-size: 18px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .status-ready { color: var(--accent); } .status-failed { color: var(--bad); }
+  .status-busy, .status-starting { color: var(--busy); }
+  .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+  td, th { text-align: left; padding: 4px 6px; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  th { color: var(--muted); font-weight: 500; }
+  .error { color: var(--bad); white-space: pre-wrap; font-size: 13px; margin-top: 8px; overflow-wrap: anywhere; }
+  .empty { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>CM 01/02 Server</h1>
+  <p class="sub">Each game runs in the recompiled game on the server. The page shows what the server keeps after each step.</p>
+  <form id="new">
+    <input id="name" maxlength="60" placeholder="Name of the new game" aria-label="Name of the new game">
+    <button class="primary" type="submit">New game</button>
+  </form>
+  <div id="games"><p class="empty">Loading…</p></div>
+</main>
+<script>
+const $games = document.getElementById('games');
+const open = new Set();
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+async function api(method, path, body) {
+  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+
+function dateText(g) {
+  return g.year ? `${g.day}.${g.month}.${g.year}` : '—';
+}
+
+function size(n) {
+  return n ? `${(n / 1048576).toFixed(n < 1048576 ? 2 : 1)} MB` : '';
+}
+
+async function stepsTable(id) {
+  const { steps } = await api('GET', `/api/games/${id}`);
+  if (!steps.length) return '<p class="empty">No steps yet.</p>';
+  return `<table><tr><th>Step</th><th>Days</th><th>Result</th><th>Time</th></tr>${steps.map((s) =>
+    `<tr><td>${esc(s.action)}</td><td>${s.days ?? ''}</td><td>${esc(s.result)}</td><td>${s.ms != null ? (s.ms / 1000).toFixed(1) + ' s' : ''}</td></tr>`).join('')}</table>`;
+}
+
+async function render() {
+  const { games } = await api('GET', '/api/games');
+  if (!games.length) { $games.innerHTML = '<p class="empty">No games yet. Make one above.</p>'; return games; }
+  const html = [];
+  for (const g of games) {
+    const status = g.busy && g.status === 'ready' ? 'busy' : g.status;
+    const locked = g.busy || g.status === 'starting' || (g.status === 'failed' && !g.save_file);
+    html.push(`<section class="game" data-id="${g.id}">
+      <div class="row"><span class="name">${esc(g.name)}</span><span class="status-${esc(status)}">${esc(status)}</span></div>
+      <div class="row"><span class="date">${dateText(g)}</span><span>${esc(g.club ?? '')}</span></div>
+      <div class="meta">${g.save_file ? `Save: ${size(g.save_bytes)}, ${g.save_parts} part${g.save_parts === 1 ? '' : 's'}` : 'Not saved yet'}</div>
+      <div class="actions">
+        ${[1, 7, 30].map((d) => `<button data-days="${d}" ${locked ? 'disabled' : ''}>+${d} day${d > 1 ? 's' : ''}</button>`).join('')}
+      </div>
+      ${g.status === 'failed' && g.error ? `<div class="error">${esc(g.error.split('\n').slice(0, 6).join('\n'))}</div>` : ''}
+      <details ${open.has(g.id) ? 'open' : ''}><summary>Steps</summary><div class="steps">${open.has(g.id) ? await stepsTable(g.id) : ''}</div></details>
+    </section>`);
+  }
+  $games.innerHTML = html.join('');
+  return games;
+}
+
+$games.addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-days]');
+  if (!b) return;
+  const id = Number(b.closest('.game').dataset.id);
+  b.disabled = true;
+  try { await api('POST', `/api/games/${id}/advance`, { days: Number(b.dataset.days) }); } catch (err) { alert(err.message); }
+  tick();
+});
+
+$games.addEventListener('toggle', (e) => {
+  const id = Number(e.target.closest('.game')?.dataset.id);
+  if (!id) return;
+  if (e.target.open) open.add(id); else open.delete(id);
+  tick();
+}, true);
+
+document.getElementById('new').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('name').value;
+  try { await api('POST', '/api/games', { name }); document.getElementById('name').value = ''; } catch (err) { alert(err.message); }
+  tick();
+});
+
+let timer;
+async function tick() {
+  clearTimeout(timer);
+  let games = [];
+  try { games = await render(); } catch (err) { $games.innerHTML = `<p class="error">${esc(err.message)}</p>`; }
+  const active = games.some((g) => g.busy || g.status === 'starting');
+  timer = setTimeout(tick, active ? 1000 : 5000);
+}
+tick();
+</script>
+</body>
+</html>

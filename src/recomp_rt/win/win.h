@@ -121,6 +121,7 @@ int holiday_widget_before(void);               /* at each widget create: 1 for t
 void holiday_widget_after(void);               /* after that create: adds the new item */
 void screen_sweep_turn(void);                  /* RECOMP_SCREEN_SWEEP, at each human turn (screen_sweep.c) */
 void holiday_next_turn(void);                  /* at each human turn, before the original */
+void worker_turn(void);                        /* RECOMP_WORKER_FD, at each human turn (worker.c) */
 /* The Bosman Edition Options box (options_screen.c). */
 uint32_t options_screen_build_fn(void);        /* the build function of the box, for the wait state "options" */
 int options_screen_open(int from);             /* pushes the box (from: 1 start screen, 2 game); 0 when it fails */

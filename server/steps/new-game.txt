@@ -1,0 +1,24 @@
+# Made by server/steps/export_steps.py from tests/smoke/smoke_run.py STEPS. Do not edit: run the tool again.
+1000 click 400 300
+wait screen:0x823950
+8200 click 522 272
+8500 click 662 524
+wait setup
+2500 click 277 177
+wait leagues
+2500 click 705 572
+wait typing
+1000 type Test
+3000 click 560 310
+4000 type Smoke
+7000 click 705 572
+wait screen:0x821900
+1000 click 705 572
+wait screen:0x822260
+1000 click 155 163
+wait screen:0x454900
+1000 click 722 14
+wait screen:0x822aa0
+1000 click 705 572
+wait screen:0x81ff10
+1000 click 705 572

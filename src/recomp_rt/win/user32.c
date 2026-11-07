@@ -26,6 +26,13 @@
 #include <stdlib.h>
 #include <strings.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+void rt_web_yield(void);                       /* host/web.c */
+/* The browser: an idle sleep hands the time to the page, so it draws and takes input (host/web.c). */
+#define SDL_Delay(ms) emscripten_sleep(ms)
+#endif
+
 #define WM_KEYDOWN 0x100u
 #define WM_KEYUP 0x101u
 #define WM_CHAR 0x102u
@@ -912,6 +919,9 @@ static void run_script(void)
 
 void win_poll_events(void)
 {
+#ifdef __EMSCRIPTEN__
+    rt_web_yield();                               /* the page draws and takes input in this time (host/web.c) */
+#endif
     uint64_t now = SDL_GetTicks64();
     if (win_screen_dirty && now - last_present >= 16) present_now();
     if (now - last_poll < 2) return;              /* the game pumps very often; SDL needs less */

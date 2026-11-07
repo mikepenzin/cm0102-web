@@ -3,6 +3,8 @@ project(cm0102-mac VERSION 0.5.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 
+# The browser build (web/README.md) makes the recompiled game only: the hand port and its tests need the host's SDL2.
+if(NOT EMSCRIPTEN)
 find_package(SDL2 REQUIRED)
 
 add_executable(cm0102
@@ -106,6 +108,10 @@ if(NOT WIN32)
         src/recomp_rt/host/posix.c)
     target_include_directories(options_test PRIVATE src/recomp_rt/win)
     add_test(NAME options COMMAND options_test)
+    # The engine worker protocol (worker_proto.c): commands, JSON lines and the line reader.
+    add_executable(worker_test tests/worker/test_worker.c src/recomp_rt/win/worker_proto.c)
+    target_include_directories(worker_test PRIVATE src/recomp_rt/win)
+    add_test(NAME worker COMMAND worker_test)
     add_executable(dbfolders_test tests/dbfolders/test_dbfolders.c src/recomp_rt/win/dbfolders.c
         src/recomp_rt/host/posix.c)
     target_include_directories(dbfolders_test PRIVATE src/recomp_rt/win)
@@ -273,6 +279,7 @@ if(NOT WIN32)
     target_link_libraries(compare_test PRIVATE m)
     add_test(NAME compare COMMAND compare_test)
 endif()
+endif()  # NOT EMSCRIPTEN
 
 
 # The recompiled original (docs/specs/2026-10-14-recompile-spec.md). tools/recomp translates the
@@ -335,6 +342,8 @@ if(EXISTS "${CM0102_EXE}")
     # The host functions (src/recomp_rt/host.h): Windows when cross-compiled with mingw-w64, else POSIX.
     if(WIN32)
         set(RECOMP_HOST src/recomp_rt/host/win32.c)
+    elseif(EMSCRIPTEN)
+        set(RECOMP_HOST src/recomp_rt/host/posix.c src/recomp_rt/host/web.c)
     else()
         set(RECOMP_HOST src/recomp_rt/host/posix.c)
     endif()
@@ -423,6 +432,8 @@ if(EXISTS "${CM0102_EXE}")
     # Every call of the original is a host call: give the main thread a deep stack.
     if(WIN32)
         include(packaging/windows/windows.cmake)
+    elseif(EMSCRIPTEN)
+        include(web/web.cmake)
     else()
         if(APPLE)
             target_link_options(cm0102_recomp PRIVATE "LINKER:-stack_size,0x10000000")
