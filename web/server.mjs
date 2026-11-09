@@ -11,7 +11,7 @@
 // The page gets exactly the files of tools/clean_files/manifest.tsv, each checked for its size, and the season
 // tables that the build makes (Seasons/*.tsv, which the runtime reads from the game folder). Nothing else is served.
 import http from 'node:http';
-import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -115,10 +115,30 @@ export async function verify(inv, manifestPath = join(ROOT, 'tools/clean_files/m
   return bad;
 }
 
+// The folders under dir, up to depth levels down, that hold a cm0102.exe (any case): where a copy of the game folder
+// landed when it went one folder deeper than meant.
+export function findGameDirs(dir, depth = 3) {
+  const found = [];
+  const walk = (d, left) => {
+    let entries;
+    try { entries = readdirSync(d, { withFileTypes: true }); } catch { return; }
+    if (entries.some((e) => e.isFile() && e.name.toLowerCase() === 'cm0102.exe')) found.push(d);
+    if (left > 0) for (const e of entries) if (e.isDirectory() && !e.name.startsWith('.')) walk(join(d, e.name), left - 1);
+  };
+  walk(dir, depth);
+  return found;
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const gameDir = process.env.CM_GAME_DIR ? resolve(process.env.CM_GAME_DIR) : null;
   if (!gameDir || !existsSync(join(gameDir, 'cm0102.exe'))) {
-    console.error('Set CM_GAME_DIR to the folder of the clean files (with cm0102.exe and Data). See web/README.md.');
+    if (!gameDir) console.error('Set CM_GAME_DIR to the folder of the clean files (with cm0102.exe and Data). See web/README.md.');
+    else if (!existsSync(gameDir)) console.error(`CM_GAME_DIR: ${gameDir} does not exist. See web/README.md, step 1.`);
+    else {
+      const found = findGameDirs(gameDir).filter((d) => d !== gameDir);
+      console.error(found.length ? `CM_GAME_DIR: ${gameDir} has no cm0102.exe, but ${found[0]} has. Use CM_GAME_DIR=${found[0]}`
+        : `CM_GAME_DIR: ${gameDir} has no cm0102.exe, and no folder under it has one. Copy the game folder there (web/README.md, step 1).`);
+    }
     process.exit(2);
   }
   const buildDir = resolve(process.env.CM_WEB_BUILD ?? join(ROOT, 'build-web'));
