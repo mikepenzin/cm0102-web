@@ -17,19 +17,16 @@ fly auth signup            # or: fly auth login
 
 Fly may ask you to add a payment card before it lets you deploy.
 
-**2. Stage the files (each release).** From the repo:
+**2. Stage the files (each release).** From your copy of the repo (for example `~/Documents/Projects/cm0102-web`),
+straight from the game folder inside the app:
 
 ```bash
-cd ~/Projects/cm0102-web
-node web/deploy/stage.mjs --game ~/cm0102-game
-```
-
-`--game` names the folder that holds `cm0102.exe` and `Data`. The game folder inside the app works too, without a
-copy:
-
-```bash
+cd ~/Documents/Projects/cm0102-web
+git pull
 node web/deploy/stage.mjs --game "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game"
 ```
+
+`--game` names the folder that holds `cm0102.exe` and `Data`; a copy of it works too (`--game ~/cm0102-game`).
 
 The stage checks every game file against `tools/clean_files/manifest.tsv` (size and SHA-256), copies the server, the
 page, the engine, the season tables and the game files into `web/deploy/stage`, writes a brotli copy of each file
@@ -54,10 +51,17 @@ App names are unique across Fly: pick your own, for example `cm0102-mike`; the g
 `https://<your-app>.fly.dev`. `fra` is Frankfurt; `fly platform regions` lists the others. If it asks whether to
 tweak the settings, answer no. A later stage keeps this `fly.toml`.
 
+If `fly launch` objects, this does the same:
+
+```bash
+fly apps create <your-app>
+sed -i '' 's/^app = .*/app = "<your-app>"/' fly.toml      # on Linux: sed -i 's/…/…/' fly.toml
+```
+
 **4. Deploy (each release).**
 
 ```bash
-cd ~/Projects/cm0102-web/web/deploy/stage
+cd ~/Documents/Projects/cm0102-web/web/deploy/stage
 fly deploy
 fly open
 ```
@@ -65,8 +69,14 @@ fly open
 `fly deploy` uploads the folder (a few hundred MB, so the first time takes some minutes) and builds the server on
 Fly. `fly open` opens the address; use Chrome 137 or later.
 
-**A later release** is steps 2 and 4: `git pull`, the engine build again if the engine's code changed
-(`cmake --build build-web --target cm0102_recomp seasons_rules`), the stage, `fly deploy`.
+**A later release** is steps 2 and 4:
+
+```bash
+cd ~/Documents/Projects/cm0102-web && git pull
+# only if the engine's code changed: cmake --build build-web --target cm0102_recomp seasons_rules
+node web/deploy/stage.mjs --game "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game"
+cd web/deploy/stage && fly deploy
+```
 
 ## If something goes wrong
 
