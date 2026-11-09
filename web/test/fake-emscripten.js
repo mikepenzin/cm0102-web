@@ -20,8 +20,9 @@
       mounts.push(point);
     },
     syncfs(populate, cb) { setTimeout(() => cb(null), 5); },
-    filesystems: { IDBFS: { name: 'IDBFS' } },
   };
+  // As newer Emscripten: IDBFS is an exported runtime method (web/web.cmake), and FS has no filesystems table.
+  M.IDBFS = { name: 'IDBFS' };
   M.ENV = {};
   let deps = 0, started = false;
   M.addRunDependency = () => { deps++; };
