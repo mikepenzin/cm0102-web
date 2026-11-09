@@ -130,13 +130,44 @@ whole game world. A new or changed save goes to IndexedDB about 2 seconds after 
 the same address every time: `127.0.0.1:8080` and `localhost:8080` are two sites to the browser, each with its own
 saves.
 
+## The page around the game
+
+- The game fills the page: the canvas has the picture's shape (1280x800, or 800x600 in classic mode), as large as
+  the window allows, drawn at the screen's own pixels (sharp on a high-DPI screen), with no bars.
+- The bar above it has Saved games, Help and Full screen. In full screen the bar becomes three small buttons over the
+  corner, and Escape goes to the game (in Chrome, hold Escape to leave).
+- Keys go to the game unless a dialog of the page is open.
+- "Saved in this browser" shows when a save has reached the browser's storage.
+- "Working…" shows at the top left when the game keeps the tab busy for more than a second or so (a database load, a
+  long day): the tab has not stopped.
+- The browser asks before the page is left while a game runs, and the screen stays on.
+- The second start needs no click: when the game files are in the browser, the game starts by itself.
+
 ## On an iPad or another touch device
 
-A tap is a click. The game draws its text entries (a name, a search) on the canvas, so the device does not open its
-keyboard by itself: tap the game's text entry, then the Keyboard button above the game. What you type goes to the
-game as typed keys; Return, Backspace and Escape work as on a keyboard. Keyboard again (Hide keyboard) closes it.
-The button shows on touch devices only. It needs an engine built from this version of the code (`rt_web_type`,
-`rt_web_key` in `src/recomp_rt/win/user32.c`): build it again after `git pull` (step 4).
+| Do | The game gets |
+|---|---|
+| Tap | A click |
+| Drag | The button held and moved: scroll bars, the tactics board |
+| Long press, or a tap with two fingers | A click of the right button |
+| Drag with two fingers | The mouse wheel: lists scroll with your fingers |
+
+The game draws its text entries (a name, a search) on the canvas, so the device does not open its keyboard by
+itself. When a text entry of the game takes keys, a "Tap to type" chip shows at it: tap the chip, or the text entry,
+and the keyboard opens. The picture moves so the entry stays above the keyboard, and the keyboard closes when the
+text is entered. The Keyboard button in the bar opens and closes the keyboard at any time. A mouse, a trackpad or a
+keyboard connected to the device work as on a computer.
+
+These need an engine built from this version of the code (`rt_web_type`, `rt_web_key`, `rt_web_picture` and
+`rt_web_typing_row` in `src/recomp_rt/win/user32.c`): build it again after `git pull` (step 4). With an older engine
+the page still runs; it has no Keyboard button then.
+
+## As an app, and without a connection
+
+Add the page to the home screen (on an iPad: Share, then Add to Home Screen) or install it from Chrome's address
+bar. It then opens full screen, without the browser's bars. After one good start the page, the engine and the game
+files are all in the browser, so it also starts with no connection (`web/sw.js`). With a connection the server is
+always asked first, so a new version is used at once. This needs https, or 127.0.0.1 on your own computer.
 
 ## Browser requirements
 
@@ -165,17 +196,36 @@ it with `CM_WEB_BUILD`.
   IndexedDB (a save at once, everything else every 15 seconds and when the tab is hidden or closed), and the page
   asks the browser to keep its storage.
 - SDL2 is Emscripten's port: it draws on the canvas, takes the mouse and keys, and plays the sound.
+- The canvas (`web/layout.js`): SDL takes the size of a canvas that CSS sizes, at each resize event of the window. The
+  page gives the canvas whole multiples of the picture's shape (8 by 5, or 4 by 3), so SDL's window and the canvas's
+  own pixels keep that shape exactly and the runtime's scaling fills them; the page sends a resize event when its
+  layout changed the size.
+- Touch (`web/touch.js`): SDL's own touch handling knows only the left button. The page takes the touches of the
+  canvas before SDL and sends it mouse and wheel events, which SDL reads as from a real mouse.
+- Typing (`web/keyboard.js`): a hidden text field of the page gets the device's keyboard; what is typed goes to the
+  runtime, which hands it to the game one key at a time. The runtime tells the page which row of the picture a text
+  entry is on.
 
 ## Tests
 
-- `cd web && npm test`: the server lists and serves only the clean files and the season tables, and refuses the rest;
-  brotli and versioned caching; the stage script and the staged server; the save logic.
+- `cd web && npm test`: the server lists and serves only the clean files, the season tables and the page, and refuses
+  the rest; brotli and versioned caching; the stage script and the staged server; the save logic; the layout's
+  arithmetic.
 - `NODE_PATH=$(npm root -g) node web/test/page-check.cjs`: the page at full size (placeholder files with the sizes of
   the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`): the browser
-  check, the load, the Saved games panel and a reload from the browser's cache. Needs Playwright.
+  check, the load, the Saved games panel, a second start from the browser's cache. Needs Playwright.
+- `NODE_PATH=$(npm root -g) node web/test/sdl-check.mjs <probe folder>`: the page against the real SDL browser
+  backend. The probe (`test/sdlprobe.c`) opens its window and renderer as the runtime does and prints what SDL tells
+  it. The check covers the layout (no bars, the screen's own pixels, a resized window, classic mode, full screen), the
+  mouse, the wheel and the keys, every touch gesture, the on-screen keyboard with a text entry, the Working sign, the
+  question before leaving, and a start without a connection. Build the probe first:
+  `web/test/build-probe.sh <SDL2 source folder> <probe folder>` (an unpacked SDL2 release of libsdl.org, and `emcc`
+  on the PATH). Needs Playwright.
 
 ## Not yet
 
 - Only the base game: the season databases (`Seasons/*.zip`) and the extra data sets are not loaded.
 - The engine runs on the page's main thread. The concept design moves it to a Web Worker, with the new screens
   beside it.
+- The touch and keyboard parts are checked in a desktop browser that plays a touch device, with the real SDL
+  backend, not on an iPad itself: the device's own keyboard and Safari can still differ.

@@ -22,8 +22,14 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const SEASON_TABLES = ['rules.tsv', 'names.tsv', 'clubs.tsv', 'club_records.tsv'];
-const PAGES = { '/': 'index.html', '/loader.js': 'loader.js', '/saves.js': 'saves.js', '/keyboard.js': 'keyboard.js' };
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.wasm': 'application/wasm' };
+// The page: these files of web/, and nothing else of it. web/deploy/stage.mjs stages the same list.
+export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'sw.js',
+  'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+const PAGES = Object.fromEntries([['/', 'index.html'], ...PAGE_FILES.map((f) => [`/${f}`, f])]);
+// What the page keeps for a start without a connection (web/sw.js): itself, without the service worker's own file.
+const SHELL = ['/', ...PAGE_FILES.filter((f) => f !== 'index.html' && f !== 'sw.js').map((f) => `/${f}`)];
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.wasm': 'application/wasm',
+  '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png' };
 
 function manifest(path) {
   return readFileSync(path, 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => {
@@ -93,6 +99,7 @@ export function createApp({ gameDir, buildDir, manifestPath }) {
           engineBytes: inv.engine.wasm?.size ?? 0,
           engineVersion: inv.engine.wasm ? Math.floor(inv.engine.wasm.mtime).toString(36) : null,
           suspend: inv.suspend,
+          shell: SHELL,
         });
         res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
         res.end(body);

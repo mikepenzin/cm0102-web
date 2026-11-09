@@ -2,82 +2,196 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>CM 01/02 in the Browser</title>
+<meta name="theme-color" content="#0b0d10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CM 01/02">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-180.png">
 <style>
-  :root { --bg: #0e1114; --panel: #171b20; --text: #e7eaee; --muted: #9aa4b1; --line: #2b323b; --accent: #3fae6e; --bad: #f97066; }
-  :root[data-theme="light"] { --bg: #f5f6f8; --panel: #ffffff; --text: #1a1e23; --muted: #5c6672; --line: #dde1e6; --accent: #1f6f43; --bad: #b42318; }
+  :root {
+    --bg: #0b0d10; --panel: #151a20; --raised: #1d242c; --text: #e8ebef; --muted: #97a2af; --line: #29313b;
+    --accent: #35b673; --accent-ink: #06140c; --bad: #ff7b72; --warn: #e3b341; --bar-h: 44px;
+    color-scheme: dark;
+  }
+  @media (pointer: coarse) { :root { --bar-h: 50px; } }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
-    display: flex; flex-direction: column; }
-  header { display: flex; gap: 12px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
-  header b { font-size: 15px; }
-  #status { color: var(--muted); flex: 1; min-width: 200px; }
-  button { font: inherit; padding: 6px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #0b1a11; font-weight: 600; }
-  #stage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; padding: 8px; position: relative; }
-  canvas { display: block; max-width: 100%; max-height: 100%; background: #000; outline: none; }
-  #overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
-  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 24px; max-width: 560px; width: 100%; }
-  .box h1 { font-size: 18px; margin: 0 0 8px; }
-  .box p { margin: 0 0 12px; color: var(--muted); }
+  [hidden] { display: none !important; }      /* also for the elements that a rule below gives a display */
+  html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: var(--bg); }
+  body { color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none;
+    -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+  #app { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+  /* The bar above the game. */
+  #bar { flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 8px; padding: 0 10px 0 14px;
+    background: var(--panel); border-bottom: 1px solid var(--line); min-width: 0; }
+  .brand { font-weight: 650; letter-spacing: .01em; white-space: nowrap; }
+  #status { color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  button { font: inherit; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0 12px; height: 32px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+  @media (pointer: coarse) { button { height: 38px; padding: 0 14px; } }
+  button:hover { border-color: #3a4552; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  button svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  @media (max-width: 720px) { #bar button span { display: none; } #bar button { padding: 0 10px; } }
+
+  /* The game. The size and place of the canvas come from layout.js, as variables on the stage; they are !important
+     so that a size SDL writes on the canvas itself cannot take their place. */
+  #stage { flex: 1; min-height: 0; position: relative; overflow: hidden; background: #000; }
+  #canvas { position: absolute; display: block; background: #000; outline: none; touch-action: none;
+    left: var(--cl, 0px) !important; top: var(--ct, 0px) !important;
+    width: var(--cw, 100%) !important; height: var(--ch, 100%) !important;
+    transform: translateY(var(--shift, 0px)); transition: transform .18s ease; }
+  #fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .ping { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .9); animation: ping .32s ease-out forwards; }
+  .ping.right { width: 60px; height: 60px; margin: -30px 0 0 -30px; border-color: var(--accent); border-width: 3px; animation-duration: .5s; }
+  @keyframes ping { from { transform: scale(.35); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+
+  #type-chip { position: absolute; left: var(--chip-x, 50%); top: var(--chip-y, 50%); z-index: 3;
+    transform: translate(-100%, -50%); background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+    font-weight: 650; box-shadow: 0 4px 18px rgba(0, 0, 0, .5); animation: chip 1.6s ease-in-out infinite; }
+  @keyframes chip { 50% { box-shadow: 0 4px 18px rgba(0, 0, 0, .5), 0 0 0 7px rgba(53, 182, 115, .28); } }
+
+  #busy { position: absolute; left: 12px; top: 12px; z-index: 3; display: flex; align-items: center; gap: 8px; opacity: 0;
+    padding: 6px 12px 6px 9px; border-radius: 999px; background: rgba(21, 26, 32, .9); border: 1px solid var(--line);
+    color: var(--muted); pointer-events: none; will-change: opacity; }
+  .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent);
+    animation: spin .8s linear infinite; will-change: transform; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #toasts { position: absolute; left: 0; right: 0; bottom: calc(14px + var(--covered, 0px)); z-index: 4; display: flex; flex-direction: column;
+    align-items: center; gap: 6px; pointer-events: none; padding: 0 12px; }
+  .toast { background: rgba(21, 26, 32, .94); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .45); animation: rise .18s ease-out; max-width: 100%; text-align: center; }
+  .toast.bad { border-color: var(--bad); color: var(--bad); }
+  @keyframes rise { from { transform: translateY(8px); opacity: 0; } }
+
+  /* The boxes over the game: start, progress, errors. */
+  #overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 16px;
+    background: radial-gradient(ellipse at center, rgba(11, 13, 16, .82), rgba(11, 13, 16, .96)); overflow: auto; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; max-width: 540px; width: 100%;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .5); }
+  .box h1 { font-size: 19px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .box p { margin: 0 0 14px; color: var(--muted); }
   .box.error { border-color: var(--bad); }
   .box.error h1 { color: var(--bad); }
-  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
-  .small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  ul { margin: 0 0 12px; padding-left: 18px; color: var(--muted); }
-  details { border-top: 1px solid var(--line); background: var(--panel); }
-  summary { padding: 6px 16px; cursor: pointer; color: var(--muted); }
-  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; width: min(640px, calc(100vw - 32px)); }
-  dialog::backdrop { background: rgba(0, 0, 0, .45); }
-  dialog h2 { font-size: 17px; margin: 0 0 6px; }
-  dialog table { width: 100%; border-collapse: collapse; margin: 8px 0; font-variant-numeric: tabular-nums; }
-  dialog th, dialog td { text-align: left; padding: 6px 6px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
-  dialog th { color: var(--muted); font-weight: 500; font-size: 12px; border-top: 0; }
-  dialog .num { text-align: right; white-space: nowrap; }
-  dialog .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
-  dialog .spacer { flex: 1; }
+  .box ul { margin: 0 0 14px; padding-left: 18px; color: var(--muted); }
+  .box .primary { height: 42px; padding: 0 20px; font-size: 15px; }
+  .box .row { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+  .bar { height: 10px; background: var(--raised); border-radius: 5px; overflow: hidden; margin: 10px 0 8px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 5px; transition: width .2s linear; }
+  .small { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .bad { color: var(--bad); }
+
+  /* The hidden field of the on-screen keyboard (keyboard.js): at the top, where the keyboard never covers it, so the
+     device does not scroll the page to it; not visible; 16px, so the device does not zoom the page when it gets the focus. */
+  #kbd { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; margin: 0;
+    font-size: 16px; background: transparent; color: transparent; caret-color: transparent; pointer-events: none; }
+
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px;
+    width: min(660px, calc(100vw - 24px)); max-height: calc(100% - 24px); box-shadow: 0 18px 50px rgba(0, 0, 0, .55);
+    -webkit-user-select: text; user-select: text; }
+  dialog::backdrop { background: rgba(0, 0, 0, .55); }
+  dialog h2 { font-size: 17px; margin: 0 0 6px; }
+  dialog h3 { font-size: 13px; margin: 16px 0 4px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  dialog table { width: 100%; border-collapse: collapse; margin: 6px 0; font-variant-numeric: tabular-nums; }
+  dialog th, dialog td { text-align: left; padding: 6px 6px; border-top: 1px solid var(--line); overflow-wrap: anywhere; vertical-align: top; }
+  dialog th { color: var(--muted); font-weight: 500; font-size: 12px; border-top: 0; }
+  dialog td:first-child { white-space: nowrap; }
+  dialog .num { text-align: right; white-space: nowrap; }
+  dialog .row { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+  dialog .spacer { flex: 1; }
+  dialog p { margin: 0 0 8px; }
   #saves-note { white-space: pre-line; }
-  /* The hidden field of the on-screen keyboard (keyboard.js): on screen, so iPadOS opens its keyboard for it, but
-     not visible; 16px, so iPadOS does not zoom the page when it gets the focus. */
-  #kbd { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
-  #log { margin: 0; padding: 4px 16px 10px; max-height: 30vh; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--muted); white-space: pre-wrap; }
+  details summary { cursor: pointer; color: var(--muted); padding: 4px 0; }
+  #log { margin: 4px 0 0; padding: 8px 10px; max-height: 34vh; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
+    color: var(--muted); white-space: pre-wrap; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); }
+
+  /* Full screen: the bar becomes a small set of buttons over the corner of the game. */
+  #app.fs #bar { position: absolute; top: calc(8px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right));
+    z-index: 6; height: auto; padding: 4px; gap: 4px; border: 1px solid var(--line); border-radius: 12px;
+    background: rgba(21, 26, 32, .86); opacity: .3; transition: opacity .2s; }
+  #app.fs #bar:hover, #app.fs #bar:focus-within { opacity: 1; }
+  @media (hover: none) { #app.fs #bar { opacity: .65; } }
+  #app.fs .brand, #app.fs #status, #app.fs #bar button span { display: none; }
+  #app.fs #bar button { padding: 0 9px; }
+
+  @media (prefers-reduced-motion: reduce) { #canvas { transition: none; } #type-chip, .toast { animation: none; } }
 </style>
 </head>
 <body>
-<header>
-  <b>CM 01/02 in the Browser</b>
-  <span id="status">Loading…</span>
-  <button id="kbd-open" hidden>Keyboard</button>
-  <button id="saves-open" hidden>Saved games</button>
-  <button id="fullscreen" hidden>Full screen</button>
-</header>
-<div id="stage">
-  <canvas id="canvas" tabindex="0" width="800" height="600" aria-label="The game"></canvas>
-  <div id="overlay"></div>
-</div>
-<dialog id="saves" aria-labelledby="saves-title">
-  <h2 id="saves-title">Saved games</h2>
-  <p class="small">Your saves stay in this browser. Download one to keep a copy on your computer or to play it on
-  another one; upload a .sav file to play it here.</p>
-  <div id="saves-list"></div>
-  <p id="saves-note" class="small" role="status"></p>
-  <div class="row">
-    <button class="primary" id="saves-upload">Upload a save…</button>
-    <input type="file" id="saves-file" accept=".sav" multiple hidden>
-    <span class="spacer"></span>
-    <button id="saves-close">Close</button>
+<div id="app">
+  <header id="bar">
+    <span class="brand">CM 01/02</span>
+    <span id="status" role="status">Loading…</span>
+    <button id="kbd-open" hidden aria-pressed="false" aria-label="Keyboard">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg><span>Keyboard</span></button>
+    <button id="saves-open" hidden aria-label="Saved games">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5M5 17v1.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span>Saved games</span></button>
+    <button id="help-open" aria-label="Help">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8M12 16.6h.01"/></svg><span>Help</span></button>
+    <button id="fullscreen" hidden aria-label="Full screen">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg><span>Full screen</span></button>
+  </header>
+  <div id="stage">
+    <canvas id="canvas" tabindex="0" width="1280" height="800" aria-label="The game"></canvas>
+    <div id="fx" aria-hidden="true"></div>
+    <button id="type-chip" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg>Tap to type</button>
+    <div id="busy" aria-hidden="true"><i class="spin"></i>Working…</div>
+    <div id="toasts" role="status" aria-live="polite"></div>
+    <div id="overlay"></div>
   </div>
-</dialog>
-<details>
-  <summary>Engine log</summary>
-  <pre id="log"></pre>
-</details>
-<input id="kbd" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-  enterkeyhint="done" aria-label="Type into the game">
+  <input id="kbd" type="text" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+    enterkeyhint="done" aria-label="Type into the game">
+
+  <dialog id="saves" aria-labelledby="saves-title">
+    <h2 id="saves-title">Saved games</h2>
+    <p class="small">Your saves stay in this browser. Download one to keep a copy on your device or to play it on
+    another one; upload a .sav file to play it here.</p>
+    <div id="saves-list"></div>
+    <p id="saves-note" class="small" role="status"></p>
+    <div class="row">
+      <button class="primary" id="saves-upload">Upload a save…</button>
+      <input type="file" id="saves-file" accept=".sav" multiple hidden>
+      <span class="spacer"></span>
+      <button id="saves-close">Close</button>
+    </div>
+  </dialog>
+
+  <dialog id="help" aria-labelledby="help-title">
+    <h2 id="help-title">How to play here</h2>
+    <p class="small">The game runs in this tab, on your device. The mouse and the keys work as in the game.</p>
+    <h3>On a touch screen</h3>
+    <table>
+      <tr><td>Tap</td><td>A click</td></tr>
+      <tr><td>Drag</td><td>Hold the button and move: scroll bars, the tactics board</td></tr>
+      <tr><td>Long press, or a tap with two fingers</td><td>A click of the right button</td></tr>
+      <tr><td>Drag with two fingers</td><td>The mouse wheel: lists scroll with your fingers</td></tr>
+      <tr><td>Tap a text box, or Tap to type</td><td>The keyboard opens; it closes when the text is entered</td></tr>
+    </table>
+    <h3>Your saved games</h3>
+    <p class="small">Save in the game as usual. The saves stay in this browser<span id="help-storage"></span>. Saved games
+    downloads them as files and uploads them again, also to and from the desktop game.</p>
+    <h3>As an app</h3>
+    <p class="small">Add the page to the home screen (on an iPad: Share, then Add to Home Screen) or install it from the
+    address bar. It then opens without the browser's bars, and it starts without a connection once it has run.</p>
+    <details>
+      <summary>Engine log</summary>
+      <pre id="log"></pre>
+    </details>
+    <div class="row"><span class="spacer"></span><button id="help-close">Close</button></div>
+  </dialog>
+</div>
 <script type="module" src="loader.js"></script>
 </body>
 </html>

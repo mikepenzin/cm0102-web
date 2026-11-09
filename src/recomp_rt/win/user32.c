@@ -437,6 +437,19 @@ void win_video_init(void)
     short_screen_hint();
 }
 
+#ifdef __EMSCRIPTEN__
+/* What the page asks a few times a second (web/layout.js, web/keyboard.js). It only reads; the page calls it while
+ * the game sleeps. rt_web_picture: the size of the picture as width << 16 | height, 0 before the window is made.
+ * rt_web_typing_row: the middle row of the text entry that takes keys (keys.c), -1 when none does. */
+EMSCRIPTEN_KEEPALIVE int rt_web_picture(void) { return window ? (int)(rt_screen_w << 16 | rt_screen_h) : 0; }
+EMSCRIPTEN_KEEPALIVE int rt_web_typing_row(void) { return window ? keys_typing_row() : -1; }
+/* The page gives the canvas the picture's shape, so at most a row or column of the canvas lies beside the picture.
+ * It is black: without this, SDL_RenderClear takes the draw colour that names_draw left (the light underline). */
+#define CLEAR_COLOUR() SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255)
+#else
+#define CLEAR_COLOUR() ((void)0)
+#endif
+
 /* The frame into the window's back buffer, without the present. */
 static int draw_frame(void)
 {
@@ -449,10 +462,12 @@ static int draw_frame(void)
         SDL_RenderSetScale(renderer, (float)work_k, (float)work_k);
         names_draw(renderer);
         SDL_SetRenderTarget(renderer, NULL);
+        CLEAR_COLOUR();
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, work, NULL, NULL);
     } else {
         if (work) SDL_SetTextureScaleMode(texture, SDL_ScaleModeLinear);   /* the target failed: no uneven letters */
+        CLEAR_COLOUR();
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, NULL, NULL);
         names_draw(renderer);

@@ -38,7 +38,8 @@ after(() => rmSync(tmp, { recursive: true, force: true }));
 test('the staged folder: server, page, engine, tables, clean files, brotli copies, Docker and Fly files', async () => {
   const r = await stage(opts);
   const o = opts.out;
-  for (const p of ['web/server.mjs', 'web/index.html', 'web/loader.js', 'web/saves.js', 'web/keyboard.js', 'tools/clean_files/manifest.tsv', 'game/cm0102.exe',
+  for (const p of ['web/server.mjs', 'web/index.html', 'web/loader.js', 'web/saves.js', 'web/keyboard.js', 'web/layout.js', 'web/touch.js', 'web/ui.js', 'web/sw.js',
+    'web/manifest.webmanifest', 'web/icon-180.png', 'tools/clean_files/manifest.tsv', 'game/cm0102.exe',
     'game/Data/staff.dat', 'build-web/cm0102_recomp.js', 'build-web/cm0102_recomp.wasm', 'build-web/seasons/rules.tsv',
     'Dockerfile', 'fly.toml']) assert.ok(existsSync(join(o, p)), p);
   assert.equal(existsSync(join(o, 'game/extra.txt')), false, 'only manifest files');

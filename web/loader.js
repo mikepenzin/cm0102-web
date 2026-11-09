@@ -1,13 +1,20 @@
 // The page side of the browser build (web/README.md): it downloads the game files, puts them into the engine's file
 // system at /game, keeps the user folder /user (saves, settings.txt) in the browser, and starts the recompiled game
 // on the canvas. The game runs in this tab; the server only hands out files.
+//
+// Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
+// runs the on-screen keyboard, saves.js is the Saved games panel, ui.js has the messages and the small helpers.
 import { mountSavesPanel, savesSignature } from './saves.js';
-import { guardKeys, mountKeyboard } from './keyboard.js';
+import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
+import { mountLayout } from './layout.js';
+import { mountTouch } from './touch.js';
+import { guardLeave, isStandalone, keepAwake, mountBusy, toast } from './ui.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const mb = (n) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
 const CONNECTIONS = 6;
+const TOUCH = hasTouch();
 
 const lines = [];
 function log(text) {
@@ -32,14 +39,54 @@ function fail(title, detail) {
 addEventListener('error', (e) => log(`page: ${e.message}`));
 addEventListener('unhandledrejection', (e) => log(`page: ${e.reason?.stack ?? e.reason}`));
 
+// ---- Before the engine: the listeners that must run ahead of SDL's, and the layout. ----
+
+let running = false;
+let keyboard = null;
+guardKeys();
+guardLeave(() => running);
+const canvas = $('canvas');
+const layout = mountLayout({ app: $('app'), bar: $('bar'), stage: $('stage'), canvas, chip: $('type-chip'), isTouch: TOUCH });
+mountTouch({ canvas, stage: $('stage'), fx: $('fx'), onFirstTouch: resumeAudio, onTap: (x, y) => keyboard?.onTap(x, y) });
+mountBusy($('busy'));
+
+function resumeAudio() {
+  const ctx = window.Module?.SDL2?.audioContext;
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());      // the game uses the right button
+// A click of a real mouse gives the keys to the game. Not a click that touch.js made, and not while the on-screen
+// keyboard's field has the focus: taking the focus from it would close the keyboard at every tap.
+canvas.addEventListener('mousedown', (e) => {
+  if (e.isTrusted && document.activeElement !== $('kbd')) canvas.focus({ preventScroll: true });
+  resumeAudio();
+});
+
+// The page's own buttons: after one is used, the keys belong to the game again.
+const backToGame = () => { if (!document.querySelector('dialog[open]') && document.activeElement !== $('kbd')) canvas.focus({ preventScroll: true }); };
+$('bar').addEventListener('click', (e) => { if (e.target.closest('button') && !e.target.closest('#kbd-open')) setTimeout(backToGame); });
+for (const d of document.querySelectorAll('dialog')) d.addEventListener('close', backToGame);
+$('help-open').onclick = () => $('help').showModal();
+$('help-close').onclick = () => $('help').close();
+$('fullscreen').onclick = () => layout.toggleFullscreen();
+layout.onFullscreen((on) => {
+  $('fullscreen').setAttribute('aria-pressed', String(on));
+  $('fullscreen').setAttribute('aria-label', on ? 'Leave full screen' : 'Full screen');
+  $('fullscreen').querySelector('span').textContent = on ? 'Leave full screen' : 'Full screen';
+});
+
+// ---- The game files in the browser. ----
+
 // The game files stay in the browser's cache storage under their versioned address, so a later visit reads them
-// from this computer. Only pages on https or on this computer (127.0.0.1) have cache storage; elsewhere every visit
+// from this device. Only pages on https or on this computer (127.0.0.1) have cache storage; elsewhere every visit
 // downloads them.
 const CACHE = 'cm0102-game-files';
+const SHELL = 'cm0102-shell';            // the page and the engine, for a start without a connection (sw.js)
 const fileUrl = (f) => `/game/${f.path.split('/').map(encodeURIComponent).join('/')}?v=${encodeURIComponent(f.v ?? '')}`;
 
-async function openCache() {
-  try { return self.caches ? await caches.open(CACHE) : null; } catch { return null; }
+async function openCache(name = CACHE) {
+  try { return self.caches ? await caches.open(name) : null; } catch { return null; }
 }
 
 // The bytes of the listed files that are in the cache already.
@@ -70,7 +117,7 @@ async function keepStorage() {
 
 // Every listed file, from the cache or the server, read as a stream so the bar moves inside the large ones
 // (language.ldb is 195 MB). counts.cached and counts.fetched get the bytes of each kind.
-async function download(files, cache, onBytes, counts) {
+async function download(files, cache, onBytes, counts, signal) {
   const out = new Map();
   let next = 0;
   async function one() {
@@ -80,7 +127,7 @@ async function download(files, cache, onBytes, counts) {
       let r = cache ? await cache.match(url) : undefined, storing = null;
       const fromCache = Boolean(r);
       if (!r) {
-        r = await fetch(url);
+        r = await fetch(url, { signal });
         if (!r.ok) throw new Error(`${f.path}: HTTP ${r.status}`);
         if (cache) storing = cache.put(url, r.clone()).catch((e) => log(`page: ${f.path} was not kept in the browser: ${e}`));
       }
@@ -92,7 +139,7 @@ async function download(files, cache, onBytes, counts) {
         if (at + value.length > f.size) throw new Error(`${f.path}: more than ${f.size} bytes`);
         buf.set(value, at);
         at += value.length;
-        onBytes(value.length);
+        onBytes(value.length, fromCache);
       }
       if (at !== f.size) throw new Error(`${f.path}: ${at} of ${f.size} bytes`);
       if (storing) await storing;
@@ -113,16 +160,28 @@ function install(FS, files) {
   }
 }
 
-function resumeAudio() {
-  const ctx = window.Module?.SDL2?.audioContext;
-  if (ctx && ctx.state === 'suspended') ctx.resume();
+// After a good start: the page and the engine into the cache that sw.js answers from when there is no connection.
+async function primeOffline(info) {
+  const cache = await openCache(SHELL);
+  if (!cache || !('serviceWorker' in navigator)) return;
+  const engine = ['js', 'wasm'].map((ext) => `/engine/cm0102_recomp.${ext}?v=${info.engineVersion}`);
+  const wanted = [...(info.shell ?? []), '/files.json', ...engine];
+  for (const req of await cache.keys()) {
+    const u = new URL(req.url);
+    if (u.pathname.startsWith('/engine/') && !engine.includes(u.pathname + u.search)) await cache.delete(req);
+  }
+  for (const url of wanted) {
+    try {
+      if (url.startsWith('/engine/') && await cache.match(url)) continue;
+      const r = await fetch(url, { cache: 'no-cache' });
+      if (r.ok) await cache.put(url, r);
+    } catch { /* offline now: the cache keeps what it has */ }
+  }
 }
 
+// ---- The engine. ----
+
 function runEngine(files, info) {
-  const canvas = $('canvas');
-  canvas.addEventListener('contextmenu', (e) => e.preventDefault());      // the game uses the right button
-  canvas.addEventListener('mousedown', () => { canvas.focus(); resumeAudio(); });
-  $('fullscreen').onclick = () => canvas.requestFullscreen?.();
   // Writes the user folder to IndexedDB. A call while a write runs makes one more write after it, so nothing is missed.
   let syncing = false, again = false;
   const sync = () => {
@@ -132,7 +191,7 @@ function runEngine(files, info) {
     syncing = true;
     FS.syncfs(false, (err) => {
       syncing = false;
-      if (err) log(`page: the user folder was not saved: ${err}`);
+      if (err) { log(`page: the user folder was not saved: ${err}`); toast('The save did not reach this browser\'s storage', { kind: 'bad', ms: 6000 }); }
       if (again) { again = false; sync(); }
     });
   };
@@ -153,42 +212,69 @@ function runEngine(files, info) {
       M.addRunDependency('user-folder');
       FS.syncfs(true, (err) => {                         // the saves of earlier visits, back from the browser
         if (err) log(`page: the user folder was not read: ${err}`);
+        // The display mode of the settings file, for an engine that does not tell the size of its picture.
+        try { if (/^\s*display\s*=\s*classic\b/m.test(FS.readFile('/user/settings.txt', { encoding: 'utf8' }))) layout.setPicture(800, 600); }
+        catch { /* no settings file yet: widescreen */ }
         M.removeRunDependency('user-folder');
       });
     }],
     onRuntimeInitialized: () => {
+      const M = window.Module, FS = M.FS;
       overlay('');
-      status('Running in this tab');
-      $('fullscreen').hidden = false;
-      canvas.focus();
+      status('');
+      running = true;
+      canvas.dataset.engine = '1';
+      $('fullscreen').hidden = !layout.canFullscreen || isStandalone();
+      canvas.focus({ preventScroll: true });
       setInterval(sync, 15000);
       // A save file that was added or changed, and has stayed the same for 2 seconds (the game finished writing it),
       // goes to IndexedDB at once, not at the next 15-second write.
-      const FS = window.Module.FS;
       let lastSaves = savesSignature(FS), seen = lastSaves;
       setInterval(() => {
         const now = savesSignature(FS);
-        if (now !== lastSaves && now === seen) { lastSaves = now; sync(); }
+        if (now !== lastSaves && now === seen) {
+          if (now.length >= lastSaves.length) toast('Saved in this browser');
+          lastSaves = now;
+          sync();
+        }
         seen = now;
       }, 2000);
       mountSavesPanel({ FS, sync, log });
-      mountKeyboard({ log });
+      keyboard = mountKeyboard({ log, layout, toast });
+      // What the engine says about itself, a few times a second: the size of its picture, and the text entry that takes
+      // keys (user32.c). An engine built before these calls has neither; the page then works without them.
+      const picture = M._rt_web_picture, typingRow = M._rt_web_typing_row;
+      if (typeof picture === 'function' || typeof typingRow === 'function') {
+        const poll = setInterval(() => {
+          try {
+            const v = typeof picture === 'function' ? picture() : 0;
+            if (v) layout.setPicture(v >>> 16, v & 0xffff);
+            if (keyboard && typeof typingRow === 'function') keyboard.setTypingRow(typingRow());
+          } catch (e) {
+            clearInterval(poll);
+            log(`page: the engine's state calls stopped: ${e}`);
+          }
+        }, 200);
+      }
+      keepAwake();
       addEventListener('pagehide', sync);
       document.addEventListener('visibilitychange', () => { if (document.hidden) sync(); });
-      log(`page: main(${window.Module.arguments.join(' ')})`);
+      primeOffline(info).catch((e) => log(`page: not kept for a start without a connection: ${e}`));
+      log(`page: main(${M.arguments.join(' ')})`);
       try {
-        const r = window.Module.callMain(window.Module.arguments);
-        if (r && typeof r.then === 'function') r.catch((e) => { if (e?.name !== 'ExitStatus') fail('The game stopped', String(e)); });
+        const r = M.callMain(M.arguments);
+        if (r && typeof r.then === 'function') r.catch((e) => { if (e?.name !== 'ExitStatus') { running = false; fail('The game stopped', String(e)); } });
       } catch (e) {
-        if (e?.name !== 'ExitStatus') fail('The game stopped', String(e));
+        if (e?.name !== 'ExitStatus') { running = false; fail('The game stopped', String(e)); }
       }
     },
     onExit: (code) => {
+      running = false;
       sync();
-      if (code === 0) { status('The game ended'); overlay('<h1>The game ended</h1><p>Reload the page to play again. Saves stay in this browser.</p>'); }
-      else fail(`The game ended with code ${code}`, 'The engine log below says why. Saves stay in this browser.');
+      if (code === 0) { status('The game ended'); overlay('<h1>The game ended</h1><p>Reload the page to play again. Your saves stay in this browser.</p>'); }
+      else fail(`The game ended with code ${code}`, 'Help, Engine log says why. Your saves stay in this browser.');
     },
-    onAbort: (what) => fail('The game stopped', String(what)),
+    onAbort: (what) => { running = false; fail('The game stopped', String(what)); },
   };
   const s = document.createElement('script');
   s.src = `/engine/cm0102_recomp.js?v=${info.engineVersion}`;
@@ -218,8 +304,6 @@ function requirements(info) {
     problems.push(`This browser does not give a page the ${Math.round(ENGINE_NEED_PAGES * PAGE / 1048576)} MB of memory that the engine needs (${e.message}).`);
   }
   if (typeof indexedDB === 'undefined') warnings.push('This browser keeps no data for the page (a private window?): saves are lost when the tab closes.');
-  if (matchMedia('(pointer: coarse)').matches && !matchMedia('(any-pointer: fine)').matches)
-    warnings.push('This device has no mouse. The game is made for a mouse and a large screen.');
   return { problems, warnings };
 }
 
@@ -229,8 +313,8 @@ function blocked(problems, note = 'Nothing was downloaded.') {
     <p>It runs in Chrome 137 or later on a Mac, Windows or Linux computer. ${esc(note)}</p>`, 'error');
 }
 
-// The engine file itself, compiled once before the game files download: a browser that lacks a WebAssembly feature the
-// engine uses fails here, after the engine's download and before the 460 MB of game files.
+// The engine file itself, compiled once while the game files download: a browser that lacks a WebAssembly feature the
+// engine uses fails here, and the download of the game files stops.
 async function engineCompiles(info) {
   try {
     await WebAssembly.compileStreaming(fetch(`/engine/cm0102_recomp.wasm?v=${info.engineVersion}`));
@@ -240,61 +324,82 @@ async function engineCompiles(info) {
   }
 }
 
+// The speed of the download over the last few seconds, and the time left at that speed.
+function meter(total) {
+  const marks = [];
+  return (got) => {
+    const now = performance.now();
+    marks.push([now, got]);
+    while (marks.length > 2 && now - marks[0][0] > 4000) marks.shift();
+    const [t0, g0] = marks[0];
+    const rate = now - t0 > 400 ? (got - g0) / ((now - t0) / 1000) : 0;
+    if (!rate) return '';
+    const left = (total - got) / rate;
+    return ` · ${mb(rate)}/s · ${left < 90 ? `about ${Math.max(1, Math.round(left))} s left` : `about ${Math.round(left / 60)} min left`}`;
+  };
+}
+
 async function start() {
-  overlay('');
+  overlay('<div class="row"><i class="spin"></i>Checking the files…</div>');
   status('Checking the files…');
   let info;
   try { info = await (await fetch('/files.json')).json(); }
   catch (e) { fail('The server does not answer', String(e)); return; }
-  if (!info.engine) { fail('The engine is not built', 'Build it first: web/README.md, step 3.'); return; }
+  if (!info.engine) { fail('The engine is not built', 'Build it first: web/README.md, step 4.'); return; }
   if (info.missing.length) {
     fail(`${info.missing.length} game files are missing or of another size`,
-      `First: ${info.missing.slice(0, 6).map((m) => m.path).join(', ')}. CM_GAME_DIR must hold the clean files (web/README.md, step 1).`);
+      `First: ${info.missing.slice(0, 6).map((m) => m.path).join(', ')}. CM_GAME_DIR must hold the clean files (web/README.md, step 3).`);
     return;
   }
   const { problems, warnings } = requirements(info);
   if (problems.length) { log(`page: blocked: ${problems.join(' ')}`); blocked(problems); return; }
+  if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').catch((e) => log(`page: no service worker: ${e}`));
   const cache = await openCache();
   const [have, kept] = await Promise.all([cachedBytes(cache, info.files), keepStorage()]);
   log(`page: browser storage ${kept}; ${mb(have)} of the game files already in this browser`);
+  $('help-storage').textContent = kept === 'kept' ? ', which keeps them' : kept === 'unknown' ? '' : ', which may clear them when the disk is nearly full: download the ones you care about';
   const toGet = info.totalBytes - have;
-  status('Ready');
-  overlay(`<h1>CM 01/02, running in your browser</h1>
-    <p>${toGet > 0 ? `${mb(toGet)} of game files download into this browser${have ? ` (${mb(have)} are here already)` : ''},`
-      : 'The game files are in this browser already,'} and the game runs in this tab. Nothing is installed.</p>
-    ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
-    <button class="primary" id="go">Start the game</button>`);
-  await new Promise((r) => { $('go').onclick = r; });     // one click first: the browser allows sound only after one
-  overlay(`<h1>Checking the engine</h1><p>The browser compiles the engine once (${mb(info.engineBytes)}) to check that it can run it.</p>`);
-  status('Checking the engine…');
-  const compileError = await engineCompiles(info);
-  if (compileError) {
-    log(`page: the engine does not compile here: ${compileError}`);
-    blocked([`This browser cannot compile the engine: ${compileError}`], 'The game files were not downloaded.');
-    return;
+  if (toGet > 0 || warnings.length) {
+    // The first visit, or part of the files: one click before a large download.
+    status('Ready');
+    overlay(`<h1>CM 01/02, in your browser</h1>
+      <p>${toGet > 0 ? `${mb(toGet)} of game files download into this browser once${have ? ` (${mb(have)} are here already)` : ''}.`
+        : 'The game files are in this browser already.'} The game then runs in this tab, on your device. Nothing is installed.</p>
+      ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
+      ${TOUCH ? '<p class="small">On a touch screen: tap to click, long press for the right button, two fingers to scroll. Help has the list.</p>' : ''}
+      <button class="primary" id="go">Start the game</button>`);
+    await new Promise((r) => { $('go').onclick = r; });
   }
-  overlay(`<h1>Loading the game files</h1><div class="bar"><i id="bar"></i></div><div class="small" id="bytes"></div>`);
+  overlay(`<h1>${toGet > 0 ? 'Loading the game files' : 'Starting'}</h1><div class="bar"><i id="bar-fill"></i></div><div class="small" id="bytes"></div>`);
   status('Loading the game files…');
   const t0 = performance.now();
   const counts = { cached: 0, fetched: 0 };
-  let got = 0;
-  let files;
+  const abort = new AbortController();
+  const speed = meter(info.totalBytes);
+  let got = 0, compileError = null, files;
+  // The engine is checked while the files load; if this browser cannot compile it, the download stops.
+  const compiled = engineCompiles(info).then((err) => { if (err) { compileError = err; abort.abort(); } });
   try {
     files = await download(info.files, cache, (n) => {
       got += n;
-      $('bar').style.width = `${(100 * got / info.totalBytes).toFixed(1)}%`;
-      $('bytes').textContent = `${mb(got)} of ${mb(info.totalBytes)}`;
-    }, counts);
+      $('bar-fill').style.width = `${(100 * got / info.totalBytes).toFixed(1)}%`;
+      $('bytes').textContent = `${mb(got)} of ${mb(info.totalBytes)}${toGet > 0 ? speed(got) : ''}`;
+    }, counts, abort.signal);
+    await compiled;
   } catch (e) {
-    fail('A game file did not load', String(e.message ?? e));
+    await compiled;
+    if (!compileError) { fail('A game file did not load', String(e.message ?? e)); return; }
+  }
+  if (compileError) {
+    log(`page: the engine does not compile here: ${compileError}`);
+    blocked([`This browser cannot compile the engine: ${compileError}`], 'The download of the game files was stopped.');
     return;
   }
   log(`page: ${info.files.length} files in ${((performance.now() - t0) / 1000).toFixed(1)} s: ${mb(counts.cached)} from this browser, ${mb(counts.fetched)} downloaded`);
   pruneCache(cache, info.files).catch((e) => log(`page: old game files not removed: ${e}`));
-  overlay(`<h1>Starting the engine</h1><p>The browser compiles the engine (${mb(info.engineBytes)}). The first start can take a minute.</p>`);
+  overlay('<h1>Starting the engine</h1><div class="row"><i class="spin"></i>The first start can take a minute.</div>');
   status('Starting the engine…');
   runEngine(files, info);
 }
 
-guardKeys();
 start();

@@ -109,6 +109,7 @@ extern uint32_t win_wndproc;
  * returns 1, or returns 0 when the key has nothing to press now. */
 extern uint32_t keys_display;                  /* the screen manager of the last input poll */
 int keys_typing(void);                         /* 1 while a text entry takes keys */
+int keys_typing_row(void);                     /* its middle row in the picture, or -1 (the browser build's page) */
 int keys_continue_game(int *x, int *y);        /* Continue Game in the left bar */
 int keys_back(int *x, int *y);                 /* the Back arrow in the left bar */
 int keys_outside_popup(int *x, int *y);        /* a place outside the open popup */

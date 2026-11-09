@@ -67,20 +67,25 @@ const PORT = 8097;
     check('a browser that refuses the memory is blocked before any download',
       /memory that the engine needs/.test(g.box) && g.start === 0 && g.asked.length === 0, g.box.slice(0, 120));
     g = await gate('bad engine', { wasm: Buffer.from('this is not WebAssembly'), click: true });
-    check('an engine the browser cannot compile stops the start before the game files',
-      /cannot compile the engine/.test(g.box) && g.asked.every((u) => u.startsWith('/engine/')) && g.asked.length >= 1,
-      `${g.asked.length} requests: ${[...new Set(g.asked)].join(', ')}`);
+    const gameAsked = g.asked.filter((u) => u.startsWith('/game/')).length;
+    check('an engine the browser cannot compile stops the download of the game files',
+      /cannot compile the engine/.test(g.box) && /download of the game files was stopped/.test(g.box) && gameAsked < rows.length / 2,
+      `${gameAsked} of ${rows.length} game files asked for`);
     g = await gate('touch only', { ctx: { hasTouch: true, isMobile: true } });
-    check('a device with no mouse gets a warning and may still start', /no mouse/.test(g.box) && g.start === 1, g.box.slice(0, 160));
+    check('a touch device is told the gestures and may start', /tap to click, long press for the right button, two fingers to scroll/.test(g.box) && g.start === 1, g.box.slice(0, 200));
 
     const p = await b.newPage({ viewport: { width: 1100, height: 760 }, deviceScaleFactor: 2 });
     const errors = [];
     p.on('pageerror', (e) => errors.push(e.message));
+    p.on('dialog', (d) => d.accept().catch(() => {}));         // the question before a page with a running game is left
     await p.goto(`http://127.0.0.1:${PORT}/`);
     await p.waitForSelector('#go');
-    check('the start box names the size', /760 game files|game files/.test(await p.textContent('#overlay')), (await p.textContent('#overlay h1')).trim());
+    check('the start box names the size of the download', /461 MB of game files download into this browser once/.test(await p.textContent('#overlay')), (await p.textContent('#overlay p')).trim().slice(0, 90));
+    if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-start.png') });
     const t0 = Date.now();
     await p.click('#go');
+    await p.waitForFunction(() => /MB of 461 MB/.test(document.getElementById('bytes')?.textContent ?? ''), null, { timeout: 30000 }).catch(() => {});
+    if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-loading.png') });
     await p.waitForFunction(() => window.__fake, null, { timeout: 120000 });
     const f = await p.evaluate(() => window.__fake);
     check('every file reached the engine', f.files === rows.length + 4, `${f.files} files`);
@@ -130,14 +135,16 @@ const PORT = 8097;
     const gameRequests = [];
     p.on('request', (r) => { if (r.url().includes('/game/')) gameRequests.push(r.url()); });
     await p.reload();
-    await p.waitForSelector('#go');
-    check('the start box says the files are here', /in this browser already/.test(await p.textContent('#overlay')));
-    await p.click('#go');
     await p.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+    check('the second visit starts by itself: no Start box', /from this browser, 0\.0 MB downloaded/.test(await p.textContent('#log')));
     const again = await p.evaluate(() => window.__fake);
     const second = (await p.textContent('#log')).match(/page: \d+ files in .*/)?.[0] ?? '';
     check('the second visit gives the engine every byte', again.bytes === total + 4 * 2, second);
     check('the second visit asks the server for no game file', gameRequests.length === 0, `${gameRequests.length} requests`);
+    await p.click('#help-open');
+    check('Help lists the gestures and holds the engine log', /Long press, or a tap with two fingers/.test(await p.textContent('#help')) && /page: main\(--game \/game\)/.test(await p.textContent('#log')));
+    if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-help.png') });
+    await p.click('#help-close');
     check('no page errors', errors.length === 0, errors.join('; '));
     check('a computer with a mouse gets no Keyboard button', (await p.locator('#kbd-open:not([hidden])').count()) === 0);
     const sdlBefore = await p.evaluate(() => window.__sdlKeys);
@@ -167,7 +174,7 @@ const PORT = 8097;
     check('keys of the field never reach SDL (no double typing)', (await t.evaluate(() => window.__sdlKeys)) === 0);
     await t.tap('#kbd-open');
     check('the button again closes the keyboard', (await t.evaluate(() => document.activeElement?.id)) !== 'kbd'
-      && (await t.textContent('#kbd-open')) === 'Keyboard');
+      && (await t.textContent('#kbd-open span')) === 'Keyboard' && (await t.locator('#kbd-open svg').count()) === 1);
     check('no page errors on the touch device', terrors.length === 0, terrors.join('; '));
     await tc.close();
     // An engine built before the keyboard calls: no button, and the log says to build it again.

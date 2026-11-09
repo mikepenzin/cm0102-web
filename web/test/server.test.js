@@ -75,8 +75,24 @@ test('the engine and the page: types and revalidation', async () => {
   assert.match(page.headers.get('content-type'), /text\/html/);
   assert.match(await page.text(), /loader\.js/);
   assert.match((await fetch(`${base}/loader.js`)).headers.get('content-type'), /javascript/);
-  assert.match((await fetch(`${base}/saves.js`)).headers.get('content-type'), /javascript/);
-  assert.match((await fetch(`${base}/keyboard.js`)).headers.get('content-type'), /javascript/);
+  for (const f of ['saves.js', 'keyboard.js', 'layout.js', 'touch.js', 'ui.js', 'sw.js'])
+    assert.match((await fetch(`${base}/${f}`)).headers.get('content-type'), /javascript/, f);
+  assert.equal((await fetch(`${base}/manifest.webmanifest`)).headers.get('content-type'), 'application/manifest+json');
+  assert.equal((await fetch(`${base}/icon.svg`)).headers.get('content-type'), 'image/svg+xml');
+  const icon = await fetch(`${base}/icon-192.png`);
+  assert.equal(icon.headers.get('content-type'), 'image/png');
+  assert.deepEqual([...new Uint8Array(await icon.arrayBuffer()).subarray(1, 4)], [0x50, 0x4e, 0x47], 'a PNG');
+  const manifest = await (await fetch(`${base}/manifest.webmanifest`)).json();
+  for (const i of manifest.icons) assert.equal((await fetch(`${base}${i.src}`)).status, 200, i.src);
+  // The shell that the page keeps for a start without a connection: every part of it is served.
+  const { shell } = await (await fetch(`${base}/files.json`)).json();
+  assert.ok(shell.includes('/') && shell.includes('/loader.js') && !shell.includes('/sw.js'));
+  for (const u of shell) assert.equal((await fetch(`${base}${u}`)).status, 200, u);
+  // Every script the page loads is in the shell.
+  const { readFileSync } = await import('node:fs');
+  const here = new URL('..', import.meta.url);
+  for (const f of ['loader.js', 'keyboard.js', 'saves.js', 'layout.js', 'touch.js', 'ui.js'])
+    for (const m of readFileSync(new URL(f, here), 'utf8').matchAll(/from '\.\/([\w.-]+)'/g)) assert.ok(shell.includes(`/${m[1]}`), `${f} imports ${m[1]}`);
 });
 
 test('hosting: a .br copy goes to a browser that takes br, and a versioned request may be kept for good', async () => {

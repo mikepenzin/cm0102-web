@@ -114,6 +114,8 @@ since the last one. If Fly hands the app a fresh builder (its cache is gone), on
 - Later visits: nothing. The page keeps the game files in the browser's cache storage and the engine in the browser's
   cache, each under its version; only a file that changed is downloaded again.
 - Saves stay in each player's browser, and the page asks the browser to keep that storage.
+- After one good start the page also starts without a connection, and it can be added to the home screen as an app
+  (`web/README.md`, "As an app").
 
 Outgoing traffic is the main cost of hosting: check Fly's prices for your region before you share the address
 widely. The machine itself is the smallest (shared CPU, 256 MB), and `fly.toml` stops it when idle.

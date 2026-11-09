@@ -83,6 +83,22 @@ int keys_typing(void)
     return 0;
 }
 
+/* The middle row of the text entry that takes keys, in rows of the picture; -1 when none does. For the page of the
+ * browser build (web/keyboard.js), which keeps that row above the on-screen keyboard of a touch device. */
+int keys_typing_row(void)
+{
+    uint32_t d = screen_manager();
+    if (!d) return -1;
+    int n = widget_count(d);
+    if (n < 0 || n > 0x4b0) return -1;
+    for (int i = 0; i < n; i++) {
+        uint32_t w = widget_at(d, i);
+        if ((rd32(g_mem, w + 0x0c) & 8) && (int32_t)rd32(g_mem, w + 0x44) >= 0)
+            return ((int32_t)rd32(g_mem, w + 0x14) + (int32_t)rd32(g_mem, w + 0x1c)) / 2;
+    }
+    return -1;
+}
+
 int keys_continue_game(int *x, int *y) { return !keys_typing() && find_left_bar_button(CONTINUE_ID, x, y); }
 
 int keys_back(int *x, int *y) { return !keys_typing() && find_left_bar_button(BACK_ID, x, y); }
