@@ -92,6 +92,38 @@ const PORT = 8097;
     check('the game writes to the user folder', f.env.RECOMP_USER_DIR === '/user');
     check('the wasm is served as application/wasm', f.wasmType === 'application/wasm', f.wasmType);
     check('the overlay is gone, the canvas shows the engine', (await p.locator('#overlay .box').count()) === 0);
+    // The Saved games panel: the list, a download, uploads, and the watcher's write to IndexedDB.
+    await p.waitForSelector('#saves-open:not([hidden])');
+    await p.click('#saves-open');
+    const listed = await p.textContent('#saves-list');
+    check('the panel lists the save, not the save in progress', /Harbour City 2001-07-14\.sav/.test(listed) && !/temp_save_file/.test(listed));
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#saves-list button[data-i="0"]')]);
+    const dlPath = path.join(tmp, 'downloaded.sav');
+    await dl.saveAs(dlPath);
+    const got = fs.readFileSync(dlPath);
+    const tail = Buffer.from(await p.evaluate(() => window.__fakeSave));
+    check('the download is the save, byte for byte', dl.suggestedFilename() === 'Harbour City 2001-07-14.sav'
+      && got.length === 0x416ec + 32 && got.subarray(0x416ec - 4).equals(tail), `${dl.suggestedFilename()}, ${got.length} bytes`);
+    const storesBefore = await p.evaluate(() => window.__syncs.store);
+    await p.setInputFiles('#saves-file', { name: 'Leeds 2002-05-01.sav', mimeType: 'application/octet-stream', buffer: got });
+    await p.waitForFunction(() => /Uploaded/.test(document.getElementById('saves-note').textContent));
+    const inFs = await p.evaluate(() => window.Module.FS.readFile('/user/Leeds 2002-05-01.sav').length);
+    check('an uploaded save lands in the save folder and is listed',
+      inFs === got.length && /Leeds 2002-05-01\.sav/.test(await p.textContent('#saves-list')));
+    check('an upload is written to IndexedDB at once', (await p.evaluate(() => window.__syncs.store)) > storesBefore);
+    await p.setInputFiles('#saves-file', [{ name: 'junk.sav', mimeType: 'application/octet-stream', buffer: Buffer.from('hello') },
+      { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('x') }]);
+    await p.waitForFunction(() => /notes\.txt/.test(document.getElementById('saves-note').textContent));
+    const refusedNote = await p.textContent('#saves-note');
+    check('a file that is not a save, and a file that is not .sav, are refused',
+      /junk\.sav: it is too short/.test(refusedNote) && /only \.sav files/.test(refusedNote) && !/junk/.test(await p.textContent('#saves-list')), refusedNote);
+    if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-saves.png') });
+    await p.click('#saves-close');
+    const storesNow = await p.evaluate(() => window.__syncs.store);
+    await p.evaluate(() => window.Module.FS.writeFile('/user/Auto 2001-07-20.sav', new Uint8Array(0x416ec + 8)));
+    await p.waitForFunction((n) => window.__syncs.store > n, storesNow, { timeout: 8000 }).catch(() => {});
+    check('a new save from the game goes to IndexedDB within seconds', (await p.evaluate(() => window.__syncs.store)) > storesNow);
+
     const first = (await p.textContent('#log')).match(/page: \d+ files in .*/)?.[0] ?? '';
     check('the first visit downloads every file', /: 0\.0 MB from this browser/.test(first), first);
     // A second visit: every file from the browser's cache storage, none from the server.

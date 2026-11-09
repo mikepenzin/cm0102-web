@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const SEASON_TABLES = ['rules.tsv', 'names.tsv', 'clubs.tsv', 'club_records.tsv'];
-const PAGES = { '/': 'index.html', '/loader.js': 'loader.js' };
+const PAGES = { '/': 'index.html', '/loader.js': 'loader.js', '/saves.js': 'saves.js' };
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.wasm': 'application/wasm' };
 
 function manifest(path) {

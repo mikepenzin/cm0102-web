@@ -76,6 +76,17 @@ the cup and Champions League rounds. What to expect:
   game). The page draws and takes input whenever the game polls for input.
 - Sound starts after the first click in the game.
 
+## Saved games
+
+The game saves into the user folder as on the desktop (Game Options, Save Game). The Saved games button above the
+game lists those saves: Download writes one to your computer, as a normal `.sav` file; Upload a save puts a `.sav`
+file into the folder, and the game's Load Game screen then lists it. An upload is checked first (it must be a save
+container of CM 01/02), and a name that is taken gets a number. The saves use the format of the desktop game, so a
+save should move between this page and the Bosman Edition both ways.
+
+The saves stay in IndexedDB, not localStorage: localStorage holds a few MB of text per site, and a save holds the
+whole game world. A new or changed save goes to IndexedDB about 2 seconds after the game finished writing it.
+
 ## Browser requirements
 
 The page checks the browser before it downloads anything, and stops with the reasons when the game cannot run:

@@ -60,7 +60,7 @@ export async function stage(opts) {
   mkdirSync(opts.out, { recursive: true });
 
   const served = [];
-  for (const name of ['server.mjs', 'index.html', 'loader.js', 'package.json']) copy(join(ROOT, 'web', name), join(opts.out, 'web', name));
+  for (const name of ['server.mjs', 'index.html', 'loader.js', 'saves.js', 'package.json']) copy(join(ROOT, 'web', name), join(opts.out, 'web', name));
   copy(opts.manifest, join(opts.out, 'tools/clean_files/manifest.tsv'));
   for (const f of inv.files) {
     const to = f.path.startsWith('Seasons/') ? join(opts.out, 'build-web/seasons', f.path.slice(8)) : join(opts.out, 'game', f.path);

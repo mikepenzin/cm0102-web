@@ -1,6 +1,8 @@
 // The page side of the browser build (web/README.md): it downloads the game files, puts them into the engine's file
 // system at /game, keeps the user folder /user (saves, settings.txt) in the browser, and starts the recompiled game
 // on the canvas. The game runs in this tab; the server only hands out files.
+import { mountSavesPanel, savesSignature } from './saves.js';
+
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const mb = (n) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
@@ -120,12 +122,18 @@ function runEngine(files, info) {
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());      // the game uses the right button
   canvas.addEventListener('mousedown', () => { canvas.focus(); resumeAudio(); });
   $('fullscreen').onclick = () => canvas.requestFullscreen?.();
-  let syncing = false;
+  // Writes the user folder to IndexedDB. A call while a write runs makes one more write after it, so nothing is missed.
+  let syncing = false, again = false;
   const sync = () => {
     const FS = window.Module?.FS;
-    if (syncing || !FS) return;
+    if (!FS) return;
+    if (syncing) { again = true; return; }
     syncing = true;
-    FS.syncfs(false, (err) => { syncing = false; if (err) log(`page: the user folder was not saved: ${err}`); });
+    FS.syncfs(false, (err) => {
+      syncing = false;
+      if (err) log(`page: the user folder was not saved: ${err}`);
+      if (again) { again = false; sync(); }
+    });
   };
   window.Module = {
     canvas,
@@ -153,6 +161,16 @@ function runEngine(files, info) {
       $('fullscreen').hidden = false;
       canvas.focus();
       setInterval(sync, 15000);
+      // A save file that was added or changed, and has stayed the same for 2 seconds (the game finished writing it),
+      // goes to IndexedDB at once, not at the next 15-second write.
+      const FS = window.Module.FS;
+      let lastSaves = savesSignature(FS), seen = lastSaves;
+      setInterval(() => {
+        const now = savesSignature(FS);
+        if (now !== lastSaves && now === seen) { lastSaves = now; sync(); }
+        seen = now;
+      }, 2000);
+      mountSavesPanel({ FS, sync, log });
       addEventListener('pagehide', sync);
       document.addEventListener('visibilitychange', () => { if (document.hidden) sync(); });
       log(`page: main(${window.Module.arguments.join(' ')})`);

@@ -30,6 +30,17 @@
   ul { margin: 0 0 12px; padding-left: 18px; color: var(--muted); }
   details { border-top: 1px solid var(--line); background: var(--panel); }
   summary { padding: 6px 16px; cursor: pointer; color: var(--muted); }
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; width: min(640px, calc(100vw - 32px)); }
+  dialog::backdrop { background: rgba(0, 0, 0, .45); }
+  dialog h2 { font-size: 17px; margin: 0 0 6px; }
+  dialog table { width: 100%; border-collapse: collapse; margin: 8px 0; font-variant-numeric: tabular-nums; }
+  dialog th, dialog td { text-align: left; padding: 6px 6px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+  dialog th { color: var(--muted); font-weight: 500; font-size: 12px; border-top: 0; }
+  dialog .num { text-align: right; white-space: nowrap; }
+  dialog .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+  dialog .spacer { flex: 1; }
+  .bad { color: var(--bad); }
+  #saves-note { white-space: pre-line; }
   #log { margin: 0; padding: 4px 16px 10px; max-height: 30vh; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--muted); white-space: pre-wrap; }
 </style>
 </head>
@@ -37,12 +48,26 @@
 <header>
   <b>CM 01/02 in the Browser</b>
   <span id="status">Loading…</span>
+  <button id="saves-open" hidden>Saved games</button>
   <button id="fullscreen" hidden>Full screen</button>
 </header>
 <div id="stage">
   <canvas id="canvas" tabindex="0" width="800" height="600" aria-label="The game"></canvas>
   <div id="overlay"></div>
 </div>
+<dialog id="saves" aria-labelledby="saves-title">
+  <h2 id="saves-title">Saved games</h2>
+  <p class="small">Your saves stay in this browser. Download one to keep a copy on your computer or to play it on
+  another one; upload a .sav file to play it here.</p>
+  <div id="saves-list"></div>
+  <p id="saves-note" class="small" role="status"></p>
+  <div class="row">
+    <button class="primary" id="saves-upload">Upload a save…</button>
+    <input type="file" id="saves-file" accept=".sav" multiple hidden>
+    <span class="spacer"></span>
+    <button id="saves-close">Close</button>
+  </div>
+</dialog>
 <details>
   <summary>Engine log</summary>
   <pre id="log"></pre>
