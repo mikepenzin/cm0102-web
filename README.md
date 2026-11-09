@@ -54,6 +54,20 @@ Each feature is a line in `settings.txt` in the save folder and can be switched 
 
 Saved games are in `~/Library/Application Support/cm0102` on a Mac, `%APPDATA%\cm0102` on Windows and `~/.local/share/cm0102` on Linux. A new version does not touch them.
 
+## Play in the browser
+
+This fork also builds the same recompiled game as WebAssembly, to play in Chrome with nothing installed. A small Node
+app hands the browser the engine and the game files; the browser runs the game, and saves stay in the browser.
+
+```bash
+emcmake cmake -S . -B build-web -G Ninja -DCM0102_EXE=$HOME/cm0102-game/cm0102.exe
+cmake --build build-web --target cm0102_recomp seasons_rules
+CM_GAME_DIR=$HOME/cm0102-game node web/server.mjs        # then open http://127.0.0.1:8080 in Chrome
+```
+
+Every step, from the tools to the game files: [web/README.md](web/README.md). On the internet, on Fly.io:
+[web/deploy/README.md](web/deploy/README.md).
+
 ## Roadmap
 
 0.6.0 (released TODO-DATE) added Choose Season: any season from 2001/02 to 2025/26 with its own squads, leagues, cups and rules, and rules that change each July in a long game.

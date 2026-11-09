@@ -92,3 +92,8 @@ test('the stage refuses a game file that is not the clean file, and a missing en
   rmSync(join(opts.build, 'cm0102_recomp.wasm'));
   await assert.rejects(stage(opts), /engine is not built/);
 });
+
+test('the stage names the folder problem: no folder, or the files one level deeper', async () => {
+  await assert.rejects(stage({ ...opts, game: join(tmp, 'nowhere') }), /nowhere does not exist/);
+  await assert.rejects(stage({ ...opts, game: tmp }), (err) => err.message.includes(`but ${join(tmp, 'game')} has`));
+});

@@ -142,7 +142,7 @@ export function findGameDirs(dir, depth = 3) {
     if (left > 0) for (const e of entries) if (e.isDirectory() && !e.name.startsWith('.')) walk(join(d, e.name), left - 1);
   };
   walk(dir, depth);
-  return found;
+  return found.sort((x, y) => x.split(/[\\/]/).length - y.split(/[\\/]/).length || x.localeCompare(y));   // the shallowest first
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

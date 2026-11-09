@@ -13,7 +13,7 @@ import { dirname, join, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 import { constants, createBrotliCompress } from 'node:zlib';
-import { inventory, verify } from '../server.mjs';
+import { findGameDirs, inventory, verify } from '../server.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
@@ -48,6 +48,12 @@ function copy(from, to) {
 }
 
 export async function stage(opts) {
+  if (!existsSync(join(opts.game, 'cm0102.exe'))) {
+    if (!existsSync(opts.game)) throw new Error(`${opts.game} does not exist. Use --game with the folder that holds cm0102.exe and Data (web/README.md, step 3).`);
+    const found = findGameDirs(opts.game).filter((d) => d !== opts.game);
+    throw new Error(found.length ? `${opts.game} has no cm0102.exe, but ${found[0]} has: use --game "${found[0]}"`
+      : `${opts.game} has no cm0102.exe, and no folder under it has one (web/README.md, step 3).`);
+  }
   const inv = inventory({ gameDir: opts.game, buildDir: opts.build, manifestPath: opts.manifest });
   if (inv.missing.length) throw new Error(`${inv.missing.length} files are missing or of another size, first: ${inv.missing.slice(0, 5).map((m) => m.path).join(', ')}`);
   if (!inv.engine.js || !inv.engine.wasm) throw new Error(`the engine is not built in ${opts.build} (web/README.md, step 2)`);

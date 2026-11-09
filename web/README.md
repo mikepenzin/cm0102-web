@@ -1,8 +1,8 @@
 # CM 01/02 in the browser
 
-The real recompiled game, built as WebAssembly, running in a browser tab. A small Node app on your computer hands the
-browser the engine and your game files; the browser does all the work. There is no mock: it is the same translated
-code as the desktop downloads, with a browser host under it.
+The real recompiled game, built as WebAssembly, running in a browser tab. A small Node app hands the browser the
+engine and the game files; the browser does all the work. There is no mock: it is the same translated code as the
+desktop downloads, with a browser host under it. To put it on the internet, see `web/deploy/README.md`.
 
 ```
 Chrome tab: web/loader.js ─ downloads ─▶ the game files into the engine's file system (/game)
@@ -11,67 +11,108 @@ Chrome tab: web/loader.js ─ downloads ─▶ the game files into the engine's 
 web/server.mjs: serves the page, the engine and the clean files, nothing else
 ```
 
-## What you need
+## Run it on a Mac, step by step
 
-- The clean files: `cm0102.exe` 3.9.68 and its `Data`, `Pictures`, `Sounds` and `History` folders (step 1).
-- [Emscripten](https://emscripten.org/docs/getting_started/downloads.html) (the latest emsdk), CMake 3.20 or later,
-  Python 3 with `capstone` (`python3 -m pip install capstone`), and Node 22.
-- Chrome 137 or later. The build uses JSPI, which Chrome has; for another browser see "Other browsers" below.
+You need the CM 01/02 Bosman Edition app in Applications (its game folder holds the clean files), Homebrew, and
+Chrome 137 or later.
 
-## Step 1: the clean files
+**1. The tools (once).**
 
-Either of these gives a folder that holds `cm0102.exe` and `Data`:
+```bash
+xcode-select --install
+brew install cmake ninja node python
+python3 -m venv ~/.venvs/cm0102 && ~/.venvs/cm0102/bin/pip install capstone
+git clone https://github.com/emscripten-core/emsdk.git ~/emsdk
+cd ~/emsdk && ./emsdk install latest && ./emsdk activate latest
+```
 
-- From the free release and the official patch, as the main README says:
-  `python3 tools/clean_files/make_clean_files.py CM0102.iso cm0102_3968.exe ../clean-3968`
+The build finds the Python of `~/.venvs/cm0102` by itself, so `capstone` is there for it.
+
+**2. The code (once; later `git pull` in the folder).**
+
+```bash
+git clone https://github.com/mikepenzin/cm0102-web.git ~/Projects/cm0102-web
+cd ~/Projects/cm0102-web
+git checkout claude/engine-worker
+```
+
+**3. The game files (once).** Copy the game folder out of the app:
+
+```bash
+rm -rf ~/cm0102-game
+cp -R "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game" ~/cm0102-game
+ls ~/cm0102-game          # cm0102.exe, Data, Pictures, Sounds, History, ...
+```
+
+The `rm -rf` matters: if `~/cm0102-game` is already there, `cp -R` puts the folder inside it, one level too deep.
+
+**4. Build the engine (once, and again when the engine's code changes).**
+
+```bash
+cd ~/Projects/cm0102-web
+source ~/emsdk/emsdk_env.sh
+emcmake cmake -S . -B build-web -G Ninja -DCM0102_EXE=$HOME/cm0102-game/cm0102.exe
+cmake --build build-web --target cm0102_recomp seasons_rules
+ls build-web/cm0102_recomp.wasm
+```
+
+If the first command prints `cm0102_recomp: … not found, so the recompiled game is not built`, the path to
+`cm0102.exe` is wrong: check step 3. The first build translates the 11,706 functions of `cm0102.exe` to C and
+compiles them, so it takes a while.
+
+**5. Run it.** In a new terminal tab (so that your own Node runs it, not Emscripten's):
+
+```bash
+cd ~/Projects/cm0102-web
+CM_GAME_DIR=$HOME/cm0102-game node web/server.mjs
+```
+
+It prints `game files: 764 (461 MB)`, `every SHA-256 matches the clean files`, the engine, and `open
+http://127.0.0.1:8080 in Chrome`. Open that address in Chrome and press Start the game. The first start loads about
+460 MB of game files into the browser (seconds from your own computer; later starts read them from the browser), the
+browser compiles the engine, and the game starts as on the desktop: the settings screen of a first start, then Setup
+Game.
+
+## Other systems
+
+The same five steps, with these differences:
+
+- Linux, or Windows through WSL (Ubuntu): in step 1, `sudo apt install -y git cmake ninja-build python3 python3-venv
+  curl`, then Node 22 (for example with nvm), then the venv and emsdk lines. On Windows, run `wsl --install` first and
+  do everything in the Ubuntu app; Chrome on Windows opens `http://127.0.0.1:8080` of WSL.
+- The game files: the folder `game` of an installed Bosman Edition on Windows (in WSL under `/mnt/c/...`), or from the
+  Linux AppImage (`--appimage-extract`, then the folder that holds `cm0102.exe`). Or make them from the free release
+  and the official patch: `python3 tools/clean_files/make_clean_files.py CM0102.iso cm0102_3968.exe ~/cm0102-game`
   (needs `bsdtar` and `unshield`).
-- From a Bosman Edition download: the folder `game` in it (on a Mac inside the app, `Contents/Resources/game`; on
-  Windows the folder `game` of the installed game; from the Linux AppImage, run it with `--appimage-extract` and use
-  the folder that holds `cm0102.exe`).
 
-The server checks every file against `tools/clean_files/manifest.tsv`, size and SHA-256, when it starts, and stops if
-one differs.
-
-## Step 2: the browser build
-
-From the repo, in a shell where `emcc` works (after `source <emsdk>/emsdk_env.sh`, or `emsdk_env.bat` on Windows):
-
-```bash
-emcmake cmake -S . -B build-web -DCM0102_EXE=../clean-3968/cm0102.exe -DRECOMP_PYTHON=python3
-cmake --build build-web -j 8 --target cm0102_recomp seasons_rules
-```
-
-The first build translates the 11,706 functions of `cm0102.exe` to C and compiles them; it takes a while. It writes
-`build-web/cm0102_recomp.js`, `build-web/cm0102_recomp.wasm` and the season tables in `build-web/seasons`. On Windows,
-add `-G Ninja` to the first command if CMake finds no make tool.
-
-## Step 3: run it
-
-```bash
-CM_GAME_DIR=../clean-3968 node web/server.mjs        # PowerShell: $env:CM_GAME_DIR="..\clean-3968"; node web/server.mjs
-```
-
-Open http://127.0.0.1:8080 in Chrome and press Start the game. The page loads about 460 MB of game files into the tab
-(seconds from your own computer; later starts read them from the browser's cache), the browser compiles the engine,
-and the game starts as on the desktop: the settings screen of a first start, then Setup Game.
+## Settings of the server
 
 | Variable | Default | |
 |---|---|---|
-| `CM_GAME_DIR` | none | the clean files of step 1 |
-| `CM_WEB_BUILD` | `build-web` | the folder of step 2 |
-| `PORT`, `HOST` | 8080, 127.0.0.1 | |
+| `CM_GAME_DIR` | none | the folder with `cm0102.exe` and `Data` (step 3) |
+| `CM_WEB_BUILD` | `build-web` | the build folder (step 4) |
+| `PORT`, `HOST` | 8080, 127.0.0.1 | `HOST=0.0.0.0` lets other devices of your network open it |
 | `CM_WEB_SKIP_VERIFY` | unset | `1` skips the SHA-256 check at the start (the size check stays) |
+
+The server checks every game file against `tools/clean_files/manifest.tsv`, size and SHA-256, when it starts, and
+stops if one differs.
 
 ## If it does not start
 
-Open "Engine log" under the game: it holds every line the runtime prints (`recomp: ...`), and the page writes its
-own lines there too (`page: ...`). A failed start shows a box with the last lines. Send those, or the build error, back.
+| What you see | What to do |
+|---|---|
+| `CM_GAME_DIR: … does not exist` or `… has no cm0102.exe` | Step 3: the folder is missing, or the files are one level deeper (the message names that folder) |
+| `cm0102_recomp: … not found` while configuring | Step 4: `-DCM0102_EXE` must name `cm0102.exe` in your game folder |
+| `engine: not built` | Step 4 did not finish: run the build again and send its last 30 lines |
+| A box "This browser cannot run the game" | It names the reason; use Chrome 137 or later on a computer |
+| The game stops in the tab | Open "Engine log" under the game and send its last lines |
 
-First run: 9 November 2026, on a MacBook Air in Chrome: the database load, a new game, and days to 12.8.01 with
-the cup and Champions League rounds. What to expect:
+"Engine log" holds every line the runtime prints (`recomp: ...`) and the page's own lines (`page: ...`).
 
-- The runtime prints `recomp: web memory ... MB, host data at 0x21..., host heap at 0x2...` at the start. If it says
-  the build's data is not above 0x21000000, the link options of `web/web.cmake` did not apply.
+First run: 9 November 2026, on a MacBook Air in Chrome: the database load, a new game, and days to 12.8.01 with the
+cup and Champions League rounds. What to expect:
+
+- The runtime prints `recomp: web memory ... MB, host data at 0x21..., host heap at 0x2...` at the start.
 - The tab freezes while the game works for a long time without asking for input (the database load of a big new
   game). The page draws and takes input whenever the game polls for input.
 - Sound starts after the first click in the game.
@@ -85,7 +126,9 @@ container of CM 01/02), and a name that is taken gets a number. The saves use th
 save should move between this page and the Bosman Edition both ways.
 
 The saves stay in IndexedDB, not localStorage: localStorage holds a few MB of text per site, and a save holds the
-whole game world. A new or changed save goes to IndexedDB about 2 seconds after the game finished writing it.
+whole game world. A new or changed save goes to IndexedDB about 2 seconds after the game finished writing it. Use
+the same address every time: `127.0.0.1:8080` and `localhost:8080` are two sites to the browser, each with its own
+saves.
 
 ## Browser requirements
 
@@ -97,8 +140,9 @@ browser that keeps no data (a private window), gets a warning but may start.
 
 ## Other browsers
 
-`-DCM0102_WEB_SUSPEND=asyncify` in step 2 builds without JSPI, for every browser. The engine is then larger and slower,
-and the build takes longer.
+`-DCM0102_WEB_SUSPEND=asyncify` in step 4 builds without JSPI, for every browser (Safari, every iPad browser). The
+engine is then larger and slower, and the build takes longer. Use another build folder for it and point the server at
+it with `CM_WEB_BUILD`.
 
 ## How it works
 
@@ -110,19 +154,17 @@ and the build takes longer.
 - Files: the page writes the game files into Emscripten's file system before `main` starts; the runtime's POSIX host
   (`host/posix.c`) reads them as on Linux. The page keeps the game files in the browser's cache storage, each under
   its version (its SHA-256 in the manifest), so a later start downloads nothing. The user folder `/user` is kept in
-  IndexedDB every 15 seconds and when the tab is hidden or closed, and the page asks the browser to keep its storage.
+  IndexedDB (a save at once, everything else every 15 seconds and when the tab is hidden or closed), and the page
+  asks the browser to keep its storage.
 - SDL2 is Emscripten's port: it draws on the canvas, takes the mouse and keys, and plays the sound.
-
-## Hosting
-
-`web/deploy/README.md`: stage the files and put them on Fly.io.
 
 ## Tests
 
 - `cd web && npm test`: the server lists and serves only the clean files and the season tables, and refuses the rest;
-  brotli and versioned caching; the stage script and the staged server.
+  brotli and versioned caching; the stage script and the staged server; the save logic.
 - `NODE_PATH=$(npm root -g) node web/test/page-check.cjs`: the page at full size (placeholder files with the sizes of
-  the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`). Needs Playwright.
+  the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`): the browser
+  check, the load, the Saved games panel and a reload from the browser's cache. Needs Playwright.
 
 ## Not yet
 
