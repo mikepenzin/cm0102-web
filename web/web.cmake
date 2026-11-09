@@ -19,7 +19,7 @@ set(CM0102_WEB_LINK
     -sEXIT_RUNTIME=1
     -sFORCE_FILESYSTEM=1
     -lidbfs.js                            # the user folder (saves, settings.txt) is kept in the browser
-    "-sEXPORTED_RUNTIME_METHODS=callMain,FS,ENV,IDBFS,addRunDependency,removeRunDependency"
+    "-sEXPORTED_RUNTIME_METHODS=callMain,ccall,FS,ENV,IDBFS,addRunDependency,removeRunDependency"   # ccall: web/keyboard.js
     -sGLOBAL_BASE=553648128               # 0x21000000: the host's data in the free gap of guest memory (host/web.c)
     -sINITIAL_MEMORY=805306368            # 768 MB; host/web.c grows the memory to the guest heap at 0x70000000
     -sALLOW_MEMORY_GROWTH=1

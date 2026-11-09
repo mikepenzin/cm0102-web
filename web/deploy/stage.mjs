@@ -90,7 +90,7 @@ export async function stage(opts) {
     if (update(from, to)) changed.add(to);
     if (serve) served.push(to);
   };
-  for (const name of ['server.mjs', 'index.html', 'loader.js', 'saves.js', 'package.json']) put(join(ROOT, 'web', name), join(opts.out, 'web', name), false);
+  for (const name of ['server.mjs', 'index.html', 'loader.js', 'saves.js', 'keyboard.js', 'package.json']) put(join(ROOT, 'web', name), join(opts.out, 'web', name), false);
   put(opts.manifest, join(opts.out, 'tools/clean_files/manifest.tsv'), false);
   for (const f of inv.files) {
     const to = f.path.startsWith('Seasons/') ? join(opts.out, 'build-web/seasons', f.path.slice(8)) : join(opts.out, 'game', f.path);

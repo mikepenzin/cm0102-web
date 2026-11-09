@@ -139,6 +139,37 @@ const PORT = 8097;
     check('the second visit gives the engine every byte', again.bytes === total + 4 * 2, second);
     check('the second visit asks the server for no game file', gameRequests.length === 0, `${gameRequests.length} requests`);
     check('no page errors', errors.length === 0, errors.join('; '));
+    check('a computer with a mouse gets no Keyboard button', (await p.locator('#kbd-open:not([hidden])').count()) === 0);
+    const sdlBefore = await p.evaluate(() => window.__sdlKeys);
+    await p.click('#canvas');
+    await p.keyboard.press('KeyA');
+    check('keys typed on the game still reach SDL', (await p.evaluate(() => window.__sdlKeys)) > sdlBefore);
+
+    // A touch device (an iPad): the Keyboard button opens the hidden field, and what is typed goes to the runtime.
+    const tc = await b.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true });
+    const t = await tc.newPage();
+    const terrors = [];
+    t.on('pageerror', (e) => terrors.push(e.message));
+    await t.goto(`http://127.0.0.1:${PORT}/`);
+    await t.waitForSelector('#go');
+    await t.click('#go');
+    await t.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+    check('a touch device gets the Keyboard button', (await t.locator('#kbd-open:not([hidden])').count()) === 1);
+    await t.tap('#kbd-open');
+    check('the button focuses the hidden field', (await t.evaluate(() => document.activeElement?.id)) === 'kbd');
+    await t.keyboard.type('Ab');
+    await t.keyboard.press('Backspace');
+    await t.keyboard.press('Enter');
+    await t.keyboard.insertText('Smith');
+    const typed = await t.evaluate(() => window.__typed);
+    check('letters, Backspace, Enter and a whole word go to the runtime',
+      JSON.stringify(typed) === JSON.stringify([['type', 'A'], ['type', 'b'], ['key', 8], ['key', 13], ['type', 'Smith']]), JSON.stringify(typed));
+    check('keys of the field never reach SDL (no double typing)', (await t.evaluate(() => window.__sdlKeys)) === 0);
+    await t.tap('#kbd-open');
+    check('the button again closes the keyboard', (await t.evaluate(() => document.activeElement?.id)) !== 'kbd'
+      && (await t.textContent('#kbd-open')) === 'Keyboard');
+    check('no page errors on the touch device', terrors.length === 0, terrors.join('; '));
+    await tc.close();
     if (process.argv[2]) await p.screenshot({ path: process.argv[2] });
   } finally {
     await b.close();

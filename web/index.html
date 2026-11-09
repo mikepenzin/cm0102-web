@@ -41,6 +41,9 @@
   dialog .spacer { flex: 1; }
   .bad { color: var(--bad); }
   #saves-note { white-space: pre-line; }
+  /* The hidden field of the on-screen keyboard (keyboard.js): on screen, so iPadOS opens its keyboard for it, but
+     not visible; 16px, so iPadOS does not zoom the page when it gets the focus. */
+  #kbd { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
   #log { margin: 0; padding: 4px 16px 10px; max-height: 30vh; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, monospace; color: var(--muted); white-space: pre-wrap; }
 </style>
 </head>
@@ -48,6 +51,7 @@
 <header>
   <b>CM 01/02 in the Browser</b>
   <span id="status">Loading…</span>
+  <button id="kbd-open" hidden>Keyboard</button>
   <button id="saves-open" hidden>Saved games</button>
   <button id="fullscreen" hidden>Full screen</button>
 </header>
@@ -72,6 +76,8 @@
   <summary>Engine log</summary>
   <pre id="log"></pre>
 </details>
+<input id="kbd" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+  enterkeyhint="done" aria-label="Type into the game">
 <script type="module" src="loader.js"></script>
 </body>
 </html>

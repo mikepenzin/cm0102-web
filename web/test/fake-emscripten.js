@@ -70,9 +70,20 @@
     g.fillStyle = '#fff'; g.font = '20px sans-serif';
     g.fillText(`stand-in engine: ${files.size} files, main(${args.join(' ')})`, 40, 300);
   };
+  // The runtime's keyboard calls (rt_web_type, rt_web_key in user32.c), recorded; and SDL's window key listener,
+  // which counts the keys it sees (keyboard.js must keep the keys of its field away from it).
+  window.__typed = [];
+  window.__sdlKeys = 0;
+  M.ccall = (name, ret, types, args) => {
+    if (name === 'rt_web_type') window.__typed.push(['type', args[0]]);
+    else if (name === 'rt_web_key') window.__typed.push(['key', args[0]]);
+    else throw new Error(`no export ${name}`);
+    return null;
+  };
   function init() {
     if (started) return;
     started = true;
+    addEventListener('keydown', () => { window.__sdlKeys++; });
     M.onRuntimeInitialized();
   }
   fetch(M.locateFile('cm0102_recomp.wasm')).then((r) => {

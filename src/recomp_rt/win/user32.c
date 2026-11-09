@@ -79,6 +79,58 @@ static void post(uint32_t msg, uint32_t wparam, uint32_t lparam)
 
 static uint32_t mouse_lparam(void) { return ((uint32_t)mouse_y & 0xffff) << 16 | ((uint32_t)mouse_x & 0xffff); }
 
+#ifdef __EMSCRIPTEN__
+/* The page's keyboard (web/keyboard.js): typing that comes from the page and not as SDL events, such as the on-screen
+ * keyboard of an iPad, which only opens for a text field of the page. The page hands over text and keys; each goes to
+ * the game one every WEB_TYPE_GAP_MS, as the script's "type" does, because the window procedure keeps only the last
+ * WM_CHAR of a pass. A key goes as SDL's keys do (handle_event): down, its character, up. */
+#define WEB_TYPED_MAX 256u
+#define WEB_TYPE_GAP_MS 40u
+#define WEB_KEY 0x10000u                            /* an entry with this bit is a key (its vk), else a character */
+static uint32_t web_typed[WEB_TYPED_MAX];
+static uint32_t web_head, web_tail;
+static uint64_t web_typed_at;
+
+static void web_push(uint32_t t)
+{
+    if (web_tail - web_head < WEB_TYPED_MAX) web_typed[web_tail++ % WEB_TYPED_MAX] = t;
+}
+
+/* Text in UTF-8; the Latin-1 range goes to the game in code page 1252, as SDL_TEXTINPUT does. */
+EMSCRIPTEN_KEEPALIVE void rt_web_type(const char *utf8)
+{
+    for (const unsigned char *t = (const unsigned char *)utf8; t && *t; t++) {
+        uint32_t c = *t;
+        if (c >= 0xC0 && c < 0xE0 && (t[1] & 0xC0) == 0x80) { c = ((c & 0x1F) << 6) | (t[1] & 0x3F); t++; }
+        else if (c >= 0x80) continue;
+        if (c >= 0x20 && c < 0x100) web_push(c);
+    }
+}
+
+/* Backspace (8), Tab (9), Enter (13) or Escape (27). */
+EMSCRIPTEN_KEEPALIVE void rt_web_key(int vk)
+{
+    if (vk == 0x08 || vk == 0x09 || vk == 0x0D || vk == 0x1B) web_push(WEB_KEY | (uint32_t)vk);
+}
+
+static void web_feed(void)
+{
+    if (web_head == web_tail) return;
+    uint64_t now = SDL_GetTicks64();
+    if (now - web_typed_at < WEB_TYPE_GAP_MS) return;
+    web_typed_at = now;
+    uint32_t t = web_typed[web_head++ % WEB_TYPED_MAX];
+    if (t & WEB_KEY) {
+        uint32_t vk = t & 0xffu;
+        post(WM_KEYDOWN, vk, 1);
+        post(WM_CHAR, vk, 1);
+        post(WM_KEYUP, vk, 0xC0000001u);
+    } else {
+        post(WM_CHAR, t, 1);
+    }
+}
+#endif
+
 /* The press that the left button is in: a new number at each WM_LBUTTONDOWN, and its time. */
 static uint32_t press_count;
 uint32_t win_press_count(void) { return press_count; }
@@ -926,6 +978,9 @@ void win_poll_events(void)
     if (win_screen_dirty && now - last_present >= 16) present_now();
     if (now - last_poll < 2) return;              /* the game pumps very often; SDL needs less */
     last_poll = now;
+#ifdef __EMSCRIPTEN__
+    web_feed();                                   /* the page's keyboard (web/keyboard.js) */
+#endif
     end_click_for_key();
     SDL_Event e;
     while (SDL_PollEvent(&e))

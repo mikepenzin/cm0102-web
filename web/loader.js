@@ -2,6 +2,7 @@
 // system at /game, keeps the user folder /user (saves, settings.txt) in the browser, and starts the recompiled game
 // on the canvas. The game runs in this tab; the server only hands out files.
 import { mountSavesPanel, savesSignature } from './saves.js';
+import { guardKeys, mountKeyboard } from './keyboard.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -171,6 +172,7 @@ function runEngine(files, info) {
         seen = now;
       }, 2000);
       mountSavesPanel({ FS, sync, log });
+      mountKeyboard({ log });
       addEventListener('pagehide', sync);
       document.addEventListener('visibilitychange', () => { if (document.hidden) sync(); });
       log(`page: main(${window.Module.arguments.join(' ')})`);
@@ -294,4 +296,5 @@ async function start() {
   runEngine(files, info);
 }
 
+guardKeys();
 start();

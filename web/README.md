@@ -130,6 +130,14 @@ whole game world. A new or changed save goes to IndexedDB about 2 seconds after 
 the same address every time: `127.0.0.1:8080` and `localhost:8080` are two sites to the browser, each with its own
 saves.
 
+## On an iPad or another touch device
+
+A tap is a click. The game draws its text entries (a name, a search) on the canvas, so the device does not open its
+keyboard by itself: tap the game's text entry, then the Keyboard button above the game. What you type goes to the
+game as typed keys; Return, Backspace and Escape work as on a keyboard. Keyboard again (Hide keyboard) closes it.
+The button shows on touch devices only. It needs an engine built from this version of the code (`rt_web_type`,
+`rt_web_key` in `src/recomp_rt/win/user32.c`): build it again after `git pull` (step 4).
+
 ## Browser requirements
 
 The page checks the browser before it downloads anything, and stops with the reasons when the game cannot run:

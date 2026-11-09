@@ -76,6 +76,7 @@ test('the engine and the page: types and revalidation', async () => {
   assert.match(await page.text(), /loader\.js/);
   assert.match((await fetch(`${base}/loader.js`)).headers.get('content-type'), /javascript/);
   assert.match((await fetch(`${base}/saves.js`)).headers.get('content-type'), /javascript/);
+  assert.match((await fetch(`${base}/keyboard.js`)).headers.get('content-type'), /javascript/);
 });
 
 test('hosting: a .br copy goes to a browser that takes br, and a versioned request may be kept for good', async () => {
