@@ -93,7 +93,7 @@ function runEngine(files, info) {
       install(FS, files);
       files.clear();
       FS.mkdirTree('/user');
-      FS.mount(FS.filesystems.IDBFS, {}, '/user');
+      FS.mount(M.IDBFS || FS.filesystems.IDBFS, {}, '/user');   // newer Emscripten has no FS.filesystems
       M.ENV.RECOMP_USER_DIR = '/user';                  // main.c: every write of the game goes there
       M.ENV.HOME = '/user';
       M.addRunDependency('user-folder');
