@@ -93,7 +93,6 @@ RT_WRAP(005cde40, human_turn)
             exit(0);
         }
     }
-    worker_turn();                 /* RECOMP_WORKER_FD: a server drives the game (worker.c) */
     o_005cde40();
 }
 

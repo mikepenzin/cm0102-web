@@ -1,8 +1,0 @@
-# Made by server/steps/export_steps.py from tests/fixtures/fixtures.py LOAD_STEPS. Do not edit: run the tool again.
-1000 click 400 300
-8200 click 522 272
-8500 click 662 524
-wait setup
-1000 click 277 242
-4000 click 445 257
-5000 click 705 573
