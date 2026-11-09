@@ -170,6 +170,17 @@ const PORT = 8097;
       && (await t.textContent('#kbd-open')) === 'Keyboard');
     check('no page errors on the touch device', terrors.length === 0, terrors.join('; '));
     await tc.close();
+    // An engine built before the keyboard calls: no button, and the log says to build it again.
+    const oc = await b.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true });
+    await oc.addInitScript(() => { window.__oldEngine = true; });
+    const o = await oc.newPage();
+    await o.goto(`http://127.0.0.1:${PORT}/`);
+    await o.waitForSelector('#go');
+    await o.click('#go');
+    await o.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+    check('an older engine on a touch device: no Keyboard button, a line in the log',
+      (await o.locator('#kbd-open:not([hidden])').count()) === 0 && /build it again for the Keyboard button/.test(await o.textContent('#log')));
+    await oc.close();
     if (process.argv[2]) await p.screenshot({ path: process.argv[2] });
   } finally {
     await b.close();

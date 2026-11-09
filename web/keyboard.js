@@ -30,6 +30,12 @@ export function hasTouch() {
 
 // Wires the button and the field of index.html once the engine runs.
 export function mountKeyboard({ log }) {
+  const M = window.Module;
+  if (typeof M.ccall !== 'function' || typeof M._rt_web_type !== 'function' || typeof M._rt_web_key !== 'function') {
+    // An engine built before these calls: a button would type nothing, so there is none.
+    if (hasTouch()) log('page: this engine has no keyboard calls (rt_web_type); build it again for the Keyboard button (web/README.md, step 4)');
+    return;
+  }
   field = document.getElementById('kbd');
   const button = document.getElementById('kbd-open');
   const type = (text) => window.Module.ccall('rt_web_type', null, ['string'], [text]);

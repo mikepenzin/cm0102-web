@@ -80,6 +80,8 @@
     else throw new Error(`no export ${name}`);
     return null;
   };
+  // An engine built before the keyboard calls has neither export (the page check sets __oldEngine for that case).
+  if (!window.__oldEngine) M._rt_web_type = M._rt_web_key = () => {};
   function init() {
     if (started) return;
     started = true;
