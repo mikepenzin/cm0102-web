@@ -6,9 +6,10 @@
 //
 // It stops when a game file is missing or is not the clean file (size and SHA-256 against
 // tools/clean_files/manifest.tsv), or when the engine is not built. A fly.toml already in the stage folder stays
-// (fly launch wrote the app name into it); everything else is made again.
+// (fly launch wrote the app name into it). A file that did not change since the last stage is left as it is, with its
+// time and its brotli copy, so a deploy rebuilds and uploads only the layers whose files changed (Dockerfile).
 import { copyFileSync, createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync,
-  statSync, writeFileSync } from 'node:fs';
+  statSync, utimesSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
@@ -41,10 +42,32 @@ async function brotli(file) {
   return packed;
 }
 
-function copy(from, to) {
+// Copies from to to, unless to is that file already (the same size and modification time). An unchanged file keeps
+// its time, so Fly's builder sees it unchanged and does not rebuild or upload its layer again (Dockerfile).
+function update(from, to) {
+  const s = statSync(from);
+  if (existsSync(to)) {
+    const d = statSync(to);
+    if (d.size === s.size && Math.abs(d.mtimeMs - s.mtimeMs) < 2) return false;   // utimes rounds through seconds
+  }
   mkdirSync(dirname(to), { recursive: true });
   copyFileSync(from, to);
-  return to;
+  utimesSync(to, s.atime, s.mtime);
+  return true;
+}
+
+// Writes text to path, unless path holds that text already.
+function updateText(path, text) {
+  if (existsSync(path) && readFileSync(path, 'utf8') === text) return false;
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, text);
+  return true;
+}
+
+function walk(dir) {
+  let entries;
+  try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return []; }
+  return entries.flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
 }
 
 export async function stage(opts) {
@@ -60,30 +83,46 @@ export async function stage(opts) {
   const bad = await verify(inv, opts.manifest);
   if (bad.length) throw new Error(`${bad.length} files are not the clean files, first: ${bad.slice(0, 5).join(', ')}`);
 
-  const flyToml = join(opts.out, 'fly.toml');
-  const keptToml = existsSync(flyToml) ? readFileSync(flyToml) : null;
-  rmSync(opts.out, { recursive: true, force: true });
   mkdirSync(opts.out, { recursive: true });
-
-  const served = [];
-  for (const name of ['server.mjs', 'index.html', 'loader.js', 'saves.js', 'package.json']) copy(join(ROOT, 'web', name), join(opts.out, 'web', name));
-  copy(opts.manifest, join(opts.out, 'tools/clean_files/manifest.tsv'));
+  const want = new Set(), changed = new Set(), served = [];
+  const put = (from, to, serve) => {
+    want.add(to);
+    if (update(from, to)) changed.add(to);
+    if (serve) served.push(to);
+  };
+  for (const name of ['server.mjs', 'index.html', 'loader.js', 'saves.js', 'package.json']) put(join(ROOT, 'web', name), join(opts.out, 'web', name), false);
+  put(opts.manifest, join(opts.out, 'tools/clean_files/manifest.tsv'), false);
   for (const f of inv.files) {
     const to = f.path.startsWith('Seasons/') ? join(opts.out, 'build-web/seasons', f.path.slice(8)) : join(opts.out, 'game', f.path);
-    served.push(copy(f.disk, to));
+    put(f.disk, to, true);
   }
-  for (const ext of ['js', 'wasm']) served.push(copy(inv.engine[ext].disk, join(opts.out, 'build-web', `cm0102_recomp.${ext}`)));
-  writeFileSync(join(opts.out, 'build-web/CMakeCache.txt'), `CM0102_WEB_SUSPEND:STRING=${inv.suspend ?? 'jspi'}\n`);
-  copy(join(HERE, 'Dockerfile'), join(opts.out, 'Dockerfile'));
-  if (keptToml) writeFileSync(flyToml, keptToml);
-  else copy(join(HERE, 'fly.toml'), flyToml);
+  for (const ext of ['js', 'wasm']) put(inv.engine[ext].disk, join(opts.out, 'build-web', `cm0102_recomp.${ext}`), true);
+  for (const [to, text] of [[join(opts.out, 'build-web/CMakeCache.txt'), `CM0102_WEB_SUSPEND:STRING=${inv.suspend ?? 'jspi'}\n`],
+    [join(opts.out, 'Dockerfile'), readFileSync(join(HERE, 'Dockerfile'), 'utf8')]]) {
+    want.add(to);
+    if (updateText(to, text)) changed.add(to);
+  }
+  const flyToml = join(opts.out, 'fly.toml');
+  const keptToml = existsSync(flyToml);
+  if (!keptToml) copyFileSync(join(HERE, 'fly.toml'), flyToml);
+  want.add(flyToml);
 
-  let raw = 0, sent = 0;
+  // A brotli copy for each new or changed file; an unchanged file keeps the copy it has (or has none, when it did
+  // not compress).
+  let raw = 0, sent = 0, compressed = 0;
   for (const file of served) {
+    const br = `${file}.br`;
+    if (changed.has(file) || !existsSync(file)) { rmSync(br, { force: true }); await brotli(file); compressed++; }
+    if (existsSync(br)) want.add(br);
     raw += statSync(file).size;
-    sent += await brotli(file);
+    sent += existsSync(br) ? statSync(br).size : statSync(file).size;
   }
-  return { files: served.length, raw, sent, keptToml: Boolean(keptToml), out: opts.out };
+  // What the stage no longer makes (a file gone from the list, an old .br, a stray file) leaves the folder.
+  let removed = 0;
+  for (const sub of ['web', 'tools', 'game', 'build-web']) {
+    for (const p of walk(join(opts.out, sub))) if (!want.has(p)) { rmSync(p); removed++; }
+  }
+  return { files: served.length, changed: changed.size, compressed, removed, raw, sent, keptToml, out: opts.out };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -92,6 +131,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     console.log(`staging ${opts.game} and ${opts.build} into ${opts.out}…`);
     const r = await stage(opts);
     console.log(`${r.files} files, ${mb(r.raw)}; a first visit downloads ${mb(r.sent)} (brotli)`);
+    console.log(`since the last stage: ${r.changed} files changed, ${r.compressed} compressed, ${r.removed} removed`);
     console.log(r.keptToml ? 'kept the fly.toml of the stage folder' : 'new fly.toml: run fly launch once (web/deploy/README.md)');
     console.log(`next: cd ${r.out} && fly deploy`);
   } catch (err) {

@@ -55,6 +55,31 @@ test('a second stage keeps the fly.toml that fly launch wrote', async () => {
   assert.equal(readFileSync(join(opts.out, 'fly.toml'), 'utf8'), 'app = "mine"\n');
 });
 
+test('a later stage changes only what changed: the same files keep their time, a new engine is the only copy', async () => {
+  const { statSync, utimesSync } = await import('node:fs');
+  const o = opts.out, time = (p) => statSync(join(o, p)).mtimeMs;
+  const before = { exe: time('game/cm0102.exe'), exeBr: time('game/cm0102.exe.br'), page: time('web/loader.js'),
+    docker: time('Dockerfile') };
+  let r = await stage(opts);
+  assert.deepEqual([r.changed, r.compressed, r.removed], [0, 0, 0], 'nothing changed, nothing is touched');
+  assert.deepEqual({ exe: time('game/cm0102.exe'), exeBr: time('game/cm0102.exe.br'), page: time('web/loader.js'),
+    docker: time('Dockerfile') }, before, 'unchanged files keep their time, so their Docker layers stay cached');
+  const wasm = join(opts.build, 'cm0102_recomp.wasm');
+  writeFileSync(wasm, Buffer.concat([Buffer.from([0, 0x61, 0x73, 0x6d]), Buffer.alloc(9000)]));   // a new engine
+  utimesSync(wasm, new Date(), new Date(Date.now() + 5000));
+  writeFileSync(join(o, 'game', 'stray.dat'), 'left from an older stage');
+  r = await stage(opts);
+  assert.equal(r.changed, 1, 'only the engine');
+  assert.equal(r.compressed, 1);
+  assert.equal(r.removed, 1, 'the stray file');
+  assert.equal(existsSync(join(o, 'game', 'stray.dat')), false);
+  assert.equal(time('game/cm0102.exe.br'), before.exeBr, 'the game files are not compressed again');
+  assert.equal(statSync(join(o, 'build-web/cm0102_recomp.wasm')).size, 9004);
+  const docker = readFileSync(join(o, 'Dockerfile'), 'utf8');
+  assert.ok(docker.indexOf('COPY game/') < docker.indexOf('COPY build-web/') && docker.indexOf('COPY build-web/') < docker.indexOf('COPY web/'),
+    'the layers go from the game files to the page');
+});
+
 test('the staged server runs as the Dockerfile starts it, and sends brotli', async () => {
   const o = opts.out;
   const port = 8000 + Math.floor(Math.random() * 900);

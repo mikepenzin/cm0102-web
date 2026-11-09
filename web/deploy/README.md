@@ -92,6 +92,22 @@ cd web/deploy/stage && fly deploy
 
 The first visit after a quiet time wakes the machine, which takes a few seconds.
 
+## What a deploy uploads
+
+Only what changed. The Docker image has one layer per part, from what never changes to what changes most: the game
+files, the manifest, the engine, then the server and the page. The stage leaves a file that did not change exactly
+as it was (with its time and its brotli copy), so Fly's builder reuses the layers whose files are the same:
+
+| You changed | A deploy rebuilds and uploads |
+|---|---|
+| The page or the server (`web/`) | The last layer: a few KB |
+| The engine (a new `build-web`) | The engine layer and the page layer: the size of the engine |
+| Nothing (a stage again) | Nothing new |
+| The game files | Everything (it should not happen: they are the clean files) |
+
+The first deploy uploads all of it, about 500 MB with the brotli copies. The stage prints how many files changed
+since the last one. If Fly hands the app a fresh builder (its cache is gone), one deploy uploads everything again.
+
 ## What players download
 
 - The first visit: the game files and the engine, brotli-compressed (the stage prints the size).
