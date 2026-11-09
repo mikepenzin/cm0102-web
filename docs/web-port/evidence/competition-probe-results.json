@@ -1,0 +1,178 @@
+{
+  "evidenceId": "COMP-ORIGINAL-PROBE-001",
+  "date": "2026-10-28",
+  "kind": "isolated-original-instruction-execution",
+  "status": "passed",
+  "passed": 15,
+  "failed": 0,
+  "originalPath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/cm0102.exe",
+  "originalSha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86",
+  "repositoryCommit": "cf2e8fa5f4cc816f252611a0e9c81e66d088358e",
+  "runner": {
+    "unicorn": "2.1.4",
+    "capstone": "5.0.9",
+    "architecture": "x86-32",
+    "python": "/private/tmp/cm0102-analysis-venv/bin/python"
+  },
+  "script": "competition-probe.py",
+  "scriptSha256": "002d55c8820e0f053877ff9411addca154aa70f38e3c88017a5affb390fcf05a",
+  "command": "rtk proxy /private/tmp/cm0102-analysis-venv/bin/python -u /private/tmp/cm0102-competition-probe.py",
+  "provenance": "Successful permitted retry executed by coordinating agent /root; exact outcomes communicated to chapter author. Preserved script is byte-identical to the invoked script.",
+  "priorAttempt": {
+    "status": "terminated",
+    "signal": 4,
+    "exitCode": 132,
+    "resultsProduced": 0,
+    "scope": "initial sandboxed invocation"
+  },
+  "cases": [
+    {
+      "case": "points descending",
+      "address": "0x683210",
+      "expected": -2,
+      "observed": -2,
+      "status": "passed"
+    },
+    {
+      "case": "goal difference signed16",
+      "address": "0x683210",
+      "expected": -10,
+      "observed": -10,
+      "status": "passed"
+    },
+    {
+      "case": "goals for signed16",
+      "address": "0x683210",
+      "expected": -10,
+      "observed": -10,
+      "status": "passed"
+    },
+    {
+      "case": "criterion3 wins offset12",
+      "address": "0x683210",
+      "expected": -2,
+      "observed": -2,
+      "status": "passed"
+    },
+    {
+      "case": "criterion4 scratch key descending",
+      "address": "0x683210",
+      "expected": 2,
+      "observed": 2,
+      "status": "passed"
+    },
+    {
+      "case": "criterion5 offset31",
+      "address": "0x683210",
+      "expected": -5,
+      "observed": -5,
+      "status": "passed"
+    },
+    {
+      "case": "criterion6 scratch key ascending",
+      "address": "0x683210",
+      "expected": -2,
+      "observed": -2,
+      "status": "passed"
+    },
+    {
+      "case": "unplayed rows use club ID",
+      "address": "0x683210",
+      "expected": -10,
+      "observed": -10,
+      "status": "passed"
+    },
+    {
+      "case": "fallback club ID",
+      "address": "0x683210",
+      "expected": -10,
+      "observed": -10,
+      "status": "passed"
+    },
+    {
+      "case": "regulation win",
+      "address": "0x68aad0",
+      "expected": [
+        3,
+        0
+      ],
+      "observed": [
+        3,
+        0
+      ],
+      "status": "passed"
+    },
+    {
+      "case": "regulation draw",
+      "address": "0x68aad0",
+      "expected": [
+        1,
+        1
+      ],
+      "observed": [
+        1,
+        1
+      ],
+      "status": "passed"
+    },
+    {
+      "case": "extra-time win enabled",
+      "address": "0x68aad0",
+      "expected": [
+        3,
+        0
+      ],
+      "observed": [
+        3,
+        0
+      ],
+      "status": "passed"
+    },
+    {
+      "case": "extra-time ignored",
+      "address": "0x68aad0",
+      "expected": [
+        1,
+        1
+      ],
+      "observed": [
+        1,
+        1
+      ],
+      "status": "passed"
+    },
+    {
+      "case": "penalty win enabled",
+      "address": "0x68aad0",
+      "expected": [
+        1,
+        0
+      ],
+      "observed": [
+        1,
+        0
+      ],
+      "status": "passed"
+    },
+    {
+      "case": "penalty ignored",
+      "address": "0x68aad0",
+      "expected": [
+        1,
+        1
+      ],
+      "observed": [
+        1,
+        1
+      ],
+      "status": "passed"
+    }
+  ],
+  "limitations": [
+    "Synthetic isolated memory only; no full game launched.",
+    "No TypeScript implementation compared.",
+    "No arbitrary custom comparator callback exercised.",
+    "No head-to-head preprocessing, whole-table sort, or competition-specific configuration validated.",
+    "Does not establish correct season simulation, schedule, progression, or rules-pack integration."
+  ]
+}

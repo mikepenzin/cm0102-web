@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "kind": "planned-work-not-completed-evidence",
+  "planningDate": "2026-10-28",
+  "target": "Full implementation-ready CM 01/02: Bosman Edition technical specification for Node.js and Angular",
+  "scope": "Research, specification, supporting probes and verification; production web implementation follows separately",
+  "prohibitedTools": [
+    "Hopper",
+    "REA auto-provider selection that could invoke Hopper"
+  ],
+  "preferredMethods": [
+    "repository translator",
+    "Capstone",
+    "original byte and source inspection",
+    "isolated Unicorn probes",
+    "controlled matching reference scenarios"
+  ],
+  "estimate": {
+    "unit": "person-days",
+    "low": 60,
+    "high": 120,
+    "confidence": "low until pilot",
+    "personWeekDays": 5,
+    "isCalendarCommitment": false
+  },
+  "phaseSource": "../08-specification-completion-plan.md",
+  "phases": [
+    {
+      "id": "R0",
+      "title": "Scope ledger and measured pilot",
+      "status": "planned",
+      "personDays": {
+        "low": 3,
+        "high": 5
+      },
+      "startAfter": [],
+      "closeAfter": [],
+      "milestone": "Scope pinned, recovery method demonstrated, estimate revised",
+      "documentSection": 4
+    },
+    {
+      "id": "R1",
+      "title": "Reference harness, canonical state and scheduler",
+      "status": "planned",
+      "personDays": {
+        "low": 5,
+        "high": 10
+      },
+      "startAfter": [
+        "R0"
+      ],
+      "closeAfter": [
+        "R0"
+      ],
+      "milestone": "Reproducible checkpoints and foundational behavior contracts",
+      "documentSection": 5
+    },
+    {
+      "id": "R2",
+      "title": "Complete match engine and quick results",
+      "status": "planned",
+      "personDays": {
+        "low": 15,
+        "high": 30
+      },
+      "startAfter": [
+        "R1"
+      ],
+      "closeAfter": [
+        "R1"
+      ],
+      "milestone": "All required match phases, algorithms and downstream effects specified",
+      "documentSection": 6
+    },
+    {
+      "id": "R3",
+      "title": "Training, health and player lifecycle",
+      "status": "planned",
+      "personDays": {
+        "low": 7,
+        "high": 14
+      },
+      "startAfter": [
+        "R1"
+      ],
+      "closeAfter": [
+        "R1"
+      ],
+      "milestone": "Development, health and generation contracts verified",
+      "documentSection": 7
+    },
+    {
+      "id": "R4",
+      "title": "Contracts, transfers and finances",
+      "status": "planned",
+      "personDays": {
+        "low": 9,
+        "high": 18
+      },
+      "startAfter": [
+        "R1"
+      ],
+      "closeAfter": [
+        "R1"
+      ],
+      "milestone": "Transaction lifecycle and financial ledger fully explained",
+      "documentSection": 8
+    },
+    {
+      "id": "R5",
+      "title": "AI, scouting, board, news and manager careers",
+      "status": "planned",
+      "personDays": {
+        "low": 6,
+        "high": 12
+      },
+      "startAfter": [
+        "R1"
+      ],
+      "closeAfter": [
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "milestone": "Target human, AI and background decisions accounted for",
+      "documentSection": 9
+    },
+    {
+      "id": "R6",
+      "title": "Competitions and season changes",
+      "status": "planned",
+      "personDays": {
+        "low": 5,
+        "high": 10
+      },
+      "startAfter": [
+        "R1"
+      ],
+      "closeAfter": [
+        "R2",
+        "R3",
+        "R4"
+      ],
+      "milestone": "Every required competition and rule variant has a verified disposition",
+      "documentSection": 10
+    },
+    {
+      "id": "R7",
+      "title": "Save semantics, UI actions and assets",
+      "status": "planned",
+      "personDays": {
+        "low": 3,
+        "high": 6
+      },
+      "startAfter": [
+        "R1"
+      ],
+      "closeAfter": [
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6"
+      ],
+      "milestone": "Persistent state and required actions reconciled; mapping begins in R1",
+      "documentSection": 11
+    },
+    {
+      "id": "R8",
+      "title": "Integrated reference careers and independent review",
+      "status": "planned",
+      "personDays": {
+        "low": 5,
+        "high": 10
+      },
+      "startAfter": [
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7"
+      ],
+      "closeAfter": [
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7"
+      ],
+      "milestone": "Required cross-system scenarios pass and discrepancies are resolved",
+      "documentSection": 12
+    },
+    {
+      "id": "R9",
+      "title": "Final web contracts and agent handoff",
+      "status": "planned",
+      "personDays": {
+        "low": 2,
+        "high": 5
+      },
+      "startAfter": [
+        "R8"
+      ],
+      "closeAfter": [
+        "R8"
+      ],
+      "milestone": "Full document release criteria pass",
+      "documentSection": 13
+    }
+  ],
+  "reestimateAfter": [
+    "R0",
+    "first complete match within R2",
+    "before R8"
+  ],
+  "completionGates": [
+    "scope closure",
+    "algorithm closure",
+    "state closure",
+    "dependency closure",
+    "evidence closure",
+    "validation closure",
+    "agent handoff closure",
+    "artifact closure"
+  ],
+  "fullGameImplementationReady": false
+}

@@ -1,0 +1,61 @@
+{
+  "scope": "Direct entry points with completed isolated original-instruction probes; coverage is bounded by each probe's synthetic cases, not whole-function/caller proof",
+  "original_sha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86",
+  "functions": [
+    {
+      "address": "0x8b4f60",
+      "evidence": "training-load-probe.json",
+      "scope": "1024 supported category-intensity combinations"
+    },
+    {
+      "address": "0x683210",
+      "evidence": "competition-probe-results.json",
+      "scope": "9 synthetic comparator cases; not all nested tie-break paths"
+    },
+    {
+      "address": "0x68aad0",
+      "evidence": "competition-probe-results.json",
+      "scope": "6 synthetic fixture outcomes, each queried for two clubs"
+    },
+    {
+      "address": "0x716450",
+      "evidence": "match-helper-probe.json",
+      "scope": "800 finite-input reaction scaling cases"
+    },
+    {
+      "address": "0x6bb9a0",
+      "evidence": "match-helper-probe.json",
+      "scope": "Synthetic pending-foul insertion and occupied-slot checks"
+    },
+    {
+      "address": "0x6bba10",
+      "evidence": "match-helper-probe.json",
+      "scope": "Synthetic pending-foul reset checks"
+    },
+    {
+      "address": "0x8d0d90",
+      "evidence": "negotiation-probe-results.json",
+      "scope": "All 65,536 status/substatus byte combinations plus immutability"
+    },
+    {
+      "address": "0x85f9f0",
+      "evidence": "negotiation-probe-results.json",
+      "scope": "All 256 flag-byte values"
+    },
+    {
+      "address": "0x867b50",
+      "evidence": "negotiation-probe-results.json",
+      "scope": "64 combinations of three clause-status fields"
+    },
+    {
+      "address": "0x8e7f10",
+      "evidence": "negotiation-probe-results.json",
+      "scope": "4 talks-status paths including normalization and list cursor"
+    },
+    {
+      "address": "0x8e7a70",
+      "evidence": "negotiation-probe-results.json",
+      "scope": "7 no-list aggregation boundaries; list/currency-dependent paths not covered"
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "functions": 11752,
+  "instructions": 1882553,
+  "handled": 1882522,
+  "handled_share": 0.9999835330001333,
+  "mnemonics": 151,
+  "unhandled": {
+    "pop": 5,
+    "push": 5,
+    "les": 4,
+    "in": 2,
+    "aaa": 2,
+    "fisttp": 1,
+    "fldenv": 1,
+    "into": 1,
+    "lcall": 1,
+    "int1": 1,
+    "int": 1,
+    "insd": 1,
+    "outsb": 1,
+    "sti": 1,
+    "stc": 1,
+    "daa": 1,
+    "iretd": 1,
+    "clc": 1
+  },
+  "unhandled_at": [
+    [
+      "0x408802",
+      "fisttp dword ptr [ebp + 0x53182444]",
+      "fisttp"
+    ],
+    [
+      "0x416573",
+      "fldenv [esi + ebx + 0x14c48300]",
+      "fldenv"
+    ],
+    [
+      "0x44aa20",
+      "pop es",
+      "register es"
+    ],
+    [
+      "0x452072",
+      "push ss",
+      "register ss"
+    ],
+    [
+      "0x492075",
+      "pop ds",
+      "register ds"
+    ],
+    [
+      "0x494920",
+      "into",
+      "into"
+    ],
+    [
+      "0x4b4a20",
+      "lcall 0x1baa, 0xb8e85300",
+      "far call"
+    ],
+    [
+      "0x585ca7",
+      "in eax, 0x25",
+      "in"
+    ],
+    [
+      "0x585ca9",
+      "push es",
+      "register es"
+    ],
+    [
+      "0x585d0a",
+      "push es",
+      "register es"
+    ],
+    [
+      "0x586051",
+      "pop ds",
+      "register ds"
+    ],
+    [
+      "0x5860c0",
+      "les eax, ptr [ecx + ecx*4]",
+      "les"
+    ],
+    [
+      "0x586131",
+      "int1",
+      "int1"
+    ],
+    [
+      "0x59487f",
+      "int 0x43",
+      "int"
+    ],
+    [
+      "0x5a001f",
+      "insd dword ptr es:[edi], dx",
+      "insd"
+    ],
+    [
+      "0x5a0021",
+      "push ds",
+      "register ds"
+    ],
+    [
+      "0x5f2fed",
+      "les eax, ptr [edx + ebp*2]",
+      "les"
+    ],
+    [
+      "0x616570",
+      "les ecx, ptr [eax]",
+      "les"
+    ],
+    [
+      "0x616824",
+      "push ds",
+      "register ds"
+    ],
+    [
+      "0x617629",
+      "les ecx, ptr [eax]",
+      "les"
+    ],
+    [
+      "0x63422d",
+      "outsb dx, byte ptr [esi]",
+      "outsb"
+    ],
+    [
+      "0x63423f",
+      "sti",
+      "sti"
+    ],
+    [
+      "0x657248",
+      "pop es",
+      "register es"
+    ],
+    [
+      "0x6c7a20",
+      "stc",
+      "stc"
+    ],
+    [
+      "0x6fe36e",
+      "daa",
+      "daa"
+    ],
+    [
+      "0x736f50",
+      "in al, dx",
+      "in"
+    ],
+    [
+      "0x746e66",
+      "aaa",
+      "aaa"
+    ],
+    [
+      "0x74733e",
+      "aaa",
+      "aaa"
+    ],
+    [
+      "0x783f23",
+      "iretd",
+      "iretd"
+    ],
+    [
+      "0x796850",
+      "pop ds",
+      "register ds"
+    ],
+    [
+      "0x840002",
+      "clc",
+      "clc"
+    ]
+  ],
+  "decode_stops": 1,
+  "jump_tables": 1270,
+  "resume_entries": 11,
+  "features": {
+    "stdcall cleanup (ret n)": 3527,
+    "tail jumps to other functions": 3034,
+    "fs segment (SEH chain)": 1654,
+    "indirect calls": 991,
+    "string instructions": 602,
+    "x87": 495,
+    "jump tables": 402,
+    "import thunks (jmp [iat])": 24,
+    "indirect jumps": 18,
+    "x87 control word (rounding)": 9,
+    "x87 80-bit loads and stores": 8,
+    "x87 transcendental (libm, may differ in the last bit)": 7,
+    "rotates through carry": 5,
+    "direction flag (std)": 3,
+    "rotates": 1
+  },
+  "missing_functions": [
+    "0x684cb8e5",
+    "0x6863da98",
+    "0xffb226b0"
+  ],
+  "c_bytes": 182011311,
+  "seconds_analysis": 51.81,
+  "seconds_translate": 28.41,
+  "mnemonics_handled": 133,
+  "mnemonics_unhandled": [
+    "aaa",
+    "clc",
+    "daa",
+    "fisttp",
+    "fldenv",
+    "in",
+    "insd",
+    "int",
+    "int1",
+    "into",
+    "iretd",
+    "lcall",
+    "les",
+    "outsb",
+    "pop",
+    "push",
+    "stc",
+    "sti"
+  ]
+}

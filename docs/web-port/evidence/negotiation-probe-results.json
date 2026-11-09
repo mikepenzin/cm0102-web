@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-28",
+  "engine": "Unicorn x86 32-bit, original PE instructions, synthetic memory only",
+  "executionContext": "Successful isolated probe run outside the workspace sandbox; no live game launched",
+  "originalPath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/cm0102.exe",
+  "originalSha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86",
+  "probePath": "docs/web-port/evidence/negotiation-probe.py",
+  "probeSha256": "c89e059b34763ddabbf70d39e3efd59ee69f35ac80380d59dd20184c2bba4673",
+  "mappedBase": "0x400000",
+  "mappedSize": "0x9e7000",
+  "mappedEnd": "0xde7000",
+  "liveGameRun": false,
+  "closedPredicateCases": 65536,
+  "expiredPredicateCases": 256,
+  "releaseClausePredicateCases": 64,
+  "talkStatusCases": 4,
+  "aggregationCases": 7,
+  "totalCases": 65867,
+  "allPassed": true,
+  "earlierHarnessAttempts": [
+    {
+      "context": "workspace sandbox",
+      "outcome": "Python process terminated with SIGILL before producing probe results; no gameplay inference"
+    },
+    {
+      "context": "initial run outside sandbox",
+      "outcome": "UC_ERR_WRITE_UNMAPPED while loading PE sections",
+      "cause": "Hardcoded mapped size 0x800000 ended at 0xc00000; resource section extended to 0xde7000",
+      "resolution": "Map PE OptionalHeader.SizeOfImage 0x9e7000 rounded to 4 KiB; expected algorithms and cases unchanged"
+    }
+  ],
+  "coverageLimits": [
+    "No live-game negotiation lifecycle, user interface, calendar processing, save/load or market AI tested.",
+    "Offer closure exhaustively covers state/substate bytes and checks no offer-memory mutation.",
+    "Expired predicate covers all 256 flag bytes; release clause covers 64 combinations of values 0, 1, 2, 255.",
+    "Talks-status coverage is four bounded primary/missing/ordered-duplicate cases, including the primary normalization write and cursor advance.",
+    "Aggregation coverage is seven no-list arithmetic cases; exchange list and alternate helper 0x4d0c60 are not executed."
+  ],
+  "environment": {
+    "python": "3.9.6",
+    "unicorn": "2.1.4"
+  }
+}

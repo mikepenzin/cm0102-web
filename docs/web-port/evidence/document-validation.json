@@ -1,0 +1,58 @@
+{
+  "chapters": [
+    {
+      "file": "01-web-architecture.md",
+      "sha256": "7571ca01bbed9db9c4d6627813a8ac4192ae1dfbc9cfa4ae1cfe1795f5128989",
+      "words": 3545,
+      "lines": 311
+    },
+    {
+      "file": "02-gameplay.md",
+      "sha256": "34c7b25698fbc191cb5adc98ed1a029e5f74054c68676536daf6ddd29d38ddaf",
+      "words": 9844,
+      "lines": 512
+    },
+    {
+      "file": "03-competitions-and-seasons.md",
+      "sha256": "dd56f27d4949d5d73f658d2cd767dbd440b385f47b05ce62cf6e21cdb0ed2ab1",
+      "words": 7931,
+      "lines": 576
+    },
+    {
+      "file": "04-data-ui-and-assets.md",
+      "sha256": "b55caf9876c36c37ff3d546d5a215fa3dd47125d21fe52ae948ed326bd968f5c",
+      "words": 9919,
+      "lines": 608
+    },
+    {
+      "file": "05-evidence-and-verification.md",
+      "sha256": "c0a3b846b50a9353215a278fcef8197d0719431dcd6ee33fe2e435e41aa5737d",
+      "words": 2269,
+      "lines": 187
+    },
+    {
+      "file": "06-agent-implementation-plan.md",
+      "sha256": "e8e16bc8aa72a48e94ba92a2ce21d7abe3fac49cec941f3fa6265670b29afbac",
+      "words": 2367,
+      "lines": 163
+    },
+    {
+      "file": "07-original-negotiation-evidence.md",
+      "sha256": "5e180575655236c22282b076c70baaaaefb7ad05b1d66d1f9f7d6fb5174df731",
+      "words": 2715,
+      "lines": 201
+    },
+    {
+      "file": "08-specification-completion-plan.md",
+      "sha256": "28f9929796ccae6fc6b12d0b8a7ba5b00d323bca7c8a6b5c5f800ec9290264ae",
+      "words": 3253,
+      "lines": 202
+    }
+  ],
+  "total_chapter_words": 41843,
+  "output": "CM0102-WEB-TECHNICAL-SPEC.md",
+  "output_sha256": "1ccc89bae1fca878a21c72455eb96ebc5875ddb2e6c2620d1f5c08de2fee7708",
+  "local_link_errors": [],
+  "json_files_parse": true,
+  "limits": "Structural artifact checks only; not a claim that every source citation or gameplay rule has passed runtime validation"
+}

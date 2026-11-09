@@ -1,0 +1,3030 @@
+{
+  "evidenceId": "TRANSLATION-GAPS-001",
+  "date": "2026-10-28",
+  "originalSha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86",
+  "inputs": {
+    "report": "recompiler-report.json",
+    "index": "generated-function-index.tsv",
+    "originalMap": "original-functions.tsv",
+    "knownFunctionEntries": "tools/recomp/functions.txt"
+  },
+  "method": [
+    "Match all31 report addresses to exact rt_unimpl markers; take the containing function from generated-function-index.tsv line ranges, never a nearest address guess.",
+    "Decode matching original bytes with Capstone5.0.9 and scan alternate generated instruction comments for a decoded instruction spanning the gap address or its owner entry. Overlap is evidence of conflicting decode boundaries, not proof one path is unreachable.",
+    "Reanalyse fragment entry 0x796870 with tools/recomp/analysis.py and the exact generation boundary file tools/recomp/functions.txt: it records cannot decode at 0x796872.",
+    "All function/module names remain inherited hints. Source line ranges identify generated bodies, not certified original function boundaries.",
+    "No translator was patched; no game reachability execution was performed.",
+    "Generated output incorporates repository translator guards/replacements even without explicit runtime arguments; this audit does not label it a pristine or semantically exact translation."
+  ],
+  "summary": {
+    "unhandledInstructions": 31,
+    "distinctGeneratedOwners": 28,
+    "ownersWithFragmentOrFalseEntryNameHint": 28,
+    "instructionsWithOverlappingDecodeEvidence": 31,
+    "decodeStopsReported": 1,
+    "decodeStopsLocated": 1,
+    "additionalRtUnimplMarkers": 1,
+    "rtFellOffMarkers": 35,
+    "provenUnreachable": 0,
+    "provenData": 0,
+    "provenReachableUnsupportedInstructions": 0
+  },
+  "interpretation": "Every reported unhandled instruction belongs to a fragment/false-entry-named generated body. Overlapping byte decodes support investigation of erroneous entry boundaries. No entry is dismissed as unreachable or data: valid targets, branches, and indirect references remain unproved. Translation handled-share is not playable semantic coverage.",
+  "unhandledInstructions": [
+    {
+      "address": "0x408802",
+      "instruction": "fisttp dword ptr [ebp + 0x53182444]",
+      "reportReason": "fisttp",
+      "originalInstructionBytesHex": "db8d44241853",
+      "originalInstructionEndExclusive": "0x408808",
+      "generatedOwner": {
+        "address": "0x408800",
+        "symbol": "f_00408800",
+        "name_hint": "ArgSecond::create_promotion_cup_stage_fragment_408800",
+        "module_hint": "arg_second.cpp",
+        "path": "build-web-evidence/original/gen/fn_000.c",
+        "start_line": 28384,
+        "end_line": 28622,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 28402,
+      "marker": "rt_unimpl(0x408802u, \"fisttp dword ptr [ebp + 0x53182444]\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x408801",
+          "endExclusive": "0x408803",
+          "bytesHex": "33db",
+          "instruction": "xor ebx, ebx",
+          "generatedComment": "xor ebx, ebx",
+          "path": "build-web-evidence/original/gen/fn_000.c",
+          "line": 28155,
+          "ownerEntry": "0x408630",
+          "ownerNameHint": "ArgSecond::create_promotion_cup_stage"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x4087fe",
+          "endExclusive": "0x408801",
+          "bytesHex": "83c410",
+          "instruction": "add esp, 0x10",
+          "generatedComment": "add esp, 0x10",
+          "path": "build-web-evidence/original/gen/fn_000.c",
+          "line": 28150,
+          "ownerEntry": "0x408630",
+          "ownerNameHint": "ArgSecond::create_promotion_cup_stage"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x416573",
+      "instruction": "fldenv [esi + ebx + 0x14c48300]",
+      "reportReason": "fldenv",
+      "originalInstructionBytesHex": "d9a41e0083c414",
+      "originalInstructionEndExclusive": "0x41657a",
+      "generatedOwner": {
+        "address": "0x416570",
+        "symbol": "f_00416570",
+        "name_hint": "award_screen_draw_team_award_fragment_416570",
+        "module_hint": "award_screens.cpp",
+        "path": "build-web-evidence/original/gen/fn_001.c",
+        "start_line": 8782,
+        "end_line": 9776,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 8973,
+      "marker": "rt_unimpl(0x416573u, \"fldenv [esi + ebx + 0x14c48300]\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x416572",
+          "endExclusive": "0x416577",
+          "bytesHex": "e8d9a41e00",
+          "instruction": "call 0x600a50",
+          "generatedComment": "call 0x600a50",
+          "path": "build-web-evidence/original/gen/fn_001.c",
+          "line": 7881,
+          "ownerEntry": "0x415f60",
+          "ownerNameHint": "award_screen_draw_team_award"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x41656f",
+          "endExclusive": "0x416571",
+          "bytesHex": "6a00",
+          "instruction": "push 0",
+          "generatedComment": "push 0",
+          "path": "build-web-evidence/original/gen/fn_001.c",
+          "line": 7877,
+          "ownerEntry": "0x415f60",
+          "ownerNameHint": "award_screen_draw_team_award"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x44aa20",
+      "instruction": "pop es",
+      "reportReason": "register es",
+      "originalInstructionBytesHex": "07",
+      "originalInstructionEndExclusive": "0x44aa21",
+      "generatedOwner": {
+        "address": "0x44aa20",
+        "symbol": "f_0044aa20",
+        "name_hint": "club_records_format_record_text_fragment_44aa20",
+        "module_hint": "club_records.cpp",
+        "path": "build-web-evidence/original/gen/fn_003.c",
+        "start_line": 46952,
+        "end_line": 47282,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 46963,
+      "marker": "rt_unimpl(0x44aa20u, \"pop es\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x44aa1d",
+          "endExclusive": "0x44aa24",
+          "bytesHex": "668b8507010000",
+          "instruction": "mov ax, word ptr [ebp + 0x107]",
+          "generatedComment": "mov ax, word ptr [ebp + 0x107]",
+          "path": "build-web-evidence/original/gen/fn_003.c",
+          "line": 41781,
+          "ownerEntry": "0x449810",
+          "ownerNameHint": "club_records_format_record_text"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x44aa1d",
+          "endExclusive": "0x44aa24",
+          "bytesHex": "668b8507010000",
+          "instruction": "mov ax, word ptr [ebp + 0x107]",
+          "generatedComment": "mov ax, word ptr [ebp + 0x107]",
+          "path": "build-web-evidence/original/gen/fn_003.c",
+          "line": 41781,
+          "ownerEntry": "0x449810",
+          "ownerNameHint": "club_records_format_record_text"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x452072",
+      "instruction": "push ss",
+      "reportReason": "register ss",
+      "originalInstructionBytesHex": "16",
+      "originalInstructionEndExclusive": "0x452073",
+      "generatedOwner": {
+        "address": "0x452070",
+        "symbol": "f_00452070",
+        "name_hint": "Club_Records::save_fragment_452070",
+        "module_hint": "club_records.cpp",
+        "path": "build-web-evidence/original/gen/fn_003.c",
+        "start_line": 65705,
+        "end_line": 66910,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 65721,
+      "marker": "rt_unimpl(0x452072u, \"push ss\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x452071",
+          "endExclusive": "0x452073",
+          "bytesHex": "6a16",
+          "instruction": "push 0x16",
+          "generatedComment": "push 0x16",
+          "path": "build-web-evidence/original/gen/fn_003.c",
+          "line": 64514,
+          "ownerEntry": "0x451ff0",
+          "ownerNameHint": "Club_Records::save"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x45206f",
+          "endExclusive": "0x452071",
+          "bytesHex": "6a04",
+          "instruction": "push 4",
+          "generatedComment": "push 4",
+          "path": "build-web-evidence/original/gen/fn_003.c",
+          "line": 64512,
+          "ownerEntry": "0x451ff0",
+          "ownerNameHint": "Club_Records::save"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x492075",
+      "instruction": "pop ds",
+      "reportReason": "register ds",
+      "originalInstructionBytesHex": "641f",
+      "originalInstructionEndExclusive": "0x492077",
+      "generatedOwner": {
+        "address": "0x492070",
+        "symbol": "f_00492070",
+        "name_hint": "comp_screens_draw_league_table_tab_fragment_492070",
+        "module_hint": "comp_screens.cpp",
+        "path": "build-web-evidence/original/gen/fn_004.c",
+        "start_line": 58521,
+        "end_line": 60911,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 59022,
+      "marker": "rt_unimpl(0x492075u, \"pop ds\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x492074",
+          "endExclusive": "0x492079",
+          "bytesHex": "68641fde00",
+          "instruction": "push 0xde1f64",
+          "generatedComment": "push 0xde1f64",
+          "path": "build-web-evidence/original/gen/fn_004.c",
+          "line": 56633,
+          "ownerEntry": "0x491380",
+          "ownerNameHint": "comp_screens_draw_league_table_tab"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x49206f",
+          "endExclusive": "0x492074",
+          "bytesHex": "68b8c19900",
+          "instruction": "push 0x99c1b8",
+          "generatedComment": "push 0x99c1b8",
+          "path": "build-web-evidence/original/gen/fn_004.c",
+          "line": 56630,
+          "ownerEntry": "0x491380",
+          "ownerNameHint": "comp_screens_draw_league_table_tab"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x494920",
+      "instruction": "into",
+      "reportReason": "into",
+      "originalInstructionBytesHex": "ce",
+      "originalInstructionEndExclusive": "0x494921",
+      "generatedOwner": {
+        "address": "0x494920",
+        "symbol": "f_00494920",
+        "name_hint": "comp_screens_draw_schedule_tab_fragment_494920",
+        "module_hint": "comp_screens.cpp",
+        "path": "build-web-evidence/original/gen/fn_004.c",
+        "start_line": 68412,
+        "end_line": 69169,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 68423,
+      "marker": "rt_unimpl(0x494920u, \"into\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x49491f",
+          "endExclusive": "0x494922",
+          "bytesHex": "83ceff",
+          "instruction": "or esi, 0xffffffff",
+          "generatedComment": "or esi, 0xffffffff",
+          "path": "build-web-evidence/original/gen/fn_004.c",
+          "line": 67661,
+          "ownerEntry": "0x4947a0",
+          "ownerNameHint": "comp_screens_draw_schedule_tab"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x49491f",
+          "endExclusive": "0x494922",
+          "bytesHex": "83ceff",
+          "instruction": "or esi, 0xffffffff",
+          "generatedComment": "or esi, 0xffffffff",
+          "path": "build-web-evidence/original/gen/fn_004.c",
+          "line": 67661,
+          "ownerEntry": "0x4947a0",
+          "ownerNameHint": "comp_screens_draw_schedule_tab"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x4b4a20",
+      "instruction": "lcall 0x1baa, 0xb8e85300",
+      "reportReason": "far call",
+      "originalInstructionBytesHex": "9a0053e8b8aa1b",
+      "originalInstructionEndExclusive": "0x4b4a27",
+      "generatedOwner": {
+        "address": "0x4b4a20",
+        "symbol": "f_004b4a20",
+        "name_hint": "comp_util_false_entry_4b4a20",
+        "module_hint": "comp_util.cpp",
+        "path": "build-web-evidence/original/gen/fn_005.c",
+        "start_line": 77421,
+        "end_line": 77456,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 77432,
+      "marker": "rt_unimpl(0x4b4a20u, \"lcall 0x1baa, 0xb8e85300\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x4b4a1d",
+          "endExclusive": "0x4b4a22",
+          "bytesHex": "68947b9a00",
+          "instruction": "push 0x9a7b94",
+          "generatedComment": "push 0x9a7b94",
+          "path": "build-web-evidence/original/gen/fn_005.c",
+          "line": 55567,
+          "ownerEntry": "0x4b4850",
+          "ownerNameHint": "comp_util_get_stage_name"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x4b4a1d",
+          "endExclusive": "0x4b4a22",
+          "bytesHex": "68947b9a00",
+          "instruction": "push 0x9a7b94",
+          "generatedComment": "push 0x9a7b94",
+          "path": "build-web-evidence/original/gen/fn_005.c",
+          "line": 55567,
+          "ownerEntry": "0x4b4850",
+          "ownerNameHint": "comp_util_get_stage_name"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x585ca7",
+      "instruction": "in eax, 0x25",
+      "reportReason": "in",
+      "originalInstructionBytesHex": "e525",
+      "originalInstructionEndExclusive": "0x585ca9",
+      "generatedOwner": {
+        "address": "0x585ca0",
+        "symbol": "f_00585ca0",
+        "name_hint": "EuropeanCup::draw_phase2_groups_fragment_585ca0",
+        "module_hint": "european_cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_010.c",
+        "start_line": 47776,
+        "end_line": 47897,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 47839,
+      "marker": "rt_unimpl(0x585ca7u, \"in eax, 0x25\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x585ca6",
+          "endExclusive": "0x585cab",
+          "bytesHex": "e8e5250600",
+          "instruction": "call 0x5e8290",
+          "generatedComment": "call 0x5e8290",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 43968,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x585ca6",
+          "endExclusive": "0x585cab",
+          "bytesHex": "e8e5250600",
+          "instruction": "call 0x5e8290",
+          "generatedComment": "call 0x5e8290",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 45996,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x585ca6",
+          "endExclusive": "0x585cab",
+          "bytesHex": "e8e5250600",
+          "instruction": "call 0x5e8290",
+          "generatedComment": "call 0x5e8290",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 47736,
+          "ownerEntry": "0x585c20",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585c20"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x585c9c",
+          "endExclusive": "0x585ca1",
+          "bytesHex": "68d024ae00",
+          "instruction": "push 0xae24d0",
+          "generatedComment": "push 0xae24d0",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 43964,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x585c9c",
+          "endExclusive": "0x585ca1",
+          "bytesHex": "68d024ae00",
+          "instruction": "push 0xae24d0",
+          "generatedComment": "push 0xae24d0",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 45992,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x585c9c",
+          "endExclusive": "0x585ca1",
+          "bytesHex": "68d024ae00",
+          "instruction": "push 0xae24d0",
+          "generatedComment": "push 0xae24d0",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 47732,
+          "ownerEntry": "0x585c20",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585c20"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x585ca9",
+      "instruction": "push es",
+      "reportReason": "register es",
+      "originalInstructionBytesHex": "06",
+      "originalInstructionEndExclusive": "0x585caa",
+      "generatedOwner": {
+        "address": "0x585ca0",
+        "symbol": "f_00585ca0",
+        "name_hint": "EuropeanCup::draw_phase2_groups_fragment_585ca0",
+        "module_hint": "european_cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_010.c",
+        "start_line": 47776,
+        "end_line": 47897,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 47841,
+      "marker": "rt_unimpl(0x585ca9u, \"push es\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x585ca6",
+          "endExclusive": "0x585cab",
+          "bytesHex": "e8e5250600",
+          "instruction": "call 0x5e8290",
+          "generatedComment": "call 0x5e8290",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 43968,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x585ca6",
+          "endExclusive": "0x585cab",
+          "bytesHex": "e8e5250600",
+          "instruction": "call 0x5e8290",
+          "generatedComment": "call 0x5e8290",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 45996,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x585ca6",
+          "endExclusive": "0x585cab",
+          "bytesHex": "e8e5250600",
+          "instruction": "call 0x5e8290",
+          "generatedComment": "call 0x5e8290",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 47736,
+          "ownerEntry": "0x585c20",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585c20"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x585c9c",
+          "endExclusive": "0x585ca1",
+          "bytesHex": "68d024ae00",
+          "instruction": "push 0xae24d0",
+          "generatedComment": "push 0xae24d0",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 43964,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x585c9c",
+          "endExclusive": "0x585ca1",
+          "bytesHex": "68d024ae00",
+          "instruction": "push 0xae24d0",
+          "generatedComment": "push 0xae24d0",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 45992,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x585c9c",
+          "endExclusive": "0x585ca1",
+          "bytesHex": "68d024ae00",
+          "instruction": "push 0xae24d0",
+          "generatedComment": "push 0xae24d0",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 47732,
+          "ownerEntry": "0x585c20",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585c20"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x585d0a",
+      "instruction": "push es",
+      "reportReason": "register es",
+      "originalInstructionBytesHex": "06",
+      "originalInstructionEndExclusive": "0x585d0b",
+      "generatedOwner": {
+        "address": "0x585d00",
+        "symbol": "f_00585d00",
+        "name_hint": "EuropeanCup::draw_phase2_groups_fragment_585d00",
+        "module_hint": "european_cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_010.c",
+        "start_line": 47945,
+        "end_line": 49542,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 48050,
+      "marker": "rt_unimpl(0x585d0au, \"push es\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x585d08",
+          "endExclusive": "0x585d0b",
+          "bytesHex": "884206",
+          "instruction": "mov byte ptr [edx + 6], al",
+          "generatedComment": "mov byte ptr [edx + 6], al",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 44058,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x585d08",
+          "endExclusive": "0x585d0b",
+          "bytesHex": "884206",
+          "instruction": "mov byte ptr [edx + 6], al",
+          "generatedComment": "mov byte ptr [edx + 6], al",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 46086,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x585cfd",
+          "endExclusive": "0x585d01",
+          "bytesHex": "66897a04",
+          "instruction": "mov word ptr [edx + 4], di",
+          "generatedComment": "mov word ptr [edx + 4], di",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 44049,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x585cfd",
+          "endExclusive": "0x585d01",
+          "bytesHex": "66897a04",
+          "instruction": "mov word ptr [edx + 4], di",
+          "generatedComment": "mov word ptr [edx + 4], di",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 46077,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x586051",
+      "instruction": "pop ds",
+      "reportReason": "register ds",
+      "originalInstructionBytesHex": "1f",
+      "originalInstructionEndExclusive": "0x586052",
+      "generatedOwner": {
+        "address": "0x586050",
+        "symbol": "f_00586050",
+        "name_hint": "EuropeanCup::draw_phase2_groups_fragment_586050",
+        "module_hint": "european_cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_010.c",
+        "start_line": 56022,
+        "end_line": 56645,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 56066,
+      "marker": "rt_unimpl(0x586051u, \"pop ds\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 44936,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 46964,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 48928,
+          "ownerEntry": "0x585d00",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585d00"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 50234,
+          "ownerEntry": "0x585dd0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585dd0"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 51539,
+          "ownerEntry": "0x585e30",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e30"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 52824,
+          "ownerEntry": "0x585e40",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e40"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 54109,
+          "ownerEntry": "0x585e50",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e50"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 55407,
+          "ownerEntry": "0x585f80",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585f80"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 56681,
+          "ownerEntry": "0x5860c0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_5860c0"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 57385,
+          "ownerEntry": "0x586180",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_586180"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 44936,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 46964,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 48928,
+          "ownerEntry": "0x585d00",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585d00"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 50234,
+          "ownerEntry": "0x585dd0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585dd0"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 51539,
+          "ownerEntry": "0x585e30",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e30"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 52824,
+          "ownerEntry": "0x585e40",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e40"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 54109,
+          "ownerEntry": "0x585e50",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e50"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 55407,
+          "ownerEntry": "0x585f80",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585f80"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 56681,
+          "ownerEntry": "0x5860c0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_5860c0"
+        },
+        {
+          "address": "0x58604e",
+          "endExclusive": "0x586054",
+          "bytesHex": "8b0d581fde00",
+          "instruction": "mov ecx, dword ptr [0xde1f58]",
+          "generatedComment": "mov ecx, dword ptr [0xde1f58]",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 57385,
+          "ownerEntry": "0x586180",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_586180"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x5860c0",
+      "instruction": "les eax, ptr [ecx + ecx*4]",
+      "reportReason": "les",
+      "originalInstructionBytesHex": "c40489",
+      "originalInstructionEndExclusive": "0x5860c3",
+      "generatedOwner": {
+        "address": "0x5860c0",
+        "symbol": "f_005860c0",
+        "name_hint": "EuropeanCup::draw_phase2_groups_fragment_5860c0",
+        "module_hint": "european_cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_010.c",
+        "start_line": 56646,
+        "end_line": 57275,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 56778,
+      "marker": "rt_unimpl(0x5860c0u, \"les eax, ptr [ecx + ecx*4]\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 45025,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 47053,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 49017,
+          "ownerEntry": "0x585d00",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585d00"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 50323,
+          "ownerEntry": "0x585dd0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585dd0"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 51628,
+          "ownerEntry": "0x585e30",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e30"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 52913,
+          "ownerEntry": "0x585e40",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e40"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 54198,
+          "ownerEntry": "0x585e50",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e50"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 55496,
+          "ownerEntry": "0x585f80",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585f80"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 56157,
+          "ownerEntry": "0x586050",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_586050"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 57474,
+          "ownerEntry": "0x586180",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_586180"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 45025,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 47053,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 49017,
+          "ownerEntry": "0x585d00",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585d00"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 50323,
+          "ownerEntry": "0x585dd0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585dd0"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 51628,
+          "ownerEntry": "0x585e30",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e30"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 52913,
+          "ownerEntry": "0x585e40",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e40"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 54198,
+          "ownerEntry": "0x585e50",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e50"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 55496,
+          "ownerEntry": "0x585f80",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585f80"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 56157,
+          "ownerEntry": "0x586050",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_586050"
+        },
+        {
+          "address": "0x5860bf",
+          "endExclusive": "0x5860c2",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 57474,
+          "ownerEntry": "0x586180",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_586180"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x586131",
+      "instruction": "int1",
+      "reportReason": "int1",
+      "originalInstructionBytesHex": "f1",
+      "originalInstructionEndExclusive": "0x586132",
+      "generatedOwner": {
+        "address": "0x586130",
+        "symbol": "f_00586130",
+        "name_hint": "EuropeanCup::draw_phase2_groups_fragment_586130",
+        "module_hint": "european_cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_010.c",
+        "start_line": 57276,
+        "end_line": 57349,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 57291,
+      "marker": "rt_unimpl(0x586131u, \"int1\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 45140,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 47168,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 49132,
+          "ownerEntry": "0x585d00",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585d00"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 50438,
+          "ownerEntry": "0x585dd0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585dd0"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 51743,
+          "ownerEntry": "0x585e30",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e30"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 53028,
+          "ownerEntry": "0x585e40",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e40"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 54313,
+          "ownerEntry": "0x585e50",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e50"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 55611,
+          "ownerEntry": "0x585f80",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585f80"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 45140,
+          "ownerEntry": "0x585ab0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 47168,
+          "ownerEntry": "0x585ac0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585ac0"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 49132,
+          "ownerEntry": "0x585d00",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585d00"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 50438,
+          "ownerEntry": "0x585dd0",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585dd0"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 51743,
+          "ownerEntry": "0x585e30",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e30"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 53028,
+          "ownerEntry": "0x585e40",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e40"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 54313,
+          "ownerEntry": "0x585e50",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585e50"
+        },
+        {
+          "address": "0x58612f",
+          "endExclusive": "0x586134",
+          "bytesHex": "e896f13b00",
+          "instruction": "call 0x9452ca",
+          "generatedComment": "call 0x9452ca",
+          "path": "build-web-evidence/original/gen/fn_010.c",
+          "line": 55611,
+          "ownerEntry": "0x585f80",
+          "ownerNameHint": "EuropeanCup::draw_phase2_groups_fragment_585f80"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x59487f",
+      "instruction": "int 0x43",
+      "reportReason": "int",
+      "originalInstructionBytesHex": "cd43",
+      "originalInstructionEndExclusive": "0x594881",
+      "generatedOwner": {
+        "address": "0x594850",
+        "symbol": "f_00594850",
+        "name_hint": "FinFirst::update_staff_records_for_status_fragment_594850",
+        "module_hint": "fin_first.cpp",
+        "path": "build-web-evidence/original/gen/fn_011.c",
+        "start_line": 13894,
+        "end_line": 13996,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 13937,
+      "marker": "rt_unimpl(0x59487fu, \"int 0x43\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x59487e",
+          "endExclusive": "0x594883",
+          "bytesHex": "e8cd432d00",
+          "instruction": "call 0x868c50",
+          "generatedComment": "call 0x868c50",
+          "path": "build-web-evidence/original/gen/fn_011.c",
+          "line": 13444,
+          "ownerEntry": "0x594810",
+          "ownerNameHint": "FinFirst::update_staff_records_for_status"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x59484e",
+          "endExclusive": "0x594853",
+          "bytesHex": "e87d752d00",
+          "instruction": "call 0x86bdd0",
+          "generatedComment": "call 0x86bdd0",
+          "path": "build-web-evidence/original/gen/fn_011.c",
+          "line": 13377,
+          "ownerEntry": "0x594810",
+          "ownerNameHint": "FinFirst::update_staff_records_for_status"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x5a001f",
+      "instruction": "insd dword ptr es:[edi], dx",
+      "reportReason": "insd",
+      "originalInstructionBytesHex": "6d",
+      "originalInstructionEndExclusive": "0x5a0020",
+      "generatedOwner": {
+        "address": "0x5a0000",
+        "symbol": "f_005a0000",
+        "name_hint": "finance_post_stadium_works_news_fragment_5a0000",
+        "module_hint": "fin_prm.cpp",
+        "path": "build-web-evidence/original/gen/fn_011.c",
+        "start_line": 58596,
+        "end_line": 58693,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 58655,
+      "marker": "rt_unimpl(0x5a001fu, \"insd dword ptr es:[edi], dx\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x5a001e",
+          "endExclusive": "0x5a0023",
+          "bytesHex": "e86d571e00",
+          "instruction": "call 0x785790",
+          "generatedComment": "call 0x785790",
+          "path": "build-web-evidence/original/gen/fn_011.c",
+          "line": 58565,
+          "ownerEntry": "0x59ffb0",
+          "ownerNameHint": "finance_post_stadium_works_news"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x59fffc",
+          "endExclusive": "0x5a0003",
+          "bytesHex": "8b8c24f8000000",
+          "instruction": "mov ecx, dword ptr [esp + 0xf8]",
+          "generatedComment": "mov ecx, dword ptr [esp + 0xf8]",
+          "path": "build-web-evidence/original/gen/fn_011.c",
+          "line": 58545,
+          "ownerEntry": "0x59ffb0",
+          "ownerNameHint": "finance_post_stadium_works_news"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x5a0021",
+      "instruction": "push ds",
+      "reportReason": "register ds",
+      "originalInstructionBytesHex": "1e",
+      "originalInstructionEndExclusive": "0x5a0022",
+      "generatedOwner": {
+        "address": "0x5a0000",
+        "symbol": "f_005a0000",
+        "name_hint": "finance_post_stadium_works_news_fragment_5a0000",
+        "module_hint": "fin_prm.cpp",
+        "path": "build-web-evidence/original/gen/fn_011.c",
+        "start_line": 58596,
+        "end_line": 58693,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 58659,
+      "marker": "rt_unimpl(0x5a0021u, \"push ds\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x5a001e",
+          "endExclusive": "0x5a0023",
+          "bytesHex": "e86d571e00",
+          "instruction": "call 0x785790",
+          "generatedComment": "call 0x785790",
+          "path": "build-web-evidence/original/gen/fn_011.c",
+          "line": 58565,
+          "ownerEntry": "0x59ffb0",
+          "ownerNameHint": "finance_post_stadium_works_news"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x59fffc",
+          "endExclusive": "0x5a0003",
+          "bytesHex": "8b8c24f8000000",
+          "instruction": "mov ecx, dword ptr [esp + 0xf8]",
+          "generatedComment": "mov ecx, dword ptr [esp + 0xf8]",
+          "path": "build-web-evidence/original/gen/fn_011.c",
+          "line": 58545,
+          "ownerEntry": "0x59ffb0",
+          "ownerNameHint": "finance_post_stadium_works_news"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x5f2fed",
+      "instruction": "les eax, ptr [edx + ebp*2]",
+      "reportReason": "les",
+      "originalInstructionBytesHex": "c4046a",
+      "originalInstructionEndExclusive": "0x5f2ff0",
+      "generatedOwner": {
+        "address": "0x5f3030",
+        "symbol": "f_005f3030",
+        "name_hint": "history_written_screen_draw_fragment_5f3030",
+        "module_hint": "History.cpp",
+        "path": "build-web-evidence/original/gen/fn_014.c",
+        "start_line": 54301,
+        "end_line": 54680,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 54322,
+      "marker": "rt_unimpl(0x5f2fedu, \"les eax, ptr [edx + ebp*2]\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x5f2fec",
+          "endExclusive": "0x5f2fef",
+          "bytesHex": "83c404",
+          "instruction": "add esp, 4",
+          "generatedComment": "add esp, 4",
+          "path": "build-web-evidence/original/gen/fn_014.c",
+          "line": 53900,
+          "ownerEntry": "0x5f2c00",
+          "ownerNameHint": "history_written_screen_draw"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x5f302c",
+          "endExclusive": "0x5f3033",
+          "bytesHex": "0fbf057a7cb700",
+          "instruction": "movsx eax, word ptr [0xb77c7a]",
+          "generatedComment": "movsx eax, word ptr [0xb77c7a]",
+          "path": "build-web-evidence/original/gen/fn_014.c",
+          "line": 53968,
+          "ownerEntry": "0x5f2c00",
+          "ownerNameHint": "history_written_screen_draw"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x616570",
+      "instruction": "les ecx, ptr [eax]",
+      "reportReason": "les",
+      "originalInstructionBytesHex": "c408",
+      "originalInstructionEndExclusive": "0x616572",
+      "generatedOwner": {
+        "address": "0x616570",
+        "symbol": "f_00616570",
+        "name_hint": "match_club_key_id_fragment_616570",
+        "module_hint": "index.cpp",
+        "path": "build-web-evidence/original/gen/fn_015.c",
+        "start_line": 115560,
+        "end_line": 117842,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 115571,
+      "marker": "rt_unimpl(0x616570u, \"les ecx, ptr [eax]\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x61656f",
+          "endExclusive": "0x616572",
+          "bytesHex": "83c408",
+          "instruction": "add esp, 8",
+          "generatedComment": "add esp, 8",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 113154,
+          "ownerEntry": "0x6146b0",
+          "ownerNameHint": "match_club_key_id"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x61656f",
+          "endExclusive": "0x616572",
+          "bytesHex": "83c408",
+          "instruction": "add esp, 8",
+          "generatedComment": "add esp, 8",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 113154,
+          "ownerEntry": "0x6146b0",
+          "ownerNameHint": "match_club_key_id"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x616824",
+      "instruction": "push ds",
+      "reportReason": "register ds",
+      "originalInstructionBytesHex": "1e",
+      "originalInstructionEndExclusive": "0x616825",
+      "generatedOwner": {
+        "address": "0x616820",
+        "symbol": "f_00616820",
+        "name_hint": "match_club_key_id_fragment_616820",
+        "module_hint": "index.cpp",
+        "path": "build-web-evidence/original/gen/fn_015.c",
+        "start_line": 117843,
+        "end_line": 119713,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 117863,
+      "marker": "rt_unimpl(0x616824u, \"push ds\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x616823",
+          "endExclusive": "0x616825",
+          "bytesHex": "eb1e",
+          "instruction": "jmp 0x616843",
+          "generatedComment": "jmp 0x616843",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 113691,
+          "ownerEntry": "0x6146b0",
+          "ownerNameHint": "match_club_key_id"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x61681d",
+          "endExclusive": "0x616823",
+          "bytesHex": "893df83cb600",
+          "instruction": "mov dword ptr [0xb63cf8], edi",
+          "generatedComment": "mov dword ptr [0xb63cf8], edi",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 113688,
+          "ownerEntry": "0x6146b0",
+          "ownerNameHint": "match_club_key_id"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x617629",
+      "instruction": "les ecx, ptr [eax]",
+      "reportReason": "les",
+      "originalInstructionBytesHex": "c408",
+      "originalInstructionEndExclusive": "0x61762b",
+      "generatedOwner": {
+        "address": "0x617620",
+        "symbol": "f_00617620",
+        "name_hint": "get_region_name_fragment_617620",
+        "module_hint": "index.cpp",
+        "path": "build-web-evidence/original/gen/fn_015.c",
+        "start_line": 123612,
+        "end_line": 123656,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 123633,
+      "marker": "rt_unimpl(0x617629u, \"les ecx, ptr [eax]\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x617628",
+          "endExclusive": "0x61762b",
+          "bytesHex": "83c408",
+          "instruction": "add esp, 8",
+          "generatedComment": "add esp, 8",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 123281,
+          "ownerEntry": "0x616f20",
+          "ownerNameHint": "get_region_name"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x61761d",
+          "endExclusive": "0x617622",
+          "bytesHex": "68ac1f9e00",
+          "instruction": "push 0x9e1fac",
+          "generatedComment": "push 0x9e1fac",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 123275,
+          "ownerEntry": "0x616f20",
+          "ownerNameHint": "get_region_name"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x63422d",
+      "instruction": "outsb dx, byte ptr [esi]",
+      "reportReason": "outsb",
+      "originalInstructionBytesHex": "6e",
+      "originalInstructionEndExclusive": "0x63422e",
+      "generatedOwner": {
+        "address": "0x634220",
+        "symbol": "f_00634220",
+        "name_hint": "IreChalCup::IreChalCup_fragment_634220",
+        "module_hint": "ire_chal_cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_015.c",
+        "start_line": 239598,
+        "end_line": 239849,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 239726,
+      "marker": "rt_unimpl(0x63422du, \"outsb dx, byte ptr [esi]\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x63422c",
+          "endExclusive": "0x634231",
+          "bytesHex": "e86e0a3100",
+          "instruction": "call 0x944c9f",
+          "generatedComment": "call 0x944c9f",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 239549,
+          "ownerEntry": "0x6340a0",
+          "ownerNameHint": "IreChalCup::IreChalCup"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x63421c",
+          "endExclusive": "0x634221",
+          "bytesHex": "e80f8f2d00",
+          "instruction": "call 0x90d130",
+          "generatedComment": "call 0x90d130",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 239541,
+          "ownerEntry": "0x6340a0",
+          "ownerNameHint": "IreChalCup::IreChalCup"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x63423f",
+      "instruction": "sti",
+      "reportReason": "sti",
+      "originalInstructionBytesHex": "fb",
+      "originalInstructionEndExclusive": "0x634240",
+      "generatedOwner": {
+        "address": "0x634220",
+        "symbol": "f_00634220",
+        "name_hint": "IreChalCup::IreChalCup_fragment_634220",
+        "module_hint": "ire_chal_cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_015.c",
+        "start_line": 239598,
+        "end_line": 239849,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 239793,
+      "marker": "rt_unimpl(0x63423fu, \"sti\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x63423c",
+          "endExclusive": "0x634241",
+          "bytesHex": "e84f40fbff",
+          "instruction": "call 0x5e8290",
+          "generatedComment": "call 0x5e8290",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 239557,
+          "ownerEntry": "0x6340a0",
+          "ownerNameHint": "IreChalCup::IreChalCup"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x63421c",
+          "endExclusive": "0x634221",
+          "bytesHex": "e80f8f2d00",
+          "instruction": "call 0x90d130",
+          "generatedComment": "call 0x90d130",
+          "path": "build-web-evidence/original/gen/fn_015.c",
+          "line": 239541,
+          "ownerEntry": "0x6340a0",
+          "ownerNameHint": "IreChalCup::IreChalCup"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x657248",
+      "instruction": "pop es",
+      "reportReason": "register es",
+      "originalInstructionBytesHex": "07",
+      "originalInstructionEndExclusive": "0x657249",
+      "generatedOwner": {
+        "address": "0x657243",
+        "symbol": "f_00657243",
+        "name_hint": "ItaSerC2a::set_up_fixed_fixtures_fragment_657243",
+        "module_hint": "ita_ser_c2a.cpp",
+        "path": "build-web-evidence/original/gen/fn_016.c",
+        "start_line": 111106,
+        "end_line": 111352,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 111127,
+      "marker": "rt_unimpl(0x657248u, \"pop es\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x657246",
+          "endExclusive": "0x65724b",
+          "bytesHex": "68d2070000",
+          "instruction": "push 0x7d2",
+          "generatedComment": "push 0x7d2",
+          "path": "build-web-evidence/original/gen/fn_016.c",
+          "line": 108700,
+          "ownerEntry": "0x6545c0",
+          "ownerNameHint": "ItaSerC2a::set_up_fixed_fixtures"
+        },
+        {
+          "address": "0x657246",
+          "endExclusive": "0x65724b",
+          "bytesHex": "68d2070000",
+          "instruction": "push 0x7d2",
+          "generatedComment": "push 0x7d2",
+          "path": "build-web-evidence/original/gen/fn_016.c",
+          "line": 110885,
+          "ownerEntry": "0x656570",
+          "ownerNameHint": "ItaSerC2a::set_up_fixed_fixtures_fragment_656570"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x657241",
+          "endExclusive": "0x657246",
+          "bytesHex": "68cca69e00",
+          "instruction": "push 0x9ea6cc",
+          "generatedComment": "push 0x9ea6cc",
+          "path": "build-web-evidence/original/gen/fn_016.c",
+          "line": 108698,
+          "ownerEntry": "0x6545c0",
+          "ownerNameHint": "ItaSerC2a::set_up_fixed_fixtures"
+        },
+        {
+          "address": "0x657241",
+          "endExclusive": "0x657246",
+          "bytesHex": "68cca69e00",
+          "instruction": "push 0x9ea6cc",
+          "generatedComment": "push 0x9ea6cc",
+          "path": "build-web-evidence/original/gen/fn_016.c",
+          "line": 110883,
+          "ownerEntry": "0x656570",
+          "ownerNameHint": "ItaSerC2a::set_up_fixed_fixtures_fragment_656570"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x6c7a20",
+      "instruction": "stc",
+      "reportReason": "stc",
+      "originalInstructionBytesHex": "f9",
+      "originalInstructionEndExclusive": "0x6c7a21",
+      "generatedOwner": {
+        "address": "0x6c7a20",
+        "symbol": "f_006c7a20",
+        "name_hint": "CM3_MATCH_ENGINE::find_best_pass_receiver_fragment_6c7a20",
+        "module_hint": "match_eng.cpp",
+        "path": "build-web-evidence/original/gen/fn_019.c",
+        "start_line": 84239,
+        "end_line": 90707,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 87635,
+      "marker": "rt_unimpl(0x6c7a20u, \"stc\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x6c7a1e",
+          "endExclusive": "0x6c7a23",
+          "bytesHex": "e8edf90400",
+          "instruction": "call 0x717410",
+          "generatedComment": "call 0x717410",
+          "path": "build-web-evidence/original/gen/fn_019.c",
+          "line": 81171,
+          "ownerEntry": "0x6c6a30",
+          "ownerNameHint": "CM3_MATCH_ENGINE::find_best_pass_receiver"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x6c7a1e",
+          "endExclusive": "0x6c7a23",
+          "bytesHex": "e8edf90400",
+          "instruction": "call 0x717410",
+          "generatedComment": "call 0x717410",
+          "path": "build-web-evidence/original/gen/fn_019.c",
+          "line": 81171,
+          "ownerEntry": "0x6c6a30",
+          "ownerNameHint": "CM3_MATCH_ENGINE::find_best_pass_receiver"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x6fe36e",
+      "instruction": "daa",
+      "reportReason": "daa",
+      "originalInstructionBytesHex": "27",
+      "originalInstructionEndExclusive": "0x6fe36f",
+      "generatedOwner": {
+        "address": "0x6fe364",
+        "symbol": "f_006fe364",
+        "name_hint": "MATCH_PLAYER::pass_fragment_6fe364",
+        "module_hint": "match_pl.cpp",
+        "path": "build-web-evidence/original/gen/fn_020.c",
+        "start_line": 157000,
+        "end_line": 158244,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 157048,
+      "marker": "rt_unimpl(0x6fe36eu, \"daa\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x6fe36c",
+          "endExclusive": "0x6fe36f",
+          "bytesHex": "8a5727",
+          "instruction": "mov dl, byte ptr [edi + 0x27]",
+          "generatedComment": "mov dl, byte ptr [edi + 0x27]",
+          "path": "build-web-evidence/original/gen/fn_020.c",
+          "line": 150136,
+          "ownerEntry": "0x6fad40",
+          "ownerNameHint": "MATCH_PLAYER::pass"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x6fe362",
+          "endExclusive": "0x6fe365",
+          "bytesHex": "f6c310",
+          "instruction": "test bl, 0x10",
+          "generatedComment": "test bl, 0x10",
+          "path": "build-web-evidence/original/gen/fn_020.c",
+          "line": 150126,
+          "ownerEntry": "0x6fad40",
+          "ownerNameHint": "MATCH_PLAYER::pass"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x736f50",
+      "instruction": "in al, dx",
+      "reportReason": "in",
+      "originalInstructionBytesHex": "ec",
+      "originalInstructionEndExclusive": "0x736f51",
+      "generatedOwner": {
+        "address": "0x736f50",
+        "symbol": "f_00736f50",
+        "name_hint": "Media::apply_story_effect_flags_fragment_736f50",
+        "module_hint": "media.cpp",
+        "path": "build-web-evidence/original/gen/fn_021.c",
+        "start_line": 52061,
+        "end_line": 56807,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 52072,
+      "marker": "rt_unimpl(0x736f50u, \"in al, dx\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x736f4f",
+          "endExclusive": "0x736f54",
+          "bytesHex": "e8ec08e1ff",
+          "instruction": "call 0x547840",
+          "generatedComment": "call 0x547840",
+          "path": "build-web-evidence/original/gen/fn_021.c",
+          "line": 47033,
+          "ownerEntry": "0x736c00",
+          "ownerNameHint": "Media::apply_story_effect_flags"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x736f4f",
+          "endExclusive": "0x736f54",
+          "bytesHex": "e8ec08e1ff",
+          "instruction": "call 0x547840",
+          "generatedComment": "call 0x547840",
+          "path": "build-web-evidence/original/gen/fn_021.c",
+          "line": 47033,
+          "ownerEntry": "0x736c00",
+          "ownerNameHint": "Media::apply_story_effect_flags"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x746e66",
+      "instruction": "aaa",
+      "reportReason": "aaa",
+      "originalInstructionBytesHex": "37",
+      "originalInstructionEndExclusive": "0x746e67",
+      "generatedOwner": {
+        "address": "0x746e66",
+        "symbol": "f_00746e66",
+        "name_hint": "Media::write_player_praise_news_text_fragment_746e66",
+        "module_hint": "media.cpp",
+        "path": "build-web-evidence/original/gen/fn_021.c",
+        "start_line": 137449,
+        "end_line": 140206,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 137460,
+      "marker": "rt_unimpl(0x746e66u, \"aaa\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x746e62",
+          "endExclusive": "0x746e67",
+          "bytesHex": "0fbe7c9037",
+          "instruction": "movsx edi, byte ptr [eax + edx*4 + 0x37]",
+          "generatedComment": "movsx edi, byte ptr [eax + edx*4 + 0x37]",
+          "path": "build-web-evidence/original/gen/fn_021.c",
+          "line": 121182,
+          "ownerEntry": "0x744f80",
+          "ownerNameHint": "Media::write_player_praise_news_text"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x746e62",
+          "endExclusive": "0x746e67",
+          "bytesHex": "0fbe7c9037",
+          "instruction": "movsx edi, byte ptr [eax + edx*4 + 0x37]",
+          "generatedComment": "movsx edi, byte ptr [eax + edx*4 + 0x37]",
+          "path": "build-web-evidence/original/gen/fn_021.c",
+          "line": 121182,
+          "ownerEntry": "0x744f80",
+          "ownerNameHint": "Media::write_player_praise_news_text"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x74733e",
+      "instruction": "aaa",
+      "reportReason": "aaa",
+      "originalInstructionBytesHex": "37",
+      "originalInstructionEndExclusive": "0x74733f",
+      "generatedOwner": {
+        "address": "0x74733e",
+        "symbol": "f_0074733e",
+        "name_hint": "Media::write_player_praise_news_text_fragment_74733e",
+        "module_hint": "media.cpp",
+        "path": "build-web-evidence/original/gen/fn_021.c",
+        "start_line": 142972,
+        "end_line": 145901,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 142983,
+      "marker": "rt_unimpl(0x74733eu, \"aaa\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x74733a",
+          "endExclusive": "0x74733f",
+          "bytesHex": "0fbe749037",
+          "instruction": "movsx esi, byte ptr [eax + edx*4 + 0x37]",
+          "generatedComment": "movsx esi, byte ptr [eax + edx*4 + 0x37]",
+          "path": "build-web-evidence/original/gen/fn_021.c",
+          "line": 122269,
+          "ownerEntry": "0x744f80",
+          "ownerNameHint": "Media::write_player_praise_news_text"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x74733a",
+          "endExclusive": "0x74733f",
+          "bytesHex": "0fbe749037",
+          "instruction": "movsx esi, byte ptr [eax + edx*4 + 0x37]",
+          "generatedComment": "movsx esi, byte ptr [eax + edx*4 + 0x37]",
+          "path": "build-web-evidence/original/gen/fn_021.c",
+          "line": 122269,
+          "ownerEntry": "0x744f80",
+          "ownerNameHint": "Media::write_player_praise_news_text"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x783f23",
+      "instruction": "iretd",
+      "reportReason": "iretd",
+      "originalInstructionBytesHex": "cf",
+      "originalInstructionEndExclusive": "0x783f24",
+      "generatedOwner": {
+        "address": "0x783f00",
+        "symbol": "f_00783f00",
+        "name_hint": "NewsItem::get_action_button_fragment_783f00",
+        "module_hint": "news.cpp",
+        "path": "build-web-evidence/original/gen/fn_022.c",
+        "start_line": 77251,
+        "end_line": 77564,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 77330,
+      "marker": "rt_unimpl(0x783f23u, \"iretd\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x783f22",
+          "endExclusive": "0x783f24",
+          "bytesHex": "03cf",
+          "instruction": "add ecx, edi",
+          "generatedComment": "add ecx, edi",
+          "path": "build-web-evidence/original/gen/fn_022.c",
+          "line": 76198,
+          "ownerEntry": "0x782b70",
+          "ownerNameHint": "NewsItem::get_action_button"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x783eff",
+          "endExclusive": "0x783f02",
+          "bytesHex": "8b7e19",
+          "instruction": "mov edi, dword ptr [esi + 0x19]",
+          "generatedComment": "mov edi, dword ptr [esi + 0x19]",
+          "path": "build-web-evidence/original/gen/fn_022.c",
+          "line": 76156,
+          "ownerEntry": "0x782b70",
+          "ownerNameHint": "NewsItem::get_action_button"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x796850",
+      "instruction": "pop ds",
+      "reportReason": "register ds",
+      "originalInstructionBytesHex": "641f",
+      "originalInstructionEndExclusive": "0x796852",
+      "generatedOwner": {
+        "address": "0x796850",
+        "symbol": "f_00796850",
+        "name_hint": "notes_draw_staff_note_screen_fragment_796850",
+        "module_hint": "notes.cpp",
+        "path": "build-web-evidence/original/gen/fn_023.c",
+        "start_line": 12341,
+        "end_line": 12912,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 12352,
+      "marker": "rt_unimpl(0x796850u, \"pop ds\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x79684f",
+          "endExclusive": "0x796854",
+          "bytesHex": "68641fde00",
+          "instruction": "push 0xde1f64",
+          "generatedComment": "push 0xde1f64",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 11782,
+          "ownerEntry": "0x796340",
+          "ownerNameHint": "notes_draw_staff_note_screen"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x79684f",
+          "endExclusive": "0x796854",
+          "bytesHex": "68641fde00",
+          "instruction": "push 0xde1f64",
+          "generatedComment": "push 0xde1f64",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 11782,
+          "ownerEntry": "0x796340",
+          "ownerNameHint": "notes_draw_staff_note_screen"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    },
+    {
+      "address": "0x840002",
+      "instruction": "clc",
+      "reportReason": "clc",
+      "originalInstructionBytesHex": "f8",
+      "originalInstructionEndExclusive": "0x840003",
+      "generatedOwner": {
+        "address": "0x840000",
+        "symbol": "f_00840000",
+        "name_hint": "Shortlist_Manager::fill_shortlist_slot_fragment_840000",
+        "module_hint": "shortlist_manager.cpp",
+        "path": "build-web-evidence/original/gen/fn_028.c",
+        "start_line": 176222,
+        "end_line": 181221,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 177819,
+      "marker": "rt_unimpl(0x840002u, \"clc\");",
+      "classification": "unsupported_translation_with_overlapping_decode_evidence",
+      "overlapAtInstruction": [
+        {
+          "address": "0x840001",
+          "endExclusive": "0x840003",
+          "bytesHex": "3bf8",
+          "instruction": "cmp edi, eax",
+          "generatedComment": "cmp edi, eax",
+          "path": "build-web-evidence/original/gen/fn_028.c",
+          "line": 172817,
+          "ownerEntry": "0x83f3a0",
+          "ownerNameHint": "Shortlist_Manager::fill_shortlist_slot"
+        },
+        {
+          "address": "0x840001",
+          "endExclusive": "0x840003",
+          "bytesHex": "3bf8",
+          "instruction": "cmp edi, eax",
+          "generatedComment": "cmp edi, eax",
+          "path": "build-web-evidence/original/gen/fn_028.c",
+          "line": 182801,
+          "ownerEntry": "0x840010",
+          "ownerNameHint": "Shortlist_Manager::fill_shortlist_slot_fragment_840010"
+        }
+      ],
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x83fffe",
+          "endExclusive": "0x840001",
+          "bytesHex": "83c410",
+          "instruction": "add esp, 0x10",
+          "generatedComment": "add esp, 0x10",
+          "path": "build-web-evidence/original/gen/fn_028.c",
+          "line": 172812,
+          "ownerEntry": "0x83f3a0",
+          "ownerNameHint": "Shortlist_Manager::fill_shortlist_slot"
+        },
+        {
+          "address": "0x83fffe",
+          "endExclusive": "0x840001",
+          "bytesHex": "83c410",
+          "instruction": "add esp, 0x10",
+          "generatedComment": "add esp, 0x10",
+          "path": "build-web-evidence/original/gen/fn_028.c",
+          "line": 182796,
+          "ownerEntry": "0x840010",
+          "ownerNameHint": "Shortlist_Manager::fill_shortlist_slot_fragment_840010"
+        }
+      ],
+      "fragmentOrFalseEntryNameHint": true,
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no",
+      "nextVerification": "Trace actual incoming direct/indirect transfers and recorded game execution to establish valid instruction boundaries and reachability before fixing translation or removing a seed."
+    }
+  ],
+  "decodeStops": [
+    {
+      "address": "0x796872",
+      "owner": {
+        "address": "0x796870",
+        "symbol": "f_00796870",
+        "name_hint": "notes_draw_staff_note_screen_fragment_796870",
+        "module_hint": "notes.cpp",
+        "path": "build-web-evidence/original/gen/fn_023.c",
+        "start_line": 12913,
+        "end_line": 12930,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 12928,
+      "marker": "rt_fell_off(0x796872u);",
+      "analysisRecheck": {
+        "entry": "0x796870",
+        "bad": [
+          {
+            "address": "0x796872",
+            "reason": "cannot decode"
+          }
+        ],
+        "decodedAddresses": [
+          "0x796870"
+        ]
+      },
+      "originalBytesHex": "db03c7885c24188944241033ff8b6c24188b",
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x79686f",
+          "endExclusive": "0x796871",
+          "bytesHex": "32db",
+          "instruction": "xor bl, bl",
+          "generatedComment": "xor bl, bl",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 11807,
+          "ownerEntry": "0x796340",
+          "ownerNameHint": "notes_draw_staff_note_screen"
+        },
+        {
+          "address": "0x79686f",
+          "endExclusive": "0x796871",
+          "bytesHex": "32db",
+          "instruction": "xor bl, bl",
+          "generatedComment": "xor bl, bl",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 12379,
+          "ownerEntry": "0x796850",
+          "ownerNameHint": "notes_draw_staff_note_screen_fragment_796850"
+        }
+      ],
+      "overlapAtStop": [
+        {
+          "address": "0x796871",
+          "endExclusive": "0x796873",
+          "bytesHex": "03c7",
+          "instruction": "add eax, edi",
+          "generatedComment": "add eax, edi",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 11812,
+          "ownerEntry": "0x796340",
+          "ownerNameHint": "notes_draw_staff_note_screen"
+        },
+        {
+          "address": "0x796871",
+          "endExclusive": "0x796873",
+          "bytesHex": "03c7",
+          "instruction": "add eax, edi",
+          "generatedComment": "add eax, edi",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 12384,
+          "ownerEntry": "0x796850",
+          "ownerNameHint": "notes_draw_staff_note_screen_fragment_796850"
+        }
+      ],
+      "classification": "decoder_stop_with_overlapping_decode_evidence",
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no"
+    }
+  ],
+  "additionalRuntimeTrapMarkers": [
+    {
+      "address": "0x727450",
+      "owner": {
+        "address": "0x727450",
+        "symbol": "f_00727450",
+        "name_hint": "match_screens_draw_team_selection_fragment_727450",
+        "module_hint": "match_screens.cpp",
+        "path": "build-web-evidence/original/gen/fn_020.c",
+        "start_line": 308023,
+        "end_line": 308036,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 308034,
+      "marker": "rt_unimpl(0x727450u, \"int3\");",
+      "originalInstruction": "hlt ",
+      "bytesHex": "f4",
+      "classification": "explicit_int3_trap_translated_to_runtime_trap",
+      "translatorSource": "tools/recomp/translate.py:775",
+      "reachability": "not_established",
+      "explanation": "Translator counts its INT3 handler as handled although output invokes rt_unimpl. Not included among the report's31 unsupported instructions."
+    }
+  ],
+  "rtFellOffMarkers": [
+    {
+      "address": "0x41b827",
+      "owner": {
+        "address": "0x41b3d0",
+        "symbol": "f_0041b3d0",
+        "name_hint": "setup_background_system",
+        "module_hint": "background.cpp",
+        "path": "build-web-evidence/original/gen/fn_001.c",
+        "start_line": 27894,
+        "end_line": 28844,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 28842,
+      "marker": "rt_fell_off(0x41b827u);"
+    },
+    {
+      "address": "0x522185",
+      "owner": {
+        "address": "0x521f10",
+        "symbol": "f_00521f10",
+        "name_hint": "cup_set_round_match_day",
+        "module_hint": "Cup.cpp",
+        "path": "build-web-evidence/original/gen/fn_007.c",
+        "start_line": 28322,
+        "end_line": 28774,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 28772,
+      "marker": "rt_fell_off(0x522185u);"
+    },
+    {
+      "address": "0x523ea5",
+      "owner": {
+        "address": "0x523380",
+        "symbol": "f_00523380",
+        "name_hint": "Cup_Stage::load_from_file",
+        "module_hint": "cup_stage.cpp",
+        "path": "build-web-evidence/original/gen/fn_007.c",
+        "start_line": 33110,
+        "end_line": 35099,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 35097,
+      "marker": "rt_fell_off(0x523ea5u);"
+    },
+    {
+      "address": "0x52d97c",
+      "owner": {
+        "address": "0x528540",
+        "symbol": "f_00528540",
+        "name_hint": "load_database",
+        "module_hint": "Database.cpp",
+        "path": "build-web-evidence/original/gen/fn_007.c",
+        "start_line": 60519,
+        "end_line": 79447,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 79445,
+      "marker": "rt_fell_off(0x52d97cu);"
+    },
+    {
+      "address": "0x54d991",
+      "owner": {
+        "address": "0x54d8a0",
+        "symbol": "f_0054d8a0",
+        "name_hint": "db_files_read_cities",
+        "module_hint": "Db_files.cpp",
+        "path": "build-web-evidence/original/gen/fn_008.c",
+        "start_line": 26061,
+        "end_line": 26270,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 26268,
+      "marker": "rt_fell_off(0x54d991u);"
+    },
+    {
+      "address": "0x5ac79a",
+      "owner": {
+        "address": "0x5ac3b0",
+        "symbol": "f_005ac3b0",
+        "name_hint": "FIXTURE_MANAGER::load_fixtures",
+        "module_hint": "fix_man.cpp",
+        "path": "build-web-evidence/original/gen/fn_011.c",
+        "start_line": 102037,
+        "end_line": 102845,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 102843,
+      "marker": "rt_fell_off(0x5ac79au);"
+    },
+    {
+      "address": "0x5ae37a",
+      "owner": {
+        "address": "0x5adba0",
+        "symbol": "f_005adba0",
+        "name_hint": "FIXTURE_MANAGER::collect_day_clashes",
+        "module_hint": "fix_man.cpp",
+        "path": "build-web-evidence/original/gen/fn_011.c",
+        "start_line": 107667,
+        "end_line": 109514,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 109512,
+      "marker": "rt_fell_off(0x5ae37au);"
+    },
+    {
+      "address": "0x5d5a01",
+      "owner": {
+        "address": "0x5ce2d0",
+        "symbol": "f_005ce2d0",
+        "name_hint": "game_daily_staff_update",
+        "module_hint": "game.cpp",
+        "path": "build-web-evidence/original/gen/fn_013.c",
+        "start_line": 30900,
+        "end_line": 60210,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 60208,
+      "marker": "rt_fell_off(0x5d5a01u);"
+    },
+    {
+      "address": "0x68d629",
+      "owner": {
+        "address": "0x68d520",
+        "symbol": "f_0068d520",
+        "name_hint": "pump_messages",
+        "module_hint": "main.cpp",
+        "path": "build-web-evidence/original/gen/fn_018.c",
+        "start_line": 35105,
+        "end_line": 35333,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 35331,
+      "marker": "rt_fell_off(0x68d629u);"
+    },
+    {
+      "address": "0x68dbe7",
+      "owner": {
+        "address": "0x68dbc0",
+        "symbol": "f_0068dbc0",
+        "name_hint": "restart_game",
+        "module_hint": "main.cpp",
+        "path": "build-web-evidence/original/gen/fn_018.c",
+        "start_line": 36323,
+        "end_line": 36358,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 36356,
+      "marker": "rt_fell_off(0x68dbe7u);"
+    },
+    {
+      "address": "0x6bab61",
+      "owner": {
+        "address": "0x6b98c0",
+        "symbol": "f_006b98c0",
+        "name_hint": "CM3_MATCH_ENGINE::run_match_steps",
+        "module_hint": "match_eng.cpp",
+        "path": "build-web-evidence/original/gen/fn_019.c",
+        "start_line": 27736,
+        "end_line": 31936,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 31934,
+      "marker": "rt_fell_off(0x6bab61u);"
+    },
+    {
+      "address": "0x6c4ec0",
+      "owner": {
+        "address": "0x6c4820",
+        "symbol": "f_006c4820",
+        "name_hint": "CM3_MATCH_ENGINE::set_up_free_kick",
+        "module_hint": "match_eng.cpp",
+        "path": "build-web-evidence/original/gen/fn_019.c",
+        "start_line": 69147,
+        "end_line": 70705,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 70703,
+      "marker": "rt_fell_off(0x6c4ec0u);"
+    },
+    {
+      "address": "0x6c69ba",
+      "owner": {
+        "address": "0x6c54a0",
+        "symbol": "f_006c54a0",
+        "name_hint": "CM3_MATCH_ENGINE::handle_stoppage",
+        "module_hint": "match_eng.cpp",
+        "path": "build-web-evidence/original/gen/fn_019.c",
+        "start_line": 72146,
+        "end_line": 77193,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 77191,
+      "marker": "rt_fell_off(0x6c69bau);"
+    },
+    {
+      "address": "0x6c9be8",
+      "owner": {
+        "address": "0x6c87e0",
+        "symbol": "f_006c87e0",
+        "name_hint": "CM3_MATCH_ENGINE::get_opposition_challenge",
+        "module_hint": "match_eng.cpp",
+        "path": "build-web-evidence/original/gen/fn_019.c",
+        "start_line": 90708,
+        "end_line": 95036,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 95034,
+      "marker": "rt_fell_off(0x6c9be8u);"
+    },
+    {
+      "address": "0x6cf6e3",
+      "owner": {
+        "address": "0x6ceb90",
+        "symbol": "f_006ceb90",
+        "name_hint": "CM3_MATCH_ENGINE::pick_restart_taker",
+        "module_hint": "match_eng.cpp",
+        "path": "build-web-evidence/original/gen/fn_019.c",
+        "start_line": 114239,
+        "end_line": 116863,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 116861,
+      "marker": "rt_fell_off(0x6cf6e3u);"
+    },
+    {
+      "address": "0x6e0cce",
+      "owner": {
+        "address": "0x6e0230",
+        "symbol": "f_006e0230",
+        "name_hint": "MATCH_MAN::choose_computer_tactic",
+        "module_hint": "match_man.cpp",
+        "path": "build-web-evidence/original/gen/fn_019.c",
+        "start_line": 181573,
+        "end_line": 184028,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 184026,
+      "marker": "rt_fell_off(0x6e0cceu);"
+    },
+    {
+      "address": "0x70007c",
+      "owner": {
+        "address": "0x6fad40",
+        "symbol": "f_006fad40",
+        "name_hint": "MATCH_PLAYER::pass",
+        "module_hint": "match_pl.cpp",
+        "path": "build-web-evidence/original/gen/fn_020.c",
+        "start_line": 137205,
+        "end_line": 156999,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 156997,
+      "marker": "rt_fell_off(0x70007cu);"
+    },
+    {
+      "address": "0x713d5a",
+      "owner": {
+        "address": "0x7109f0",
+        "symbol": "f_007109f0",
+        "name_hint": "MATCH_PLAYER::decide_ball_action",
+        "module_hint": "match_pl.cpp",
+        "path": "build-web-evidence/original/gen/fn_020.c",
+        "start_line": 222877,
+        "end_line": 235161,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 235159,
+      "marker": "rt_fell_off(0x713d5au);"
+    },
+    {
+      "address": "0x762a99",
+      "owner": {
+        "address": "0x7615d0",
+        "symbol": "f_007615d0",
+        "name_hint": "menubar_handle_command",
+        "module_hint": "Menubar.cpp",
+        "path": "build-web-evidence/original/gen/fn_021.c",
+        "start_line": 233254,
+        "end_line": 244716,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 244714,
+      "marker": "rt_fell_off(0x762a99u);"
+    },
+    {
+      "address": "0x796872",
+      "owner": {
+        "address": "0x796870",
+        "symbol": "f_00796870",
+        "name_hint": "notes_draw_staff_note_screen_fragment_796870",
+        "module_hint": "notes.cpp",
+        "path": "build-web-evidence/original/gen/fn_023.c",
+        "start_line": 12913,
+        "end_line": 12930,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 12928,
+      "marker": "rt_fell_off(0x796872u);",
+      "analysisRecheck": {
+        "entry": "0x796870",
+        "bad": [
+          {
+            "address": "0x796872",
+            "reason": "cannot decode"
+          }
+        ],
+        "decodedAddresses": [
+          "0x796870"
+        ]
+      },
+      "originalBytesHex": "db03c7885c24188944241033ff8b6c24188b",
+      "overlapAtOwnerEntry": [
+        {
+          "address": "0x79686f",
+          "endExclusive": "0x796871",
+          "bytesHex": "32db",
+          "instruction": "xor bl, bl",
+          "generatedComment": "xor bl, bl",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 11807,
+          "ownerEntry": "0x796340",
+          "ownerNameHint": "notes_draw_staff_note_screen"
+        },
+        {
+          "address": "0x79686f",
+          "endExclusive": "0x796871",
+          "bytesHex": "32db",
+          "instruction": "xor bl, bl",
+          "generatedComment": "xor bl, bl",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 12379,
+          "ownerEntry": "0x796850",
+          "ownerNameHint": "notes_draw_staff_note_screen_fragment_796850"
+        }
+      ],
+      "overlapAtStop": [
+        {
+          "address": "0x796871",
+          "endExclusive": "0x796873",
+          "bytesHex": "03c7",
+          "instruction": "add eax, edi",
+          "generatedComment": "add eax, edi",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 11812,
+          "ownerEntry": "0x796340",
+          "ownerNameHint": "notes_draw_staff_note_screen"
+        },
+        {
+          "address": "0x796871",
+          "endExclusive": "0x796873",
+          "bytesHex": "03c7",
+          "instruction": "add eax, edi",
+          "generatedComment": "add eax, edi",
+          "path": "build-web-evidence/original/gen/fn_023.c",
+          "line": 12384,
+          "ownerEntry": "0x796850",
+          "ownerNameHint": "notes_draw_staff_note_screen_fragment_796850"
+        }
+      ],
+      "classification": "decoder_stop_with_overlapping_decode_evidence",
+      "reachability": "not_established",
+      "isData": "not_established",
+      "canDismiss": "no"
+    },
+    {
+      "address": "0x7b11a8",
+      "owner": {
+        "address": "0x7b0e40",
+        "symbol": "f_007b0e40",
+        "name_hint": "PLAYER_SEARCH::add_own_squad",
+        "module_hint": "player_search.cpp",
+        "path": "build-web-evidence/original/gen/fn_024.c",
+        "start_line": 31814,
+        "end_line": 32554,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 32552,
+      "marker": "rt_fell_off(0x7b11a8u);"
+    },
+    {
+      "address": "0x839d84",
+      "owner": {
+        "address": "0x839a80",
+        "symbol": "f_00839a80",
+        "name_hint": "Shortlist_Manager::Shortlist_Manager",
+        "module_hint": "shortlist_manager.cpp",
+        "path": "build-web-evidence/original/gen/fn_028.c",
+        "start_line": 149721,
+        "end_line": 150309,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 150307,
+      "marker": "rt_fell_off(0x839d84u);"
+    },
+    {
+      "address": "0x83a1a3",
+      "owner": {
+        "address": "0x839e60",
+        "symbol": "f_00839e60",
+        "name_hint": "Shortlist_Manager::build_position_lists",
+        "module_hint": "shortlist_manager.cpp",
+        "path": "build-web-evidence/original/gen/fn_028.c",
+        "start_line": 150536,
+        "end_line": 151275,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 151273,
+      "marker": "rt_fell_off(0x83a1a3u);"
+    },
+    {
+      "address": "0x922c35",
+      "owner": {
+        "address": "0x922810",
+        "symbol": "f_00922810",
+        "name_hint": "Weather::load_config",
+        "module_hint": "weather.cpp",
+        "path": "build-web-evidence/original/gen/fn_035.c",
+        "start_line": 11502,
+        "end_line": 12311,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 12309,
+      "marker": "rt_fell_off(0x922c35u);"
+    },
+    {
+      "address": "0x947a7e",
+      "owner": {
+        "address": "0x947a13",
+        "symbol": "f_00947a13",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 1646,
+        "end_line": 1848,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 1844,
+      "marker": "rt_fell_off(0x947a7eu);"
+    },
+    {
+      "address": "0x947aea",
+      "owner": {
+        "address": "0x947a13",
+        "symbol": "f_00947a13",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 1646,
+        "end_line": 1848,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 1846,
+      "marker": "rt_fell_off(0x947aeau);"
+    },
+    {
+      "address": "0x947b09",
+      "owner": {
+        "address": "0x947afe",
+        "symbol": "f_00947afe",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 1849,
+        "end_line": 1871,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 1869,
+      "marker": "rt_fell_off(0x947b09u);"
+    },
+    {
+      "address": "0x947b51",
+      "owner": {
+        "address": "0x947b2e",
+        "symbol": "f_00947b2e",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 1913,
+        "end_line": 1950,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 1948,
+      "marker": "rt_fell_off(0x947b51u);"
+    },
+    {
+      "address": "0x94a5dd",
+      "owner": {
+        "address": "0x94a58c",
+        "symbol": "f_0094a58c",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 15313,
+        "end_line": 15397,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 15395,
+      "marker": "rt_fell_off(0x94a5ddu);"
+    },
+    {
+      "address": "0x94a5dd",
+      "owner": {
+        "address": "0x94a5cd",
+        "symbol": "f_0094a5cd",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 15398,
+        "end_line": 15429,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 15427,
+      "marker": "rt_fell_off(0x94a5ddu);"
+    },
+    {
+      "address": "0x94a633",
+      "owner": {
+        "address": "0x94a5e2",
+        "symbol": "f_0094a5e2",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 15444,
+        "end_line": 15528,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 15526,
+      "marker": "rt_fell_off(0x94a633u);"
+    },
+    {
+      "address": "0x94a633",
+      "owner": {
+        "address": "0x94a623",
+        "symbol": "f_0094a623",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 15529,
+        "end_line": 15560,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 15558,
+      "marker": "rt_fell_off(0x94a633u);"
+    },
+    {
+      "address": "0x94f57b",
+      "owner": {
+        "address": "0x94f564",
+        "symbol": "f_0094f564",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_038.c",
+        "start_line": 39317,
+        "end_line": 39349,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 39347,
+      "marker": "rt_fell_off(0x94f57bu);"
+    },
+    {
+      "address": "0x950f63",
+      "owner": {
+        "address": "0x950ecb",
+        "symbol": "f_00950ecb",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_039.c",
+        "start_line": 4440,
+        "end_line": 4734,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 4732,
+      "marker": "rt_fell_off(0x950f63u);"
+    },
+    {
+      "address": "0x952bed",
+      "owner": {
+        "address": "0x9529d2",
+        "symbol": "f_009529d2",
+        "name_hint": "",
+        "module_hint": "",
+        "path": "build-web-evidence/original/gen/fn_039.c",
+        "start_line": 13581,
+        "end_line": 14334,
+        "semantic_review": "not_established_by_translation"
+      },
+      "markerLine": 14332,
+      "marker": "rt_fell_off(0x952bedu);"
+    }
+  ],
+  "rtFellOffInterpretation": "These35 generated markers are not35 decoder stops. Some represent missing translated fallthrough after noreturn paths; classify their path reachability separately. For example0x70007c follows call0x945934(exit) and is used as a jump-table address.",
+  "missingFunctionsReported": [
+    "0x684cb8e5",
+    "0x6863da98",
+    "0xffb226b0"
+  ],
+  "missingFunctionsInterpretation": "Separate unresolved references retained from the report; outside scope of this31-instruction ownership audit. They are not proven genuine calls or safe to ignore.",
+  "inputSha256": {
+    "docs/web-port/evidence/recompiler-report.json": "0851273e9b3370dd26a460947b9e50e96c067e09720561eeee2cd70a6d844714",
+    "docs/web-port/evidence/generated-function-index.tsv": "353496bb73c5bf2e1688ac19c4662f944e666bf54033c6230db506514780e822",
+    "tools/recomp/functions.txt": "792c116b046458325c1dfe672b1dc4022256c8a3849fabf83ffcc35883e8e6c2"
+  },
+  "generationCommand": "/private/tmp/cm0102-analysis-venv/bin/python tools/recomp/recomp.py --exe '/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/cm0102.exe' --out build-web-evidence/original --functions tools/recomp/functions.txt --all --shards 64 --jobs 2"
+}

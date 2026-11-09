@@ -1,0 +1,683 @@
+{
+  "original": {
+    "path": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/cm0102.exe",
+    "bytes": 7192576,
+    "sha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86",
+    "matches_clean_3968": true
+  },
+  "download_original": {
+    "path": "/Users/mikepenzin/Downloads/CM0102/cm0102.exe",
+    "bytes": 7110656,
+    "sha256": "343f359a713a34ae46ef47f9a97bbf61ab9278e9e1f0a74381f224ffc50349f2"
+  },
+  "patch": {
+    "path": "/Users/mikepenzin/Downloads/242.exe",
+    "bytes": 23458816,
+    "sha256": "b3f2b7d2ace6e86d0974e5ad68ae7a87a1e8fc3494c90d00cc3758392dcf24f1",
+    "matches_official_3968": true
+  },
+  "manual": {
+    "path": "/Users/mikepenzin/Downloads/CM0102/MANUAL/manual_uk.pdf",
+    "bytes": 1708328,
+    "sha256": "629647992bcb4dffd6cd94435671d3fe2c4efa5ecbfc423eb86ef5448d1502e7"
+  },
+  "patch_payload": {
+    "path": "/private/tmp/cm0102-patch-inspection/update.dat",
+    "bytes": 306794850,
+    "sha256": "1f8141d5baf0f8a99d7e1a3373ba2feeb9e0ddbdf4863b1ad29da2cada7fc918"
+  },
+  "patch_members": [
+    {
+      "path": "cm0102.exe",
+      "payload_offset": 184,
+      "bytes": 7192576,
+      "sha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "cm0102_GDI.exe",
+      "payload_offset": 7192760,
+      "bytes": 7188480,
+      "sha256": "0e50572c292bdfb9de8b3e087dd29043a13bcd0985ed198c9011e5a0f694388b",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/dan.lng",
+      "payload_offset": 14381240,
+      "bytes": 1993486,
+      "sha256": "6018ed4e7946692dd4a9ab74421c30d6deb516d838e9d73896f2eb88608915e5",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/eng.lng",
+      "payload_offset": 16374726,
+      "bytes": 1993486,
+      "sha256": "391017caa3177e8343f5576f7dcebf5a716c7df58f60cc853dd39733f270b217",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/esp.lng",
+      "payload_offset": 18368212,
+      "bytes": 1993486,
+      "sha256": "581f0c66422f3690812d18c6c0383046d7a790564da05d506def3c157c553f59",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/fra.lng",
+      "payload_offset": 20361698,
+      "bytes": 1993486,
+      "sha256": "9971dd66a749c1bdaf22a6d72e321dcc2253194c95fc0f04daadf5d79606813a",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/ita.lng",
+      "payload_offset": 22355184,
+      "bytes": 1993486,
+      "sha256": "71eb108008dc392b20ba57d7075a4ff3d8faef3989a415ac6f809557617ba3a0",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/nor.lng",
+      "payload_offset": 24348670,
+      "bytes": 1993486,
+      "sha256": "e80f918ea34b53301219a69e4722e1c814b3c61ba2382c2d0f419da70442890d",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/por.lng",
+      "payload_offset": 26342156,
+      "bytes": 1993486,
+      "sha256": "4877211c9127573046167d1f9676f3d9ff03f3a2cebc121ddfe97a3d1d47f51b",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/swe.lng",
+      "payload_offset": 28335642,
+      "bytes": 1993486,
+      "sha256": "caf62f46a0c107f2531dc1da98249a355804ddf64d7caa2b35f2ada770ddb27f",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/hol.lng",
+      "payload_offset": 30329128,
+      "bytes": 1993486,
+      "sha256": "51f57bd7a2021bb6b136b56f01546b4e292262ff73f78835bb82e770c39a4615",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/ger.lng",
+      "payload_offset": 32322614,
+      "bytes": 1993486,
+      "sha256": "5220cc7585b1e0fb250d847d2fc74b14a6e7535c6112bc55ff54e65952ae0b41",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/language.ldb",
+      "payload_offset": 34316100,
+      "bytes": 204672142,
+      "sha256": "7f6fcec87709fc0072e05a44fa7f781978f2abd247630e1d977f74ecac449b59",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/player_setup.cfg",
+      "payload_offset": 238988242,
+      "bytes": 21151,
+      "sha256": "b79989b68c0832a8da54d37e153fbb718975c85790bcda9907fb9110fbc0f805",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/weather.cfg",
+      "payload_offset": 239009393,
+      "bytes": 26671,
+      "sha256": "79465370fb159fea95f8620ece738a9355cfb51f23c273df933ecfff710f75f8",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "changes.txt",
+      "payload_offset": 239036064,
+      "bytes": 4374,
+      "sha256": "df7626e5a94119e75a7017f3a5f32d75fd65533d595bbfba67d199157365acb9",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/city.dat",
+      "payload_offset": 239040438,
+      "bytes": 374192,
+      "sha256": "bfa3d3c7b6af6eb530798a9eb9e9dbefd79230be85fc237904990c4edbb0583d",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/club.dat",
+      "payload_offset": 239414630,
+      "bytes": 7677334,
+      "sha256": "32da1bc33450a1c73d9e3f4ffcd11fde2866ba7ff0f228f4effb2052856ecd87",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/club_comp.dat",
+      "payload_offset": 247091964,
+      "bytes": 46331,
+      "sha256": "a9b99cb7aaa3910fd740b30ede51746cf44dc88e451df780e3fb6904f06892cd",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/club_comp_history.dat",
+      "payload_offset": 247138295,
+      "bytes": 279916,
+      "sha256": "38a730d0c95a162e1fe5de37d7becfb85055dd8411b410b2d29a874cb99f4864",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/colour.dat",
+      "payload_offset": 247418211,
+      "bytes": 1972,
+      "sha256": "d6bfbec988316bab8316138dc33fc81bca385cfabf536180c9e3c4f70971580f",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/common_names.dat",
+      "payload_offset": 247420183,
+      "bytes": 795360,
+      "sha256": "e92ea87d052f38301395ad9d9dfb049bb6c55737d5312aeea71ca28296ab321b",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/continent.dat",
+      "payload_offset": 248215543,
+      "bytes": 1188,
+      "sha256": "3f77bd10c3df91d0233306e3102bfa6e94d21a9b544dd8b3dd28b7b98e7524ce",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/first_names.dat",
+      "payload_offset": 248216731,
+      "bytes": 2656860,
+      "sha256": "6ee911754313a1defce19e6ead36073d1ba68fad609cf3bb84814e0e77bc0be9",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/index.dat",
+      "payload_offset": 250873591,
+      "bytes": 1482,
+      "sha256": "cab19a09aa092fdf2200dc8cea0f72506b9ff924396d26e24fc59e7cc894fb03",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/nat_club.dat",
+      "payload_offset": 250875073,
+      "bytes": 247506,
+      "sha256": "abd350c31f181f218643d8ccfcfd58ff8316c4a05112c4ad140d8982ce26007b",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/nation.dat",
+      "payload_offset": 251122579,
+      "bytes": 61770,
+      "sha256": "3868c523f26cea7732850ad0d5948605a9e5c53855e255b9f318b170c0634ffe",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/nation_comp.dat",
+      "payload_offset": 251184349,
+      "bytes": 2033,
+      "sha256": "1db57e1a07c2e4e638ef19c035354a8a2d180758daba835598656b090e4480ef",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/nation_comp_history.dat",
+      "payload_offset": 251186382,
+      "bytes": 7098,
+      "sha256": "1710b471a78779848efe71e138ca9411d947396cc5e370b0a30dd27b38962b24",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/officials.dat",
+      "payload_offset": 251193480,
+      "bytes": 196381,
+      "sha256": "50f7e16484ffa5731c33293cc347b28c3d2875062688a03cbec8bbec3da04882",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/second_names.dat",
+      "payload_offset": 251389861,
+      "bytes": 6263700,
+      "sha256": "ba3dceda48cdda03982065fdaced76a9cf6ed930a74fde21541c20e685c2b045",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/stadium.dat",
+      "payload_offset": 257653561,
+      "bytes": 695526,
+      "sha256": "dd7b396cb526844db20a1cb4e54e0be8af084028c2fec8cdd34b297c67ef67f3",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/staff.dat",
+      "payload_offset": 258349087,
+      "bytes": 38469344,
+      "sha256": "297d674bdb512546f2c12c174600ea2ba91768dfe4f97bcb6767e39eb99db8b4",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/staff_comp.dat",
+      "payload_offset": 296818431,
+      "bytes": 54843,
+      "sha256": "f467ac6bae0aca083cde76bc32e01b6952d866c730a0a191dcc883f6a6f45485",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/staff_comp_history.dat",
+      "payload_offset": 296873274,
+      "bytes": 151322,
+      "sha256": "625770b4365e35d5bd054cbfa63147063fa0ccc4cd85d570378a024278422e31",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Data/staff_history.dat",
+      "payload_offset": 297024596,
+      "bytes": 6559382,
+      "sha256": "91c8817921ba9dfdde4ba3a45ca8541161673441bc4c649d767159b5a99191e0",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "hall_of_fame.bin",
+      "payload_offset": 303583978,
+      "bytes": 336009,
+      "sha256": "b9b02ad551d96f1acdefb38c13be2c94fe46ffa52f93f2aa7fd989711c0a780c",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/cm0102ed.CNT",
+      "payload_offset": 303919987,
+      "bytes": 1167,
+      "sha256": "f625c03cc5885e145e0682275741ec02d6df04755d27b636cd8043f7bdb5597c",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/cm0102ed.exe",
+      "payload_offset": 303921154,
+      "bytes": 2598912,
+      "sha256": "a47f1db6b369e618343a6befb4f2d03832b8ec06e7d97a8b227b2475050f33d7",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/cm0102ed.exe.manifest",
+      "payload_offset": 306520066,
+      "bytes": 627,
+      "sha256": "56b1f8a45a6d94afa1ad8549aeed589fdf3fd76257dd4b738b38ac85e9148dcc",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/CM0102ED.GID",
+      "payload_offset": 306520693,
+      "bytes": 10850,
+      "sha256": "cfdfc9ac451f343d470ee7b320fbe90b58ae81c2d3cfc0d866d5ef5b6f3af0f0",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/Cm0102ed.hlp",
+      "payload_offset": 306531543,
+      "bytes": 72688,
+      "sha256": "05abc195f0055a66549e71e1412c4d2bc761da39537582d7885fc5f130f74073",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/faq.txt",
+      "payload_offset": 306604231,
+      "bytes": 5662,
+      "sha256": "65fc47719ce867dabc5953a15d775f8d0a6c2409b738a7436496622d36fa48e3",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/WhatsNew.txt",
+      "payload_offset": 306609893,
+      "bytes": 12413,
+      "sha256": "0f17d55cb52efbeb81b17234a7fb25e22da48d0566d8bdfad61a6a879b2daa98",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/ZipDll.dll",
+      "payload_offset": 306622306,
+      "bytes": 132096,
+      "sha256": "17d182e5d20dc1e4767d7e5e122566cbaa7e462eaadcf558de87c039f412a38a",
+      "matches_clean_manifest": true
+    },
+    {
+      "path": "Editor/ZipSFX.bin",
+      "payload_offset": 306754402,
+      "bytes": 40448,
+      "sha256": "5733042a110e96ba54f738e6ccf98b18be34f52735a9654f4ef86dd86add653e",
+      "matches_clean_manifest": true
+    }
+  ],
+  "patch_members_all_match": true,
+  "generated_functions_indexed": 11752,
+  "generated_files": [
+    {
+      "path": "build-web-evidence/original/gen/fn_000.c",
+      "bytes": 2395034,
+      "sha256": "ead1b3d29a816f01ec0c8583b246fff087c6eff8224096a482def0822505eee8"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_001.c",
+      "bytes": 2838416,
+      "sha256": "38b095dd995e7d9212b9116dfceaeca458a464cf70d10fc5873a247708b81732"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_002.c",
+      "bytes": 2622592,
+      "sha256": "85543efefac162e5e8170c1b50d418cf13ac6fc46e40a6d0844584bafa3fbe84"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_003.c",
+      "bytes": 8688983,
+      "sha256": "8896a764115b575c1a9ef778bf26755f20398d0fb40127d71680b079223539e5"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_004.c",
+      "bytes": 4089946,
+      "sha256": "c5f278de1bd729a1e038a888b65aa1efbd7d660971b57e7a461dd7ea9e1c9060"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_005.c",
+      "bytes": 4002771,
+      "sha256": "d4330d0d73f4a4915105beed44fe9bb865ac3c00952d12dfdd7823452ed7f475"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_006.c",
+      "bytes": 15985058,
+      "sha256": "de7c6d73ea78e031a6c7574a9dd573a1bb5144c9605806b0fa5a2dc483136d01"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_007.c",
+      "bytes": 5717932,
+      "sha256": "36665a910b67444d32bfd7411332a72744d414b98e9a0a883330297784fdf51f"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_008.c",
+      "bytes": 2835869,
+      "sha256": "ab1c3cbb49bd74216e97003eb2b07992689f38db5a129ba52617c43bde7a79f7"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_009.c",
+      "bytes": 3442747,
+      "sha256": "3564537cb4044458e861725d5638ea389eb99b23b304d4c674bed87f68f92494"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_010.c",
+      "bytes": 3202152,
+      "sha256": "3c2f18203253bd2c08b7a3a883a5025b8ca851bf61ae82da3d38f92face75b95"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_011.c",
+      "bytes": 3664566,
+      "sha256": "48b620634a87e6ffa9b4187ebade43be8996eb0a3bfeb37a761a90f195f0d2c8"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_012.c",
+      "bytes": 2720518,
+      "sha256": "090ce0481edb170f2a919c08cf4a77791a734c2ddff67560dc38c4ff34e10140"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_013.c",
+      "bytes": 3898922,
+      "sha256": "1492ae8a44d1ee420903dabccca29953b927ee61e09abe54b23980ec777b5874"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_014.c",
+      "bytes": 2761308,
+      "sha256": "c70ef72281b6d154f67093f2de6f0ce0e2a61542c9202cefe94bdb7e763025f9"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_015.c",
+      "bytes": 7678520,
+      "sha256": "3e3786530b1b3f3bc11a955d7e5b841e1a0e79b68d08c64cf44f7ac1ce9a0010"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_016.c",
+      "bytes": 3921432,
+      "sha256": "f7826c72f1e0db14e3062f8b399445756a1b55276a5e6e84f998158361945612"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_017.c",
+      "bytes": 5026488,
+      "sha256": "409f1f33e92dd840f4ed66dcc1e6a40059aaac9812e32cedde529f869e328cf5"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_018.c",
+      "bytes": 5513378,
+      "sha256": "5bc017013a722fad10968e7f6cbe521f8c887d43cb8d8fa6df368a6f4a3501c5"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_019.c",
+      "bytes": 6015007,
+      "sha256": "f79de4409742cf81b1032cad35c61e9f274914a26034a894ce3bd3ddb6f994f9"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_020.c",
+      "bytes": 10522839,
+      "sha256": "3419c968ae87a974aabe4191041f02609d06b71480c91ab2b84e77b31395835c"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_021.c",
+      "bytes": 9388774,
+      "sha256": "dc58a34c829f25540c302383e8fd84be1476c1591c948195d2265b5bc9200f70"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_022.c",
+      "bytes": 4336189,
+      "sha256": "857b88acb1597189c79db88774671df27c972c9502c5b7429118d7d690443933"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_023.c",
+      "bytes": 2598378,
+      "sha256": "b3cb46b3c7eccc920b66071582fd188787ad319197e345375fa2ff0134af3b41"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_024.c",
+      "bytes": 4550419,
+      "sha256": "da24ef941bc19cb66bbbe6e86cd8bb6dd49390f16f425a970c9604a6e05d617d"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_025.c",
+      "bytes": 2513080,
+      "sha256": "1494d82fbcf3b7869079481ee9a00ba5e25fa9fd92982f8dfbcef01654fa1df5"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_026.c",
+      "bytes": 2231763,
+      "sha256": "33e33d4bea9c0010ae225f09d3ff982ffe73a55348b3bc7f1128696f2af68ce1"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_027.c",
+      "bytes": 3809852,
+      "sha256": "e09f188b3ae5f20679a889f335b8c6a01e1ec8827f3311fae36ecdb68731be25"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_028.c",
+      "bytes": 6265538,
+      "sha256": "bf175b069ffe7060bc191d5ad239cfbab4d07a37eae91f871b03fe010bdbe093"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_029.c",
+      "bytes": 4569628,
+      "sha256": "318567df2260dac3659435f8ab6ab5f69d6cc0d95fc13d52483aad65530fa3e1"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_030.c",
+      "bytes": 7746762,
+      "sha256": "1786dd9982dd5a67008fd4c1d56189fc65765474a3f5d25468350f69532fa6b3"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_031.c",
+      "bytes": 3693870,
+      "sha256": "94624ab5f6a11a67c23ecfbc88b65529ff1fedfed7936e1779188026911d1615"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_032.c",
+      "bytes": 4747820,
+      "sha256": "b6072d9f8483a3821f7b4bddba7da11d59edc0075a219c0e96240d37e8a89594"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_033.c",
+      "bytes": 3752402,
+      "sha256": "05d03391c6057374cb2e4d34d2f61056070488ec2006309f5f84ea9db855a864"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_034.c",
+      "bytes": 2910179,
+      "sha256": "804bbff5adf895daeaf53e46e5e56c167adc8817c6593d0002d02828d9fa43d4"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_035.c",
+      "bytes": 2585559,
+      "sha256": "b04b7f59a0b00b33d4c483c65f8c8a69102dd2327e34019f1c3be38c8b850fb7"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_036.c",
+      "bytes": 1971191,
+      "sha256": "6288c8a497abe80dc19a4006be91fcd025c4b9c55ab508ad9cb51eaae8ae24a0"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_037.c",
+      "bytes": 1004994,
+      "sha256": "4c0f98e4a3422dd40898992dd33c3885e21331dd75dc14b18c6c068d4d4c8d9a"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_038.c",
+      "bytes": 1230771,
+      "sha256": "8b89b2405187b7e8d1dd82dd67228c507449622b396e9502b37570001dee5d62"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_039.c",
+      "bytes": 604977,
+      "sha256": "2e5068108ad0662a1636a5615c93d3fedfb38d6bcc82cb2c03ef1b818f48e615"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_040.c",
+      "bytes": 147864,
+      "sha256": "c3d500ba893c37939afc136db848ff079fbd6bf7e2b0faa7f63d4c51b320fd7f"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_041.c",
+      "bytes": 154777,
+      "sha256": "b1179bcab06213f92fb59dd04b40b9e27d6354710b8facde197bc6d0c2497a9c"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_042.c",
+      "bytes": 129760,
+      "sha256": "959f352d0455ecf7f4032f7756739c216f37b3cafbc9c86a52ca2cfa5cd66faf"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_043.c",
+      "bytes": 138524,
+      "sha256": "6bdead4f4f0a45e41726261142ebad7faf57d48c6e4873d96e5de45d05dbf959"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_044.c",
+      "bytes": 130688,
+      "sha256": "7cb3bab014d66798ddab36411f522675d05cea1aa11c03b8fb2b47502efe5166"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_045.c",
+      "bytes": 147518,
+      "sha256": "208763382172079496a53027be2fa850916c866184820847f7ef3361bbbec779"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_046.c",
+      "bytes": 143045,
+      "sha256": "61c976898b88cfde3fa2546e6f702f8dd990ccc9aa05333fb28b128dcbd53482"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_047.c",
+      "bytes": 145063,
+      "sha256": "6ce0e6b77e63f53022567f0d76ea70f465ea734c0c64f5e121c48e49af7f6f81"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_048.c",
+      "bytes": 142956,
+      "sha256": "a69321aa10362828b9056f38fab14d5d4e6443cbb04a0a4a4f5b9b82e6f5636f"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_049.c",
+      "bytes": 142589,
+      "sha256": "7e2fb3513589ec5adcc8e05b135f0575d32215020d9a2db699858024b0afb433"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_050.c",
+      "bytes": 151292,
+      "sha256": "31864c3772262199386ee339ae4435ded1f79de0b97735b66768fecadda2e6aa"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_051.c",
+      "bytes": 135416,
+      "sha256": "b471643df8a116157bc1bba7da5bcb55bc285bd9271b87534276fe0f72cfaa0c"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_052.c",
+      "bytes": 135565,
+      "sha256": "de206affbd27a7ac200ee372bfb6d6358121078de6b5762b344eae002b9a837e"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_053.c",
+      "bytes": 137820,
+      "sha256": "bd110b02a753f745e00f57209403a7ab62e5c110f765e9b7f65bf3c14f2649b8"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_054.c",
+      "bytes": 143761,
+      "sha256": "4b8723546e7f48cd21407b0e9645b8472a9bdf371cbb407ec460fcc8181b7d1b"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_055.c",
+      "bytes": 137344,
+      "sha256": "dff3023289a327be02aea96067424d51c5cfd903748c804ed5775afc0bae3bec"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_056.c",
+      "bytes": 128558,
+      "sha256": "43604ec0f385142f8b87b4ebebfeea2467659bf000343e79723e33074eef4cc9"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_057.c",
+      "bytes": 154395,
+      "sha256": "bd95cd45325751bdfd7ca749249c9d2cc96e62faf1ee31d95d0de6477067acd2"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_058.c",
+      "bytes": 164242,
+      "sha256": "740f7eeaa3151181b55d8ca6974564d9c089c79e2df1f66dca5eb23c610bdf4f"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_059.c",
+      "bytes": 141214,
+      "sha256": "558f61efda94f56a78fdff26857e7a4286d3b99c5c48a7dea5a3e8912fc175b2"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_060.c",
+      "bytes": 144551,
+      "sha256": "3b9383bcd60e79f11ecee37b1fcf95c9cfd6ecdbf6dd865b31f43514101c6657"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_061.c",
+      "bytes": 134087,
+      "sha256": "d319ff094aac8411cfe054c666ad1facfba179c0948844986c8ea1318251413c"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_062.c",
+      "bytes": 134508,
+      "sha256": "322ad07a45e860dce114191d51162abf65611f1b2461a28c30e002942dd346fb"
+    },
+    {
+      "path": "build-web-evidence/original/gen/fn_063.c",
+      "bytes": 123137,
+      "sha256": "5c128c6387d2d4c60ab23dc17b6749d0b3fdd0dbd2a00ec22fe9971da7a9c1ad"
+    }
+  ],
+  "limits": [
+    "Static file inspection; patch installer and game were not executed",
+    "Generated C is mechanical translation, not proof of semantic correctness",
+    "Runtime enhancements require the separate Bosman source wrappers",
+    "Original addresses apply only to the matched executable"
+  ]
+}

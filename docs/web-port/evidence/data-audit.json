@@ -1,0 +1,1623 @@
+{
+  "schemaVersion": 1,
+  "auditDate": "2026-10-28",
+  "auditDateTimezone": "Asia/Jerusalem",
+  "method": "Read-only SHA-256/size comparison against repository clean-file manifest; little-endian index and translated-name header decoding; no target execution.",
+  "sourceCommit": "cf2e8fa5f4cc816f252611a0e9c81e66d088358e",
+  "sourceManifest": {
+    "path": "tools/clean_files/manifest.tsv",
+    "sha256": "920cbf75653473d276cd33fbbe7a90553dcd6fff4c0878e848aaca7736dddac6"
+  },
+  "installationRoot": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game",
+  "installationRuntimeCaveat": "Installed Bosman runtime is older than current repository; original/Data identity does not establish current Bosman feature behavior.",
+  "original": {
+    "path": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/cm0102.exe",
+    "bytes": 7192576,
+    "sha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86"
+  },
+  "manual": {
+    "path": "/Users/mikepenzin/Downloads/CM0102/MANUAL/manual_uk.pdf",
+    "bytes": 1708328,
+    "sha256": "629647992bcb4dffd6cd94435671d3fe2c4efa5ecbfc423eb86ef5448d1502e7",
+    "pages": 67
+  },
+  "summary": {
+    "manifestDataEntries": 106,
+    "matchingDataEntries": 106,
+    "missingDataEntries": 0,
+    "differentDataEntries": 0,
+    "nonemptyIndexExtentsFit": true,
+    "allDataFilesExactlyCoveredByIndex": true
+  },
+  "dataFiles": [
+    {
+      "relativePath": "Data/343_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/343_default.pct",
+      "expectedSha256": "c6317a37dbd21b483d199837a927b95d8ae2d6f321f031a426dfad9b583421df",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "c6317a37dbd21b483d199837a927b95d8ae2d6f321f031a426dfad9b583421df",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/343_defensive.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/343_defensive.pct",
+      "expectedSha256": "de8a5d8bc5a8b1f49c6c9e4a5ddc1673d7778451e44fc245d7a0249f7c9a1432",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "de8a5d8bc5a8b1f49c6c9e4a5ddc1673d7778451e44fc245d7a0249f7c9a1432",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/352_attacking_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/352_attacking_default.pct",
+      "expectedSha256": "ed4f90e2442792044a5064d1b4b04b41093bb28a3fe2dd739de5086cd73df8dc",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "ed4f90e2442792044a5064d1b4b04b41093bb28a3fe2dd739de5086cd73df8dc",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/352_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/352_default.pct",
+      "expectedSha256": "fb10462f1c2dc747d8ba0566489d9111357359f576abb86d340240021c7e0d28",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "fb10462f1c2dc747d8ba0566489d9111357359f576abb86d340240021c7e0d28",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/352_defensive_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/352_defensive_default.pct",
+      "expectedSha256": "5774b1c3032f0e8963614883486e5aa13efc9f8208d3ed6c27fb3e088e204213",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "5774b1c3032f0e8963614883486e5aa13efc9f8208d3ed6c27fb3e088e204213",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/352_v1.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/352_v1.pct",
+      "expectedSha256": "aeba9e2fc8af4a9e2bd71376117ddefe9e2a8896e494081b913f8100c60f31c5",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "aeba9e2fc8af4a9e2bd71376117ddefe9e2a8896e494081b913f8100c60f31c5",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/352_v2.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/352_v2.pct",
+      "expectedSha256": "710ff235b117f7a0a12625d91ed335c562215cbcf9ccd29532ed4014a890c923",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "710ff235b117f7a0a12625d91ed335c562215cbcf9ccd29532ed4014a890c923",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/41212_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/41212_default.pct",
+      "expectedSha256": "0e87e1019e23618ef57e469d61d0bb7674abd3d7c2d1c18d4482a90ce4532210",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "0e87e1019e23618ef57e469d61d0bb7674abd3d7c2d1c18d4482a90ce4532210",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/4132.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/4132.pct",
+      "expectedSha256": "713828b3d23f815bee2278c7a05edbace0a54ec315b93778f0d004676ea5d50b",
+      "expectedBytes": 1432,
+      "exists": true,
+      "actualSha256": "713828b3d23f815bee2278c7a05edbace0a54ec315b93778f0d004676ea5d50b",
+      "actualBytes": 1432,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/424_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/424_default.pct",
+      "expectedSha256": "0ccc0e32ecd26c7d670b1fb385d09ec4e5eb7f79cfbc927dcf9ff708b0285acd",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "0ccc0e32ecd26c7d670b1fb385d09ec4e5eb7f79cfbc927dcf9ff708b0285acd",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/424_v1.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/424_v1.pct",
+      "expectedSha256": "4546b965fd5c876fc5b8c3deb659cd760b6982a9513809dfe2ee1e834d4bd5d0",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "4546b965fd5c876fc5b8c3deb659cd760b6982a9513809dfe2ee1e834d4bd5d0",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/4312_v1.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/4312_v1.pct",
+      "expectedSha256": "6dc200cb87d7329a35af5773027bcd95a486bca252d598740504044f8fae5b17",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "6dc200cb87d7329a35af5773027bcd95a486bca252d598740504044f8fae5b17",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/433_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/433_default.pct",
+      "expectedSha256": "d77dcf1f9fa390c8cb49e4a73642391f37668d04551381663232864b17176d35",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "d77dcf1f9fa390c8cb49e4a73642391f37668d04551381663232864b17176d35",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_attacking_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_attacking_default.pct",
+      "expectedSha256": "3a9d42d5c42171bbffd56d006da6097f63a8b7c6bfd312e423c3b0b741179b23",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "3a9d42d5c42171bbffd56d006da6097f63a8b7c6bfd312e423c3b0b741179b23",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_default.pct",
+      "expectedSha256": "0ce5ad3166f43bcd3f195ad48dbd4b11226f727003c1e8335eae84ecf0c6380d",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "0ce5ad3166f43bcd3f195ad48dbd4b11226f727003c1e8335eae84ecf0c6380d",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_defensive_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_defensive_default.pct",
+      "expectedSha256": "895073a00420ea7fadadb849597533b6f661fa50ba07a784b72645bae1e49973",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "895073a00420ea7fadadb849597533b6f661fa50ba07a784b72645bae1e49973",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_diamond_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_diamond_default.pct",
+      "expectedSha256": "ed48c09533c1ff4cac15eb439f05d104889a1cbdfe69f92eec57846b9459ada4",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "ed48c09533c1ff4cac15eb439f05d104889a1cbdfe69f92eec57846b9459ada4",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_push.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_push.pct",
+      "expectedSha256": "982dbacc0de8c9a7d798afb8fdbd2ea5da58f7073932c40c12ccf171c9a842de",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "982dbacc0de8c9a7d798afb8fdbd2ea5da58f7073932c40c12ccf171c9a842de",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_v1.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_v1.pct",
+      "expectedSha256": "93cdd5f8ac76bbbd374d54d9a46d737aa5caa223cb1dfc9d28ad07ea21d396e1",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "93cdd5f8ac76bbbd374d54d9a46d737aa5caa223cb1dfc9d28ad07ea21d396e1",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_v10.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_v10.pct",
+      "expectedSha256": "9809a476526be63a07a919591624c8da9b1a266c3a1457560524bc7e247520ed",
+      "expectedBytes": 1432,
+      "exists": true,
+      "actualSha256": "9809a476526be63a07a919591624c8da9b1a266c3a1457560524bc7e247520ed",
+      "actualBytes": 1432,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_v4.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_v4.pct",
+      "expectedSha256": "1f95fa809326bfe30ea0e4b7dad697ec2a2eb1f617341877d85dc763ff1cd0d9",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "1f95fa809326bfe30ea0e4b7dad697ec2a2eb1f617341877d85dc763ff1cd0d9",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_v8.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_v8.pct",
+      "expectedSha256": "49a53f1b7732ba13c934d3e7df0584e4fcfdf90ac9c421cbb3b65779870f35b4",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "49a53f1b7732ba13c934d3e7df0584e4fcfdf90ac9c421cbb3b65779870f35b4",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/442_wide.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/442_wide.pct",
+      "expectedSha256": "8d19bf7d2a6e8f4eeeb21545ba653e259f51a4a11aa36eeffd5376c63e0abbdb",
+      "expectedBytes": 1432,
+      "exists": true,
+      "actualSha256": "8d19bf7d2a6e8f4eeeb21545ba653e259f51a4a11aa36eeffd5376c63e0abbdb",
+      "actualBytes": 1432,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/451_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/451_default.pct",
+      "expectedSha256": "465b9f5784cf0eff4475f10315d675deb9b910507e411be9975bca849f36e434",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "465b9f5784cf0eff4475f10315d675deb9b910507e411be9975bca849f36e434",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/451_defensive.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/451_defensive.pct",
+      "expectedSha256": "96f7c1f139f555cf467e0bc764516abde165757c3a5ad11206bd5acab04853ea",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "96f7c1f139f555cf467e0bc764516abde165757c3a5ad11206bd5acab04853ea",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/451_norway.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/451_norway.pct",
+      "expectedSha256": "28a49b2df2beb624f11a4e310ff2cd54d7d26fddb3fbb5ec308a5af8c75eb895",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "28a49b2df2beb624f11a4e310ff2cd54d7d26fddb3fbb5ec308a5af8c75eb895",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_attacking_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_attacking_default.pct",
+      "expectedSha256": "0802e02dd43caf281b1da04ffdd896b6c16ffd970fde6228ed442bb1fc08d5cf",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "0802e02dd43caf281b1da04ffdd896b6c16ffd970fde6228ed442bb1fc08d5cf",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_default.pct",
+      "expectedSha256": "6c80536d32bb880f0a0adc4db3d26c2d5f833bae34536fc81eb6ee9fe612dd64",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "6c80536d32bb880f0a0adc4db3d26c2d5f833bae34536fc81eb6ee9fe612dd64",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_defensive_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_defensive_default.pct",
+      "expectedSha256": "874350c093530b6d2f49da6184e8d56859c8c787ecbe73e42946fef9fc7cded6",
+      "expectedBytes": 1476,
+      "exists": true,
+      "actualSha256": "874350c093530b6d2f49da6184e8d56859c8c787ecbe73e42946fef9fc7cded6",
+      "actualBytes": 1476,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_v1.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_v1.pct",
+      "expectedSha256": "3ff956b1b25c3738cbea654ef21c720ce9f65a3bb8370ed44cc1a7197a18f564",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "3ff956b1b25c3738cbea654ef21c720ce9f65a3bb8370ed44cc1a7197a18f564",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_v2.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_v2.pct",
+      "expectedSha256": "6667856829ecf252ab7ffa760c09807eb07864190ce853263d16975e3681cfb9",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "6667856829ecf252ab7ffa760c09807eb07864190ce853263d16975e3681cfb9",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_v3.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_v3.pct",
+      "expectedSha256": "f0d13a22ef55cad4bef2d54434158014f5bd45901cc1210994b03450caca82c0",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "f0d13a22ef55cad4bef2d54434158014f5bd45901cc1210994b03450caca82c0",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_v4.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_v4.pct",
+      "expectedSha256": "5096b86959a4c71a61e73f572a7104aad7e51e65140f68f85d9778d7355563b0",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "5096b86959a4c71a61e73f572a7104aad7e51e65140f68f85d9778d7355563b0",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_v5.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_v5.pct",
+      "expectedSha256": "4c453b1dd9f20f638bb6fd2b0cfc295111948de67a71ae165f9a1c912a3c45eb",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "4c453b1dd9f20f638bb6fd2b0cfc295111948de67a71ae165f9a1c912a3c45eb",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_v6.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_v6.pct",
+      "expectedSha256": "32d366e888ca4d971345e0ba625e8993b9fa99698a2129b8562bd531b93996f4",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "32d366e888ca4d971345e0ba625e8993b9fa99698a2129b8562bd531b93996f4",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_v7.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_v7.pct",
+      "expectedSha256": "86177bbb5704a0cdce274862553bbf1b63beaaf32f502545118f5a6c583d9f8b",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "86177bbb5704a0cdce274862553bbf1b63beaaf32f502545118f5a6c583d9f8b",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/532_v9.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/532_v9.pct",
+      "expectedSha256": "d180cf823b9b98d69dcf8c9497e79e30992bda3d6f9cf2d42accc126509eb50e",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "d180cf823b9b98d69dcf8c9497e79e30992bda3d6f9cf2d42accc126509eb50e",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/arial_14.fnt",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/arial_14.fnt",
+      "expectedSha256": "2baa1b0af0bb4eac014d20708c55ad9ec628c00409a9e923b747ded1dcf792cf",
+      "expectedBytes": 26961,
+      "exists": true,
+      "actualSha256": "2baa1b0af0bb4eac014d20708c55ad9ec628c00409a9e923b747ded1dcf792cf",
+      "actualBytes": 26961,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/arial_16.fnt",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/arial_16.fnt",
+      "expectedSha256": "e3d615e5a11128f1784374b700a83c0478f6f476c4b25bb55993787ca57bd9fd",
+      "expectedBytes": 32964,
+      "exists": true,
+      "actualSha256": "e3d615e5a11128f1784374b700a83c0478f6f476c4b25bb55993787ca57bd9fd",
+      "actualBytes": 32964,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/arial_18.fnt",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/arial_18.fnt",
+      "expectedSha256": "406f61ed37adf8699bab7e82d5196cc7ae821c4c2aaa44fe3b3e20d5cfd1621a",
+      "expectedBytes": 40605,
+      "exists": true,
+      "actualSha256": "406f61ed37adf8699bab7e82d5196cc7ae821c4c2aaa44fe3b3e20d5cfd1621a",
+      "actualBytes": 40605,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/arial_narrow_10.fnt",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/arial_narrow_10.fnt",
+      "expectedSha256": "d7fd44c8c6cd248cd25d541759db2150d4f3bcd416841418df1d25c8a98ac154",
+      "expectedBytes": 13728,
+      "exists": true,
+      "actualSha256": "d7fd44c8c6cd248cd25d541759db2150d4f3bcd416841418df1d25c8a98ac154",
+      "actualBytes": 13728,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/arial_narrow_11.fnt",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/arial_narrow_11.fnt",
+      "expectedSha256": "0370a05afe282ba0e5f3b918d63f664aae12d47977c944073665df33df9cb72a",
+      "expectedBytes": 17070,
+      "exists": true,
+      "actualSha256": "0370a05afe282ba0e5f3b918d63f664aae12d47977c944073665df33df9cb72a",
+      "actualBytes": 17070,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/city.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/city.dat",
+      "expectedSha256": "bfa3d3c7b6af6eb530798a9eb9e9dbefd79230be85fc237904990c4edbb0583d",
+      "expectedBytes": 374192,
+      "exists": true,
+      "actualSha256": "bfa3d3c7b6af6eb530798a9eb9e9dbefd79230be85fc237904990c4edbb0583d",
+      "actualBytes": 374192,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/club.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/club.dat",
+      "expectedSha256": "32da1bc33450a1c73d9e3f4ffcd11fde2866ba7ff0f228f4effb2052856ecd87",
+      "expectedBytes": 7677334,
+      "exists": true,
+      "actualSha256": "32da1bc33450a1c73d9e3f4ffcd11fde2866ba7ff0f228f4effb2052856ecd87",
+      "actualBytes": 7677334,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/club_comp.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/club_comp.dat",
+      "expectedSha256": "a9b99cb7aaa3910fd740b30ede51746cf44dc88e451df780e3fb6904f06892cd",
+      "expectedBytes": 46331,
+      "exists": true,
+      "actualSha256": "a9b99cb7aaa3910fd740b30ede51746cf44dc88e451df780e3fb6904f06892cd",
+      "actualBytes": 46331,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/club_comp_history.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/club_comp_history.dat",
+      "expectedSha256": "38a730d0c95a162e1fe5de37d7becfb85055dd8411b410b2d29a874cb99f4864",
+      "expectedBytes": 279916,
+      "exists": true,
+      "actualSha256": "38a730d0c95a162e1fe5de37d7becfb85055dd8411b410b2d29a874cb99f4864",
+      "actualBytes": 279916,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/colour.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/colour.dat",
+      "expectedSha256": "d6bfbec988316bab8316138dc33fc81bca385cfabf536180c9e3c4f70971580f",
+      "expectedBytes": 1972,
+      "exists": true,
+      "actualSha256": "d6bfbec988316bab8316138dc33fc81bca385cfabf536180c9e3c4f70971580f",
+      "actualBytes": 1972,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/common_names.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/common_names.dat",
+      "expectedSha256": "e92ea87d052f38301395ad9d9dfb049bb6c55737d5312aeea71ca28296ab321b",
+      "expectedBytes": 795360,
+      "exists": true,
+      "actualSha256": "e92ea87d052f38301395ad9d9dfb049bb6c55737d5312aeea71ca28296ab321b",
+      "actualBytes": 795360,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/continent.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/continent.dat",
+      "expectedSha256": "3f77bd10c3df91d0233306e3102bfa6e94d21a9b544dd8b3dd28b7b98e7524ce",
+      "expectedBytes": 1188,
+      "exists": true,
+      "actualSha256": "3f77bd10c3df91d0233306e3102bfa6e94d21a9b544dd8b3dd28b7b98e7524ce",
+      "actualBytes": 1188,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/Cpuinf32.dll",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/Cpuinf32.dll",
+      "expectedSha256": "5e7f97ecbb834822a9913124f181c1e82ffbda6a7c13f2deb1f963c09383f31e",
+      "expectedBytes": 19968,
+      "exists": true,
+      "actualSha256": "5e7f97ecbb834822a9913124f181c1e82ffbda6a7c13f2deb1f963c09383f31e",
+      "actualBytes": 19968,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/dan.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/dan.lng",
+      "expectedSha256": "6018ed4e7946692dd4a9ab74421c30d6deb516d838e9d73896f2eb88608915e5",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "6018ed4e7946692dd4a9ab74421c30d6deb516d838e9d73896f2eb88608915e5",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/default_pic.rgn",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/default_pic.rgn",
+      "expectedSha256": "d3f7a0d4bea834eea0e0206380d26f69421fbdf75601543a023a13cf91b1f392",
+      "expectedBytes": 960048,
+      "exists": true,
+      "actualSha256": "d3f7a0d4bea834eea0e0206380d26f69421fbdf75601543a023a13cf91b1f392",
+      "actualBytes": 960048,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/defensive_counter.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/defensive_counter.pct",
+      "expectedSha256": "a195f4b01c96fbc564f70f779055eaa85e334806d12bdc56262103f526ee6008",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "a195f4b01c96fbc564f70f779055eaa85e334806d12bdc56262103f526ee6008",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/eidos.rgn",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/eidos.rgn",
+      "expectedSha256": "4a1324708c3d5c86caa6fbc2639b12fc8b051caee40ab09b726bfac9c64816c3",
+      "expectedBytes": 231916,
+      "exists": true,
+      "actualSha256": "4a1324708c3d5c86caa6fbc2639b12fc8b051caee40ab09b726bfac9c64816c3",
+      "actualBytes": 231916,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/eng.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/eng.lng",
+      "expectedSha256": "391017caa3177e8343f5576f7dcebf5a716c7df58f60cc853dd39733f270b217",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "391017caa3177e8343f5576f7dcebf5a716c7df58f60cc853dd39733f270b217",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/esp.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/esp.lng",
+      "expectedSha256": "581f0c66422f3690812d18c6c0383046d7a790564da05d506def3c157c553f59",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "581f0c66422f3690812d18c6c0383046d7a790564da05d506def3c157c553f59",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/euro.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/euro.cfg",
+      "expectedSha256": "62b38466dbdd5928b0799b79da7d427f5adafdafec96cb2d5979ff89a0866f47",
+      "expectedBytes": 4176,
+      "exists": true,
+      "actualSha256": "62b38466dbdd5928b0799b79da7d427f5adafdafec96cb2d5979ff89a0866f47",
+      "actualBytes": 4176,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_dan.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_dan.cfg",
+      "expectedSha256": "e799e1917d6a4e7452934c6b43c2748edbc1f4c27f3d58c56dd258af928a43ad",
+      "expectedBytes": 373490,
+      "exists": true,
+      "actualSha256": "e799e1917d6a4e7452934c6b43c2748edbc1f4c27f3d58c56dd258af928a43ad",
+      "actualBytes": 373490,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_eng.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_eng.cfg",
+      "expectedSha256": "94cb8623c6f305335b9ce7761444766f9fe374ab53b075a935cebdf595e489ed",
+      "expectedBytes": 363098,
+      "exists": true,
+      "actualSha256": "94cb8623c6f305335b9ce7761444766f9fe374ab53b075a935cebdf595e489ed",
+      "actualBytes": 363098,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_fra.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_fra.cfg",
+      "expectedSha256": "e716750aef7af983beee7d4982be787cc0dbfd0778971b7bc9a8ff393a41f347",
+      "expectedBytes": 386526,
+      "exists": true,
+      "actualSha256": "e716750aef7af983beee7d4982be787cc0dbfd0778971b7bc9a8ff393a41f347",
+      "actualBytes": 386526,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_ger.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_ger.cfg",
+      "expectedSha256": "ee895cc121d695d589fa0730e441dc364674f2b6ccf6e10bef9029ce02e8cd19",
+      "expectedBytes": 366301,
+      "exists": true,
+      "actualSha256": "ee895cc121d695d589fa0730e441dc364674f2b6ccf6e10bef9029ce02e8cd19",
+      "actualBytes": 366301,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_ita.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_ita.cfg",
+      "expectedSha256": "4f215afb6d7b28026cb977679fc177d46826a1f7f5ce741e2a5d17c4a275990a",
+      "expectedBytes": 403991,
+      "exists": true,
+      "actualSha256": "4f215afb6d7b28026cb977679fc177d46826a1f7f5ce741e2a5d17c4a275990a",
+      "actualBytes": 403991,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_ned.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_ned.cfg",
+      "expectedSha256": "b1708d950eba1fb21bac30a8843d1d805fdcd94a30d984ae36857605398ca33b",
+      "expectedBytes": 384385,
+      "exists": true,
+      "actualSha256": "b1708d950eba1fb21bac30a8843d1d805fdcd94a30d984ae36857605398ca33b",
+      "actualBytes": 384385,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_nor.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_nor.cfg",
+      "expectedSha256": "1977f75dba89f068d39550313881e64e3a028bddcd2ccb38f5fc37a0e8821c43",
+      "expectedBytes": 361722,
+      "exists": true,
+      "actualSha256": "1977f75dba89f068d39550313881e64e3a028bddcd2ccb38f5fc37a0e8821c43",
+      "actualBytes": 361722,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_por.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_por.cfg",
+      "expectedSha256": "2f2f34c233e6965e88d84b80c8b1e11d70e88faa227d30b0b3c24d4ab6697998",
+      "expectedBytes": 369290,
+      "exists": true,
+      "actualSha256": "2f2f34c233e6965e88d84b80c8b1e11d70e88faa227d30b0b3c24d4ab6697998",
+      "actualBytes": 369290,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_spa.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_spa.cfg",
+      "expectedSha256": "5f50abdc8d40a463b37e5673a42574adbd86cfc0c430d06d3e75a10639f07484",
+      "expectedBytes": 386441,
+      "exists": true,
+      "actualSha256": "5f50abdc8d40a463b37e5673a42574adbd86cfc0c430d06d3e75a10639f07484",
+      "actualBytes": 386441,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/events_swe.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/events_swe.cfg",
+      "expectedSha256": "097e10417957ccf32a339d80bc2f268895ddec481226bc2c1a5ce5778169c495",
+      "expectedBytes": 373216,
+      "exists": true,
+      "actualSha256": "097e10417957ccf32a339d80bc2f268895ddec481226bc2c1a5ce5778169c495",
+      "actualBytes": 373216,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/fancluburls.txt",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/fancluburls.txt",
+      "expectedSha256": "992f88d08eb3f70f6bc3bbb1a97984025e701a11d2fd863103af96c07d742902",
+      "expectedBytes": 7137,
+      "exists": true,
+      "actualSha256": "992f88d08eb3f70f6bc3bbb1a97984025e701a11d2fd863103af96c07d742902",
+      "actualBytes": 7137,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/first_names.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/first_names.dat",
+      "expectedSha256": "6ee911754313a1defce19e6ead36073d1ba68fad609cf3bb84814e0e77bc0be9",
+      "expectedBytes": 2656860,
+      "exists": true,
+      "actualSha256": "6ee911754313a1defce19e6ead36073d1ba68fad609cf3bb84814e0e77bc0be9",
+      "actualBytes": 2656860,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/fra.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/fra.lng",
+      "expectedSha256": "9971dd66a749c1bdaf22a6d72e321dcc2253194c95fc0f04daadf5d79606813a",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "9971dd66a749c1bdaf22a6d72e321dcc2253194c95fc0f04daadf5d79606813a",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/game.mbr",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/game.mbr",
+      "expectedSha256": "369df68f2dbe40233b9e0709e9ac873f8b2551b5c835e338d61ea97d706db3a2",
+      "expectedBytes": 108048,
+      "exists": true,
+      "actualSha256": "369df68f2dbe40233b9e0709e9ac873f8b2551b5c835e338d61ea97d706db3a2",
+      "actualBytes": 108048,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/ger.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/ger.lng",
+      "expectedSha256": "5220cc7585b1e0fb250d847d2fc74b14a6e7535c6112bc55ff54e65952ae0b41",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "5220cc7585b1e0fb250d847d2fc74b14a6e7535c6112bc55ff54e65952ae0b41",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/hol.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/hol.lng",
+      "expectedSha256": "51f57bd7a2021bb6b136b56f01546b4e292262ff73f78835bb82e770c39a4615",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "51f57bd7a2021bb6b136b56f01546b4e292262ff73f78835bb82e770c39a4615",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/index.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/index.dat",
+      "expectedSha256": "cab19a09aa092fdf2200dc8cea0f72506b9ff924396d26e24fc59e7cc894fb03",
+      "expectedBytes": 1482,
+      "exists": true,
+      "actualSha256": "cab19a09aa092fdf2200dc8cea0f72506b9ff924396d26e24fc59e7cc894fb03",
+      "actualBytes": 1482,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/ita.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/ita.lng",
+      "expectedSha256": "71eb108008dc392b20ba57d7075a4ff3d8faef3989a415ac6f809557617ba3a0",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "71eb108008dc392b20ba57d7075a4ff3d8faef3989a415ac6f809557617ba3a0",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/kio.rgn",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/kio.rgn",
+      "expectedSha256": "90652d935d7d6db72a2e8fa440c9a85a35b9337bd17daa6579d8024bef76f4a8",
+      "expectedBytes": 960048,
+      "exists": true,
+      "actualSha256": "90652d935d7d6db72a2e8fa440c9a85a35b9337bd17daa6579d8024bef76f4a8",
+      "actualBytes": 960048,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/language.ldb",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/language.ldb",
+      "expectedSha256": "7f6fcec87709fc0072e05a44fa7f781978f2abd247630e1d977f74ecac449b59",
+      "expectedBytes": 204672142,
+      "exists": true,
+      "actualSha256": "7f6fcec87709fc0072e05a44fa7f781978f2abd247630e1d977f74ecac449b59",
+      "actualBytes": 204672142,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/large.t2k",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/large.t2k",
+      "expectedSha256": "2dd50062293ed3375e0aa13a88e70654905161be555e66b18df865c9d9098a68",
+      "expectedBytes": 17508,
+      "exists": true,
+      "actualSha256": "2dd50062293ed3375e0aa13a88e70654905161be555e66b18df865c9d9098a68",
+      "actualBytes": 17508,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/logo.rgn",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/logo.rgn",
+      "expectedSha256": "bb8bfc2558cd80fdb3b94fd1efda592fc1c6d5e8b4687def686d4235a520884d",
+      "expectedBytes": 540848,
+      "exists": true,
+      "actualSha256": "bb8bfc2558cd80fdb3b94fd1efda592fc1c6d5e8b4687def686d4235a520884d",
+      "actualBytes": 540848,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/match.mbr",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/match.mbr",
+      "expectedSha256": "369df68f2dbe40233b9e0709e9ac873f8b2551b5c835e338d61ea97d706db3a2",
+      "expectedBytes": 108048,
+      "exists": true,
+      "actualSha256": "369df68f2dbe40233b9e0709e9ac873f8b2551b5c835e338d61ea97d706db3a2",
+      "actualBytes": 108048,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/medium.t2k",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/medium.t2k",
+      "expectedSha256": "dc5749d9ce9cef6d0a0c693f025a856c370a4d286519d6f2e626e62df241a965",
+      "expectedBytes": 22416,
+      "exists": true,
+      "actualSha256": "dc5749d9ce9cef6d0a0c693f025a856c370a4d286519d6f2e626e62df241a965",
+      "actualBytes": 22416,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/nat_club.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/nat_club.dat",
+      "expectedSha256": "abd350c31f181f218643d8ccfcfd58ff8316c4a05112c4ad140d8982ce26007b",
+      "expectedBytes": 247506,
+      "exists": true,
+      "actualSha256": "abd350c31f181f218643d8ccfcfd58ff8316c4a05112c4ad140d8982ce26007b",
+      "actualBytes": 247506,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/nation.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/nation.dat",
+      "expectedSha256": "3868c523f26cea7732850ad0d5948605a9e5c53855e255b9f318b170c0634ffe",
+      "expectedBytes": 61770,
+      "exists": true,
+      "actualSha256": "3868c523f26cea7732850ad0d5948605a9e5c53855e255b9f318b170c0634ffe",
+      "actualBytes": 61770,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/nation_comp.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/nation_comp.dat",
+      "expectedSha256": "1db57e1a07c2e4e638ef19c035354a8a2d180758daba835598656b090e4480ef",
+      "expectedBytes": 2033,
+      "exists": true,
+      "actualSha256": "1db57e1a07c2e4e638ef19c035354a8a2d180758daba835598656b090e4480ef",
+      "actualBytes": 2033,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/nation_comp_history.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/nation_comp_history.dat",
+      "expectedSha256": "1710b471a78779848efe71e138ca9411d947396cc5e370b0a30dd27b38962b24",
+      "expectedBytes": 7098,
+      "exists": true,
+      "actualSha256": "1710b471a78779848efe71e138ca9411d947396cc5e370b0a30dd27b38962b24",
+      "actualBytes": 7098,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/nor.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/nor.lng",
+      "expectedSha256": "e80f918ea34b53301219a69e4722e1c814b3c61ba2382c2d0f419da70442890d",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "e80f918ea34b53301219a69e4722e1c814b3c61ba2382c2d0f419da70442890d",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/officials.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/officials.dat",
+      "expectedSha256": "50f7e16484ffa5731c33293cc347b28c3d2875062688a03cbec8bbec3da04882",
+      "expectedBytes": 196381,
+      "exists": true,
+      "actualSha256": "50f7e16484ffa5731c33293cc347b28c3d2875062688a03cbec8bbec3da04882",
+      "actualBytes": 196381,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/player_setup.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/player_setup.cfg",
+      "expectedSha256": "b79989b68c0832a8da54d37e153fbb718975c85790bcda9907fb9110fbc0f805",
+      "expectedBytes": 21151,
+      "exists": true,
+      "actualSha256": "b79989b68c0832a8da54d37e153fbb718975c85790bcda9907fb9110fbc0f805",
+      "actualBytes": 21151,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/por.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/por.lng",
+      "expectedSha256": "4877211c9127573046167d1f9676f3d9ff03f3a2cebc121ddfe97a3d1d47f51b",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "4877211c9127573046167d1f9676f3d9ff03f3a2cebc121ddfe97a3d1d47f51b",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/pundit.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/pundit.cfg",
+      "expectedSha256": "ba525f2a1f0d20ea06671159362bb7f58eea9bfa950237d6883472862534c2a5",
+      "expectedBytes": 15875,
+      "exists": true,
+      "actualSha256": "ba525f2a1f0d20ea06671159362bb7f58eea9bfa950237d6883472862534c2a5",
+      "actualBytes": 15875,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/savechip.rgn",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/savechip.rgn",
+      "expectedSha256": "e0f80bf9ee2f65da825aea725a7416e056f8da081f7fdd0245ae80cf1912d79c",
+      "expectedBytes": 960048,
+      "exists": true,
+      "actualSha256": "e0f80bf9ee2f65da825aea725a7416e056f8da081f7fdd0245ae80cf1912d79c",
+      "actualBytes": 960048,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/second_names.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/second_names.dat",
+      "expectedSha256": "ba3dceda48cdda03982065fdaced76a9cf6ed930a74fde21541c20e685c2b045",
+      "expectedBytes": 6263700,
+      "exists": true,
+      "actualSha256": "ba3dceda48cdda03982065fdaced76a9cf6ed930a74fde21541c20e685c2b045",
+      "actualBytes": 6263700,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/si.rgn",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/si.rgn",
+      "expectedSha256": "1f2f6be7d54e7dd42e64d9a065d0b5adc16635808775a789207a792263ad4a79",
+      "expectedBytes": 960048,
+      "exists": true,
+      "actualSha256": "1f2f6be7d54e7dd42e64d9a065d0b5adc16635808775a789207a792263ad4a79",
+      "actualBytes": 960048,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/small.t2k",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/small.t2k",
+      "expectedSha256": "dc5749d9ce9cef6d0a0c693f025a856c370a4d286519d6f2e626e62df241a965",
+      "expectedBytes": 22416,
+      "exists": true,
+      "actualSha256": "dc5749d9ce9cef6d0a0c693f025a856c370a4d286519d6f2e626e62df241a965",
+      "actualBytes": 22416,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/stadium.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/stadium.dat",
+      "expectedSha256": "dd7b396cb526844db20a1cb4e54e0be8af084028c2fec8cdd34b297c67ef67f3",
+      "expectedBytes": 695526,
+      "exists": true,
+      "actualSha256": "dd7b396cb526844db20a1cb4e54e0be8af084028c2fec8cdd34b297c67ef67f3",
+      "actualBytes": 695526,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/staff.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/staff.dat",
+      "expectedSha256": "297d674bdb512546f2c12c174600ea2ba91768dfe4f97bcb6767e39eb99db8b4",
+      "expectedBytes": 38469344,
+      "exists": true,
+      "actualSha256": "297d674bdb512546f2c12c174600ea2ba91768dfe4f97bcb6767e39eb99db8b4",
+      "actualBytes": 38469344,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/staff_comp.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/staff_comp.dat",
+      "expectedSha256": "f467ac6bae0aca083cde76bc32e01b6952d866c730a0a191dcc883f6a6f45485",
+      "expectedBytes": 54843,
+      "exists": true,
+      "actualSha256": "f467ac6bae0aca083cde76bc32e01b6952d866c730a0a191dcc883f6a6f45485",
+      "actualBytes": 54843,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/staff_comp_history.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/staff_comp_history.dat",
+      "expectedSha256": "625770b4365e35d5bd054cbfa63147063fa0ccc4cd85d570378a024278422e31",
+      "expectedBytes": 151322,
+      "exists": true,
+      "actualSha256": "625770b4365e35d5bd054cbfa63147063fa0ccc4cd85d570378a024278422e31",
+      "actualBytes": 151322,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/staff_history.dat",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/staff_history.dat",
+      "expectedSha256": "91c8817921ba9dfdde4ba3a45ca8541161673441bc4c649d767159b5a99191e0",
+      "expectedBytes": 6559382,
+      "exists": true,
+      "actualSha256": "91c8817921ba9dfdde4ba3a45ca8541161673441bc4c649d767159b5a99191e0",
+      "actualBytes": 6559382,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/swe.lng",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/swe.lng",
+      "expectedSha256": "caf62f46a0c107f2531dc1da98249a355804ddf64d7caa2b35f2ada770ddb27f",
+      "expectedBytes": 1993486,
+      "exists": true,
+      "actualSha256": "caf62f46a0c107f2531dc1da98249a355804ddf64d7caa2b35f2ada770ddb27f",
+      "actualBytes": 1993486,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/sweeper_default.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/sweeper_default.pct",
+      "expectedSha256": "7db6311bf073b0386cb198cab14a93b2420475bef93e146db4eeb17b7659fe63",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "7db6311bf073b0386cb198cab14a93b2420475bef93e146db4eeb17b7659fe63",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/sweeper_v1.pct",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/sweeper_v1.pct",
+      "expectedSha256": "46e8ec44c0ed9ce99c8b454af668d00faba0b13a18d29d24a55f54441e7c1178",
+      "expectedBytes": 1428,
+      "exists": true,
+      "actualSha256": "46e8ec44c0ed9ce99c8b454af668d00faba0b13a18d29d24a55f54441e7c1178",
+      "actualBytes": 1428,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/symbol.ttf",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/symbol.ttf",
+      "expectedSha256": "946ba638d6f214db6430e61f7ec4e980ac6642958e0393808f8fa13805920cd1",
+      "expectedBytes": 4552,
+      "exists": true,
+      "actualSha256": "946ba638d6f214db6430e61f7ec4e980ac6642958e0393808f8fa13805920cd1",
+      "actualBytes": 4552,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/trade_cond_24_bold.fnt",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/trade_cond_24_bold.fnt",
+      "expectedSha256": "ab26031ef4ba5d611f23e2a33c12fa1ea1ebe0b807490c47d11b3765c2130077",
+      "expectedBytes": 60645,
+      "exists": true,
+      "actualSha256": "ab26031ef4ba5d611f23e2a33c12fa1ea1ebe0b807490c47d11b3765c2130077",
+      "actualBytes": 60645,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/trade_cond_28_bold.fnt",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/trade_cond_28_bold.fnt",
+      "expectedSha256": "e834b0ce7cd09bb20e4a8394a6c37ea4136e55464a593f2f332975579bf54f49",
+      "expectedBytes": 78558,
+      "exists": true,
+      "actualSha256": "e834b0ce7cd09bb20e4a8394a6c37ea4136e55464a593f2f332975579bf54f49",
+      "actualBytes": 78558,
+      "matches": true
+    },
+    {
+      "relativePath": "Data/weather.cfg",
+      "absolutePath": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/weather.cfg",
+      "expectedSha256": "79465370fb159fea95f8620ece738a9355cfb51f23c273df933ecfff710f75f8",
+      "expectedBytes": 26671,
+      "exists": true,
+      "actualSha256": "79465370fb159fea95f8620ece738a9355cfb51f23c273df933ecfff710f75f8",
+      "actualBytes": 26671,
+      "matches": true
+    }
+  ],
+  "extraDataFiles": [
+    {
+      "relativePath": "Data/bosman_logo.rgn",
+      "bytes": 540848,
+      "sha256": "8bc60d613bbd5bb17b94e0f10a7f831f381add760017dabc1ee63615f4b02697"
+    }
+  ],
+  "dataExtensionCounts": {
+    ".cfg": 14,
+    ".dat": 20,
+    ".dll": 1,
+    ".fnt": 7,
+    ".ldb": 1,
+    ".lng": 10,
+    ".mbr": 2,
+    ".pct": 40,
+    ".rgn": 7,
+    ".t2k": 3,
+    ".ttf": 1,
+    ".txt": 1
+  },
+  "databaseIndex": {
+    "path": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/index.dat",
+    "sha256": "cab19a09aa092fdf2200dc8cea0f72506b9ff924396d26e24fc59e7cc894fb03",
+    "bytes": 1482,
+    "headerInts": [
+      0,
+      0
+    ],
+    "entryCount": 22,
+    "entryBytes": 67,
+    "entries": [
+      {
+        "ordinal": 0,
+        "filename": "club.dat",
+        "tableId": 0,
+        "tableNameFromCurrentHeader": "club",
+        "recordCount": 13214,
+        "offsetBytes": 0,
+        "format": 2,
+        "recordBytes": 581,
+        "declaredEndBytes": 7677334,
+        "fileBytes": 7677334,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 1,
+        "filename": "nat_club.dat",
+        "tableId": 1,
+        "tableNameFromCurrentHeader": "national_club",
+        "recordCount": 426,
+        "offsetBytes": 0,
+        "format": 2,
+        "recordBytes": 581,
+        "declaredEndBytes": 247506,
+        "fileBytes": 247506,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 2,
+        "filename": "colour.dat",
+        "tableId": 2,
+        "tableNameFromCurrentHeader": "colour",
+        "recordCount": 34,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 58,
+        "declaredEndBytes": 1972,
+        "fileBytes": 1972,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 3,
+        "filename": "continent.dat",
+        "tableId": 3,
+        "tableNameFromCurrentHeader": "continent",
+        "recordCount": 6,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 198,
+        "declaredEndBytes": 1188,
+        "fileBytes": 1188,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 4,
+        "filename": "nation.dat",
+        "tableId": 4,
+        "tableNameFromCurrentHeader": "nation",
+        "recordCount": 213,
+        "offsetBytes": 0,
+        "format": 2,
+        "recordBytes": 290,
+        "declaredEndBytes": 61770,
+        "fileBytes": 61770,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 5,
+        "filename": "officials.dat",
+        "tableId": 7,
+        "tableNameFromCurrentHeader": "official",
+        "recordCount": 4567,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 43,
+        "declaredEndBytes": 196381,
+        "fileBytes": 196381,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 6,
+        "filename": "stadium.dat",
+        "tableId": 5,
+        "tableNameFromCurrentHeader": "stadium",
+        "recordCount": 8917,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 78,
+        "declaredEndBytes": 695526,
+        "fileBytes": 695526,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 7,
+        "filename": "staff.dat",
+        "tableId": 6,
+        "tableNameFromCurrentHeader": "staff_disk",
+        "recordCount": 169342,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 157,
+        "declaredEndBytes": 26586694,
+        "fileBytes": 38469344,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 8,
+        "filename": "staff.dat",
+        "tableId": 8,
+        "tableNameFromCurrentHeader": "staff_b_no_reader",
+        "recordCount": 0,
+        "offsetBytes": 26586694,
+        "format": 1,
+        "recordBytes": null,
+        "declaredEndBytes": null,
+        "fileBytes": 38469344,
+        "extentWithinFile": null,
+        "unknownWidthWithZeroRecords": true
+      },
+      {
+        "ordinal": 9,
+        "filename": "staff.dat",
+        "tableId": 9,
+        "tableNameFromCurrentHeader": "non_player",
+        "recordCount": 30865,
+        "offsetBytes": 26586694,
+        "format": 2,
+        "recordBytes": 68,
+        "declaredEndBytes": 28685514,
+        "fileBytes": 38469344,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 10,
+        "filename": "staff.dat",
+        "tableId": 10,
+        "tableNameFromCurrentHeader": "player",
+        "recordCount": 139769,
+        "offsetBytes": 28685514,
+        "format": 2,
+        "recordBytes": 70,
+        "declaredEndBytes": 38469344,
+        "fileBytes": 38469344,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 11,
+        "filename": "staff_comp.dat",
+        "tableId": 11,
+        "tableNameFromCurrentHeader": "staff_competition",
+        "recordCount": 543,
+        "offsetBytes": 0,
+        "format": 2,
+        "recordBytes": 101,
+        "declaredEndBytes": 54843,
+        "fileBytes": 54843,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 12,
+        "filename": "city.dat",
+        "tableId": 21,
+        "tableNameFromCurrentHeader": "city",
+        "recordCount": 6682,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 56,
+        "declaredEndBytes": 374192,
+        "fileBytes": 374192,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 13,
+        "filename": "club_comp.dat",
+        "tableId": 12,
+        "tableNameFromCurrentHeader": "club_competition",
+        "recordCount": 433,
+        "offsetBytes": 0,
+        "format": 2,
+        "recordBytes": 107,
+        "declaredEndBytes": 46331,
+        "fileBytes": 46331,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 14,
+        "filename": "nation_comp.dat",
+        "tableId": 16,
+        "tableNameFromCurrentHeader": "nation_competition",
+        "recordCount": 19,
+        "offsetBytes": 0,
+        "format": 2,
+        "recordBytes": 107,
+        "declaredEndBytes": 2033,
+        "fileBytes": 2033,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 15,
+        "filename": "first_names.dat",
+        "tableId": 13,
+        "tableNameFromCurrentHeader": "first_name",
+        "recordCount": 44281,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 60,
+        "declaredEndBytes": 2656860,
+        "fileBytes": 2656860,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 16,
+        "filename": "second_names.dat",
+        "tableId": 14,
+        "tableNameFromCurrentHeader": "second_name",
+        "recordCount": 104395,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 60,
+        "declaredEndBytes": 6263700,
+        "fileBytes": 6263700,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 17,
+        "filename": "common_names.dat",
+        "tableId": 15,
+        "tableNameFromCurrentHeader": "common_name",
+        "recordCount": 13256,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 60,
+        "declaredEndBytes": 795360,
+        "fileBytes": 795360,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 18,
+        "filename": "staff_history.dat",
+        "tableId": 17,
+        "tableNameFromCurrentHeader": "staff_history",
+        "recordCount": 385846,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 17,
+        "declaredEndBytes": 6559382,
+        "fileBytes": 6559382,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 19,
+        "filename": "staff_comp_history.dat",
+        "tableId": 18,
+        "tableNameFromCurrentHeader": "staff_competition_history",
+        "recordCount": 2609,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 58,
+        "declaredEndBytes": 151322,
+        "fileBytes": 151322,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 20,
+        "filename": "club_comp_history.dat",
+        "tableId": 19,
+        "tableNameFromCurrentHeader": "club_competition_history",
+        "recordCount": 10766,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 26,
+        "declaredEndBytes": 279916,
+        "fileBytes": 279916,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      },
+      {
+        "ordinal": 21,
+        "filename": "nation_comp_history.dat",
+        "tableId": 20,
+        "tableNameFromCurrentHeader": "nation_competition_history",
+        "recordCount": 273,
+        "offsetBytes": 0,
+        "format": 1,
+        "recordBytes": 26,
+        "declaredEndBytes": 7098,
+        "fileBytes": 7098,
+        "extentWithinFile": true,
+        "unknownWidthWithZeroRecords": false
+      }
+    ],
+    "fileExtents": [
+      {
+        "filename": "club.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "nat_club.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "colour.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "continent.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "nation.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "officials.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "stadium.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "staff.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "staff_comp.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "city.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "club_comp.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "nation_comp.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "first_names.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "second_names.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "common_names.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "staff_history.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "staff_comp_history.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "club_comp_history.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      },
+      {
+        "filename": "nation_comp_history.dat",
+        "contiguousFromStart": true,
+        "endsExactlyAtFileSize": true
+      }
+    ]
+  },
+  "englishTranslatedNames": {
+    "path": "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/Data/eng.lng",
+    "sha256": "391017caa3177e8343f5576f7dcebf5a716c7df58f60cc853dd39733f270b217",
+    "bytes": 1993486,
+    "headerCounts": [
+      13640,
+      6,
+      19,
+      213,
+      6682,
+      433,
+      8917,
+      543
+    ],
+    "sections": [
+      {
+        "name": "clubs",
+        "headerCountIndex": 0,
+        "records": 13640,
+        "recordBytes": 79,
+        "startBytes": 32,
+        "endBytes": 1077592
+      },
+      {
+        "name": "continents",
+        "headerCountIndex": 1,
+        "records": 6,
+        "recordBytes": 186,
+        "startBytes": 1077592,
+        "endBytes": 1078708
+      },
+      {
+        "name": "national_competitions",
+        "headerCountIndex": 2,
+        "records": 19,
+        "recordBytes": 83,
+        "startBytes": 1078708,
+        "endBytes": 1080285
+      },
+      {
+        "name": "nations",
+        "headerCountIndex": 3,
+        "records": 213,
+        "recordBytes": 109,
+        "startBytes": 1080285,
+        "endBytes": 1103502
+      },
+      {
+        "name": "stadiums",
+        "headerCountIndex": 6,
+        "records": 8917,
+        "recordBytes": 52,
+        "startBytes": 1103502,
+        "endBytes": 1567186
+      },
+      {
+        "name": "cities",
+        "headerCountIndex": 4,
+        "records": 6682,
+        "recordBytes": 52,
+        "startBytes": 1567186,
+        "endBytes": 1914650
+      },
+      {
+        "name": "staff_competitions",
+        "headerCountIndex": 7,
+        "records": 543,
+        "recordBytes": 79,
+        "startBytes": 1914650,
+        "endBytes": 1957547
+      },
+      {
+        "name": "club_competitions",
+        "headerCountIndex": 5,
+        "records": 433,
+        "recordBytes": 83,
+        "startBytes": 1957547,
+        "endBytes": 1993486
+      }
+    ],
+    "computedBytes": 1993486,
+    "computedSizeMatches": true
+  },
+  "limitations": [
+    "No original data payloads are copied into this report.",
+    "Record widths and table names follow current include/database.h; older research contains conflicting player/non-player labels.",
+    "Size/range validation does not establish every field meaning, reference integrity or complete gameplay semantics.",
+    "Only Data directory manifest entries are checked; other installation folders and season data packs are not covered.",
+    "Manual describes original 2001 public behavior and is not proof of all 3.9.68/Bosman details."
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "artifactSha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86",
+  "entry": "0x8b4f60",
+  "method": "Unicorn isolated original-function execution; synthetic schedule; x87 FPCW=0x27f; no native app launched",
+  "cases": 1024,
+  "mismatches": [],
+  "examples": [
+    {
+      "levels": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "result": 0
+    },
+    {
+      "levels": [
+        25,
+        0,
+        0,
+        0,
+        0
+      ],
+      "result": 32
+    },
+    {
+      "levels": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "result": 80
+    },
+    {
+      "levels": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "result": 100
+    }
+  ]
+}

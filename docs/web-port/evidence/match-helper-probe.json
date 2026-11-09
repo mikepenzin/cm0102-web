@@ -1,0 +1,13 @@
+{
+  "artifactSha256": "0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86",
+  "method": "Unicorn isolated original functions, synthetic records, x87 FPCW 0x27f; no native app launched",
+  "entries": [
+    "0x716450",
+    "0x6bb9a0",
+    "0x6bba10"
+  ],
+  "reactionCases": 800,
+  "foulChecks": 8,
+  "mismatches": [],
+  "limits": "Only synthetic finite ordinary inputs; no caller semantics, NaN, invalid pointers, full match or application validated."
+}

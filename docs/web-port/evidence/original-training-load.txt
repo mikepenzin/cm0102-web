@@ -1,0 +1,261 @@
+Artifact: /Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game/cm0102.exe
+SHA256: 0c78e7da6d0bcb4603fa179449bbe6d1b6b5e1c627a22c445d14d489bd9bff86
+Method: static Capstone 5.0.9 decoding through repository Analyzer; not REA evidence and not native execution
+
+FUNCTION 008b4f30 bad=[]
+008b4f30 movsx eax, byte ptr [esp + 4]
+008b4f35 mov dl, byte ptr [esp + 8]
+008b4f39 mov byte ptr [eax + ecx + 4], dl
+008b4f3d mov dword ptr [ecx + 0x93], 0
+008b4f47 ret 8
+FUNCTION 008b4f50 bad=[]
+008b4f50 movsx eax, byte ptr [esp + 4]
+008b4f55 mov al, byte ptr [eax + ecx + 4]
+008b4f59 ret 4
+FUNCTION 008b4f60 bad=[]
+008b4f60 push ecx
+008b4f61 push ebx
+008b4f62 push esi
+008b4f63 push edi
+008b4f64 mov edi, ecx
+008b4f66 movsx eax, byte ptr [edi + 4]
+008b4f6a mov dword ptr [esp + 0xc], eax
+008b4f6e fild dword ptr [esp + 0xc]
+008b4f72 fmul qword ptr [0x96f878]
+008b4f78 call 0x945640
+008b4f7d movsx ecx, byte ptr [edi + 8]
+008b4f81 mov dword ptr [esp + 0xc], ecx
+008b4f85 mov bx, ax
+008b4f88 fild dword ptr [esp + 0xc]
+008b4f8c fmul qword ptr [0x968968]
+008b4f92 call 0x945640
+008b4f97 movsx edx, byte ptr [edi + 7]
+008b4f9b mov dword ptr [esp + 0xc], edx
+008b4f9f mov si, ax
+008b4fa2 fild dword ptr [esp + 0xc]
+008b4fa6 sub esi, ebx
+008b4fa8 fmul qword ptr [0x969540]
+008b4fae call 0x945640
+008b4fb3 sub esi, eax
+008b4fb5 movsx eax, byte ptr [edi + 6]
+008b4fb9 mov dword ptr [esp + 0xc], eax
+008b4fbd fild dword ptr [esp + 0xc]
+008b4fc1 fmul qword ptr [0x969540]
+008b4fc7 call 0x945640
+008b4fcc movsx ecx, byte ptr [edi + 5]
+008b4fd0 mov dword ptr [esp + 0xc], ecx
+008b4fd4 sub esi, eax
+008b4fd6 fild dword ptr [esp + 0xc]
+008b4fda fmul qword ptr [0x969540]
+008b4fe0 call 0x945640
+008b4fe5 sub esi, eax
+008b4fe7 cmp si, 0x64
+008b4feb movsx eax, si
+008b4fee jl 0x8b4ff5
+008b4ff0 mov eax, 0x64
+008b4ff5 pop edi
+008b4ff6 pop esi
+008b4ff7 pop ebx
+008b4ff8 pop ecx
+008b4ff9 ret 
+FUNCTION 008b5520 bad=[]
+008b5520 mov eax, dword ptr [esp + 0xc]
+008b5524 sub esp, 0x200
+008b552a cmp eax, 0x14
+008b552d jge 0x8b5563
+008b552f lea eax, [esp]
+008b5533 lea ecx, [esp + 0x100]
+008b553a push eax
+008b553b push ecx
+008b553c push 0
+008b553e push 0
+008b5540 push 0xa8cfa0
+008b5545 call 0x944cff
+008b554a add esp, 0x14
+008b554d lea edx, [esp]
+008b5551 lea eax, [esp + 0x100]
+008b5558 push 0x25e
+008b555d push edx
+008b555e jmp 0x8b5651
+008b5563 mov al, byte ptr [esp + 0x204]
+008b556a test al, al
+008b556c jne 0x8b5594
+008b556e mov ecx, dword ptr [esp + 0x208]
+008b5575 push 0xad9c64
+008b557a push 0xa8cf74
+008b557f push ecx
+008b5580 call 0x66f4e0
+008b5585 add esp, 0xc
+008b5588 mov eax, 1
+008b558d add esp, 0x200
+008b5593 ret 
+008b5594 cmp al, 1
+008b5596 jne 0x8b55a4
+008b5598 push 0xad9c64
+008b559d push 0xa8cf48
+008b55a2 jmp 0x8b5606
+008b55a4 cmp al, 2
+008b55a6 jne 0x8b55ce
+008b55a8 mov eax, dword ptr [esp + 0x208]
+008b55af push 0xad9c64
+008b55b4 push 0xa8cf1c
+008b55b9 push eax
+008b55ba call 0x66f4e0
+008b55bf add esp, 0xc
+008b55c2 mov eax, 1
+008b55c7 add esp, 0x200
+008b55cd ret 
+008b55ce cmp al, 3
+008b55d0 jne 0x8b55f8
+008b55d2 mov ecx, dword ptr [esp + 0x208]
+008b55d9 push 0xad9c64
+008b55de push 0xa8cef4
+008b55e3 push ecx
+008b55e4 call 0x66f4e0
+008b55e9 add esp, 0xc
+008b55ec mov eax, 1
+008b55f1 add esp, 0x200
+008b55f7 ret 
+008b55f8 cmp al, 4
+008b55fa jne 0x8b5622
+008b55fc push 0xad9c64
+008b5601 push 0xa8cec0
+008b5606 mov edx, dword ptr [esp + 0x210]
+008b560d push edx
+008b560e call 0x66f4e0
+008b5613 add esp, 0xc
+008b5616 mov eax, 1
+008b561b add esp, 0x200
+008b5621 ret 
+008b5622 lea eax, [esp + 0x100]
+008b5629 lea ecx, [esp]
+008b562d push eax
+008b562e push ecx
+008b562f push 0
+008b5631 push 0
+008b5633 push 0xa8cfa0
+008b5638 call 0x944cff
+008b563d add esp, 0x14
+008b5640 lea edx, [esp + 0x100]
+008b5647 lea eax, [esp]
+008b564b push 0x27e
+008b5650 push edx
+008b5651 push eax
+008b5652 call 0x90d130
+008b5657 push eax
+008b5658 push 0x9870e8
+008b565d push 0xae24d0
+008b5662 call 0x944c9f
+008b5667 push 0
+008b5669 push 0xae24d0
+008b566e push 0x9870e0
+008b5673 call 0x5e8290
+008b5678 add esp, 0x24
+008b567b mov dword ptr [0xb67a34], 0
+008b5685 xor eax, eax
+008b5687 add esp, 0x200
+008b568d ret 
+FUNCTION 008b5690 bad=[]
+008b5690 mov eax, dword ptr [esp + 0xc]
+008b5694 sub esp, 0x200
+008b569a cmp eax, 0x14
+008b569d jge 0x8b56d4
+008b569f lea eax, [esp]
+008b56a3 lea ecx, [esp + 0x100]
+008b56aa push eax
+008b56ab push ecx
+008b56ac push 0
+008b56ae push 0
+008b56b0 push 0xa8cfa0
+008b56b5 call 0x944cff
+008b56ba add esp, 0x14
+008b56bd lea edx, [esp]
+008b56c1 lea eax, [esp + 0x100]
+008b56c8 push 0x294
+008b56cd push edx
+008b56ce push eax
+008b56cf jmp 0x8b5799
+008b56d4 mov al, byte ptr [esp + 0x204]
+008b56db test al, al
+008b56dd jne 0x8b56eb
+008b56df push 0xad9c64
+008b56e4 push 0xa8d060
+008b56e9 jmp 0x8b574d
+008b56eb cmp al, 0xa
+008b56ed jne 0x8b5715
+008b56ef mov edx, dword ptr [esp + 0x208]
+008b56f6 push 0xad9c64
+008b56fb push 0xa8d034
+008b5700 push edx
+008b5701 call 0x66f4e0
+008b5706 add esp, 0xc
+008b5709 mov eax, 1
+008b570e add esp, 0x200
+008b5714 ret 
+008b5715 cmp al, 0x19
+008b5717 jne 0x8b573f
+008b5719 mov eax, dword ptr [esp + 0x208]
+008b5720 push 0xad9c64
+008b5725 push 0xa8d004
+008b572a push eax
+008b572b call 0x66f4e0
+008b5730 add esp, 0xc
+008b5733 mov eax, 1
+008b5738 add esp, 0x200
+008b573e ret 
+008b573f cmp al, 0x32
+008b5741 jne 0x8b5769
+008b5743 push 0xad9c64
+008b5748 push 0xa8cfd4
+008b574d mov ecx, dword ptr [esp + 0x210]
+008b5754 push ecx
+008b5755 call 0x66f4e0
+008b575a add esp, 0xc
+008b575d mov eax, 1
+008b5762 add esp, 0x200
+008b5768 ret 
+008b5769 lea edx, [esp + 0x100]
+008b5770 lea eax, [esp]
+008b5774 push edx
+008b5775 push eax
+008b5776 push 0
+008b5778 push 0
+008b577a push 0xa8cfa0
+008b577f call 0x944cff
+008b5784 add esp, 0x14
+008b5787 lea ecx, [esp + 0x100]
+008b578e lea edx, [esp]
+008b5792 push 0x2af
+008b5797 push ecx
+008b5798 push edx
+008b5799 call 0x90d130
+008b579e push eax
+008b579f push 0x9870e8
+008b57a4 push 0xae24d0
+008b57a9 call 0x944c9f
+008b57ae push 0
+008b57b0 push 0xae24d0
+008b57b5 push 0x9870e0
+008b57ba call 0x5e8290
+008b57bf add esp, 0x24
+008b57c2 mov dword ptr [0xb67a34], 0
+008b57cc xor eax, eax
+008b57ce add esp, 0x200
+008b57d4 ret 
+FUNCTION 00945640 bad=[]
+00945640 push ebp
+00945641 mov ebp, esp
+00945643 add esp, -0xc
+00945646 wait 
+00945647 fnstcw word ptr [ebp - 2]
+0094564a wait 
+0094564b mov ax, word ptr [ebp - 2]
+0094564f or ah, 0xc
+00945652 mov word ptr [ebp - 4], ax
+00945656 fldcw word ptr [ebp - 4]
+00945659 fistp qword ptr [ebp - 0xc]
+0094565c fldcw word ptr [ebp - 2]
+0094565f mov eax, dword ptr [ebp - 0xc]
+00945662 mov edx, dword ptr [ebp - 8]
+00945665 leave 
+00945666 ret 

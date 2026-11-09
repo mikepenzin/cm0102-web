@@ -1,0 +1,30 @@
+{
+  "repository_commit": "cf2e8fa5f4cc816f252611a0e9c81e66d088358e",
+  "scope": "Repository inventory plus bounded probe ledger; artifact/data audits record separately inspected local inputs",
+  "function_placements": 11747,
+  "named_functions": 6863,
+  "named_source_modules": 393,
+  "catalog_groups_including_unresolved": 396,
+  "global_rows": 4428,
+  "function_categories": {
+    "game": 6609,
+    "lib": 254,
+    "crt": 387,
+    "funclet": 3873,
+    "ehstub": 624
+  },
+  "name_confidence": {
+    "high": 5702,
+    "medium": 1133,
+    "low": 28
+  },
+  "tracked_files_hashed": 1768,
+  "direct_original_entries_with_bounded_probes": 11,
+  "full_game_implementation_ready": false,
+  "blocking_evidence": [
+    "Complete match/quick-result, growth, finance, AI and negotiation semantic contracts",
+    "All required original caller/field/scheduling dependencies",
+    "Runtime career scenarios and full subsystem differential vectors",
+    "Complete legacy-save member decoding and season-pack coverage"
+  ]
+}
