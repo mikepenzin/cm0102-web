@@ -77,6 +77,32 @@ test('the engine and the page: types and revalidation', async () => {
   assert.match((await fetch(`${base}/loader.js`)).headers.get('content-type'), /javascript/);
 });
 
+test('hosting: a .br copy goes to a browser that takes br, and a versioned request may be kept for good', async () => {
+  const { brotliCompressSync, brotliDecompressSync } = await import('node:zlib');
+  writeFileSync(join(gameDir, 'cm0102.exe.br'), brotliCompressSync(Buffer.from('MZexe')));
+  const info = await (await fetch(`${base}/files.json`)).json();
+  const exe = info.files.find((f) => f.path === 'cm0102.exe');
+  assert.equal(exe.v, 'x', 'the version is the start of the SHA-256 in the manifest');
+  const raw = (await import('node:http')).get;
+  const get = (path, headers) => new Promise((resolveGet) => raw(`${base}${path}`, { headers }, (r) => {
+    const chunks = [];
+    r.on('data', (c) => chunks.push(c));
+    r.on('end', () => resolveGet({ status: r.statusCode, headers: r.headers, body: Buffer.concat(chunks) }));
+  }));
+  const br = await get(`/game/cm0102.exe?v=${exe.v}`, { 'accept-encoding': 'gzip, br' });
+  assert.equal(br.headers['content-encoding'], 'br');
+  assert.equal(brotliDecompressSync(br.body).toString(), 'MZexe');
+  assert.match(br.headers['cache-control'], /immutable/);
+  assert.equal(br.headers.vary, 'Accept-Encoding');
+  const plain = await get('/game/cm0102.exe', { 'accept-encoding': 'gzip' });
+  assert.equal(plain.headers['content-encoding'], undefined);
+  assert.equal(plain.body.toString(), 'MZexe');
+  assert.equal(plain.headers['cache-control'], 'no-cache', 'no version, no keeping');
+  const stale = await get('/game/cm0102.exe?v=old', {});
+  assert.equal(stale.headers['cache-control'], 'no-cache', 'another version is never kept for good');
+  rmSync(join(gameDir, 'cm0102.exe.br'));
+});
+
 test('verify: a file whose SHA-256 is not the clean file is named', async () => {
   const { createHash } = await import('node:crypto');
   const good = createHash('sha256').update('MZexe').digest('hex');

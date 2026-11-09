@@ -10,6 +10,10 @@
 //
 // The page gets exactly the files of tools/clean_files/manifest.tsv, each checked for its size, and the season
 // tables that the build makes (Seasons/*.tsv, which the runtime reads from the game folder). Nothing else is served.
+//
+// Hosting (web/deploy): a file with a <file>.br beside it goes out brotli-compressed to a browser that takes br, and a
+// request whose ?v= names the file's version (files.json) may be kept by the browser for good: the version changes
+// when the file does.
 import http from 'node:http';
 import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -35,12 +39,15 @@ export function inventory({ gameDir, buildDir, manifestPath = join(ROOT, 'tools/
     const disk = join(gameDir, m.path);
     let size = -1;
     try { size = statSync(disk).size; } catch { /* missing */ }
-    if (size === m.size) files.push({ path: m.path, size, disk });
+    if (size === m.size) files.push({ path: m.path, size, disk, v: m.sha256.slice(0, 16) });
     else missing.push({ path: m.path, want: m.size, have: size });
   }
   for (const name of SEASON_TABLES) {
     const disk = join(buildDir, 'seasons', name);
-    if (existsSync(disk)) files.push({ path: `Seasons/${name}`, size: statSync(disk).size, disk });
+    if (existsSync(disk)) {
+      const st = statSync(disk);
+      files.push({ path: `Seasons/${name}`, size: st.size, disk, v: `${st.size.toString(36)}-${Math.floor(st.mtimeMs).toString(36)}` });
+    }
     else missing.push({ path: `Seasons/${name}`, want: null, have: -1, hint: 'build the target seasons_rules' });
   }
   const engine = {};
@@ -54,14 +61,19 @@ export function inventory({ gameDir, buildDir, manifestPath = join(ROOT, 'tools/
   return { files, missing, engine, suspend };
 }
 
-function sendFile(req, res, disk, type) {
-  const st = statSync(disk);
-  const etag = `"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}"`;
-  const headers = { 'Content-Type': type, 'Cache-Control': 'no-cache', ETag: etag };
+// immutable: the request named the file's current version, so the browser may keep it for good.
+function sendFile(req, res, disk, type, immutable = false) {
+  const br = /\bbr\b/.test(req.headers['accept-encoding'] ?? '') && existsSync(`${disk}.br`);
+  const file = br ? `${disk}.br` : disk;
+  const st = statSync(file);
+  const etag = `"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}${br ? '-br' : ''}"`;
+  const headers = { 'Content-Type': type, ETag: etag, Vary: 'Accept-Encoding',
+    'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'no-cache' };
+  if (br) headers['Content-Encoding'] = 'br';
   if (req.headers['if-none-match'] === etag) { res.writeHead(304, headers); res.end(); return; }
   res.writeHead(200, { ...headers, 'Content-Length': st.size });
   if (req.method === 'HEAD') { res.end(); return; }
-  createReadStream(disk).pipe(res);
+  createReadStream(file).pipe(res);
 }
 
 export function createApp({ gameDir, buildDir, manifestPath }) {
@@ -69,12 +81,12 @@ export function createApp({ gameDir, buildDir, manifestPath }) {
   return http.createServer((req, res) => {
     try {
       if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); res.end(); return; }
-      const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+      const url = new URL(req.url, 'http://x'), path = decodeURIComponent(url.pathname), v = url.searchParams.get('v');
       if (PAGES[path]) { sendFile(req, res, join(HERE, PAGES[path]), TYPES[PAGES[path].slice(PAGES[path].lastIndexOf('.'))]); return; }
       if (path === '/files.json') {
         inv = inventory({ gameDir, buildDir, manifestPath });   // a rebuild or new files count without a restart
         const body = JSON.stringify({
-          files: inv.files.map(({ path: p, size }) => ({ path: p, size })),
+          files: inv.files.map(({ path: p, size, v: version }) => ({ path: p, size, v: version })),
           totalBytes: inv.files.reduce((a, f) => a + f.size, 0),
           missing: inv.missing,
           engine: Boolean(inv.engine.js && inv.engine.wasm),
@@ -87,10 +99,14 @@ export function createApp({ gameDir, buildDir, manifestPath }) {
         return;
       }
       const engine = /^\/engine\/cm0102_recomp\.(js|wasm)$/.exec(path);
-      if (engine && inv.engine[engine[1]]) { sendFile(req, res, inv.engine[engine[1]].disk, TYPES[`.${engine[1]}`]); return; }
+      if (engine && inv.engine[engine[1]]) {
+        const current = inv.engine.wasm ? Math.floor(inv.engine.wasm.mtime).toString(36) : null;
+        sendFile(req, res, inv.engine[engine[1]].disk, TYPES[`.${engine[1]}`], v !== null && v === current);
+        return;
+      }
       if (path.startsWith('/game/')) {
         const f = inv.files.find((x) => x.path === path.slice(6));    // only listed files: no path leaves the list
-        if (f) { sendFile(req, res, f.disk, 'application/octet-stream'); return; }
+        if (f) { sendFile(req, res, f.disk, 'application/octet-stream', v !== null && v === f.v); return; }
       }
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       res.end('not found');

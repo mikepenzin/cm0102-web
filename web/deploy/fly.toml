@@ -1,0 +1,19 @@
+# Fly.io settings of the web app (web/deploy/README.md). `fly launch --no-deploy --copy-config --name <app>` in the
+# stage folder sets the app name and region the first time; later stages keep that file.
+app = "cm0102-web"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# The machine only serves files, and stops when nobody is visiting.
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

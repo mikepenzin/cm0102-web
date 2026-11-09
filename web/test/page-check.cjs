@@ -28,6 +28,9 @@ const PORT = 8097;
   fs.writeFileSync(path.join(build, 'cm0102_recomp.wasm'), Buffer.from([0, 0x61, 0x73, 0x6d, 1, 0, 0, 0]));
   fs.writeFileSync(path.join(build, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=asyncify\n');
   const total = rows.reduce((a, r) => a + Number(r[1]), 0);
+  // One file also as brotli, as web/deploy/stage.mjs makes them: the server sends it compressed, the browser unpacks.
+  const zlib = require('node:zlib');
+  fs.writeFileSync(path.join(game, 'Data/staff.dat.br'), zlib.brotliCompressSync(fs.readFileSync(path.join(game, 'Data/staff.dat'))));
 
   const server = spawn(process.execPath, [path.join(ROOT, 'web/server.mjs')], {
     env: { ...process.env, CM_GAME_DIR: game, CM_WEB_BUILD: build, PORT: String(PORT), CM_WEB_SKIP_VERIFY: '1' }, stdio: ['ignore', 'pipe', 'inherit'],
@@ -37,6 +40,39 @@ const PORT = 8097;
   const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}${detail ? `: ${detail}` : ''}`); ok &&= cond; };
   const b = await chromium.launch();
   try {
+    // The requirement gate: each case in a fresh browser, counting what the page asks the server for.
+    const gate = async (name, { suspend = 'asyncify', wasm = null, init = null, ctx = {}, click = false }) => {
+      fs.writeFileSync(path.join(build, 'CMakeCache.txt'), `CM0102_WEB_SUSPEND:STRING=${suspend}\n`);
+      const good = fs.readFileSync(path.join(build, 'cm0102_recomp.wasm'));
+      if (wasm) fs.writeFileSync(path.join(build, 'cm0102_recomp.wasm'), wasm);
+      const c = await b.newContext({ viewport: { width: 1100, height: 760 }, ...ctx });
+      if (init) await c.addInitScript(init);
+      const pg = await c.newPage();
+      const asked = [];
+      pg.on('request', (r) => { const u = new URL(r.url()); if (/^\/(game|engine)\//.test(u.pathname)) asked.push(u.pathname); });
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await pg.waitForSelector('#go, .box.error');
+      if (click && await pg.locator('#go').count()) { await pg.click('#go'); await pg.waitForSelector('.box.error', { timeout: 30000 }); }
+      const box = (await pg.textContent('#overlay')).replace(/\s+/g, ' ').trim();
+      const result = { box, start: await pg.locator('#go').count(), asked };
+      await c.close();
+      if (wasm) fs.writeFileSync(path.join(build, 'cm0102_recomp.wasm'), good);
+      fs.writeFileSync(path.join(build, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=asyncify\n');
+      return result;
+    };
+    let g = await gate('no JSPI', { suspend: 'jspi', init: () => { delete WebAssembly.Suspending; } });
+    check('a JSPI build in a browser without JSPI is blocked before any download',
+      /cannot run the game/.test(g.box) && /JSPI/.test(g.box) && g.start === 0 && g.asked.length === 0, g.box.slice(0, 120));
+    g = await gate('no memory', { init: () => { WebAssembly.Memory = function () { throw new RangeError('could not allocate memory'); }; } });
+    check('a browser that refuses the memory is blocked before any download',
+      /memory that the engine needs/.test(g.box) && g.start === 0 && g.asked.length === 0, g.box.slice(0, 120));
+    g = await gate('bad engine', { wasm: Buffer.from('this is not WebAssembly'), click: true });
+    check('an engine the browser cannot compile stops the start before the game files',
+      /cannot compile the engine/.test(g.box) && g.asked.every((u) => u.startsWith('/engine/')) && g.asked.length >= 1,
+      `${g.asked.length} requests: ${[...new Set(g.asked)].join(', ')}`);
+    g = await gate('touch only', { ctx: { hasTouch: true, isMobile: true } });
+    check('a device with no mouse gets a warning and may still start', /no mouse/.test(g.box) && g.start === 1, g.box.slice(0, 160));
+
     const p = await b.newPage({ viewport: { width: 1100, height: 760 }, deviceScaleFactor: 2 });
     const errors = [];
     p.on('pageerror', (e) => errors.push(e.message));
@@ -56,6 +92,20 @@ const PORT = 8097;
     check('the game writes to the user folder', f.env.RECOMP_USER_DIR === '/user');
     check('the wasm is served as application/wasm', f.wasmType === 'application/wasm', f.wasmType);
     check('the overlay is gone, the canvas shows the engine', (await p.locator('#overlay .box').count()) === 0);
+    const first = (await p.textContent('#log')).match(/page: \d+ files in .*/)?.[0] ?? '';
+    check('the first visit downloads every file', /: 0\.0 MB from this browser/.test(first), first);
+    // A second visit: every file from the browser's cache storage, none from the server.
+    const gameRequests = [];
+    p.on('request', (r) => { if (r.url().includes('/game/')) gameRequests.push(r.url()); });
+    await p.reload();
+    await p.waitForSelector('#go');
+    check('the start box says the files are here', /in this browser already/.test(await p.textContent('#overlay')));
+    await p.click('#go');
+    await p.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+    const again = await p.evaluate(() => window.__fake);
+    const second = (await p.textContent('#log')).match(/page: \d+ files in .*/)?.[0] ?? '';
+    check('the second visit gives the engine every byte', again.bytes === total + 4 * 2, second);
+    check('the second visit asks the server for no game file', gameRequests.length === 0, `${gameRequests.length} requests`);
     check('no page errors', errors.length === 0, errors.join('; '));
     if (process.argv[2]) await p.screenshot({ path: process.argv[2] });
   } finally {

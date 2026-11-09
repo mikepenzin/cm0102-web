@@ -52,8 +52,8 @@ CM_GAME_DIR=../clean-3968 node web/server.mjs        # PowerShell: $env:CM_GAME_
 ```
 
 Open http://127.0.0.1:8080 in Chrome and press Start the game. The page loads about 460 MB of game files into the tab
-(seconds from your own computer), the browser compiles the engine, and the game starts as on the desktop: the
-settings screen of a first start, then Setup Game.
+(seconds from your own computer; later starts read them from the browser's cache), the browser compiles the engine,
+and the game starts as on the desktop: the settings screen of a first start, then Setup Game.
 
 | Variable | Default | |
 |---|---|---|
@@ -67,13 +67,22 @@ settings screen of a first start, then Setup Game.
 Open "Engine log" under the game: it holds every line the runtime prints (`recomp: ...`), and the page writes its
 own lines there too (`page: ...`). A failed start shows a box with the last lines. Send those, or the build error, back.
 
-What to expect at the first runs, because the browser build has not yet run with the game:
+First run: 9 November 2026, on a MacBook Air in Chrome: the database load, a new game, and days to 12.8.01 with
+the cup and Champions League rounds. What to expect:
 
 - The runtime prints `recomp: web memory ... MB, host data at 0x21..., host heap at 0x2...` at the start. If it says
   the build's data is not above 0x21000000, the link options of `web/web.cmake` did not apply.
 - The tab freezes while the game works for a long time without asking for input (the database load of a big new
   game). The page draws and takes input whenever the game polls for input.
 - Sound starts after the first click in the game.
+
+## Browser requirements
+
+The page checks the browser before it downloads anything, and stops with the reasons when the game cannot run:
+no WebAssembly; no JSPI for a JSPI build; or no room for the engine's memory (the page tries the engine's own plan:
+768 MB, grown to 1,856 MB, with a 4 GB maximum). After Start it compiles the engine once, before the game files
+download, so a browser that lacks a WebAssembly feature of the engine stops there. A device with no mouse, or a
+browser that keeps no data (a private window), gets a warning but may start.
 
 ## Other browsers
 
@@ -87,20 +96,25 @@ and the build takes longer.
   grows as the game's heap grows. Every block of the game sits where it sits on the desktop.
 - Time: the game's screen loop never returns. With JSPI the runtime's sleeps hand the time to the page: the idle
   sleep, and a short one at least every 12 ms while the game polls for input (`rt_web_yield`).
-- Files: the page writes the downloaded files into Emscripten's file system before `main` starts; the runtime's
-  POSIX host (`host/posix.c`) reads them as on Linux. The user folder `/user` is kept in IndexedDB every 15 seconds and
-  when the tab is hidden or closed.
+- Files: the page writes the game files into Emscripten's file system before `main` starts; the runtime's POSIX host
+  (`host/posix.c`) reads them as on Linux. The page keeps the game files in the browser's cache storage, each under
+  its version (its SHA-256 in the manifest), so a later start downloads nothing. The user folder `/user` is kept in
+  IndexedDB every 15 seconds and when the tab is hidden or closed, and the page asks the browser to keep its storage.
 - SDL2 is Emscripten's port: it draws on the canvas, takes the mouse and keys, and plays the sound.
+
+## Hosting
+
+`web/deploy/README.md`: stage the files and put them on Fly.io.
 
 ## Tests
 
-- `cd web && npm test`: the server lists and serves only the clean files and the season tables, and refuses the rest.
+- `cd web && npm test`: the server lists and serves only the clean files and the season tables, and refuses the rest;
+  brotli and versioned caching; the stage script and the staged server.
 - `NODE_PATH=$(npm root -g) node web/test/page-check.cjs`: the page at full size (placeholder files with the sizes of
   the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`). Needs Playwright.
 
 ## Not yet
 
 - Only the base game: the season databases (`Seasons/*.zip`) and the extra data sets are not loaded.
-- The game files load from the server at every start; they are not cached in the browser yet.
 - The engine runs on the page's main thread. The concept design moves it to a Web Worker, with the new screens
   beside it.

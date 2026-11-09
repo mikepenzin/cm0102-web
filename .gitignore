@@ -18,3 +18,5 @@ site/assets/
 build-*/
 # The server prototype: its games, saves and logs (they hold the original's data).
 server/data/
+# The staged web app for hosting: it holds the game files (web/deploy/stage.mjs).
+web/deploy/stage/
