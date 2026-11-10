@@ -60,6 +60,18 @@ If the first command prints `cm0102_recomp: … not found, so the recompiled gam
 `cm0102.exe` is wrong: check step 3. The first build translates the 11,706 functions of `cm0102.exe` to C and
 compiles them, so it takes a while.
 
+A later build, after `git pull` changed the engine's code, is one command; the build folder remembers the compiler:
+
+```bash
+cd ~/Projects/cm0102-web
+cmake --build build-web --target cm0102_recomp seasons_rules
+```
+
+If `source ~/emsdk/emsdk_env.sh` says the file is not found, emsdk is in another folder. The build folder knows
+which: `grep CMAKE_TOOLCHAIN_FILE build-web/CMakeCache.txt` prints a path like
+`<folder>/emsdk/upstream/emscripten/cmake/...`; the file is `<folder>/emsdk/emsdk_env.sh`. A path with `homebrew` in
+it means Emscripten came from Homebrew, which needs no `source` line.
+
 **5. Run it.** In a new terminal tab (so that your own Node runs it, not Emscripten's):
 
 ```bash
@@ -104,6 +116,7 @@ stops if one differs.
 | `CM_GAME_DIR: … does not exist` or `… has no cm0102.exe` | Step 3: the folder is missing, or the files are one level deeper (the message names that folder) |
 | `cm0102_recomp: … not found` while configuring | Step 4: `-DCM0102_EXE` must name `cm0102.exe` in your game folder |
 | `engine: not built` | Step 4 did not finish: run the build again and send its last 30 lines |
+| `source: no such file or directory: …/emsdk_env.sh` | emsdk is in another folder: see the end of step 4 |
 | A box "This browser cannot run the game" | It names the reason; use Chrome 137 or later on a computer |
 | The game stops in the tab | Open "Engine log" under the game and send its last lines |
 

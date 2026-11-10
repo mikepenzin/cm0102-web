@@ -73,7 +73,8 @@ Fly. `fly open` opens the address; use Chrome 137 or later.
 
 ```bash
 cd ~/Documents/Projects/cm0102-web && git pull
-# only if the engine's code changed: cmake --build build-web --target cm0102_recomp seasons_rules
+# only if the engine's code changed (no emsdk_env.sh needed: the build folder remembers the compiler):
+#   cmake --build build-web --target cm0102_recomp seasons_rules
 node web/deploy/stage.mjs --game "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game"
 cd web/deploy/stage && fly deploy
 ```
