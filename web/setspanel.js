@@ -87,6 +87,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
       const set = s('setGo'), season = Number($('sets-season').value);
       try {
         const how = chooseForNextGame(module(), FS, root, set.name, season);
+        sync();                                   // settings.txt to the browser's storage (the engine's call does not wait for it)
         using = null;
         render();
         say(how === 'now' ? `The next new game starts ${set.name} in ${seasonText(season)}: Start New Game on the game's first screen starts it. The button at the top left of that screen shows the new choice the next time the screen opens.`

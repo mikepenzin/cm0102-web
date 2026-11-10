@@ -104,7 +104,11 @@ says.
 It does not call `season_set_new_game` itself. With no game on, that function moves the game date to 1 January of
 the start year with `rt_callback` to Date::set (0x54a130), code of the game. The page calls between two frames,
 outside the game's turn, where JSPI cannot suspend: the first build of the call stopped with "trying to suspend
-without WebAssembly.promising". The call marks the choice instead, and the wrap of Start New Game (0x81ce00,
+without WebAssembly.promising". The second build stopped the same way in `options_set`: settings.txt is written
+with `host_sync`, which is `fsync`, and Emscripten's `fd_sync` syncs the browser's storage (IDBFS) and waits for it
+(the stack of the error: `host_sync` < `options_set` < `rt_web_choose_data_set`). In the glue only
+`emscripten_sleep` and `fd_sync` can suspend. While the page calls, `host_web_page_call` (host.h) makes `host_sync`
+only flush; the page syncs the folder after the call (`setspanel.js`). The call marks the choice instead, and the wrap of Start New Game (0x81ce00,
 `start_new_game` in `season_dates.c`) applies it first (`season_screen_apply_page_choice`). 0x81ce00 is the
 function that Setup Game's input (0x81bd70) calls for item 1 at 0x81c929; it is also called at 0x81f764 and
 0x764164. It reads the year of the game date at 0x81cf37 (key_nation_build_table 0x667150), after the wrap. Setup

@@ -18,6 +18,7 @@
 
 #include "../rt.h"
 #include "../rt_host.h"
+#include "../host.h"
 
 #include <emscripten.h>
 #include <emscripten/heap.h>
@@ -33,6 +34,8 @@
 #define YIELD_MS 12.0
 
 static size_t memory_size;               /* the memory as last grown: emscripten_get_heap_size is a call into JS */
+
+int host_web_page_call;                  /* host.h */
 
 static void ensure(uint64_t top)
 {

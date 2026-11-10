@@ -46,6 +46,14 @@ int host_replace(const char *from, const char *to);
 /* Flushes the file to the disk. 0 on success. Call fflush first. */
 int host_sync(FILE *f);
 
+#ifdef __EMSCRIPTEN__
+/* The browser build (host/web.c): nonzero while the page calls the runtime between two frames, outside the
+ * game's turn (rt_web_choose_data_set). Nothing may wait for the browser then: JSPI stops such a wait with "trying
+ * to suspend without WebAssembly.promising". host_sync, which is FS.syncfs of the browser's storage (fd_sync), then
+ * only flushes, and the page saves the folder to the browser's storage itself after the call. */
+extern int host_web_page_call;
+#endif
+
 /* Folder listing: each name, "." and ".." included, then NULL. */
 typedef struct HostDir HostDir;
 HostDir *host_opendir(const char *path);

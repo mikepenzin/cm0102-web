@@ -1103,8 +1103,9 @@ void season_screen_apply_page_choice(void)
 /* The browser build's "Use for my next new game" (web/datasets.js): what Choose does for the Custom tile
  * (choose_apply) to the options, for a folder of Databases that the page names, so that the next new game starts
  * that data set in that season. A known season database keeps its own season (season_screen_year). The game date
- * moves at Start New Game (page_choice, above). Returns 1 when the options hold the choice, 0 when the folder or
- * the season cannot be chosen. */
+ * moves at Start New Game (page_choice, above). The options are written without the sync to the browser's storage
+ * (host_web_page_call, host.h): the page syncs after the call. Returns 1 when the options hold the choice, 0 when
+ * the folder or the season cannot be chosen. */
 EMSCRIPTEN_KEEPALIVE int rt_web_choose_data_set(const char *folder, int year)
 {
     char value[DBFOLDER_NAME + 8], path[1100], season_word[16];
@@ -1112,7 +1113,9 @@ EMSCRIPTEN_KEEPALIVE int rt_web_choose_data_set(const char *folder, int year)
     if (!dbfolders_path(win_databases_root(), folder, path, sizeof path)) return 0;
     snprintf(value, sizeof value, "folder:%s", folder);
     snprintf(season_word, sizeof season_word, "%d/%02d", year, (year + 1) % 100);
+    host_web_page_call = 1;
     int a = options_set(OPT_DATABASE, value), b = options_set(OPT_SEASON, season_word);
+    host_web_page_call = 0;
     if (!a || !b || strcmp(options_string(OPT_DATABASE), value)) return 0;
     win_data_set_changed();
     page_choice = 1;
