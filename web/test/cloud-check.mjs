@@ -12,7 +12,8 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 import { createApp } from '../server.mjs';
 import { createCloud } from '../cloud.mjs';
 import { createS3 } from '../s3.mjs';
-import { fakeGoogle, fakeS3, fakeSaveBytes, paddleEvent, signPaddle } from './fakes.mjs';
+import { fakeDataSet, fakeGoogle, fakeS3, fakeSaveBytes, paddleEvent, signPaddle } from './fakes.mjs';
+import { writeZip } from '../zip.js';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -128,6 +129,16 @@ try {
   check('a message names the kept copy', /That version is kept as Harbour City 2001-07-14 \(other device\)\.sav/.test(await toasts(a)), await toasts(a));
   const removedAgain = s3fake.objects.has(keyOf('From iPad.sav'));
   check('the removed save did not go up again', !removedAgain);
+  // A data set uploaded here goes up to the cloud too.
+  const setZipBytes = await writeZip(Object.entries(fakeDataSet()).map(([f, data]) => ({ name: `My squads/${f}`, data })));
+  await a.click('#saves-open');
+  await a.setInputFiles('#sets-file', { name: 'My squads.zip', mimeType: 'application/zip', buffer: Buffer.from(setZipBytes) });
+  const setKey = `sets/${PLAYER.sub}/${Buffer.from('My squads').toString('base64url')}.zip`;
+  await waitFor('the data set to go up', () => s3fake.objects.has(setKey), 20000);
+  check('an uploaded data set goes up to the cloud', s3fake.objects.has(setKey));
+  await waitFor('the cloud column', async () => /In the cloud/.test(await a.textContent('#sets-list')));
+  check('Data sets shows it in the cloud', /In the cloud/.test(await a.textContent('#sets-list')));
+  await a.click('#saves-close');
   await a.click('#account-open');
   const dialogText = (await a.textContent('#account-body')).replace(/\s+/g, ' ');
   check('Account: the email, cloud saves on, the last sync', /Signed in as player@example\.com/.test(dialogText) && /Cloud Saves are on/.test(dialogText) && /Given to this account/.test(dialogText) && /Last sync:/.test(dialogText), dialogText.slice(0, 200));
@@ -149,6 +160,13 @@ try {
   check('the second device gets both versions of Harbour City before its game starts',
     same(await localBytes(b, harbour), here) && same(await localBytes(b, other), elsewhere));
   check('and not the save removed from the cloud', (await localBytes(b, 'From iPad.sav')) === null, (await localNames(b)).join(', '));
+  await waitFor('the data set from the cloud', () => b.evaluate(() => { try { return window.Module.FS.readdir('/user/Databases/My squads').length > 20; } catch { return false; } }), 20000);
+  const setHere = await b.evaluate(async () => {
+    const { DataSet, DATA_SET_FILES } = await import('/dataset.js');
+    try { return new DataSet(Object.fromEntries(DATA_SET_FILES.map((f) => [f, window.Module.FS.readFile(`/user/Databases/My squads/${f}`)]))).players().length; }
+    catch (e) { return String(e); }
+  });
+  check('the data set comes to the second device once its game is up', setHere === 3, String(setHere));
   // Sign out: the saves stay, the cloud column goes.
   await b.tap('#account-open');
   await b.tap('#account-signout');

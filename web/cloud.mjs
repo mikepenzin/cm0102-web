@@ -14,14 +14,36 @@ import { GOOGLE, SignInError, googleFinish, googleStart, readCookies, sealer, se
 import { PADDLE_API, accountRef, applySubscription, checkPaddleSignature, openAccountRef, portalUrl } from './billing.mjs';
 import { S3Error, s3FromEnv } from './s3.mjs';
 import { SAVE_HEADER, checkSave } from './saves.js';
+import { DATA_SET_FILES } from './dataset.js';
+import { zipEntries } from './zip.js';
 
 const SESSION = 'cm_session', OAUTH = 'cm_oauth';
 const SESSION_DAYS = 30;
 export const MAX_GZ = 64 << 20;            // what one upload may be, compressed
 export const MAX_RAW = 256 << 20;          // and uncompressed (a save of the full database is some tens of MB)
+export const MAX_SET_ZIP = 48 << 20;       // a data set as a zip (the 3.9.68 data: about 61 MB, some 20 MB zipped)
 
 const b64u = (s) => Buffer.from(s, 'utf8').toString('base64url');
 const unb64u = (s) => Buffer.from(s, 'base64url').toString('utf8');
+
+// A data set's name as the store takes it: a folder name of Databases (datasets.js cleanName).
+export function validSetName(name) {
+  return typeof name === 'string' && name.length >= 1 && name.length <= 60 && !/[\u0000-\u001f\u007f\\/:*?"<>|]/.test(name)
+    && name.trim() === name && !name.startsWith('.');
+}
+
+// What a zip of a data set holds: null and its size, or why it is not one (the 20 files in one folder).
+export function inspectSetZip(zip) {
+  let entries;
+  try { entries = zipEntries(zip); } catch (e) { return { why: e.message }; }
+  const by = new Map();
+  for (const e of entries) {
+    const i = e.name.lastIndexOf('/'), base = e.name.slice(i + 1).toLowerCase();
+    if (DATA_SET_FILES.includes(base)) by.set(base, e);
+  }
+  if (by.size !== DATA_SET_FILES.length) return { why: `it does not hold the ${DATA_SET_FILES.length} database files` };
+  return { why: null, rawSize: [...by.values()].reduce((a, e) => a + e.size, 0) };
+}
 
 // A save's name as the store takes it: a .sav file name of the save folder, without a folder part.
 export function validSaveName(name) {
@@ -75,7 +97,7 @@ ${ok ? 'setTimeout(() => window.close(), 300);' : ''}</script>`;
 // paddle: { env, clientToken, priceIds, webhookSecret, apiKey, apiBase } to sell Cloud Saves with Paddle, or null.
 // price: how the page names the price ("$5 a month").
 export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicUrl = null, cloudFor = 'listed', cloudUsers = [],
-  upgradeUrl = null, maxSaves = 30, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t) }) {
+  upgradeUrl = null, maxSaves = 30, maxSets = 5, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t) }) {
   const seal = sealer(sessionSecret);
   const users = new Set(cloudUsers.map((e) => e.trim().toLowerCase()).filter(Boolean));
   const accounts = new Map();               // google id -> { account, at }: the record, read at most once a minute
@@ -85,6 +107,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   const sessionOf = (req) => seal.open('s', readCookies(req)[SESSION]);
   const accountKey = (sub) => `accounts/${sub}.json`;
   const saveKey = (sub, name) => `saves/${sub}/${b64u(name)}.gz`;
+  const setKey = (sub, name) => `sets/${sub}/${b64u(name)}.zip`;
 
   async function account(sub, fresh = false) {
     const c = accounts.get(sub);
@@ -253,6 +276,48 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     r.pipe(res);
   }
 
+  // The data sets of an account: zips of the 20 database files (datasets.js), metadata raw-size and saved.
+  async function dataSets(req, res, user, path, method) {
+    if (path === '/api/datasets') {
+      if (method !== 'GET') { send(res, 405, { error: 'GET only' }); return; }
+      const objects = (await s3.list(`sets/${user.sub}/`)).filter((o) => o.key.endsWith('.zip'));
+      const sets = (await Promise.all(objects.map(async (o) => {
+        const name = unb64u(o.key.slice(o.key.lastIndexOf('/') + 1, -4)), h = await s3.head(o.key);
+        return h && validSetName(name) ? { name, etag: h.etag, size: h.size, rawSize: Number(h.metadata['raw-size']) || null, saved: Number(h.metadata.saved) || null } : null;
+      }))).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+      send(res, 200, { sets, maxSets });
+      return;
+    }
+    let name;
+    try { name = decodeURIComponent(path.slice('/api/datasets/'.length)); } catch { name = null; }
+    if (!validSetName(name)) { req.resume(); send(res, 400, { error: 'not a data set name' }); return; }
+    const key = setKey(user.sub, name);
+    if (method === 'GET') {
+      const r = await s3.get(key);
+      if (!r) { send(res, 404, { error: `${name} is not in the cloud` }); return; }
+      res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Length': r.headers['content-length'], ETag: r.headers.etag,
+        'X-Saved': r.headers['x-amz-meta-saved'] ?? '', 'Cache-Control': 'no-store' });
+      r.pipe(res);
+      return;
+    }
+    if (method === 'DELETE') { await s3.delete(key); send(res, 204); return; }
+    if (method !== 'PUT') { send(res, 405, { error: 'GET, PUT or DELETE' }); return; }
+    if (Number(req.headers['content-length']) > MAX_SET_ZIP) { req.resume(); send(res, 413, { error: `a data set may be ${MAX_SET_ZIP >> 20} MB at most, zipped` }); return; }
+    const body = await readBody(req, MAX_SET_ZIP);
+    const { why, rawSize } = inspectSetZip(body);
+    if (why) { send(res, 422, { error: `${name} was not stored: ${why}` }); return; }
+    const current = await s3.head(key), base = req.headers['x-base-etag'];
+    if (base !== undefined && (base === 'none' ? current !== null : current?.etag !== base)) { send(res, 409, { error: 'changed' }); return; }
+    if (!current && (await s3.list(`sets/${user.sub}/`)).length >= maxSets) {
+      send(res, 507, { error: `the cloud holds ${maxSets} data sets at most: remove one first` });
+      return;
+    }
+    const savedAt = Number(req.headers['x-save-time']);
+    const saved = Number.isFinite(savedAt) && savedAt > 0 ? Math.floor(savedAt) : Date.now();
+    const etag = await s3.put(key, body, { type: 'application/zip', metadata: { 'raw-size': rawSize, saved } });
+    send(res, 200, { name, etag, size: body.length, rawSize, saved });
+  }
+
   async function deleteAccount(req, res, user) {
     // A subscription that runs on would be paid for an account that is gone: it is canceled first.
     const record = await account(user.sub, true);
@@ -262,6 +327,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
       return;
     }
     for (const o of await s3.list(`saves/${user.sub}/`)) await s3.delete(o.key);
+    for (const o of await s3.list(`sets/${user.sub}/`)) await s3.delete(o.key);
     await s3.delete(accountKey(user.sub));
     accounts.delete(user.sub);
     setCookie(res, SESSION, null, { secure: secure(req) });
@@ -292,7 +358,12 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
       if (!user) { send(res, 401, { error: 'not signed in' }); return; }
       return deleteAccount(req, res, user);
     }
-    if (path === '/api/saves' || path.startsWith('/api/saves/')) {
+    if (path === '/api/datasets' || path.startsWith('/api/datasets/')) {
+      if (!user) { req.resume(); send(res, 401, { error: 'not signed in' }); return; }
+      if (!(await hasCloud(user))) { req.resume(); send(res, 403, { error: 'cloud saves are not on this account\'s plan' }); return; }
+      return dataSets(req, res, user, path, method);
+    }
+    if (path === '/api/saves' || path === '/api/saves/' || path.startsWith('/api/saves/')) {
       if (!user) { req.resume(); send(res, 401, { error: 'not signed in' }); return; }
       if (!(await hasCloud(user))) { req.resume(); send(res, 403, { error: 'cloud saves are not on this account\'s plan' }); return; }
       if (path === '/api/saves') {
@@ -318,7 +389,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
         await handle(req, res, url);
       } catch (err) {
         if (res.headersSent) { res.destroy(err); return; }
-        if (err.status === 413) { send(res, 413, { error: `a save may be ${MAX_GZ >> 20} MB at most, compressed` }); return; }
+        if (err.status === 413) { send(res, 413, { error: url.pathname.startsWith('/api/datasets') ? `a data set may be ${MAX_SET_ZIP >> 20} MB at most, zipped` : `a save may be ${MAX_GZ >> 20} MB at most, compressed` }); return; }
         log(`cloud: ${req.method} ${url.pathname}: ${err.message}`);
         send(res, err instanceof S3Error || err.code === 'ECONNREFUSED' || /S3/.test(err.message) ? 502 : 500,
           { error: err instanceof S3Error ? 'the cloud store did not take the request: try again later' : 'the server failed: try again later' });
@@ -338,7 +409,7 @@ export function cloudFromEnv(env = process.env, log) {
     s3: s3FromEnv(env), clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET, sessionSecret: env.CM_SESSION_SECRET,
     publicUrl: env.CM_PUBLIC_URL ? env.CM_PUBLIC_URL.replace(/\/+$/, '') : null,
     cloudFor: env.CM_CLOUD_FOR === 'everyone' ? 'everyone' : 'listed', cloudUsers: (env.CM_CLOUD_USERS ?? '').split(','),
-    upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, log,
+    upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, maxSets: Number(env.CM_CLOUD_MAX_SETS) || 5, log,
     price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env),
   });
   return { cloud, missing };

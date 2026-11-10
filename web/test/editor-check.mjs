@@ -105,6 +105,58 @@ async function dataSets(p, label) {
   await p.click('#editor-close');
 }
 
+// The data sets in Saved games: New, Use (with and without the runtime call), Download, Upload of a zip and of the
+// 20 files, Delete.
+async function setsPanel(p, label) {
+  const { zipEntries } = await import('../zip.js');
+  await p.click('#saves-open');
+  check(`${label}: Saved games has a Data sets section`, await p.isVisible('#sets') && /No data sets yet/.test(await p.textContent('#sets-list')));
+  await p.click('#sets-new');
+  await p.waitForSelector('#editor[open] #editor-new');
+  await p.fill('#editor-new-name', 'Panel set');
+  await p.click('#editor-new');
+  await p.waitForSelector('#editor .ed-row', { timeout: 30000 });
+  await p.click('#editor-close');
+  await p.click('#saves-open');
+  await p.waitForSelector('#sets-list [data-set-use]');
+  await p.click('#sets-list [data-set-use]');
+  check(`${label}: Use asks the season; a copy of the game's data starts at 2001/02`, (await p.inputValue('#sets-season')) === '2001');
+  await p.click('#sets-list [data-set-go]');
+  const settings = await p.evaluate(() => { const t = window.Module.FS.readFile('/user/settings.txt'); return typeof t === 'string' ? t : new TextDecoder().decode(t); });
+  check(`${label}: with an engine before the runtime call: the settings file, for the next start`,
+    /database = folder:Panel set\n/.test(settings) && /season = 2001\/02\n/.test(settings) && /next start of this page/.test(await p.textContent('#sets-note')),
+    JSON.stringify({ settings, note: await p.textContent('#sets-note') }));
+  await p.evaluate(() => {
+    const M = window.Module, old = M.ccall;
+    M._rt_web_choose_data_set = () => 1;
+    M.ccall = (n, r, t, a) => (n === 'rt_web_choose_data_set' ? ((window.__chosen = a), 1) : old(n, r, t, a));
+  });
+  await p.click('#sets-list [data-set-use]');
+  await p.selectOption('#sets-season', '2025');
+  await p.click('#sets-list [data-set-go]');
+  check(`${label}: with the runtime call: chosen at once, in the season asked`, JSON.stringify(await p.evaluate(() => window.__chosen)) === '["Panel set",2025]'
+    && /The next new game starts Panel set in 2025\/26/.test(await p.textContent('#sets-note')));
+  const [download] = await Promise.all([p.waitForEvent('download'), p.click('#sets-list [data-set-download]')]);
+  const zipPath = await download.path();
+  const zip = new Uint8Array((await import('node:fs')).readFileSync(zipPath));
+  const names = zipEntries(zip).map((e) => e.name);
+  check(`${label}: Download gives a zip of the folder with its 20 files`, download.suggestedFilename() === 'Panel set.zip' && names.length === 20 && names.every((n) => n.startsWith('Panel set/')));
+  await p.setInputFiles('#sets-file', { name: 'Panel set.zip', mimeType: 'application/zip', buffer: Buffer.from(zip) });
+  await p.waitForFunction(() => /^Uploaded/.test(document.getElementById('sets-note').textContent), null, { timeout: 30000 });
+  await p.evaluate(() => { window.prompt = () => 'Loose files'; });      // the name asked for the 20 files
+  await p.setInputFiles('#sets-file', Object.entries(fakeDataSet()).map(([name, b]) => ({ name, mimeType: 'application/octet-stream', buffer: Buffer.from(b) })));
+  await p.waitForFunction(() => /Uploaded Loose files/.test(document.getElementById('sets-note').textContent), null, { timeout: 30000 });
+  const listed = await p.$$eval('#sets-list tr td:first-child', (t) => t.map((x) => x.textContent).filter((x) => x && !/Season/.test(x)));
+  check(`${label}: Upload: a zip (a free name) and the 20 files (named)`, listed.join() === 'Loose files,Panel set,Panel set (2)', listed.join());
+  await p.setInputFiles('#sets-file', { name: 'staff.dat', mimeType: 'application/octet-stream', buffer: Buffer.from(fakeDataSet()['staff.dat']) });
+  check(`${label}: one database file alone is refused`, /go together/.test(await p.textContent('#sets-note')));
+  await shot(p, 'sets');
+  await p.click('#sets-list [data-set-delete="0"]');                   // the page's confirm: accepted by the check's handler
+  await p.waitForFunction(() => !/Loose files/.test(document.getElementById('sets-list').textContent));
+  check(`${label}: Delete`, !(await p.textContent('#sets-list')).includes('Loose files'));
+  await p.click('#saves-close');
+}
+
 try {
   for (const [label, viewport, touch] of [['computer', { width: 1280, height: 820 }, false], ['phone', { width: 400, height: 820 }, true]]) {
     const ctx = await browser.newContext({ viewport, hasTouch: touch, isMobile: touch });
@@ -158,7 +210,7 @@ try {
     await p.waitForFunction(() => /cannot be edited/.test(document.getElementById('editor-note').textContent));
     check(`${label}: a file that is not a full saved game is refused`, /cannot be edited/.test(await p.textContent('#editor-note')));
     await p.click('#editor-close');
-    if (!touch) await dataSets(p, label);
+    if (!touch) { await dataSets(p, label); await setsPanel(p, label); }
     check(`${label}: no page errors`, errors.length === 0, errors.join('; '));
     await ctx.close();
   }

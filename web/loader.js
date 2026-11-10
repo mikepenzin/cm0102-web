@@ -7,6 +7,8 @@
 // has the messages and the small helpers.
 import { SAVE_DIR, mountSavesPanel, savesSignature } from './saves.js';
 import { mountEditor } from './editor.js';
+import { mountSetsPanel } from './setspanel.js';
+import { createSetSync } from './datasets.js';
 import { LEGAL_LINKS, createCloudSync, mountAccount, plansHtml } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
 import { mountLayout } from './layout.js';
@@ -76,7 +78,7 @@ $('help-open').onclick = () => $('help').showModal();
 
 const account = mountAccount({ log, toast, isRunning: () => running, isStandalone, leave: () => { leaving = true; } });
 account.ready.then((me) => { $('help-cloud').hidden = !me?.auth; });
-let cloud = null, cloudBehind = false, watcher = null;
+let cloud = null, cloudBehind = false, watcher = null, setSync = null;
 
 // The sync of the account's saves, when it has cloud saves. replace: the saves of the cloud may replace the ones here
 // (before the game runs). Resolves to the jobs done, or null.
@@ -85,11 +87,14 @@ async function startCloud(FS, { replace, onStep }) {
   const me = account.me;                         // as now: a sign-in since the page opened counts
   cloud?.stop();
   cloud = null;
+  setSync?.stop();
+  setSync = null;
   account.setCloud(null);
   if (!me?.user?.cloud) return null;
   if (typeof CompressionStream !== 'function') { log('page: no CompressionStream in this browser: no cloud saves'); return null; }
   cloud = createCloudSync({ FS, sync, log, toast, account: me.user.email, onWrote: () => watcher?.rebase() });
   account.setCloud(cloud);
+  setSync = createSetSync({ FS, root: SAVE_DIR, sync, log, toast, account: me.user.email });   // runs once the game is up
   const jobs = await cloud.run({ replace, onStep, signal: onStep?.signal });
   cloudBehind = jobs === null;
   const came = jobs?.filter((j) => j.do === 'down').length ?? 0;
@@ -111,8 +116,8 @@ setInterval(() => { if (cloudBehind && running) cloudAfterSave(); }, 60000);
 account.onAccountChange((me) => {
   const FS = window.Module?.FS;
   if (!running || !FS) return;                   // before the game, the start does it
-  if (!me?.user?.cloud) { cloud?.stop(); cloud = null; account.setCloud(null); return; }
-  startCloud(FS, { replace: false });            // signed in while the game runs: new saves come in, none is replaced
+  if (!me?.user?.cloud) { cloud?.stop(); cloud = null; setSync?.stop(); setSync = null; account.setCloud(null); return; }
+  startCloud(FS, { replace: false }).then(() => setSync?.run());   // signed in while the game runs: new saves come in, none is replaced
 });
 // The start box tells the plans: free, or Cloud Saves. Signing in leaves the page, which is fine before the game.
 function plansForStart(me) {
@@ -321,9 +326,15 @@ function runEngine(files, info) {
         }
         seen = now;
       }, 2000);
-      const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running });
+      const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running,
+        onSetChange: (name, what) => (what === 'deleted' ? setSync?.deleted(name) : setSync?.run()) });
       $('editor-open').hidden = false;
       $('editor-open').onclick = () => editor.open();
+      const sets = mountSetsPanel({ FS, root: SAVE_DIR, sync, log, toast, module: () => window.Module, cloud: () => setSync,
+        edit: (name) => editor.openSet(name), create: () => editor.open(), changed: () => setSync?.run() });
+      $('sets').hidden = false;
+      $('saves-open').addEventListener('click', () => sets.render());
+      setSync?.run();                                   // the cloud's data sets come in while the game starts
       mountSavesPanel({ FS, sync, log, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),
         openPromo: () => { $('saves').close(); account.open(); }, edit: (name) => editor.openSave(name) });
       keyboard = mountKeyboard({ log, layout, toast });

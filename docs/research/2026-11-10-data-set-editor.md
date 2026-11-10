@@ -91,9 +91,18 @@ full, one refused) was:
 - read by `tools/seasons/own_db/cmdb1.py` with the right names, clubs and dates;
 - passed by `check_squad_lists`.
 
+## Choosing a data set from the page
+
+The Choose button of Choose Season (choose_apply, `season_screen.c`) sets the options `database = folder:<name>` and
+`season`, calls `win_data_set_changed` and `season_set_new_game`. The runtime reads settings.txt once, at the start
+(`options_load`, `display.c`), so the page cannot choose by writing the file while the game runs. The browser build's
+`rt_web_choose_data_set(folder, year)` (`season_screen.c`, `__EMSCRIPTEN__` only) does what choose_apply does for the
+Custom tile, after the same checks (the season range, `folder_fault`, `dbfolders_path`). For a season database that the
+game knows, `season_screen_year` takes the database's own season, whatever the option says.
+
 ## Not done
 
 Clubs, non-playing staff, the personality bytes other than Determination, and the three i16 of the player row are not
 edited. A player is added only to data in format 1 (the game's own data and copies of it); Update Team data sets keep
-staff in format 2 and preferences in table 22, which a new row would need too. A data set stays in the browser that
-made it: there is no download or upload of a data set yet.
+staff in format 2 and preferences in table 22, which a new row would need too. Data sets go to other browsers as
+zips (Download, Upload) and, with Cloud Saves, through the cloud.

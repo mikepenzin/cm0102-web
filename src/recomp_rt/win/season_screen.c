@@ -1081,3 +1081,25 @@ void season_screen_open(void)
     handled_press = win_press_count();          /* the press that opened the screen does not click in it */
     fprintf(stderr, "recomp: choose season opened, %d custom folders\n", list.custom_count);
 }
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+/* The browser build's "Use for my next new game" (web/datasets.js): what Choose does for the Custom tile
+ * (choose_apply), for a folder of Databases that the page names, so that the next new game starts that data set
+ * in that season. A known season database keeps its own season (season_screen_year). Returns 1 when the options
+ * hold the choice, 0 when the folder or the season cannot be chosen. */
+EMSCRIPTEN_KEEPALIVE int rt_web_choose_data_set(const char *folder, int year)
+{
+    char value[DBFOLDER_NAME + 8], path[1100], season_word[16];
+    if (!folder || year < SEASONS_FIRST || year >= SEASONS_FIRST + SEASONS_COUNT || folder_fault(folder)) return 0;
+    if (!dbfolders_path(win_databases_root(), folder, path, sizeof path)) return 0;
+    snprintf(value, sizeof value, "folder:%s", folder);
+    snprintf(season_word, sizeof season_word, "%d/%02d", year, (year + 1) % 100);
+    int a = options_set(OPT_DATABASE, value), b = options_set(OPT_SEASON, season_word);
+    if (!a || !b || strcmp(options_string(OPT_DATABASE), value)) return 0;
+    win_data_set_changed();
+    season_set_new_game(year, season_screen_rules_choice());
+    fprintf(stderr, "recomp: the page chose %s with database = %s\n", season_word, value);
+    return 1;
+}
+#endif

@@ -7,6 +7,7 @@
 import { ATTRIBUTES, POSITIONS, SaveGame } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet } from './dataset.js';
 import { listSaves } from './saves.js';
+import { noteSeason } from './datasets.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -30,7 +31,8 @@ export function dataSetNameProblem(name, taken) {
   return null;
 }
 
-export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data', isRunning, onSaved = () => {} }) {
+// onSetChange(name, 'made' | 'saved' | 'deleted'): a data set changed (the cloud sync of datasets.js follows).
+export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data', isRunning, onSaved = () => {}, onSetChange = () => {} }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
   const home = $('editor-home'), title = $('editor-title'), fileLabel = $('editor-file');
@@ -102,8 +104,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       try { FS.mkdir(DB_DIR); } catch { /* there already */ }
       FS.mkdir(`${DB_DIR}/${n}`);
       for (const [f, path] of Object.entries(files)) FS.writeFile(`${DB_DIR}/${n}/${f}`, FS.readFile(path));
+      noteSeason(FS, dir, n, 2001);                   // the game's own data is the 2001/02 data
       sync();
       log(`page: data set ${n} made from the game's data`);
+      onSetChange(n, 'made');
       await openSet(n);
       say(`${n} is ready. Change players or add new ones, then save it.`);
     } catch (e) {
@@ -117,6 +121,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       for (const f of FS.readdir(`${DB_DIR}/${n}`)) if (f !== '.' && f !== '..') FS.unlink(`${DB_DIR}/${n}/${f}`);
       FS.rmdir(`${DB_DIR}/${n}`);
       sync();
+      onSetChange(n, 'deleted');
       say(`${n} is deleted.`);
     } catch (e) { say(`${n} was not deleted: ${e.message}`, true); }
     showHome();
@@ -308,7 +313,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         const changed = edited.size;
         log(`page: data set ${name}: ${changed} player(s) changed, ${Object.keys(out).length} files (${MB(bytes)}) written`);
         await openSet(name);                          // the saved files, read again: the new rows are now the files' own
-        say(`Saved: ${changed} player(s) changed in ${name}. Start a new game and choose ${name} under Database to play with it.`);
+        onSetChange(name, 'saved');
+        say(`Saved: ${changed} player(s) changed in ${name}. To play with it: Saved games, Data sets, Use.`);
         return;
       }
       const path = `${dir}/${name}`;

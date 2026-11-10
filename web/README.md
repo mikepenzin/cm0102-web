@@ -224,6 +224,7 @@ deleted until the subscription is canceled. In Paddle (start in the sandbox, `sa
 | `CM_SELLER`, `CM_CONTACT` | your name (as in your Paddle account) and contact email, on the terms, refund, privacy and pricing pages |
 | `CM_UPGRADE_URL` | without Paddle: where "Get Cloud Saves" leads |
 | `CM_CLOUD_MAX_SAVES` | the most saves an account keeps in the cloud (default 30) |
+| `CM_CLOUD_MAX_SETS` | the most data sets an account keeps in the cloud (default 5) |
 
 A good start prints `accounts and cloud saves: on`. Each save is gzip-compressed by the browser; the server checks that
 it is a saved game of CM 01/02 (64 MB compressed at most) before it stores it.
@@ -262,6 +263,22 @@ The **Editor** button in the bar opens the editors: a saved game (as above), or 
 - **Add a player** to any club, or as a free player. A club takes 50 players at most.
 - **Save the data set** writes the changed files; the data set's other files stay.
 - The Editor's home lists the data sets, with Delete.
+
+**Data sets in Saved games.** The Saved games dialog lists the data sets under the saves (`setspanel.js`,
+`datasets.js`), as it lists the saves:
+
+- **Use** chooses one for the next new game, in a season (2001/02 to 2025/26; a copy of the game's data is 2001/02). It
+  does what the Choose Season screen does, through the runtime call `rt_web_choose_data_set` (`season_screen.c`), so
+  the game's first screen shows it at once. An engine built before that call: the page writes `database` and `season`
+  in settings.txt, and the choice counts from the next start of the page. A season database that the game knows keeps
+  its own season.
+- **Download** gives a zip of a folder with the 20 files, which the desktop Bosman Edition takes too (unpack it into
+  Databases in its save folder).
+- **Upload** takes a zip (each folder in it with the 20 files becomes a data set, named by the folder: an Update Team
+  zip, a data set of another browser) or the 20 `.dat` files (asked for a name).
+- **Delete**; with Cloud Saves, a Cloud column and Remove, as for the saves.
+- With Cloud Saves, the data sets go to the cloud too (zips in Tigris, `CM_CLOUD_MAX_SETS`, 5 by default, 48 MB each
+  at most) and come to the other devices once their game is up; a data set changed on two devices is kept twice.
 
 Players are added only to the format of the game's own data, not to Update Team data sets. The facts, with the game's
 code addresses and the checks: `docs/research/2026-11-10-data-set-editor.md`.
@@ -368,7 +385,9 @@ it with `CM_WEB_BUILD`.
 - `NODE_PATH=$(npm root -g) node web/test/editor-check.mjs`: the editors in Chromium, with a small saved game and a small
   data set in the game's formats (`test/fakes.mjs`). The save editor on a computer and a phone: Edit, search, change,
   Apply, a rating out of reach, Save, the backup, a file that is not a full save. The data set editor: a name refused,
-  New data set, an edit with a move to another club, Add a player, an unknown club refused, Save, Delete.
+  New data set, an edit with a move to another club, Add a player, an unknown club refused, Save, Delete; the Data sets
+  of Saved games: Use (through settings.txt and through the runtime call), Download, Upload of a zip and of the 20
+  files, Delete. The cloud check adds a data set uploaded on one device that comes to the other.
 - `NODE_PATH=$(npm root -g) node web/test/sdl-check.mjs <probe folder>`: the page against the real SDL browser
   backend. The probe (`test/sdlprobe.c`) opens its window and renderer as the runtime does and prints what SDL tells
   it. The check covers the layout (no bars, the screen's own pixels, a resized window, classic mode, full screen), the
