@@ -275,7 +275,11 @@ The **Editor** button in the bar opens the editors: a saved game (as above), or 
 - **Download** gives a zip of a folder with the 20 files, which the desktop Bosman Edition takes too (unpack it into
   Databases in its save folder).
 - **Upload** takes a zip (each folder in it with the 20 files becomes a data set, named by the folder: an Update Team
-  zip, a data set of another browser) or the 20 `.dat` files (asked for a name).
+  zip, a data set of another browser) or the 20 `.dat` files (asked for a name). A data set keeps the other Data files
+  of its folder that the game reads from a data set (`.cfg`, `.pct`, `.lng`: an update's own player_setup.cfg,
+  euro.cfg, weather.cfg and tactics); pictures (`.rgn`) always come from the game's own Data. An uploaded data set
+  starts on the latest season under Use: the game measures a database's year from its dates of birth and moves it to
+  the season chosen, its players keeping their ages (`season_dates.c`).
 - **Delete**; with Cloud Saves, a Cloud column and Remove, as for the saves.
 - With Cloud Saves, the data sets go to the cloud too (zips in Tigris, `CM_CLOUD_MAX_SETS`, 5 by default, 48 MB each
   at most) and come to the other devices once their game is up; a data set changed on two devices is kept twice.

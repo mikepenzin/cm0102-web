@@ -8,6 +8,10 @@ import { writeZip, zipEntries, zipRead } from './zip.js';
 
 export const FIRST_SEASON = 2001, LAST_SEASON = 2025;          // the seasons the game has (seasons_db.h)
 const META = '.web.json';                                       // the page's note in a folder: { season }
+// The other Data files a data set may bring (an Update Team zip has its own player_setup.cfg, euro.cfg, weather.cfg
+// and tactics): the game reads a Data file from the data set's folder when the folder has it (files.c data_dir_swap),
+// pictures (.rgn) excepted, so a data set keeps these and leaves pictures out.
+export const EXTRA = /\.(cfg|pct|lng)$/i;
 const CHANGE = { 'x-cm': '1' };
 
 export const seasonText = (y) => `${y}/${String((y + 1) % 100).padStart(2, '0')}`;
@@ -53,6 +57,13 @@ export function listDataSets(FS, root) {
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// Every file of the data set: the 20 and the extra Data files ({ name: bytes }).
+export function readAllOfDataSet(FS, root, name) {
+  const out = readDataSet(FS, root, name);
+  for (const f of filesOf(FS, dirOf(root, name)) ?? []) if (EXTRA.test(f)) out[f] = FS.readFile(`${dirOf(root, name)}/${f}`);
+  return out;
+}
+
 export function readDataSet(FS, root, name) {
   const have = new Map(filesOf(FS, dirOf(root, name)).map((f) => [f.toLowerCase(), f]));
   return Object.fromEntries(DATA_SET_FILES.map((f) => [have.get(f), FS.readFile(`${dirOf(root, name)}/${have.get(f)}`)]));
@@ -81,7 +92,7 @@ export function deleteDataSet(FS, root, name) {
 
 // The zip to download: a folder of the data set's name with its 20 files, as the game's Databases folder takes it.
 export async function dataSetZip(FS, root, name) {
-  const files = readDataSet(FS, root, name);
+  const files = readAllOfDataSet(FS, root, name);
   return writeZip(Object.entries(files).map(([f, data]) => ({ name: `${name}/${f}`, data })));
 }
 
@@ -91,16 +102,16 @@ export async function dataSetsInZip(bytes, fallback) {
   const entries = zipEntries(bytes).filter((e) => !e.name.endsWith('/') && !/(^|\/)__MACOSX\//.test(e.name) && !/(^|\/)\._/.test(e.name));
   const groups = new Map();
   for (const e of entries) {
-    const i = e.name.lastIndexOf('/'), folder = i < 0 ? '' : e.name.slice(0, i), base = e.name.slice(i + 1).toLowerCase();
-    if (!DATA_SET_FILES.includes(base)) continue;
+    const i = e.name.lastIndexOf('/'), folder = i < 0 ? '' : e.name.slice(0, i), base = e.name.slice(i + 1);
+    if (!DATA_SET_FILES.includes(base.toLowerCase()) && !EXTRA.test(base)) continue;
     if (!groups.has(folder)) groups.set(folder, new Map());
-    groups.get(folder).set(base, e);
+    groups.get(folder).set(DATA_SET_FILES.includes(base.toLowerCase()) ? base.toLowerCase() : base, e);
   }
   const out = [];
   for (const [folder, g] of groups) {
-    if (g.size !== DATA_SET_FILES.length) continue;
+    if (!DATA_SET_FILES.every((f) => g.has(f))) continue;
     const files = {};
-    for (const f of DATA_SET_FILES) files[f] = await zipRead(bytes, g.get(f));
+    for (const [f, e] of g) files[f] = await zipRead(bytes, e);
     // The folder's name; for a folder called Data (as a game folder has it), the folder above it.
     const parts = folder ? folder.split('/') : [];
     if (parts.length && parts[parts.length - 1].toLowerCase() === 'data') parts.pop();

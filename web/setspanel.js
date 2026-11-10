@@ -5,6 +5,9 @@ import { DATA_SET_FILES } from './dataset.js';
 import { FIRST_SEASON, LAST_SEASON, chooseForNextGame, cleanName, dataSetZip, dataSetsInZip, deleteDataSet, listDataSets,
   seasonText, uniqueName, writeDataSet } from './datasets.js';
 
+// An uploaded data set starts on the latest season the game has (an update of the current season, most often); the
+// game measures its own year from its dates of birth and moves it to the season chosen (season_dates.c).
+
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const MB = (n) => `${(n / 1048576).toFixed(0)} MB`;
@@ -34,7 +37,8 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
           <select id="sets-season">${Array.from({ length: LAST_SEASON - FIRST_SEASON + 1 }, (_, k) => FIRST_SEASON + k)
             .map((y) => `<option value="${y}"${y === (s.season ?? FIRST_SEASON) ? ' selected' : ''}>${seasonText(y)}</option>`).join('')}</select></label>
           <button class="primary" data-set-go="${i}">Use for my next new game</button>
-          <span class="small">A season database that the game knows keeps its own season. A copy of the game's data is 2001/02.</span></td></tr>` : ''}`;
+          <span class="small">A season database that the game knows keeps its own season. A copy of the game's data is 2001/02;
+          a newer database moves to the season you choose, its players keeping their ages.</span></td></tr>` : ''}`;
       }).join('')}</table>`;
   }
 
@@ -47,7 +51,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
       try {
         for (const set of await dataSetsInZip(new Uint8Array(await f.arrayBuffer()), f.name.replace(/\.zip$/i, ''))) {
           const name = uniqueName(set.name, taken());
-          writeDataSet(FS, root, name, set.files);
+          writeDataSet(FS, root, name, set.files, { season: LAST_SEASON });
           done.push(name);
         }
       } catch (e) { refused.push(`${f.name}: ${e.message}`); }
@@ -63,7 +67,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
           try {
             const files = {};
             for (const n of DATA_SET_FILES) files[n] = new Uint8Array(await have.get(n).arrayBuffer());
-            writeDataSet(FS, root, name, files);
+            writeDataSet(FS, root, name, files, { season: LAST_SEASON });
             done.push(name);
           } catch (e) { refused.push(`${name}: ${e.message}`); }
         }

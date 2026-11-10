@@ -38,6 +38,12 @@ test('the data sets in a zip: one per folder with the 20 files; junk and half se
   const sets = await dataSetsInZip(two, 'fallback');
   assert.deepEqual(sets.map((s) => s.name).sort(), ['December 2025', 'My edit'], 'the folder names; any case of the file names');
   assert.deepEqual(sets[0].files['index.dat'], files['index.dat']);
+  const withExtras = await writeZip([...Object.entries(files).map(([f, data]) => ({ name: `Update/${f}`, data })),
+    { name: 'Update/player_setup.cfg', data: new Uint8Array(9) }, { name: 'Update/442_default.pct', data: new Uint8Array(5) },
+    { name: 'Update/logo.RGN', data: new Uint8Array(7) }, { name: 'Update/readme.txt', data: new Uint8Array(3) }]);
+  const [u] = await dataSetsInZip(withExtras, 'x');
+  assert.deepEqual(Object.keys(u.files).filter((f) => !f.endsWith('.dat')).sort(), ['442_default.pct', 'player_setup.cfg'],
+    'the settings and tactics files stay; pictures and others do not');
   const inData = await writeZip(Object.entries(files).map(([f, data]) => ({ name: `December 2025/Data/${f}`, data })));
   assert.deepEqual((await dataSetsInZip(inData, 'x')).map((s) => s.name), ['December 2025'], 'a Data folder takes the name above it');
   const top = await writeZip(Object.entries(files).map(([f, data]) => ({ name: f, data })));
