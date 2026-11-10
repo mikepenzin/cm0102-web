@@ -17,11 +17,14 @@ CALLBACK_FILES = ("picker.c", "assistant.c", "commentary.c", "holiday_next.c", "
                   "season_change.c", "season_kind_club_world.c", "season_comps.c", "season_bra_states.c",
                   "season_super_cups.c", "season_new_cups.c", "season_cup_groups.c",
                   "season_club_cups.c", "season_playoffs.c", "season_nl.c", "season_nl_euro.c", "season_nl_wc.c",
-                  "season_gold_cup.c", "season_divisions.c", "season_tur_groups.c", "screen_sweep.c")
+                  "season_gold_cup.c", "season_divisions.c", "season_tur_groups.c", "screen_sweep.c",
+                  "language_sort.c")
                                 # in src/recomp_rt/win
 
 # address: (bytes of the first eight, name)
 CALLBACKS = {
+    # language_sort.c: the compare function of the language table's qsort (0x945333), when the wrap leaves the sort to it.
+    0x7C6D40: ("8b5424045685d275", "player_stats_compare_language_entries (entry, entry), cdecl"),
     # O288 (fixture_season_end.c, not in CALLBACK_FILES: it compares return addresses of 0x5abb10's calls): the free
     # day before a season change for a match moved for a call-up.
     0x549EF0: ("668b442404568b74", "Date::Date (day of the year, year), ret 8"),
