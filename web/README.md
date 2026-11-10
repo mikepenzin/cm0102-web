@@ -143,6 +143,58 @@ whole game world. A new or changed save goes to IndexedDB about 2 seconds after 
 the same address every time: `127.0.0.1:8080` and `localhost:8080` are two sites to the browser, each with its own
 saves.
 
+## Cloud saves
+
+Players can sign in with Google. An account with cloud saves keeps its saved games in the cloud as well as in the
+browser: a save made on one computer or iPad is there when the game starts on another. Without an account, or on an
+account without cloud saves, nothing changes: the saves stay in the browser, and Saved games downloads and uploads
+them as files.
+
+**How it works.** The server (`cloud.mjs`) runs the Google sign-in (the authorization code flow, with PKCE) and keeps a
+signed cookie; no script of Google's runs on the page. The saves go to an S3 store (Tigris on Fly.io, `s3.mjs`),
+gzip-compressed, under the account's Google id. The page (`account.js`):
+
+- Before the game starts, the saves made elsewhere come into the user folder, so Load Game lists them. A slow
+  connection gets a "Start without them" button after 5 seconds.
+- After each save, the new or changed save goes up ("Saved to the cloud"). With no connection it goes up later.
+- A save changed on two devices since they last synced is kept twice, nothing is lost: the other device's version as
+  "<name> (other device).sav", in both places.
+- While the game runs, a save in the browser is never replaced from the cloud; only new ones come in.
+- Saved games shows where each save is, and Remove takes one out of the cloud (it stays in the browser).
+- Account has Sign out and Delete account (the account and all its cloud saves). `/privacy` says what is kept.
+
+**Who has cloud saves.** The accounts in `CM_CLOUD_USERS`, every account with `CM_CLOUD_FOR=everyone`, and the
+accounts whose record in the store (`accounts/<id>.json`) says `"plan": "cloud"` (with `planUntil`, until then). A
+payment can set that record; until there is one, edit it by hand in the Tigris console. Others see "Cloud saves are
+not on for this account", and a "Get cloud saves" link when `CM_UPGRADE_URL` is set.
+
+**Set it up** (once). It is off until all of these are set; the server says at the start which ones are missing.
+
+1. Google: in [console.cloud.google.com](https://console.cloud.google.com), make a project. Google Auth Platform,
+   Branding: the app name, a support email, and the privacy page `https://<your-app>.fly.dev/privacy`. Audience:
+   External, then Publish app (while it is "Testing", only the test users you list can sign in). Clients, Create
+   client: Web application, with the Authorized redirect URIs `https://<your-app>.fly.dev/auth/google/callback` and,
+   to try it on your computer, `http://127.0.0.1:8080/auth/google/callback`. Keep the client id and the client secret.
+   The app asks only for the basic scopes (openid, email, profile), which need no review by Google.
+2. Tigris: a private bucket and an access key for it. On Fly, `fly storage create` in `web/deploy/stage` makes both and
+   sets `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` and `BUCKET_NAME` on the app.
+   With a key of your own Tigris account, set those five yourself (`fly secrets set`, below); `AWS_ENDPOINT_URL_S3` is
+   `https://t3.storage.dev` (or `https://fly.storage.tigris.dev`), `AWS_REGION` is `auto`.
+3. The rest, as Fly secrets (`web/deploy/README.md`, "Accounts and cloud saves"), or as variables for a local server:
+
+| Variable | |
+|---|---|
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | the client of step 1 |
+| `CM_SESSION_SECRET` | 32 characters or more, random (`openssl rand -base64 48`): seals the cookies. A new one signs everyone out |
+| `CM_PUBLIC_URL` | the site's address, `https://<your-app>.fly.dev` (default: the address the browser used) |
+| `CM_CLOUD_USERS` | emails with cloud saves, comma-separated |
+| `CM_CLOUD_FOR` | `everyone`: every signed-in account has cloud saves |
+| `CM_UPGRADE_URL` | where "Get cloud saves" leads (a payment page), shown to accounts without cloud saves |
+| `CM_CLOUD_MAX_SAVES` | the most saves an account keeps in the cloud (default 30) |
+
+A good start prints `accounts and cloud saves: on`. Each save is gzip-compressed by the browser; the server checks that
+it is a saved game of CM 01/02 (64 MB compressed at most) before it stores it.
+
 ## The page around the game
 
 - The game fills the page: the canvas has the picture's shape (1280x800, or 800x600 in classic mode), as large as
@@ -223,10 +275,17 @@ it with `CM_WEB_BUILD`.
 
 - `cd web && npm test`: the server lists and serves only the clean files, the season tables and the page, and refuses
   the rest; brotli and versioned caching; the stage script and the staged server; the save logic; the layout's
-  arithmetic.
+  arithmetic; the sign-in (state, PKCE, a token for another app or with no verified email is refused), the cookies, the
+  cloud saves API (conflicts, limits, checks, account deletion) and the sync plan. The request signatures of `s3.mjs`
+  were also checked against the examples of AWS's Signature Version 4 documentation and the AWS SDK's signer.
 - `NODE_PATH=$(npm root -g) node web/test/page-check.cjs`: the page at full size (placeholder files with the sizes of
   the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`): the browser
   check, the load, the Saved games panel, a second start from the browser's cache. Needs Playwright.
+- `NODE_PATH=$(npm root -g) node web/test/cloud-check.mjs`: the accounts and cloud saves in Chromium, with stand-ins of
+  Google and the S3 store (`test/fakes.mjs`, which checks every request's signature as S3 does) and of the engine:
+  the sign-in from the start box and from a small window while the game runs, the saves of the cloud before the game
+  starts, a save going up, Remove, a save changed on two devices, a second device, sign-out, and an account without
+  cloud saves. Needs Playwright.
 - `NODE_PATH=$(npm root -g) node web/test/sdl-check.mjs <probe folder>`: the page against the real SDL browser
   backend. The probe (`test/sdlprobe.c`) opens its window and renderer as the runtime does and prints what SDL tells
   it. The check covers the layout (no bars, the screen's own pixels, a resized window, classic mode, full screen), the

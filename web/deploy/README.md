@@ -79,6 +79,25 @@ node web/deploy/stage.mjs --game "/Applications/CM 01-02 Bosman Edition.app/Cont
 cd web/deploy/stage && fly deploy
 ```
 
+## Accounts and cloud saves (optional)
+
+Sign in with Google and cloud saves (`web/README.md`, "Cloud saves") are off until their settings are on the app. Once:
+
+```bash
+cd ~/Documents/Projects/cm0102-web/web/deploy/stage
+fly storage create                     # a private Tigris bucket; sets AWS_* and BUCKET_NAME on the app
+fly secrets set GOOGLE_CLIENT_ID=<client id> GOOGLE_CLIENT_SECRET=<client secret> \
+  CM_SESSION_SECRET="$(openssl rand -base64 48)" CM_PUBLIC_URL=https://<your-app>.fly.dev \
+  CM_CLOUD_USERS=<your email>
+```
+
+With a key of your own Tigris account instead of `fly storage create`, add `AWS_ENDPOINT_URL_S3=https://t3.storage.dev
+AWS_ACCESS_KEY_ID=<key id> AWS_SECRET_ACCESS_KEY=<secret> AWS_REGION=auto BUCKET_NAME=<bucket>` to the
+`fly secrets set` line. The Google client and its redirect URI come first: `web/README.md`, "Set it up", step 1.
+
+`fly secrets set` restarts the app with them. `fly logs` then shows `accounts and cloud saves: on`; if a setting is
+missing it names it. The secrets stay on the app: a later `fly deploy` keeps them.
+
 ## If something goes wrong
 
 | What you see | What to do |
@@ -90,6 +109,9 @@ cd web/deploy/stage && fly deploy
 | The upload of `fly deploy` keeps failing | `fly deploy --local-only` builds on your Mac instead (needs Docker Desktop) |
 | The site does not answer | `fly logs`: a good start prints `game files: 764 (461 MB)` and `open http://0.0.0.0:8080` |
 | The machine runs out of memory | `fly scale memory 512` |
+| `accounts and cloud saves: off, missing …` | Set the named secrets (Accounts and cloud saves) |
+| Google says `redirect_uri_mismatch` | The client's Authorized redirect URI must be exactly `https://<your-app>.fly.dev/auth/google/callback` |
+| Only some Google accounts can sign in | The Google app is still "Testing": Audience, Publish app |
 
 The first visit after a quiet time wakes the machine, which takes a few seconds.
 
@@ -114,7 +136,9 @@ since the last one. If Fly hands the app a fresh builder (its cache is gone), on
 - The first visit: the game files and the engine, brotli-compressed (the stage prints the size).
 - Later visits: nothing. The page keeps the game files in the browser's cache storage and the engine in the browser's
   cache, each under its version; only a file that changed is downloaded again.
-- Saves stay in each player's browser, and the page asks the browser to keep that storage.
+- Saves stay in each player's browser, and the page asks the browser to keep that storage. Accounts with cloud saves
+  also keep them in Tigris: the page and Tigris talk through the server, so a save that goes up or comes down passes
+  the machine (a save is some MB, compressed).
 - After one good start the page also starts without a connection, and it can be added to the home screen as an app
   (`web/README.md`, "As an app").
 

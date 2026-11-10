@@ -18,14 +18,16 @@ import http from 'node:http';
 import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { cloudFromEnv } from './cloud.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const SEASON_TABLES = ['rules.tsv', 'names.tsv', 'clubs.tsv', 'club_records.tsv'];
-// The page: these files of web/, and nothing else of it. web/deploy/stage.mjs stages the same list.
-export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'sw.js',
-  'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
-const PAGES = Object.fromEntries([['/', 'index.html'], ...PAGE_FILES.map((f) => [`/${f}`, f])]);
+// The page: these files of web/, and nothing else of it. web/deploy/stage.mjs stages the same list, and the server's own.
+export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'account.js', 'sw.js',
+  'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'privacy.html'];
+export const SERVER_FILES = ['server.mjs', 'cloud.mjs', 'auth.mjs', 's3.mjs', 'package.json'];
+const PAGES = Object.fromEntries([['/', 'index.html'], ['/privacy', 'privacy.html'], ...PAGE_FILES.map((f) => [`/${f}`, f])]);
 // What the page keeps for a start without a connection (web/sw.js): itself, without the service worker's own file.
 const SHELL = ['/', ...PAGE_FILES.filter((f) => f !== 'index.html' && f !== 'sw.js').map((f) => `/${f}`)];
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.wasm': 'application/wasm',
@@ -82,12 +84,21 @@ function sendFile(req, res, disk, type, immutable = false) {
   createReadStream(file).pipe(res);
 }
 
-export function createApp({ gameDir, buildDir, manifestPath }) {
+// cloud: accounts and cloud saves (cloud.mjs), or null for none.
+export function createApp({ gameDir, buildDir, manifestPath, cloud = null }) {
   let inv = inventory({ gameDir, buildDir, manifestPath });
   return http.createServer((req, res) => {
     try {
+      const url = new URL(req.url, 'http://x');
+      if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) {
+        if (cloud) { cloud.handle(req, res, url); return; }
+        req.resume();
+        res.writeHead(url.pathname === '/api/me' ? 200 : 404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify(url.pathname === '/api/me' ? { auth: false } : { error: 'accounts are not set up on this server' }));
+        return;
+      }
       if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); res.end(); return; }
-      const url = new URL(req.url, 'http://x'), path = decodeURIComponent(url.pathname), v = url.searchParams.get('v');
+      const path = decodeURIComponent(url.pathname), v = url.searchParams.get('v');
       if (PAGES[path]) { sendFile(req, res, join(HERE, PAGES[path]), TYPES[PAGES[path].slice(PAGES[path].lastIndexOf('.'))]); return; }
       if (path === '/files.json') {
         inv = inventory({ gameDir, buildDir, manifestPath });   // a rebuild or new files count without a restart
@@ -179,6 +190,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (inv.missing.length) console.log(`missing or of another size: ${inv.missing.length}, first: ${inv.missing.slice(0, 5).map((m) => m.path).join(', ')}`);
   console.log(inv.engine.js && inv.engine.wasm ? `engine: ${buildDir}/cm0102_recomp.wasm (${mb(inv.engine.wasm.size)}, ${inv.suspend ?? 'unknown'} build)`
     : `engine: not built in ${buildDir} (web/README.md, step 3)`);
+  const { cloud, missing } = cloudFromEnv(process.env);
+  const someSet = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'CM_SESSION_SECRET', 'BUCKET_NAME'].some((k) => process.env[k]);
+  console.log(cloud ? `accounts and cloud saves: on${process.env.CM_CLOUD_FOR === 'everyone' ? ', for every account' : ''}`
+    : `accounts and cloud saves: off${someSet ? `, missing ${missing.join(', ')}` : ''} (web/README.md, "Cloud saves")`);
   const port = Number(process.env.PORT ?? 8080), host = process.env.HOST ?? '127.0.0.1';
-  createApp({ gameDir, buildDir }).listen(port, host, () => console.log(`open http://${host}:${port} in Chrome`));
+  createApp({ gameDir, buildDir, cloud }).listen(port, host, () => console.log(`open http://${host}:${port} in Chrome`));
 }

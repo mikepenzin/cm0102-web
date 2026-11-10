@@ -55,13 +55,14 @@
       mounts, env: { ...M.ENV }, exe: files.has('/game/cm0102.exe'), rules: files.has('/game/Seasons/rules.tsv'),
       wasmType: window.__wasmType,
     };
-    // One saved game, as the game writes it (a save container: version 2, one part), and a save in progress.
+    // One saved game, as the game writes it (a save container: version 2, one part), and a save in progress. A save of
+    // that name in the user folder already (the cloud check brings one) stays as it is.
     const save = new Uint8Array(0x416ec + 32), dv = new DataView(save.buffer);
     dv.setInt32(0, 2, true);
     dv.setInt32(8, 1, true);
     dv.setUint32(12, 0x416ec, true);
     save.set(new TextEncoder().encode('Harbour City'), 0x416ec);
-    files.set('/user/Harbour City 2001-07-14.sav', { data: save, size: save.length, own: false, mtime: new Date() });
+    if (!files.has('/user/Harbour City 2001-07-14.sav')) files.set('/user/Harbour City 2001-07-14.sav', { data: save, size: save.length, own: false, mtime: new Date() });
     files.set('/user/temp_save_file.sav', { data: new Uint8Array(10), size: 10, own: false, mtime: new Date() });
     window.__fakeSave = Array.from(save.subarray(0x416ec - 4));
     const c = M.canvas, g = c.getContext('2d');

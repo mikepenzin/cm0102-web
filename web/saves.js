@@ -36,14 +36,16 @@ export function savesSignature(FS) {
   return [...saves, ...backups].map((f) => `${f.path}:${f.size}:${+f.mtime}`).join('|');
 }
 
-// null when bytes look like a saved game of CM 01/02 (its container header), else why not.
-export function checkSave(bytes) {
-  if (bytes.length < HEADER) return 'it is too short to be a saved game of CM 01/02';
+// null when bytes look like a saved game of CM 01/02 (its container header), else why not. bytes may be only the start
+// of the file (at least its header, SAVE_HEADER bytes) when total gives the whole length: the server checks so.
+export const SAVE_HEADER = HEADER;
+export function checkSave(bytes, total = bytes.length) {
+  if (total < HEADER || bytes.length < HEADER) return 'it is too short to be a saved game of CM 01/02';
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const version = dv.getInt32(0, true), count = dv.getInt32(8, true);
   if (![1, 2, 3, 4].includes(version) || count < 1 || count > MAX_ENTRIES) return 'it is not a saved game of CM 01/02';
   for (let k = 0; k < count; k++)
-    if (dv.getUint32(12 + k * ENTRY, true) > bytes.length) return 'the saved game is damaged: a part starts after its end';
+    if (dv.getUint32(12 + k * ENTRY, true) > total) return 'the saved game is damaged: a part starts after its end';
   return null;
 }
 
@@ -68,28 +70,47 @@ function download(FS, f) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
-// Wires the panel of index.html to the engine's file system. sync() writes the user folder to IndexedDB now.
-export function mountSavesPanel({ FS, sync, log }) {
+const CLOUD = { cloud: 'In the cloud', up: 'Saving…', here: 'Only here', waiting: 'Not yet' };
+
+// Wires the panel of index.html to the engine's file system. sync() writes the user folder to IndexedDB now. cloud():
+// the cloud sync of account.js, or null when the account has no cloud saves.
+export function mountSavesPanel({ FS, sync, log, cloud = () => null }) {
   const dialog = document.getElementById('saves'), list = document.getElementById('saves-list');
   const note = document.getElementById('saves-note'), input = document.getElementById('saves-file');
   const say = (text, bad = false) => { note.textContent = text; note.className = bad ? 'small bad' : 'small'; };
-  let shown = { saves: [], backups: [] };
+  let shown = { saves: [], backups: [] }, watched = null;
 
   function render() {
     shown = listSaves(FS);
+    const c = cloud();
+    document.getElementById('saves-where').textContent = c ? 'Your saves are in this browser and in the cloud.' : 'Your saves stay in this browser.';
+    const state = (f) => {
+      const st = c.status(f.name, f);
+      return `<td class="cloud ${st}">${CLOUD[st]}${st === 'cloud' ? ` <button class="link" data-remove="${esc(f.name)}" title="Remove from the cloud; it stays here">Remove</button>` : ''}</td>`;
+    };
     const row = (f, i, kind) => `<tr><td>${esc(f.name)}</td><td class="num">${mb(f.size)}</td><td>${esc(when(f.mtime))}</td>
-      <td><button data-kind="${kind}" data-i="${i}">Download</button></td></tr>`;
+      ${c ? (kind === 'save' ? state(f) : '<td></td>') : ''}<td><button data-kind="${kind}" data-i="${i}">Download</button></td></tr>`;
     list.innerHTML = shown.saves.length
-      ? `<table><tr><th>Save</th><th class="num">Size</th><th>Saved</th><th></th></tr>${shown.saves.map((f, i) => row(f, i, 'save')).join('')}</table>`
+      ? `<table><tr><th>Save</th><th class="num">Size</th><th>Saved</th>${c ? '<th>Cloud</th>' : ''}<th></th></tr>${shown.saves.map((f, i) => row(f, i, 'save')).join('')}</table>`
       : '<p class="small">No saved games yet. Save in the game (Game Options, Save Game), or upload one.</p>';
     if (shown.backups.length) list.innerHTML += `<details><summary>Older copies (${shown.backups.length})</summary><table>
       ${shown.backups.map((f, i) => row(f, i, 'backup')).join('')}</table></details>`;
+    if (c && c !== watched) { watched = c; c.onChange(() => { if (dialog.open) render(); }); }
   }
 
   document.getElementById('saves-open').onclick = () => { say(''); render(); dialog.showModal(); };
   document.getElementById('saves-close').onclick = () => dialog.close();
   document.getElementById('saves-upload').onclick = () => input.click();
-  list.addEventListener('click', (e) => {
+  list.addEventListener('click', async (e) => {
+    const r = e.target.closest('button[data-remove]');
+    if (r && cloud()) {
+      const name = r.dataset.remove;
+      r.disabled = true;
+      try { await cloud().remove(name); say(`${name} is no longer in the cloud. It stays in this browser.`); log(`page: ${name} removed from the cloud`); }
+      catch (err) { say(`${name} was not removed: ${err.message}`, true); }
+      render();
+      return;
+    }
     const b = e.target.closest('button[data-i]');
     if (!b) return;
     const f = (b.dataset.kind === 'backup' ? shown.backups : shown.saves)[Number(b.dataset.i)];

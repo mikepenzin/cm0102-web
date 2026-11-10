@@ -3,8 +3,10 @@
 // on the canvas. The game runs in this tab; the server only hands out files.
 //
 // Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
-// runs the on-screen keyboard, saves.js is the Saved games panel, ui.js has the messages and the small helpers.
+// runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
+// has the messages and the small helpers.
 import { mountSavesPanel, savesSignature } from './saves.js';
+import { createCloudSync, mountAccount } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
 import { mountLayout } from './layout.js';
 import { mountTouch } from './touch.js';
@@ -41,10 +43,10 @@ addEventListener('unhandledrejection', (e) => log(`page: ${e.reason?.stack ?? e.
 
 // ---- Before the engine: the listeners that must run ahead of SDL's, and the layout. ----
 
-let running = false;
+let running = false, leaving = false;
 let keyboard = null;
 guardKeys();
-guardLeave(() => running);
+guardLeave(() => running && !leaving);
 const canvas = $('canvas');
 const layout = mountLayout({ app: $('app'), bar: $('bar'), stage: $('stage'), canvas, chip: $('type-chip'), isTouch: TOUCH });
 mountTouch({ canvas, stage: $('stage'), fx: $('fx'), onFirstTouch: resumeAudio, onTap: (x, y) => keyboard?.onTap(x, y) });
@@ -68,6 +70,54 @@ const backToGame = () => { if (!document.querySelector('dialog[open]') && docume
 $('bar').addEventListener('click', (e) => { if (e.target.closest('button') && !e.target.closest('#kbd-open')) setTimeout(backToGame); });
 for (const d of document.querySelectorAll('dialog')) d.addEventListener('close', backToGame);
 $('help-open').onclick = () => $('help').showModal();
+
+// ---- The account and the cloud saves (account.js). ----
+
+const account = mountAccount({ log, toast, isRunning: () => running, isStandalone, leave: () => { leaving = true; } });
+account.ready.then((me) => { $('help-cloud').hidden = !me?.auth; });
+let cloud = null, cloudBehind = false, watcher = null;
+
+// The sync of the account's saves, when it has cloud saves. replace: the saves of the cloud may replace the ones here
+// (before the game runs). Resolves to the jobs done, or null.
+async function startCloud(FS, { replace, onStep }) {
+  await account.ready;
+  const me = account.me;                         // as now: a sign-in since the page opened counts
+  cloud?.stop();
+  cloud = null;
+  account.setCloud(null);
+  if (!me?.user?.cloud) return null;
+  if (typeof CompressionStream !== 'function') { log('page: no CompressionStream in this browser: no cloud saves'); return null; }
+  cloud = createCloudSync({ FS, sync, log, toast, account: me.user.email, onWrote: () => watcher?.rebase() });
+  account.setCloud(cloud);
+  const jobs = await cloud.run({ replace, onStep, signal: onStep?.signal });
+  cloudBehind = jobs === null;
+  const came = jobs?.filter((j) => j.do === 'down').length ?? 0;
+  if (jobs === null && !onStep?.signal?.aborted) toast('The cloud was not reached: the saves here are used, and go up later', { kind: 'bad', ms: 7000 });
+  else if (came) toast(`${came} saved game${came > 1 ? 's' : ''} came from the cloud`);
+  return jobs;
+}
+
+// After a save: up to the cloud. A sync that failed (no connection) is tried again each minute.
+function cloudAfterSave() {
+  if (!cloud || cloud.stopped) return;
+  cloud.run({ replace: false }).then((jobs) => {
+    cloudBehind = jobs === null;
+    if (jobs === null) toast('Not in the cloud yet: no connection. It goes up later.', { kind: 'bad', ms: 6000 });
+    else if (jobs.some((j) => j.do !== 'down')) toast('Saved to the cloud');
+  });
+}
+setInterval(() => { if (cloudBehind && running) cloudAfterSave(); }, 60000);
+account.onAccountChange((me) => {
+  const FS = window.Module?.FS;
+  if (!running || !FS) return;                   // before the game, the start does it
+  if (!me?.user?.cloud) { cloud?.stop(); cloud = null; account.setCloud(null); return; }
+  startCloud(FS, { replace: false });            // signed in while the game runs: new saves come in, none is replaced
+});
+// For a sign-in that leaves the page: it is a click away when the start box shows.
+function signInHint(me) {
+  return me?.auth && !me.user ? `<p class="small">Played here before with an account? <a href="/auth/google/start?mode=page" id="go-signin">Sign in
+    with Google</a> to bring your cloud saves.</p>` : '';
+}
 $('help-close').onclick = () => $('help').close();
 $('fullscreen').onclick = () => layout.toggleFullscreen();
 layout.onFullscreen((on) => {
@@ -181,20 +231,21 @@ async function primeOffline(info) {
 
 // ---- The engine. ----
 
+// Writes the user folder to IndexedDB. A call while a write runs makes one more write after it, so nothing is missed.
+let syncing = false, syncAgain = false;
+function sync() {
+  const FS = window.Module?.FS;
+  if (!FS) return;
+  if (syncing) { syncAgain = true; return; }
+  syncing = true;
+  FS.syncfs(false, (err) => {
+    syncing = false;
+    if (err) { log(`page: the user folder was not saved: ${err}`); toast('The save did not reach this browser\'s storage', { kind: 'bad', ms: 6000 }); }
+    if (syncAgain) { syncAgain = false; sync(); }
+  });
+}
+
 function runEngine(files, info) {
-  // Writes the user folder to IndexedDB. A call while a write runs makes one more write after it, so nothing is missed.
-  let syncing = false, again = false;
-  const sync = () => {
-    const FS = window.Module?.FS;
-    if (!FS) return;
-    if (syncing) { again = true; return; }
-    syncing = true;
-    FS.syncfs(false, (err) => {
-      syncing = false;
-      if (err) { log(`page: the user folder was not saved: ${err}`); toast('The save did not reach this browser\'s storage', { kind: 'bad', ms: 6000 }); }
-      if (again) { again = false; sync(); }
-    });
-  };
   window.Module = {
     canvas,
     arguments: ['--game', '/game'],
@@ -210,11 +261,26 @@ function runEngine(files, info) {
       M.ENV.RECOMP_USER_DIR = '/user';                  // main.c: every write of the game goes there
       M.ENV.HOME = '/user';
       M.addRunDependency('user-folder');
-      FS.syncfs(true, (err) => {                         // the saves of earlier visits, back from the browser
+      FS.syncfs(true, async (err) => {                   // the saves of earlier visits, back from the browser
         if (err) log(`page: the user folder was not read: ${err}`);
         // The display mode of the settings file, for an engine that does not tell the size of its picture.
         try { if (/^\s*display\s*=\s*classic\b/m.test(FS.readFile('/user/settings.txt', { encoding: 'utf8' }))) layout.setPicture(800, 600); }
         catch { /* no settings file yet: widescreen */ }
+        // The saves made on other devices, before the game lists them.
+        if ((await account.ready)?.user?.cloud) {
+          const abort = new AbortController();
+          overlay(`<h1>Getting your cloud saves</h1><div class="row"><i class="spin"></i><span id="cloud-step">Asking the cloud…</span></div>
+            <p style="margin:14px 0 0"><button id="cloud-skip" hidden>Start without them</button></p>`);
+          status('Getting your cloud saves…');
+          const skip = setTimeout(() => { if ($('cloud-skip')) { $('cloud-skip').hidden = false; $('cloud-skip').onclick = () => abort.abort(); } }, 5000);
+          const onStep = (t) => { if ($('cloud-step')) $('cloud-step').textContent = t; };
+          onStep.signal = abort.signal;
+          try { await startCloud(FS, { replace: true, onStep }); }
+          catch (e) { log(`page: cloud saves: ${e?.stack ?? e}`); }       // the game starts all the same
+          clearTimeout(skip);
+          overlay('<h1>Starting the engine</h1><div class="row"><i class="spin"></i>The first start can take a minute.</div>');
+          status('Starting the engine…');
+        }
         M.removeRunDependency('user-folder');
       });
     }],
@@ -229,17 +295,20 @@ function runEngine(files, info) {
       setInterval(sync, 15000);
       // A save file that was added or changed, and has stayed the same for 2 seconds (the game finished writing it),
       // goes to IndexedDB at once, not at the next 15-second write.
+      // A save that the cloud sync wrote is not a save of the game: the watcher takes it as seen.
       let lastSaves = savesSignature(FS), seen = lastSaves;
+      watcher = { rebase() { lastSaves = seen = savesSignature(FS); } };
       setInterval(() => {
         const now = savesSignature(FS);
         if (now !== lastSaves && now === seen) {
           if (now.length >= lastSaves.length) toast('Saved in this browser');
           lastSaves = now;
           sync();
+          cloudAfterSave();
         }
         seen = now;
       }, 2000);
-      mountSavesPanel({ FS, sync, log });
+      mountSavesPanel({ FS, sync, log, cloud: () => cloud });
       keyboard = mountKeyboard({ log, layout, toast });
       // What the engine says about itself, a few times a second: the size of its picture, and the text entry that takes
       // keys (user32.c). An engine built before these calls has neither; the page then works without them.
@@ -367,6 +436,7 @@ async function start() {
         : 'The game files are in this browser already.'} The game then runs in this tab, on your device. Nothing is installed.</p>
       ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
       ${TOUCH ? '<p class="small">On a touch screen: tap to click, long press for the right button, two fingers to scroll. Help has the list.</p>' : ''}
+      ${signInHint(await Promise.race([account.ready, new Promise((r) => setTimeout(r, 1500))]))}
       <button class="primary" id="go">Start the game</button>`);
     await new Promise((r) => { $('go').onclick = r; });
   }

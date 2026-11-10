@@ -14,7 +14,7 @@ import { dirname, join, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 import { constants, createBrotliCompress } from 'node:zlib';
-import { PAGE_FILES, findGameDirs, inventory, verify } from '../server.mjs';
+import { PAGE_FILES, SERVER_FILES, findGameDirs, inventory, verify } from '../server.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
@@ -90,7 +90,7 @@ export async function stage(opts) {
     if (update(from, to)) changed.add(to);
     if (serve) served.push(to);
   };
-  for (const name of ['server.mjs', 'package.json', ...PAGE_FILES]) put(join(ROOT, 'web', name), join(opts.out, 'web', name), false);
+  for (const name of [...SERVER_FILES, ...PAGE_FILES]) put(join(ROOT, 'web', name), join(opts.out, 'web', name), false);
   put(opts.manifest, join(opts.out, 'tools/clean_files/manifest.tsv'), false);
   for (const f of inv.files) {
     const to = f.path.startsWith('Seasons/') ? join(opts.out, 'build-web/seasons', f.path.slice(8)) : join(opts.out, 'game', f.path);

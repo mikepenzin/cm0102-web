@@ -3,7 +3,8 @@
 // With a connection it changes nothing: every request goes to the server first, so a new version of the page or the
 // engine is used at once. Only when the server cannot be reached (or does not answer in time) the answer comes from
 // the cache that the page filled after its last good start (loader.js, primeOffline). The game files are not its
-// business: the page keeps those in its own cache and asks for them there first.
+// business: the page keeps those in its own cache and asks for them there first, and the account (/api, /auth) is
+// always the server's.
 const SHELL = 'cm0102-shell';
 const WAIT_MS = 6000;          // a server that does not answer this long, with a kept copy at hand: the copy
 
@@ -36,6 +37,6 @@ async function serverFirst(request) {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  if (e.request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/game/')) return;
+  if (e.request.method !== 'GET' || url.origin !== self.location.origin || /^\/(game|api|auth)\//.test(url.pathname)) return;
   e.respondWith(url.pathname.startsWith('/engine/') && url.searchParams.has('v') ? keptFirst(e.request) : serverFirst(e.request));
 });
