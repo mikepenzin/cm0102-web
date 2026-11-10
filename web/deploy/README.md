@@ -95,6 +95,16 @@ With a key of your own Tigris account instead of `fly storage create`, add `AWS_
 AWS_ACCESS_KEY_ID=<key id> AWS_SECRET_ACCESS_KEY=<secret> AWS_REGION=auto BUCKET_NAME=<bucket>` to the
 `fly secrets set` line. The Google client and its redirect URI come first: `web/README.md`, "Set it up", step 1.
 
+To sell Cloud Saves with Paddle (`web/README.md`, "Payments"), add its settings and the seller's name and contact,
+which the terms, refunds, privacy and pricing pages show:
+
+```bash
+fly secrets set PADDLE_ENV=sandbox PADDLE_CLIENT_TOKEN=test_… PADDLE_PRICE_ID=pri_… PADDLE_WEBHOOK_SECRET=pdl_ntfset_… \
+  PADDLE_API_KEY=pdl_sdbx_apikey_… CM_SELLER="<your name>" CM_CONTACT=<your email>
+```
+
+For real payments: the live token, price, secret and key, and `fly secrets unset PADDLE_ENV`.
+
 `fly secrets set` restarts the app with them. `fly logs` then shows `accounts and cloud saves: on`; if a setting is
 missing it names it. The secrets stay on the app: a later `fly deploy` keeps them.
 
@@ -112,6 +122,8 @@ missing it names it. The secrets stay on the app: a later `fly deploy` keeps the
 | `accounts and cloud saves: off, missing …` | Set the named secrets (Accounts and cloud saves) |
 | Google says `redirect_uri_mismatch` | The client's Authorized redirect URI must be exactly `https://<your-app>.fly.dev/auth/google/callback` |
 | Only some Google accounts can sign in | The Google app is still "Testing": Audience, Publish app |
+| The checkout does not open | Paddle has not approved the domain yet (Checkout, Website approval), or the token is of the other environment (`test_` is the sandbox) |
+| Paid, but Cloud Saves stay off | `fly logs`: a `Paddle notification refused` line means `PADDLE_WEBHOOK_SECRET` is not the destination's secret; `price … is not one of PADDLE_PRICE_ID` names the price to add |
 
 The first visit after a quiet time wakes the machine, which takes a few seconds.
 

@@ -74,7 +74,8 @@ const CLOUD = { cloud: 'In the cloud', up: 'Saving…', here: 'Only here', waiti
 
 // Wires the panel of index.html to the engine's file system. sync() writes the user folder to IndexedDB now. cloud():
 // the cloud sync of account.js, or null when the account has no cloud saves.
-export function mountSavesPanel({ FS, sync, log, cloud = () => null }) {
+// promo(): a line about Cloud Saves for a player without them, or null; openPromo() shows them.
+export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () => null, openPromo = () => {} }) {
   const dialog = document.getElementById('saves'), list = document.getElementById('saves-list');
   const note = document.getElementById('saves-note'), input = document.getElementById('saves-file');
   const say = (text, bad = false) => { note.textContent = text; note.className = bad ? 'small bad' : 'small'; };
@@ -84,6 +85,9 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null }) {
     shown = listSaves(FS);
     const c = cloud();
     document.getElementById('saves-where').textContent = c ? 'Your saves are in this browser and in the cloud.' : 'Your saves stay in this browser.';
+    const p = promo(), box = document.getElementById('saves-promo');
+    box.hidden = !p;
+    if (p) { box.firstChild.textContent = `${p} `; box.querySelector('button').onclick = openPromo; }
     const state = (f) => {
       const st = c.status(f.name, f);
       return `<td class="cloud ${st}">${CLOUD[st]}${st === 'cloud' ? ` <button class="link" data-remove="${esc(f.name)}" title="Remove from the cloud; it stays here">Remove</button>` : ''}</td>`;

@@ -1,6 +1,6 @@
 // Stand-ins for the services of the cloud saves, for the tests: an S3 store that checks every signature (as Tigris
 // does), and Google's sign-in (its authorization endpoint answers at once, as if the person had picked an account).
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, createHmac, randomBytes } from 'node:crypto';
 import http from 'node:http';
 import { signV4 } from '../s3.mjs';
 
@@ -118,4 +118,21 @@ export function fakeSaveBytes(fill = 7, extra = 4000) {
   b.writeInt32LE(1, 8);
   b.writeUInt32LE(HEADER, 12);
   return b;
+}
+
+// A Paddle notification as Paddle sends it, and its Paddle-Signature.
+export function signPaddle(raw, secret, ts = Math.floor(Date.now() / 1000)) {
+  return `ts=${ts};h1=${createHmac('sha256', secret).update(`${ts}:${raw}`).digest('hex')}`;
+}
+export function paddleEvent(type, { ref, at = new Date().toISOString(), status = 'active', price = 'pri_cloud_month', cancelAt = null } = {}) {
+  const start = new Date(), end = new Date(Date.now() + 30 * 86400e3);
+  return {
+    event_id: `evt_${randomBytes(6).toString('hex')}`, event_type: type, occurred_at: at, notification_id: `ntf_${randomBytes(6).toString('hex')}`,
+    data: {
+      id: 'sub_test_1', status, customer_id: 'ctm_test_1', custom_data: { account: ref },
+      current_billing_period: { starts_at: start.toISOString(), ends_at: end.toISOString() },
+      scheduled_change: cancelAt ? { action: 'cancel', effective_at: cancelAt, resume_at: null } : null,
+      items: [{ status: 'active', quantity: 1, price: { id: price, product_id: 'pro_cloud' } }],
+    },
+  };
 }

@@ -3,14 +3,15 @@
 // page shows no account.
 //
 // Who has cloud saves: CM_CLOUD_FOR=everyone gives them to every signed-in account; else the emails in CM_CLOUD_USERS
-// (comma-separated) and the accounts whose record says plan "cloud" (accounts/<id>.json in the store, for a payment
-// to set) have them. Everyone else keeps saves in the browser only, as before.
+// (comma-separated) and the accounts whose record says plan "cloud" until planUntil (accounts/<id>.json in the store:
+// set by a Paddle subscription, billing.mjs, or by hand) have them. Everyone else keeps saves in the browser only.
 //
 // The store holds:
 //   accounts/<google id>.json            { sub, email, name, created, seen, plan, planUntil }
 //   saves/<google id>/<name, base64url>.gz the save, gzip-compressed by the page; metadata raw-size and saved (ms)
 import { createGunzip } from 'node:zlib';
 import { GOOGLE, SignInError, googleFinish, googleStart, readCookies, sealer, setCookie } from './auth.mjs';
+import { PADDLE_API, accountRef, applySubscription, checkPaddleSignature, openAccountRef, portalUrl } from './billing.mjs';
 import { S3Error, s3FromEnv } from './s3.mjs';
 import { SAVE_HEADER, checkSave } from './saves.js';
 
@@ -71,8 +72,10 @@ const popupPage = (ok, why) => `<!doctype html><meta charset="utf-8"><meta name=
 <script>try { new BroadcastChannel('cm-account').postMessage(${JSON.stringify({ ok, why: ok ? null : String(why) })}); } catch {}
 ${ok ? 'setTimeout(() => window.close(), 300);' : ''}</script>`;
 
+// paddle: { env, clientToken, priceIds, webhookSecret, apiKey, apiBase } to sell Cloud Saves with Paddle, or null.
+// price: how the page names the price ("$5 a month").
 export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicUrl = null, cloudFor = 'listed', cloudUsers = [],
-  upgradeUrl = null, maxSaves = 30, google = GOOGLE, log = (t) => console.log(t) }) {
+  upgradeUrl = null, maxSaves = 30, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t) }) {
   const seal = sealer(sessionSecret);
   const users = new Set(cloudUsers.map((e) => e.trim().toLowerCase()).filter(Boolean));
   const accounts = new Map();               // google id -> { account, at }: the record, read at most once a minute
@@ -92,12 +95,21 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     return a;
   }
 
-  async function hasCloud(user) {
-    if (cloudFor === 'everyone' || users.has(user.email)) return true;
+  // { cloud, from: 'subscription' | 'given' | null, record }.
+  async function planOf(user) {
     let a = null;
     try { a = await account(user.sub); } catch (err) { log(`cloud: account ${user.sub} not read: ${err.message}`); }
-    return a?.plan === 'cloud' && (!a.planUntil || Date.parse(a.planUntil) > Date.now());
+    if (cloudFor === 'everyone' || users.has(user.email)) return { cloud: true, from: 'given', record: a };
+    const on = a?.plan === 'cloud' && (!a.planUntil || Date.parse(a.planUntil) > Date.now());
+    return { cloud: on, from: on ? (a.paddle ? 'subscription' : 'given') : null, record: a };
   }
+  const hasCloud = async (user) => (await planOf(user)).cloud;
+
+  // What the page offers: the price, and how to buy (Paddle's checkout, or a link).
+  const offer = () => cloudFor === 'everyone'
+    ? { price: 'Free with an account', free: true, paddle: null, url: null }
+    : { price, free: false, url: upgradeUrl,
+      paddle: paddle ? { env: paddle.env, token: paddle.clientToken, priceId: paddle.priceIds[0] } : null };
 
   function finishSignIn(res, mode, ok, why = null) {
     if (mode === 'popup') {
@@ -138,8 +150,8 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     try {
       const had = await account(user.sub, true);
       const now = new Date().toISOString();
-      const record = { sub: user.sub, email: user.email, name: user.name, created: had?.created ?? now, seen: now,
-        plan: had?.plan ?? 'free', planUntil: had?.planUntil ?? null };
+      const record = { plan: 'free', planUntil: null, ...had, sub: user.sub, email: user.email, name: user.name,
+        created: had?.created ?? now, seen: now };              // a plan and a subscription stay as they were
       await s3.put(accountKey(user.sub), Buffer.from(JSON.stringify(record)), { type: 'application/json' });
       accounts.set(user.sub, { account: record, at: Date.now() });
       if (!had) log(`cloud: new account ${user.sub}`);
@@ -152,11 +164,49 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
 
   async function me(req, res) {
     const user = sessionOf(req);
-    if (!user) { send(res, 200, { auth: true, user: null }); return; }
-    const cloud = await hasCloud(user);
+    if (!user) { send(res, 200, { auth: true, user: null, offer: offer(), maxSaves }); return; }
+    const p = await planOf(user);
     setCookie(res, SESSION, seal.seal('s', user, SESSION_DAYS * 86400), { maxAge: SESSION_DAYS * 86400, secure: secure(req) });
-    send(res, 200, { auth: true, user: { email: user.email, name: user.name, picture: user.picture, cloud },
-      upgradeUrl: cloud ? null : upgradeUrl, maxSaves });
+    send(res, 200, { auth: true, offer: offer(), maxSaves, user: {
+      email: user.email, name: user.name, picture: user.picture, cloud: p.cloud, cloudFrom: p.from,
+      until: p.from === 'subscription' ? p.record.planUntil : null, cancelAt: p.from === 'subscription' ? p.record.paddle?.cancelAt ?? null : null,
+      manage: Boolean(p.record?.paddle?.customerId), ref: paddle ? accountRef(user.sub, sessionSecret) : null,
+    } });
+  }
+
+  // A notification of Paddle (billing.mjs). Only subscription events change a plan; the others are taken and left.
+  async function paddleWebhook(req, res) {
+    if (!paddle) { req.resume(); send(res, 404, { error: 'no payments here' }); return; }
+    const raw = await readBody(req, 1 << 20);
+    const why = checkPaddleSignature(req.headers['paddle-signature'], raw, paddle.webhookSecret);
+    if (why) { log(`cloud: Paddle notification refused: ${why}`); send(res, 401, { error: why }); return; }
+    let event;
+    try { event = JSON.parse(raw.toString()); } catch { send(res, 400, { error: 'not JSON' }); return; }
+    if (!String(event.event_type).startsWith('subscription.') || !event.data?.id) { send(res, 200, { ignored: event.event_type }); return; }
+    const sub = openAccountRef(event.data.custom_data?.account, sessionSecret);
+    if (!sub) { log(`cloud: Paddle ${event.event_type} ${event.data.id}: no account of this server in custom_data`); send(res, 200, { ignored: 'no account' }); return; }
+    const prices = (event.data.items ?? []).map((i) => i.price?.id);
+    if (!prices.some((id) => paddle.priceIds.includes(id))) {
+      log(`cloud: Paddle ${event.event_type} ${event.data.id}: price ${prices.join(',')} is not one of PADDLE_PRICE_ID`);
+      send(res, 200, { ignored: 'another price' });
+      return;
+    }
+    const record = await account(sub, true);
+    const next = applySubscription(record ?? { sub, email: null, created: new Date().toISOString() }, event);
+    if (!next) { send(res, 200, { ignored: 'older than the last event' }); return; }
+    await s3.put(accountKey(sub), Buffer.from(JSON.stringify(next)), { type: 'application/json' });
+    accounts.set(sub, { account: next, at: Date.now() });
+    log(`cloud: account ${sub}: ${event.event_type}, ${event.data.status}, plan ${next.plan}${next.planUntil ? ` until ${next.planUntil}` : ''}`);
+    send(res, 200, { ok: true });
+  }
+
+  async function billingPortal(res, user) {
+    const record = await account(user.sub, true);
+    const customerId = record?.paddle?.customerId;
+    if (!customerId) { send(res, 404, { error: 'no subscription on this account' }); return; }
+    if (!paddle?.apiKey) { send(res, 501, { error: 'no portal on this server', url: 'https://paddle.net' }); return; }
+    const url = await portalUrl({ apiKey: paddle.apiKey, apiBase: paddle.apiBase, customerId, subscriptionId: record.paddle.subscriptionId });
+    send(res, 200, { url });
   }
 
   async function listSaves(user) {
@@ -204,6 +254,13 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   }
 
   async function deleteAccount(req, res, user) {
+    // A subscription that runs on would be paid for an account that is gone: it is canceled first.
+    const record = await account(user.sub, true);
+    const p = record?.paddle;
+    if (p && ['active', 'trialing', 'past_due'].includes(p.status) && !p.cancelAt) {
+      send(res, 409, { error: 'Cancel your Cloud Saves subscription first (Manage subscription), then delete the account.' });
+      return;
+    }
     for (const o of await s3.list(`saves/${user.sub}/`)) await s3.delete(o.key);
     await s3.delete(accountKey(user.sub));
     accounts.delete(user.sub);
@@ -214,6 +271,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
 
   async function handle(req, res, url) {
     const path = url.pathname, method = req.method;
+    if (path === '/api/paddle/webhook' && method === 'POST') return paddleWebhook(req, res);    // signed by Paddle instead
     // A change comes only from this site's page: a header that a form or another site cannot send without asking
     // first, and the Origin of this site when the browser names one. The cookies are SameSite=Lax as well.
     if (method !== 'GET' && method !== 'HEAD') {
@@ -226,6 +284,10 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     if (path === '/auth/logout' && method === 'POST') { setCookie(res, SESSION, null, { secure: secure(req) }); send(res, 204); return; }
 
     const user = sessionOf(req);
+    if (path === '/api/billing/portal' && method === 'POST') {
+      if (!user) { send(res, 401, { error: 'not signed in' }); return; }
+      return billingPortal(res, user);
+    }
     if (path === '/api/account' && method === 'DELETE') {
       if (!user) { send(res, 401, { error: 'not signed in' }); return; }
       return deleteAccount(req, res, user);
@@ -277,6 +339,16 @@ export function cloudFromEnv(env = process.env, log) {
     publicUrl: env.CM_PUBLIC_URL ? env.CM_PUBLIC_URL.replace(/\/+$/, '') : null,
     cloudFor: env.CM_CLOUD_FOR === 'everyone' ? 'everyone' : 'listed', cloudUsers: (env.CM_CLOUD_USERS ?? '').split(','),
     upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, log,
+    price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env),
   });
   return { cloud, missing };
+}
+
+// Paddle's settings, or null (no checkout) when one of the three it needs is missing.
+export function paddleFromEnv(env = process.env) {
+  if (!env.PADDLE_CLIENT_TOKEN || !env.PADDLE_PRICE_ID || !env.PADDLE_WEBHOOK_SECRET) return null;
+  const sandbox = env.PADDLE_ENV === 'sandbox';
+  return { env: sandbox ? 'sandbox' : 'production', clientToken: env.PADDLE_CLIENT_TOKEN,
+    priceIds: env.PADDLE_PRICE_ID.split(',').map((x) => x.trim()).filter(Boolean), webhookSecret: env.PADDLE_WEBHOOK_SECRET,
+    apiKey: env.PADDLE_API_KEY || null, apiBase: PADDLE_API[sandbox ? 'sandbox' : 'production'] };
 }

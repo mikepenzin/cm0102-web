@@ -164,9 +164,35 @@ gzip-compressed, under the account's Google id. The page (`account.js`):
 - Account has Sign out and Delete account (the account and all its cloud saves). `/privacy` says what is kept.
 
 **Who has cloud saves.** The accounts in `CM_CLOUD_USERS`, every account with `CM_CLOUD_FOR=everyone`, and the
-accounts whose record in the store (`accounts/<id>.json`) says `"plan": "cloud"` (with `planUntil`, until then). A
-payment can set that record; until there is one, edit it by hand in the Tigris console. Others see "Cloud saves are
-not on for this account", and a "Get cloud saves" link when `CM_UPGRADE_URL` is set.
+accounts whose record in the store (`accounts/<id>.json`) says `"plan": "cloud"` until `planUntil`: a Paddle
+subscription sets that (Payments, below), or you by hand in the Tigris console.
+
+**What players see.** The start box of a first visit, the Account dialog and Saved games show the two plans: Free
+(the whole game, saves in the browser, download and upload) and Cloud Saves (`CM_PRICE`, "$5 a month"), with the
+links to `/pricing`, `/terms`, `/refunds` and `/privacy`. Signing in alone changes nothing; it is how cloud saves
+know their account. A signed-in account without Cloud Saves gets the "Get Cloud Saves · $5 a month" button, which
+opens Paddle's checkout over the page (the game keeps running). After the payment, the page turns Cloud Saves on by
+itself once Paddle's webhook has come (a few seconds), and the running game's saves go up. An account with a
+subscription has Manage subscription (Paddle's portal: cancel, card, invoices). After the first save in a browser, a
+player without Cloud Saves gets one message about them.
+
+**Payments (Paddle).** Paddle is the merchant of record: it sells the subscription, takes the payment and the sales
+tax and VAT, and tells the server with signed webhooks (`billing.mjs`). The server keeps no payment data: the
+subscription's id, customer id and state in the account record. An active subscription gives Cloud Saves to the end
+of its billing period plus three days (for the renewal's webhook), a past-due one a week, a canceled or paused one
+none; a cancel for the end of the period keeps them until then. An account with a running subscription cannot be
+deleted until the subscription is canceled. In Paddle (start in the sandbox, `sandbox-vendors.paddle.com`):
+
+1. Catalog, Products: Cloud Saves, with a price of $5 a month (recurring). Keep the price id (`pri_...`).
+2. Developer tools, Authentication: a client-side token (`test_...` in the sandbox, `live_...` for real), and, for
+   Manage subscription, an API key with the permission `customer_portal_session.write`.
+3. Developer tools, Notifications: a destination `https://<your-app>.fly.dev/api/paddle/webhook` with the events
+   `subscription.created`, `subscription.updated`, `subscription.activated`, `subscription.canceled`,
+   `subscription.past_due`, `subscription.paused` and `subscription.resumed`. Keep its secret key.
+4. Checkout, Website approval: the domain `<your-app>.fly.dev`. Paddle checks the site: the pricing, terms, refund and
+   privacy pages are there, named in `CM_SELLER` and `CM_CONTACT`, and the terms say Paddle is the merchant of record.
+5. The settings below (`PADDLE_*`, `CM_SELLER`, `CM_CONTACT`). For real payments, repeat 1 to 3 in the live account
+   and leave out `PADDLE_ENV`.
 
 **Set it up** (once). It is off until all of these are set; the server says at the start which ones are missing.
 
@@ -189,7 +215,12 @@ not on for this account", and a "Get cloud saves" link when `CM_UPGRADE_URL` is 
 | `CM_PUBLIC_URL` | the site's address, `https://<your-app>.fly.dev` (default: the address the browser used) |
 | `CM_CLOUD_USERS` | emails with cloud saves, comma-separated |
 | `CM_CLOUD_FOR` | `everyone`: every signed-in account has cloud saves |
-| `CM_UPGRADE_URL` | where "Get cloud saves" leads (a payment page), shown to accounts without cloud saves |
+| `CM_PRICE` | the price the page and the pricing and terms pages name (default `$5 a month`) |
+| `PADDLE_CLIENT_TOKEN`, `PADDLE_PRICE_ID`, `PADDLE_WEBHOOK_SECRET` | Paddle's checkout: the client-side token, the price id (more than one, comma-separated, are all taken; the first is sold), the notification destination's secret |
+| `PADDLE_ENV` | `sandbox` for Paddle's sandbox; unset for real payments |
+| `PADDLE_API_KEY` | for Manage subscription; without it the button leads to paddle.net |
+| `CM_SELLER`, `CM_CONTACT` | your name (as in your Paddle account) and contact email, on the terms, refund, privacy and pricing pages |
+| `CM_UPGRADE_URL` | without Paddle: where "Get Cloud Saves" leads |
 | `CM_CLOUD_MAX_SAVES` | the most saves an account keeps in the cloud (default 30) |
 
 A good start prints `accounts and cloud saves: on`. Each save is gzip-compressed by the browser; the server checks that
@@ -276,16 +307,19 @@ it with `CM_WEB_BUILD`.
 - `cd web && npm test`: the server lists and serves only the clean files, the season tables and the page, and refuses
   the rest; brotli and versioned caching; the stage script and the staged server; the save logic; the layout's
   arithmetic; the sign-in (state, PKCE, a token for another app or with no verified email is refused), the cookies, the
-  cloud saves API (conflicts, limits, checks, account deletion) and the sync plan. The request signatures of `s3.mjs`
+  cloud saves API (conflicts, limits, checks, account deletion) and the sync plan; Paddle's signatures, the
+  subscription events (buy, cancel for the end of the period, a late event, the cancel), the portal link, and the
+  pricing, terms, refunds and privacy pages. The request signatures of `s3.mjs`
   were also checked against the examples of AWS's Signature Version 4 documentation and the AWS SDK's signer.
 - `NODE_PATH=$(npm root -g) node web/test/page-check.cjs`: the page at full size (placeholder files with the sizes of
   the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`): the browser
   check, the load, the Saved games panel, a second start from the browser's cache. Needs Playwright.
 - `NODE_PATH=$(npm root -g) node web/test/cloud-check.mjs`: the accounts and cloud saves in Chromium, with stand-ins of
-  Google and the S3 store (`test/fakes.mjs`, which checks every request's signature as S3 does) and of the engine:
-  the sign-in from the start box and from a small window while the game runs, the saves of the cloud before the game
-  starts, a save going up, Remove, a save changed on two devices, a second device, sign-out, and an account without
-  cloud saves. Needs Playwright.
+  Google, the S3 store (`test/fakes.mjs`, which checks every request's signature as S3 does), Paddle.js and the
+  engine: the plans in the start box, the sign-in from the start box and from a small window while the game runs, the
+  saves of the cloud before the game starts, a save going up, Remove, a save changed on two devices, a second device,
+  sign-out, and a free account that buys Cloud Saves while its game runs (checkout, webhook, the save goes up).
+  Needs Playwright.
 - `NODE_PATH=$(npm root -g) node web/test/sdl-check.mjs <probe folder>`: the page against the real SDL browser
   backend. The probe (`test/sdlprobe.c`) opens its window and renderer as the runtime does and prints what SDL tells
   it. The check covers the layout (no bars, the screen's own pixels, a resized window, classic mode, full screen), the

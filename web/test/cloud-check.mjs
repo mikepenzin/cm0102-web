@@ -12,7 +12,7 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 import { createApp } from '../server.mjs';
 import { createCloud } from '../cloud.mjs';
 import { createS3 } from '../s3.mjs';
-import { fakeGoogle, fakeS3, fakeSaveBytes } from './fakes.mjs';
+import { fakeGoogle, fakeS3, fakeSaveBytes, paddleEvent, signPaddle } from './fakes.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -38,7 +38,15 @@ const google = await fakeGoogle();
 const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
 const logs = [];
 const cloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'z'.repeat(40),
-  cloudUsers: ['player@example.com'], upgradeUrl: 'https://example.com/support', maxSaves: 10, google: google.google, log: (t) => logs.push(t) });
+  cloudUsers: ['player@example.com'], maxSaves: 10, google: google.google, log: (t) => logs.push(t), price: '$5 a month',
+  paddle: { env: 'sandbox', clientToken: 'test_token', priceIds: ['pri_cloud_month'], webhookSecret: 'pdl_ntfset_check', apiKey: null, apiBase: null } });
+// Paddle.js, as far as the page uses it: Initialize, and a checkout that completes at once. The test then sends the
+// webhook that Paddle would send.
+const FAKE_PADDLE = `window.Paddle = {
+  Environment: { set(e) { window.__paddleEnv = e; } },
+  Initialize(o) { window.__paddleInit = o; },
+  Checkout: { open(o) { window.__paddleOpen = o; setTimeout(() => window.__paddleInit.eventCallback({ name: 'checkout.completed', data: {} }), 200); } },
+};`;
 const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
@@ -72,13 +80,16 @@ try {
   await a.waitForSelector('#go');
   check('signed out: the bar says Sign in', await a.isVisible('#account-open') && (await a.textContent('#account-open span')) === 'Sign in');
   check('the start box offers the sign-in', await a.isVisible('#go-signin'));
+  const startPlans = (await a.innerText('#overlay .plans')).replace(/\s+/g, ' ');
+  check('the start box shows the plans: Free, and Cloud Saves at $5 a month', /Free \$0/.test(startPlans) && /Cloud Saves \$5 a month/.test(startPlans), startPlans);
+  check('and the links to pricing, terms, refunds and privacy', (await a.$$eval('#overlay .legal a', (as) => as.map((x) => x.getAttribute('href')))).join() === '/pricing,/terms,/refunds,/privacy');
   await shot(a, 'start');
   await Promise.all([a.waitForURL(`${BASE}/`), a.click('#go-signin')]);
   await a.waitForSelector('#go');
   await waitFor('the account', async () => (await a.textContent('#account-open span')) === 'Alex');
   check('back from Google: signed in, the address is clean, the button names the player', (await a.textContent('#account-open span')) === 'Alex'
     && a.url() === `${BASE}/` && await a.evaluate(() => document.getElementById('account-open').classList.contains('on')));
-  check('a message says so', /Signed in as player@example\.com\. Cloud saves are on\./.test(await toasts(a)), await toasts(a));
+  check('a message says so', /Signed in as player@example\.com\. Cloud Saves are on\./.test(await toasts(a)), await toasts(a));
   await a.click('#go');
   await a.waitForFunction(() => window.__fake, null, { timeout: 30000 }).catch(async (e) => {
     console.log('LOG:', await a.textContent('#log'), '\nOVERLAY:', await a.textContent('#overlay'), '\nERRORS:', errors.join('; '));
@@ -119,7 +130,7 @@ try {
   check('the removed save did not go up again', !removedAgain);
   await a.click('#account-open');
   const dialogText = (await a.textContent('#account-body')).replace(/\s+/g, ' ');
-  check('Account: the email, cloud saves on, the last sync', /Signed in as player@example\.com/.test(dialogText) && /Cloud saves are on/.test(dialogText) && /Last sync:/.test(dialogText), dialogText.slice(0, 200));
+  check('Account: the email, cloud saves on, the last sync', /Signed in as player@example\.com/.test(dialogText) && /Cloud Saves are on/.test(dialogText) && /Given to this account/.test(dialogText) && /Last sync:/.test(dialogText), dialogText.slice(0, 200));
   await shot(a, 'account');
   await a.click('#account-close');
 
@@ -155,6 +166,12 @@ try {
   await c.click('#go');
   await c.waitForFunction(() => window.__fake, null, { timeout: 30000 });
   const mine = await localBytes(c, harbour);                       // this device's own Harbour City, from its stand-in game
+  await c.click('#saves-open');
+  check('Saved games tells a player without an account about Cloud Saves', await c.isVisible('#saves-promo')
+    && /Cloud Saves keep your saves on all your devices too: \$5 a month/.test(await c.textContent('#saves-promo')));
+  await c.click('#saves-promo button');
+  check('and its button opens the plans', await c.isVisible('#account') && await c.isVisible('#account-body .plans'));
+  await c.click('#account-close');
   await c.click('#account-open');
   const [popup] = await Promise.all([c.context().waitForEvent('page'), c.click('#account-signin')]);
   await popup.waitForLoadState().catch(() => {});
@@ -171,17 +188,46 @@ try {
     same(await localBytes(c, other2), here) && cloudBytes(other2)?.equals(here) && cloudBytes(harbour)?.equals(Buffer.from(mine))
       && cloudBytes(other)?.equals(elsewhere), (await localNames(c)).join(', '));
 
-  // ---- A free account: signed in, no cloud saves, a way to get them. ----
+  // ---- A free account buys Cloud Saves while its game runs: Paddle's checkout, the webhook, the saves go up. ----
   google.user = { sub: '5000005', email: 'free@example.com', email_verified: true, name: 'Free Player' };
-  const d = await (await browser.newContext()).newPage();
+  const dctx = await browser.newContext({ viewport: { width: 1200, height: 800 } });
+  await dctx.route('https://cdn.paddle.com/paddle/v2/paddle.js', (route) => route.fulfill({ contentType: 'text/javascript', body: FAKE_PADDLE }));
+  const d = await dctx.newPage();
+  d.on('pageerror', (e) => errors.push(e.message));
   await d.goto(`${BASE}/auth/google/start?mode=page`);
   await d.waitForSelector('#go');
   await waitFor('the account', async () => (await d.textContent('#account-open span')) === 'Free');
+  check('the start box of a free account: its plan, and the way to Cloud Saves', /Free plan/.test(await d.textContent('#overlay')) && await d.isVisible('#go-plans'));
+  await d.click('#go');
+  await d.waitForFunction(() => window.__fake, null, { timeout: 30000 });
   await d.click('#account-open');
-  const free = (await d.textContent('#account-body')).replace(/\s+/g, ' ');
-  check('a free account: no cloud saves, and the link to get them', /Cloud saves are not on for this account/.test(free)
-    && (await d.getAttribute('#account-body a.button', 'href')) === 'https://example.com/support', free.slice(0, 160));
+  const free = (await d.innerText('#account-body')).replace(/\s+/g, ' ');
+  check('a free account sees its plan, the two plans and the price', /Free plan/.test(free) && /Cloud Saves \$5 a month/.test(free)
+    && (await d.textContent('#account-buy')) === 'Get Cloud Saves · $5 a month', free.slice(0, 200));
+  check('and the refund and renewal terms by the button', /cancel any time\. A full refund within 14 days/.test(free));
   await shot(d, 'free');
+  await d.click('#account-buy');
+  await d.waitForFunction(() => window.__paddleOpen, null, { timeout: 10000 });
+  const opened = await d.evaluate(() => ({ open: window.__paddleOpen, env: window.__paddleEnv, token: window.__paddleInit?.token, dialog: document.getElementById('account').open }));
+  check('the checkout opens with the price, the email and this account\'s mark; the dialog gives way to it',
+    opened.open.items[0].priceId === 'pri_cloud_month' && opened.open.customer.email === 'free@example.com' && /^5000005\./.test(opened.open.customData.account)
+      && opened.env === 'sandbox' && opened.token === 'test_token' && opened.dialog === false, JSON.stringify(opened).slice(0, 300));
+  // Paddle's webhook, a moment after the payment.
+  await new Promise((r) => setTimeout(r, 1500));
+  const raw = JSON.stringify(paddleEvent('subscription.created', { ref: opened.open.customData.account }));
+  const hooked = await fetch(`${BASE}/api/paddle/webhook`, { method: 'POST', body: raw, headers: { 'paddle-signature': signPaddle(raw, 'pdl_ntfset_check') } });
+  check('the webhook is taken', hooked.status === 200);
+  await waitFor('Cloud Saves on', async () => /Cloud Saves are on\. Your saves go to the cloud/.test(await toasts(d)), 20000);
+  check('the page turns Cloud Saves on by itself', /Payment done/.test(await toasts(d)) && /Cloud Saves are on\. Your saves go to the cloud/.test(await toasts(d)), await toasts(d));
+  const paidKey = `saves/5000005/${Buffer.from(harbour).toString('base64url')}.gz`;
+  await waitFor('the save to go up', () => s3fake.objects.has(paidKey));
+  check('the save of its running game goes up at once', s3fake.objects.has(paidKey));
+  await d.click('#account-open');
+  const paid = (await d.innerText('#account-body')).replace(/\s+/g, ' ');
+  check('Account: Cloud Saves, renews, paid until, Manage subscription', /· Cloud Saves/.test(paid) && /Renews every month; paid until/.test(paid)
+    && await d.isVisible('#account-manage'), paid.slice(0, 220));
+  await shot(d, 'paid');
+  await d.click('#account-close');
 
   check('no page errors', errors.length === 0, errors.join('; '));
   check('the server logged no failure', !logs.some((l) => /fail|not written|not read/.test(l)), logs.join('; '));

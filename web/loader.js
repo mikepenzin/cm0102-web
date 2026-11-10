@@ -6,7 +6,7 @@
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
 import { mountSavesPanel, savesSignature } from './saves.js';
-import { createCloudSync, mountAccount } from './account.js';
+import { LEGAL_LINKS, createCloudSync, mountAccount, plansHtml } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
 import { mountLayout } from './layout.js';
 import { mountTouch } from './touch.js';
@@ -113,10 +113,22 @@ account.onAccountChange((me) => {
   if (!me?.user?.cloud) { cloud?.stop(); cloud = null; account.setCloud(null); return; }
   startCloud(FS, { replace: false });            // signed in while the game runs: new saves come in, none is replaced
 });
-// For a sign-in that leaves the page: it is a click away when the start box shows.
-function signInHint(me) {
-  return me?.auth && !me.user ? `<p class="small">Played here before with an account? <a href="/auth/google/start?mode=page" id="go-signin">Sign in
-    with Google</a> to bring your cloud saves.</p>` : '';
+// The start box tells the plans: free, or Cloud Saves. Signing in leaves the page, which is fine before the game.
+function plansForStart(me) {
+  if (!me?.auth) return '';
+  const links = `<p class="small legal">${LEGAL_LINKS}</p>`;
+  if (me.user?.cloud) return `<p class="small">Signed in as ${esc(me.user.email)} · Cloud Saves are on: your saves from other devices come in when the game starts.</p>`;
+  if (me.user) return `<p class="small">Signed in as ${esc(me.user.email)} · Free plan. Cloud Saves (${esc(me.offer.price)}) keep your saves on all your
+    devices: <a href="#" id="go-plans">see Cloud Saves</a>.</p>${links}`;
+  return `${plansHtml(me.offer, me.maxSaves)}<p class="small"><a href="/auth/google/start?mode=page" id="go-signin">Sign in with Google</a>
+    to get Cloud Saves, or to bring the cloud saves you have. Playing needs no account.</p>${links}`;
+}
+// Once in this browser, after its first save: a player without Cloud Saves hears that they exist.
+function cloudHintOnce() {
+  const hint = account.promo();
+  if (!hint) return;
+  try { if (localStorage.getItem('cm-cloud-hint')) return; localStorage.setItem('cm-cloud-hint', '1'); } catch { return; }
+  setTimeout(() => toast(`${hint} See ${account.me?.user ? 'your name' : 'Sign in'}, top right.`, { ms: 9000 }), 2500);
 }
 $('help-close').onclick = () => $('help').close();
 $('fullscreen').onclick = () => layout.toggleFullscreen();
@@ -301,14 +313,15 @@ function runEngine(files, info) {
       setInterval(() => {
         const now = savesSignature(FS);
         if (now !== lastSaves && now === seen) {
-          if (now.length >= lastSaves.length) toast('Saved in this browser');
+          if (now.length >= lastSaves.length) { toast('Saved in this browser'); if (!cloud) cloudHintOnce(); }
           lastSaves = now;
           sync();
           cloudAfterSave();
         }
         seen = now;
       }, 2000);
-      mountSavesPanel({ FS, sync, log, cloud: () => cloud });
+      mountSavesPanel({ FS, sync, log, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),
+        openPromo: () => { $('saves').close(); account.open(); } });
       keyboard = mountKeyboard({ log, layout, toast });
       // What the engine says about itself, a few times a second: the size of its picture, and the text entry that takes
       // keys (user32.c). An engine built before these calls has neither; the page then works without them.
@@ -436,8 +449,9 @@ async function start() {
         : 'The game files are in this browser already.'} The game then runs in this tab, on your device. Nothing is installed.</p>
       ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
       ${TOUCH ? '<p class="small">On a touch screen: tap to click, long press for the right button, two fingers to scroll. Help has the list.</p>' : ''}
-      ${signInHint(await Promise.race([account.ready, new Promise((r) => setTimeout(r, 1500))]))}
-      <button class="primary" id="go">Start the game</button>`);
+      <button class="primary" id="go">Start the game</button>
+      ${plansForStart(await Promise.race([account.ready, new Promise((r) => setTimeout(r, 1500))]))}`);
+    if ($('go-plans')) $('go-plans').onclick = (e) => { e.preventDefault(); account.open(); };
     await new Promise((r) => { $('go').onclick = r; });
   }
   overlay(`<h1>${toGet > 0 ? 'Loading the game files' : 'Starting'}</h1><div class="bar"><i id="bar-fill"></i></div><div class="small" id="bytes"></div>`);

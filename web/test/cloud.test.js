@@ -108,7 +108,7 @@ test('without its settings the server has no accounts, and says so to the page',
 
 test('sign in with Google: the account, the session cookie, and a free plan', async () => {
   const b = browser();
-  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null });
+  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3 });
   google.user = { sub: '1000001', email: 'player@example.com', email_verified: true, name: 'A Player' };
   const back = await b.signIn();
   assert.equal(back.status, 303);
@@ -120,7 +120,8 @@ test('sign in with Google: the account, the session cookie, and a free plan', as
   const me = await (await b.get('/api/me')).json();
   assert.equal(me.user.email, 'player@example.com');
   assert.equal(me.user.cloud, false);
-  assert.equal(me.upgradeUrl, 'https://example.com/support');
+  assert.equal(me.offer.url, 'https://example.com/support');
+  assert.equal(me.user.cloudFrom, null);
   const record = JSON.parse(s3fake.objects.get('accounts/1000001.json').body);
   assert.equal(record.plan, 'free');
   assert.equal(record.email, 'player@example.com');
@@ -128,7 +129,7 @@ test('sign in with Google: the account, the session cookie, and a free plan', as
   assert.equal((await b.send('PUT', '/api/saves/a.sav', gzipSync(fakeSaveBytes()))).status, 403);
   // Signing out.
   assert.equal((await b.send('POST', '/auth/logout')).status, 204);
-  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null });
+  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3 });
 });
 
 test('the sign-in refuses a wrong state, a cancel, an unverified email and a token for another app', async () => {
@@ -166,7 +167,7 @@ test('cloud saves: store, list, fetch, conflicts, limits and checks', async () =
   await b.signIn();
   const me = await (await b.get('/api/me')).json();
   assert.equal(me.user.cloud, true, 'a listed email has cloud saves');
-  assert.equal(me.upgradeUrl, null);
+  assert.equal(me.user.cloudFrom, 'given');
   assert.deepEqual(await (await b.get('/api/saves')).json(), { saves: [], maxSaves: 3 });
 
   const raw = fakeSaveBytes(1), gz = gzipSync(raw);
@@ -218,7 +219,7 @@ test('cloud saves: store, list, fetch, conflicts, limits and checks', async () =
   // Delete the account: its saves, its record and the session go.
   assert.equal((await b.send('DELETE', '/api/account')).status, 204);
   assert.equal([...s3fake.objects.keys()].some((k) => k.includes('2000002')), false);
-  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null });
+  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3 });
 });
 
 test('a plan of "cloud" in the account record gives cloud saves', async () => {

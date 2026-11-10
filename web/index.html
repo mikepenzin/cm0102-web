@@ -120,6 +120,16 @@
   a.button.primary { background: var(--accent); color: var(--accent-ink); font-weight: 650; }
   #account-open .dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: -2px; }
   #account-open.on .dot { display: inline-block; }
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
+  .plan { background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .plan.pro { border-color: var(--accent); }
+  .plan h4 { margin: 0; font-size: 14px; }
+  .plan .price { font-size: 19px; font-weight: 650; margin: 2px 0 6px; color: var(--text); }
+  .plan ul { margin: 0; padding-left: 17px; color: var(--muted); font-size: 13px; }
+  .box .plans { margin-top: 16px; }
+  .legal { margin: 10px 0 0 !important; }
+  .promo { border: 1px solid var(--accent); border-radius: 8px; padding: 7px 10px; margin: 8px 0 !important; }
+  .promo .link { color: var(--accent); }
   details summary { cursor: pointer; color: var(--muted); padding: 4px 0; }
   #log { margin: 4px 0 0; padding: 8px 10px; max-height: 34vh; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
     color: var(--muted); white-space: pre-wrap; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); }
@@ -168,6 +178,7 @@
     <h2 id="saves-title">Saved games</h2>
     <p class="small"><span id="saves-where">Your saves stay in this browser.</span> Download one to keep a copy on your
     device or to play it on another one; upload a .sav file to play it here.</p>
+    <p id="saves-promo" class="small promo" hidden><span></span><button class="link">See Cloud Saves</button></p>
     <div id="saves-list"></div>
     <p id="saves-note" class="small" role="status"></p>
     <div class="row">
@@ -182,7 +193,7 @@
     <h2 id="account-title">Your account</h2>
     <div id="account-body"></div>
     <p id="account-note" class="small" role="status"></p>
-    <div class="row"><a class="small" href="/privacy" target="_blank" rel="noopener">Privacy</a><span class="spacer"></span><button id="account-close">Close</button></div>
+    <div class="row"><span class="spacer"></span><button id="account-close">Close</button></div>
   </dialog>
 
   <dialog id="help" aria-labelledby="help-title">
@@ -201,8 +212,9 @@
     downloads them as files and uploads them again, also to and from the desktop game.</p>
     <div id="help-cloud" hidden>
       <h3>Cloud saves</h3>
-      <p class="small">Sign in with Google (Sign in, in the bar). With cloud saves on your account, each save goes to the
-      cloud, and the game started on another computer or iPad gets it. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
+      <p class="small">With Cloud Saves, each save goes to the cloud, and the game started on another computer or iPad
+      gets it. Sign in with Google (Sign in, in the bar) to get them. <a href="/pricing" target="_blank" rel="noopener">Pricing</a> ·
+      <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
     </div>
     <h3>As an app</h3>
     <p class="small">Add the page to the home screen (on an iPad: Share, then Add to Home Screen) or install it from the

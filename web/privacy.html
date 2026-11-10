@@ -18,6 +18,8 @@
   table { border-collapse: collapse; width: 100%; margin: 8px 0; }
   td { border-top: 1px solid var(--line); padding: 7px 8px 7px 0; vertical-align: top; color: var(--muted); }
   td:first-child { color: var(--text); white-space: nowrap; padding-right: 16px; }
+  nav { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; }
+  nav a { margin-right: 14px; }
 </style>
 </head>
 <body>
@@ -44,17 +46,28 @@
   and the time it was saved. The storage is Tigris, an object store of Fly.io, where this site runs. Nothing else of the
   game goes there.</p>
 
+  <h2>Payments</h2>
+  <p>Cloud Saves are paid through Paddle.com, the Merchant of Record of our orders. You give your card or other payment
+  details to Paddle, not to this site; Paddle's <a href="https://www.paddle.com/legal/privacy">privacy notice</a> covers
+  them. Paddle tells this site the id and the state of your subscription (active, canceled) and the end of the period
+  you paid for, which the site keeps with your account to know whether Cloud Saves are on.</p>
+
   <h2>Cookies</h2>
   <p>A signed-in browser holds one cookie, <b>cm_session</b>, for 30 days: it says which account is signed in. During the
-  sign-in a second cookie, <b>cm_oauth</b>, holds the state of the sign-in for at most 10 minutes. There are no other
-  cookies, no ads and no tracking.</p>
+  sign-in a second cookie, <b>cm_oauth</b>, holds the state of the sign-in for at most 10 minutes. This site sets no other
+  cookies, and has no ads and no tracking. The checkout, when you open it to buy Cloud Saves, is Paddle's, and loads
+  Paddle's script; Paddle's privacy notice covers it.</p>
 
   <h2>Deleting your data</h2>
   <p>Account, then <b>Delete account</b>, removes your account and all of your cloud saves from the storage at once. The
   saves in your browser stay until you clear the site's data in the browser. Signing out removes the cookie from the
-  browser.</p>
+  browser. A running Cloud Saves subscription is canceled first (Account, Manage subscription). Paddle keeps the
+  records of your payments as the law asks of a seller.</p>
 
-  <p><a href="/">Back to the game</a></p>
+  <h2>Contact</h2>
+  <p>{{SELLER}}: {{CONTACT}}.</p>
+
+  <nav><a href="/">The game</a><a href="/pricing">Pricing</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a><a href="/privacy">Privacy</a></nav>
 </main>
 </body>
 </html>
