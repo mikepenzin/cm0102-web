@@ -122,7 +122,7 @@ missing it names it. The secrets stay on the app: a later `fly deploy` keeps the
 | `accounts and cloud saves: off, missing …` | Set the named secrets (Accounts and cloud saves) |
 | Google says `redirect_uri_mismatch` | The client's Authorized redirect URI must be exactly `https://<your-app>.fly.dev/auth/google/callback` |
 | Only some Google accounts can sign in | The Google app is still "Testing": Audience, Publish app |
-| The checkout does not open | Paddle has not approved the domain yet (Checkout, Website approval), or the token is of the other environment (`test_` is the sandbox) |
+| The checkout says "Something went wrong" | Paddle has not approved the domain yet (Website approval), or there is no Default payment link (Checkout settings: `https://<your-app>.fly.dev/`), or the token and the price are of different environments (`test_` is the sandbox) |
 | Paid, but Cloud Saves stay off | `fly logs`: a `Paddle notification refused` line means `PADDLE_WEBHOOK_SECRET` is not the destination's secret; `price … is not one of PADDLE_PRICE_ID` names the price to add |
 
 The first visit after a quiet time wakes the machine, which takes a few seconds.

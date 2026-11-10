@@ -189,8 +189,10 @@ deleted until the subscription is canceled. In Paddle (start in the sandbox, `sa
 3. Developer tools, Notifications: a destination `https://<your-app>.fly.dev/api/paddle/webhook` with the events
    `subscription.created`, `subscription.updated`, `subscription.activated`, `subscription.canceled`,
    `subscription.past_due`, `subscription.paused` and `subscription.resumed`. Keep its secret key.
-4. Checkout, Website approval: the domain `<your-app>.fly.dev`. Paddle checks the site: the pricing, terms, refund and
-   privacy pages are there, named in `CM_SELLER` and `CM_CONTACT`, and the terms say Paddle is the merchant of record.
+4. Website approval (My account, Settings, or Checkout): the domain `<your-app>.fly.dev`. Paddle checks the site: the
+   pricing, terms, refund and privacy pages are there, named in `CM_SELLER` and `CM_CONTACT`, and the terms say Paddle
+   is the merchant of record. Once it is approved, Checkout settings, Default payment link: `https://<your-app>.fly.dev/`.
+   Without both, Paddle's checkout opens with "Something went wrong".
 5. The settings below (`PADDLE_*`, `CM_SELLER`, `CM_CONTACT`). For real payments, repeat 1 to 3 in the live account
    and leave out `PADDLE_ENV`.
 
