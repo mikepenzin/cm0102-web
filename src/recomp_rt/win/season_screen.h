@@ -38,6 +38,10 @@ void season_screen_set_rules(int on);           /* the right button of Setup Gam
  * value of the changing rules button of Setup Game (database.c). */
 void setup_widget_drawn(uint32_t w);
 
+/* Start New Game (season_dates.c) calls this first: a data set and season that the page chose (the browser
+ * build's rt_web_choose_data_set) move the game date there, inside the game's turn. Nothing without a choice. */
+void season_screen_apply_page_choice(void);
+
 /* The build function of the Extras screen of Setup Game (database.c), for the wait state "extras". */
 uint32_t setup_extras_build_fn(void);
 

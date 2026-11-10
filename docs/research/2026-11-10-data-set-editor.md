@@ -96,9 +96,19 @@ full, one refused) was:
 The Choose button of Choose Season (choose_apply, `season_screen.c`) sets the options `database = folder:<name>` and
 `season`, calls `win_data_set_changed` and `season_set_new_game`. The runtime reads settings.txt once, at the start
 (`options_load`, `display.c`), so the page cannot choose by writing the file while the game runs. The browser build's
-`rt_web_choose_data_set(folder, year)` (`season_screen.c`, `__EMSCRIPTEN__` only) does what choose_apply does for the
-Custom tile, after the same checks (the season range, `folder_fault`, `dbfolders_path`). For a season database that the
-game knows, `season_screen_year` takes the database's own season, whatever the option says.
+`rt_web_choose_data_set(folder, year)` (`season_screen.c`, `__EMSCRIPTEN__` only) sets the options and calls
+`win_data_set_changed` for the Custom tile, after the same checks (the season range, `folder_fault`, `dbfolders_path`).
+For a season database that the game knows, `season_screen_year` takes the database's own season, whatever the option
+says.
+
+It does not call `season_set_new_game` itself. With no game on, that function moves the game date to 1 January of
+the start year with `rt_callback` to Date::set (0x54a130), code of the game. The page calls between two frames,
+outside the game's turn, where JSPI cannot suspend: the first build of the call stopped with "trying to suspend
+without WebAssembly.promising". The call marks the choice instead, and the wrap of Start New Game (0x81ce00,
+`start_new_game` in `season_dates.c`) applies it first (`season_screen_apply_page_choice`). 0x81ce00 is the
+function that Setup Game's input (0x81bd70) calls for item 1 at 0x81c929; it is also called at 0x81f764 and
+0x764164. It reads the year of the game date at 0x81cf37 (key_nation_build_table 0x667150), after the wrap. Setup
+Game's menu build (database.c, the wrap of 0x5ed300) applies the options too, at each build.
 
 ## Not done
 

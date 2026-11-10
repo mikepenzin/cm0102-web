@@ -89,7 +89,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
         const how = chooseForNextGame(module(), FS, root, set.name, season);
         using = null;
         render();
-        say(how === 'now' ? `The next new game starts ${set.name} in ${seasonText(season)}. On the game's first screen, the button at the top left shows it.`
+        say(how === 'now' ? `The next new game starts ${set.name} in ${seasonText(season)}: Start New Game on the game's first screen starts it. The button at the top left of that screen shows the new choice the next time the screen opens.`
           : `${set.name} in ${seasonText(season)} is chosen for the next new game from the next start of this page. Reload the page (after saving your game) to use it now.`);
         log(`page: ${set.name} chosen for the next new game, ${seasonText(season)} (${how})`);
       } catch (err) { say(`${set.name} was not chosen: ${err.message}`, true); }

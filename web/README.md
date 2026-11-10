@@ -268,8 +268,10 @@ The **Editor** button in the bar opens the editors: a saved game (as above), or 
 `datasets.js`), as it lists the saves:
 
 - **Use** chooses one for the next new game, in a season (2001/02 to 2025/26; a copy of the game's data is 2001/02). It
-  does what the Choose Season screen does, through the runtime call `rt_web_choose_data_set` (`season_screen.c`), so
-  the game's first screen shows it at once. An engine built before that call: the page writes `database` and `season`
+  does what the Choose Season screen does, through the runtime call `rt_web_choose_data_set` (`season_screen.c`): the
+  call sets the options, and Start New Game moves the game date to the season (the page calls between two frames,
+  where the runtime must not run the game's code). The button at the top left of the game's first screen shows the
+  choice the next time that screen opens. An engine built before that call: the page writes `database` and `season`
   in settings.txt, and the choice counts from the next start of the page. A season database that the game knows keeps
   its own season.
 - **Download** gives a zip of a folder with the 20 files, which the desktop Bosman Edition takes too (unpack it into

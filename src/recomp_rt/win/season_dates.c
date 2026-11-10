@@ -35,6 +35,7 @@
 #include "season_history.h"
 #include "season_records.h"
 #include "seasons_db.h"
+#include "season_screen.h"
 #include "../host.h"
 
 #include <fcntl.h>
@@ -601,6 +602,8 @@ void o_0081ce00(void);
  * another choice. */
 RT_WRAP(0081ce00, start_new_game)
 {
+    season_screen_apply_page_choice();                     /* the browser build: Use of the Saved games dialog */
+    if (rt_unwinding) return;
     if (loaded && !season_game_on() && season_code_on() && rd32(g_mem, 0xae23a8u) &&
         (loaded_year != season_start_year() || strcmp(loaded_dir, win_data_set_dir()) ||
          season_comps_records_stale())) {                  /* slice 26: the records of new competitions */

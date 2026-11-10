@@ -122,7 +122,7 @@ export async function dataSetsInZip(bytes, fallback) {
 }
 
 // The choice for the next new game: the runtime does what Choose Season does (season_screen.c,
-// rt_web_choose_data_set). An engine built before that call: the settings file gets the two lines, and the choice
+// rt_web_choose_data_set): the options now, the game date at Start New Game. An engine built before that call: the settings file gets the two lines, and the choice
 // counts from the next start of the page. Returns 'now', 'next start' or throws.
 export function chooseForNextGame(M, FS, root, name, season) {
   if (typeof M?._rt_web_choose_data_set === 'function') {
