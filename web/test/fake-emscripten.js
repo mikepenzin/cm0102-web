@@ -14,6 +14,7 @@
   window.__syncs = { load: 0, store: 0 };
   M.FS = {
     mkdirTree,
+    mkdir(p) { if (dirs.has(p)) throw Object.assign(new Error(`EEXIST ${p}`), { errno: 20 }); dirs.add(p); },
     writeFile(path, data, opts) {
       if (!dirs.has(path.slice(0, path.lastIndexOf('/')) || '/')) throw new Error(`no folder for ${path}`);
       files.set(path, { data, size: data.length, own: Boolean(opts?.canOwn), mtime: new Date() });

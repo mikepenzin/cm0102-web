@@ -228,6 +228,27 @@ deleted until the subscription is canceled. In Paddle (start in the sandbox, `sa
 A good start prints `accounts and cloud saves: on`. Each save is gzip-compressed by the browser; the server checks that
 it is a saved game of CM 01/02 (64 MB compressed at most) before it stores it.
 
+## Edit a saved game
+
+Saved games has an **Edit** button by each save. It opens the save editor (`editor.js`, `savedit.js`):
+
+- Search a player by name or club; the best players come first.
+- Change current and potential ability, date of birth, the twelve position ratings, the 31 attributes the game shows
+  (Technical, Mental, Physical, Goalkeeping, with Determination) and the hidden ones (Consistency, Important Matches,
+  Injury Proneness, the feet, One On Ones and others). **Apply** puts the change into the save; **Save the game file**
+  writes it.
+- The numbers are those of the game's player profile. The game keeps 18 attributes relative to current ability (the
+  technical ones, Anticipation, Decisions, Positioning): the editor turns them into the right bytes, and keeps them
+  when the ability changes. A rating that the game cannot show with that ability (Heading 3 at ability 195, for
+  example) gets the nearest one, and the editor says so.
+- The save is written under its own name, so Load Game lists it; the file as it was goes to `backups/` as "<name>
+  (before edit).sav" (Saved games, Older copies). With Cloud Saves on, the edited save goes up as any other save.
+- If the save is loaded in the running game, save the changes in the editor and then load the save again: the game
+  keeps its own copy until it loads.
+
+Contracts, clubs, names and reputations are not edited, and a saved game gets no new players. The facts, with the
+game's code addresses: `docs/research/2026-11-10-save-editor.md`.
+
 ## The page around the game
 
 - The game fills the page: the canvas has the picture's shape (1280x800, or 800x600 in classic mode), as large as
@@ -311,7 +332,10 @@ it with `CM_WEB_BUILD`.
   arithmetic; the sign-in (state, PKCE, a token for another app or with no verified email is refused), the cookies, the
   cloud saves API (conflicts, limits, checks, account deletion) and the sync plan; Paddle's signatures, the
   subscription events (buy, cancel for the end of the period, a late event, the cancel), the portal link, and the
-  pricing, terms, refunds and privacy pages. The request signatures of `s3.mjs`
+  pricing, terms, refunds and privacy pages; the save editor's model (the run code, Date.cpp dates, the ratings of
+  0x544380 and 0x5442f0 and the bytes for them, a saved game read and written with only its staff and player tables
+  changed). The editor was also checked on a real 3.9.68 save of 60 MB: an unchanged save writes back the same bytes,
+  it opens in half a second in Chromium and saves in a fifth of one. The request signatures of `s3.mjs`
   were also checked against the examples of AWS's Signature Version 4 documentation and the AWS SDK's signer.
 - `NODE_PATH=$(npm root -g) node web/test/page-check.cjs`: the page at full size (placeholder files with the sizes of
   the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`): the browser
@@ -322,6 +346,9 @@ it with `CM_WEB_BUILD`.
   saves of the cloud before the game starts, a save going up, Remove, a save changed on two devices, a second device,
   sign-out, and a free account that buys Cloud Saves while its game runs (checkout, webhook, the save goes up).
   Needs Playwright.
+- `NODE_PATH=$(npm root -g) node web/test/editor-check.mjs`: the save editor in Chromium, on a computer and a phone, with a
+  small saved game in the game's format (`test/fakes.mjs`): Edit, search, change, Apply, a rating out of reach, Save,
+  the backup, a file that is not a full save.
 - `NODE_PATH=$(npm root -g) node web/test/sdl-check.mjs <probe folder>`: the page against the real SDL browser
   backend. The probe (`test/sdlprobe.c`) opens its window and renderer as the runtime does and prints what SDL tells
   it. The check covers the layout (no bars, the screen's own pixels, a resized window, classic mode, full screen), the

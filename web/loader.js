@@ -5,7 +5,8 @@
 // Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
-import { mountSavesPanel, savesSignature } from './saves.js';
+import { SAVE_DIR, mountSavesPanel, savesSignature } from './saves.js';
+import { mountEditor } from './editor.js';
 import { LEGAL_LINKS, createCloudSync, mountAccount, plansHtml } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
 import { mountLayout } from './layout.js';
@@ -320,8 +321,9 @@ function runEngine(files, info) {
         }
         seen = now;
       }, 2000);
+      const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running });
       mountSavesPanel({ FS, sync, log, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),
-        openPromo: () => { $('saves').close(); account.open(); } });
+        openPromo: () => { $('saves').close(); account.open(); }, edit: (name) => editor.open(name) });
       keyboard = mountKeyboard({ log, layout, toast });
       // What the engine says about itself, a few times a second: the size of its picture, and the text entry that takes
       // keys (user32.c). An engine built before these calls has neither; the page then works without them.

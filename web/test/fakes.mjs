@@ -136,3 +136,58 @@ export function paddleEvent(type, { ref, at = new Date().toISOString(), status =
     },
   };
 }
+
+// A small saved game in the format of the game's own (savedit.js has the facts): the container (version 4, members
+// run-coded), index.dat with the 22 entries, and the tables the editor reads. Three people: two players and one
+// coach. players: [{ first, second, common, club, ca, pa, gk, born: [y, m, d], attrs: byte of each attribute }].
+export async function fakeSaveGame(players = [
+  { first: 'Alessandro', second: 'Del Piero', ca: 181, pa: 190, gk: 1, born: [1974, 11, 9], club: 0, fill: 15 },
+  { first: 'Gianluigi', second: 'Buffon', ca: 187, pa: 194, gk: 20, born: [1978, 1, 28], club: 0, fill: 12 },
+]) {
+  const { encodeRuns, writeDate } = await import('../savedit.js');
+  const names = (list) => { const b = Buffer.alloc(list.length * 60); list.forEach((n, i) => { b.write(n, i * 60, 'latin1'); b.writeInt32LE(i, i * 60 + 0x33); b.writeInt32LE(-1, i * 60 + 0x37); b[i * 60 + 0x3b] = 1; }); return b; };
+  const first = ['', ...players.map((p) => p.first), 'Marcello'], second = ['', ...players.map((p) => p.second), 'Lippi'];
+  const staff = Buffer.alloc((players.length + 1) * 110), player = Buffer.alloc(players.length * 70);
+  players.forEach((p, i) => {
+    const o = i * 110;
+    staff.writeInt32LE(i, o); staff.writeInt32LE(i + 1, o + 4); staff.writeInt32LE(i + 1, o + 8); staff.writeInt32LE(0, o + 0x0c);
+    writeDate(staff, o + 0x10, { year: p.born[0], month: p.born[1], day: p.born[2] });
+    staff.writeUInt16LE(p.born[0], o + 0x18); staff.writeInt32LE(0, o + 0x1a); staff.writeInt32LE(p.club, o + 0x39); staff[o + 0x3d] = 11;
+    staff[o + 0x58] = 16; staff[o + 0x5f] = 2; staff.writeInt32LE(i, o + 0x61); staff.writeInt32LE(-1, o + 0x65); staff.writeInt32LE(-1, o + 0x69);
+    const q = i * 70;
+    player.writeInt32LE(i, q); player.writeInt16LE(p.ca, q + 5); player.writeInt16LE(p.pa, q + 7);
+    for (let k = 0; k < 12; k++) player[q + 0x0f + k] = 1;
+    player[q + 0x0f] = p.gk; if (p.gk !== 20) { player[q + 0x0f + 6] = 20; player[q + 0x0f + 10] = 20; }
+    for (let k = 0x1b; k <= 0x44; k++) player[q + k] = p.fill;
+  });
+  const c = players.length * 110;                         // the coach: no player data
+  staff.writeInt32LE(players.length, c); staff.writeInt32LE(first.length - 1, c + 4); staff.writeInt32LE(second.length - 1, c + 8);
+  staff.writeInt32LE(-1, c + 0x61); staff.writeInt32LE(-1, c + 0x65); staff.writeInt32LE(0, c + 0x69); staff.writeInt32LE(0, c + 0x39);
+  const club = Buffer.alloc(581); club.writeInt32LE(0, 0); club.write('Juventus', 4, 'latin1');
+  const natClub = Buffer.alloc(581); natClub.writeInt32LE(1, 0); natClub.write('Italy', 4, 'latin1');
+  const nation = Buffer.alloc(290); nation.writeInt32LE(0, 0); nation.write('Italy', 4, 'latin1');
+  const tables = [['first_names.dat', 13, names(first)], ['second_names.dat', 14, names(second)], ['common_names.dat', 15, names([''])],
+    ['club.dat', 0, club], ['nat_club.dat', 1, natClub], ['nation.dat', 4, nation], ['staff.dat', 6, staff], ['player.dat', 10, player]];
+  const sizes = { 13: 60, 14: 60, 15: 60, 0: 581, 1: 581, 4: 290, 6: 110, 10: 70 };
+  const index = Buffer.alloc(8 + 22 * 0x43 + 0x1cc, 0xcc);           // the save writes stack bytes after the entries
+  index.writeInt32LE(127, 0); index.writeInt32LE(16, 4);
+  for (let k = 0; k < 22; k++) {
+    const o = 8 + k * 0x43, t = tables[k];
+    index.fill(0, o, o + 0x43);
+    if (t) { index.write(t[0], o, 'latin1'); index.writeInt32LE(t[1], o + 0x33); index.writeInt32LE(t[2].length / sizes[t[1]], o + 0x37); index.writeInt32LE(2, o + 0x3f); }
+    else index.writeInt32LE(100 + k, o + 0x33);
+  }
+  const members = [['continent.dat', Buffer.from('stays as it is, byte for byte')], ...tables.map((t) => [t[0], t[2]]),
+    ['index.dat', index], ['general.dat', Buffer.alloc(3000, 7)]];
+  const HEADER = 0x416ec, header = Buffer.alloc(HEADER);
+  header.writeInt32LE(4, 0); header.writeInt32LE(0, 4); header.writeInt32LE(members.length, 8);
+  const body = [];
+  let at = HEADER;
+  members.forEach(([name, data], k) => {
+    const raw = Buffer.from(encodeRuns(data));
+    header.writeUInt32LE(at, 12 + k * 0x10c); header.writeUInt32LE(data.length, 16 + k * 0x10c); header.write(name, 20 + k * 0x10c, 'latin1');
+    body.push(raw);
+    at += raw.length;
+  });
+  return new Uint8Array(Buffer.concat([header, ...body]));
+}

@@ -129,6 +129,44 @@
   .box .plans { margin-top: 16px; }
   .legal { margin: 10px 0 0 !important; }
   .promo { border: 1px solid var(--accent); border-radius: 8px; padding: 7px 10px; margin: 8px 0 !important; }
+  td.acts { white-space: nowrap; }
+  td.acts button + button { margin-left: 6px; }
+
+  /* The save editor (editor.js): the players on the left, the one chosen on the right; one at a time when narrow. */
+  dialog#editor { width: min(1180px, calc(100vw - 16px)); height: calc(100% - 16px); max-height: none; padding: 14px 16px;
+    display: none; flex-direction: column; gap: 6px; }
+  dialog#editor[open] { display: flex; }
+  .ed-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ed-head h2 { margin: 0; }
+  #editor-note { margin: 0; min-height: 1.2em; white-space: pre-line; }
+  .ed-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 14px; }
+  .ed-list { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  #editor-search { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; }
+  #editor-results { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+  .ed-row { display: grid; grid-template-columns: 1fr auto; text-align: left; height: auto; padding: 7px 10px; gap: 0 8px; white-space: normal; }
+  .ed-row b { font-weight: 600; } .ed-row span { grid-column: 1; color: var(--muted); font-size: 12px; }
+  .ed-row i { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ed-row.on { border-color: var(--accent); } .ed-row.edited b::after { content: " ●"; color: var(--accent); }
+  .ed-form { overflow: auto; min-height: 0; padding-right: 4px; }
+  .ed-form .ed-title h3 { margin: 0; font-size: 18px; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 650; }
+  .ed-form h4 { margin: 14px 0 6px; font-size: 13px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .05em; }
+  .ed-form h4 .small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .ed-title .ed-back { display: none; padding: 0; margin-bottom: 4px; }
+  .ed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 10px; }
+  .ed-grid.pos { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .ed-grid.pos input { width: 52px; }
+  .ed-grid label { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); }
+  .ed-grid input { width: 64px; font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 6px; padding: 4px 6px; text-align: right; font-variant-numeric: tabular-nums; }
+  .ed-grid input[type=date] { width: auto; text-align: left; }
+  .ed-grid input.changed { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 760px) {
+    .ed-body { grid-template-columns: 1fr; }
+    .ed-body.detail .ed-list { display: none; } .ed-body:not(.detail) .ed-form { display: none; }
+    .ed-title .ed-back { display: inline-flex; }
+  }
   .promo .link { color: var(--accent); }
   details summary { cursor: pointer; color: var(--muted); padding: 4px 0; }
   #log { margin: 4px 0 0; padding: 8px 10px; max-height: 34vh; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
@@ -189,6 +227,17 @@
     </div>
   </dialog>
 
+  <dialog id="editor" aria-labelledby="editor-title">
+    <div class="ed-head"><h2 id="editor-title">Edit a saved game</h2><span id="editor-file" class="small"></span>
+      <span class="spacer"></span><button class="primary" id="editor-save" disabled>Save the game file</button><button id="editor-close">Close</button></div>
+    <p id="editor-note" class="small" role="status"></p>
+    <div class="ed-body">
+      <div class="ed-list"><input id="editor-search" type="search" placeholder="Search a player or a club" autocomplete="off" spellcheck="false">
+        <div id="editor-results"></div></div>
+      <div class="ed-form" id="editor-form"></div>
+    </div>
+  </dialog>
+
   <dialog id="account" aria-labelledby="account-title">
     <h2 id="account-title">Your account</h2>
     <div id="account-body"></div>
@@ -209,7 +258,8 @@
     </table>
     <h3>Your saved games</h3>
     <p class="small">Save in the game as usual. The saves stay in this browser<span id="help-storage"></span>. Saved games
-    downloads them as files and uploads them again, also to and from the desktop game.</p>
+    downloads them as files and uploads them again, also to and from the desktop game, and its Edit button changes the
+    players of a save: ability, attributes, positions, age.</p>
     <div id="help-cloud" hidden>
       <h3>Cloud saves</h3>
       <p class="small">With Cloud Saves, each save goes to the cloud, and the game started on another computer or iPad

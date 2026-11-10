@@ -74,8 +74,9 @@ const CLOUD = { cloud: 'In the cloud', up: 'Saving…', here: 'Only here', waiti
 
 // Wires the panel of index.html to the engine's file system. sync() writes the user folder to IndexedDB now. cloud():
 // the cloud sync of account.js, or null when the account has no cloud saves.
-// promo(): a line about Cloud Saves for a player without them, or null; openPromo() shows them.
-export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () => null, openPromo = () => {} }) {
+// promo(): a line about Cloud Saves for a player without them, or null; openPromo() shows them. edit(name): opens the
+// save editor (editor.js) on a save of the folder.
+export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () => null, openPromo = () => {}, edit = null }) {
   const dialog = document.getElementById('saves'), list = document.getElementById('saves-list');
   const note = document.getElementById('saves-note'), input = document.getElementById('saves-file');
   const say = (text, bad = false) => { note.textContent = text; note.className = bad ? 'small bad' : 'small'; };
@@ -93,7 +94,7 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
       return `<td class="cloud ${st}">${CLOUD[st]}${st === 'cloud' ? ` <button class="link" data-remove="${esc(f.name)}" title="Remove from the cloud; it stays here">Remove</button>` : ''}</td>`;
     };
     const row = (f, i, kind) => `<tr><td>${esc(f.name)}</td><td class="num">${mb(f.size)}</td><td>${esc(when(f.mtime))}</td>
-      ${c ? (kind === 'save' ? state(f) : '<td></td>') : ''}<td><button data-kind="${kind}" data-i="${i}">Download</button></td></tr>`;
+      ${c ? (kind === 'save' ? state(f) : '<td></td>') : ''}<td class="acts">${edit && kind === 'save' ? `<button data-edit="${i}">Edit</button>` : ''}<button data-kind="${kind}" data-i="${i}">Download</button></td></tr>`;
     list.innerHTML = shown.saves.length
       ? `<table><tr><th>Save</th><th class="num">Size</th><th>Saved</th>${c ? '<th>Cloud</th>' : ''}<th></th></tr>${shown.saves.map((f, i) => row(f, i, 'save')).join('')}</table>`
       : '<p class="small">No saved games yet. Save in the game (Game Options, Save Game), or upload one.</p>';
@@ -106,6 +107,8 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
   document.getElementById('saves-close').onclick = () => dialog.close();
   document.getElementById('saves-upload').onclick = () => input.click();
   list.addEventListener('click', async (e) => {
+    const ed = e.target.closest('button[data-edit]');
+    if (ed && edit) { dialog.close(); edit(shown.saves[Number(ed.dataset.edit)].name); return; }
     const r = e.target.closest('button[data-remove]');
     if (r && cloud()) {
       const name = r.dataset.remove;
