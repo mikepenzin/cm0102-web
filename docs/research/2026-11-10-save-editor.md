@@ -2,7 +2,8 @@
 
 Facts for the save editor of the browser build (`web/savedit.js`, `web/editor.js`). Source: `cm0102.exe` of the clean
 files (SHA-256 `0c78e7da…bff86`, `tools/clean_files/manifest.tsv`), read with capstone, and one saved game of the
-3.9.68 data (a Juventus game saved on 29.7.01, 60,621,406 bytes, version 4). The game itself was not run for this note.
+3.9.68 data (a Juventus game saved on 29.7.01, 60,621,406 bytes, version 4). The game itself was not run for this note;
+a save edited in the browser was then loaded in the game, and the profile showed the edited numbers (2026-11-10).
 
 ## The container
 

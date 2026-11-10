@@ -249,6 +249,23 @@ Saved games has an **Edit** button by each save. It opens the save editor (`edit
 Contracts, clubs, names and reputations are not edited, and a saved game gets no new players. The facts, with the
 game's code addresses: `docs/research/2026-11-10-save-editor.md`.
 
+## Edit a data set
+
+The **Editor** button in the bar opens the editors: a saved game (as above), or a data set for new games.
+
+- **New data set** copies the game's own database (the 20 files, about 60 MB) into `Databases/<name>` in the user
+  folder. Start a new game and choose it under Database: the game lists such folders as it lists Update Team data
+  sets. The game's own data stays as it is.
+- Search a player, then change his names, nationality, club, contract end, ability, positions, attributes and
+  Determination. The numbers are those of the database: 0 to 20, where 0 means the game sets the attribute when a new
+  game starts (most players of the data have 0s).
+- **Add a player** to any club, or as a free player. A club takes 50 players at most.
+- **Save the data set** writes the changed files; the data set's other files stay.
+- The Editor's home lists the data sets, with Delete.
+
+Players are added only to the format of the game's own data, not to Update Team data sets. The facts, with the game's
+code addresses and the checks: `docs/research/2026-11-10-data-set-editor.md`.
+
 ## The page around the game
 
 - The game fills the page: the canvas has the picture's shape (1280x800, or 800x600 in classic mode), as large as
@@ -334,8 +351,10 @@ it with `CM_WEB_BUILD`.
   subscription events (buy, cancel for the end of the period, a late event, the cancel), the portal link, and the
   pricing, terms, refunds and privacy pages; the save editor's model (the run code, Date.cpp dates, the ratings of
   0x544380 and 0x5442f0 and the bytes for them, a saved game read and written with only its staff and player tables
-  changed). The editor was also checked on a real 3.9.68 save of 60 MB: an unchanged save writes back the same bytes,
-  it opens in half a second in Chromium and saves in a fifth of one. The request signatures of `s3.mjs`
+  changed); the data set editor's model (names, clubs, a move that keeps the squad lists packed, a new player with the
+  tables after him moved, refusals that leave nothing behind). The editors were also checked on the real 3.9.68 files:
+  an unchanged save writes back the same bytes; a data set with an edit and a new player loads through the loader's
+  port (`src/cm3/database.c`) and passes `check_squad_lists`. The request signatures of `s3.mjs`
   were also checked against the examples of AWS's Signature Version 4 documentation and the AWS SDK's signer.
 - `NODE_PATH=$(npm root -g) node web/test/page-check.cjs`: the page at full size (placeholder files with the sizes of
   the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`): the browser
@@ -346,9 +365,10 @@ it with `CM_WEB_BUILD`.
   saves of the cloud before the game starts, a save going up, Remove, a save changed on two devices, a second device,
   sign-out, and a free account that buys Cloud Saves while its game runs (checkout, webhook, the save goes up).
   Needs Playwright.
-- `NODE_PATH=$(npm root -g) node web/test/editor-check.mjs`: the save editor in Chromium, on a computer and a phone, with a
-  small saved game in the game's format (`test/fakes.mjs`): Edit, search, change, Apply, a rating out of reach, Save,
-  the backup, a file that is not a full save.
+- `NODE_PATH=$(npm root -g) node web/test/editor-check.mjs`: the editors in Chromium, with a small saved game and a small
+  data set in the game's formats (`test/fakes.mjs`). The save editor on a computer and a phone: Edit, search, change,
+  Apply, a rating out of reach, Save, the backup, a file that is not a full save. The data set editor: a name refused,
+  New data set, an edit with a move to another club, Add a player, an unknown club refused, Save, Delete.
 - `NODE_PATH=$(npm root -g) node web/test/sdl-check.mjs <probe folder>`: the page against the real SDL browser
   backend. The probe (`test/sdlprobe.c`) opens its window and renderer as the runtime does and prints what SDL tells
   it. The check covers the layout (no bars, the screen's own pixels, a resized window, classic mode, full screen), the

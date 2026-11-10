@@ -161,8 +161,21 @@
   .ed-grid input { width: 64px; font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
     border-radius: 6px; padding: 4px 6px; text-align: right; font-variant-numeric: tabular-nums; }
   .ed-grid input[type=date] { width: auto; text-align: left; }
+  .ed-grid input[type=text], .ed-grid select { width: 100%; max-width: 260px; text-align: left; font: inherit; font-size: 16px;
+    color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+  .ed-grid label.wide { grid-column: span 2; }
+  .ed-grid select.changed { border-color: var(--accent); }
+  .ed-search { display: flex; gap: 6px; } .ed-search input { flex: 1; min-width: 0; }
+  #editor-home { overflow: auto; min-height: 0; }
+  #editor-home h4 { margin: 12px 0 4px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .ed-files { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+  .ed-file { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; }
+  .ed-file span { flex: 1; overflow-wrap: anywhere; }
+  #editor-new-name { flex: 1; max-width: 340px; font: inherit; font-size: 16px; color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
   .ed-grid input.changed { border-color: var(--accent); color: var(--accent); }
   @media (max-width: 760px) {
+    .ed-grid label.wide { grid-column: 1 / -1; }
     .ed-body { grid-template-columns: 1fr; }
     .ed-body.detail .ed-list { display: none; } .ed-body:not(.detail) .ed-form { display: none; }
     .ed-title .ed-back { display: inline-flex; }
@@ -193,6 +206,8 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg><span>Keyboard</span></button>
     <button id="saves-open" hidden aria-label="Saved games">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5M5 17v1.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span>Saved games</span></button>
+    <button id="editor-open" hidden aria-label="Editor">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="m14 8 2 2"/></svg><span>Editor</span></button>
     <button id="account-open" hidden aria-label="Sign in">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c.8-3.3 3.6-5.2 7-5.2s6.2 1.9 7 5.2"/></svg><span>Sign in</span><i class="dot" aria-hidden="true"></i></button>
     <button id="help-open" aria-label="Help">
@@ -228,14 +243,18 @@
   </dialog>
 
   <dialog id="editor" aria-labelledby="editor-title">
-    <div class="ed-head"><h2 id="editor-title">Edit a saved game</h2><span id="editor-file" class="small"></span>
-      <span class="spacer"></span><button class="primary" id="editor-save" disabled>Save the game file</button><button id="editor-close">Close</button></div>
+    <div class="ed-head"><button class="link" id="editor-home-button" type="button">← Editor</button>
+      <h2 id="editor-title">Editor</h2><span id="editor-file" class="small"></span>
+      <span class="spacer"></span><button class="primary" id="editor-save" hidden disabled>Save</button><button id="editor-close">Close</button></div>
     <p id="editor-note" class="small" role="status"></p>
-    <div class="ed-body">
-      <div class="ed-list"><input id="editor-search" type="search" placeholder="Search a player or a club" autocomplete="off" spellcheck="false">
+    <div id="editor-home"></div>
+    <div class="ed-body" hidden>
+      <div class="ed-list"><div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" autocomplete="off" spellcheck="false">
+        <button id="editor-add" type="button" hidden>Add a player</button></div>
         <div id="editor-results"></div></div>
       <div class="ed-form" id="editor-form"></div>
     </div>
+    <datalist id="editor-clubs"></datalist>
   </dialog>
 
   <dialog id="account" aria-labelledby="account-title">
@@ -260,6 +279,9 @@
     <p class="small">Save in the game as usual. The saves stay in this browser<span id="help-storage"></span>. Saved games
     downloads them as files and uploads them again, also to and from the desktop game, and its Edit button changes the
     players of a save: ability, attributes, positions, age.</p>
+    <h3>Editor</h3>
+    <p class="small">The Editor button changes the players of a saved game, or makes a data set for new games: your own copy
+    of the database, where you change players and add new ones. Start a new game and choose it under Database.</p>
     <div id="help-cloud" hidden>
       <h3>Cloud saves</h3>
       <p class="small">With Cloud Saves, each save goes to the cloud, and the game started on another computer or iPad

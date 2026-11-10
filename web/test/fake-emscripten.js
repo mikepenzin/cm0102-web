@@ -15,6 +15,8 @@
   M.FS = {
     mkdirTree,
     mkdir(p) { if (dirs.has(p)) throw Object.assign(new Error(`EEXIST ${p}`), { errno: 20 }); dirs.add(p); },
+    unlink(p) { if (!files.delete(p)) throw enoent(p); },
+    rmdir(p) { if ([...files.keys()].some((f) => f.startsWith(`${p}/`))) throw new Error(`ENOTEMPTY ${p}`); if (!dirs.delete(p)) throw enoent(p); },
     writeFile(path, data, opts) {
       if (!dirs.has(path.slice(0, path.lastIndexOf('/')) || '/')) throw new Error(`no folder for ${path}`);
       files.set(path, { data, size: data.length, own: Boolean(opts?.canOwn), mtime: new Date() });

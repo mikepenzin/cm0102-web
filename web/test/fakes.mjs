@@ -191,3 +191,67 @@ export async function fakeSaveGame(players = [
   });
   return new Uint8Array(Buffer.concat([header, ...body]));
 }
+
+// A small data set in the format of the game's own data (dataset.js has the facts): the 20 files, index.dat with 22
+// entries, staff.dat with the staff (format 1, 157 bytes), table 8 (empty), the non-players and the players one after
+// another, two clubs, two nations, the name tables with row 0 empty. Two players at Juventus, one coach at Milan, one
+// free player. { files: { name: Uint8Array } }
+export function fakeDataSet() {
+  const NAMES = (list, nation = 0) => { const b = Buffer.alloc(list.length * 60); list.forEach((n, i) => { b.write(n, i * 60, 'latin1'); b.writeInt32LE(i, i * 60 + 0x33); b.writeInt32LE(nation, i * 60 + 0x37); b[i * 60 + 0x3b] = 1; }); return b; };
+  const first = ['', 'Alessandro', 'Gianluigi', 'Carlo', 'Mario'], second = ['', 'Del Piero', 'Buffon', 'Ancelotti', 'Rossi'];
+  const people = [
+    { f: 1, s: 1, club: 0, player: 0, born: [1974, 11, 9], ca: 183, pa: 190, gk: 1 },
+    { f: 2, s: 2, club: 0, player: 1, born: [1978, 1, 28], ca: 187, pa: 194, gk: 20 },
+    { f: 3, s: 3, club: 1, nonPlayer: 0, born: [1959, 6, 10] },
+    { f: 4, s: 4, club: -1, player: 2, born: [1980, 3, 3], ca: 60, pa: 120, gk: 1 },
+  ];
+  const staff = Buffer.alloc(people.length * 157), nonPlayers = Buffer.alloc(68), players = Buffer.alloc(3 * 70);
+  const date = (b, o, [y, m, d]) => { const leap = y % 4 === 0; const t = leap ? [-1, 30, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334] : [-1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333]; b.writeInt16LE(t[m - 1] + d, o); b.writeUInt16LE(y, o + 2); b.writeUInt32LE(leap ? 1 : 0, o + 4); };
+  const none = (b, o) => { b.writeInt16LE(31, o); b.writeUInt16LE(1900, o + 2); b.writeUInt32LE(1, o + 4); };
+  people.forEach((p, i) => {
+    const o = i * 157;
+    staff.writeInt32LE(i, o); staff.writeInt32LE(p.f, o + 4); staff.writeInt32LE(p.s, o + 8); staff.writeInt32LE(0, o + 12);
+    date(staff, o + 0x10, p.born); staff.writeUInt16LE(p.born[0], o + 0x18); staff.writeInt32LE(0, o + 0x1a); staff.writeInt32LE(-2, o + 0x1e);
+    staff.writeInt32LE(-2, o + 0x24); none(staff, o + 0x31); staff.writeInt32LE(p.club, o + 0x39); staff[o + 0x3d] = p.player !== undefined ? 11 : 9;
+    date(staff, o + 0x3e, [1996, 1, 2]); none(staff, o + 0x46); staff[o + 0x5e] = 1; staff[o + 0x5f] = p.player !== undefined ? 2 : 1; staff[o + 0x58] = 14;
+    for (let k = 0; k < 12; k++) staff.writeInt32LE(-1, o + 0x61 + 4 * k);
+    staff.writeInt32LE(p.player ?? -1, o + 0x91); staff.writeInt32LE(-1, o + 0x95); staff.writeInt32LE(p.nonPlayer ?? -1, o + 0x99);
+    if (p.player !== undefined) {
+      const q = p.player * 70;
+      players.writeInt32LE(p.player, q); players.writeInt16LE(p.ca, q + 5); players.writeInt16LE(p.pa, q + 7);
+      for (let k = 0; k < 12; k++) players[q + 0x0f + k] = 1;
+      players[q + 0x0f] = p.gk; if (p.gk !== 20) { players[q + 0x0f + 6] = 20; players[q + 0x0f + 10] = 20; }
+      for (let k = 0x1b; k <= 0x44; k++) players[q + k] = 12;
+    }
+  });
+  nonPlayers.writeInt32LE(0, 0);
+  const clubs = Buffer.alloc(2 * 581);
+  [['Juventus', [0, 1]], ['AC Milan', []]].forEach(([n, squad], c) => {
+    const o = c * 581;
+    clubs.writeInt32LE(c, o); clubs.write(n, o + 4, 'latin1'); clubs.writeInt32LE(0, o + 0x53);
+    for (let k = 0; k < 50; k++) clubs.writeInt32LE(k < squad.length ? squad[k] : -1, o + 0xd7 + 4 * k);
+    for (let k = 0; k < 20; k++) clubs.writeInt32LE(-1, o + 0x1e0 + 4 * k);
+  });
+  const natClub = Buffer.alloc(581); natClub.writeInt32LE(2, 0); natClub.write('Italy', 4, 'latin1');
+  const nations = Buffer.alloc(2 * 290); nations.writeInt32LE(0, 0); nations.write('Italy', 4, 'latin1'); nations.writeInt32LE(1, 290); nations.write('Argentina', 294, 'latin1');
+  const staffFile = Buffer.concat([staff, nonPlayers, players]);
+  const files = { 'club.dat': clubs, 'nat_club.dat': natClub, 'nation.dat': nations, 'staff.dat': staffFile,
+    'first_names.dat': NAMES(first), 'second_names.dat': NAMES(second), 'common_names.dat': NAMES(['']) };
+  for (const f of ['city.dat', 'club_comp.dat', 'club_comp_history.dat', 'colour.dat', 'continent.dat', 'nation_comp.dat',
+    'nation_comp_history.dat', 'officials.dat', 'stadium.dat', 'staff_comp.dat', 'staff_comp_history.dat', 'staff_history.dat']) files[f] = Buffer.alloc(0);
+  const entries = [['club.dat', 0, 2, 0, 2], ['nat_club.dat', 1, 1, 0, 2], ['colour.dat', 2, 0, 0, 1], ['continent.dat', 3, 0, 0, 1],
+    ['nation.dat', 4, 2, 0, 2], ['officials.dat', 7, 0, 0, 1], ['stadium.dat', 5, 0, 0, 1], ['staff.dat', 6, people.length, 0, 1],
+    ['staff.dat', 8, 0, staff.length, 1], ['staff.dat', 9, 1, staff.length, 2], ['staff.dat', 10, 3, staff.length + 68, 2],
+    ['staff_comp.dat', 11, 0, 0, 2], ['city.dat', 21, 0, 0, 1], ['club_comp.dat', 12, 0, 0, 2], ['nation_comp.dat', 16, 0, 0, 2],
+    ['first_names.dat', 13, first.length, 0, 1], ['second_names.dat', 14, second.length, 0, 1], ['common_names.dat', 15, 1, 0, 1],
+    ['staff_history.dat', 17, 0, 0, 1], ['staff_comp_history.dat', 18, 0, 0, 1], ['club_comp_history.dat', 19, 0, 0, 1],
+    ['nation_comp_history.dat', 20, 0, 0, 1]];
+  const index = Buffer.alloc(8 + 22 * 0x43);
+  entries.forEach(([name, table, count, offset, format], k) => {
+    const o = 8 + k * 0x43;
+    index.write(name, o, 'latin1'); index.writeInt32LE(table, o + 0x33); index.writeInt32LE(count, o + 0x37);
+    index.writeInt32LE(offset, o + 0x3b); index.writeInt32LE(format, o + 0x3f);
+  });
+  files['index.dat'] = index;
+  return Object.fromEntries(Object.entries(files).map(([k, v]) => [k, new Uint8Array(v)]));
+}

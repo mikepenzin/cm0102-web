@@ -322,8 +322,10 @@ function runEngine(files, info) {
         seen = now;
       }, 2000);
       const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running });
+      $('editor-open').hidden = false;
+      $('editor-open').onclick = () => editor.open();
       mountSavesPanel({ FS, sync, log, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),
-        openPromo: () => { $('saves').close(); account.open(); }, edit: (name) => editor.open(name) });
+        openPromo: () => { $('saves').close(); account.open(); }, edit: (name) => editor.openSave(name) });
       keyboard = mountKeyboard({ log, layout, toast });
       // What the engine says about itself, a few times a second: the size of its picture, and the text entry that takes
       // keys (user32.c). An engine built before these calls has neither; the page then works without them.
