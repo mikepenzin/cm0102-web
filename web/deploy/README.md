@@ -117,7 +117,7 @@ missing it names it. The secrets stay on the app: a later `fly deploy` keeps the
 | `stage: … are not the clean files` | The folder holds other versions of the files; use the game folder of the Bosman Edition app |
 | `stage: the engine is not built` | `web/README.md` step 4 |
 | The upload of `fly deploy` keeps failing | `fly deploy --local-only` builds on your Mac instead (needs Docker Desktop) |
-| `failed to push registry.fly.io/…` with `_api.internal:5000 … connection refused` | Fly's builder could not reach Fly's registry; the image itself built. Run `fly deploy` again. If it fails the same way, `fly apps list` shows the builder (`fly-builder-…`): `fly apps destroy fly-builder-…` and deploy again (a fresh builder uploads everything once), or `fly deploy --local-only` |
+| `failed to push registry.fly.io/…` with `_api.internal:5000 … connection refused` | Fly's internal registry did not answer; the image itself built. Try, one at a time: `fly deploy --wg=false` (the push goes over HTTPS instead of Fly's private network), `fly deploy --depot=false` (the other builder), `fly deploy --local-only` (builds on your Mac, needs Docker Desktop). If none works, it is on Fly's side: status.flyio.net and community.fly.io |
 | The site does not answer | `fly logs`: a good start prints `game files: 764 (461 MB)` and `open http://0.0.0.0:8080` |
 | The machine runs out of memory | `fly scale memory 512` |
 | `accounts and cloud saves: off, missing …` | Set the named secrets (Accounts and cloud saves) |
