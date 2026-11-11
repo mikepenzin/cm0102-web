@@ -35,6 +35,25 @@ function overlay(html, kind = '') {
   $('overlay').style.display = html ? '' : 'none';
 }
 
+// What the user folder keeps in memory, for the log: the page holds all of it while the game runs.
+function userFolderSizes(FS) {
+  const sum = { saves: 0, older: 0, sets: 0, other: 0 };
+  const walk = (dir, kind) => {
+    let names = [];
+    try { names = FS.readdir(dir).filter((n) => n !== '.' && n !== '..'); } catch { return; }
+    for (const n of names) {
+      const p = `${dir}/${n}`;
+      let st;
+      try { st = FS.stat(p); } catch { continue; }
+      if (FS.isDir(st.mode)) walk(p, dir === SAVE_DIR && n === 'backups' ? 'older' : dir === SAVE_DIR && n === 'Databases' ? 'sets' : kind);
+      else sum[kind === 'other' && /\.sav$/i.test(n) ? 'saves' : kind] += st.size;
+    }
+  };
+  walk(SAVE_DIR, 'other');
+  const all = sum.saves + sum.older + sum.sets + sum.other;
+  return `user folder in memory: ${mb(all)} (saves ${mb(sum.saves)}, older copies ${mb(sum.older)}, data sets ${mb(sum.sets)}, other ${mb(sum.other)})`;
+}
+
 // The browser had no memory for the page: it keeps the game files and everything of the user folder (saves, older
 // copies, data sets) in memory while the game runs.
 const OUT_OF_MEMORY = /Array buffer allocation failed|out of memory|Cannot allocate|could not allocate/i;
@@ -307,6 +326,7 @@ function runEngine(files, info) {
           overlay('<h1>Starting the engine</h1><div class="row"><i class="spin"></i>The first start can take a minute.</div>');
           status('Starting the engine…');
         }
+        log(`page: ${userFolderSizes(FS)}`);
         M.removeRunDependency('user-folder');
       });
     }],
