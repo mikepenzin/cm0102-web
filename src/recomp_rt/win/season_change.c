@@ -363,8 +363,12 @@ void season_change_rename(uint32_t rec, const char *name)
             renames = p;
             rename_room = room;
         }
-        renames[rename_count].index = index;
-        snprintf(renames[rename_count].original, NAME_ROOM, "%.*s", NAME_ROOM - 1, win_str(rec + NAME_AT));
+        /* The save part copies the whole field (season_change_part_write): the bytes after the name are 0, not
+         * what the host heap held there (docs/research/2026-11-11-season-part-unset-bytes.md). */
+        SeasonRename *r = &renames[rename_count];
+        memset(r, 0, sizeof *r);
+        r->index = index;
+        snprintf(r->original, NAME_ROOM, "%.*s", NAME_ROOM - 1, win_str(rec + NAME_AT));
         rename_count++;
     } else if (!record_index(rec, &index)) {
         return;                                 /* not a competition record: a load could not match it */
@@ -497,8 +501,10 @@ int season_change_part_read(const uint8_t *in, uint32_t n)
     }
     for (uint32_t i = 0; i < names; i++) {
         renames[i].index = get32(in + at);
-        memcpy(renames[i].original, in + at + 4, NAME_ROOM);
-        renames[i].original[NAME_ROOM - 1] = 0;
+        /* The name up to its 0, the rest 0: a save of an older build has host bytes after the name, and the next
+         * save would carry them on. */
+        memset(renames[i].original, 0, NAME_ROOM);
+        snprintf(renames[i].original, NAME_ROOM, "%.*s", NAME_ROOM - 1, (const char *)in + at + 4);
         at += 4 + NAME_ROOM;
     }
     rename_count = (int)names;

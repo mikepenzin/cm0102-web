@@ -25,6 +25,8 @@ days (default 14) after the first news screen (RECOMP_SAVE_AFTER_DAYS) and stops
     rules-on, rules-off  changing_rules (0.6.0 slice 11): a new game with it on has the season part
                bosman_season.dat in its save; from slice 17 it also plays by the rules table of 2001/02 (RULES_ON_PARTS). Every new-game run has
                changing_rules = off unless it sets it (new_game_runs), so the new game is the base game.
+    rules-on-again  (new game only) the same as rules-on, compared with rules-on in every part: the season part
+               is repeatable too (it once held unset host bytes after each changed name)
     kinds-base  RECOMP_SEASON_CHANGE_TEST=write (0.6.0 slice 16): a rule kind that writes the game in every
                hook changes nothing in the base game, because the base game calls no kind
 Each run prints its count of idle sleeps (RECOMP_IDLE_COUNT=1). The check fails when the normal run
@@ -380,7 +382,8 @@ def compare_runs(program, game, mode, runs, steps, days, save=None, timeout=600,
         unknown = [n for n in ONLY_RUNS if n not in [r[0] for r in runs]]
         if unknown:
             raise SystemExit(f"--runs: no run named {', '.join(unknown)} in this check")
-        runs = [r for i, r in enumerate(runs) if i == 0 or r[0] in ONLY_RUNS]
+        bases = {r[1].get("_against") for r in runs if r[0] in ONLY_RUNS}   # a kept run keeps the run it is compared with
+        runs = [r for i, r in enumerate(runs) if i == 0 or r[0] in ONLY_RUNS or r[0] in bases]
         if len(runs) + bool(REF_BUILD) + bool(REF_050 and text_050) < 2:
             raise SystemExit("--runs: fewer than two runs are left, so nothing is compared")
     if REF_BUILD:
@@ -544,6 +547,11 @@ RULES_PART = "bosman_season.dat"
 # the section's part differs too.
 RULES_ON_PARTS = ("fifa_rankings.dat", "general.dat", "national_teams.dat", "staff history.tmp", "contract.dat",
                   "World Cup South American Qualifying Section_440.tmp")
+# The run rules-on is compared with rules-off, so its season part is never compared with another. rules-on-again
+# plays the same game and must equal rules-on in every part, the season part too: before 2026-11-11 the part held
+# the host heap's bytes after each changed name and differed between two runs with the same clicks
+# (docs/research/2026-11-11-season-part-unset-bytes.md).
+RULES_AGAIN_RUN = ("rules-on-again", {"faster_days": "off", "changing_rules": "on", "_against": "rules-on"})
 # O128 (the standard of O107): in a new game the runs off and foreign-off may differ in club records.dat. The same
 # build with the menu of the preview (RECOMP_SETUP_TEXT=0.6.0-preview) equals normal in both, so the Setup Game
 # top row's layout (Q422) meets the memory move that those options already make (foreign_colours draws names in
@@ -566,11 +574,11 @@ def same_save(program, game, mode, days, save_name=None, search=False, options=F
     # No click ends the intro (without_intro_click).
     if save_name is None:
         steps = [s for s in STEPS if "5-holiday" not in s and "quit" not in s]
-        return compare_runs(program, game, mode, new_game_runs(SAME_SAVE_RUNS),
+        return compare_runs(program, game, mode, new_game_runs(SAME_SAVE_RUNS + [RULES_AGAIN_RUN]),
                             without_intro_click(steps) + ["400000 quit"], days,
                             allowed={"rules-on": (RULES_PART,) + RULES_ON_PARTS, "off": NEW_GAME_LAYOUT_PARTS,
                                      "foreign-off": NEW_GAME_LAYOUT_PARTS},
-                            required={"rules-on": RULES_PART}, text_050=True)
+                            required={"rules-on": RULES_PART, "rules-on-again": RULES_PART}, text_050=True)
     # --save: load the saved test game, then the same Go on Holiday steps as the new game.
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "fixtures"))
     import fixtures  # noqa: E402  (fixtures.py imports this file)
