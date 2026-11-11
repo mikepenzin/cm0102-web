@@ -7,7 +7,7 @@
 // set by a Paddle subscription, billing.mjs, or by hand) have them. Everyone else keeps saves in the browser only.
 //
 // The store holds:
-//   accounts/<google id>.json            { sub, email, name, created, seen, plan, planUntil }
+//   accounts/<google id>.json            { sub, email, name, created, seen, plan, planUntil, given }
 //   saves/<google id>/<name, base64url>.gz the save, gzip-compressed by the page; metadata raw-size and saved (ms)
 import { createGunzip } from 'node:zlib';
 import { GOOGLE, SignInError, googleFinish, googleStart, readCookies, sealer, setCookie } from './auth.mjs';
@@ -141,7 +141,29 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     try { a = await account(user.sub); } catch (err) { log(`cloud: account ${user.sub} not read: ${err.message}`); }
     if (cloudFor === 'everyone' || users.has(user.email)) return { cloud: true, from: 'given', record: a };
     const on = a?.plan === 'cloud' && (!a.planUntil || Date.parse(a.planUntil) > Date.now());
-    return { cloud: on, from: on ? (a.paddle ? 'subscription' : 'given') : null, record: a };
+    if (on) return { cloud: true, from: a.paddle ? 'subscription' : 'given', record: a };
+    if (a?.given) return { cloud: true, from: 'given', record: a };      // an admin gave it (give, the admin page)
+    return { cloud: false, from: null, record: a };
+  }
+
+  // The admin page (server.mjs): an account's plan, and Cloud Saves that an admin gives or takes back. A gift is a field
+  // of its own in the record (given: { by, at }), so Paddle's events, which write plan and planUntil, leave it.
+  async function planOfSub(sub, fresh = false) {
+    const a = await account(sub, fresh);
+    if (!a) return null;
+    const p = await planOf({ sub, email: a.email });
+    return { cloud: p.cloud, from: p.from, given: Boolean(a.given), until: p.from === 'subscription' ? a.planUntil ?? null : null };
+  }
+  async function give(sub, on, by) {
+    const a = await account(sub, true);
+    if (!a) return null;
+    const next = { ...a };
+    if (on) next.given = { by: String(by ?? 'admin').slice(0, 200), at: new Date().toISOString() };
+    else delete next.given;
+    await s3.put(accountKey(sub), Buffer.from(JSON.stringify(next)), { type: 'application/json' });
+    accounts.set(sub, { account: next, at: Date.now() });
+    log(`cloud: account ${sub}: Cloud Saves ${on ? 'given' : 'taken back'} by an admin`);
+    return planOfSub(sub);
   }
   const hasCloud = async (user) => (await planOf(user)).cloud;
 
@@ -417,6 +439,8 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   return {
     // The account signed in on this request ({ sub, email, name }), or null: statistics and the admin page.
     userOf: (req) => sessionOf(req),
+    planOfSub,
+    give,
     async handle(req, res, url) {
       try {
         await handle(req, res, url);

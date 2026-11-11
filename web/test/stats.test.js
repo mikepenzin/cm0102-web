@@ -141,7 +141,10 @@ test('the routes: a beat only from the page, the admin data only for an admin', 
   writeFileSync(manifestPath, 'x\t2\tcm0102.exe\n');
   const stats = createStats();
   const signedIn = (req) => (req.headers.cookie === 'admin' ? { sub: '1', email: 'boss@example.com' } : req.headers.cookie === 'user' ? { sub: '2', email: 'p@example.com' } : null);
-  const cloud = { userOf: signedIn, handle: (req, res) => { res.writeHead(404); res.end(); } };
+  const plans = { 2: { cloud: false, from: null, given: false, until: null } };
+  const cloud = { userOf: signedIn, handle: (req, res) => { res.writeHead(404); res.end(); },
+    planOfSub: async (sub) => plans[sub] ?? null,
+    give: async (sub, on, by) => { if (!plans[sub]) return null; plans[sub] = { cloud: on, from: on ? 'given' : null, given: on, until: null, by }; return plans[sub]; } };
   const server = createApp({ gameDir, buildDir, manifestPath, stats, cloud, admins: ['Boss@example.com'], adminToken: 'a-token-of-16-chars-or-more' });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -162,6 +165,20 @@ test('the routes: a beat only from the page, the admin data only for an admin', 
     assert.equal(sum.totals.people, 1, 'the browser signed in: one person');
     assert.equal(sum.totals.hours, 120 / 3600, 'its play before and after the sign-in');
     assert.equal((await fetch(`${base}/api/admin/stats`, { headers: { authorization: 'Bearer a-token-of-16-chars-or-more' } })).status, 200);
+    assert.deepEqual(sum.people.find((p) => p.id === 'g:2').plan, plans[2], 'each account with its plan');
+    assert.equal(stats.data.people['g:2'].plan, undefined, 'the plan is not kept in the statistics');
+    // Give Cloud Saves: an admin, from the admin page (its header), to an account that exists.
+    const give = (headers, body) => fetch(`${base}/api/admin/cloud`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
+    assert.equal((await give({ cookie: 'user', 'x-cm': '1' }, { id: 'g:2', on: true })).status, 403, 'not an admin');
+    assert.equal((await give({ cookie: 'admin' }, { id: 'g:2', on: true })).status, 403, 'not from the admin page');
+    assert.equal((await give({ cookie: 'admin', 'x-cm': '1', origin: 'https://evil.example' }, { id: 'g:2', on: true })).status, 403, 'from another site');
+    assert.equal((await give({ cookie: 'admin', 'x-cm': '1' }, { id: 'a:x', on: true })).status, 400, 'only accounts');
+    assert.equal((await give({ cookie: 'admin', 'x-cm': '1' }, { id: 'g:404', on: true })).status, 404);
+    const given = await give({ cookie: 'admin', 'x-cm': '1' }, { id: 'g:2', on: true });
+    assert.equal(given.status, 200);
+    assert.deepEqual((await given.json()).plan, { cloud: true, from: 'given', given: true, until: null, by: 'boss@example.com' });
+    assert.equal((await give({ authorization: 'Bearer a-token-of-16-chars-or-more', 'x-cm': '1' }, { id: 'g:2', on: false })).status, 200, 'the token too');
+    assert.equal(plans[2].by, 'the admin token');
     assert.equal((await fetch(`${base}/api/admin/stats`, { headers: { authorization: 'Bearer wrong' } })).status, 403);
     const page = await fetch(`${base}/admin`);
     assert.equal(page.status, 200);

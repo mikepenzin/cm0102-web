@@ -13,7 +13,7 @@ import { createS3, signV4 } from '../s3.mjs';
 import { createApp } from '../server.mjs';
 import { fakeGoogle, fakeS3, fakeSaveBytes } from './fakes.mjs';
 
-let tmp, s3fake, google, base, server, logs;
+let tmp, s3fake, google, base, server, logs, cloudApi;
 
 before(async () => {
   tmp = mkdtempSync(join(tmpdir(), 'cm0102-cloud-test-'));
@@ -25,6 +25,7 @@ before(async () => {
   const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
   const cloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'x'.repeat(40),
     cloudUsers: ['Listed@Example.com'], upgradeUrl: 'https://example.com/support', maxSaves: 3, google: google.google, log: (t) => logs.push(t) });
+  cloudApi = cloud;
   server = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv'), cloud });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${server.address().port}`;
@@ -238,6 +239,22 @@ test('a plan of "cloud" in the account record gives cloud saves', async () => {
   const c = browser();
   await c.signIn();
   assert.equal((await (await c.get('/api/me')).json()).user.cloud, false, 'a plan that ended');
+
+  // An admin gives Cloud Saves (the admin page): on, as given, and the record keeps the old plan; then taken back.
+  assert.deepEqual(await cloudApi.planOfSub('3000004'), { cloud: false, from: null, given: false, until: null });
+  assert.deepEqual(await cloudApi.give('3000004', true, 'boss@example.com'), { cloud: true, from: 'given', given: true, until: null });
+  let me = (await (await c.get('/api/me')).json()).user;
+  assert.equal(me.cloud, true);
+  assert.equal(me.cloudFrom, 'given', 'the Account dialog says: given to this account');
+  const rec = JSON.parse(s3fake.objects.get('accounts/3000004.json').body);
+  assert.equal(rec.given.by, 'boss@example.com');
+  assert.equal(rec.planUntil, '2020-01-01T00:00:00Z');
+  await c.signIn();
+  assert.ok(JSON.parse(s3fake.objects.get('accounts/3000004.json').body).given, 'a sign-in keeps the gift');
+  assert.equal((await cloudApi.give('3000004', false, 'boss@example.com')).cloud, false);
+  me = (await (await c.get('/api/me')).json()).user;
+  assert.equal(me.cloud, false, 'taken back');
+  assert.equal(await cloudApi.give('9999999', true, 'boss@example.com'), null, 'an account that never signed in');
 });
 
 test('the S3 store refuses a request with another secret (the stand-in checks signatures)', async () => {

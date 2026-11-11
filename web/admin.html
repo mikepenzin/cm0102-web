@@ -39,6 +39,8 @@
     max-height: 50vh; overflow: auto; }
   .reports td:nth-child(3) { white-space: normal; min-width: 320px; }
   a { color: var(--accent); }
+  td .give { padding: 2px 9px; font-size: 12px; margin-left: 6px; }
+  td .give.on { border-color: var(--accent); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -77,11 +79,37 @@ function chart(days) {
 }
 
 const COLS = [
-  ['who', 'Who'], ['kind', 'Kind'], ['first', 'First seen'], ['last', 'Last seen'], ['seconds', 'Played', 'num'], ['sessions', 'Visits', 'num'],
+  ['who', 'Who'], ['kind', 'Kind'], ['plan', 'Cloud Saves'], ['first', 'First seen'], ['last', 'Last seen'], ['seconds', 'Played', 'num'], ['sessions', 'Visits', 'num'],
   ['days', 'Days', 'num'], ['saves', 'Saves', 'num'], ['older', 'Older copies', 'num'], ['sets', 'Data sets', 'num'], ['reports', 'Errors', 'num'],
   ['browser', 'Browser'], ['engine', 'Engine'],
 ];
-const keyOf = (p, k) => (k === 'who' ? (p.email || p.id) : k === 'saves' || k === 'older' || k === 'sets' ? p[k]?.n ?? 0 : p[k] ?? '');
+const keyOf = (p, k) => (k === 'who' ? (p.email || p.id) : k === 'saves' || k === 'older' || k === 'sets' ? p[k]?.n ?? 0
+  : k === 'plan' ? (p.plan?.cloud ? (p.plan.from === 'subscription' ? 3 : 2) : p.kind === 'account' ? 1 : 0) : p[k] ?? '');
+const day = (t) => new Date(t).toLocaleDateString(undefined, { dateStyle: 'medium' });
+
+// The account's plan (the server reads each account record), and the button that gives Cloud Saves or takes back a gift.
+function planCell(p) {
+  if (p.kind !== 'account') return '';
+  const pl = p.plan;
+  if (!data.accountsOn) return '<span class="muted small">no accounts</span>';
+  if (!pl) return '<span class="muted small">no record</span>';
+  const what = pl.from === 'subscription' ? `paid${pl.until ? ` · to ${esc(day(pl.until))}` : ''}`
+    : pl.given ? 'given by an admin' : pl.cloud ? 'given (server list)' : 'free';
+  const button = pl.given ? `<button class="give" data-give="${esc(p.id)}" data-on="0">Take back</button>`
+    : pl.cloud ? '' : `<button class="give on" data-give="${esc(p.id)}" data-on="1">Give</button>`;
+  return `<span class="${pl.cloud ? '' : 'muted'}">${what}</span>${button}`;
+}
+
+async function give(id, on) {
+  const p = data.people.find((x) => x.id === id);
+  if (!confirm(`${on ? 'Give Cloud Saves to' : 'Take back the Cloud Saves given to'} ${p?.email ?? id}? It counts from the player's next page load.`)) return;
+  const r = await fetch('/api/admin/cloud', { method: 'POST', credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', 'x-cm': '1' }, body: JSON.stringify({ id, on }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { alert(`Not changed: ${j.error ?? `the server answered ${r.status}`}`); return; }
+  if (p) { p.plan = j.plan; p.cloud = j.plan.cloud; }
+  $('people').innerHTML = peopleRows();
+}
 
 function peopleRows() {
   const f = filter.toLowerCase();
@@ -91,6 +119,7 @@ function peopleRows() {
   return list.map((p) => `<tr class="${p.account ? 'linked' : ''}">
     <td>${p.kind === 'account' ? `${esc(p.email)}<br><span class="small muted">${esc(p.name)}</span>` : `<span class="small">${esc(p.id.slice(2, 10))}…</span>${p.account ? `<br><span class="small">→ ${esc(byId[p.account]?.email ?? 'account')}</span>` : ''}`}</td>
     <td><span class="tag ${p.kind === 'account' ? 'account' : ''}">${p.kind === 'account' ? 'account' : 'anonymous'}</span>${p.cloud ? ' <span class="tag cloud">cloud</span>' : ''}${p.vault ? '' : ' <span class="tag" title="the vault was off in its last visit">no vault</span>'}</td>
+    <td>${planCell(p)}</td>
     <td>${esc(when(p.first))}</td><td title="${esc(when(p.last))}">${esc(ago(p.last))}</td>
     <td class="num">${hours(p.seconds)}</td><td class="num">${p.sessions}</td><td class="num">${p.days}</td>
     <td class="num">${p.saves?.n ?? 0} <span class="small muted">${mb(p.saves?.bytes ?? 0)}</span></td>
@@ -129,6 +158,7 @@ function render() {
       </tbody></table></div><pre id="report" hidden></pre>` : '<p class="muted">No error reports.</p>'}
     </section>`;
   $('filter').oninput = (e) => { filter = e.target.value; $('people').innerHTML = peopleRows(); };
+  $('people').onclick = (e) => { const b = e.target.closest('[data-give]'); if (b) give(b.dataset.give, b.dataset.on === '1'); };
   document.querySelectorAll('th[data-k]').forEach((th) => { th.onclick = () => { const k = th.dataset.k; sortDir = sortKey === k ? -sortDir : -1; sortKey = k; render(); }; });
   document.querySelectorAll('[data-report]').forEach((a) => {
     a.onclick = async (e) => {

@@ -256,6 +256,42 @@ try {
   await shot(d, 'paid');
   await d.click('#account-close');
 
+  // ---- An admin gives Cloud Saves to a free account (the admin page), and takes them back. ----
+  google.user = { sub: '6000006', email: 'gift@example.com', email_verified: true, name: 'Gift Player' };
+  const gctx = await browser.newContext({ viewport: { width: 1200, height: 800 } });
+  const g = await gctx.newPage();
+  g.on('pageerror', (e) => errors.push(e.message));
+  await g.goto(`${BASE}/auth/google/start?mode=page`);
+  await g.waitForSelector('#go');
+  await waitFor('the account', async () => (await g.textContent('#account-open span')) === 'Gift');
+  await g.waitForTimeout(4000);                                       // its first heartbeat: the admin page lists it
+  const adm = await a.context().newPage();
+  adm.on('dialog', (dlg) => dlg.accept());                           // "Give Cloud Saves to …?"
+  await adm.goto(`${BASE}/admin`);
+  await adm.waitForSelector('[data-give="g:6000006"]', { timeout: 15000 });
+  const row = () => adm.locator('#people tr', { hasText: 'gift@example.com' }).innerText();
+  check('the admin page: a free account has a Give button, the admin\'s own (server list) none',
+    /free/.test(await row()) && (await adm.locator('#people tr', { hasText: 'player@example.com' }).first().innerText()).includes('given (server list)'), (await row()).replace(/\s+/g, ' '));
+  await adm.click('[data-give="g:6000006"]');
+  await adm.waitForSelector('[data-give="g:6000006"][data-on="0"]', { timeout: 10000 });
+  check('Give: the row says given by an admin, with Take back', /given by an admin/.test(await row()), (await row()).replace(/\s+/g, ' '));
+  await shot(adm, 'admin-given');
+  await g.reload();
+  await g.waitForSelector('#go');
+  await g.click('#account-open');
+  const gift = (await g.innerText('#account-body')).replace(/\s+/g, ' ');
+  check('the player, at the next page load: Cloud Saves are on, given to this account', /· Cloud Saves/.test(gift) && /Given to this account/.test(gift), gift.slice(0, 200));
+  await g.click('#account-close');
+  await adm.click('[data-give="g:6000006"]');
+  await adm.waitForSelector('[data-give="g:6000006"][data-on="1"]', { timeout: 10000 });
+  await g.reload();
+  await g.waitForSelector('#go');
+  await g.click('#account-open');
+  check('Take back: the player is on the free plan again', /Free plan/.test(await g.innerText('#account-body')));
+  await g.click('#account-close');
+  await adm.close();
+  await gctx.close();
+
   check('no page errors', errors.length === 0, errors.join('; '));
   check('the server logged no failure', !logs.some((l) => /fail|not written|not read/.test(l)), logs.join('; '));
 } finally {

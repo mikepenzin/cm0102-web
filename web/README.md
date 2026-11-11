@@ -187,7 +187,9 @@ Each write reads the object again and adds what its machine counted since (`merg
 copies, data sets, errors), the last 90 days, every person (sortable, searchable) and the error reports with their log.
 It is open to the Google accounts of `CM_ADMIN_EMAILS` (comma separated, signed in on the game's page) and to a request
 with `Authorization: Bearer <CM_ADMIN_TOKEN>` (16 characters or more). Such an account has an Admin panel button in
-its Account dialog (`/api/me` says `admin`), which opens `/admin` in a tab of its own, so the game goes on. Help, Statistics turns them off for a browser
+its Account dialog (`/api/me` says `admin`), which opens `/admin` in a tab of its own, so the game goes on. The people
+table's Cloud Saves column shows each account's plan (free, paid until a day, given by an admin, or given by the
+server list) and gives Cloud Saves to an account, or takes a gift back (`POST /api/admin/cloud`, Cloud saves below). Help, Statistics turns them off for a browser
 (localStorage `cm0102-stats` = `off`). `CM_STATS=optin`: off until the player turns them on (for consent rules that
 want it); `CM_STATS=off`: none. Without a bucket they stay in memory only. The privacy page says what is collected.
 
@@ -213,7 +215,10 @@ gzip-compressed, under the account's Google id. The page (`account.js`):
 
 **Who has cloud saves.** The accounts in `CM_CLOUD_USERS`, every account with `CM_CLOUD_FOR=everyone`, and the
 accounts whose record in the store (`accounts/<id>.json`) says `"plan": "cloud"` until `planUntil`: a Paddle
-subscription sets that (Payments, below), or you by hand in the Tigris console.
+subscription sets that (Payments, below), or you by hand in the Tigris console. And the accounts an admin gave Cloud
+Saves on the admin page (Give, in the Cloud Saves column of People): the record then holds `"given": { by, at }`, a
+field of its own that Paddle's events leave as it is, and Take back removes it. A gift is as good as a payment: the
+player's Account dialog says "Given to this account", from the page's next load.
 
 **What players see.** The start box of a first visit, the Account dialog and Saved games show the two plans: Free
 (the whole game, saves in the browser, download and upload) and Cloud Saves (`CM_PRICE`, "$5 a month"), with the

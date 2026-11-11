@@ -148,7 +148,33 @@ async function statsRoute(req, res, url, { stats, cloud, admins, adminToken }) {
   const bearer = /^Bearer (.+)$/.exec(req.headers.authorization ?? '')?.[1];
   const admin = (adminToken && bearer === adminToken) || (user && admins.has(String(user.email).toLowerCase()));
   if (!admin) { req.resume(); json(res, user || bearer ? 403 : 401, { error: user || bearer ? 'not an admin' : 'not signed in' }); return; }
-  if (path === '/api/admin/stats' && req.method === 'GET') { json(res, 200, await stats.summary()); return; }
+  if (path === '/api/admin/stats' && req.method === 'GET') {
+    const sum = await stats.summary();
+    sum.people = sum.people.map((p) => ({ ...p }));              // copies: the plans below are not statistics
+    sum.accountsOn = Boolean(cloud?.planOfSub);
+    if (cloud?.planOfSub) {
+      const accounts = sum.people.filter((p) => p.kind === 'account' && /^g:/.test(p.id));
+      for (let i = 0; i < accounts.length; i += 8) {             // the account records, 8 at a time
+        await Promise.all(accounts.slice(i, i + 8).map(async (p) => {
+          try { p.plan = await cloud.planOfSub(p.id.slice(2)); } catch { p.plan = null; }
+        }));
+      }
+    }
+    json(res, 200, sum);
+    return;
+  }
+  if (path === '/api/admin/cloud' && req.method === 'POST') {
+    // Gives Cloud Saves to an account, or takes them back: { id: "g:<google id>", on }. Only from the admin page.
+    const from = req.headers.origin;
+    if (req.headers['x-cm'] !== '1' || (from && new URL(from).host !== req.headers.host)) { req.resume(); json(res, 403, { error: 'not from this site' }); return; }
+    const body = await readJson(req, 4 << 10);
+    const sub = /^g:([0-9A-Za-z_-]{1,64})$/.exec(String(body.id ?? ''))?.[1];
+    if (!sub || typeof body.on !== 'boolean') { json(res, 400, { error: 'id (g:…) and on (true or false)' }); return; }
+    if (!cloud?.give) { json(res, 404, { error: 'accounts are not set up on this server' }); return; }
+    const plan = await cloud.give(sub, body.on, user?.email ?? 'the admin token');
+    json(res, plan ? 200 : 404, plan ? { id: body.id, plan } : { error: 'no such account: it signs in once first' });
+    return;
+  }
   if (path === '/api/admin/report' && req.method === 'GET') {
     const r = await stats.reportFile(url.searchParams.get('key') ?? '');
     json(res, r ? 200 : 404, r ?? { error: 'no such report' });

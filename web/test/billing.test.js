@@ -102,7 +102,8 @@ test('what a subscription gives: active to the end of its period and three days,
   assert.deepEqual(planOf({ status: 'canceled' }, now), { plan: 'free', planUntil: null, cancelAt: null });
   assert.equal(planOf({ status: 'paused' }, now).plan, 'free');
   // An older event than the last one of the subscription changes nothing.
-  const rec = applySubscription({ sub: '1' }, { occurred_at: '2026-11-10T12:00:05Z', data: { id: 'sub_1', status: 'canceled', customer_id: 'ctm_1' } }, now);
+  const rec = applySubscription({ sub: '1', given: { by: 'boss@example.com' } }, { occurred_at: '2026-11-10T12:00:05Z', data: { id: 'sub_1', status: 'canceled', customer_id: 'ctm_1' } }, now);
+  assert.deepEqual(rec.given, { by: 'boss@example.com' }, 'an event of Paddle keeps Cloud Saves an admin gave');
   assert.equal(applySubscription(rec, { occurred_at: '2026-11-10T12:00:01Z', data: { id: 'sub_1', status: 'active', current_billing_period: period } }, now), null);
 });
 
