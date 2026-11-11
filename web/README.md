@@ -154,8 +154,8 @@ not changed for 1.5 seconds, and becomes a placeholder; a renamed file keeps its
 renaming keeps the old save's bytes), a deleted one loses it. At the first start with the vault the files move from
 IDBFS's store, one at a time. The page reads placeholders with `readBytes`, `readView` and `readBlob` (`saves.js`);
 Download and the cloud upload hand the Blob on without memory. The data set choice goes through ccall's async form:
-the browser takes a Suspending import only inside `WebAssembly.promising`. An Asyncify build has no vault; files that
-an earlier visit put in it come back into the user folder. `?vault=0` or localStorage `cm0102-vault` = `off` turns it
+the browser takes a Suspending import only inside `WebAssembly.promising`. The Asyncify build (Other browsers) has no
+vault; files that an earlier visit put in it come back into the user folder. `?vault=0` or localStorage `cm0102-vault` = `off` turns it
 off (the files in it then come back into the user folder).
 
 The browser may delete the saves by itself, without asking: when the disk runs low (unless it agreed to keep the
@@ -378,16 +378,39 @@ always asked first, so a new version is used at once. This needs https, or 127.0
 ## Browser requirements
 
 The page checks the browser before it downloads anything, and stops with the reasons when the game cannot run:
-no WebAssembly; no JSPI for a JSPI build; or no room for the engine's memory (the page tries the engine's own plan:
+no WebAssembly; no JSPI, when the server has no Asyncify build (Other browsers); or no room for the engine's memory (the page tries the engine's own plan:
 768 MB, grown to 1,856 MB, with a 4 GB maximum). After Start it compiles the engine once, before the game files
 download, so a browser that lacks a WebAssembly feature of the engine stops there. A device with no mouse, or a
 browser that keeps no data (a private window), gets a warning but may start.
 
 ## Other browsers
 
-`-DCM0102_WEB_SUSPEND=asyncify` in step 4 builds without JSPI, for every browser (Safari, every iPad browser). The
-engine is then larger and slower, and the build takes longer. Use another build folder for it and point the server at
-it with `CM_WEB_BUILD`.
+The engine of step 4 needs JSPI, which Chrome 137 and later have. Safari, and every browser on an iPad (they are all
+Safari inside), need a second build of the engine, with Asyncify in place of JSPI. The server serves both, and each
+browser gets the one it can run (`web/engine.js`): JSPI where the browser has it, else Asyncify.
+
+```bash
+cd ~/Projects/cm0102-web
+source ~/emsdk/emsdk_env.sh
+emcmake cmake -S . -B build-web-asyncify -G Ninja -DCM0102_EXE=$HOME/cm0102-game/cm0102.exe -DCM0102_WEB_SUSPEND=asyncify
+cmake --build build-web-asyncify --target cm0102_recomp
+ls build-web-asyncify/cm0102_recomp.wasm
+```
+
+The server finds it in `build-web-asyncify` beside `build-web` (or at `CM_WEB_BUILD_ASYNCIFY`) and prints
+`second engine, for browsers without JSPI: …` when it starts. The season tables come from `build-web`. The stage for
+Fly takes it too (`web/deploy/README.md`). Engine log, first lines, names the build a browser runs:
+`page: engine /engine/asyncify/ (asyncify build, …)`.
+
+What to know about the Asyncify engine:
+
+- It is larger and slower: Asyncify adds code to every function that may be on the stack when the game hands time
+  to the page, and in the recompiled game that is nearly every function. The build takes longer too.
+- It has no vault (the vault opens a file while the game waits, which needs JSPI): every save, older copy and data
+  set file is in memory, as before the vault. A player with many saves can run the tab out of memory; Saved games,
+  Download all and Delete keep the folder small.
+- The engine needs 1,856 MB of memory (Browser requirements). An iPad with little memory refuses it, and the page
+  says so before it downloads anything. Try it on a real iPad before you tell players it works there.
 
 ## How it works
 

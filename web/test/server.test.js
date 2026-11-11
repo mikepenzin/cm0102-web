@@ -5,6 +5,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp, inventory, verify } from '../server.mjs';
+import { engineUrl, pickEngine } from '../engine.js';
 
 let tmp, gameDir, buildDir, manifestPath, base, server;
 
@@ -51,6 +52,43 @@ test('files.json tells the page what to load and what is missing', async () => {
   assert.equal(info.missing.length, 5);
   assert.equal(info.suspend, 'jspi');
   assert.equal(info.files.some((f) => 'disk' in f), false, 'no server paths leave the server');
+});
+
+test('a second, Asyncify build: listed in files.json, served under /engine/asyncify/, picked by a browser without JSPI', async () => {
+  const asyncifyDir = join(tmp, 'build-web-asyncify');
+  mkdirSync(asyncifyDir, { recursive: true });
+  writeFileSync(join(asyncifyDir, 'cm0102_recomp.js'), '// asyncify engine');
+  writeFileSync(join(asyncifyDir, 'cm0102_recomp.wasm'), Buffer.from([0, 0x61, 0x73, 0x6d, 1]));
+  writeFileSync(join(asyncifyDir, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=asyncify\n');
+  const two = createApp({ gameDir, buildDir, asyncifyDir, manifestPath });
+  await new Promise((r) => two.listen(0, '127.0.0.1', r));
+  const at = `http://127.0.0.1:${two.address().port}`;
+  try {
+    const info = await (await fetch(`${at}/files.json`)).json();
+    assert.deepEqual(info.engines.map((e) => [e.base, e.suspend, e.bytes]), [['/engine/', 'jspi', 4], ['/engine/asyncify/', 'asyncify', 5]]);
+    assert.equal(info.suspend, 'jspi', 'the main build, as before');
+    const slow = pickEngine(info, false), fast = pickEngine(info, true);
+    assert.equal(slow.base, '/engine/asyncify/');
+    assert.equal(fast.base, '/engine/');
+    const js = await fetch(`${at}${engineUrl(slow, 'cm0102_recomp.js')}`);
+    assert.equal(await js.text(), '// asyncify engine');
+    assert.match(js.headers.get('cache-control'), /immutable/, 'under its version: kept for good');
+    assert.equal((await fetch(`${at}/engine/asyncify/cm0102_recomp.wasm?v=old`)).headers.get('cache-control'), 'no-cache');
+    assert.equal((await fetch(`${at}/engine/asyncify/other.js`)).status, 404);
+    // Without the second build: no such address, and a browser without JSPI gets the JSPI build (the page then says why
+    // it cannot run).
+    const one = await (await fetch(`${base}/files.json`)).json();
+    assert.equal(one.engines.length, 1);
+    assert.equal(pickEngine(one, false).base, '/engine/');
+    assert.equal((await fetch(`${base}/engine/asyncify/cm0102_recomp.js`)).status, 404);
+    // A server before files.json listed engines.
+    assert.deepEqual(pickEngine({ engine: true, suspend: 'asyncify', engineVersion: 'v1', engineBytes: 9 }, true),
+      { base: '/engine/', suspend: 'asyncify', version: 'v1', bytes: 9 });
+    assert.equal(pickEngine({ engine: false }, true), null);
+  } finally {
+    two.close();
+    rmSync(asyncifyDir, { recursive: true, force: true });
+  }
 });
 
 test('listed files are served, everything else is refused', async () => {

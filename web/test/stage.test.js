@@ -47,6 +47,9 @@ test('the staged folder: server, page, engine, tables, clean files, brotli copie
   assert.equal(existsSync(join(o, 'game/Data/staff.dat.br')), false, 'a file that does not, gets none');
   assert.match(readFileSync(join(o, 'build-web/CMakeCache.txt'), 'utf8'), /CM0102_WEB_SUSPEND:STRING=jspi/);
   assert.ok(r.sent < r.raw);
+  assert.ok(existsSync(join(o, 'build-web-asyncify/.keep')), 'the Asyncify folder is there for the Dockerfile, empty');
+  assert.equal(existsSync(join(o, 'build-web-asyncify/cm0102_recomp.wasm')), false);
+  assert.equal(r.asyncify, false);
 });
 
 test('a second stage keeps the fly.toml that fly launch wrote', async () => {
@@ -105,6 +108,27 @@ test('the staged server runs as the Dockerfile starts it, and sends brotli', asy
   } finally {
     server.kill();
   }
+});
+
+test('the Asyncify build is staged beside the JSPI one, and a JSPI build in its place is refused', async () => {
+  const asyncify = join(tmp, 'build-web-asyncify');
+  mkdirSync(asyncify, { recursive: true });
+  writeFileSync(join(asyncify, 'cm0102_recomp.js'), '// asyncify glue '.repeat(500));
+  writeFileSync(join(asyncify, 'cm0102_recomp.wasm'), Buffer.concat([Buffer.from([0, 0x61, 0x73, 0x6d]), Buffer.alloc(12000)]));
+  writeFileSync(join(asyncify, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=jspi\n');
+  await assert.rejects(stage({ ...opts, asyncify }), /holds a jspi build, not an Asyncify one/);
+  writeFileSync(join(asyncify, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=asyncify\n');
+  const r = await stage({ ...opts, asyncify });
+  assert.equal(r.asyncify, true);
+  const o = opts.out;
+  assert.ok(existsSync(join(o, 'build-web-asyncify/cm0102_recomp.wasm.br')), 'brotli, as the other engine');
+  assert.match(readFileSync(join(o, 'build-web-asyncify/CMakeCache.txt'), 'utf8'), /STRING=asyncify/);
+  assert.match(readFileSync(join(o, 'build-web/CMakeCache.txt'), 'utf8'), /STRING=jspi/, 'the main build stays the JSPI one');
+  // A stage without it again: its files leave the folder, the folder stays.
+  const again = await stage(opts);
+  assert.equal(again.asyncify, false);
+  assert.equal(existsSync(join(o, 'build-web-asyncify/cm0102_recomp.wasm')), false);
+  assert.ok(existsSync(join(o, 'build-web-asyncify/.keep')));
 });
 
 test('the stage refuses a game file that is not the clean file, and a missing engine', async () => {

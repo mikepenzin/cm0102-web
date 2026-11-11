@@ -6,6 +6,8 @@
 // CM_GAME_DIR  the clean files: the free release with the official patch (tools/clean_files/make_clean_files.py),
 //              or the game folder of a Bosman Edition download, which holds the same files
 // CM_WEB_BUILD the browser build folder (default build-web): cm0102_recomp.js, .wasm and seasons/*.tsv
+// CM_WEB_BUILD_ASYNCIFY  a second build folder, of the Asyncify build (default build-web-asyncify, when it is there):
+//              the page of a browser without JSPI (Safari, every iPad browser) runs that one (web/engine.js)
 // PORT, HOST   default 8080 and 127.0.0.1
 //
 // The page gets exactly the files of tools/clean_files/manifest.tsv, each checked for its size, and the season
@@ -26,7 +28,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const SEASON_TABLES = ['rules.tsv', 'names.tsv', 'clubs.tsv', 'club_records.tsv'];
 // The page: these files of web/, and nothing else of it. web/deploy/stage.mjs stages the same list, and the server's own.
-export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'account.js', 'savedit.js', 'dataset.js', 'datasets.js', 'zip.js', 'editor.js', 'setspanel.js', 'vault.js', 'stats.js', 'sw.js',
+export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'account.js', 'savedit.js', 'dataset.js', 'datasets.js', 'zip.js', 'editor.js', 'setspanel.js', 'vault.js', 'stats.js', 'engine.js', 'sw.js',
   'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html', 'refunds.html', 'pricing.html'];
 // The server's own files; it also imports saves.js, savedit.js, dataset.js and zip.js of the page (PAGE_FILES).
 export const SERVER_FILES = ['server.mjs', 'cloud.mjs', 'auth.mjs', 'billing.mjs', 's3.mjs', 'stats.mjs', 'admin.html', 'package.json'];
@@ -47,8 +49,9 @@ function manifest(path) {
   });
 }
 
-// The files the page loads, the ones missing or of the wrong size, and the engine's files.
-export function inventory({ gameDir, buildDir, manifestPath = join(ROOT, 'tools/clean_files/manifest.tsv') }) {
+// The files the page loads, the ones missing or of the wrong size, and the engine's files: engine and suspend of the
+// main build, engines of every build there is (the main one first).
+export function inventory({ gameDir, buildDir, asyncifyDir = null, manifestPath = join(ROOT, 'tools/clean_files/manifest.tsv') }) {
   const files = [], missing = [];
   for (const m of manifest(manifestPath)) {
     const disk = join(gameDir, m.path);
@@ -65,15 +68,24 @@ export function inventory({ gameDir, buildDir, manifestPath = join(ROOT, 'tools/
     }
     else missing.push({ path: `Seasons/${name}`, want: null, have: -1, hint: 'build the target seasons_rules' });
   }
-  const engine = {};
+  const main = engineIn(buildDir, '/engine/');
+  const engines = [main, engineIn(asyncifyDir, '/engine/asyncify/')].filter((e) => e.js && e.wasm);
+  return { files, missing, engine: { js: main.js, wasm: main.wasm }, suspend: main.suspend, engines };
+}
+
+// The engine of a build folder: its two files, how it suspends (CM0102_WEB_SUSPEND in CMakeCache.txt: jspi or
+// asyncify), its version (the time of the .wasm) and the address the page loads it from.
+function engineIn(dir, base) {
+  const e = { base, dir, js: null, wasm: null, suspend: null, version: null };
+  if (!dir) return e;
   for (const ext of ['js', 'wasm']) {
-    const disk = join(buildDir, `cm0102_recomp.${ext}`);
-    if (existsSync(disk)) engine[ext] = { disk, size: statSync(disk).size, mtime: statSync(disk).mtimeMs };
+    const disk = join(dir, `cm0102_recomp.${ext}`);
+    if (existsSync(disk)) e[ext] = { disk, size: statSync(disk).size, mtime: statSync(disk).mtimeMs };
   }
-  let suspend = null;
-  try { suspend = /CM0102_WEB_SUSPEND:STRING=(\w+)/.exec(readFileSync(join(buildDir, 'CMakeCache.txt'), 'utf8'))?.[1] ?? null; }
+  try { e.suspend = /CM0102_WEB_SUSPEND:STRING=(\w+)/.exec(readFileSync(join(dir, 'CMakeCache.txt'), 'utf8'))?.[1] ?? null; }
   catch { /* no cache: not a CMake build folder */ }
-  return { files, missing, engine, suspend };
+  if (e.wasm) e.version = Math.floor(e.wasm.mtime).toString(36);
+  return e;
 }
 
 // immutable: the request named the file's current version, so the browser may keep it for good.
@@ -148,9 +160,9 @@ async function statsRoute(req, res, url, { stats, cloud, admins, adminToken }) {
 // cloud: accounts and cloud saves (cloud.mjs), or null for none. site: { seller, contact, price } for the terms pages.
 // stats: the statistics (stats.mjs), or null for none; statsMode: 'optout' (on unless the player turns them off) or
 // 'optin'. admins: the emails of the admin page; adminToken: a token for it instead.
-export function createApp({ gameDir, buildDir, manifestPath, cloud = null, site = {}, stats = null, statsMode = 'optout', admins = [],
+export function createApp({ gameDir, buildDir, asyncifyDir = null, manifestPath, cloud = null, site = {}, stats = null, statsMode = 'optout', admins = [],
   adminToken = null }) {
-  let inv = inventory({ gameDir, buildDir, manifestPath });
+  let inv = inventory({ gameDir, buildDir, asyncifyDir, manifestPath });
   const adminSet = new Set(admins.map((e) => e.trim().toLowerCase()).filter(Boolean));
   const token = adminToken && adminToken.length >= 16 ? adminToken : null;
   return http.createServer((req, res) => {
@@ -176,7 +188,7 @@ export function createApp({ gameDir, buildDir, manifestPath, cloud = null, site 
       if (PAGES[path] && TEMPLATED.has(PAGES[path])) { sendTemplated(req, res, join(HERE, PAGES[path]), site); return; }
       if (PAGES[path]) { sendFile(req, res, join(HERE, PAGES[path]), TYPES[PAGES[path].slice(PAGES[path].lastIndexOf('.'))]); return; }
       if (path === '/files.json') {
-        inv = inventory({ gameDir, buildDir, manifestPath });   // a rebuild or new files count without a restart
+        inv = inventory({ gameDir, buildDir, asyncifyDir, manifestPath });   // a rebuild or new files count without a restart
         const body = JSON.stringify({
           files: inv.files.map(({ path: p, size, v: version }) => ({ path: p, size, v: version })),
           totalBytes: inv.files.reduce((a, f) => a + f.size, 0),
@@ -185,6 +197,7 @@ export function createApp({ gameDir, buildDir, manifestPath, cloud = null, site 
           engineBytes: inv.engine.wasm?.size ?? 0,
           engineVersion: inv.engine.wasm ? Math.floor(inv.engine.wasm.mtime).toString(36) : null,
           suspend: inv.suspend,
+          engines: inv.engines.map((e) => ({ base: e.base, suspend: e.suspend, version: e.version, bytes: e.wasm.size })),
           shell: SHELL,
           stats: stats ? { mode: statsMode } : null,
         });
@@ -192,10 +205,10 @@ export function createApp({ gameDir, buildDir, manifestPath, cloud = null, site 
         res.end(body);
         return;
       }
-      const engine = /^\/engine\/cm0102_recomp\.(js|wasm)$/.exec(path);
-      if (engine && inv.engine[engine[1]]) {
-        const current = inv.engine.wasm ? Math.floor(inv.engine.wasm.mtime).toString(36) : null;
-        sendFile(req, res, inv.engine[engine[1]].disk, TYPES[`.${engine[1]}`], v !== null && v === current);
+      const asked = /^(\/engine\/(?:asyncify\/)?)cm0102_recomp\.(js|wasm)$/.exec(path);
+      const build = asked && inv.engines.find((e) => e.base === asked[1]);
+      if (build) {
+        sendFile(req, res, build[asked[2]].disk, TYPES[`.${asked[2]}`], v !== null && v === build.version);
         return;
       }
       if (path.startsWith('/game/')) {
@@ -252,7 +265,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     process.exit(2);
   }
   const buildDir = resolve(process.env.CM_WEB_BUILD ?? join(ROOT, 'build-web'));
-  const inv = inventory({ gameDir, buildDir });
+  const asyncifyDir = resolve(process.env.CM_WEB_BUILD_ASYNCIFY ?? join(ROOT, 'build-web-asyncify'));
+  const inv = inventory({ gameDir, buildDir, asyncifyDir });
   const mb = (n) => `${(n / 1048576).toFixed(0)} MB`;
   console.log(`game files: ${inv.files.length} (${mb(inv.files.reduce((a, f) => a + f.size, 0))}) from ${gameDir}`);
   if (!process.env.CM_WEB_SKIP_VERIFY) {
@@ -266,6 +280,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (inv.missing.length) console.log(`missing or of another size: ${inv.missing.length}, first: ${inv.missing.slice(0, 5).map((m) => m.path).join(', ')}`);
   console.log(inv.engine.js && inv.engine.wasm ? `engine: ${buildDir}/cm0102_recomp.wasm (${mb(inv.engine.wasm.size)}, ${inv.suspend ?? 'unknown'} build)`
     : `engine: not built in ${buildDir} (web/README.md, step 3)`);
+  const second = inv.engines.find((e) => e.dir === asyncifyDir);
+  console.log(second ? `second engine, for browsers without JSPI: ${asyncifyDir}/cm0102_recomp.wasm (${mb(second.wasm.size)}, ${second.suspend ?? 'unknown'} build)`
+    : 'second engine: none, so Safari and iPad browsers cannot play (web/README.md, "Other browsers")');
   // Statistics: in the bucket when there is one (BUCKET_NAME and the keys), else in memory only. CM_STATS=off: none.
   const stats = process.env.CM_STATS === 'off' ? null : createStats({ store: statsStore(s3FromEnv(process.env)) });
   stats?.start();
@@ -282,7 +299,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const admins = (process.env.CM_ADMIN_EMAILS ?? '').split(',');
   console.log(stats ? `statistics: on (${process.env.CM_STATS === 'optin' ? 'opt-in' : 'opt-out'}), ${s3FromEnv(process.env) ? 'kept in the bucket' : 'in memory only'}; admin page /admin for ${admins.filter((e) => e.trim()).length} email(s)${process.env.CM_ADMIN_TOKEN ? ' and the token' : ''}`
     : 'statistics: off (CM_STATS=off)');
-  const server = createApp({ gameDir, buildDir, cloud, site, stats, statsMode: process.env.CM_STATS === 'optin' ? 'optin' : 'optout', admins,
+  const server = createApp({ gameDir, buildDir, asyncifyDir, cloud, site, stats, statsMode: process.env.CM_STATS === 'optin' ? 'optin' : 'optout', admins,
     adminToken: process.env.CM_ADMIN_TOKEN ?? null });
   server.listen(port, host, () => console.log(`open http://${host}:${port} in Chrome`));
   // Fly stops a machine with SIGINT (fly.toml kill_signal) or SIGTERM: the statistics are written first.

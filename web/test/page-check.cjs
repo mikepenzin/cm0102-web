@@ -13,7 +13,7 @@ const PORT = 8097;
 
 (async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cm0102-page-check-'));
-  const game = path.join(tmp, 'game'), build = path.join(tmp, 'build-web');
+  const game = path.join(tmp, 'game'), build = path.join(tmp, 'build-web'), asyncDir = path.join(tmp, 'build-web-asyncify');
   const rows = fs.readFileSync(path.join(ROOT, 'tools/clean_files/manifest.tsv'), 'utf8').split('\n')
     .filter((l) => l && !l.startsWith('#')).map((l) => l.split('\t'));
   for (const [, size, file] of rows) {
@@ -33,7 +33,8 @@ const PORT = 8097;
   fs.writeFileSync(path.join(game, 'Data/staff.dat.br'), zlib.brotliCompressSync(fs.readFileSync(path.join(game, 'Data/staff.dat'))));
 
   const server = spawn(process.execPath, [path.join(ROOT, 'web/server.mjs')], {
-    env: { ...process.env, CM_GAME_DIR: game, CM_WEB_BUILD: build, PORT: String(PORT), CM_WEB_SKIP_VERIFY: '1' }, stdio: ['ignore', 'pipe', 'inherit'],
+    env: { ...process.env, CM_GAME_DIR: game, CM_WEB_BUILD: build, CM_WEB_BUILD_ASYNCIFY: asyncDir, PORT: String(PORT), CM_WEB_SKIP_VERIFY: '1' },
+    stdio: ['ignore', 'pipe', 'inherit'],
   });
   await new Promise((r) => server.stdout.on('data', (d) => { process.stdout.write(`server: ${d}`); if (/open http/.test(d)) r(); }));
   let ok = true;
@@ -73,6 +74,34 @@ const PORT = 8097;
       `${gameAsked} of ${rows.length} game files asked for`);
     g = await gate('touch only', { ctx: { hasTouch: true, isMobile: true } });
     check('a touch device is told the gestures and may start', /tap to click, long press for the right button, two fingers to scroll/.test(g.box) && g.start === 1, g.box.slice(0, 200));
+
+    // A server with both builds (CM_WEB_BUILD_ASYNCIFY) and a browser without JSPI (Safari, an iPad): the page runs the
+    // Asyncify build, and asks for no file of the JSPI one.
+    fs.mkdirSync(asyncDir);
+    fs.copyFileSync(path.join(build, 'cm0102_recomp.js'), path.join(asyncDir, 'cm0102_recomp.js'));
+    fs.copyFileSync(path.join(build, 'cm0102_recomp.wasm'), path.join(asyncDir, 'cm0102_recomp.wasm'));
+    fs.writeFileSync(path.join(asyncDir, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=asyncify\n');
+    fs.writeFileSync(path.join(build, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=jspi\n');
+    for (const jspi of [false, true]) {
+      const c = await b.newContext({ viewport: { width: 1100, height: 760 } });
+      if (!jspi) await c.addInitScript(() => { delete WebAssembly.Suspending; });
+      const pg = await c.newPage();
+      const asked = [];
+      pg.on('request', (r) => { const u = new URL(r.url()); if (u.pathname.startsWith('/engine/')) asked.push(u.pathname); });
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await pg.click('#go');
+      await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      const logText = await pg.textContent('#log');
+      await c.close();
+      const want = jspi ? '/engine/' : '/engine/asyncify/';
+      check(jspi ? 'a browser with JSPI runs the JSPI build, though the server has both'
+        : 'a browser without JSPI runs the Asyncify build of a server with both',
+        asked.length > 0 && asked.every((u) => u === `${want}cm0102_recomp.js` || u === `${want}cm0102_recomp.wasm`)
+          && logText.includes(`page: engine ${want} (${jspi ? 'jspi' : 'asyncify'} build`),
+        asked.join(', '));
+    }
+    fs.rmSync(asyncDir, { recursive: true });
+    fs.writeFileSync(path.join(build, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=asyncify\n');
 
     const p = await b.newPage({ viewport: { width: 1100, height: 760 }, deviceScaleFactor: 2 });
     const errors = [];

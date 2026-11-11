@@ -2,7 +2,10 @@
 // the engine, the season tables and the clean game files, each also brotli-compressed when that saves space, plus
 // the Dockerfile and fly.toml. `fly deploy` in that folder puts it on Fly.io.
 //
-//   node web/deploy/stage.mjs --game ~/cm0102-game [--build build-web] [--out web/deploy/stage]
+//   node web/deploy/stage.mjs --game ~/cm0102-game [--build build-web] [--asyncify build-web-asyncify] [--out web/deploy/stage]
+//
+// --asyncify is the folder of the Asyncify build, for browsers without JSPI (Safari, every iPad browser: web/README.md,
+// "Other browsers"). It is staged when it holds an engine; without one only JSPI browsers can play.
 //
 // It stops when a game file is missing or is not the clean file (size and SHA-256 against
 // tools/clean_files/manifest.tsv), or when the engine is not built. A fly.toml already in the stage folder stays
@@ -21,10 +24,11 @@ const ROOT = resolve(HERE, '..', '..');
 const KEEP_BR = 0.9;          // a .br is kept when it is at most 90% of the file
 
 function args(argv) {
-  const out = { build: join(ROOT, 'build-web'), out: join(HERE, 'stage'), manifest: join(ROOT, 'tools/clean_files/manifest.tsv') };
+  const out = { build: join(ROOT, 'build-web'), asyncify: join(ROOT, 'build-web-asyncify'), out: join(HERE, 'stage'),
+    manifest: join(ROOT, 'tools/clean_files/manifest.tsv') };
   for (let i = 0; i < argv.length; i += 2) {
     const key = argv[i].replace(/^--/, '');
-    if (!['game', 'build', 'out', 'manifest'].includes(key) || argv[i + 1] === undefined) throw new Error(`unknown argument ${argv[i]}`);
+    if (!['game', 'build', 'asyncify', 'out', 'manifest'].includes(key) || argv[i + 1] === undefined) throw new Error(`unknown argument ${argv[i]}`);
     out[key] = resolve(argv[i + 1]);
   }
   if (!out.game) throw new Error('--game <folder with cm0102.exe and Data> is needed');
@@ -77,9 +81,11 @@ export async function stage(opts) {
     throw new Error(found.length ? `${opts.game} has no cm0102.exe, but ${found[0]} has: use --game "${found[0]}"`
       : `${opts.game} has no cm0102.exe, and no folder under it has one (web/README.md, step 3).`);
   }
-  const inv = inventory({ gameDir: opts.game, buildDir: opts.build, manifestPath: opts.manifest });
+  const inv = inventory({ gameDir: opts.game, buildDir: opts.build, asyncifyDir: opts.asyncify ?? null, manifestPath: opts.manifest });
   if (inv.missing.length) throw new Error(`${inv.missing.length} files are missing or of another size, first: ${inv.missing.slice(0, 5).map((m) => m.path).join(', ')}`);
   if (!inv.engine.js || !inv.engine.wasm) throw new Error(`the engine is not built in ${opts.build} (web/README.md, step 2)`);
+  const second = inv.engines.find((e) => e.base === '/engine/asyncify/');
+  if (second && second.suspend !== 'asyncify') throw new Error(`${opts.asyncify} holds a ${second.suspend ?? 'unknown'} build, not an Asyncify one (web/README.md, "Other browsers")`);
   const bad = await verify(inv, opts.manifest);
   if (bad.length) throw new Error(`${bad.length} files are not the clean files, first: ${bad.slice(0, 5).join(', ')}`);
 
@@ -96,9 +102,16 @@ export async function stage(opts) {
     const to = f.path.startsWith('Seasons/') ? join(opts.out, 'build-web/seasons', f.path.slice(8)) : join(opts.out, 'game', f.path);
     put(f.disk, to, true);
   }
-  for (const ext of ['js', 'wasm']) put(inv.engine[ext].disk, join(opts.out, 'build-web', `cm0102_recomp.${ext}`), true);
-  for (const [to, text] of [[join(opts.out, 'build-web/CMakeCache.txt'), `CM0102_WEB_SUSPEND:STRING=${inv.suspend ?? 'jspi'}\n`],
-    [join(opts.out, 'Dockerfile'), readFileSync(join(HERE, 'Dockerfile'), 'utf8')]]) {
+  // Each engine with its kind (CMakeCache.txt, which the server reads). The Asyncify folder is always there, empty
+  // without that build, because the Dockerfile copies it.
+  const texts = [[join(opts.out, 'Dockerfile'), readFileSync(join(HERE, 'Dockerfile'), 'utf8')],
+    [join(opts.out, 'build-web-asyncify/.keep'), '']];
+  for (const [e, folder] of [[inv.engines[0], 'build-web'], [second, 'build-web-asyncify']]) {
+    if (!e) continue;
+    for (const ext of ['js', 'wasm']) put(e[ext].disk, join(opts.out, folder, `cm0102_recomp.${ext}`), true);
+    texts.push([join(opts.out, folder, 'CMakeCache.txt'), `CM0102_WEB_SUSPEND:STRING=${e.suspend ?? 'jspi'}\n`]);
+  }
+  for (const [to, text] of texts) {
     want.add(to);
     if (updateText(to, text)) changed.add(to);
   }
@@ -119,10 +132,10 @@ export async function stage(opts) {
   }
   // What the stage no longer makes (a file gone from the list, an old .br, a stray file) leaves the folder.
   let removed = 0;
-  for (const sub of ['web', 'tools', 'game', 'build-web']) {
+  for (const sub of ['web', 'tools', 'game', 'build-web', 'build-web-asyncify']) {
     for (const p of walk(join(opts.out, sub))) if (!want.has(p)) { rmSync(p); removed++; }
   }
-  return { files: served.length, changed: changed.size, compressed, removed, raw, sent, keptToml, out: opts.out };
+  return { files: served.length, changed: changed.size, compressed, removed, raw, sent, keptToml, out: opts.out, asyncify: Boolean(second) };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -132,6 +145,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const r = await stage(opts);
     console.log(`${r.files} files, ${mb(r.raw)}; a first visit downloads ${mb(r.sent)} (brotli)`);
     console.log(`since the last stage: ${r.changed} files changed, ${r.compressed} compressed, ${r.removed} removed`);
+    console.log(r.asyncify ? 'with the Asyncify engine: Safari and iPad browsers can play'
+      : `no Asyncify engine in ${opts.asyncify}: only browsers with JSPI (Chrome 137 and later) can play`);
     console.log(r.keptToml ? 'kept the fly.toml of the stage folder' : 'new fly.toml: run fly launch once (web/deploy/README.md)');
     console.log(`next: cd ${r.out} && fly deploy`);
   } catch (err) {

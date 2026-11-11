@@ -27,6 +27,9 @@ node web/deploy/stage.mjs --game "/Applications/CM 01-02 Bosman Edition.app/Cont
 ```
 
 `--game` names the folder that holds `cm0102.exe` and `Data`; a copy of it works too (`--game ~/cm0102-game`).
+When `build-web-asyncify` holds the Asyncify engine (`web/README.md`, "Other browsers"), the stage takes it too and
+prints `with the Asyncify engine: Safari and iPad browsers can play`; without it only Chrome 137 and later can play
+(`--asyncify <folder>` names another folder).
 
 The stage checks every game file against `tools/clean_files/manifest.tsv` (size and SHA-256), copies the server, the
 page, the engine, the season tables and the game files into `web/deploy/stage`, writes a brotli copy of each file
@@ -75,6 +78,7 @@ Fly. `fly open` opens the address; use Chrome 137 or later.
 cd ~/Documents/Projects/cm0102-web && git pull
 # only if the engine's code changed (no emsdk_env.sh needed: the build folder remembers the compiler):
 #   cmake --build build-web --target cm0102_recomp seasons_rules
+#   cmake --build build-web-asyncify --target cm0102_recomp      (when you have that build: both engines must match)
 node web/deploy/stage.mjs --game "/Applications/CM 01-02 Bosman Edition.app/Contents/Resources/game"
 cd web/deploy/stage && fly deploy
 ```
@@ -152,6 +156,7 @@ as it was (with its time and its brotli copy), so Fly's builder reuses the layer
 |---|---|
 | The page or the server (`web/`) | The last layer: a few KB |
 | The engine (a new `build-web`) | The engine layer and the page layer: the size of the engine |
+| The Asyncify engine (a new `build-web-asyncify`) | Its layer and the page layer: the size of that engine |
 | Nothing (a stage again) | Nothing new |
 | The game files | Everything (it should not happen: they are the clean files) |
 

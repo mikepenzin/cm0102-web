@@ -8,6 +8,7 @@
 import { SAVE_DIR, listSaves, mountSavesPanel, savesSignature, setStorageKept, skipWorkFiles, storageWarning, useVault } from './saves.js';
 import { setStatsAllowed, startStats, statsAllowed } from './stats.js';
 import { createVault } from './vault.js';
+import { engineUrl, hasJspi, pickEngine } from './engine.js';
 import { mountEditor } from './editor.js';
 import { mountSetsPanel } from './setspanel.js';
 import { createSetSync, listDataSets } from './datasets.js';
@@ -281,7 +282,7 @@ function install(FS, files) {
 async function primeOffline(info) {
   const cache = await openCache(SHELL);
   if (!cache || !('serviceWorker' in navigator)) return;
-  const engine = ['js', 'wasm'].map((ext) => `/engine/cm0102_recomp.${ext}?v=${info.engineVersion}`);
+  const engine = ['js', 'wasm'].map((ext) => engineUrl(info.chosen, `cm0102_recomp.${ext}`));
   const wanted = [...(info.shell ?? []), '/files.json', ...engine];
   for (const req of await cache.keys()) {
     const u = new URL(req.url);
@@ -369,10 +370,10 @@ function vaultWanted() {
 }
 
 function runEngine(files, info) {
-  const wasmUrl = `/engine/cm0102_recomp.wasm?v=${info.engineVersion}`;
+  const wasmUrl = engineUrl(info.chosen, 'cm0102_recomp.wasm');
   // The vault opens files lazily only on a JSPI engine in a browser with WebAssembly.Suspending; otherwise (or turned
   // off) it is there only to give back what an earlier visit put in it (prepareVault: restore).
-  const lazy = vaultWanted() && info.suspend === 'jspi' && typeof WebAssembly.Suspending === 'function';
+  const lazy = vaultWanted() && info.chosen.suspend === 'jspi' && typeof WebAssembly.Suspending === 'function';
   vault = typeof indexedDB !== 'undefined' ? createVault({ FS: () => window.Module?.FS, log }) : null;
   let hooked = false;
   const plainInstantiate = (imports, receive) => WebAssembly.instantiateStreaming(fetch(wasmUrl), imports).then((r) => receive(r.instance))
@@ -387,7 +388,7 @@ function runEngine(files, info) {
     arguments: ['--game', '/game'],
     print: log,
     printErr: log,
-    locateFile: (name) => `/engine/${name}?v=${info.engineVersion}`,
+    locateFile: (name) => engineUrl(info.chosen, name),
     preRun: [() => {
       const M = window.Module, FS = M.FS;
       install(FS, files);
@@ -502,8 +503,8 @@ function runEngine(files, info) {
     onAbort: (what) => { running = false; fail('The game stopped', String(what)); },
   };
   const s = document.createElement('script');
-  s.src = `/engine/cm0102_recomp.js?v=${info.engineVersion}`;
-  s.onerror = () => fail('The engine did not load', 'The server did not give /engine/cm0102_recomp.js.');
+  s.src = engineUrl(info.chosen, 'cm0102_recomp.js');
+  s.onerror = () => fail('The engine did not load', `The server did not give ${info.chosen.base}cm0102_recomp.js.`);
   document.body.appendChild(s);
 }
 
@@ -520,8 +521,8 @@ function requirements(info) {
     problems.push('This browser has no WebAssembly, which the engine is made of.');
     return { problems, warnings };
   }
-  if (info.suspend !== 'asyncify' && (typeof WebAssembly.Suspending !== 'function' || typeof WebAssembly.promising !== 'function'))
-    problems.push('The engine needs JSPI, a WebAssembly feature that this browser lacks. Chrome 137 or later on a computer has it.');
+  if (info.chosen.suspend !== 'asyncify' && !hasJspi())
+    problems.push('The engine needs JSPI, a WebAssembly feature that this browser lacks, and this server has no engine for other browsers. Chrome 137 or later on a computer has it.');
   try {                                              // the engine's own memory plan, on a memory that is then dropped
     const m = new WebAssembly.Memory({ initial: ENGINE_START_PAGES, maximum: ENGINE_MAX_PAGES });
     m.grow(ENGINE_NEED_PAGES - ENGINE_START_PAGES);
@@ -542,7 +543,7 @@ function blocked(problems, note = 'Nothing was downloaded.') {
 // engine uses fails here, and the download of the game files stops.
 async function engineCompiles(info) {
   try {
-    await WebAssembly.compileStreaming(fetch(`/engine/cm0102_recomp.wasm?v=${info.engineVersion}`));
+    await WebAssembly.compileStreaming(fetch(engineUrl(info.chosen, 'cm0102_recomp.wasm')));
     return null;
   } catch (e) {
     return e.message ?? String(e);
@@ -570,14 +571,16 @@ async function start() {
   let info;
   try { info = await (await fetch('/files.json')).json(); }
   catch (e) { fail('The server does not answer', String(e)); return; }
-  if (!info.engine) { fail('The engine is not built', 'Build it first: web/README.md, step 4.'); return; }
+  info.chosen = pickEngine(info);
+  if (!info.chosen) { fail('The engine is not built', 'Build it first: web/README.md, step 4.'); return; }
+  log(`page: engine ${info.chosen.base} (${info.chosen.suspend ?? 'unknown'} build, version ${info.chosen.version})${hasJspi() ? '' : '; this browser has no JSPI'}`);
   if (info.missing.length) {
     fail(`${info.missing.length} game files are missing or of another size`,
       `First: ${info.missing.slice(0, 6).map((m) => m.path).join(', ')}. CM_GAME_DIR must hold the clean files (web/README.md, step 3).`);
     return;
   }
   stats = startStats({ info, log, isRunning: () => running, state: folderState,
-    extra: () => ({ engine: info.engineVersion, vault: Boolean(vault?.active), cloud: Boolean(account.me?.user?.cloud) }) });
+    extra: () => ({ engine: `${info.chosen.suspend ?? 'unknown'} ${info.chosen.version}`, vault: Boolean(vault?.active), cloud: Boolean(account.me?.user?.cloud) }) });
   mountStatsChoice(info);
   const { problems, warnings } = requirements(info);
   if (problems.length) { log(`page: blocked: ${problems.join(' ')}`); stats.report(`blocked: ${problems.join(' ')}`, [], 'requirements'); blocked(problems); return; }
