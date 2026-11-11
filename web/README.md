@@ -155,8 +155,8 @@ renaming keeps the old save's bytes), a deleted one loses it. At the first start
 IDBFS's store, one at a time. The page reads placeholders with `readBytes`, `readView` and `readBlob` (`saves.js`);
 Download and the cloud upload hand the Blob on without memory. The data set choice goes through ccall's async form:
 the browser takes a Suspending import only inside `WebAssembly.promising`. An Asyncify build has no vault; files that
-an earlier visit put in it come back into the user folder. Until it is checked in more browsers it is on with
-`?vault=1` or localStorage `cm0102-vault` = `on`.
+an earlier visit put in it come back into the user folder. `?vault=0` or localStorage `cm0102-vault` = `off` turns it
+off (the files in it then come back into the user folder).
 
 The browser may delete the saves by itself, without asking: when the disk runs low (unless it agreed to keep the
 site's storage, `navigator.storage.persist`), when browsing data is cleared, when a private window closes, and in

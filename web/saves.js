@@ -110,6 +110,13 @@ export async function readBytes(FS, path) { return vaultRef ? vaultRef.bytes(pat
 export async function readView(FS, path) { return vaultRef ? vaultRef.view(path) : fileView(FS, path); }
 // The file as a Blob, for a download or an upload: a placeholder's comes from the browser's storage, not memory.
 export async function readBlob(FS, path) { return vaultRef ? vaultRef.blob(path) : new Blob([fileView(FS, path)]); }
+// The same at once for a file in memory (a Blob made now, so it matches a stat taken just before), a promise only for a
+// placeholder, whose contents do not change while it waits.
+export function readBlobNow(FS, path) {
+  let node = null;
+  try { node = FS.lookupPath(path).node; } catch { /* not this FS */ }
+  return vaultRef && node?.vault === 'out' ? vaultRef.blob(path) : new Blob([fileView(FS, path)]);
+}
 
 async function download(FS, f) {
   const url = URL.createObjectURL(new Blob([await readBlob(FS, f.path)], { type: 'application/octet-stream' }));

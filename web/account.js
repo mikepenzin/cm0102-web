@@ -11,7 +11,7 @@
 //
 // What was last the same is kept in the user folder itself (.cloud-sync.json): per save, the cloud's ETag and the size
 // and time of the local file at that moment.
-import { SAVE_DIR, checkSave, listSaves, readBlob, saveName } from './saves.js';
+import { SAVE_DIR, checkSave, listSaves, readBlobNow, saveName } from './saves.js';
 
 const STATE = `${SAVE_DIR}/.cloud-sync.json`;
 const CHANGE = { 'x-cm': '1' };                   // what the server wants on a change (cloud.mjs)
@@ -86,7 +86,8 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
 
   async function up(name, base, signal) {
     const before = stat(name);
-    const bytes = await readBlob(FS, `${SAVE_DIR}/${name}`);  // from the browser's storage, or memory without a copy
+    let bytes = readBlobNow(FS, `${SAVE_DIR}/${name}`);       // with the stat above: the same version of the file
+    if (bytes instanceof Promise) bytes = await bytes;          // a placeholder: from the browser's storage
     const r = await fetch(at(name), { method: 'PUT', body: await gzip(bytes), signal,
       headers: { ...CHANGE, 'x-base-etag': base, 'x-save-time': String(before.mtime) } });
     if (r.status === 409) return { conflict: (await r.json()).cloud };
@@ -98,7 +99,7 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
     if (r.status === 401 || r.status === 403) { stopped = true; return {}; }
     if (!r.ok) throw fail(`${name} up`, r);
     const j = await r.json();
-    state.saves[name] = { etag: j.etag, size: bytes.length, mtime: before.mtime };
+    state.saves[name] = { etag: j.etag, size: bytes.size ?? bytes.length, mtime: before.mtime };   // a Blob, or bytes
     log(`page: ${name} is in the cloud (${(j.size / 1048576).toFixed(1)} MB compressed)`);
     return { up: true };
   }

@@ -47,7 +47,7 @@ function userFolderSizes(FS) {
       let st;
       try { st = FS.stat(p); } catch { continue; }
       if (FS.isDir(st.mode)) walk(p, dir === SAVE_DIR && n === 'backups' ? 'older' : dir === SAVE_DIR && n === 'Databases' ? 'sets' : kind);
-      else if (FS.lookupPath(p).node.vault === 'out') sum.stored += st.size;          // a placeholder: in the vault
+      else if ((() => { try { return FS.lookupPath(p).node.vault === 'out'; } catch { return false; } })()) sum.stored += st.size;  // a placeholder
       else sum[kind === 'other' && /\.sav$/i.test(n) ? 'saves' : kind] += st.size;
     }
   };
@@ -339,22 +339,25 @@ async function finishVault(FS) {
   }
 }
 
-// Until the vault is checked in browsers it is on only when asked for: ?vault=1 in the address, or localStorage
-// cm0102-vault = on (a test sets it).
+// The vault is on, unless asked to be off: ?vault=0 in the address, or localStorage cm0102-vault = off (a way back if a
+// browser does not take it; the files already in it then come back into the user folder).
 function vaultWanted() {
-  if (/[?&]vault=1\b/.test(location.search)) return true;
-  try { return localStorage.getItem('cm0102-vault') === 'on'; } catch { return false; }
+  if (/[?&]vault=0\b/.test(location.search)) return false;
+  try { return localStorage.getItem('cm0102-vault') !== 'off'; } catch { return true; }
 }
 
 function runEngine(files, info) {
   const wasmUrl = `/engine/cm0102_recomp.wasm?v=${info.engineVersion}`;
-  vault = vaultWanted() && info.suspend === 'jspi' && typeof WebAssembly.Suspending === 'function' ? createVault({ FS: () => window.Module?.FS, log }) : null;
+  // The vault opens files lazily only on a JSPI engine in a browser with WebAssembly.Suspending; otherwise (or turned
+  // off) it is there only to give back what an earlier visit put in it (prepareVault: restore).
+  const lazy = vaultWanted() && info.suspend === 'jspi' && typeof WebAssembly.Suspending === 'function';
+  vault = typeof indexedDB !== 'undefined' ? createVault({ FS: () => window.Module?.FS, log }) : null;
   let hooked = false;
   const plainInstantiate = (imports, receive) => WebAssembly.instantiateStreaming(fetch(wasmUrl), imports).then((r) => receive(r.instance))
     .catch(async () => receive((await WebAssembly.instantiate(await (await fetch(wasmUrl)).arrayBuffer(), imports)).instance));
   window.Module = {
     canvas,
-    ...(vault ? { instantiateWasm: (imports, receive) => {
+    ...(vault && lazy ? { instantiateWasm: (imports, receive) => {
       hooked = vault.instantiate(imports, receive, wasmUrl);
       if (!hooked) plainInstantiate(imports, receive);
       return {};
