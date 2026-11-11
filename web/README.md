@@ -143,6 +143,13 @@ whole game world. A new or changed save goes to IndexedDB about 2 seconds after 
 the same address every time: `127.0.0.1:8080` and `localhost:8080` are two sites to the browser, each with its own
 saves.
 
+Delete removes a save or an older copy (with Cloud Saves, a save in the cloud goes there too). While the game runs,
+the page keeps the game files and the whole user folder in memory: every save, older copy and data set. A browser that
+runs out of memory stops the game with "Array buffer allocation failed"; the page then says so and suggests deleting
+saves and older copies that are no longer played (download them first to keep them). The game's working files
+(`*.tmp`, the parts of the game in play, written at a load and at each save) do not go to IndexedDB (`skipWorkFiles`,
+`saves.js`): a save packs them into its `.sav`, and copying them at every sync held tens of MB more in memory.
+
 ## Cloud saves
 
 Players can sign in with Google. An account with cloud saves keeps its saved games in the cloud as well as in the

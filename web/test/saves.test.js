@@ -1,7 +1,7 @@
 // Tests of the Saved games logic (web/saves.js): which files are saves, the check of an upload, its name.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkSave, listSaves, saveName, savesSignature } from '../saves.js';
+import { checkSave, isWorkFile, listSaves, saveName, savesSignature, skipWorkFiles } from '../saves.js';
 
 // A save container as tools/save/savfile.py reads it: version, count, the entries, then the parts.
 function save(parts = 1, extra = 16) {
@@ -71,4 +71,26 @@ test('listSaves: the saves and the older copies, newest first, without a save in
   const before = savesSignature(FS);
   assert.equal(savesSignature(FS), before, 'the same files: the same signature');
   assert.notEqual(savesSignature(fakeFS({ '/user/Leeds.sav': { size: 8000001, mtime: new Date(3000) } })), before);
+});
+
+test('the working files (*.tmp) stay out of IndexedDB, and earlier copies there go', () => {
+  const calls = [];
+  const set = (type, paths) => ({ type, entries: Object.fromEntries(paths.map((p) => [p, { timestamp: new Date(1) }])) });
+  const IDBFS = {
+    getLocalSet: (mount, cb) => cb(null, set('local', ['/user/a.sav', '/user/staff history.tmp', '/user/backups/a.sav'])),
+    getRemoteSet: (mount, cb) => cb(null, set('remote', ['/user/old.TMP', '/user/d.sav'])),
+    reconcile: (src, dst, cb) => { calls.push([src.type, Object.keys(src.entries).sort(), dst.type, Object.keys(dst.entries).sort()]); cb(null); },
+  };
+  assert.equal(skipWorkFiles(IDBFS), true);
+  let done = 0;
+  IDBFS.syncfs({}, false, (err) => { assert.equal(err, null); done++; });
+  IDBFS.syncfs({}, true, (err) => { assert.equal(err, null); done++; });
+  assert.equal(done, 2);
+  // To IndexedDB: the local set without the .tmp file; the remote set keeps old.TMP, so reconcile removes it there.
+  assert.deepEqual(calls[0], ['local', ['/user/a.sav', '/user/backups/a.sav'], 'remote', ['/user/d.sav', '/user/old.TMP']]);
+  // From IndexedDB: no .tmp file comes back.
+  assert.deepEqual(calls[1], ['remote', ['/user/d.sav'], 'local', ['/user/a.sav', '/user/backups/a.sav']]);
+  assert.equal(isWorkFile('/user/x.tmp'), true);
+  assert.equal(isWorkFile('/user/x.sav'), false);
+  assert.equal(skipWorkFiles({ syncfs() {} }), false);
 });

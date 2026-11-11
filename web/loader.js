@@ -5,7 +5,7 @@
 // Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
-import { SAVE_DIR, mountSavesPanel, savesSignature } from './saves.js';
+import { SAVE_DIR, mountSavesPanel, savesSignature, skipWorkFiles } from './saves.js';
 import { mountEditor } from './editor.js';
 import { mountSetsPanel } from './setspanel.js';
 import { createSetSync } from './datasets.js';
@@ -35,10 +35,16 @@ function overlay(html, kind = '') {
   $('overlay').style.display = html ? '' : 'none';
 }
 
+// The browser had no memory for the page: it keeps the game files and everything of the user folder (saves, older
+// copies, data sets) in memory while the game runs.
+const OUT_OF_MEMORY = /Array buffer allocation failed|out of memory|Cannot allocate|could not allocate/i;
 function fail(title, detail) {
   status(title);
   const last = lines.slice(-8).join('\n');
-  overlay(`<h1>${esc(title)}</h1><p>${esc(detail)}</p>${last ? `<pre class="small" style="white-space:pre-wrap;margin:0">${esc(last)}</pre>` : ''}`, 'error');
+  const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. The page keeps the game
+    files and all your saves, older copies and data sets in memory while it runs. Close other tabs, reload the page, and
+    in Saved games download and delete the saves and older copies you no longer play.</p>` : '';
+  overlay(`<h1>${esc(title)}</h1><p>${esc(detail)}</p>${memory}${last ? `<pre class="small" style="white-space:pre-wrap;margin:0">${esc(last)}</pre>` : ''}`, 'error');
 }
 
 addEventListener('error', (e) => log(`page: ${e.message}`));
@@ -275,7 +281,9 @@ function runEngine(files, info) {
       install(FS, files);
       files.clear();
       FS.mkdirTree('/user');
-      FS.mount(M.IDBFS || FS.filesystems.IDBFS, {}, '/user');   // newer Emscripten has no FS.filesystems
+      const idbfs = M.IDBFS || FS.filesystems.IDBFS;           // newer Emscripten has no FS.filesystems
+      if (!skipWorkFiles(idbfs)) log('page: this engine\'s IDBFS has no sets: the working files go to IndexedDB too');
+      FS.mount(idbfs, {}, '/user');
       M.ENV.RECOMP_USER_DIR = '/user';                  // main.c: every write of the game goes there
       M.ENV.HOME = '/user';
       M.addRunDependency('user-folder');

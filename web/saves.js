@@ -30,6 +30,34 @@ function files(FS, dir) {
 
 export function listSaves(FS) { return { saves: files(FS, SAVE_DIR), backups: files(FS, `${SAVE_DIR}/backups`) }; }
 
+// The game's working files: the parts of the game in play (*.tmp, written at a load and at each save, tens of MB in a
+// big game) live only while the game runs, and a save packs them into its .sav. IDBFS would copy each changed one into
+// IndexedDB at every sync, all of them in one transaction that holds the copies in memory until it ends. That also
+// ran during a load, while the game wrote them. A path of the user folder that the sync leaves out:
+export const isWorkFile = (path) => /\.tmp$/i.test(path);
+
+// Makes IDBFS (Emscripten's IndexedDB file system) leave the working files out: a sync to IndexedDB does not store
+// them and removes the ones an earlier page stored; a read from IndexedDB does not bring them back. The rest is
+// IDBFS.syncfs as Emscripten has it (getLocalSet, getRemoteSet, reconcile). An IDBFS without those parts is left as it
+// is. Returns true when the sync was changed.
+export function skipWorkFiles(IDBFS) {
+  if (!IDBFS || typeof IDBFS.getLocalSet !== 'function' || typeof IDBFS.getRemoteSet !== 'function'
+    || typeof IDBFS.reconcile !== 'function') return false;
+  const drop = (set) => { for (const path of Object.keys(set.entries)) if (isWorkFile(path)) delete set.entries[path]; };
+  IDBFS.syncfs = (mount, populate, callback) => {
+    IDBFS.getLocalSet(mount, (err, local) => {
+      if (err) return callback(err);
+      IDBFS.getRemoteSet(mount, (err2, remote) => {
+        if (err2) return callback(err2);
+        drop(local);                    // never stored, never removed here
+        if (populate) drop(remote);     // not read back; a sync to IndexedDB removes them there (not in the local set)
+        IDBFS.reconcile(populate ? remote : local, populate ? local : remote, callback);
+      });
+    });
+  };
+  return true;
+}
+
 // A short text that changes whenever a save file is added, changed or removed (the watcher of loader.js).
 export function savesSignature(FS) {
   const { saves, backups } = listSaves(FS);
@@ -94,7 +122,7 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
       return `<td class="cloud ${st}">${CLOUD[st]}${st === 'cloud' ? ` <button class="link" data-remove="${esc(f.name)}" title="Remove from the cloud; it stays here">Remove</button>` : ''}</td>`;
     };
     const row = (f, i, kind) => `<tr><td>${esc(f.name)}</td><td class="num">${mb(f.size)}</td><td>${esc(when(f.mtime))}</td>
-      ${c ? (kind === 'save' ? state(f) : '<td></td>') : ''}<td class="acts">${edit && kind === 'save' ? `<button data-edit="${i}">Edit</button>` : ''}<button data-kind="${kind}" data-i="${i}">Download</button></td></tr>`;
+      ${c ? (kind === 'save' ? state(f) : '<td></td>') : ''}<td class="acts">${edit && kind === 'save' ? `<button data-edit="${i}">Edit</button>` : ''}<button data-kind="${kind}" data-i="${i}">Download</button><button class="link" data-delete="${kind}" data-i="${i}">Delete</button></td></tr>`;
     list.innerHTML = shown.saves.length
       ? `<table><tr><th>Save</th><th class="num">Size</th><th>Saved</th>${c ? '<th>Cloud</th>' : ''}<th></th></tr>${shown.saves.map((f, i) => row(f, i, 'save')).join('')}</table>`
       : '<p class="small">No saved games yet. Save in the game (Game Options, Save Game), or upload one.</p>';
@@ -115,6 +143,21 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
       r.disabled = true;
       try { await cloud().remove(name); say(`${name} is no longer in the cloud. It stays in this browser.`); log(`page: ${name} removed from the cloud`); }
       catch (err) { say(`${name} was not removed: ${err.message}`, true); }
+      render();
+      return;
+    }
+    const d = e.target.closest('button[data-delete]');
+    if (d) {
+      const backup = d.dataset.delete === 'backup', f = (backup ? shown.backups : shown.saves)[Number(d.dataset.i)];
+      const inCloud = !backup && cloud()?.status(f.name, f) === 'cloud';
+      if (!confirm(`Delete ${backup ? 'this older copy of ' : ''}${f.name}${inCloud ? ' here and in the cloud' : ''}? This cannot be undone; Download keeps a copy first.`)) return;
+      try {
+        if (inCloud) await cloud().remove(f.name);
+        FS.unlink(f.path);
+        sync();
+        say(`${backup ? 'The older copy of ' : ''}${f.name} is deleted.`);
+        log(`page: deleted the ${backup ? 'older copy' : 'save'} ${f.name}`);
+      } catch (err) { say(`${f.name} was not deleted: ${err.message}`, true); }
       render();
       return;
     }
