@@ -124,6 +124,19 @@ async function download(FS, f) {
 
 const CLOUD = { cloud: 'In the cloud', up: 'Saving…', here: 'Only here', waiting: 'Not yet' };
 
+// What the browser may do to the saves on its own. kept: the answer of navigator.storage.persist (loader.js): 'kept'
+// when the browser agreed to keep the site's storage when the disk runs low. It still deletes it when the player
+// clears browsing data, when a private window closes, and Safari (iPhone, iPad, Mac) deletes a site's storage after 7
+// days without a visit, unless the page is on the home screen.
+let storageKept = 'unknown';
+export function setStorageKept(kept) { storageKept = kept; }
+export function storageWarning(cloudOn) {
+  const when = 'when browsing data is cleared, when a private window closes, and in Safari (iPhone, iPad, Mac) after 7 days without a visit, unless the page is on the home screen';
+  if (cloudOn) return `The browser can delete the saves here by itself, without asking: when the disk runs low, ${when}. The saves marked In the cloud then come back at the next start; download the others you want to keep.`;
+  if (storageKept === 'kept') return `This browser agreed to keep these saves when the disk runs low, but it still deletes them by itself, without asking, ${when}. Download the saves you want to keep, or use Cloud Saves.`;
+  return `The browser can delete these saves by itself, without asking: when the disk runs low, ${when}. Download the saves you want to keep, or use Cloud Saves.`;
+}
+
 // Wires the panel of index.html to the engine's file system. sync() writes the user folder to IndexedDB now. cloud():
 // the cloud sync of account.js, or null when the account has no cloud saves.
 // promo(): a line about Cloud Saves for a player without them, or null; openPromo() shows them. edit(name): opens the
@@ -138,6 +151,7 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
     shown = listSaves(FS);
     const c = cloud();
     document.getElementById('saves-where').textContent = c ? 'Your saves are in this browser and in the cloud.' : 'Your saves stay in this browser.';
+    document.getElementById('saves-risk').textContent = storageWarning(Boolean(c));
     const p = promo(), box = document.getElementById('saves-promo');
     box.hidden = !p;
     if (p) { box.firstChild.textContent = `${p} `; box.querySelector('button').onclick = openPromo; }

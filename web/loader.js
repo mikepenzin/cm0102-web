@@ -5,7 +5,7 @@
 // Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
-import { SAVE_DIR, mountSavesPanel, savesSignature, skipWorkFiles, useVault } from './saves.js';
+import { SAVE_DIR, mountSavesPanel, savesSignature, setStorageKept, skipWorkFiles, storageWarning, useVault } from './saves.js';
 import { createVault } from './vault.js';
 import { mountEditor } from './editor.js';
 import { mountSetsPanel } from './setspanel.js';
@@ -557,7 +557,8 @@ async function start() {
   const cache = await openCache();
   const [have, kept] = await Promise.all([cachedBytes(cache, info.files), keepStorage()]);
   log(`page: browser storage ${kept}; ${mb(have)} of the game files already in this browser`);
-  $('help-storage').textContent = kept === 'kept' ? ', which keeps them' : kept === 'unknown' ? '' : ', which may clear them when the disk is nearly full: download the ones you care about';
+  setStorageKept(kept);
+  $('help-storage').textContent = ` ${storageWarning(false)}`;
   const toGet = info.totalBytes - have;
   if (toGet > 0 || warnings.length) {
     // The first visit, or part of the files: one click before a large download.

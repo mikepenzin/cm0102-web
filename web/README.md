@@ -143,6 +143,11 @@ whole game world. A new or changed save goes to IndexedDB about 2 seconds after 
 the same address every time: `127.0.0.1:8080` and `localhost:8080` are two sites to the browser, each with its own
 saves.
 
+The browser may delete the saves by itself, without asking: when the disk runs low (unless it agreed to keep the
+site's storage, `navigator.storage.persist`), when browsing data is cleared, when a private window closes, and in
+Safari after 7 days without a visit unless the page is on the home screen. Saved games and Help say so
+(`storageWarning`, `saves.js`), with the advice to download the saves to keep or to use Cloud Saves.
+
 Delete removes a save or an older copy (with Cloud Saves, a save in the cloud goes there too). While the game runs,
 the page keeps the game files and the whole user folder in memory: every save, older copy and data set. A browser that
 runs out of memory stops the game with "Array buffer allocation failed"; the page then says so and suggests deleting

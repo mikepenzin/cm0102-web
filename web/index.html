@@ -154,6 +154,7 @@
   .plan ul { margin: 0; padding-left: 17px; color: var(--muted); font-size: 13px; }
   .box .plans { margin-top: 16px; }
   .legal { margin: 10px 0 0 !important; }
+  .warn { border-left: 3px solid #d9a441; padding: 2px 0 2px 10px; margin: 6px 0 8px !important; }
   .promo { border: 1px solid var(--accent); border-radius: 8px; padding: 7px 10px; margin: 8px 0 !important; }
   td.acts { white-space: nowrap; }
   #sets-note { white-space: pre-line; }
@@ -263,6 +264,7 @@
     <div class="dlg-body">
     <p class="small"><span id="saves-where">Your saves stay in this browser.</span> Download one to keep a copy on your
     device or to play it on another one; upload a .sav file to play it here.</p>
+    <p id="saves-risk" class="small warn"></p>
     <p id="saves-promo" class="small promo" hidden><span></span><button class="link">See Cloud Saves</button></p>
     <div id="saves-list" class="dlg-list"></div>
     <p id="saves-note" class="small" role="status"></p>
@@ -320,7 +322,7 @@
       <tr><td>Tap a text box, or Tap to type</td><td>The keyboard opens; it closes when the text is entered</td></tr>
     </table>
     <h3>Your saved games</h3>
-    <p class="small">Save in the game as usual. The saves stay in this browser<span id="help-storage"></span>. Saved games
+    <p class="small">Save in the game as usual. The saves stay in this browser.<span id="help-storage"></span> Saved games
     downloads them as files and uploads them again, also to and from the desktop game, and its Edit button changes the
     players of a save: ability, attributes, positions, age.</p>
     <h3>Editor</h3>
