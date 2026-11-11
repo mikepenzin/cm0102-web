@@ -75,6 +75,24 @@ const PORT = 8097;
     g = await gate('touch only', { ctx: { hasTouch: true, isMobile: true } });
     check('a touch device is told the gestures and may start', /tap to click, long press for the right button, two fingers to scroll/.test(g.box) && g.start === 1, g.box.slice(0, 200));
 
+    // The game stops (an exit code, as Restart Game gave before WinExec was replaced): the box names it and offers
+    // Start again, which loads the page again.
+    {
+      const c = await b.newContext({ viewport: { width: 1100, height: 760 } });
+      const pg = await c.newPage();
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await pg.click('#consent-no').catch(() => {});
+      await pg.click('#go');
+      await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      await pg.evaluate(() => window.Module.onExit(70));
+      const box = (await pg.textContent('#overlay')).replace(/\s+/g, ' ');
+      const again = pg.waitForNavigation({ timeout: 15000 }).then(() => true, () => false);
+      await pg.click('#fail-again');
+      check('a stop of the game: the box says so and Start again loads the page again',
+        /The game ended with code 70/.test(box) && /Start again/.test(box) && await again, box.slice(0, 120));
+      await c.close();
+    }
+
     // A server with both builds (CM_WEB_BUILD_ASYNCIFY) and a browser without JSPI (Safari, an iPad): the page runs the
     // Asyncify build, and asks for no file of the JSPI one.
     fs.mkdirSync(asyncDir);

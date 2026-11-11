@@ -102,7 +102,11 @@ function fail(title, detail) {
   const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. The page keeps the game
     files and all your saves, older copies and data sets in memory while it runs. Close other tabs, reload the page, and
     in Saved games download and delete the saves and older copies you no longer play.</p>` : '';
-  overlay(`<h1>${esc(title)}</h1><p>${esc(detail)}</p>${memory}${last ? `<pre class="small" style="white-space:pre-wrap;margin:0">${esc(last)}</pre>` : ''}`, 'error');
+  overlay(`<h1>${esc(title)}</h1><p>${esc(detail)}</p>${memory}${last ? `<pre class="small" style="white-space:pre-wrap;margin:0 0 14px">${esc(last)}</pre>` : ''}
+    <div class="row"><button class="primary" id="fail-again">Start again</button><span class="small">Your saves stay in this browser.</span></div>`, 'error');
+  // The way on: the page loads again, after the user folder went to the browser's storage.
+  const again = $('fail-again');
+  if (again) again.onclick = () => { running = false; leaving = true; sync(); setTimeout(() => location.reload(), 600); };
 }
 
 addEventListener('error', (e) => log(`page: ${e.message}`));
