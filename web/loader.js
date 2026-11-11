@@ -109,7 +109,15 @@ function fail(title, detail) {
   if (again) again.onclick = () => { running = false; leaving = true; sync(); setTimeout(() => location.reload(), 600); };
 }
 
-addEventListener('error', (e) => log(`page: ${e.message}`));
+// The stack of an error, in the log: for a stop of the engine it names the game's functions (the build keeps their
+// names, web/web.cmake --profiling-funcs: f_<address> is the original's function at that address), so the error
+// report says where the game was.
+function logStack(e) {
+  const lines = String(e?.stack ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
+  for (const l of lines.slice(0, 24)) log(`page: at ${l.replace(/^at /, '')}`);
+}
+
+addEventListener('error', (e) => { log(`page: ${e.message}`); logStack(e.error); });
 addEventListener('unhandledrejection', (e) => log(`page: ${e.reason?.stack ?? e.reason}`));
 
 // ---- Before the engine: the listeners that must run ahead of SDL's, and the layout. ----
@@ -523,9 +531,9 @@ function runEngine(files, info) {
       log(`page: main(${M.arguments.join(' ')})`);
       try {
         const r = M.callMain(M.arguments);
-        if (r && typeof r.then === 'function') r.catch((e) => { if (e?.name !== 'ExitStatus') { running = false; fail('The game stopped', String(e)); } });
+        if (r && typeof r.then === 'function') r.catch((e) => { if (e?.name !== 'ExitStatus') { running = false; logStack(e); fail('The game stopped', String(e)); } });
       } catch (e) {
-        if (e?.name !== 'ExitStatus') { running = false; fail('The game stopped', String(e)); }
+        if (e?.name !== 'ExitStatus') { running = false; logStack(e); fail('The game stopped', String(e)); }
       }
     },
     onExit: (code) => {

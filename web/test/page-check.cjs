@@ -84,6 +84,11 @@ const PORT = 8097;
       await pg.click('#consent-no').catch(() => {});
       await pg.click('#go');
       await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      // An error with a stack (as a trap of the engine): its stack lines go to the log, so an error report names where.
+      await pg.evaluate(() => { function f_0068dbc0() { return new Error('RuntimeError: test trap'); }
+        window.dispatchEvent(new ErrorEvent('error', { message: 'RuntimeError: test trap', error: f_0068dbc0() })); });
+      check('an error\'s stack goes to the log: the report says where it happened',
+        /page: at f_0068dbc0/.test(await pg.textContent('#log')), (await pg.textContent('#log')).split('\n').filter((l) => /page: at/.test(l)).slice(0, 2).join(' | '));
       await pg.evaluate(() => window.Module.onExit(70));
       const box = (await pg.textContent('#overlay')).replace(/\s+/g, ' ');
       const again = pg.waitForNavigation({ timeout: 15000 }).then(() => true, () => false);
