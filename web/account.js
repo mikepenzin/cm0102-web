@@ -278,7 +278,8 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       return;
     }
     const signedIn = `<p>Signed in as <b>${esc(u.email)}</b> · ${u.cloud ? 'Cloud Saves' : 'Free plan'}</p>`;
-    const own = '<div class="row"><button id="account-signout">Sign out</button><button id="account-delete">Delete account…</button></div>';
+    const own = `<div class="row"><button id="account-signout">Sign out</button><button id="account-delete">Delete account…</button>
+      ${u.admin ? '<button id="account-admin">Admin panel</button>' : ''}</div>`;
     if (u.cloud) {
       const info = cloud?.info();
       const term = u.cloudFrom === 'subscription'
@@ -301,6 +302,8 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     }
     $('account-signout').onclick = signOut;
     $('account-delete').onclick = deleteAccount;
+    // The statistics in a tab of their own, so the game here goes on (CM_ADMIN_EMAILS lists the admins).
+    if (u.admin) $('account-admin').onclick = () => window.open('/admin', '_blank', 'noopener');
   }
 
   function signIn() {

@@ -98,7 +98,7 @@ ${ok ? 'setTimeout(() => window.close(), 300);' : ''}</script>`;
 // price: how the page names the price ("$5 a month").
 export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicUrl = null, cloudFor = 'listed', cloudUsers = [],
   upgradeUrl = null, maxSaves = 30, maxSets = 5, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t),
-  onAccountDeleted = () => {}, uploadBudget = 160 << 20 }) {
+  onAccountDeleted = () => {}, uploadBudget = 160 << 20, isAdmin = () => false }) {
   const seal = sealer(sessionSecret);
   // The uploads in memory at once (readBody holds each whole, for its check and its signature): a save is at most
   // MAX_GZ, a data set MAX_SET_ZIP. Past uploadBudget an upload is turned away with 503 and goes at the next sync, so a
@@ -211,6 +211,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
       email: user.email, name: user.name, picture: user.picture, cloud: p.cloud, cloudFrom: p.from,
       until: p.from === 'subscription' ? p.record.planUntil : null, cancelAt: p.from === 'subscription' ? p.record.paddle?.cancelAt ?? null : null,
       manage: Boolean(p.record?.paddle?.customerId), ref: paddle ? accountRef(user.sub, sessionSecret) : null,
+      admin: Boolean(isAdmin(String(user.email ?? '').toLowerCase())),   // the page shows the Admin panel button
     } });
   }
 
@@ -431,7 +432,8 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
 }
 
 // The cloud of the environment, or null and the settings that are missing.
-export function cloudFromEnv(env = process.env, log, { onAccountDeleted } = {}) {
+// isAdmin(email): whether the account may open the admin page (server.mjs: CM_ADMIN_EMAILS).
+export function cloudFromEnv(env = process.env, log, { onAccountDeleted, isAdmin } = {}) {
   const missing = [];
   for (const k of ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'CM_SESSION_SECRET', 'AWS_ENDPOINT_URL_S3', 'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY', 'BUCKET_NAME']) if (!env[k]) missing.push(k);
@@ -442,7 +444,7 @@ export function cloudFromEnv(env = process.env, log, { onAccountDeleted } = {}) 
     publicUrl: env.CM_PUBLIC_URL ? env.CM_PUBLIC_URL.replace(/\/+$/, '') : null,
     cloudFor: env.CM_CLOUD_FOR === 'everyone' ? 'everyone' : 'listed', cloudUsers: (env.CM_CLOUD_USERS ?? '').split(','),
     upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, maxSets: Number(env.CM_CLOUD_MAX_SETS) || 5, log,
-    price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env), onAccountDeleted,
+    price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env), onAccountDeleted, isAdmin,
     uploadBudget: (Number(env.CM_UPLOAD_BUDGET_MB) || 160) << 20,
   });
   return { cloud, missing };

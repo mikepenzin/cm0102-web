@@ -291,7 +291,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   // Statistics: in the bucket when there is one (BUCKET_NAME and the keys), else in memory only. CM_STATS=off: none.
   const stats = process.env.CM_STATS === 'off' ? null : createStats({ store: statsStore(s3FromEnv(process.env)) });
   stats?.start();
-  const { cloud, missing } = cloudFromEnv(process.env, undefined, { onAccountDeleted: (sub) => stats?.forget(sub) });
+  const admins = (process.env.CM_ADMIN_EMAILS ?? '').split(',');
+  const adminEmails = new Set(admins.map((e) => e.trim().toLowerCase()).filter(Boolean));
+  const { cloud, missing } = cloudFromEnv(process.env, undefined, { onAccountDeleted: (sub) => stats?.forget(sub),
+    isAdmin: (email) => Boolean(stats) && adminEmails.has(email) });
   const someSet = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'CM_SESSION_SECRET', 'BUCKET_NAME'].some((k) => process.env[k]);
   const paddle = paddleFromEnv(process.env);
   console.log(cloud ? `accounts and cloud saves: on${process.env.CM_CLOUD_FOR === 'everyone' ? ', for every account'
@@ -301,7 +304,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const site = { seller: process.env.CM_SELLER, contact: process.env.CM_CONTACT, price: process.env.CM_PRICE };
   if (process.env.PADDLE_CLIENT_TOKEN && (!site.seller || !site.contact))
     console.log('payments: set CM_SELLER and CM_CONTACT, which the terms, refunds and privacy pages name (Paddle checks them)');
-  const admins = (process.env.CM_ADMIN_EMAILS ?? '').split(',');
   console.log(stats ? `statistics: on (${process.env.CM_STATS === 'optin' ? 'opt-in' : 'opt-out'}), ${s3FromEnv(process.env) ? 'kept in the bucket' : 'in memory only'}; admin page /admin for ${admins.filter((e) => e.trim()).length} email(s)${process.env.CM_ADMIN_TOKEN ? ' and the token' : ''}`
     : 'statistics: off (CM_STATS=off)');
   const server = createApp({ gameDir, buildDir, asyncifyDir, cloud, site, stats, statsMode: process.env.CM_STATS === 'optin' ? 'optin' : 'optout', admins,

@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { createApp } from '../server.mjs';
 import { createCloud } from '../cloud.mjs';
+import { createStats } from '../stats.mjs';
 import { createS3 } from '../s3.mjs';
 import { fakeDataSet, fakeGoogle, fakeS3, fakeSaveBytes, paddleEvent, signPaddle } from './fakes.mjs';
 import { writeZip } from '../zip.js';
@@ -40,6 +41,7 @@ const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKe
 const logs = [];
 const cloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'z'.repeat(40),
   cloudUsers: ['player@example.com'], maxSaves: 10, google: google.google, log: (t) => logs.push(t), price: '$5 a month',
+  isAdmin: (email) => email === 'player@example.com',
   paddle: { env: 'sandbox', clientToken: 'test_token', priceIds: ['pri_cloud_month'], webhookSecret: 'pdl_ntfset_check', apiKey: null, apiBase: null } });
 // Paddle.js, as far as the page uses it: Initialize, and a checkout that completes at once. The test then sends the
 // webhook that Paddle would send.
@@ -48,7 +50,8 @@ const FAKE_PADDLE = `window.Paddle = {
   Initialize(o) { window.__paddleInit = o; },
   Checkout: { open(o) { window.__paddleOpen = o; setTimeout(() => window.__paddleInit.eventCallback({ name: 'checkout.completed', data: {} }), 200); } },
 };`;
-const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud });
+const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, stats: createStats(),
+  admins: ['player@example.com'] });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 
@@ -143,6 +146,12 @@ try {
   const dialogText = (await a.textContent('#account-body')).replace(/\s+/g, ' ');
   check('Account: the email, cloud saves on, the last sync', /Signed in as player@example\.com/.test(dialogText) && /Cloud Saves are on/.test(dialogText) && /Given to this account/.test(dialogText) && /Last sync:/.test(dialogText), dialogText.slice(0, 200));
   await shot(a, 'account');
+  // An admin (CM_ADMIN_EMAILS): the dialog has the Admin panel button, which opens the panel in a tab of its own.
+  const [panel] = await Promise.all([a.context().waitForEvent('page'), a.click('#account-admin')]);
+  await panel.waitForFunction(() => !/Loading/.test(document.getElementById('main')?.textContent ?? 'Loading'), null, { timeout: 15000 });
+  const panelText = (await panel.textContent('main')).replace(/\s+/g, ' ');
+  check('an admin: Admin panel opens the statistics in a new tab, signed in', panel.url() === `${BASE}/admin` && !/Sign in with Google|not an admin/.test(panelText) && /Saves/.test(panelText), panelText.slice(0, 120));
+  await panel.close();
   await a.click('#account-close');
 
   // ---- An iPad (a second device): signs in, gets every cloud save before its game starts. ----

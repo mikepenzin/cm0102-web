@@ -168,6 +168,7 @@ test('cloud saves: store, list, fetch, conflicts, limits and checks', async () =
   await b.signIn();
   const me = await (await b.get('/api/me')).json();
   assert.equal(me.user.cloud, true, 'a listed email has cloud saves');
+  assert.equal(me.user.admin, false, 'not an admin: no Admin panel button');
   assert.equal(me.user.cloudFrom, 'given');
   assert.deepEqual(await (await b.get('/api/saves')).json(), { saves: [], maxSaves: 3 });
 
@@ -282,7 +283,7 @@ test('uploads in memory at once stay within the budget: one past it waits for th
   const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
   const gz = gzipSync(fakeSaveBytes(7));
   const cloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'x'.repeat(40),
-    cloudFor: 'everyone', google: google.google, log: () => {}, uploadBudget: gz.length + 10 });
+    cloudFor: 'everyone', google: google.google, log: () => {}, uploadBudget: gz.length + 10, isAdmin: (e) => e === 'budget@example.com' });
   const two = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv'), cloud });
   await new Promise((r) => two.listen(0, '127.0.0.1', r));
   const at = `http://127.0.0.1:${two.address().port}`;
@@ -290,6 +291,7 @@ test('uploads in memory at once stay within the budget: one past it waits for th
     google.user = { sub: '2000077', email: 'budget@example.com', email_verified: true, name: 'Budget' };
     const b = browser(at);
     await b.signIn();
+    assert.equal((await (await b.get('/api/me')).json()).user.admin, true, 'an admin: the page shows the Admin panel button');
     // The first upload sends half its body and waits: it holds its size of the budget.
     const cookie = [...b.jar].map(([k, v]) => `${k}=${v}`).join('; ');
     let firstStatus;

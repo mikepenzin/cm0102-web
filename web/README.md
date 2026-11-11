@@ -180,13 +180,14 @@ with their size. A stop of the game sends an error report with the last lines of
 A person is an account, or without one a browser with a random id (localStorage `cm0102-anon`); no name, email or IP
 address of an anonymous player is kept. When a browser signs in, its record points at the account and its play counts
 for it. The server (`stats.mjs`) keeps one object in the bucket (`stats/stats.json`, written every 2 minutes and when
-the server stops) and the reports as files (`reports/<day>/…`, deleted after 90 days); people idle for 400 days go. One
-server machine writes the object: with more machines each keeps its own count.
+the server stops) and the reports as files (`reports/<day>/…`, deleted after 90 days); people idle for 400 days go.
+Each write reads the object again and adds what its machine counted since (`mergeStats`), so two machines both count.
 
 `/admin` shows the totals (people, accounts and anonymous, active today, in 7 and 30 days, hours played, saves, older
 copies, data sets, errors), the last 90 days, every person (sortable, searchable) and the error reports with their log.
 It is open to the Google accounts of `CM_ADMIN_EMAILS` (comma separated, signed in on the game's page) and to a request
-with `Authorization: Bearer <CM_ADMIN_TOKEN>` (16 characters or more). Help, Statistics turns them off for a browser
+with `Authorization: Bearer <CM_ADMIN_TOKEN>` (16 characters or more). Such an account has an Admin panel button in
+its Account dialog (`/api/me` says `admin`), which opens `/admin` in a tab of its own, so the game goes on. Help, Statistics turns them off for a browser
 (localStorage `cm0102-stats` = `off`). `CM_STATS=optin`: off until the player turns them on (for consent rules that
 want it); `CM_STATS=off`: none. Without a bucket they stay in memory only. The privacy page says what is collected.
 
