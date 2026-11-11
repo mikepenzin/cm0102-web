@@ -124,8 +124,9 @@ fly secrets set CM_ADMIN_EMAILS=<your email> CM_ADMIN_TOKEN="$(openssl rand -hex
 Sign in with that Google account on the game's page: its Account dialog then has an Admin panel button, which
 opens `/admin` in a new tab. The token is for scripts:
 `curl -H "Authorization: Bearer <token>" https://<your-app>.fly.dev/api/admin/stats`. `fly logs` shows
-`statistics: on (opt-out), kept in the bucket`. `CM_STATS=optin` asks players first (off until they turn them on in
-Help); `CM_STATS=off` turns them off.
+`statistics: on (opt-in: the page asks first), kept in the bucket`: each player is asked once, and only those who allow
+them are counted (the admin page shows the share who said yes). `CM_STATS=optout` counts everyone until they turn them
+off in Help, with no question (EU consent rules want the question); `CM_STATS=off` turns them off.
 
 ## Straight to Tigris
 

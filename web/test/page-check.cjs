@@ -107,8 +107,22 @@ const PORT = 8097;
     const errors = [];
     p.on('pageerror', (e) => errors.push(e.message));
     p.on('dialog', (d) => d.accept().catch(() => {}));         // the question before a page with a running game is left
+    const statsCalls = [];                                     // the page's requests of the statistics, with their bodies
+    p.on('request', (r) => { if (r.url().includes('/api/stats/') || r.url().includes('/api/report')) statsCalls.push(`${new URL(r.url()).pathname} ${r.postData() ?? ''}`); });
     await p.goto(`http://127.0.0.1:${PORT}/`);
     await p.waitForSelector('#go');
+    // The statistics ask first (the server's opt-in mode, the default): the card, and nothing sent or stored before.
+    check('the first visit asks about the statistics, with two answers that look the same',
+      await p.isVisible('#consent') && (await p.getAttribute('#consent-yes', 'class')) === (await p.getAttribute('#consent-no', 'class')));
+    await p.waitForTimeout(3500);                              // past the first heartbeat of a page that may send
+    check('before an answer: no browser id stored, nothing sent', statsCalls.length === 0
+      && (await p.evaluate(() => localStorage.getItem('cm0102-anon'))) === null, statsCalls.join(' | '));
+    if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-consent.png') });
+    await p.click('#consent-no');
+    await p.waitForTimeout(500);
+    check('No thanks: the card goes, only the answer is sent (no id), nothing is stored but the answer',
+      !(await p.isVisible('#consent')) && statsCalls.length === 1 && /^\/api\/stats\/choice \{"choice":"off"\}$/.test(statsCalls[0])
+        && (await p.evaluate(() => [localStorage.getItem('cm0102-anon'), localStorage.getItem('cm0102-stats')])).join() === ',off', statsCalls.join(' | '));
     check('the start box names the size of the download', /461 MB of game files download into this browser once/.test(await p.textContent('#overlay')), (await p.textContent('#overlay p')).trim().slice(0, 90));
     if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-start.png') });
     const t0 = Date.now();
@@ -166,6 +180,16 @@ const PORT = 8097;
     await p.reload();
     await p.waitForFunction(() => window.__fake, null, { timeout: 120000 });
     check('the second visit starts by itself: no Start box', /from this browser, 0\.0 MB downloaded/.test(await p.textContent('#log')));
+    check('and does not ask again: the answer stays', !(await p.isVisible('#consent')) && statsCalls.filter((c) => c.startsWith('/api/stats/beat')).length === 0);
+    // Turned on in Help: the browser's id is made then, and the visit counts at once.
+    await p.evaluate(() => document.getElementById('help-stats-on').click());
+    await p.waitForFunction(() => localStorage.getItem('cm0102-anon') !== null, null, { timeout: 5000 }).catch(() => {});
+    await p.waitForTimeout(800);
+    check('Help, Statistics on: the id is made, the answer and a heartbeat go',
+      (await p.evaluate(() => localStorage.getItem('cm0102-stats'))) === 'on' && /^[0-9a-f-]{36}$/.test(await p.evaluate(() => localStorage.getItem('cm0102-anon')) ?? '')
+        && statsCalls.some((c) => c === '/api/stats/choice {"choice":"on"}') && statsCalls.some((c) => c.startsWith('/api/stats/beat')), statsCalls.join(' | ').slice(0, 300));
+    await p.evaluate(() => document.getElementById('help-stats-on').click());
+    check('and off again: the id is deleted', (await p.evaluate(() => [localStorage.getItem('cm0102-anon'), localStorage.getItem('cm0102-stats')])).join() === ',off');
     const again = await p.evaluate(() => window.__fake);
     const second = (await p.textContent('#log')).match(/page: \d+ files in .*/)?.[0] ?? '';
     check('the second visit gives the engine every byte', again.bytes === total + 4 * 2, second);

@@ -50,7 +50,7 @@ const FAKE_PADDLE = `window.Paddle = {
   Initialize(o) { window.__paddleInit = o; },
   Checkout: { open(o) { window.__paddleOpen = o; setTimeout(() => window.__paddleInit.eventCallback({ name: 'checkout.completed', data: {} }), 200); } },
 };`;
-const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, stats: createStats(),
+const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, stats: createStats(), statsMode: 'optout',
   admins: ['player@example.com'] });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${server.address().port}`;

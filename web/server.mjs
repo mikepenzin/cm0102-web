@@ -131,6 +131,17 @@ const json = (res, status, body) => {
 async function statsRoute(req, res, url, { stats, cloud, admins, adminToken }) {
   const path = url.pathname;
   const user = cloud?.userOf(req) ?? null;
+  if (path === '/api/stats/choice') {
+    // The player's answer to the question about the statistics, with no id: the count of answers on the admin page.
+    if (req.method !== 'POST') { json(res, 405, { error: 'POST only' }); return; }
+    const from = req.headers.origin;
+    if (req.headers['x-cm'] !== '1' || (from && new URL(from).host !== req.headers.host)) { req.resume(); json(res, 403, { error: 'not from this site' }); return; }
+    const body = await readJson(req, 1024);
+    if (body.choice !== 'on' && body.choice !== 'off') { json(res, 400, { error: 'choice: on or off' }); return; }
+    await stats.choice(body.choice === 'on');
+    json(res, 204, null);
+    return;
+  }
   if (path === '/api/stats/beat' || path === '/api/report') {
     if (req.method !== 'POST') { json(res, 405, { error: 'POST only' }); return; }
     const from = req.headers.origin;
@@ -184,9 +195,9 @@ async function statsRoute(req, res, url, { stats, cloud, admins, adminToken }) {
 }
 
 // cloud: accounts and cloud saves (cloud.mjs), or null for none. site: { seller, contact, price } for the terms pages.
-// stats: the statistics (stats.mjs), or null for none; statsMode: 'optout' (on unless the player turns them off) or
-// 'optin'. admins: the emails of the admin page; adminToken: a token for it instead.
-export function createApp({ gameDir, buildDir, asyncifyDir = null, manifestPath, cloud = null, site = {}, stats = null, statsMode = 'optout', admins = [],
+// stats: the statistics (stats.mjs), or null for none; statsMode: 'optin' (the page asks first: nothing is sent or stored
+// for them before a yes) or 'optout' (on unless the player turns them off). admins: the emails of the admin page; adminToken: a token for it instead.
+export function createApp({ gameDir, buildDir, asyncifyDir = null, manifestPath, cloud = null, site = {}, stats = null, statsMode = 'optin', admins = [],
   adminToken = null }) {
   let inv = inventory({ gameDir, buildDir, asyncifyDir, manifestPath });
   const adminSet = new Set(admins.map((e) => e.trim().toLowerCase()).filter(Boolean));
@@ -194,7 +205,7 @@ export function createApp({ gameDir, buildDir, asyncifyDir = null, manifestPath,
   return http.createServer((req, res) => {
     try {
       const url = new URL(req.url, 'http://x');
-      if (stats && (url.pathname === '/api/stats/beat' || url.pathname === '/api/report' || url.pathname.startsWith('/api/admin/'))) {
+      if (stats && (url.pathname === '/api/stats/beat' || url.pathname === '/api/stats/choice' || url.pathname === '/api/report' || url.pathname.startsWith('/api/admin/'))) {
         statsRoute(req, res, url, { stats, cloud, admins: adminSet, adminToken: token }).catch((err) => {
           if (res.headersSent) { res.destroy(err); return; }
           json(res, err.status ?? 500, { error: err.status ? err.message : 'the server failed' });
@@ -330,9 +341,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const site = { seller: process.env.CM_SELLER, contact: process.env.CM_CONTACT, price: process.env.CM_PRICE };
   if (process.env.PADDLE_CLIENT_TOKEN && (!site.seller || !site.contact))
     console.log('payments: set CM_SELLER and CM_CONTACT, which the terms, refunds and privacy pages name (Paddle checks them)');
-  console.log(stats ? `statistics: on (${process.env.CM_STATS === 'optin' ? 'opt-in' : 'opt-out'}), ${s3FromEnv(process.env) ? 'kept in the bucket' : 'in memory only'}; admin page /admin for ${admins.filter((e) => e.trim()).length} email(s)${process.env.CM_ADMIN_TOKEN ? ' and the token' : ''}`
+  console.log(stats ? `statistics: on (${process.env.CM_STATS === 'optout' ? 'opt-out' : 'opt-in: the page asks first'}), ${s3FromEnv(process.env) ? 'kept in the bucket' : 'in memory only'}; admin page /admin for ${admins.filter((e) => e.trim()).length} email(s)${process.env.CM_ADMIN_TOKEN ? ' and the token' : ''}`
     : 'statistics: off (CM_STATS=off)');
-  const server = createApp({ gameDir, buildDir, asyncifyDir, cloud, site, stats, statsMode: process.env.CM_STATS === 'optin' ? 'optin' : 'optout', admins,
+  const server = createApp({ gameDir, buildDir, asyncifyDir, cloud, site, stats, statsMode: process.env.CM_STATS === 'optout' ? 'optout' : 'optin', admins,
     adminToken: process.env.CM_ADMIN_TOKEN ?? null });
   server.listen(port, host, () => console.log(`open http://${host}:${port} in Chrome`));
   // Fly stops a machine with SIGINT (fly.toml kill_signal) or SIGTERM: the statistics are written first.

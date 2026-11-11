@@ -156,7 +156,12 @@ test('the routes: a beat only from the page, the admin data only for an admin', 
     assert.equal((await beat({ 'x-cm': '1', cookie: 'user' })).status, 204);
     assert.equal((await beat({ 'x-cm': '1' }, { anon: 'x' })).status, 400);
     const files = await (await fetch(`${base}/files.json`)).json();
-    assert.deepEqual(files.stats, { mode: 'optout' });
+    assert.deepEqual(files.stats, { mode: 'optin' }, 'the page asks first, by default');
+    // The answers to the question, with no id: counted for the day, nothing of the player kept.
+    const choice = (headers, body) => fetch(`${base}/api/stats/choice`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
+    assert.equal((await choice({}, { choice: 'off' })).status, 403, 'only from the page');
+    assert.equal((await choice({ 'x-cm': '1' }, { choice: 'maybe' })).status, 400);
+    for (const c of ['off', 'off', 'on']) assert.equal((await choice({ 'x-cm': '1' }, { choice: c })).status, 204);
     assert.equal((await fetch(`${base}/api/admin/stats`)).status, 401);
     assert.equal((await fetch(`${base}/api/admin/stats`, { headers: { cookie: 'user' } })).status, 403);
     const asAdmin = await fetch(`${base}/api/admin/stats`, { headers: { cookie: 'admin' } });
@@ -164,6 +169,8 @@ test('the routes: a beat only from the page, the admin data only for an admin', 
     const sum = await asAdmin.json();
     assert.equal(sum.totals.people, 1, 'the browser signed in: one person');
     assert.equal(sum.totals.hours, 120 / 3600, 'its play before and after the sign-in');
+    assert.deepEqual([sum.totals.allowed30, sum.totals.declined30], [1, 2], 'one yes, two no');
+    assert.equal(sum.people.length, 2, 'the answers add no person');
     assert.equal((await fetch(`${base}/api/admin/stats`, { headers: { authorization: 'Bearer a-token-of-16-chars-or-more' } })).status, 200);
     assert.deepEqual(sum.people.find((p) => p.id === 'g:2').plan, plans[2], 'each account with its plan');
     assert.equal(stats.data.people['g:2'].plan, undefined, 'the plan is not kept in the statistics');

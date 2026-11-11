@@ -28,7 +28,7 @@ const text = (v, max) => String(v ?? '').replace(/[\u0000-\u001f]/g, ' ').slice(
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const PERSON_COUNTS = ['seconds', 'sessions', 'days', 'reports'];
-const DAY_COUNTS = ['seconds', 'sessions', 'new', 'reports'];
+const DAY_COUNTS = ['seconds', 'sessions', 'new', 'reports', 'allowed', 'declined'];
 
 // The object as the store holds it now (theirs), with this machine's changes since it last read it (from base to
 // mine) added. A count adds this machine's part to theirs; any other field of a person comes from the record that saw
@@ -103,7 +103,7 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     } catch (e) { log(`stats: not read: ${e.message}`); }
   })();
 
-  const dayOf = (k) => (data.days[k] ??= { active: 0, seconds: 0, sessions: 0, new: 0, reports: 0 });
+  const dayOf = (k) => (data.days[k] ??= { active: 0, seconds: 0, sessions: 0, new: 0, reports: 0, allowed: 0, declined: 0 });
 
   // The day turned: yesterday's count of active people stays, today's list starts again.
   function rollDay(t) {
@@ -182,6 +182,16 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     return { key };
   }
 
+  // A player's answer to the question about the statistics (stats.js): a count of the day, nothing of the player.
+  async function choice(allowed) {
+    await ready;
+    const t = now();
+    rollDay(t);
+    const d = dayOf(day(t));
+    d[allowed ? 'allowed' : 'declined'] = (d[allowed ? 'allowed' : 'declined'] ?? 0) + 1;
+    dirty = true;
+  }
+
   async function reportFile(key) {
     if (!/^reports\/\d{4}-\d{2}-\d{2}\/\d+-[a-z0-9]+\.json$/.test(key) || !store) return null;
     const buf = await store.get(key);
@@ -257,7 +267,7 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     const sum = (f) => persons.reduce((a, p) => a + f(p), 0);
     const days = Object.entries(data.days).sort(([a], [b]) => (a < b ? -1 : 1)).slice(-90)
       .map(([k, v]) => ({ day: k, ...v, active: k === data.today.day ? todayIds.size : v.active }));
-    if (!days.some((d) => d.day === data.today.day)) days.push({ day: data.today.day, active: todayIds.size, seconds: 0, sessions: 0, new: 0, reports: 0 });
+    if (!days.some((d) => d.day === data.today.day)) days.push({ day: data.today.day, active: todayIds.size, seconds: 0, sessions: 0, new: 0, reports: 0, allowed: 0, declined: 0 });
     return {
       at: new Date(t).toISOString(),
       totals: {
@@ -268,6 +278,9 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
         hours: people.reduce((a, p) => a + p.seconds, 0) / 3600, saves: sum((p) => p.saves?.n ?? 0), savesBytes: sum((p) => p.saves?.bytes ?? 0),
         older: sum((p) => p.older?.n ?? 0), olderBytes: sum((p) => p.older?.bytes ?? 0), sets: sum((p) => p.sets?.n ?? 0),
         setsBytes: sum((p) => p.sets?.bytes ?? 0), reports7: data.reports.filter((r) => Date.parse(r.at) >= t - 7 * 86400000).length,
+        // the answers to the question about the statistics in the last 30 days (players who said no are counted only here)
+        allowed30: days.filter((d) => d.day >= day(t - 30 * 86400000)).reduce((a, d) => a + (d.allowed ?? 0), 0),
+        declined30: days.filter((d) => d.day >= day(t - 30 * 86400000)).reduce((a, d) => a + (d.declined ?? 0), 0),
       },
       days,
       people: people.sort((a, b) => b.last - a.last),
@@ -282,7 +295,7 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
   }
   async function stop() { if (timer) clearInterval(timer); timer = null; await flush(); }
 
-  return { ready, beat, report, reportFile, forget, flush, summary, start, stop, get data() { return data; } };
+  return { ready, beat, choice, report, reportFile, forget, flush, summary, start, stop, get data() { return data; } };
 }
 
 // The store of an S3 client (s3.mjs): getBuffer and put.

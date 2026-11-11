@@ -143,6 +143,8 @@ function render() {
       ${card('Older copies', t.older, mb(t.olderBytes))}
       ${card('Data sets', t.sets, mb(t.setsBytes))}
       ${card('Error reports', t.reports7, 'in 7 days')}
+      ${card('Said yes to statistics', t.allowed30 + t.declined30 ? `${Math.round(100 * t.allowed30 / (t.allowed30 + t.declined30))}%` : '–',
+        `${t.allowed30} yes · ${t.declined30} no, in 30 days`)}
     </div>
     <section><h2>Days</h2>${chart(data.days)}</section>
     <section><h2>People</h2>

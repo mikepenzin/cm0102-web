@@ -6,7 +6,7 @@
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
 import { SAVE_DIR, listSaves, mountSavesPanel, savesSignature, setStorageKept, skipWorkFiles, storageWarning, useVault } from './saves.js';
-import { setStatsAllowed, startStats, statsAllowed } from './stats.js';
+import { needsChoice, setStatsAllowed, startStats, statsAllowed } from './stats.js';
 import { createVault } from './vault.js';
 import { engineUrl, hasJspi, pickEngine } from './engine.js';
 import { mountEditor } from './editor.js';
@@ -49,12 +49,26 @@ function folderState() {
 }
 
 // The choice in Help: send the statistics or not (stats.js keeps it in localStorage).
+// The statistics: the player's answer in Help, and the question (the consent card) while there is none (stats.js).
 function mountStatsChoice(info) {
-  const box = $('help-stats'), input = $('help-stats-on');
+  const box = $('help-stats'), input = $('help-stats-on'), card = $('consent');
   if (!box || !info.stats) return;
+  const mode = info.stats.mode;
   box.hidden = false;
-  input.checked = statsAllowed(info.stats.mode);
-  input.onchange = () => { setStatsAllowed(input.checked); log(`page: statistics ${input.checked ? 'on' : 'off'}`); };
+  input.checked = statsAllowed(mode);
+  const answer = (on) => {
+    setStatsAllowed(on, { tell: true });
+    input.checked = on;
+    if (card) card.hidden = true;
+    log(`page: statistics ${on ? 'allowed' : 'not allowed'}`);
+    if (on) stats?.allowed();
+  };
+  input.onchange = () => answer(input.checked);
+  if (card && needsChoice(mode)) {
+    card.hidden = false;
+    $('consent-yes').onclick = () => answer(true);
+    $('consent-no').onclick = () => answer(false);
+  }
 }
 
 // What the user folder keeps in memory, for the log: the page holds all of it while the game runs.

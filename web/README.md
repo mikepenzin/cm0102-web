@@ -177,6 +177,9 @@ saves and older copies that are no longer played (download them first to keep th
 The page sends a heartbeat each minute while the game runs (`stats.js`): the seconds played since the last one (the
 tab visible and an input in the last 5 minutes) and how many saves, older copies and data sets the browser keeps,
 with their size. A stop of the game sends an error report with the last lines of the engine log (at most 3 a visit).
+The page asks first (`CM_STATS` opt-in, the default): a card with Allow and No thanks, which look the same; before a
+yes nothing is sent and no id is stored, and No thanks sends only the answer with no id (`/api/stats/choice`), which the
+admin page counts as the share of players who said yes. Help, Statistics changes the answer; off deletes the id.
 A person is an account, or without one a browser with a random id (localStorage `cm0102-anon`); no name, email or IP
 address of an anonymous player is kept. When a browser signs in, its record points at the account and its play counts
 for it. The server (`stats.mjs`) keeps one object in the bucket (`stats/stats.json`, written every 2 minutes and when
@@ -190,8 +193,8 @@ with `Authorization: Bearer <CM_ADMIN_TOKEN>` (16 characters or more). Such an a
 its Account dialog (`/api/me` says `admin`), which opens `/admin` in a tab of its own, so the game goes on. The people
 table's Cloud Saves column shows each account's plan (free, paid until a day, given by an admin, or given by the
 server list) and gives Cloud Saves to an account, or takes a gift back (`POST /api/admin/cloud`, Cloud saves below). Help, Statistics turns them off for a browser
-(localStorage `cm0102-stats` = `off`). `CM_STATS=optin`: off until the player turns them on (for consent rules that
-want it); `CM_STATS=off`: none. Without a bucket they stay in memory only. The privacy page says what is collected.
+(localStorage `cm0102-stats` = `off`). `CM_STATS=optout`: on until the player turns them off, with no question (not for
+players in the EU, whose consent rules want the question); `CM_STATS=off`: none. Without a bucket they stay in memory only. The privacy page says what is collected.
 
 ## Cloud saves
 
