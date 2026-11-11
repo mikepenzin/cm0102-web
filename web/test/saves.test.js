@@ -1,7 +1,7 @@
 // Tests of the Saved games logic (web/saves.js): which files are saves, the check of an upload, its name.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkSave, isWorkFile, listSaves, saveName, savesSignature, skipWorkFiles } from '../saves.js';
+import { checkSave, fileView, isWorkFile, listSaves, saveName, savesSignature, skipWorkFiles } from '../saves.js';
 
 // A save container as tools/save/savfile.py reads it: version, count, the entries, then the parts.
 function save(parts = 1, extra = 16) {
@@ -93,4 +93,13 @@ test('the working files (*.tmp) stay out of IndexedDB, and earlier copies there 
   assert.equal(isWorkFile('/user/x.tmp'), true);
   assert.equal(isWorkFile('/user/x.sav'), false);
   assert.equal(skipWorkFiles({ syncfs() {} }), false);
+});
+
+test('fileView gives the file without a copy, or FS.readFile without a memory file system', () => {
+  const contents = new Uint8Array([1, 2, 3, 4, 0, 0, 0, 0]);
+  const FS = { lookupPath: () => ({ node: { contents, usedBytes: 4 } }), readFile: () => new Uint8Array([9]) };
+  const v = fileView(FS, '/user/a.sav');
+  assert.deepEqual([...v], [1, 2, 3, 4]);
+  assert.equal(v.buffer, contents.buffer);               // the same memory: no copy
+  assert.deepEqual([...fileView({ readFile: () => new Uint8Array([9]) }, '/x')], [9]);
 });

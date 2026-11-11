@@ -87,8 +87,20 @@ export function saveName(fileName, taken) {
   for (let i = 2; ; i++) if (!taken.has(`${stem} (${i}).sav`.toLowerCase())) return `${stem} (${i}).sav`;
 }
 
+// The bytes of a file of the engine's file system without a copy: a view of the array where the memory file system keeps
+// the file (it can be larger than the file). FS.readFile would first make a copy of the whole file, 75 MB for a big save,
+// at a time when the page's memory can be short. Use the view at once (new Blob copies it); a later write can change
+// it. A file system without such an array gives FS.readFile's copy.
+export function fileView(FS, path) {
+  try {
+    const node = FS.lookupPath(path).node, c = node?.contents;
+    if (c instanceof Uint8Array) return c.subarray(0, node.usedBytes ?? c.length);
+  } catch { /* below */ }
+  return FS.readFile(path);
+}
+
 function download(FS, f) {
-  const url = URL.createObjectURL(new Blob([FS.readFile(f.path)], { type: 'application/octet-stream' }));
+  const url = URL.createObjectURL(new Blob([fileView(FS, f.path)], { type: 'application/octet-stream' }));
   const a = document.createElement('a');
   a.href = url;
   a.download = f.name;

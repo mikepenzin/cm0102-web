@@ -11,7 +11,7 @@
 //
 // What was last the same is kept in the user folder itself (.cloud-sync.json): per save, the cloud's ETag and the size
 // and time of the local file at that moment.
-import { SAVE_DIR, checkSave, listSaves, saveName } from './saves.js';
+import { SAVE_DIR, checkSave, fileView, listSaves, saveName } from './saves.js';
 
 const STATE = `${SAVE_DIR}/.cloud-sync.json`;
 const CHANGE = { 'x-cm': '1' };                   // what the server wants on a change (cloud.mjs)
@@ -86,7 +86,7 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
 
   async function up(name, base, signal) {
     const before = stat(name);
-    const bytes = FS.readFile(`${SAVE_DIR}/${name}`);
+    const bytes = fileView(FS, `${SAVE_DIR}/${name}`);       // gzip copies it at once (new Blob)
     const r = await fetch(at(name), { method: 'PUT', body: await gzip(bytes), signal,
       headers: { ...CHANGE, 'x-base-etag': base, 'x-save-time': String(before.mtime) } });
     if (r.status === 409) return { conflict: (await r.json()).cloud };

@@ -5,6 +5,7 @@
 import { DATA_SET_FILES, DataSet } from './dataset.js';
 import { otherDeviceName, planSync } from './account.js';
 import { writeZip, zipEntries, zipRead } from './zip.js';
+import { fileView } from './saves.js';
 
 export const FIRST_SEASON = 2001, LAST_SEASON = 2025;          // the seasons the game has (seasons_db.h)
 const META = '.web.json';                                       // the page's note in a folder: { season }
@@ -58,15 +59,16 @@ export function listDataSets(FS, root) {
 }
 
 // Every file of the data set: the 20 and the extra Data files ({ name: bytes }).
-export function readAllOfDataSet(FS, root, name) {
-  const out = readDataSet(FS, root, name);
-  for (const f of filesOf(FS, dirOf(root, name)) ?? []) if (EXTRA.test(f)) out[f] = FS.readFile(`${dirOf(root, name)}/${f}`);
+// read(path): FS.readFile (a copy the caller may change), or fileView (saves.js) for a zip that only reads them.
+export function readAllOfDataSet(FS, root, name, read = (p) => FS.readFile(p)) {
+  const out = readDataSet(FS, root, name, read);
+  for (const f of filesOf(FS, dirOf(root, name)) ?? []) if (EXTRA.test(f)) out[f] = read(`${dirOf(root, name)}/${f}`);
   return out;
 }
 
-export function readDataSet(FS, root, name) {
+export function readDataSet(FS, root, name, read = (p) => FS.readFile(p)) {
   const have = new Map(filesOf(FS, dirOf(root, name)).map((f) => [f.toLowerCase(), f]));
-  return Object.fromEntries(DATA_SET_FILES.map((f) => [have.get(f), FS.readFile(`${dirOf(root, name)}/${have.get(f)}`)]));
+  return Object.fromEntries(DATA_SET_FILES.map((f) => [have.get(f), read(`${dirOf(root, name)}/${have.get(f)}`)]));
 }
 
 export function noteSeason(FS, root, name, season) {
@@ -92,7 +94,7 @@ export function deleteDataSet(FS, root, name) {
 
 // The zip to download: a folder of the data set's name with its 20 files, as the game's Databases folder takes it.
 export async function dataSetZip(FS, root, name) {
-  const files = readAllOfDataSet(FS, root, name);
+  const files = readAllOfDataSet(FS, root, name, (p) => fileView(FS, p));    // the zip only reads them: no copies
   return writeZip(Object.entries(files).map(([f, data]) => ({ name: `${name}/${f}`, data })));
 }
 
