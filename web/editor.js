@@ -5,7 +5,7 @@
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
 import { ATTRIBUTES, POSITIONS, SaveGame } from './savedit.js';
-import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet } from './dataset.js';
+import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { listSaves, readBytes } from './saves.js';
 import { noteSeason } from './datasets.js';
 
@@ -161,6 +161,18 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     }
   }
 
+  // The game's own data (the 3.9.68 files at gameData), read once: what the shift of a data set is measured against.
+  let baseData = null;
+  async function ownData() {
+    if (baseData) return baseData;
+    const have = new Map(FS.readdir(gameData).map((f) => [f.toLowerCase(), f]));
+    if (!DATA_SET_FILES.every((f) => have.has(f))) return null;
+    const files = {};
+    for (const f of DATA_SET_FILES) files[f] = await readBytes(FS, `${gameData}/${have.get(f)}`);
+    baseData = new DataSet(files);
+    return baseData;
+  }
+
   async function openSet(n) {
     kind = 'set'; name = n; edited = new Set(); current = null; clubs = null; nations = null;
     if (!dialog.open) dialog.showModal();
@@ -173,10 +185,17 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       const files = {};
       for (const f of DATA_SET_FILES) files[have.get(f)] = await readBytes(FS, `${DB_DIR}/${n}/${have.get(f)}`);
       model = new DataSet(files);
+      // The dates as the game uses them: an Update Team database keeps them years early (dataset.js, dateShift).
+      try {
+        const base = await ownData();
+        if (base) model.shift = dateShift(model, base);
+      } catch (e) { log(`page: the dates of ${n} were not measured: ${e.message}`); }
       clubs = model.clubs();
       nations = model.nations();
       fillClubs();
-      log(`page: data set ${n} opened in the editor: ${model.players().length} players`);
+      log(`page: data set ${n} opened in the editor: ${model.players().length} players${model.shift ? `, its dates ${model.shift} years early (the data of ${model.season}/${String(model.season + 1).slice(2)})` : ''}`);
+      if (model.shift) say(`Dates are shown as the game uses them for ${model.season}/${String(model.season + 1).slice(2)}. This data keeps them `
+        + `${model.shift} years earlier, as Update Team databases do; the editor turns them back when it saves.`);
       dirty();
       results();
       search.focus();
@@ -252,8 +271,9 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
 
   function newPlayer() {
     const zero = Object.fromEntries(DATA_ATTRIBUTES.map((a) => [a.name, 0]));
-    return { first: '', second: '', common: '', born: { year: 1983, month: 1, day: 1 }, nation: nations[0]?.id ?? 0, nation2: -2, club: -1,
-      contractEnd: { year: 2004, month: 6, day: 30 }, ca: 100, pa: 140, positions: [1, 1, 1, 1, 20, 1, 1, 1, 1, 1, 20, 1], attrs: zero };
+    const k = model?.shift ?? 0;            // an 18-year-old with three years of contract, in the data's season
+    return { first: '', second: '', common: '', born: { year: 1983 + k, month: 1, day: 1 }, nation: nations[0]?.id ?? 0, nation2: -2, club: -1,
+      contractEnd: { year: 2004 + k, month: 6, day: 30 }, ca: 100, pa: 140, positions: [1, 1, 1, 1, 20, 1, 1, 1, 1, 1, 20, 1], attrs: zero };
   }
 
   function clubByLabel(v) {

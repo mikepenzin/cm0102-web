@@ -45,6 +45,43 @@ export function nameBytes(text) {
   return t;
 }
 
+// A date moved by years; 29 February in a year that is not a leap year becomes 28 February, as the runtime does
+// (season_dates.c, shift_date), and no year goes below 1901.
+const leapYear = (y) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+function movedDate(d, years) {
+  const year = Math.max(1901, d.year + years);
+  return { ...d, year, day: d.month === 2 && d.day === 29 && !leapYear(year) ? 28 : d.day };
+}
+
+// The year shift of a data set against the game's own data (base, the 3.9.68 files), as the runtime measures it for a
+// Custom database (src/recomp_rt/win/season_dates.c, measure_folder): among the people that both hold, by first
+// name, second name and day of the year of birth (a key that the game's data has twice does not count), the most
+// common difference of the years of birth, from -20 to 60. It counts when 2000 people or more match and 80% of them
+// agree; else 0, as the runtime then moves nothing.
+export function dateShift(set, base) {
+  const keyOf = (ds, i) => {
+    const s = ds.row(6, i), year = u16(s, 0x12), f = i32(s, 0x04), n = i32(s, 0x08);
+    if (year <= 1900 || f < 0 || n < 0 || f >= ds.entry(13).count || n >= ds.entry(14).count) return null;
+    return [`${ds.name(13, f)}\u0000${ds.name(14, n)}\u0000${i16(s, 0x10)}`, year];
+  };
+  const years = new Map();
+  for (let i = 0; i < base.entry(6).count; i++) {
+    const k = keyOf(base, i);
+    if (k) years.set(k[0], years.has(k[0]) ? -1 : k[1]);
+  }
+  const hist = new Array(81).fill(0);
+  let total = 0;
+  for (let i = 0; i < set.entry(6).count; i++) {
+    const k = keyOf(set, i), y = k && years.get(k[0]);
+    if (!(y > 0)) continue;
+    const d = y - k[1];
+    if (d >= -20 && d <= 60) { hist[d + 20]++; total++; }
+  }
+  let best = 0;
+  for (let d = 1; d < 81; d++) if (hist[d] > hist[best]) best = d;
+  return total >= 2000 && hist[best] * 10 >= total * 8 ? best - 20 : 0;
+}
+
 export class DataSet {
   // files: { name (any case): Uint8Array } with the 20 database files.
   constructor(files) {
@@ -71,6 +108,7 @@ export class DataSet {
       if (!f || e.offset < 0 || e.count < 0 || e.offset + e.count * size > f.bytes.length)
         throw new DataSetError(`table ${e.table} (${e.count} rows of ${size} at ${e.offset}) runs past the end of ${e.file}`);
     }
+    this.shift = 0;                     // the years its dates of birth and old contract ends lie early (dateShift)
     this.added = new Map();             // table -> [Uint8Array row]
     this.changedFiles = new Set();
     this.nameIndex = {};
@@ -135,7 +173,7 @@ export class DataSet {
       const common = this.name(15, i32(s, 0x0c));
       const full = common || `${this.name(13, i32(s, 0x04))} ${this.name(14, i32(s, 0x08))}`.trim();
       out.push({ row: i, data: d, name: full || '(no name)', key: fold(full), club: this.clubName(i32(s, 0x39)),
-        nation: this.nationName(i32(s, 0x1a)), born: readDate(s, 0x10)?.year ?? u16(s, 0x18),
+        nation: this.nationName(i32(s, 0x1a)), born: this.bornOut(readDate(s, 0x10))?.year ?? u16(s, 0x18),
         ca: i16(p, 5), pa: i16(p, 7), pos: positionText(p.subarray(0x0f, 0x1b)) });
     }
     this.list = out;
@@ -155,9 +193,26 @@ export class DataSet {
     for (const a of ATTRIBUTES) attrs[a.name] = a.from === 'staff' ? s[a.off] : p[a.off];
     const end = readDate(s, 0x46);
     return { first: this.name(13, i32(s, 0x04)), second: this.name(14, i32(s, 0x08)), common: this.name(15, i32(s, 0x0c)),
-      born: readDate(s, 0x10), nation: i32(s, 0x1a), nation2: i32(s, 0x1e), club: i32(s, 0x39), contractEnd: end,
+      born: this.bornOut(readDate(s, 0x10)), nation: i32(s, 0x1a), nation2: i32(s, 0x1e), club: i32(s, 0x39), contractEnd: this.endOut(end),
       ca: i16(p, 5), pa: i16(p, 7), positions: [...p.subarray(0x0f, 0x1b)], attrs };
   }
+
+  // ---- Dates as the game uses them ----
+  // An Update Team database keeps the dates of a 2001 start: a player born in 2007 is in the data as born in 1982, and
+  // the game moves the dates when a game starts in the data's own season, 2001 + shift (season_dates.c,
+  // plan_for_folder for a Custom database: dates of birth by the shift; a contract end before that season or before
+  // 2009 by the shift, a later one is a real year already; none more than 6 years after the season). The editor
+  // shows and takes those dates; the files keep the data's own.
+  get season() { return 2001 + this.shift; }
+  bornOut(d) { return d && this.shift ? movedDate(d, this.shift) : d; }
+  bornIn(d) { return d && this.shift ? movedDate(d, -this.shift) : d; }
+  endOut(d) {
+    if (!d || !this.shift || (d.year >= this.season && d.year >= 2009)) return d;
+    const m = movedDate(d, this.shift);
+    return m.year > this.season + 6 ? { ...m, year: this.season + 6 } : m;
+  }
+  // A shown end in the data's season or later (and 2009 or later) is kept as a real year, which the game keeps too.
+  endIn(d) { return d && this.shift && !(d.year >= this.season && d.year >= 2009) ? movedDate(d, -this.shift) : d; }
 
   // ---- Writing ----
 
@@ -233,10 +288,10 @@ export class DataSet {
     set32(s, 0x04, this.nameId(13, f.first, nation));
     set32(s, 0x08, this.nameId(14, f.second, nation));
     set32(s, 0x0c, this.nameId(15, f.common, nation));
-    if (f.born) { writeDate(s, 0x10, f.born); set16(s, 0x18, f.born.year); }
+    if (f.born) { const b = this.bornIn(f.born); writeDate(s, 0x10, b); set16(s, 0x18, b.year); }
     set32(s, 0x1a, nation);
     set32(s, 0x1e, f.nation2 >= 0 ? clamp(f.nation2, 0, this.count(4) - 1) : -2);
-    if (f.contractEnd) writeDate(s, 0x46, f.contractEnd);
+    if (f.contractEnd) writeDate(s, 0x46, this.endIn(f.contractEnd));
     else writeRaw(s, 0x46, NO_DATE);
     set16(p, 5, clamp(f.ca, 0, 200));
     set16(p, 7, clamp(f.pa, -2, 200));

@@ -340,6 +340,10 @@ The **Editor** button in the bar opens the editors: a saved game (as above), or 
 - Search a player, then change his names, nationality, club, contract end, ability, positions, attributes and
   Determination. The numbers are those of the database: 0 to 20, where 0 means the game sets the attribute when a new
   game starts (most players of the data have 0s).
+- Dates as the game uses them: an Update Team database keeps them years early (a player born in 2007 is in the data
+  as born in 1982), and the game moves them when a game starts. The editor measures that shift as the runtime does and
+  shows the real dates (born 2007), with a note; it writes the data's own dates back
+  (`docs/research/2026-11-10-data-set-editor.md`, "Dates of an Update Team database").
 - **Add a player** to any club, or as a free player. A club takes 50 players at most.
 - **Save the data set** writes the changed files; the data set's other files stay.
 - The Editor's home lists the data sets, with Delete.

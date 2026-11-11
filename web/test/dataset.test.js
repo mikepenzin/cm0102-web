@@ -2,7 +2,7 @@
 // Run: cd web && npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ATTRIBUTES, DataSet, DataSetError, nameBytes } from '../dataset.js';
+import { ATTRIBUTES, DataSet, DataSetError, dateShift, nameBytes } from '../dataset.js';
 import { dataSetNameProblem } from '../editor.js';
 import { fakeDataSet } from './fakes.mjs';
 
@@ -71,6 +71,54 @@ test('refusals: a full club, a name the game cannot show, no name; nothing is le
   assert.throws(() => nameBytes('x'.repeat(51)), /longer than 50/);
   assert.ok(ds.add(fields({ first: '', second: '', common: 'Pelé' })) > 0, 'a common name alone will do; é is Latin-1');
   assert.throws(() => new DataSet({ ...files, 'staff.dat': new Uint8Array(10) }), DataSetError);
+});
+
+// A stand-in of the tables dateShift reads: staff rows with first and second name ids and a date of birth.
+function people(list) {
+  const rows = list.map(([f, n, day, year]) => { const b = new Uint8Array(0x20); const dv = new DataView(b.buffer);
+    dv.setInt32(4, f, true); dv.setInt32(8, n, true); dv.setInt16(0x10, day, true); dv.setUint16(0x12, year, true); return b; });
+  const names = Math.max(...list.map((x) => Math.max(x[0], x[1]))) + 1;
+  return { entry: (t) => ({ count: t === 6 ? rows.length : names }), row: (t, i) => rows[i], name: (t, id) => `${t}-${id}` };
+}
+
+test('the date shift of a data set, measured as the runtime does (season_dates.c, measure_folder)', () => {
+  const base = [];
+  for (let i = 0; i < 2600; i++) base.push([i, i + 1, 1 + (i % 365), 1960 + (i % 25)]);
+  const shifted = (years, n = 2600) => people(base.slice(0, n).map(([f, s, d, y], i) => [f, s, d, i % 10 === 0 ? y : y - years]));
+  assert.equal(dateShift(shifted(25), people(base)), 25, '90% agree: an Update Team database 25 years early');
+  assert.equal(dateShift(people(base), people(base)), 0, 'the game\'s own data: no shift');
+  assert.equal(dateShift(shifted(25, 1500), people(base)), 0, 'fewer than 2000 people match: nothing moves');
+  const mixed = people(base.map(([f, s, d, y], i) => [f, s, d, i % 3 === 0 ? y : y - 25]));
+  assert.equal(dateShift(mixed, people(base)), 0, 'fewer than 80% agree: nothing moves');
+  const twice = people([...base, ...base]);
+  assert.equal(dateShift(shifted(25), twice), 0, 'a name and day seen twice in the game\'s data does not count');
+});
+
+test('a shifted data set: dates as the game uses them, the file keeps its own', () => {
+  const files = fakeDataSet();
+  const set = new DataSet(files);
+  const before = Buffer.from(set.output()['staff.dat'] ?? files['staff.dat']);
+  set.shift = 25;
+  assert.equal(set.season, 2026);
+  const del = set.players().find((p) => p.name === 'Alessandro Del Piero');
+  assert.equal(del.born, 1999, 'born 1974 in the file: 1999 in a 2026 start');
+  const f = set.read(del.row);
+  assert.deepEqual(f.born, { year: 1999, month: 11, day: 9 });
+  set.write(del.row, f);                                       // unchanged in the editor: the same bytes
+  assert.ok(Buffer.from(set.output()['staff.dat']).equals(before));
+  // Contract ends: one of the 2001 start moves by the shift, at most 6 years past the season; a real year stays.
+  assert.deepEqual(set.endOut({ year: 2004, month: 6, day: 30 }), { year: 2029, month: 6, day: 30 });
+  assert.deepEqual(set.endOut({ year: 2005, month: 6, day: 30 }), { year: 2030, month: 6, day: 30 });
+  assert.deepEqual(set.endOut({ year: 2008, month: 6, day: 30 }), { year: 2032, month: 6, day: 30 }, 'capped at 2026 + 6');
+  assert.deepEqual(set.endOut({ year: 2029, month: 6, day: 30 }), { year: 2029, month: 6, day: 30 }, 'a real year');
+  assert.deepEqual(set.endIn({ year: 2029, month: 6, day: 30 }), { year: 2029, month: 6, day: 30 }, 'kept as a real year');
+  assert.deepEqual(set.endIn({ year: 2020, month: 6, day: 30 }), { year: 1995, month: 6, day: 30 });
+  assert.deepEqual(set.bornIn({ year: 2000, month: 2, day: 29 }), { year: 1975, month: 2, day: 28 }, '29 February in a year that has none');
+  set.write(del.row, { ...f, born: { year: 2001, month: 3, day: 4 } });
+  assert.deepEqual(set.read(del.row).born, { year: 2001, month: 3, day: 4 });
+  const raw = new DataView(set.row(6, del.row).buffer, set.row(6, del.row).byteOffset);
+  assert.equal(raw.getUint16(0x12, true), 1976, 'the file keeps the data\'s own year');
+  assert.equal(raw.getUint16(0x18, true), 1976);
 });
 
 test('data set names for the Databases folder', () => {

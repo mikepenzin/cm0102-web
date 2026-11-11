@@ -114,6 +114,26 @@ function that Setup Game's input (0x81bd70) calls for item 1 at 0x81c929; it is 
 0x764164. It reads the year of the game date at 0x81cf37 (key_nation_build_table 0x667150), after the wrap. Setup
 Game's menu build (database.c, the wrap of 0x5ed300) applies the options too, at each build.
 
+## Dates of an Update Team database
+
+An Update Team database keeps the dates of a game that starts in 2001: Lamine Yamal (born 13 July 2007) is in the
+October 2026 Data Update as born 13 July 1982, with a contract to 30 June 2006. The game moves them when a game starts
+(`src/recomp_rt/win/season_dates.c`, the rules at its top; the evidence in `2026-10-17-season-date-shifts.md`). For a
+Custom database, which a data set of the page is, `measure_folder` takes the most common difference of the years of
+birth of the people that the folder and the game's own 3.9.68 data share (first name, second name, day of the year of
+birth; a key that the game's data holds twice does not count), from -20 to 60. It counts with at least 2000 matches of
+which 80% agree; `plan_for_folder` then gives the data the season D = 2001 + d. A game in D moves the dates of birth by
+d, and a contract end by d unless it is in D or later and in 2009 or later (a real year already, `shift_contract`),
+with none more than 6 years after D.
+
+The editor shows those dates (`dataset.js`: `dateShift`, the same measure against `/game/Data`; `bornOut`, `endOut`)
+and writes the data's own back (`bornIn`, `endIn`: a contract end it is given in D or later and 2009 or later is kept
+as a real year, which the game then keeps too). A 29 February that falls in a year with none becomes 28 February, as
+in `shift_date`. Measured on the files: the October 2026 Data Update has d = 25 (5741 of 5962 shared people, the same
+count as the runtime's log line), so Yamal shows as born 13 July 2007 with a contract to 30 June 2031; the game's own
+data has d = 0 and shows as it is. A game in another season N moves everything by N - D more, so in a 2025/26 game
+with that data Yamal is born in 2006: the editor shows the data's own season, 2026/27, and says so.
+
 ## Not done
 
 Clubs, non-playing staff, the personality bytes other than Determination, and the three i16 of the player row are not
