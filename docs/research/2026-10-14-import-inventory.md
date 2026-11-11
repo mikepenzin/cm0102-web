@@ -331,6 +331,13 @@ Section 1 gives the plan for each import. This section groups them.
 - Disk space before a save: `LoadLibraryA("KERNEL32.DLL")` and `GetProcAddress("GetDiskFreeSpaceExA")` (0x7a1820, 136 callers, most in 0x828000..0x82f500). Return a large free space.
 - Real sound: the IDirectSoundBuffer methods with SDL audio.
 - Restart after a save: `WinExec`.
+  Replaced on 2026-11-11 (`src/recomp_rt/win/kernel32.c`, `RT_IMPORT(WinExec)`): restart_game (0x68dbc0) is the only
+  caller (0x68dbda); it runs 0x5cc7d0, closes the handle at [0xb67a28] and calls `WinExec(GetCommandLineA(), 10)`, then
+  `exit(0)` at 0x68dbe2. The replacement starts the program again with the arguments of this start (`host_restart`:
+  `execv` of the program on macOS and Linux, `CreateProcessW` with the command line on Windows) and, in the browser,
+  saves the user folder and loads the page again (`Module.rtRestart`, `web/loader.js`). Before, the import had no
+  replacement and Restart Game stopped every build ("import WinExec has no replacement (called from 0x68dbe0)", an
+  error report of the browser build on 2026-11-11).
 
 ### 3.3 Stubs with a fixed value
 

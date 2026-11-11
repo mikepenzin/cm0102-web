@@ -429,3 +429,20 @@ int host_pick_folder(const char *title, char *out, size_t room)
     while (n > 3 && out[n - 1] == '/') out[--n] = 0;
     return 1;
 }
+
+/* The game's Restart Game (kernel32.c, WinExec): a new process with this one's command line, then this one ends. */
+void host_restart(char *const argv[])
+{
+    (void)argv;
+    wchar_t *line = _wcsdup(GetCommandLineW());     /* CreateProcessW may write into its command line */
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof si;
+    if (!line || !CreateProcessW(NULL, line, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) { free(line); return; }
+    free(line);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    fflush(NULL);
+    exit(0);
+}

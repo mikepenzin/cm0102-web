@@ -71,6 +71,16 @@ uint8_t *rt_web_memory(void)
     return (uint8_t *)0;
 }
 
+/* The game's Restart Game (kernel32.c, WinExec): the page saves the user folder and loads again, which starts the game
+ * as a visit does. The engine waits here until the page goes. */
+void host_restart(char *const argv[])
+{
+    (void)argv;
+    if (!EM_ASM_INT({ return typeof Module.rtRestart === 'function' ? 1 : 0; })) return;
+    EM_ASM({ Module.rtRestart(); });
+    for (;;) emscripten_sleep(1000);
+}
+
 /* heap.c: the guest heap's top moved up. */
 void rt_web_heap_top(uint32_t top)
 {

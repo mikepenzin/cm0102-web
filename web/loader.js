@@ -405,6 +405,17 @@ function runEngine(files, info) {
       return {};
     } } : {}),
     arguments: ['--game', '/game'],
+    // Restart Game (the game's restart_game 0x68dbc0, WinExec in kernel32.c, host_restart in host/web.c): the user
+    // folder goes to the browser's storage, then the page loads again, which starts the game as a visit does.
+    rtRestart: () => {
+      running = false;                                   // no question before the page goes
+      log('page: Restart Game: the page loads again');
+      const FS = window.Module.FS;
+      const go = () => location.reload();
+      Promise.all([vault?.active ? vault.persist({ force: true }).catch(() => {}) : null,
+        new Promise((done) => FS.syncfs(false, () => done()))]).then(go, go);
+      setTimeout(go, 8000);                              // at the latest
+    },
     print: log,
     printErr: log,
     locateFile: (name) => engineUrl(info.chosen, name),

@@ -70,6 +70,11 @@ void host_closedir(HostDir *d);
 int host_realpath(const char *path, char *out, size_t room);
 /* The path of the running program. 0 on failure. */
 int host_program_path(char *out, size_t room);
+
+/* Starts this program again with the arguments of this start (argv as main got it), and ends this one: the game's
+ * Restart Game (restart_game 0x68dbc0 runs it through WinExec, kernel32.c). Returns only when it could not. In the
+ * browser the page saves the user folder and loads again (loader.js, Module.rtRestart). */
+void host_restart(char *const argv[]);
 /* The current folder. 0 on failure. */
 int host_current_dir(char *out, size_t room);
 /* The folder for every write of the game, not yet created: ~/Library/Application Support/cm0102 or

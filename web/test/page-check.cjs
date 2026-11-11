@@ -190,6 +190,20 @@ const PORT = 8097;
         && statsCalls.some((c) => c === '/api/stats/choice {"choice":"on"}') && statsCalls.some((c) => c.startsWith('/api/stats/beat')), statsCalls.join(' | ').slice(0, 300));
     await p.evaluate(() => document.getElementById('help-stats-on').click());
     check('and off again: the id is deleted', (await p.evaluate(() => [localStorage.getItem('cm0102-anon'), localStorage.getItem('cm0102-stats')])).join() === ',off');
+    // Restart Game (the game's restart_game 0x68dbc0 through WinExec, host_restart in host/web.c): the page saves the
+    // user folder to the browser's storage, then loads again. The stand-in's storage keeps nothing, so the save before
+    // the reload is marked in sessionStorage, which a reload keeps.
+    await p.evaluate(() => {
+      sessionStorage.removeItem('saved-before-restart');
+      const FS = window.Module.FS, syncfs = FS.syncfs.bind(FS);
+      FS.syncfs = (populate, cb) => syncfs(populate, (e) => { if (!populate) sessionStorage.setItem('saved-before-restart', '1'); cb(e); });
+    });
+    const reloaded = p.waitForNavigation({ timeout: 20000 }).then(() => true, () => false);
+    await p.evaluate(() => window.Module.rtRestart());
+    check('Restart Game: the page loads again', await reloaded);
+    await p.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+    check('the user folder went to the browser\'s storage before the reload, and the game starts again by itself',
+      (await p.evaluate(() => sessionStorage.getItem('saved-before-restart'))) === '1');
     const again = await p.evaluate(() => window.__fake);
     const second = (await p.textContent('#log')).match(/page: \d+ files in .*/)?.[0] ?? '';
     check('the second visit gives the engine every byte', again.bytes === total + 4 * 2, second);

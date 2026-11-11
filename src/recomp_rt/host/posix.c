@@ -118,6 +118,16 @@ int host_program_path(char *out, size_t room)
 
 int host_current_dir(char *out, size_t room) { return getcwd(out, room) != NULL; }
 
+#ifndef __EMSCRIPTEN__
+void host_restart(char *const argv[])
+{
+    char self[PATH_MAX];
+    if (!host_program_path(self, sizeof self)) return;
+    fflush(NULL);
+    execv(self, argv);                     /* the same process id, a new program; returns only on failure */
+}
+#endif
+
 int host_user_dir(char *out, size_t room)
 {
     const char *home = getenv("HOME");
