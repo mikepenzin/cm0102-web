@@ -54,6 +54,52 @@ export async function writeZip(files, date = new Date()) {
   return out;
 }
 
+// The CRC-32 of a Blob, read a chunk at a time (a file of the vault: on disk, never all in memory). onBytes(n) after each.
+export async function crc32Blob(blob, onBytes = () => {}) {
+  let c = 0xffffffff;
+  const reader = blob.stream().getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    for (let i = 0; i < value.length; i++) c = TABLE[(c ^ value[i]) & 0xff] ^ (c >>> 8);
+    onBytes(value.length);
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+// A zip of the files [{ name, blob }] made of the Blobs themselves, each stored as it is: the browser writes it from the
+// Blobs (from disk for the vault's), so a backup of every save needs no memory of its size. Up to 4 GB (no zip64).
+export async function zipOfBlobs(files, { date = new Date(), onBytes = () => {} } = {}) {
+  const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1);
+  const dosDate = ((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+  const parts = [], central = [];
+  let at = 0;
+  for (const f of files) {
+    const name = utf8.encode(f.name), size = f.blob.size;
+    if (at + 30 + name.length + size > 0xffffffff || files.length > 0xffff) throw new Error('more than 4 GB or 65,535 files: download fewer at once');
+    const crc = await crc32Blob(f.blob, onBytes);
+    const local = new Uint8Array(30 + name.length), lv = new DataView(local.buffer);
+    lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0x0800, true); lv.setUint16(8, 0, true);
+    lv.setUint16(10, dosTime, true); lv.setUint16(12, dosDate, true); lv.setUint32(14, crc, true);
+    lv.setUint32(18, size, true); lv.setUint32(22, size, true); lv.setUint16(26, name.length, true);
+    local.set(name, 30);
+    const c = new Uint8Array(46 + name.length), cv = new DataView(c.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(8, 0x0800, true);
+    cv.setUint16(10, 0, true); cv.setUint16(12, dosTime, true); cv.setUint16(14, dosDate, true); cv.setUint32(16, crc, true);
+    cv.setUint32(20, size, true); cv.setUint32(24, size, true); cv.setUint16(28, name.length, true);
+    cv.setUint32(42, at, true);
+    c.set(name, 46);
+    parts.push(local, f.blob);
+    central.push(c);
+    at += local.length + size;
+  }
+  const csize = central.reduce((a, c) => a + c.length, 0);
+  const end = new Uint8Array(22), ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, files.length, true); ev.setUint16(10, files.length, true);
+  ev.setUint32(12, csize, true); ev.setUint32(16, at, true);
+  return new Blob([...parts, ...central, end], { type: 'application/zip' });
+}
+
 // The entries of a zip: [{ name, size, method, compressed, offset }] from its central directory. Throws on a file that
 // is not a zip of this kind.
 export function zipEntries(zip) {

@@ -6,6 +6,8 @@
 // The game writes *.sav files in the user folder (src/recomp_rt/win/files.c; the option save_folder can name another
 // folder, which the browser build does not use). A save in progress is temp_save_file.sav, renamed when it is done;
 // older copies are in backups/ (option save_backups).
+import { zipOfBlobs } from './zip.js';
+
 export const SAVE_DIR = '/user';
 const TEMP = 'temp_save_file.sav';
 const HEADER = 0x416ec, ENTRY = 0x10c, MAX_ENTRIES = 1000;     // the save container (tools/save/savfile.py)
@@ -118,16 +120,38 @@ export function readBlobNow(FS, path) {
   return vaultRef && node?.vault === 'out' ? vaultRef.blob(path) : new Blob([fileView(FS, path)]);
 }
 
-async function download(FS, f) {
-  const url = URL.createObjectURL(new Blob([await readBlob(FS, f.path)], { type: 'application/octet-stream' }));
+// Every file to keep, as the save folder holds them: the saves, backups/ (older copies) and Databases/ (data sets).
+function allFiles(FS) {
+  const out = [];
+  const walk = (dir, rel) => {
+    let names = [];
+    try { names = FS.readdir(dir).filter((n) => n !== '.' && n !== '..'); } catch { return; }
+    for (const n of names) {
+      const p = `${dir}/${n}`, r = rel ? `${rel}/${n}` : n;
+      let st;
+      try { st = FS.stat(p); } catch { continue; }
+      if (FS.isDir(st.mode)) walk(p, r);
+      else out.push({ path: p, name: r, size: st.size });
+    }
+  };
+  for (const f of listSaves(FS).saves) out.push({ path: f.path, name: f.name, size: f.size });
+  walk(`${SAVE_DIR}/backups`, 'backups');
+  walk(`${SAVE_DIR}/Databases`, 'Databases');
+  return out;
+}
+
+const saveLink = (blob, name) => {
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = f.name;
+  a.download = name;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-}
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
+};
+
+async function download(FS, f) { saveLink(new Blob([await readBlob(FS, f.path)], { type: 'application/octet-stream' }), f.name); }
 
 const CLOUD = { cloud: 'In the cloud', up: 'Saving…', here: 'Only here', waiting: 'Not yet' };
 
@@ -179,6 +203,29 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
   document.getElementById('saves-open').onclick = () => { say(''); render(); dialog.showModal(); };
   document.getElementById('saves-close').onclick = () => dialog.close();
   document.getElementById('saves-upload').onclick = () => input.click();
+  // One zip of everything (zipOfBlobs: the files of the vault go from disk, not through memory).
+  document.getElementById('saves-all').onclick = async (e) => {
+    const b = e.currentTarget;
+    const files = allFiles(FS);
+    if (!files.length) { say('There is nothing to download yet.'); return; }
+    const total = files.reduce((a, f) => a + f.size, 0);
+    b.disabled = true;
+    let done = 0, shown = -1;
+    try {
+      const entries = [];
+      for (const f of files) entries.push({ name: f.name, blob: await readBlob(FS, f.path) });
+      const zip = await zipOfBlobs(entries, { onBytes: (n) => {
+        done += n;
+        const pct = Math.floor((done / total) * 100);
+        if (pct !== shown) { shown = pct; say(`Packing ${files.length} files (${mb(total)}): ${pct}%`); }
+      } });
+      const day = new Date().toISOString().slice(0, 10);
+      saveLink(zip, `CM 01-02 saves ${day}.zip`);
+      say(`Downloaded ${files.length} files (${mb(total)}) as one zip: the saves, the older copies (backups) and the data sets (Databases), as the save folder holds them.`);
+      log(`page: downloaded all: ${files.length} files, ${mb(total)}`);
+    } catch (err) { say(`The zip was not made: ${err.message}`, true); }
+    b.disabled = false;
+  };
   list.addEventListener('click', async (e) => {
     const ed = e.target.closest('button[data-edit]');
     if (ed && edit) { dialog.close(); edit(shown.saves[Number(ed.dataset.edit)].name); return; }

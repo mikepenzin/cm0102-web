@@ -594,6 +594,8 @@ async function start() {
     overlay(`<h1>CM 01/02, in your browser</h1>
       <p>${toGet > 0 ? `${mb(toGet)} of game files download into this browser once${have ? ` (${mb(have)} are here already)` : ''}.`
         : 'The game files are in this browser already.'} The game then runs in this tab, on your device. Nothing is installed.</p>
+      <p class="small">Your saved games stay in this browser too. Saved games downloads them, one by one or all at once, so you
+      keep copies: a browser may delete a site's data by itself.</p>
       ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
       ${TOUCH ? '<p class="small">On a touch screen: tap to click, long press for the right button, two fingers to scroll. Help has the list.</p>' : ''}
       <button class="primary" id="go">Start the game</button>
