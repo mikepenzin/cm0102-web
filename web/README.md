@@ -143,6 +143,21 @@ whole game world. A new or changed save goes to IndexedDB about 2 seconds after 
 the same address every time: `127.0.0.1:8080` and `localhost:8080` are two sites to the browser, each with its own
 saves.
 
+**Where the saves live (the vault, `vault.js`).** IDBFS keeps every file of the user folder in memory and reads all of
+it at the start, so a player with many saves ran the tab out of memory. With the vault on, saves, older copies and the
+files of the data sets live in an IndexedDB store of their own (`cm0102-vault`), as Blobs that the browser keeps on
+disk. The user folder holds a placeholder for each: its name, size and time, no contents, so the game lists it as
+before. When the game opens one, the open waits (under JSPI the page makes the engine's `__syscall_openat` a
+Suspending import, through `Module.instantiateWasm`) while the page reads the Blob in; when the game closes it
+unchanged, the contents go again. A file the game or the page writes goes into the vault once it is closed and has
+not changed for 1.5 seconds, and becomes a placeholder; a renamed file keeps its record (an older copy of the save
+renaming keeps the old save's bytes), a deleted one loses it. At the first start with the vault the files move from
+IDBFS's store, one at a time. The page reads placeholders with `readBytes`, `readView` and `readBlob` (`saves.js`);
+Download and the cloud upload hand the Blob on without memory. The data set choice goes through ccall's async form:
+the browser takes a Suspending import only inside `WebAssembly.promising`. An Asyncify build has no vault; files that
+an earlier visit put in it come back into the user folder. Until it is checked in more browsers it is on with
+`?vault=1` or localStorage `cm0102-vault` = `on`.
+
 The browser may delete the saves by itself, without asking: when the disk runs low (unless it agreed to keep the
 site's storage, `navigator.storage.persist`), when browsing data is cleared, when a private window closes, and in
 Safari after 7 days without a visit unless the page is on the home screen. Saved games and Help say so
