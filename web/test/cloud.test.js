@@ -257,6 +257,22 @@ test('a plan of "cloud" in the account record gives cloud saves', async () => {
   assert.equal(await cloudApi.give('9999999', true, 'boss@example.com'), null, 'an account that never signed in');
 });
 
+test('the store fails a save: the server sends it again twice, then answers 502', async () => {
+  google.user = { sub: '2000088', email: 'listed@example.com', email_verified: true, name: 'Listed' };
+  const b = browser();
+  await b.signIn();
+  const gz = gzipSync(fakeSaveBytes(8));
+  Object.assign(s3fake.faults, { failPuts: 2, failMatch: /^saves\/2000088\// });
+  let r = await b.send('PUT', '/api/saves/retry.sav', gz);
+  assert.equal(r.status, 200, 'two failures: the third try is taken');
+  assert.equal(s3fake.faults.failPuts, 0);
+  s3fake.faults.failPuts = 3;
+  r = await b.send('PUT', '/api/saves/retry.sav', gz);
+  assert.equal(r.status, 502, 'three: the page is told, and tries again later');
+  assert.match((await r.json()).error, /cloud store did not take/);
+  s3fake.faults.failPuts = 0;
+});
+
 test('the S3 store refuses a request with another secret (the stand-in checks signatures)', async () => {
   const wrong = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'not-it', pathStyle: true });
   await assert.rejects(wrong.put('x', Buffer.from('y')), /SignatureDoesNotMatch/);

@@ -160,6 +160,7 @@ add up across them (each write adds what its machine counted). One is enough: `f
 | `failed to push registry.fly.io/…` with `_api.internal:5000 … connection refused` | Fly's internal registry did not answer; the image itself built. Try, one at a time: `fly deploy --wg=false` (the push goes over HTTPS instead of Fly's private network), `fly deploy --depot=false` (the other builder), `fly deploy --local-only` (builds on your Mac, needs Docker Desktop). If none works, it is on Fly's side: status.flyio.net and community.fly.io |
 | The site does not answer | `fly logs`: a good start prints `game files: 764 (461 MB)` and `open http://0.0.0.0:8080` |
 | The machine runs out of memory | `fly scale memory 1024`, or a lower `CM_UPLOAD_BUDGET_MB` (Size of the machine) |
+| The engine log shows `cloud saves: … up: HTTP 502` | The server, or the store behind it, failed that upload; the page tries it again after 3 and 10 s, then each minute. `fly logs` says which: `cloud: PUT /api/saves/…: <the store's error>`, or `Out of memory` and a restart (the machine is too small: `fly scale memory 512`) |
 | `accounts and cloud saves: off, missing …` | Set the named secrets (Accounts and cloud saves) |
 | Google says `redirect_uri_mismatch` | The client's Authorized redirect URI must be exactly `https://<your-app>.fly.dev/auth/google/callback` |
 | Only some Google accounts can sign in | The Google app is still "Testing": Audience, Publish app |

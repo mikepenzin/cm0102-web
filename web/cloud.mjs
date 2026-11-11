@@ -57,12 +57,22 @@ function send(res, status, body, headers = {}) {
   res.end(text);
 }
 
+// The body in one Buffer. With a Content-Length (the page's fetch sends one) the Buffer is made at that size and filled,
+// so an upload is held once, not twice (its parts and their copy).
 function readBody(req, limit) {
   return new Promise((resolveBody, reject) => {
+    const length = Number(req.headers['content-length']);
+    const whole = Number.isInteger(length) && length >= 0 && length <= limit ? Buffer.allocUnsafe(length) : null;
     const chunks = [];
     let n = 0, over = false;
-    req.on('data', (c) => { n += c.length; if (n > limit) over = true; else chunks.push(c); });
-    req.on('end', () => (over ? reject(Object.assign(new Error('too large'), { status: 413 })) : resolveBody(Buffer.concat(chunks))));
+    req.on('data', (c) => {
+      if (over) return;
+      if (n + c.length > (whole ? whole.length : limit)) { over = true; chunks.length = 0; return; }
+      if (whole) c.copy(whole, n); else chunks.push(c);
+      n += c.length;
+    });
+    req.on('end', () => (over ? reject(Object.assign(new Error('too large'), { status: 413 }))
+      : resolveBody(whole ? whole.subarray(0, n) : Buffer.concat(chunks))));
     req.on('error', reject);
   });
 }

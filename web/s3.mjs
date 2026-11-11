@@ -43,6 +43,8 @@ export class S3Error extends Error {
   constructor(status, code, message) { super(`S3 ${status} ${code}: ${message}`); this.status = status; this.code = code; }
 }
 
+const RETRIES = [400, 1500];      // the pauses before a request that the store failed is sent again
+
 export function createS3({ endpoint, bucket, accessKeyId, secretAccessKey, region = 'auto', pathStyle = false, timeoutMs = 30000 }) {
   const base = new URL(endpoint);
   const host = pathStyle ? base.host : `${bucket}.${base.host}`;
@@ -50,9 +52,25 @@ export function createS3({ endpoint, bucket, accessKeyId, secretAccessKey, regio
   const prefix = pathStyle ? `/${bucket}` : '';
   const lib = base.protocol === 'http:' ? http : https;
 
-  // One request. body: a Buffer or undefined. Resolves to { status, headers, body: Buffer } or, with stream, the response
-  // itself (to pipe on).
-  function request(method, key, { query = {}, headers = {}, body, stream = false } = {}) {
+  // One request, and up to two more when the store answers 500 and up or the connection fails (each request of this
+  // client can be sent again: a PUT writes the same object). body: a Buffer or undefined. Resolves to
+  // { status, headers, body: Buffer } or, with stream, the response itself (to pipe on).
+  async function request(method, key, opts = {}) {
+    for (let i = 0; ; i++) {
+      let r;
+      try { r = await requestOnce(method, key, opts); } catch (err) {
+        if (i >= RETRIES.length) throw err;
+        await new Promise((ok) => setTimeout(ok, RETRIES[i]));
+        continue;
+      }
+      const status = r.status ?? r.statusCode;
+      if (status < 500 || i >= RETRIES.length) return r;
+      if (r.resume) r.resume();                      // a stream answer: drop it before the next try
+      await new Promise((ok) => setTimeout(ok, RETRIES[i]));
+    }
+  }
+
+  function requestOnce(method, key, { query = {}, headers = {}, body, stream = false } = {}) {
     const path = `${prefix}/${key}`;
     const payloadHash = body ? sha256(body) : EMPTY_SHA256;
     const all = { host, 'x-amz-date': amzNow(), 'x-amz-content-sha256': payloadHash, ...headers };

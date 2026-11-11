@@ -146,23 +146,28 @@ async function startCloud(FS, { replace, onStep }) {
   account.setCloud(cloud);
   setSync = createSetSync({ FS, root: SAVE_DIR, sync, log, toast, account: me.user.email });   // runs once the game is up
   const jobs = await cloud.run({ replace, onStep, signal: onStep?.signal });
-  cloudBehind = jobs === null;
-  const came = jobs?.filter((j) => j.do === 'down').length ?? 0;
+  cloudBehind = jobs === null || jobs.failed.length > 0;
+  const came = jobs?.filter((j) => j.do === 'down' && !jobs.failed.includes(j.name)).length ?? 0;
   if (jobs === null && !onStep?.signal?.aborted) toast('The cloud was not reached: the saves here are used, and go up later', { kind: 'bad', ms: 7000 });
+  else if (jobs?.failed.length) toast(notYet(jobs.failed), { kind: 'bad', ms: 7000 });
   else if (came) toast(`${came} saved game${came > 1 ? 's' : ''} came from the cloud`);
   return jobs;
 }
 
-// After a save: up to the cloud. A sync that failed (no connection) is tried again each minute.
-function cloudAfterSave() {
+// The saves that the cloud did not take this time (the server or its store failed them): they go at the next sync.
+const notYet = (names) => `${names.length === 1 ? `${names[0]} is` : `${names.length} saves are`} not in the cloud yet: the cloud did not take ${names.length === 1 ? 'it' : 'them'} this time. ${names.length === 1 ? 'It goes' : 'They go'} up in a minute.`;
+
+// After a save: up to the cloud. A sync that failed (no connection) or left a save behind is tried again each minute.
+function cloudAfterSave(quiet = false) {
   if (!cloud || cloud.stopped) return;
   cloud.run({ replace: false }).then((jobs) => {
-    cloudBehind = jobs === null;
-    if (jobs === null) toast('Not in the cloud yet: no connection. It goes up later.', { kind: 'bad', ms: 6000 });
+    cloudBehind = jobs === null || jobs.failed.length > 0;
+    if (jobs === null) { if (!quiet) toast('Not in the cloud yet: no connection. It goes up later.', { kind: 'bad', ms: 6000 }); }
+    else if (jobs.failed.length) { if (!quiet) toast(notYet(jobs.failed), { kind: 'bad', ms: 6000 }); }
     else if (jobs.some((j) => j.do !== 'down')) toast('Saved to the cloud');
   });
 }
-setInterval(() => { if (cloudBehind && running) cloudAfterSave(); }, 60000);
+setInterval(() => { if (cloudBehind && running) cloudAfterSave(true); }, 60000);   // the try again says nothing till it works
 account.onAccountChange((me) => {
   const FS = window.Module?.FS;
   if (!running || !FS) return;                   // before the game, the start does it

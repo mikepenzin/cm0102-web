@@ -31,6 +31,7 @@ export async function fetchMe(timeoutMs = 8000) {
   }
 }
 
+const PAUSES = [3000, 10000];   // the pauses before a request of the cloud saves is tried again
 const gzip = (bytes) => new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
 const gunzip = async (stream) => new Uint8Array(await new Response(stream.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
 
@@ -82,14 +83,36 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
     const st = FS.stat(`${SAVE_DIR}/${name}`);
     return { size: st.size, mtime: +new Date(st.mtime) };
   };
-  const fail = (what, r) => new Error(`${what}: HTTP ${r.status}`);
+  // An answer of 500 and up (the server, or the cloud store behind it, did not take it) can be tried again.
+  const fail = (what, r) => Object.assign(new Error(`${what}: HTTP ${r.status}`), { again: r.status >= 500 });
+
+  // A request that the server or the store did not take, or that lost its connection, is tried twice more after a
+  // pause; then the job waits for the next sync (each minute: loader.js).
+  async function retrying(what, request, signal, pauses = PAUSES) {
+    for (let i = 0; ; i++) {
+      try {
+        const r = await request();
+        if (r.status >= 500 && i < pauses.length) throw fail(what, r);
+        return r;
+      } catch (err) {
+        const again = err.again || err instanceof TypeError;    // TypeError: fetch lost the connection
+        if (!again || i >= pauses.length || signal?.aborted) throw err;
+        log(`page: cloud saves: ${err.message}; again in ${pauses[i] / 1000} s`);
+        await new Promise((ok, no) => {
+          const t = setTimeout(ok, pauses[i]);
+          signal?.addEventListener('abort', () => { clearTimeout(t); no(signal.reason); }, { once: true });
+        });
+      }
+    }
+  }
 
   async function up(name, base, signal) {
     const before = stat(name);
     let bytes = readBlobNow(FS, `${SAVE_DIR}/${name}`);       // with the stat above: the same version of the file
     if (bytes instanceof Promise) bytes = await bytes;          // a placeholder: from the browser's storage
-    const r = await fetch(at(name), { method: 'PUT', body: await gzip(bytes), signal,
-      headers: { ...CHANGE, 'x-base-etag': base, 'x-save-time': String(before.mtime) } });
+    const body = await gzip(bytes);                             // a Blob: the same body for each try
+    const r = await retrying(`${name} up`, () => fetch(at(name), { method: 'PUT', body, signal,
+      headers: { ...CHANGE, 'x-base-etag': base, 'x-save-time': String(before.mtime) } }), signal);
     if (r.status === 409) return { conflict: (await r.json()).cloud };
     if (r.status === 507) {
       if (!full) toast((await r.json()).error, { kind: 'bad', ms: 8000 });
@@ -106,7 +129,7 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
 
   // The cloud's save into the user folder as file (its own name, or another one).
   async function down(name, file, signal) {
-    const r = await fetch(at(name), { cache: 'no-store', signal });
+    const r = await retrying(`${name} down`, () => fetch(at(name), { cache: 'no-store', signal }), signal);
     if (!r.ok) throw fail(`${name} down`, r);
     const etag = r.headers.get('etag'), saved = Number(r.headers.get('x-saved')) || Date.now();
     const bytes = await gunzip(r.body);
@@ -150,6 +173,7 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
     Object.assign(state.saves, plan.settle);
     for (const n of plan.forget) delete state.saves[n];
     let i = 0;
+    const failed = [];
     for (const job of plan.jobs) {
       i++;
       if (full && job.do === 'up' && job.base === 'none') continue;
@@ -166,6 +190,12 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
         } else {
           await keepBoth(job.name, job.cloud, cloud.keys(), signal);
         }
+      } catch (err) {
+        // One save that did not go (the server or the store failed it, after the tries): the others still go, and it
+        // waits for the next sync. A lost connection or a stop ends the sync.
+        if (err.name === 'AbortError' || err.name === 'TimeoutError' || err instanceof TypeError || !err.again) throw err;
+        log(`page: cloud saves: ${err.message}; it goes at the next sync`);
+        failed.push(job.name);
       } finally {
         busy.delete(job.name);
         keep();
@@ -177,12 +207,13 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
     last = Date.now();
     if (plan.jobs.some((j) => j.do !== 'down')) count = null;     // the count changed; the next list tells it
     changed();
-    return plan.jobs;
+    return Object.assign([...plan.jobs], { failed });            // failed: the names that go at the next sync
   }
 
-  // Runs one sync after the ones before it. Resolves to the jobs done, or null when it failed (no connection).
+  // Runs one sync after the ones before it. Resolves to the jobs (with failed: the saves that wait for the next sync),
+  // or null when it failed as a whole (no connection, or the cloud's list not read).
   function run(opts = {}) {
-    const job = chain.then(() => once(opts)).catch((err) => {
+    const job = chain.then(() => once(opts)).then((jobs) => jobs ?? Object.assign([], { failed: [] })).catch((err) => {
       if (err.name === 'AbortError' || err.name === 'TimeoutError') return null;
       log(`page: cloud saves: ${err.message ?? err}`);
       return null;

@@ -14,6 +14,8 @@ function body(req) {
 // An S3 store, path style (http://127.0.0.1:<port>/<bucket>/<key>). objects: key -> { body, etag, type, meta, modified }.
 export async function fakeS3({ bucket = 'cm-test', accessKeyId = 'tid_test', secretAccessKey = 'tsec_test', region = 'auto', pageSize = 1000 } = {}) {
   const objects = new Map(), requests = [];
+  // failPuts: the next n PUTs (of keys that match failMatch) answer 500 InternalError, as a store that has a bad moment.
+  const faults = { failPuts: 0, failMatch: /./ };
   const server = http.createServer(async (req, res) => {
     const data = await body(req);
     const url = new URL(req.url, 'http://x');
@@ -43,6 +45,7 @@ export async function fakeS3({ bucket = 'cm-test', accessKeyId = 'tid_test', sec
       }).join('')}${more ? `<NextContinuationToken>${Buffer.from(String(start + pageSize)).toString('base64')}</NextContinuationToken>` : ''}</ListBucketResult>`);
     }
     const o = objects.get(key);
+    if (req.method === 'PUT' && faults.failPuts > 0 && faults.failMatch.test(key)) { faults.failPuts--; return error(500, 'InternalError'); }
     if (req.method === 'PUT') {
       const meta = Object.fromEntries(Object.entries(req.headers).filter(([k]) => k.startsWith('x-amz-meta-')));
       const etag = `"${createHash('md5').update(data).digest('hex')}"`;
@@ -56,7 +59,7 @@ export async function fakeS3({ bucket = 'cm-test', accessKeyId = 'tid_test', sec
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const endpoint = `http://127.0.0.1:${server.address().port}`;
-  return { server, objects, requests, endpoint, bucket, close: () => server.close(),
+  return { server, objects, requests, endpoint, bucket, faults, close: () => server.close(),
     env: { AWS_ENDPOINT_URL_S3: endpoint, AWS_ACCESS_KEY_ID: accessKeyId, AWS_SECRET_ACCESS_KEY: secretAccessKey, AWS_REGION: region,
       BUCKET_NAME: bucket, CM_S3_PATH_STYLE: '1' } };
 }

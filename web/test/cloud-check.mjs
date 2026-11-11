@@ -132,6 +132,26 @@ try {
   check('a message names the kept copy', /That version is kept as Harbour City 2001-07-14 \(other device\)\.sav/.test(await toasts(a)), await toasts(a));
   const removedAgain = s3fake.objects.has(keyOf('From iPad.sav'));
   check('the removed save did not go up again', !removedAgain);
+
+  // The store has a bad moment: it fails a save 4 times. The server tries it 3 times and answers 502; the page tries
+  // again after 3 s, and it goes up.
+  const writeSave = (n, b) => a.evaluate(([name, bytes]) => window.Module.FS.writeFile(`/user/${name}`, new Uint8Array(bytes)), [n, Array.from(b)]);
+  const flaky = 'Flaky 2001-08-01.sav', flakyBytes = fakeSaveBytes(44);
+  Object.assign(s3fake.faults, { failPuts: 4, failMatch: new RegExp(Buffer.from(flaky).toString('base64url')) });
+  await writeSave(flaky, flakyBytes);
+  await waitFor('the save the store failed', () => cloudBytes(flaky) !== null, 40000);
+  check('a save the store failed 4 times still goes up: the server tries 3 times, the page again after a pause',
+    cloudBytes(flaky)?.equals(flakyBytes) && /Flaky 2001-08-01\.sav up: HTTP 502; again in 3 s/.test(await a.textContent('#log')));
+  // A save the store fails every time: the save beside it still goes up, and a message says that one waits.
+  const stuck = 'Stuck 2001-08-02.sav', fine = 'Fine 2001-08-02.sav';
+  Object.assign(s3fake.faults, { failPuts: 1000, failMatch: new RegExp(Buffer.from(stuck).toString('base64url')) });
+  await writeSave(stuck, fakeSaveBytes(45));
+  await writeSave(fine, fakeSaveBytes(46));
+  await waitFor('the message about the save that waits', async () => /not in the cloud yet: the cloud did not take it this time/.test(await toasts(a)), 60000);
+  check('one save the cloud does not take: the other goes up, and the message names the one that waits',
+    cloudBytes(fine) !== null && cloudBytes(stuck) === null && /Stuck 2001-08-02\.sav is not in the cloud yet/.test(await toasts(a)), await toasts(a));
+  check('and no "not reached" message: the cloud was reached', !/was not reached|no connection/.test(await toasts(a)));
+  s3fake.faults.failPuts = 0;
   // A data set uploaded here goes up to the cloud too.
   const setZipBytes = await writeZip(Object.entries(fakeDataSet()).map(([f, data]) => ({ name: `My squads/${f}`, data })));
   await a.click('#saves-open');
