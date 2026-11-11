@@ -108,6 +108,20 @@ For real payments: the live token, price, secret and key, and `fly secrets unset
 `fly secrets set` restarts the app with them. `fly logs` then shows `accounts and cloud saves: on`; if a setting is
 missing it names it. The secrets stay on the app: a later `fly deploy` keeps them.
 
+## Statistics and the admin page
+
+The statistics are on by default and kept in the bucket (`web/README.md`, "Statistics and the admin panel"). The admin
+page is at `https://<your-app>.fly.dev/admin`; name who may open it:
+
+```bash
+fly secrets set CM_ADMIN_EMAILS=<your email> CM_ADMIN_TOKEN="$(openssl rand -hex 24)"
+```
+
+Sign in with that Google account on the game's page, then open `/admin`. The token is for scripts:
+`curl -H "Authorization: Bearer <token>" https://<your-app>.fly.dev/api/admin/stats`. `fly logs` shows
+`statistics: on (opt-out), kept in the bucket`. `CM_STATS=optin` asks players first (off until they turn them on in
+Help); `CM_STATS=off` turns them off.
+
 ## If something goes wrong
 
 | What you see | What to do |

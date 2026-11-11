@@ -154,6 +154,7 @@
   .plan ul { margin: 0; padding-left: 17px; color: var(--muted); font-size: 13px; }
   .box .plans { margin-top: 16px; }
   .legal { margin: 10px 0 0 !important; }
+  .check { display: flex; gap: 8px; align-items: flex-start; } .check input { margin-top: 3px; }
   .warn { border-left: 3px solid #d9a441; padding: 2px 0 2px 10px; margin: 6px 0 8px !important; }
   .promo { border: 1px solid var(--accent); border-radius: 8px; padding: 7px 10px; margin: 8px 0 !important; }
   td.acts { white-space: nowrap; }
@@ -338,6 +339,13 @@
     <h3>As an app</h3>
     <p class="small">Add the page to the home screen (on an iPad: Share, then Add to Home Screen) or install it from the
     address bar. It then opens without the browser's bars, and it starts without a connection once it has run.</p>
+    <div id="help-stats" hidden>
+      <h3>Statistics</h3>
+      <label class="small check"><input type="checkbox" id="help-stats-on"> Send usage statistics: play time, and how many
+        saves and data sets you have. They go with a random id of this browser (or your account when you are signed in),
+        never your files, and no IP address is kept. When the game stops on an error, its message and the last lines of the
+        engine log go too. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></label>
+    </div>
     <details>
       <summary>Engine log</summary>
       <pre id="log"></pre>

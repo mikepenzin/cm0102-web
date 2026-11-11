@@ -5,11 +5,12 @@
 // Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
-import { SAVE_DIR, mountSavesPanel, savesSignature, setStorageKept, skipWorkFiles, storageWarning, useVault } from './saves.js';
+import { SAVE_DIR, listSaves, mountSavesPanel, savesSignature, setStorageKept, skipWorkFiles, storageWarning, useVault } from './saves.js';
+import { setStatsAllowed, startStats, statsAllowed } from './stats.js';
 import { createVault } from './vault.js';
 import { mountEditor } from './editor.js';
 import { mountSetsPanel } from './setspanel.js';
-import { createSetSync } from './datasets.js';
+import { createSetSync, listDataSets } from './datasets.js';
 import { LEGAL_LINKS, createCloudSync, mountAccount, plansHtml } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
 import { mountLayout } from './layout.js';
@@ -36,6 +37,25 @@ function overlay(html, kind = '') {
   $('overlay').style.display = html ? '' : 'none';
 }
 
+// For the statistics (stats.js): how many saves, older copies and data sets the user folder holds, and their size.
+function folderState() {
+  const FS = window.Module?.FS;
+  if (!FS?.readdir) return null;
+  const { saves, backups } = listSaves(FS);
+  const sets = listDataSets(FS, SAVE_DIR);
+  const of = (list) => ({ n: list.length, bytes: list.reduce((a, f) => a + (f.size ?? 0), 0) });
+  return { saves: of(saves), older: of(backups), sets: of(sets) };
+}
+
+// The choice in Help: send the statistics or not (stats.js keeps it in localStorage).
+function mountStatsChoice(info) {
+  const box = $('help-stats'), input = $('help-stats-on');
+  if (!box || !info.stats) return;
+  box.hidden = false;
+  input.checked = statsAllowed(info.stats.mode);
+  input.onchange = () => { setStatsAllowed(input.checked); log(`page: statistics ${input.checked ? 'on' : 'off'}`); };
+}
+
 // What the user folder keeps in memory, for the log: the page holds all of it while the game runs.
 function userFolderSizes(FS) {
   const sum = { saves: 0, older: 0, sets: 0, other: 0, stored: 0 };
@@ -59,8 +79,10 @@ function userFolderSizes(FS) {
 // The browser had no memory for the page: it keeps the game files and everything of the user folder (saves, older
 // copies, data sets) in memory while the game runs.
 const OUT_OF_MEMORY = /Array buffer allocation failed|out of memory|Cannot allocate|could not allocate/i;
+let stats = null;                                    // stats.js, once files.json told the server's mode
 function fail(title, detail) {
   status(title);
+  stats?.report(`${title}: ${detail}`, lines.slice(-40), 'fail');
   const last = lines.slice(-8).join('\n');
   const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. The page keeps the game
     files and all your saves, older copies and data sets in memory while it runs. Close other tabs, reload the page, and
@@ -554,8 +576,11 @@ async function start() {
       `First: ${info.missing.slice(0, 6).map((m) => m.path).join(', ')}. CM_GAME_DIR must hold the clean files (web/README.md, step 3).`);
     return;
   }
+  stats = startStats({ info, log, isRunning: () => running, state: folderState,
+    extra: () => ({ engine: info.engineVersion, vault: Boolean(vault?.active), cloud: Boolean(account.me?.user?.cloud) }) });
+  mountStatsChoice(info);
   const { problems, warnings } = requirements(info);
-  if (problems.length) { log(`page: blocked: ${problems.join(' ')}`); blocked(problems); return; }
+  if (problems.length) { log(`page: blocked: ${problems.join(' ')}`); stats.report(`blocked: ${problems.join(' ')}`, [], 'requirements'); blocked(problems); return; }
   if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').catch((e) => log(`page: no service worker: ${e}`));
   const cache = await openCache();
   const [have, kept] = await Promise.all([cachedBytes(cache, info.files), keepStorage()]);

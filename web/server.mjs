@@ -19,15 +19,17 @@ import { createReadStream, existsSync, readdirSync, readFileSync, statSync } fro
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudFromEnv, paddleFromEnv } from './cloud.mjs';
+import { createStats, statsStore } from './stats.mjs';
+import { s3FromEnv } from './s3.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const SEASON_TABLES = ['rules.tsv', 'names.tsv', 'clubs.tsv', 'club_records.tsv'];
 // The page: these files of web/, and nothing else of it. web/deploy/stage.mjs stages the same list, and the server's own.
-export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'account.js', 'savedit.js', 'dataset.js', 'datasets.js', 'zip.js', 'editor.js', 'setspanel.js', 'vault.js', 'sw.js',
+export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'account.js', 'savedit.js', 'dataset.js', 'datasets.js', 'zip.js', 'editor.js', 'setspanel.js', 'vault.js', 'stats.js', 'sw.js',
   'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html', 'refunds.html', 'pricing.html'];
 // The server's own files; it also imports saves.js, savedit.js, dataset.js and zip.js of the page (PAGE_FILES).
-export const SERVER_FILES = ['server.mjs', 'cloud.mjs', 'auth.mjs', 'billing.mjs', 's3.mjs', 'package.json'];
+export const SERVER_FILES = ['server.mjs', 'cloud.mjs', 'auth.mjs', 'billing.mjs', 's3.mjs', 'stats.mjs', 'admin.html', 'package.json'];
 const PAGES = Object.fromEntries([['/', 'index.html'], ...['privacy', 'terms', 'refunds', 'pricing'].map((p) => [`/${p}`, `${p}.html`]),
   ...PAGE_FILES.map((f) => [`/${f}`, f])]);
 // The pages of the site's terms: the seller, the contact and the price come from the settings (CM_SELLER, CM_CONTACT,
@@ -98,12 +100,70 @@ function sendTemplated(req, res, file, site) {
   res.end(req.method === 'HEAD' ? undefined : body);
 }
 
+// The routes of the statistics (stats.mjs): the page's heartbeats and error reports, and the admin page's data. A
+// heartbeat or a report comes only from this site's page (the header x-cm, as the cloud wants it). The admin's data goes
+// to a signed-in account of CM_ADMIN_EMAILS, or to a request with CM_ADMIN_TOKEN (Authorization: Bearer).
+function readJson(req, limit) {
+  return new Promise((ok, bad) => {
+    const parts = [];
+    let n = 0;
+    req.on('data', (c) => { n += c.length; if (n > limit) { bad(Object.assign(new Error('too large'), { status: 413 })); req.destroy(); } else parts.push(c); });
+    req.on('end', () => { try { ok(JSON.parse(Buffer.concat(parts).toString() || '{}')); } catch { bad(Object.assign(new Error('not JSON'), { status: 400 })); } });
+    req.on('error', bad);
+  });
+}
+const json = (res, status, body) => {
+  res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+  res.end(status === 204 ? undefined : JSON.stringify(body));
+};
+async function statsRoute(req, res, url, { stats, cloud, admins, adminToken }) {
+  const path = url.pathname;
+  const user = cloud?.userOf(req) ?? null;
+  if (path === '/api/stats/beat' || path === '/api/report') {
+    if (req.method !== 'POST') { json(res, 405, { error: 'POST only' }); return; }
+    const from = req.headers.origin;
+    if (req.headers['x-cm'] !== '1' || (from && new URL(from).host !== req.headers.host)) { req.resume(); json(res, 403, { error: 'not from this site' }); return; }
+    const body = await readJson(req, path === '/api/report' ? 256 << 10 : 16 << 10);
+    if (path === '/api/stats/beat') {
+      const why = await stats.beat(body, user, req.headers['user-agent']);
+      json(res, why ? 400 : 204, why ? { error: why } : null);
+    } else {
+      const r = await stats.report(body, user, req.headers['user-agent']);
+      json(res, r.error ? 400 : 201, r);
+    }
+    return;
+  }
+  const bearer = /^Bearer (.+)$/.exec(req.headers.authorization ?? '')?.[1];
+  const admin = (adminToken && bearer === adminToken) || (user && admins.has(String(user.email).toLowerCase()));
+  if (!admin) { req.resume(); json(res, user || bearer ? 403 : 401, { error: user || bearer ? 'not an admin' : 'not signed in' }); return; }
+  if (path === '/api/admin/stats' && req.method === 'GET') { json(res, 200, await stats.summary()); return; }
+  if (path === '/api/admin/report' && req.method === 'GET') {
+    const r = await stats.reportFile(url.searchParams.get('key') ?? '');
+    json(res, r ? 200 : 404, r ?? { error: 'no such report' });
+    return;
+  }
+  json(res, 404, { error: 'not found' });
+}
+
 // cloud: accounts and cloud saves (cloud.mjs), or null for none. site: { seller, contact, price } for the terms pages.
-export function createApp({ gameDir, buildDir, manifestPath, cloud = null, site = {} }) {
+// stats: the statistics (stats.mjs), or null for none; statsMode: 'optout' (on unless the player turns them off) or
+// 'optin'. admins: the emails of the admin page; adminToken: a token for it instead.
+export function createApp({ gameDir, buildDir, manifestPath, cloud = null, site = {}, stats = null, statsMode = 'optout', admins = [],
+  adminToken = null }) {
   let inv = inventory({ gameDir, buildDir, manifestPath });
+  const adminSet = new Set(admins.map((e) => e.trim().toLowerCase()).filter(Boolean));
+  const token = adminToken && adminToken.length >= 16 ? adminToken : null;
   return http.createServer((req, res) => {
     try {
       const url = new URL(req.url, 'http://x');
+      if (stats && (url.pathname === '/api/stats/beat' || url.pathname === '/api/report' || url.pathname.startsWith('/api/admin/'))) {
+        statsRoute(req, res, url, { stats, cloud, admins: adminSet, adminToken: token }).catch((err) => {
+          if (res.headersSent) { res.destroy(err); return; }
+          json(res, err.status ?? 500, { error: err.status ? err.message : 'the server failed' });
+        });
+        return;
+      }
+      if (url.pathname === '/admin') { sendFile(req, res, join(HERE, 'admin.html'), TYPES['.html']); return; }
       if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) {
         if (cloud) { cloud.handle(req, res, url); return; }
         req.resume();
@@ -126,6 +186,7 @@ export function createApp({ gameDir, buildDir, manifestPath, cloud = null, site 
           engineVersion: inv.engine.wasm ? Math.floor(inv.engine.wasm.mtime).toString(36) : null,
           suspend: inv.suspend,
           shell: SHELL,
+          stats: stats ? { mode: statsMode } : null,
         });
         res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
         res.end(body);
@@ -205,7 +266,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (inv.missing.length) console.log(`missing or of another size: ${inv.missing.length}, first: ${inv.missing.slice(0, 5).map((m) => m.path).join(', ')}`);
   console.log(inv.engine.js && inv.engine.wasm ? `engine: ${buildDir}/cm0102_recomp.wasm (${mb(inv.engine.wasm.size)}, ${inv.suspend ?? 'unknown'} build)`
     : `engine: not built in ${buildDir} (web/README.md, step 3)`);
-  const { cloud, missing } = cloudFromEnv(process.env);
+  // Statistics: in the bucket when there is one (BUCKET_NAME and the keys), else in memory only. CM_STATS=off: none.
+  const stats = process.env.CM_STATS === 'off' ? null : createStats({ store: statsStore(s3FromEnv(process.env)) });
+  stats?.start();
+  const { cloud, missing } = cloudFromEnv(process.env, undefined, { onAccountDeleted: (sub) => stats?.forget(sub) });
   const someSet = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'CM_SESSION_SECRET', 'BUCKET_NAME'].some((k) => process.env[k]);
   const paddle = paddleFromEnv(process.env);
   console.log(cloud ? `accounts and cloud saves: on${process.env.CM_CLOUD_FOR === 'everyone' ? ', for every account'
@@ -215,5 +279,12 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const site = { seller: process.env.CM_SELLER, contact: process.env.CM_CONTACT, price: process.env.CM_PRICE };
   if (process.env.PADDLE_CLIENT_TOKEN && (!site.seller || !site.contact))
     console.log('payments: set CM_SELLER and CM_CONTACT, which the terms, refunds and privacy pages name (Paddle checks them)');
-  createApp({ gameDir, buildDir, cloud, site }).listen(port, host, () => console.log(`open http://${host}:${port} in Chrome`));
+  const admins = (process.env.CM_ADMIN_EMAILS ?? '').split(',');
+  console.log(stats ? `statistics: on (${process.env.CM_STATS === 'optin' ? 'opt-in' : 'opt-out'}), ${s3FromEnv(process.env) ? 'kept in the bucket' : 'in memory only'}; admin page /admin for ${admins.filter((e) => e.trim()).length} email(s)${process.env.CM_ADMIN_TOKEN ? ' and the token' : ''}`
+    : 'statistics: off (CM_STATS=off)');
+  const server = createApp({ gameDir, buildDir, cloud, site, stats, statsMode: process.env.CM_STATS === 'optin' ? 'optin' : 'optout', admins,
+    adminToken: process.env.CM_ADMIN_TOKEN ?? null });
+  server.listen(port, host, () => console.log(`open http://${host}:${port} in Chrome`));
+  // Fly stops a machine with SIGINT (fly.toml kill_signal) or SIGTERM: the statistics are written first.
+  for (const sig of ['SIGINT', 'SIGTERM']) process.once(sig, async () => { await stats?.stop(); process.exit(0); });
 }

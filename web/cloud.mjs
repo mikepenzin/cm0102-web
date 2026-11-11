@@ -97,7 +97,8 @@ ${ok ? 'setTimeout(() => window.close(), 300);' : ''}</script>`;
 // paddle: { env, clientToken, priceIds, webhookSecret, apiKey, apiBase } to sell Cloud Saves with Paddle, or null.
 // price: how the page names the price ("$5 a month").
 export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicUrl = null, cloudFor = 'listed', cloudUsers = [],
-  upgradeUrl = null, maxSaves = 30, maxSets = 5, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t) }) {
+  upgradeUrl = null, maxSaves = 30, maxSets = 5, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t),
+  onAccountDeleted = () => {} }) {
   const seal = sealer(sessionSecret);
   const users = new Set(cloudUsers.map((e) => e.trim().toLowerCase()).filter(Boolean));
   const accounts = new Map();               // google id -> { account, at }: the record, read at most once a minute
@@ -332,6 +333,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     accounts.delete(user.sub);
     setCookie(res, SESSION, null, { secure: secure(req) });
     log(`cloud: account ${user.sub} deleted`);
+    try { await onAccountDeleted(user.sub); } catch (err) { log(`cloud: after the deletion of ${user.sub}: ${err.message}`); }
     send(res, 204);
   }
 
@@ -384,6 +386,8 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   }
 
   return {
+    // The account signed in on this request ({ sub, email, name }), or null: statistics and the admin page.
+    userOf: (req) => sessionOf(req),
     async handle(req, res, url) {
       try {
         await handle(req, res, url);
@@ -399,7 +403,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
 }
 
 // The cloud of the environment, or null and the settings that are missing.
-export function cloudFromEnv(env = process.env, log) {
+export function cloudFromEnv(env = process.env, log, { onAccountDeleted } = {}) {
   const missing = [];
   for (const k of ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'CM_SESSION_SECRET', 'AWS_ENDPOINT_URL_S3', 'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY', 'BUCKET_NAME']) if (!env[k]) missing.push(k);
@@ -410,7 +414,7 @@ export function cloudFromEnv(env = process.env, log) {
     publicUrl: env.CM_PUBLIC_URL ? env.CM_PUBLIC_URL.replace(/\/+$/, '') : null,
     cloudFor: env.CM_CLOUD_FOR === 'everyone' ? 'everyone' : 'listed', cloudUsers: (env.CM_CLOUD_USERS ?? '').split(','),
     upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, maxSets: Number(env.CM_CLOUD_MAX_SETS) || 5, log,
-    price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env),
+    price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env), onAccountDeleted,
   });
   return { cloud, missing };
 }

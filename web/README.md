@@ -170,6 +170,24 @@ saves and older copies that are no longer played (download them first to keep th
 (`*.tmp`, the parts of the game in play, written at a load and at each save) do not go to IndexedDB (`skipWorkFiles`,
 `saves.js`): a save packs them into its `.sav`, and copying them at every sync held tens of MB more in memory.
 
+## Statistics and the admin panel
+
+The page sends a heartbeat each minute while the game runs (`stats.js`): the seconds played since the last one (the
+tab visible and an input in the last 5 minutes) and how many saves, older copies and data sets the browser keeps,
+with their size. A stop of the game sends an error report with the last lines of the engine log (at most 3 a visit).
+A person is an account, or without one a browser with a random id (localStorage `cm0102-anon`); no name, email or IP
+address of an anonymous player is kept. When a browser signs in, its record points at the account and its play counts
+for it. The server (`stats.mjs`) keeps one object in the bucket (`stats/stats.json`, written every 2 minutes and when
+the server stops) and the reports as files (`reports/<day>/…`, deleted after 90 days); people idle for 400 days go. One
+server machine writes the object: with more machines each keeps its own count.
+
+`/admin` shows the totals (people, accounts and anonymous, active today, in 7 and 30 days, hours played, saves, older
+copies, data sets, errors), the last 90 days, every person (sortable, searchable) and the error reports with their log.
+It is open to the Google accounts of `CM_ADMIN_EMAILS` (comma separated, signed in on the game's page) and to a request
+with `Authorization: Bearer <CM_ADMIN_TOKEN>` (16 characters or more). Help, Statistics turns them off for a browser
+(localStorage `cm0102-stats` = `off`). `CM_STATS=optin`: off until the player turns them on (for consent rules that
+want it); `CM_STATS=off`: none. Without a bucket they stay in memory only. The privacy page says what is collected.
+
 ## Cloud saves
 
 Players can sign in with Google. An account with cloud saves keeps its saved games in the cloud as well as in the
