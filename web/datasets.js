@@ -5,7 +5,7 @@
 import { DATA_SET_FILES, DataSet } from './dataset.js';
 import { otherDeviceName, planSync } from './account.js';
 import { writeZip, zipEntries, zipRead } from './zip.js';
-import { fileView } from './saves.js';
+import { readView } from './saves.js';
 
 export const FIRST_SEASON = 2001, LAST_SEASON = 2025;          // the seasons the game has (seasons_db.h)
 const META = '.web.json';                                       // the page's note in a folder: { season }
@@ -94,8 +94,12 @@ export function deleteDataSet(FS, root, name) {
 
 // The zip to download: a folder of the data set's name with its 20 files, as the game's Databases folder takes it.
 export async function dataSetZip(FS, root, name) {
-  const files = readAllOfDataSet(FS, root, name, (p) => fileView(FS, p));    // the zip only reads them: no copies
-  return writeZip(Object.entries(files).map(([f, data]) => ({ name: `${name}/${f}`, data })));
+  const dir = dirOf(root, name), list = filesOf(FS, dir) ?? [];
+  const have = new Map(list.map((f) => [f.toLowerCase(), f]));
+  const names = [...DATA_SET_FILES.map((f) => have.get(f)), ...list.filter((f) => EXTRA.test(f))];
+  const entries = [];
+  for (const f of names) entries.push({ name: `${name}/${f}`, data: await readView(FS, `${dir}/${f}`) });   // only read
+  return writeZip(entries);
 }
 
 // The data sets in a zip: each folder (or the zip's top) that holds the 20 files. [{ name, files }]; name: the folder's,
@@ -125,10 +129,14 @@ export async function dataSetsInZip(bytes, fallback) {
 
 // The choice for the next new game: the runtime does what Choose Season does (season_screen.c,
 // rt_web_choose_data_set): the options now, the game date at Start New Game. An engine built before that call: the settings file gets the two lines, and the choice
-// counts from the next start of the page. Returns 'now', 'next start' or throws.
-export function chooseForNextGame(M, FS, root, name, season) {
+// counts from the next start of the page. Resolves to 'now' or 'next start', or rejects. With the vault on (vault.js) the
+// engine's open is a Suspending import, which the browser takes only inside WebAssembly.promising: loader.js then makes
+// the call promising (M.chooseAsync) and ccall waits for it. It never waits for anything in fact (season_screen.c).
+export async function chooseForNextGame(M, FS, root, name, season) {
   if (typeof M?._rt_web_choose_data_set === 'function') {
-    if (M.ccall('rt_web_choose_data_set', 'number', ['string', 'number'], [name, season]) === 1) return 'now';
+    const args = ['rt_web_choose_data_set', 'number', ['string', 'number'], [name, season]];
+    const r = M.chooseAsync ? await M.ccall(...args, { async: true }) : M.ccall(...args);
+    if (r === 1) return 'now';
     throw new Error('the game did not take this data set');
   }
   const path = `${root}/settings.txt`;

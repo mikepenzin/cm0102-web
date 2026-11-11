@@ -51,20 +51,25 @@ test('the data sets in a zip: one per folder with the 20 files; junk and half se
   await assert.rejects(dataSetsInZip(await writeZip([{ name: 'x/staff.dat', data: files['staff.dat'] }]), 'x'), /no folder of the zip holds/);
 });
 
-test('names, and the choice for the next new game', () => {
+test('names, and the choice for the next new game', async () => {
   assert.equal(cleanName(' a/b:c* '), 'a b c');
   assert.equal(cleanName('...'), 'Data set');
   assert.equal(uniqueName('Set', ['set', 'Set (2)']), 'Set (3)');
   // An engine with the runtime call: it does the choice.
   const calls = [];
   const M = { _rt_web_choose_data_set: () => 1, ccall: (...a) => { calls.push(a); return 1; } };
-  assert.equal(chooseForNextGame(M, null, '/user', 'My edit', 2001), 'now');
+  assert.equal(await chooseForNextGame(M, null, '/user', 'My edit', 2001), 'now');
   assert.deepEqual(calls[0], ['rt_web_choose_data_set', 'number', ['string', 'number'], ['My edit', 2001]]);
-  assert.throws(() => chooseForNextGame({ ...M, ccall: () => 0 }, null, '/user', 'x', 2001), /did not take/);
+  await assert.rejects(() => chooseForNextGame({ ...M, ccall: () => 0 }, null, '/user', 'x', 2001), /did not take/);
+  // With the vault on: the call goes through ccall's async form.
+  const asyncCalls = [];
+  const A = { _rt_web_choose_data_set: () => 1, chooseAsync: true, ccall: (...a) => { asyncCalls.push(a); return Promise.resolve(1); } };
+  assert.equal(await chooseForNextGame(A, null, '/user', 'My edit', 2025), 'now');
+  assert.deepEqual(asyncCalls[0][4], { async: true });
   // An older engine: the settings file gets the lines, for the next start.
   const fs = new Map([['/user/settings.txt', '# settings\ndisplay = widescreen\ndatabase = 3.9.68\n']]);
   const FS = { readFile: (p) => { if (!fs.has(p)) throw new Error('ENOENT'); return fs.get(p); }, writeFile: (p, t) => fs.set(p, t) };
-  assert.equal(chooseForNextGame({}, FS, '/user', 'My edit', 2025), 'next start');
+  assert.equal(await chooseForNextGame({}, FS, '/user', 'My edit', 2025), 'next start');
   assert.equal(fs.get('/user/settings.txt'), '# settings\ndisplay = widescreen\ndatabase = folder:My edit\nseason = 2025/26\n');
 });
 

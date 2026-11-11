@@ -6,7 +6,7 @@
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
 import { ATTRIBUTES, POSITIONS, SaveGame } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet } from './dataset.js';
-import { listSaves } from './saves.js';
+import { listSaves, readBytes } from './saves.js';
 import { noteSeason } from './datasets.js';
 
 const $ = (id) => document.getElementById(id);
@@ -103,7 +103,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       const files = gameFiles();
       try { FS.mkdir(DB_DIR); } catch { /* there already */ }
       FS.mkdir(`${DB_DIR}/${n}`);
-      for (const [f, path] of Object.entries(files)) FS.writeFile(`${DB_DIR}/${n}/${f}`, FS.readFile(path));
+      for (const [f, path] of Object.entries(files)) FS.writeFile(`${DB_DIR}/${n}/${f}`, await readBytes(FS, path));
       noteSeason(FS, dir, n, 2001);                   // the game's own data is the 2001/02 data
       sync();
       log(`page: data set ${n} made from the game's data`);
@@ -149,7 +149,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     say(isRunning() ? 'If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.' : '');
     await later();
     try {
-      model = new SaveGame(FS.readFile(`${dir}/${file}`));
+      model = new SaveGame(await readBytes(FS, `${dir}/${file}`));
       log(`page: ${file} opened in the editor: ${model.players().length} players`);
       dirty();
       results();
@@ -171,7 +171,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     try {
       const have = new Map(FS.readdir(`${DB_DIR}/${n}`).map((f) => [f.toLowerCase(), f]));
       const files = {};
-      for (const f of DATA_SET_FILES) files[have.get(f)] = FS.readFile(`${DB_DIR}/${n}/${have.get(f)}`);
+      for (const f of DATA_SET_FILES) files[have.get(f)] = await readBytes(FS, `${DB_DIR}/${n}/${have.get(f)}`);
       model = new DataSet(files);
       clubs = model.clubs();
       nations = model.nations();
@@ -320,7 +320,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       const path = `${dir}/${name}`;
       if (!backedUp) {
         try { FS.mkdir(`${dir}/backups`); } catch { /* there already */ }
-        FS.writeFile(`${dir}/backups/${name.replace(/\.sav$/i, '')} (before edit).sav`, FS.readFile(path));
+        FS.writeFile(`${dir}/backups/${name.replace(/\.sav$/i, '')} (before edit).sav`, await readBytes(FS, path));
         backedUp = true;
       }
       FS.writeFile(path, model.toBytes());

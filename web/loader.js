@@ -5,7 +5,8 @@
 // Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
-import { SAVE_DIR, mountSavesPanel, savesSignature, skipWorkFiles } from './saves.js';
+import { SAVE_DIR, mountSavesPanel, savesSignature, skipWorkFiles, useVault } from './saves.js';
+import { createVault } from './vault.js';
 import { mountEditor } from './editor.js';
 import { mountSetsPanel } from './setspanel.js';
 import { createSetSync } from './datasets.js';
@@ -37,7 +38,7 @@ function overlay(html, kind = '') {
 
 // What the user folder keeps in memory, for the log: the page holds all of it while the game runs.
 function userFolderSizes(FS) {
-  const sum = { saves: 0, older: 0, sets: 0, other: 0 };
+  const sum = { saves: 0, older: 0, sets: 0, other: 0, stored: 0 };
   const walk = (dir, kind) => {
     let names = [];
     try { names = FS.readdir(dir).filter((n) => n !== '.' && n !== '..'); } catch { return; }
@@ -46,12 +47,13 @@ function userFolderSizes(FS) {
       let st;
       try { st = FS.stat(p); } catch { continue; }
       if (FS.isDir(st.mode)) walk(p, dir === SAVE_DIR && n === 'backups' ? 'older' : dir === SAVE_DIR && n === 'Databases' ? 'sets' : kind);
+      else if (FS.lookupPath(p).node.vault === 'out') sum.stored += st.size;          // a placeholder: in the vault
       else sum[kind === 'other' && /\.sav$/i.test(n) ? 'saves' : kind] += st.size;
     }
   };
   walk(SAVE_DIR, 'other');
   const all = sum.saves + sum.older + sum.sets + sum.other;
-  return `user folder in memory: ${mb(all)} (saves ${mb(sum.saves)}, older copies ${mb(sum.older)}, data sets ${mb(sum.sets)}, other ${mb(sum.other)})`;
+  return `user folder in memory: ${mb(all)} (saves ${mb(sum.saves)}, older copies ${mb(sum.older)}, data sets ${mb(sum.sets)}, other ${mb(sum.other)}); in the browser's storage only: ${mb(sum.stored)}`;
 }
 
 // The browser had no memory for the page: it keeps the game files and everything of the user folder (saves, older
@@ -279,6 +281,7 @@ let syncing = false, syncAgain = false;
 function sync() {
   const FS = window.Module?.FS;
   if (!FS) return;
+  if (vault?.active) vault.persist().catch((e) => log(`page: the vault: ${e?.message ?? e}`));
   if (syncing) { syncAgain = true; return; }
   syncing = true;
   FS.syncfs(false, (err) => {
@@ -288,9 +291,74 @@ function sync() {
   });
 }
 
+// The vault (vault.js): with JSPI the engine's open can wait, so saves, older copies and data sets stay in the browser's
+// storage until the game opens one, not in the page's memory. vaultMode: 'on', 'restore' (the vault cannot run here;
+// files that an earlier visit put in it come back into the user folder) or 'off'.
+let vault = null, vaultMode = 'off', vaultOpened = false;
+
+async function prepareVault(hooked) {
+  if (!vault) return;
+  try {
+    await vault.open();
+    vaultOpened = true;
+    if (!hooked) { vaultMode = 'restore'; return; }
+    const moved = await vault.migrateFrom('/user');
+    if (moved) log(`page: ${moved} files of the user folder moved to the browser's storage (the vault)`);
+    vault.wrapFS();
+    vaultMode = 'on';
+  } catch (e) {
+    log(`page: the vault is off: ${e?.message ?? e}`);
+    vault.stop();
+    vaultMode = vaultOpened ? 'restore' : 'off';
+  }
+}
+
+async function finishVault(FS) {
+  if (!vault) return;
+  if (vaultMode === 'on') {
+    try {
+      const m = await vault.mount();
+      vault.active = true;
+      useVault(vault);
+      log(`page: the vault: ${m.files} files (${mb(m.bytes)}) stay in the browser's storage until the game opens them`);
+      return;
+    } catch (e) {
+      log(`page: the vault is off: ${e?.message ?? e}`);
+      vault.stop();
+      vaultMode = 'restore';
+    }
+  }
+  if (vaultMode === 'restore') {
+    try {
+      const n = await vault.materialize();
+      if (n) {
+        log(`page: ${n} files came back from the vault into the user folder (this engine cannot open them from there)`);
+        FS.syncfs(false, (err) => { if (!err) vault.clear(); });
+      }
+    } catch (e) { log(`page: the vault's files did not come back: ${e?.message ?? e}`); }
+  }
+}
+
+// Until the vault is checked in browsers it is on only when asked for: ?vault=1 in the address, or localStorage
+// cm0102-vault = on (a test sets it).
+function vaultWanted() {
+  if (/[?&]vault=1\b/.test(location.search)) return true;
+  try { return localStorage.getItem('cm0102-vault') === 'on'; } catch { return false; }
+}
+
 function runEngine(files, info) {
+  const wasmUrl = `/engine/cm0102_recomp.wasm?v=${info.engineVersion}`;
+  vault = vaultWanted() && info.suspend === 'jspi' && typeof WebAssembly.Suspending === 'function' ? createVault({ FS: () => window.Module?.FS, log }) : null;
+  let hooked = false;
+  const plainInstantiate = (imports, receive) => WebAssembly.instantiateStreaming(fetch(wasmUrl), imports).then((r) => receive(r.instance))
+    .catch(async () => receive((await WebAssembly.instantiate(await (await fetch(wasmUrl)).arrayBuffer(), imports)).instance));
   window.Module = {
     canvas,
+    ...(vault ? { instantiateWasm: (imports, receive) => {
+      hooked = vault.instantiate(imports, receive, wasmUrl);
+      if (!hooked) plainInstantiate(imports, receive);
+      return {};
+    } } : {}),
     arguments: ['--game', '/game'],
     print: log,
     printErr: log,
@@ -301,13 +369,14 @@ function runEngine(files, info) {
       files.clear();
       FS.mkdirTree('/user');
       const idbfs = M.IDBFS || FS.filesystems.IDBFS;           // newer Emscripten has no FS.filesystems
-      if (!skipWorkFiles(idbfs)) log('page: this engine\'s IDBFS has no sets: the working files go to IndexedDB too');
+      if (!skipWorkFiles(idbfs, (p) => Boolean(vault?.owns(p)))) log('page: this engine\'s IDBFS has no sets: the working files go to IndexedDB too');
       FS.mount(idbfs, {}, '/user');
       M.ENV.RECOMP_USER_DIR = '/user';                  // main.c: every write of the game goes there
       M.ENV.HOME = '/user';
       M.addRunDependency('user-folder');
-      FS.syncfs(true, async (err) => {                   // the saves of earlier visits, back from the browser
+      prepareVault(hooked).then(() => FS.syncfs(true, async (err) => {   // the saves of earlier visits, back from the browser
         if (err) log(`page: the user folder was not read: ${err}`);
+        await finishVault(FS);                           // the placeholders, before the cloud sync and the game list them
         // The display mode of the settings file, for an engine that does not tell the size of its picture.
         try { if (/^\s*display\s*=\s*classic\b/m.test(FS.readFile('/user/settings.txt', { encoding: 'utf8' }))) layout.setPicture(800, 600); }
         catch { /* no settings file yet: widescreen */ }
@@ -328,7 +397,7 @@ function runEngine(files, info) {
         }
         log(`page: ${userFolderSizes(FS)}`);
         M.removeRunDependency('user-folder');
-      });
+      }));
     }],
     onRuntimeInitialized: () => {
       const M = window.Module, FS = M.FS;
@@ -339,12 +408,17 @@ function runEngine(files, info) {
       $('fullscreen').hidden = !layout.canFullscreen || isStandalone();
       canvas.focus({ preventScroll: true });
       setInterval(sync, 15000);
+      if (vault?.active && typeof vault.exports?.rt_web_choose_data_set === 'function' && typeof WebAssembly.promising === 'function') {
+        M._rt_web_choose_data_set = WebAssembly.promising(vault.exports.rt_web_choose_data_set);
+        M.chooseAsync = true;                            // datasets.js: ccall's async form
+      }
       // A save file that was added or changed, and has stayed the same for 2 seconds (the game finished writing it),
       // goes to IndexedDB at once, not at the next 15-second write.
       // A save that the cloud sync wrote is not a save of the game: the watcher takes it as seen.
       let lastSaves = savesSignature(FS), seen = lastSaves;
       watcher = { rebase() { lastSaves = seen = savesSignature(FS); } };
       setInterval(() => {
+        if (vault?.active) vault.persist().catch((e) => log(`page: the vault: ${e?.message ?? e}`));
         const now = savesSignature(FS);
         if (now !== lastSaves && now === seen) {
           if (now.length >= lastSaves.length) { toast('Saved in this browser'); if (!cloud) cloudHintOnce(); }
@@ -382,8 +456,9 @@ function runEngine(files, info) {
         }, 200);
       }
       keepAwake();
-      addEventListener('pagehide', sync);
-      document.addEventListener('visibilitychange', () => { if (document.hidden) sync(); });
+      const onHide = () => { if (vault?.active) vault.persist({ force: true }).catch(() => {}); sync(); };
+      addEventListener('pagehide', onHide);
+      document.addEventListener('visibilitychange', () => { if (document.hidden) onHide(); });
       primeOffline(info).catch((e) => log(`page: not kept for a start without a connection: ${e}`));
       log(`page: main(${M.arguments.join(' ')})`);
       try {

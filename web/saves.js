@@ -40,10 +40,11 @@ export const isWorkFile = (path) => /\.tmp$/i.test(path);
 // them and removes the ones an earlier page stored; a read from IndexedDB does not bring them back. The rest is
 // IDBFS.syncfs as Emscripten has it (getLocalSet, getRemoteSet, reconcile). An IDBFS without those parts is left as it
 // is. Returns true when the sync was changed.
-export function skipWorkFiles(IDBFS) {
+// skip(path): more paths to leave out (the vault's files, vault.js); called at each sync.
+export function skipWorkFiles(IDBFS, skip = () => false) {
   if (!IDBFS || typeof IDBFS.getLocalSet !== 'function' || typeof IDBFS.getRemoteSet !== 'function'
     || typeof IDBFS.reconcile !== 'function') return false;
-  const drop = (set) => { for (const path of Object.keys(set.entries)) if (isWorkFile(path)) delete set.entries[path]; };
+  const drop = (set) => { for (const path of Object.keys(set.entries)) if (isWorkFile(path) || skip(path)) delete set.entries[path]; };
   IDBFS.syncfs = (mount, populate, callback) => {
     IDBFS.getLocalSet(mount, (err, local) => {
       if (err) return callback(err);
@@ -99,8 +100,19 @@ export function fileView(FS, path) {
   return FS.readFile(path);
 }
 
-function download(FS, f) {
-  const url = URL.createObjectURL(new Blob([fileView(FS, f.path)], { type: 'application/octet-stream' }));
+// The vault (vault.js) when it is on: saves, older copies and data sets are then placeholders in the user folder, and
+// the page reads them with these. Without it they read from the engine's memory, as before.
+let vaultRef = null;
+export function useVault(vault) { vaultRef = vault; }
+// The file's bytes, a copy that the caller may change (the editors).
+export async function readBytes(FS, path) { return vaultRef ? vaultRef.bytes(path) : FS.readFile(path); }
+// The file's bytes for reading only (a zip): no copy of a file in memory.
+export async function readView(FS, path) { return vaultRef ? vaultRef.view(path) : fileView(FS, path); }
+// The file as a Blob, for a download or an upload: a placeholder's comes from the browser's storage, not memory.
+export async function readBlob(FS, path) { return vaultRef ? vaultRef.blob(path) : new Blob([fileView(FS, path)]); }
+
+async function download(FS, f) {
+  const url = URL.createObjectURL(new Blob([await readBlob(FS, f.path)], { type: 'application/octet-stream' }));
   const a = document.createElement('a');
   a.href = url;
   a.download = f.name;
@@ -176,7 +188,7 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
     const b = e.target.closest('button[data-i]');
     if (!b) return;
     const f = (b.dataset.kind === 'backup' ? shown.backups : shown.saves)[Number(b.dataset.i)];
-    try { download(FS, f); say(`Downloaded ${f.name}.`); log(`page: downloaded the save ${f.name}`); }
+    try { await download(FS, f); say(`Downloaded ${f.name}.`); log(`page: downloaded the save ${f.name}`); }
     catch (err) { say(`${f.name} could not be read: ${err.message}`, true); }
   });
   input.onchange = async () => {

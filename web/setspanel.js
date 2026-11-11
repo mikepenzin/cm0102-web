@@ -86,7 +86,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
     if (b.dataset.setGo !== undefined) {
       const set = s('setGo'), season = Number($('sets-season').value);
       try {
-        const how = chooseForNextGame(module(), FS, root, set.name, season);
+        const how = await chooseForNextGame(module(), FS, root, set.name, season);
         sync();                                   // settings.txt to the browser's storage (the engine's call does not wait for it)
         using = null;
         render();
