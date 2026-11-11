@@ -171,7 +171,14 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
     const r = await fetch('/api/saves', { cache: 'no-store', signal });
     if (r.status === 401 || r.status === 403) { stopped = true; changed(); return; }
     if (!r.ok) throw fail('the cloud list', r);
-    const { saves, maxSaves } = await r.json();
+    const { saves, maxSaves, store } = await r.json();
+    // Another store than the last sync's (its bucket changed): what went up before is not there, and it goes up again
+    // rather than count as removed from the cloud ("Only here").
+    if (store && state.store !== store) {
+      if (state.store) log('page: cloud saves: the cloud store is another one: the saves here go up to it again');
+      state.saves = {};                         // each save as on a first sign-in: the same in both places, or up
+      state.store = store;
+    }
     count = saves.length;
     max = maxSaves;
     const local = new Map(listSaves(FS).saves.map((f) => [f.name, { size: f.size, mtime: +f.mtime }]));

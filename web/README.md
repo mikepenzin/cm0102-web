@@ -213,6 +213,13 @@ gzip-compressed, under the account's Google id. The page (`account.js`):
 - Saved games shows where each save is, and Remove takes one out of the cloud (it stays in the browser).
 - Account has Sign out and Delete account (the account and all its cloud saves). `/privacy` says what is kept.
 
+**Gifts and another bucket.** Cloud Saves an admin gives are a file of their own (`grants/<id>.json`), which only Give
+and Take back write; the admin page and `/api/me` read the store, not the server's minute-long copy, so both machines
+agree at once. The store has an id (`meta/store.json`, made at the first start on a bucket) that the lists name: when
+the server is pointed at another bucket (`BUCKET_NAME` or its key changed), each page sends its saves and data sets to
+it again instead of showing them as Only here. Gifts, accounts and statistics are files of the bucket too, so another
+bucket starts without them.
+
 **Straight to the store (`direct.js`, `cloud.mjs` "direct").** A save or a data set goes from the browser to Tigris and
 back without passing the server's machine. The server checks the plan, the name, the size, the version (409) and the
 count (507), then signs a link for 15 minutes (`s3.presign`, Signature Version 4 in the query: the length and the

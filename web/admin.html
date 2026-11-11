@@ -94,7 +94,7 @@ function planCell(p) {
   if (!data.accountsOn) return '<span class="muted small">no accounts</span>';
   if (!pl) return '<span class="muted small">no record</span>';
   const what = pl.from === 'subscription' ? `paid${pl.until ? ` · to ${esc(day(pl.until))}` : ''}`
-    : pl.given ? 'given by an admin' : pl.cloud ? 'given (server list)' : 'free';
+    : pl.given ? `given by an admin${pl.givenAt ? ` · ${esc(day(pl.givenAt))}` : ''}` : pl.cloud ? 'given (server list)' : 'free';
   const button = pl.given ? `<button class="give" data-give="${esc(p.id)}" data-on="0">Take back</button>`
     : pl.cloud ? '' : `<button class="give on" data-give="${esc(p.id)}" data-on="1">Give</button>`;
   return `<span class="${pl.cloud ? '' : 'muted'}">${what}</span>${button}`;

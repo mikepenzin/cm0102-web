@@ -171,7 +171,10 @@ test('cloud saves: store, list, fetch, conflicts, limits and checks', async () =
   assert.equal(me.user.cloud, true, 'a listed email has cloud saves');
   assert.equal(me.user.admin, false, 'not an admin: no Admin panel button');
   assert.equal(me.user.cloudFrom, 'given');
-  assert.deepEqual(await (await b.get('/api/saves')).json(), { saves: [], maxSaves: 3 });
+  const empty = await (await b.get('/api/saves')).json();
+  assert.deepEqual({ ...empty, store: undefined }, { saves: [], maxSaves: 3, store: undefined });
+  assert.match(empty.store, /^[0-9a-f]{18}$/, 'the store\'s id (meta/store.json), the same in each list');
+  assert.equal(JSON.parse(s3fake.objects.get('meta/store.json').body).id, empty.store);
 
   const raw = fakeSaveBytes(1), gz = gzipSync(raw);
   let r = await b.send('PUT', `/api/saves/${encodeURIComponent('Copa América.sav')}`, gz, { 'x-base-etag': 'none', 'x-save-time': '1762770000000' });
@@ -240,20 +243,36 @@ test('a plan of "cloud" in the account record gives cloud saves', async () => {
   await c.signIn();
   assert.equal((await (await c.get('/api/me')).json()).user.cloud, false, 'a plan that ended');
 
-  // An admin gives Cloud Saves (the admin page): on, as given, and the record keeps the old plan; then taken back.
-  assert.deepEqual(await cloudApi.planOfSub('3000004'), { cloud: false, from: null, given: false, until: null });
-  assert.deepEqual(await cloudApi.give('3000004', true, 'boss@example.com'), { cloud: true, from: 'given', given: true, until: null });
+  // An admin gives Cloud Saves (the admin page): a file of its own, grants/<id>.json; the record stays as it was.
+  assert.deepEqual(await cloudApi.planOfSub('3000004'), { cloud: false, from: null, given: false, givenAt: null, until: null });
+  const given = await cloudApi.give('3000004', true, 'boss@example.com');
+  assert.deepEqual([given.cloud, given.from, given.given], [true, 'given', true]);
   let me = (await (await c.get('/api/me')).json()).user;
   assert.equal(me.cloud, true);
   assert.equal(me.cloudFrom, 'given', 'the Account dialog says: given to this account');
-  const rec = JSON.parse(s3fake.objects.get('accounts/3000004.json').body);
-  assert.equal(rec.given.by, 'boss@example.com');
-  assert.equal(rec.planUntil, '2020-01-01T00:00:00Z');
+  assert.equal(JSON.parse(s3fake.objects.get('grants/3000004.json').body).by, 'boss@example.com');
+  assert.equal(JSON.parse(s3fake.objects.get('accounts/3000004.json').body).planUntil, '2020-01-01T00:00:00Z', 'the record is not touched');
+  // The record written again from an old copy (as a sign-in or Paddle's event may): the gift stays.
+  await createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true })
+    .put('accounts/3000004.json', Buffer.from(JSON.stringify({ sub: '3000004', email: 'lapsed@example.com', plan: 'free', planUntil: null })), { type: 'application/json' });
   await c.signIn();
-  assert.ok(JSON.parse(s3fake.objects.get('accounts/3000004.json').body).given, 'a sign-in keeps the gift');
+  // Another server (a second machine, or a restart) sees it at once: the admin page and /api/me read fresh.
+  const other = createCloud({ s3: createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true }),
+    clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'x'.repeat(40), google: google.google, log: () => {}, direct: false });
+  assert.equal((await other.planOfSub('3000004')).given, true);
+  me = (await (await c.get('/api/me')).json()).user;
+  assert.equal(me.cloud, true, 'the gift outlives a record written again');
   assert.equal((await cloudApi.give('3000004', false, 'boss@example.com')).cloud, false);
+  assert.equal(s3fake.objects.has('grants/3000004.json'), false);
   me = (await (await c.get('/api/me')).json()).user;
   assert.equal(me.cloud, false, 'taken back');
+  assert.equal((await other.planOfSub('3000004')).given, false, 'the other server too');
+  // A gift of the first version (given in the record) still counts, and Take back removes it.
+  await createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true })
+    .put('accounts/3000004.json', Buffer.from(JSON.stringify({ sub: '3000004', email: 'lapsed@example.com', plan: 'free', given: { by: 'x', at: 'y' } })), { type: 'application/json' });
+  assert.equal((await cloudApi.planOfSub('3000004')).given, true);
+  assert.equal((await cloudApi.give('3000004', false, 'boss@example.com')).given, false);
+  assert.equal(JSON.parse(s3fake.objects.get('accounts/3000004.json').body).given, undefined);
   assert.equal(await cloudApi.give('9999999', true, 'boss@example.com'), null, 'an account that never signed in');
 });
 

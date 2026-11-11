@@ -7,7 +7,8 @@
 // set by a Paddle subscription, billing.mjs, or by hand) have them. Everyone else keeps saves in the browser only.
 //
 // The store holds:
-//   accounts/<google id>.json            { sub, email, name, created, seen, plan, planUntil, given }
+//   accounts/<google id>.json            { sub, email, name, created, seen, plan, planUntil }
+//   grants/<google id>.json              { sub, email, by, at }: Cloud Saves an admin gave (the admin page)
 //   saves/<google id>/<name, base64url>.gz the save, gzip-compressed by the page; metadata raw-size and saved (ms)
 import { randomBytes } from 'node:crypto';
 import { createGunzip } from 'node:zlib';
@@ -109,7 +110,8 @@ ${ok ? 'setTimeout(() => window.close(), 300);' : ''}</script>`;
 // price: how the page names the price ("$5 a month").
 export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicUrl = null, cloudFor = 'listed', cloudUsers = [],
   upgradeUrl = null, maxSaves = 30, maxSets = 5, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t),
-  onAccountDeleted = () => {}, uploadBudget = 160 << 20, isAdmin = () => false, direct: directWanted = true, origins = ['*'] }) {
+  onAccountDeleted = () => {}, uploadBudget = 160 << 20, isAdmin = () => false, direct: directWanted = true, origins = ['*'],
+  storeTtl = 10 * 60e3 }) {
   const seal = sealer(sessionSecret);
   // Direct: the page sends a save or a data set to the store, and gets one from it, with a link that this server signs
   // (s3.presign), so the files do not pass this machine. An upload goes to incoming/<account>/ first; the server then
@@ -135,6 +137,21 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
         + ` store's console and CM_DIRECT=on (web/deploy/README.md, "Straight to Tigris")`);
     }
   })();
+  // The store's own id (meta/store.json, made at the first start on a bucket): the lists name it, so a page whose saves
+  // went to another bucket (BUCKET_NAME or the key changed) sends them again instead of taking them as removed.
+  let storeId = null, storeAt = 0;
+  async function theStore() {
+    if (storeId && Date.now() - storeAt < storeTtl) return storeId;
+    storeAt = Date.now();
+    const buf = await s3.getBuffer('meta/store.json');
+    if (buf) storeId = JSON.parse(buf.toString()).id;
+    else {
+      storeId = randomBytes(9).toString('hex');
+      await s3.put('meta/store.json', Buffer.from(JSON.stringify({ id: storeId, created: new Date().toISOString() })), { type: 'application/json' });
+      log(`cloud: a new store (meta/store.json ${storeId}): pages send their saves and data sets to it again`);
+    }
+    return storeId;
+  }
   const incomingKey = (sub, ext) => `incoming/${sub}/${Date.now()}-${randomBytes(6).toString('hex')}.${ext}`;
   const incomingOf = (sub, key, ext) => typeof key === 'string' && new RegExp(`^incoming/${sub}/\\d+-[0-9a-f]{12}\\.${ext}$`).test(key);
   // Uploads that were never finished: gone after a day (each 6 hours, and at the start).
@@ -170,6 +187,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   const secure = (req) => origin(req).startsWith('https:');
   const sessionOf = (req) => seal.open('s', readCookies(req)[SESSION]);
   const accountKey = (sub) => `accounts/${sub}.json`;
+  const grantKey = (sub) => `grants/${sub}.json`;
   const saveKey = (sub, name) => `saves/${sub}/${b64u(name)}.gz`;
   const setKey = (sub, name) => `sets/${sub}/${b64u(name)}.zip`;
 
@@ -182,33 +200,55 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     return a;
   }
 
-  // { cloud, from: 'subscription' | 'given' | null, record }.
-  async function planOf(user) {
-    let a = null;
-    try { a = await account(user.sub); } catch (err) { log(`cloud: account ${user.sub} not read: ${err.message}`); }
-    if (cloudFor === 'everyone' || users.has(user.email)) return { cloud: true, from: 'given', record: a };
-    const on = a?.plan === 'cloud' && (!a.planUntil || Date.parse(a.planUntil) > Date.now());
-    if (on) return { cloud: true, from: a.paddle ? 'subscription' : 'given', record: a };
-    if (a?.given) return { cloud: true, from: 'given', record: a };      // an admin gave it (give, the admin page)
-    return { cloud: false, from: null, record: a };
+  // Cloud Saves an admin gave: grants/<google id>.json, { sub, email, by, at }, a file that only give writes (the sign-in
+  // and Paddle's events write the account record, and a record written from an old copy lost a gift kept in it).
+  // Kept in memory for a minute, like the record; fresh reads for the admin page and /api/me.
+  const grants = new Map();
+  async function grant(sub, fresh = false) {
+    const c = grants.get(sub);
+    if (!fresh && c && Date.now() - c.at < 60000) return c.grant;
+    const buf = await s3.getBuffer(grantKey(sub));
+    const g = buf ? JSON.parse(buf.toString()) : null;
+    grants.set(sub, { grant: g, at: Date.now() });
+    return g;
   }
 
-  // The admin page (server.mjs): an account's plan, and Cloud Saves that an admin gives or takes back. A gift is a field
-  // of its own in the record (given: { by, at }), so Paddle's events, which write plan and planUntil, leave it.
-  async function planOfSub(sub, fresh = false) {
+  // { cloud, from: 'subscription' | 'given' | null, record, grant }. fresh: read the store, not the minute's copy.
+  async function planOf(user, fresh = false) {
+    let a = null, g = null;
+    try { a = await account(user.sub, fresh); } catch (err) { log(`cloud: account ${user.sub} not read: ${err.message}`); }
+    if (cloudFor === 'everyone' || users.has(user.email)) return { cloud: true, from: 'given', record: a, grant: null };
+    const on = a?.plan === 'cloud' && (!a.planUntil || Date.parse(a.planUntil) > Date.now());
+    if (on) return { cloud: true, from: a.paddle ? 'subscription' : 'given', record: a, grant: null };
+    try { g = await grant(user.sub, fresh); } catch (err) { log(`cloud: grant ${user.sub} not read: ${err.message}`); }
+    if (g || a?.given) return { cloud: true, from: 'given', record: a, grant: g ?? a.given };   // an admin gave it
+    return { cloud: false, from: null, record: a, grant: null };
+  }
+
+  // The admin page (server.mjs): an account's plan, read fresh, and Cloud Saves that an admin gives or takes back.
+  async function planOfSub(sub, fresh = true) {
     const a = await account(sub, fresh);
     if (!a) return null;
-    const p = await planOf({ sub, email: a.email });
-    return { cloud: p.cloud, from: p.from, given: Boolean(a.given), until: p.from === 'subscription' ? a.planUntil ?? null : null };
+    const p = await planOf({ sub, email: a.email }, fresh);
+    return { cloud: p.cloud, from: p.from, given: Boolean(p.grant), givenAt: p.grant?.at ?? null,
+      until: p.from === 'subscription' ? a.planUntil ?? null : null };
   }
   async function give(sub, on, by) {
     const a = await account(sub, true);
     if (!a) return null;
-    const next = { ...a };
-    if (on) next.given = { by: String(by ?? 'admin').slice(0, 200), at: new Date().toISOString() };
-    else delete next.given;
-    await s3.put(accountKey(sub), Buffer.from(JSON.stringify(next)), { type: 'application/json' });
-    accounts.set(sub, { account: next, at: Date.now() });
+    if (on) {
+      const g = { sub, email: a.email ?? null, by: String(by ?? 'admin').slice(0, 200), at: new Date().toISOString() };
+      await s3.put(grantKey(sub), Buffer.from(JSON.stringify(g)), { type: 'application/json' });
+      grants.set(sub, { grant: g, at: Date.now() });
+    } else {
+      await s3.delete(grantKey(sub));
+      grants.set(sub, { grant: null, at: Date.now() });
+      if (a.given) {                            // a gift of the first version, in the record itself
+        const { given, ...rest } = a;
+        await s3.put(accountKey(sub), Buffer.from(JSON.stringify(rest)), { type: 'application/json' });
+        accounts.set(sub, { account: rest, at: Date.now() });
+      }
+    }
     log(`cloud: account ${sub}: Cloud Saves ${on ? 'given' : 'taken back'} by an admin`);
     return planOfSub(sub);
   }
@@ -274,7 +314,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   async function me(req, res) {
     const user = sessionOf(req);
     if (!user) { send(res, 200, { auth: true, user: null, offer: offer(), maxSaves }); return; }
-    const p = await planOf(user);
+    const p = await planOf(user, true);              // fresh: a gift or a payment shows at the page's next load
     setCookie(res, SESSION, seal.seal('s', user, SESSION_DAYS * 86400), { maxAge: SESSION_DAYS * 86400, secure: secure(req) });
     send(res, 200, { auth: true, offer: offer(), maxSaves, user: {
       email: user.email, name: user.name, picture: user.picture, cloud: p.cloud, cloudFrom: p.from,
@@ -505,7 +545,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
         const name = unb64u(o.key.slice(o.key.lastIndexOf('/') + 1, -4)), h = await s3.head(o.key);
         return h && validSetName(name) ? { name, etag: h.etag, size: h.size, rawSize: Number(h.metadata['raw-size']) || null, saved: Number(h.metadata.saved) || null } : null;
       }))).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
-      send(res, 200, { sets, maxSets });
+      send(res, 200, { sets, maxSets, store: await theStore() });
       return;
     }
     let name;
@@ -556,6 +596,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     for (const o of await s3.list(`saves/${user.sub}/`)) await s3.delete(o.key);
     for (const o of await s3.list(`sets/${user.sub}/`)) await s3.delete(o.key);
     for (const o of await s3.list(`incoming/${user.sub}/`)) await s3.delete(o.key);
+    await s3.delete(grantKey(user.sub));
     await s3.delete(accountKey(user.sub));
     accounts.delete(user.sub);
     setCookie(res, SESSION, null, { secure: secure(req) });
@@ -597,7 +638,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
       if (!(await hasCloud(user))) { req.resume(); send(res, 403, { error: 'cloud saves are not on this account\'s plan' }); return; }
       if (path === '/api/saves') {
         if (method !== 'GET') { send(res, 405, { error: 'GET only' }); return; }
-        send(res, 200, { saves: await listSaves(user), maxSaves });
+        send(res, 200, { saves: await listSaves(user), maxSaves, store: await theStore() });
         return;
       }
       let name;

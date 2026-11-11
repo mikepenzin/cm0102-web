@@ -41,7 +41,7 @@ const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKe
 const logs = [];
 const cloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'z'.repeat(40),
   cloudUsers: ['player@example.com'], maxSaves: 10, google: google.google, log: (t) => logs.push(t), price: '$5 a month',
-  isAdmin: (email) => email === 'player@example.com',
+  isAdmin: (email) => email === 'player@example.com', storeTtl: 0,
   paddle: { env: 'sandbox', clientToken: 'test_token', priceIds: ['pri_cloud_month'], webhookSecret: 'pdl_ntfset_check', apiKey: null, apiBase: null } });
 // Paddle.js, as far as the page uses it: Initialize, and a checkout that completes at once. The test then sends the
 // webhook that Paddle would send.
@@ -190,6 +190,21 @@ try {
     cloudBytes(through)?.equals(throughBytes) && /did not answer this page directly/.test(await a.textContent('#log'))
       && s3fake.requests.slice(before).some((r) => r.startsWith('PUT') && r.includes(Buffer.from(through).toString('base64url')) && !r.includes('X-Amz-Signature')));
   s3fake.faults.corsGone = false;
+  // The server is pointed at another bucket (BUCKET_NAME or its key changed): the saves of this page are not in it.
+  // The store's id tells the page, and its saves go up again instead of showing as Only here.
+  for (const k of [...s3fake.objects.keys()]) if (k.startsWith(`saves/${PLAYER.sub}/`)) s3fake.objects.delete(k);
+  s3fake.objects.delete('meta/store.json');
+  await writeSave('Trigger 2001-08-04.sav', fakeSaveBytes(48));            // a save, so the page syncs
+  await waitFor('the saves back in the new store', () => cloudBytes(harbour) !== null && cloudBytes(through) !== null, 60000);
+  check('another store: the saves already sent before go up to it again', cloudBytes(harbour) !== null && cloudBytes(through)?.equals(throughBytes)
+    && /the cloud store is another one/.test(await a.textContent('#log')));
+  await a.click('#saves-open');
+  const after = await a.$$eval('#saves-list td.cloud', (tds) => tds.map((t) => t.textContent.trim()));
+  check('and Saved games shows them in the cloud, not Only here', after.length > 0 && !after.includes('Only here'), after.join(', '));
+  check('a save removed from the old store goes to the new one too: the removal was of the old one', cloudBytes('From iPad.sav') !== null);
+  await a.click('#saves-list button[data-remove="From iPad.sav"]');      // removed again, for the second device below
+  await waitFor('the removal', () => !s3fake.objects.has(keyOf('From iPad.sav')));
+  await a.click('#saves-close');
 
   // ---- An iPad (a second device): signs in, gets every cloud save before its game starts. ----
   const ipadCtx = await browser.newContext({ viewport: { width: 1180, height: 820 }, hasTouch: true, isMobile: true });

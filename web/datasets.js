@@ -209,7 +209,13 @@ export function createSetSync({ FS, root, sync, log, toast, account }) {
     const r = await fetch('/api/datasets', { cache: 'no-store' });
     if (r.status === 401 || r.status === 403) { stopped = true; changed(); return []; }
     if (!r.ok) throw new Error(`the cloud's data sets: HTTP ${r.status}`);
-    const { sets } = await r.json();
+    const { sets, store } = await r.json();
+    // Another store than the last sync's: the data sets go up to it again (account.js, the same for saves).
+    if (store && state.store !== store) {
+      if (state.store) log('page: data sets: the cloud store is another one: the data sets here go up to it again');
+      state.sets = {};
+      state.store = store;
+    }
     const cloud = new Map(sets.map((s) => [s.name, { etag: s.etag, rawSize: s.rawSize, saved: s.saved }]));
     const plan = planSync(local(), cloud, state.sets, { replace: true });
     Object.assign(state.sets, plan.settle);
