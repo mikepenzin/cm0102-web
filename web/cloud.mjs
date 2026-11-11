@@ -116,14 +116,24 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   // checks it and copies it to its place (the store copies; the bytes do not come here). The store must let the page's
   // origin in (CORS): the server sets the bucket's rules at the start. When that fails, or with direct off, the page
   // goes through this server as before (putSave, getSave).
+  // direct: true (set the rules, and go direct when that works), 'given' (the rules were set by hand in the store's
+  // console: CM_DIRECT=on) or false (CM_DIRECT=off).
   let direct = false;
   const directReady = (async () => {
     if (!directWanted || !s3.presign) return;
+    if (directWanted === 'given') {
+      direct = true;
+      log('cloud: saves and data sets go straight between the browser and the store (CORS rules set in the store\'s console, CM_DIRECT=on)');
+      return;
+    }
     try {
       await s3.putCors(origins);
       direct = true;
       log(`cloud: saves and data sets go straight between the browser and the store (CORS for ${origins.join(', ')})`);
-    } catch (err) { log(`cloud: the store's CORS rules were not set (${err.message}): saves and data sets go through this server`); }
+    } catch (err) {
+      log(`cloud: the store's CORS rules were not set (${err.message}): saves and data sets go through this server. Set them in the`
+        + ` store's console and CM_DIRECT=on (web/deploy/README.md, "Straight to Tigris")`);
+    }
   })();
   const incomingKey = (sub, ext) => `incoming/${sub}/${Date.now()}-${randomBytes(6).toString('hex')}.${ext}`;
   const incomingOf = (sub, key, ext) => typeof key === 'string' && new RegExp(`^incoming/${sub}/\\d+-[0-9a-f]{12}\\.${ext}$`).test(key);
@@ -647,9 +657,10 @@ export function cloudFromEnv(env = process.env, log, { onAccountDeleted, isAdmin
     upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, maxSets: Number(env.CM_CLOUD_MAX_SETS) || 5, log,
     price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env), onAccountDeleted, isAdmin,
     uploadBudget: (Number(env.CM_UPLOAD_BUDGET_MB) || 160) << 20,
-    // Direct to the store (createCloud, "direct"): off with CM_DIRECT=off. The bucket's CORS rules let in the site's
-    // own addresses: CM_PUBLIC_URL and the app's fly.dev address, or CM_CORS_ORIGINS (comma separated) in their place.
-    direct: env.CM_DIRECT !== 'off',
+    // Direct to the store (createCloud, "direct"): off with CM_DIRECT=off; on without setting the rules with CM_DIRECT=on
+    // (they were set in the store's console). The bucket's CORS rules let in the site's own addresses: CM_PUBLIC_URL
+    // and the app's fly.dev address, or CM_CORS_ORIGINS (comma separated) in their place.
+    direct: env.CM_DIRECT === 'off' ? false : env.CM_DIRECT === 'on' ? 'given' : true,
     origins: corsOrigins(env),
   });
   return { cloud, missing };

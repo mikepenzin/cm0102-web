@@ -332,6 +332,9 @@ test('direct off: a store that takes no CORS rules, or CM_DIRECT=off: the page i
     cloudFor: 'everyone', google: google.google, log: (t) => said.push(t) });
   assert.equal(await cloud.directReady, false);
   assert.match(said.join(' '), /CORS rules were not set .*go through this server/);
+  const byHand = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'x'.repeat(40),
+    cloudFor: 'everyone', google: google.google, log: (t) => said.push(t), direct: 'given' });
+  assert.equal(await byHand.directReady, true, 'CM_DIRECT=on: the rules were set in the console; the server does not try');
   s3fake.faults.noCors = false;
   const two = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv'), cloud });
   await new Promise((r) => two.listen(0, '127.0.0.1', r));

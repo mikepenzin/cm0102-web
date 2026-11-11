@@ -127,6 +127,26 @@ opens `/admin` in a new tab. The token is for scripts:
 `statistics: on (opt-out), kept in the bucket`. `CM_STATS=optin` asks players first (off until they turn them on in
 Help); `CM_STATS=off` turns them off.
 
+## Straight to Tigris
+
+Saves and data sets go from the browser to Tigris and back without passing the machine (`web/README.md`, "Straight to
+the store"), once the bucket lets the site's page in (its CORS rules). The server sets them at the start when its key
+may; the key that `fly storage create` makes may not, and `fly logs` then says `the store's CORS rules were not set
+(S3 403 AccessDenied …)`. Saves still work then, through the server. Set the rules by hand, once:
+
+1. `fly storage dashboard` (in `web/deploy/stage`) opens the bucket in the Tigris console.
+2. The bucket's Settings, CORS: a rule with
+   - Allowed origins: `https://<your-app>.fly.dev` (and your own domain, when you have one)
+   - Allowed methods: `GET`, `PUT`, `HEAD`
+   - Allowed headers: `*`
+   - Expose headers: `ETag`
+   - Max age: `3600`
+3. `fly secrets set CM_DIRECT=on`: the server then goes direct without setting the rules itself. `fly logs` says
+   `saves and data sets go straight between the browser and the store (CORS rules set in the store's console …)`.
+
+If the rule is missing or wrong, a page finds out at its first save (its engine log says `did not answer this page
+directly`) and goes through the server for that visit, so a mistake costs speed, not saves.
+
 ## Size of the machine
 
 One shared-CPU machine with 512 MB (`fly.toml`), which stops when nobody is visiting. The server streams the files
@@ -160,7 +180,7 @@ add up across them (each write adds what its machine counted). One is enough: `f
 | `failed to push registry.fly.io/…` with `_api.internal:5000 … connection refused` | Fly's internal registry did not answer; the image itself built. Try, one at a time: `fly deploy --wg=false` (the push goes over HTTPS instead of Fly's private network), `fly deploy --depot=false` (the other builder), `fly deploy --local-only` (builds on your Mac, needs Docker Desktop). If none works, it is on Fly's side: status.flyio.net and community.fly.io |
 | The site does not answer | `fly logs`: a good start prints `game files: 764 (461 MB)` and `open http://0.0.0.0:8080` |
 | The machine runs out of memory | `fly scale memory 1024`, or a lower `CM_UPLOAD_BUDGET_MB` (Size of the machine) |
-| `fly logs` says `the store's CORS rules were not set` | Saves still work, through the server. The bucket did not take the rules that let the page reach it directly (`web/README.md`, "Straight to the store"); its access key may lack the right: `fly storage update`, or set the rules in the Tigris console (GET, PUT and HEAD for the site's address) |
+| `fly logs` says `the store's CORS rules were not set (… AccessDenied …)` | Saves still work, through the server. The key of `fly storage create` may not change the bucket's settings: set the rules once in the Tigris console (Straight to Tigris, below) |
 | The engine log shows `cloud saves: … up: HTTP 502` | The server, or the store behind it, failed that upload; the page tries it again after 3 and 10 s, then each minute. `fly logs` says which: `cloud: PUT /api/saves/…: <the store's error>`, or `Out of memory` and a restart (the machine is too small: `fly scale memory 512`) |
 | `accounts and cloud saves: off, missing …` | Set the named secrets (Accounts and cloud saves) |
 | Google says `redirect_uri_mismatch` | The client's Authorized redirect URI must be exactly `https://<your-app>.fly.dev/auth/google/callback` |

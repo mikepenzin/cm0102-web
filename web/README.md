@@ -221,7 +221,9 @@ header; a data set's zip is read whole, 48 MB at most), checks it, and copies it
 not come to the server); a file that fails the check is deleted and never replaces the save before it. A download is a
 link too. At the start the server sets the bucket's CORS rules for the site's origins (`CM_PUBLIC_URL` and
 `https://<FLY_APP_NAME>.fly.dev`, or `CM_CORS_ORIGINS`); the log then says `saves and data sets go straight between the
-browser and the store`. When the store takes no rules, with `CM_DIRECT=off`, or when the store does not answer a page
+browser and the store`. `CM_DIRECT=on` skips the setting, for rules set in the store's console (`web/deploy/README.md`, "Straight to Tigris":
+the key of `fly storage create` may not set them). When the store takes no rules, with `CM_DIRECT=off`, or when the
+store does not answer a page
 (the page's log says `did not answer this page directly`), the files go through the server as before. Uploads left in
 `incoming/` go after a day.
 
@@ -290,7 +292,7 @@ deleted until the subscription is canceled. In Paddle (start in the sandbox, `sa
 | `CM_UPGRADE_URL` | without Paddle: where "Get Cloud Saves" leads |
 | `CM_CLOUD_MAX_SAVES` | the most saves an account keeps in the cloud (default 30) |
 | `CM_CLOUD_MAX_SETS` | the most data sets an account keeps in the cloud (default 5) |
-| `CM_DIRECT` | `off`: saves and data sets go through the server, not straight to the store |
+| `CM_DIRECT` | `off`: saves and data sets go through the server, not straight to the store; `on`: straight, with the bucket's CORS rules set in the store's console (the server does not set them) |
 | `CM_CORS_ORIGINS` | the addresses the bucket's CORS rules let in, comma separated (default `CM_PUBLIC_URL` and the fly.dev address) |
 | `CM_UPLOAD_BUDGET_MB` | the uploads the server holds in memory at once, through the server (default 160) |
 
