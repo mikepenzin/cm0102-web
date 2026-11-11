@@ -9,6 +9,7 @@
 // The store holds:
 //   accounts/<google id>.json            { sub, email, name, created, seen, plan, planUntil, given }
 //   saves/<google id>/<name, base64url>.gz the save, gzip-compressed by the page; metadata raw-size and saved (ms)
+import { randomBytes } from 'node:crypto';
 import { createGunzip } from 'node:zlib';
 import { GOOGLE, SignInError, googleFinish, googleStart, readCookies, sealer, setCookie } from './auth.mjs';
 import { PADDLE_API, accountRef, applySubscription, checkPaddleSignature, openAccountRef, portalUrl } from './billing.mjs';
@@ -108,8 +109,34 @@ ${ok ? 'setTimeout(() => window.close(), 300);' : ''}</script>`;
 // price: how the page names the price ("$5 a month").
 export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicUrl = null, cloudFor = 'listed', cloudUsers = [],
   upgradeUrl = null, maxSaves = 30, maxSets = 5, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t),
-  onAccountDeleted = () => {}, uploadBudget = 160 << 20, isAdmin = () => false }) {
+  onAccountDeleted = () => {}, uploadBudget = 160 << 20, isAdmin = () => false, direct: directWanted = true, origins = ['*'] }) {
   const seal = sealer(sessionSecret);
+  // Direct: the page sends a save or a data set to the store, and gets one from it, with a link that this server signs
+  // (s3.presign), so the files do not pass this machine. An upload goes to incoming/<account>/ first; the server then
+  // checks it and copies it to its place (the store copies; the bytes do not come here). The store must let the page's
+  // origin in (CORS): the server sets the bucket's rules at the start. When that fails, or with direct off, the page
+  // goes through this server as before (putSave, getSave).
+  let direct = false;
+  const directReady = (async () => {
+    if (!directWanted || !s3.presign) return;
+    try {
+      await s3.putCors(origins);
+      direct = true;
+      log(`cloud: saves and data sets go straight between the browser and the store (CORS for ${origins.join(', ')})`);
+    } catch (err) { log(`cloud: the store's CORS rules were not set (${err.message}): saves and data sets go through this server`); }
+  })();
+  const incomingKey = (sub, ext) => `incoming/${sub}/${Date.now()}-${randomBytes(6).toString('hex')}.${ext}`;
+  const incomingOf = (sub, key, ext) => typeof key === 'string' && new RegExp(`^incoming/${sub}/\\d+-[0-9a-f]{12}\\.${ext}$`).test(key);
+  // Uploads that were never finished: gone after a day (each 6 hours, and at the start).
+  async function sweepIncoming() {
+    try {
+      for (const o of await s3.list('incoming/')) if (Date.parse(o.modified) < Date.now() - 86400e3) await s3.delete(o.key);
+    } catch (err) { log(`cloud: incoming uploads not swept: ${err.message}`); }
+  }
+  if (directWanted && s3.presign) {
+    directReady.then(() => { if (direct) sweepIncoming(); });
+    setInterval(() => { if (direct) sweepIncoming(); }, 6 * 3600e3).unref?.();
+  }
   // The uploads in memory at once (readBody holds each whole, for its check and its signature): a save is at most
   // MAX_GZ, a data set MAX_SET_ZIP. Past uploadBudget an upload is turned away with 503 and goes at the next sync, so a
   // few players saving at once cannot run the server's small machine out of memory (web/deploy/README.md).
@@ -324,6 +351,133 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     send(res, 200, { name, etag, size: body.length, rawSize: total, saved });
   }
 
+  // The direct steps of a save (direct above). ?direct=put (POST { size, rawSize, saved, base }): the checks of an
+  // upload before it goes, and a link to send it with. ?direct=done (POST { key, base }): the upload is checked and takes
+  // its place. ?direct=get (GET): a link to get it with. With direct off each answers { direct: false }.
+  async function directSave(req, res, user, name, how, method) {
+    const body = method === 'POST' ? await readBody(req, 4096).then((b) => JSON.parse(b.toString() || '{}')).catch(() => null) : null;
+    if (!direct) { send(res, 200, { direct: false }); return; }
+    const key = saveKey(user.sub, name);
+    if (how === 'get' && method === 'GET') {
+      const h = await s3.head(key);
+      if (!h) { send(res, 404, { error: `${name} is not in the cloud` }); return; }
+      send(res, 200, { direct: true, url: s3.presign('GET', key).url, etag: h.etag, size: h.size,
+        rawSize: Number(h.metadata['raw-size']) || null, saved: Number(h.metadata.saved) || null });
+      return;
+    }
+    if (method !== 'POST' || !body) { send(res, 400, { error: 'POST a JSON body' }); return; }
+    const conflict = async (base) => {
+      const current = await s3.head(key);
+      if (base !== undefined && (base === 'none' ? current !== null : current?.etag !== base)) {
+        send(res, 409, { error: 'changed', cloud: current && { etag: current.etag, rawSize: Number(current.metadata['raw-size']) || null,
+          saved: Number(current.metadata.saved) || null } });
+        return true;
+      }
+      if (!current && (await s3.list(`saves/${user.sub}/`)).length >= maxSaves) {
+        send(res, 507, { error: `the cloud holds ${maxSaves} saves at most: remove one first` });
+        return true;
+      }
+      return false;
+    };
+    if (how === 'put') {
+      const size = Math.floor(Number(body.size)), rawSize = Math.floor(Number(body.rawSize));
+      const saved = Number.isFinite(Number(body.saved)) && Number(body.saved) > 0 ? Math.floor(Number(body.saved)) : Date.now();
+      if (!(size > 0) || size > MAX_GZ) { send(res, 413, { error: `a save may be ${MAX_GZ >> 20} MB at most, compressed` }); return; }
+      if (!(rawSize > 0) || rawSize > MAX_RAW) { send(res, 422, { error: `${name} was not stored: it is larger than ${MAX_RAW >> 20} MB` }); return; }
+      if (await conflict(body.base ?? undefined)) return;
+      const upload = incomingKey(user.sub, 'gz');
+      const link = s3.presign('PUT', upload, { headers: { 'content-type': 'application/gzip', 'content-length': size,
+        'x-amz-meta-raw-size': rawSize, 'x-amz-meta-saved': saved } });
+      const { 'content-length': _, ...headers } = link.headers;    // the browser sets the length of the body itself
+      send(res, 200, { direct: true, url: link.url, headers: Object.fromEntries(Object.entries(headers).map(([k, v]) => [k, String(v)])), key: upload });
+      return;
+    }
+    if (how === 'done') {
+      const upload = body.key;
+      if (!incomingOf(user.sub, upload, 'gz')) { send(res, 400, { error: 'not an upload of this account' }); return; }
+      const h = await s3.head(upload);
+      if (!h) { send(res, 404, { error: 'the upload did not reach the cloud' }); return; }
+      const total = Number(h.metadata['raw-size']), saved = Number(h.metadata.saved) || Date.now();
+      const head = h.size <= MAX_GZ ? await gzipHead(upload, SAVE_HEADER) : null;
+      const why = h.size > MAX_GZ ? `it is larger than ${MAX_GZ >> 20} MB, compressed` : head === null ? 'the upload is not gzip data'
+        : checkSave(new Uint8Array(head.buffer, head.byteOffset, head.length), total);
+      if (why) { await s3.delete(upload); send(res, 422, { error: `${name} was not stored: ${why}` }); return; }
+      if (await conflict(body.base ?? undefined)) { await s3.delete(upload); return; }
+      await s3.copy(upload, key);
+      await s3.delete(upload);
+      const now = await s3.head(key);
+      send(res, 200, { name, etag: now.etag, size: now.size, rawSize: total, saved });
+      return;
+    }
+    send(res, 400, { error: 'direct=put, done or get' });
+  }
+
+  // The first bytes of a gzip object of the store (its header), without the rest: null when it is not gzip data.
+  async function gzipHead(key, want) {
+    const r = await s3.get(key);
+    if (!r) return null;
+    return new Promise((resolveHead) => {
+      const g = createGunzip(), parts = [];
+      let n = 0, settled = false;
+      const finish = (v) => { if (settled) return; settled = true; r.destroy(); g.destroy(); resolveHead(v); };
+      g.on('data', (c) => { parts.push(c); n += c.length; if (n >= want) finish(Buffer.concat(parts)); });
+      g.on('end', () => finish(Buffer.concat(parts)));
+      g.on('error', () => finish(null));
+      r.on('error', () => finish(null));
+      r.pipe(g);
+    });
+  }
+
+  // The direct steps of a data set, as directSave: put ({ size, saved, base }), done ({ key, base }: the zip is read
+  // here for its check, at most MAX_SET_ZIP) and get.
+  async function directSet(req, res, user, name, key, how, method) {
+    const body = method === 'POST' ? await readBody(req, 4096).then((b) => JSON.parse(b.toString() || '{}')).catch(() => null) : null;
+    if (!direct) { send(res, 200, { direct: false }); return; }
+    if (how === 'get' && method === 'GET') {
+      const h = await s3.head(key);
+      if (!h) { send(res, 404, { error: `${name} is not in the cloud` }); return; }
+      send(res, 200, { direct: true, url: s3.presign('GET', key).url, etag: h.etag, size: h.size, saved: Number(h.metadata.saved) || null });
+      return;
+    }
+    if (method !== 'POST' || !body) { send(res, 400, { error: 'POST a JSON body' }); return; }
+    const conflict = async (base) => {
+      const current = await s3.head(key);
+      if (base !== undefined && (base === 'none' ? current !== null : current?.etag !== base)) { send(res, 409, { error: 'changed' }); return true; }
+      if (!current && (await s3.list(`sets/${user.sub}/`)).length >= maxSets) {
+        send(res, 507, { error: `the cloud holds ${maxSets} data sets at most: remove one first` });
+        return true;
+      }
+      return false;
+    };
+    if (how === 'put') {
+      const size = Math.floor(Number(body.size));
+      const saved = Number.isFinite(Number(body.saved)) && Number(body.saved) > 0 ? Math.floor(Number(body.saved)) : Date.now();
+      if (!(size > 0) || size > MAX_SET_ZIP) { send(res, 413, { error: `a data set may be ${MAX_SET_ZIP >> 20} MB at most, zipped` }); return; }
+      if (await conflict(body.base ?? undefined)) return;
+      const upload = incomingKey(user.sub, 'zip');
+      const link = s3.presign('PUT', upload, { headers: { 'content-type': 'application/zip', 'content-length': size, 'x-amz-meta-saved': saved } });
+      const { 'content-length': _, ...headers } = link.headers;
+      send(res, 200, { direct: true, url: link.url, headers: Object.fromEntries(Object.entries(headers).map(([k, v]) => [k, String(v)])), key: upload });
+      return;
+    }
+    if (how === 'done') {
+      const upload = body.key;
+      if (!incomingOf(user.sub, upload, 'zip')) { send(res, 400, { error: 'not an upload of this account' }); return; }
+      const h = await s3.head(upload);
+      if (!h) { send(res, 404, { error: 'the upload did not reach the cloud' }); return; }
+      const saved = Number(h.metadata.saved) || Date.now();
+      const { why, rawSize } = h.size > MAX_SET_ZIP ? { why: `it is larger than ${MAX_SET_ZIP >> 20} MB, zipped` } : inspectSetZip(await s3.getBuffer(upload));
+      if (why) { await s3.delete(upload); send(res, 422, { error: `${name} was not stored: ${why}` }); return; }
+      if (await conflict(body.base ?? undefined)) { await s3.delete(upload); return; }
+      await s3.copy(upload, key, { type: 'application/zip', metadata: { 'raw-size': rawSize, saved } });
+      await s3.delete(upload);
+      const now = await s3.head(key);
+      send(res, 200, { name, etag: now.etag, size: now.size, rawSize, saved });
+      return;
+    }
+    send(res, 400, { error: 'direct=put, done or get' });
+  }
+
   async function getSave(res, user, name) {
     const r = await s3.get(saveKey(user.sub, name));
     if (!r) { send(res, 404, { error: `${name} is not in the cloud` }); return; }
@@ -333,7 +487,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   }
 
   // The data sets of an account: zips of the 20 database files (datasets.js), metadata raw-size and saved.
-  async function dataSets(req, res, user, path, method) {
+  async function dataSets(req, res, user, path, method, url) {
     if (path === '/api/datasets') {
       if (method !== 'GET') { send(res, 405, { error: 'GET only' }); return; }
       const objects = (await s3.list(`sets/${user.sub}/`)).filter((o) => o.key.endsWith('.zip'));
@@ -348,6 +502,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     try { name = decodeURIComponent(path.slice('/api/datasets/'.length)); } catch { name = null; }
     if (!validSetName(name)) { req.resume(); send(res, 400, { error: 'not a data set name' }); return; }
     const key = setKey(user.sub, name);
+    if (url.searchParams.has('direct')) return directSet(req, res, user, name, key, url.searchParams.get('direct'), method);
     if (method === 'GET') {
       const r = await s3.get(key);
       if (!r) { send(res, 404, { error: `${name} is not in the cloud` }); return; }
@@ -390,6 +545,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     }
     for (const o of await s3.list(`saves/${user.sub}/`)) await s3.delete(o.key);
     for (const o of await s3.list(`sets/${user.sub}/`)) await s3.delete(o.key);
+    for (const o of await s3.list(`incoming/${user.sub}/`)) await s3.delete(o.key);
     await s3.delete(accountKey(user.sub));
     accounts.delete(user.sub);
     setCookie(res, SESSION, null, { secure: secure(req) });
@@ -424,7 +580,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     if (path === '/api/datasets' || path.startsWith('/api/datasets/')) {
       if (!user) { req.resume(); send(res, 401, { error: 'not signed in' }); return; }
       if (!(await hasCloud(user))) { req.resume(); send(res, 403, { error: 'cloud saves are not on this account\'s plan' }); return; }
-      return dataSets(req, res, user, path, method);
+      return dataSets(req, res, user, path, method, url);
     }
     if (path === '/api/saves' || path === '/api/saves/' || path.startsWith('/api/saves/')) {
       if (!user) { req.resume(); send(res, 401, { error: 'not signed in' }); return; }
@@ -437,6 +593,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
       let name;
       try { name = decodeURIComponent(path.slice('/api/saves/'.length)); } catch { name = null; }
       if (!validSaveName(name)) { req.resume(); send(res, 400, { error: 'not a save name' }); return; }
+      if (url.searchParams.has('direct')) return directSave(req, res, user, name, url.searchParams.get('direct'), method);
       if (method === 'GET') return getSave(res, user, name);
       if (method === 'PUT') return putSave(req, res, user, name);
       if (method === 'DELETE') { await s3.delete(saveKey(user.sub, name)); send(res, 204); return; }
@@ -449,6 +606,8 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   return {
     // The account signed in on this request ({ sub, email, name }), or null: statistics and the admin page.
     userOf: (req) => sessionOf(req),
+    // Resolves once the store's CORS rules are set, or found not to be: whether the page may go to the store directly.
+    directReady: directReady.then(() => direct),
     planOfSub,
     give,
     async handle(req, res, url) {
@@ -463,6 +622,14 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
       }
     },
   };
+}
+
+// The origins the bucket's CORS rules let in: CM_CORS_ORIGINS (comma separated), else CM_PUBLIC_URL and the app's
+// fly.dev address (FLY_APP_NAME, which Fly sets), else any (a link of presign is the key to its one object anyway).
+export function corsOrigins(env = process.env) {
+  const named = env.CM_CORS_ORIGINS ? env.CM_CORS_ORIGINS.split(',') : [env.CM_PUBLIC_URL, env.FLY_APP_NAME && `https://${env.FLY_APP_NAME}.fly.dev`];
+  const list = [...new Set(named.map((o) => (o ?? '').trim().replace(/\/+$/, '')).filter(Boolean))];
+  return list.length ? list : ['*'];
 }
 
 // The cloud of the environment, or null and the settings that are missing.
@@ -480,6 +647,10 @@ export function cloudFromEnv(env = process.env, log, { onAccountDeleted, isAdmin
     upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, maxSets: Number(env.CM_CLOUD_MAX_SETS) || 5, log,
     price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env), onAccountDeleted, isAdmin,
     uploadBudget: (Number(env.CM_UPLOAD_BUDGET_MB) || 160) << 20,
+    // Direct to the store (createCloud, "direct"): off with CM_DIRECT=off. The bucket's CORS rules let in the site's
+    // own addresses: CM_PUBLIC_URL and the app's fly.dev address, or CM_CORS_ORIGINS (comma separated) in their place.
+    direct: env.CM_DIRECT !== 'off',
+    origins: corsOrigins(env),
   });
   return { cloud, missing };
 }

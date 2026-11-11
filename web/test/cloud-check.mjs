@@ -105,6 +105,9 @@ try {
   const harbour = 'Harbour City 2001-07-14.sav';
   await waitFor('the save to go up', () => cloudBytes(harbour) !== null);
   check('the game\'s save went up to the cloud', same(await localBytes(a, harbour), cloudBytes(harbour)));
+  check('straight to the store: the page sent it to incoming/ with a signed link, the server copied it in place',
+    s3fake.requests.some((r) => /^PUT \/[^/]+\/incoming\/4000004\/\d+-[0-9a-f]{12}\.gz\?.*X-Amz-Signature=/.test(r))
+      && ![...s3fake.objects.keys()].some((k) => k.startsWith('incoming/')), s3fake.requests.filter((r) => r.startsWith('PUT')).slice(0, 3).join(' · ').slice(0, 300));
   await waitFor('the message', async () => /Saved to the cloud/.test(await toasts(a)));
   check('the messages: saved here, then in the cloud', /Saved in this browser/.test(await toasts(a)) && /Saved to the cloud/.test(await toasts(a)), await toasts(a));
   check('the cloud\'s save was not sent back up', s3fake.requests.filter((r) => r.startsWith('PUT') && r.includes(Buffer.from('From iPad.sav').toString('base64url'))).length === 1);
@@ -159,6 +162,9 @@ try {
   const setKey = `sets/${PLAYER.sub}/${Buffer.from('My squads').toString('base64url')}.zip`;
   await waitFor('the data set to go up', () => s3fake.objects.has(setKey), 20000);
   check('an uploaded data set goes up to the cloud', s3fake.objects.has(setKey));
+  check('straight to the store as well: the zip went to incoming/ with a signed link',
+    s3fake.requests.some((r) => /^PUT \/[^/]+\/incoming\/4000004\/\d+-[0-9a-f]{12}\.zip\?.*X-Amz-Signature=/.test(r))
+      && JSON.stringify(s3fake.objects.get(setKey)?.meta ?? {}).includes('raw-size'));
   await waitFor('the cloud column', async () => /In the cloud/.test(await a.textContent('#sets-list')));
   check('Data sets shows it in the cloud', /In the cloud/.test(await a.textContent('#sets-list')));
   await a.click('#saves-close');
@@ -173,6 +179,17 @@ try {
   check('an admin: Admin panel opens the statistics in a new tab, signed in', panel.url() === `${BASE}/admin` && !/Sign in with Google|not an admin/.test(panelText) && /Saves/.test(panelText), panelText.slice(0, 120));
   await panel.close();
   await a.click('#account-close');
+  // The store stops letting the page in (its CORS rules changed): the page goes through the server for the rest of the
+  // visit, and the save still goes up.
+  s3fake.faults.corsGone = true;
+  const through = 'Through 2001-08-03.sav', throughBytes = fakeSaveBytes(47);
+  const before = s3fake.requests.length;
+  await writeSave(through, throughBytes);
+  await waitFor('the save through the server', () => cloudBytes(through)?.equals(throughBytes), 40000);
+  check('the store refuses the page: the save goes up through the server, and the log says why',
+    cloudBytes(through)?.equals(throughBytes) && /did not answer this page directly/.test(await a.textContent('#log'))
+      && s3fake.requests.slice(before).some((r) => r.startsWith('PUT') && r.includes(Buffer.from(through).toString('base64url')) && !r.includes('X-Amz-Signature')));
+  s3fake.faults.corsGone = false;
 
   // ---- An iPad (a second device): signs in, gets every cloud save before its game starts. ----
   const ipadCtx = await browser.newContext({ viewport: { width: 1180, height: 820 }, hasTouch: true, isMobile: true });

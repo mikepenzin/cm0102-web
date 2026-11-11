@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { sealer, googleStart } from '../auth.mjs';
-import { createCloud, cloudFromEnv, validSaveName } from '../cloud.mjs';
+import { corsOrigins, createCloud, cloudFromEnv, validSaveName } from '../cloud.mjs';
 import { createS3, signV4 } from '../s3.mjs';
 import { createApp } from '../server.mjs';
 import { fakeGoogle, fakeS3, fakeSaveBytes } from './fakes.mjs';
@@ -271,6 +271,80 @@ test('the store fails a save: the server sends it again twice, then answers 502'
   assert.equal(r.status, 502, 'three: the page is told, and tries again later');
   assert.match((await r.json()).error, /cloud store did not take/);
   s3fake.faults.failPuts = 0;
+});
+
+test('direct: a save goes to the store with a link, is checked, and takes its place; a bad one never does', async () => {
+  google.user = { sub: '2000099', email: 'listed@example.com', email_verified: true, name: 'Listed' };
+  const b = browser();
+  await b.signIn();
+  assert.equal(await cloudApi.directReady, true, 'the store took the CORS rules');
+  const json = (o) => JSON.stringify(o);
+  const ask = (name, how, body) => b.send('POST', `/api/saves/${encodeURIComponent(name)}?direct=${how}`, json(body), { 'content-type': 'application/json' });
+  const raw = fakeSaveBytes(9), gz = gzipSync(raw);
+  let r = await ask('Direct.sav', 'put', { size: gz.length, rawSize: raw.length, saved: 1762770000000, base: 'none' });
+  assert.equal(r.status, 200);
+  const link = await r.json();
+  assert.equal(link.direct, true);
+  assert.match(link.key, /^incoming\/2000099\/\d+-[0-9a-f]{12}\.gz$/);
+  assert.deepEqual(link.headers, { 'content-type': 'application/gzip', 'x-amz-meta-raw-size': String(raw.length), 'x-amz-meta-saved': '1762770000000' });
+  // The link takes only the length it was made for, and only these headers.
+  assert.equal((await fetch(link.url, { method: 'PUT', body: Buffer.concat([gz, Buffer.from('x')]), headers: link.headers })).status, 403);
+  assert.equal((await fetch(link.url, { method: 'PUT', body: gz, headers: { ...link.headers, 'x-amz-meta-saved': '1' } })).status, 403);
+  assert.equal((await fetch(link.url, { method: 'PUT', body: gz, headers: link.headers })).status, 200);
+  assert.equal((await ask('Direct.sav', 'done', { key: 'incoming/2000002/1-aaaaaaaaaaaa.gz', base: 'none' })).status, 400, 'another account\'s upload');
+  r = await ask('Direct.sav', 'done', { key: link.key, base: 'none' });
+  assert.equal(r.status, 200, await r.clone().text());
+  const done = await r.json();
+  assert.deepEqual([done.rawSize, done.saved, done.size], [raw.length, 1762770000000, gz.length]);
+  const final = `saves/2000099/${Buffer.from('Direct.sav').toString('base64url')}.gz`;
+  assert.ok(s3fake.objects.get(final).body.equals(gz), 'in its place');
+  assert.equal(s3fake.objects.has(link.key), false, 'the upload is gone from incoming/');
+  // A link to get it, and the same bytes from the store.
+  r = await b.get(`/api/saves/${encodeURIComponent('Direct.sav')}?direct=get`);
+  const got = await r.json();
+  assert.deepEqual([got.etag, got.rawSize, got.saved], [done.etag, raw.length, 1762770000000]);
+  assert.ok(gunzipSync(Buffer.from(await (await fetch(got.url)).arrayBuffer())).equals(raw));
+  // Not a save: refused at done, and the save in its place stays as it was.
+  const bad = gzipSync(Buffer.from('not a save at all, but long enough to read a header from it '.repeat(40)));
+  const l2 = await (await ask('Direct.sav', 'put', { size: bad.length, rawSize: 2400, base: done.etag })).json();
+  await fetch(l2.url, { method: 'PUT', body: bad, headers: l2.headers });
+  r = await ask('Direct.sav', 'done', { key: l2.key, base: done.etag });
+  assert.equal(r.status, 422);
+  assert.ok(s3fake.objects.get(final).body.equals(gz), 'the save stays');
+  assert.equal(s3fake.objects.has(l2.key), false);
+  // Changed on another device between the link and the done: refused, the other device's save stays.
+  const l3 = await (await ask('Direct.sav', 'put', { size: gz.length, rawSize: raw.length, base: done.etag })).json();
+  await fetch(l3.url, { method: 'PUT', body: gz, headers: l3.headers });
+  const other = gzipSync(fakeSaveBytes(10));
+  await b.send('PUT', `/api/saves/${encodeURIComponent('Direct.sav')}`, other, { 'x-base-etag': done.etag });
+  r = await ask('Direct.sav', 'done', { key: l3.key, base: done.etag });
+  assert.equal(r.status, 409);
+  assert.ok(s3fake.objects.get(final).body.equals(other));
+  // Too large, refused before the link.
+  assert.equal((await ask('Big.sav', 'put', { size: 65 << 20, rawSize: 1000, base: 'none' })).status, 413);
+});
+
+test('direct off: a store that takes no CORS rules, or CM_DIRECT=off: the page is told to go through the server', async () => {
+  s3fake.faults.noCors = true;
+  const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
+  const said = [];
+  const cloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'x'.repeat(40),
+    cloudFor: 'everyone', google: google.google, log: (t) => said.push(t) });
+  assert.equal(await cloud.directReady, false);
+  assert.match(said.join(' '), /CORS rules were not set .*go through this server/);
+  s3fake.faults.noCors = false;
+  const two = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv'), cloud });
+  await new Promise((r) => two.listen(0, '127.0.0.1', r));
+  try {
+    google.user = { sub: '2000111', email: 'off@example.com', email_verified: true, name: 'Off' };
+    const b = browser(`http://127.0.0.1:${two.address().port}`);
+    await b.signIn();
+    const r = await b.send('POST', '/api/saves/x.sav?direct=put', JSON.stringify({ size: 10, rawSize: 10 }), { 'content-type': 'application/json' });
+    assert.deepEqual(await r.json(), { direct: false });
+  } finally { two.close(); }
+  assert.deepEqual(corsOrigins({ FLY_APP_NAME: 'cm', CM_PUBLIC_URL: 'https://cm.example/' }), ['https://cm.example', 'https://cm.fly.dev']);
+  assert.deepEqual(corsOrigins({}), ['*']);
+  assert.deepEqual(corsOrigins({ CM_CORS_ORIGINS: 'https://a.example, https://b.example' }), ['https://a.example', 'https://b.example']);
 });
 
 test('the S3 store refuses a request with another secret (the stand-in checks signatures)', async () => {

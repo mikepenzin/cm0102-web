@@ -2,7 +2,7 @@
 // does), and Google's sign-in (its authorization endpoint answers at once, as if the person had picked an account).
 import { createHash, createHmac, randomBytes } from 'node:crypto';
 import http from 'node:http';
-import { signV4 } from '../s3.mjs';
+import { signV4, signatureV4 } from '../s3.mjs';
 
 const sha256 = (b) => createHash('sha256').update(b).digest('hex');
 const xmlEsc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -15,23 +15,58 @@ function body(req) {
 export async function fakeS3({ bucket = 'cm-test', accessKeyId = 'tid_test', secretAccessKey = 'tsec_test', region = 'auto', pageSize = 1000 } = {}) {
   const objects = new Map(), requests = [];
   // failPuts: the next n PUTs (of keys that match failMatch) answer 500 InternalError, as a store that has a bad moment.
-  const faults = { failPuts: 0, failMatch: /./ };
+  // noCors: the store takes no CORS rules (as one that does not have them), so a page cannot reach it directly.
+  // corsGone: the rules it took no longer let any page in (as a bucket whose rules someone changed).
+  const faults = { failPuts: 0, failMatch: /./, noCors: false, corsGone: false };
+  let cors = null;                            // the bucket's CORS rules: { origins }
   const server = http.createServer(async (req, res) => {
     const data = await body(req);
     const url = new URL(req.url, 'http://x');
     requests.push(`${req.method} ${url.pathname}${url.search}`);
-    const reply = (status, xml = '', headers = {}) => { res.writeHead(status, { 'Content-Type': 'application/xml', ...headers }); res.end(xml); };
+    // CORS, as S3 answers it: only with rules that name the page's origin (or *).
+    const from = req.headers.origin;
+    const allowed = from && cors && !faults.corsGone && (cors.origins.includes('*') || cors.origins.includes(from));
+    const corsHeaders = allowed ? { 'Access-Control-Allow-Origin': cors.origins.includes('*') ? '*' : from, 'Access-Control-Expose-Headers': 'ETag', Vary: 'Origin' } : {};
+    const reply = (status, xml = '', headers = {}) => { res.writeHead(status, { 'Content-Type': 'application/xml', ...corsHeaders, ...headers }); res.end(xml); };
     const error = (status, code) => reply(status, `<?xml version="1.0"?><Error><Code>${code}</Code><Message>${code}</Message></Error>`);
+    if (req.method === 'OPTIONS') {
+      if (!allowed) return error(403, 'CORSResponse');
+      return reply(200, '', { 'Access-Control-Allow-Methods': 'GET, PUT, HEAD', 'Access-Control-Allow-Headers': req.headers['access-control-request-headers'] ?? '',
+        'Access-Control-Max-Age': '3600' });
+    }
+    const query = Object.fromEntries(url.searchParams);
+    if (query['X-Amz-Signature']) {
+      // A link of presign: the signature over the signed headers as they came, the body unsigned, within its time.
+      const signedNames = (query['X-Amz-SignedHeaders'] ?? '').split(';');
+      const [akid, day, reg] = (query['X-Amz-Credential'] ?? '').split('/');
+      if (akid !== accessKeyId || reg !== region) return error(403, 'InvalidAccessKeyId');
+      const at = Date.UTC(+query['X-Amz-Date'].slice(0, 4), +query['X-Amz-Date'].slice(4, 6) - 1, +query['X-Amz-Date'].slice(6, 8),
+        +query['X-Amz-Date'].slice(9, 11), +query['X-Amz-Date'].slice(11, 13), +query['X-Amz-Date'].slice(13, 15));
+      if (Date.now() > at + Number(query['X-Amz-Expires']) * 1000 || !query['X-Amz-Date'].startsWith(day)) return error(403, 'AccessDenied');
+      const lower = Object.fromEntries(signedNames.map((h) => [h, String(req.headers[h] ?? '').trim()]));
+      const { 'X-Amz-Signature': sig, ...rest } = query;
+      const want = signatureV4({ method: req.method, path: url.pathname, query: rest, lower, signed: signedNames, payloadHash: 'UNSIGNED-PAYLOAD',
+        amzDate: query['X-Amz-Date'], secretAccessKey, region });
+      if (want !== sig) return error(403, 'SignatureDoesNotMatch');
+      return objectRequest(url, query, data, req, res, reply, error, corsHeaders);
+    }
     // The signature, as S3 checks it.
     const auth = req.headers.authorization ?? '';
     const m = /^AWS4-HMAC-SHA256 Credential=([^/]+)\/(\d{8})\/([^/]+)\/s3\/aws4_request, SignedHeaders=([\w;-]+), Signature=(\w+)$/.exec(auth);
     if (!m || m[1] !== accessKeyId || m[3] !== region) return error(403, 'InvalidAccessKeyId');
     if (req.headers['x-amz-content-sha256'] !== sha256(data)) return error(400, 'XAmzContentSHA256Mismatch');
     const signedHeaders = Object.fromEntries(m[4].split(';').map((h) => [h, req.headers[h]]));
-    const query = Object.fromEntries(url.searchParams);
     const want = signV4({ method: req.method, path: url.pathname, query, headers: signedHeaders, payloadHash: req.headers['x-amz-content-sha256'],
       accessKeyId, secretAccessKey, region, alsoSign: m[4].split(';') });
     if (want !== auth) return error(403, 'SignatureDoesNotMatch');
+    if ('cors' in query && req.method === 'PUT') {
+      if (faults.noCors) return error(501, 'NotImplemented');
+      cors = { origins: [...data.toString().matchAll(/<AllowedOrigin>([^<]*)<\/AllowedOrigin>/g)].map((x) => x[1]) };
+      return reply(200);
+    }
+    return objectRequest(url, query, data, req, res, reply, error, corsHeaders);
+  });
+  function objectRequest(url, query, data, req, res, reply, error, corsHeaders) {
     const parts = url.pathname.split('/');
     if (parts[1] !== bucket) return error(404, 'NoSuchBucket');
     const key = decodeURIComponent(parts.slice(2).join('/'));
@@ -46,6 +81,14 @@ export async function fakeS3({ bucket = 'cm-test', accessKeyId = 'tid_test', sec
     }
     const o = objects.get(key);
     if (req.method === 'PUT' && faults.failPuts > 0 && faults.failMatch.test(key)) { faults.failPuts--; return error(500, 'InternalError'); }
+    if (req.method === 'PUT' && req.headers['x-amz-copy-source']) {
+      const src = objects.get(decodeURIComponent(req.headers['x-amz-copy-source'].split('/').slice(2).join('/')));
+      if (!src) return error(404, 'NoSuchKey');
+      const replace = req.headers['x-amz-metadata-directive'] === 'REPLACE';
+      objects.set(key, { ...src, modified: new Date().toISOString(),
+        ...(replace ? { type: req.headers['content-type'], meta: Object.fromEntries(Object.entries(req.headers).filter(([k]) => k.startsWith('x-amz-meta-'))) } : {}) });
+      return reply(200, `<?xml version="1.0"?><CopyObjectResult><ETag>${xmlEsc(src.etag)}</ETag></CopyObjectResult>`);
+    }
     if (req.method === 'PUT') {
       const meta = Object.fromEntries(Object.entries(req.headers).filter(([k]) => k.startsWith('x-amz-meta-')));
       const etag = `"${createHash('md5').update(data).digest('hex')}"`;
@@ -54,9 +97,9 @@ export async function fakeS3({ bucket = 'cm-test', accessKeyId = 'tid_test', sec
     }
     if (req.method === 'DELETE') { objects.delete(key); return reply(204); }
     if (!o) return error(404, 'NoSuchKey');
-    res.writeHead(200, { 'Content-Type': o.type ?? 'application/octet-stream', 'Content-Length': o.body.length, ETag: o.etag, ...o.meta });
+    res.writeHead(200, { 'Content-Type': o.type ?? 'application/octet-stream', 'Content-Length': o.body.length, ETag: o.etag, ...o.meta, ...corsHeaders });
     res.end(req.method === 'HEAD' ? undefined : o.body);
-  });
+  }
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const endpoint = `http://127.0.0.1:${server.address().port}`;
   return { server, objects, requests, endpoint, bucket, faults, close: () => server.close(),

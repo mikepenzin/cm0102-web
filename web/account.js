@@ -12,6 +12,7 @@
 // What was last the same is kept in the user folder itself (.cloud-sync.json): per save, the cloud's ETag and the size
 // and time of the local file at that moment.
 import { SAVE_DIR, checkSave, listSaves, readBlobNow, saveName } from './saves.js';
+import { downDirect, upDirect } from './direct.js';
 
 const STATE = `${SAVE_DIR}/.cloud-sync.json`;
 const CHANGE = { 'x-cm': '1' };                   // what the server wants on a change (cloud.mjs)
@@ -111,8 +112,10 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
     let bytes = readBlobNow(FS, `${SAVE_DIR}/${name}`);       // with the stat above: the same version of the file
     if (bytes instanceof Promise) bytes = await bytes;          // a placeholder: from the browser's storage
     const body = await gzip(bytes);                             // a Blob: the same body for each try
-    const r = await retrying(`${name} up`, () => fetch(at(name), { method: 'PUT', body, signal,
-      headers: { ...CHANGE, 'x-base-etag': base, 'x-save-time': String(before.mtime) } }), signal);
+    // Straight to the store (direct.js), or through the server when that is off.
+    const r = await retrying(`${name} up`, async () => (await upDirect({ url: at(name), body, base, signal, log,
+      fields: { rawSize: bytes.size ?? bytes.length, saved: before.mtime } }))
+      ?? fetch(at(name), { method: 'PUT', body, signal, headers: { ...CHANGE, 'x-base-etag': base, 'x-save-time': String(before.mtime) } }), signal);
     if (r.status === 409) return { conflict: (await r.json()).cloud };
     if (r.status === 507) {
       if (!full) toast((await r.json()).error, { kind: 'bad', ms: 8000 });
@@ -129,9 +132,13 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
 
   // The cloud's save into the user folder as file (its own name, or another one).
   async function down(name, file, signal) {
-    const r = await retrying(`${name} down`, () => fetch(at(name), { cache: 'no-store', signal }), signal);
+    let link = null;                                            // the store's link, its ETag and time (direct.js)
+    const r = await retrying(`${name} down`, async () => {
+      link = await downDirect({ url: at(name), signal, log });
+      return link?.response ?? fetch(at(name), { cache: 'no-store', signal });
+    }, signal);
     if (!r.ok) throw fail(`${name} down`, r);
-    const etag = r.headers.get('etag'), saved = Number(r.headers.get('x-saved')) || Date.now();
+    const etag = link?.etag ?? r.headers.get('etag'), saved = Number(link?.saved ?? r.headers.get('x-saved')) || Date.now();
     const bytes = await gunzip(r.body);
     const why = checkSave(bytes);
     if (why) { log(`page: ${name} from the cloud was not taken: ${why}`); return null; }

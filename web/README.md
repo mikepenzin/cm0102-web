@@ -213,6 +213,18 @@ gzip-compressed, under the account's Google id. The page (`account.js`):
 - Saved games shows where each save is, and Remove takes one out of the cloud (it stays in the browser).
 - Account has Sign out and Delete account (the account and all its cloud saves). `/privacy` says what is kept.
 
+**Straight to the store (`direct.js`, `cloud.mjs` "direct").** A save or a data set goes from the browser to Tigris and
+back without passing the server's machine. The server checks the plan, the name, the size, the version (409) and the
+count (507), then signs a link for 15 minutes (`s3.presign`, Signature Version 4 in the query: the length and the
+headers are signed). The page sends the file to `incoming/<account>/…`; the server then reads its start (a save's
+header; a data set's zip is read whole, 48 MB at most), checks it, and copies it to its place on the store (the bytes do
+not come to the server); a file that fails the check is deleted and never replaces the save before it. A download is a
+link too. At the start the server sets the bucket's CORS rules for the site's origins (`CM_PUBLIC_URL` and
+`https://<FLY_APP_NAME>.fly.dev`, or `CM_CORS_ORIGINS`); the log then says `saves and data sets go straight between the
+browser and the store`. When the store takes no rules, with `CM_DIRECT=off`, or when the store does not answer a page
+(the page's log says `did not answer this page directly`), the files go through the server as before. Uploads left in
+`incoming/` go after a day.
+
 **Who has cloud saves.** The accounts in `CM_CLOUD_USERS`, every account with `CM_CLOUD_FOR=everyone`, and the
 accounts whose record in the store (`accounts/<id>.json`) says `"plan": "cloud"` until `planUntil`: a Paddle
 subscription sets that (Payments, below), or you by hand in the Tigris console. And the accounts an admin gave Cloud
@@ -278,6 +290,9 @@ deleted until the subscription is canceled. In Paddle (start in the sandbox, `sa
 | `CM_UPGRADE_URL` | without Paddle: where "Get Cloud Saves" leads |
 | `CM_CLOUD_MAX_SAVES` | the most saves an account keeps in the cloud (default 30) |
 | `CM_CLOUD_MAX_SETS` | the most data sets an account keeps in the cloud (default 5) |
+| `CM_DIRECT` | `off`: saves and data sets go through the server, not straight to the store |
+| `CM_CORS_ORIGINS` | the addresses the bucket's CORS rules let in, comma separated (default `CM_PUBLIC_URL` and the fly.dev address) |
+| `CM_UPLOAD_BUDGET_MB` | the uploads the server holds in memory at once, through the server (default 160) |
 
 A good start prints `accounts and cloud saves: on`. Each save is gzip-compressed by the browser; the server checks that
 it is a saved game of CM 01/02 (64 MB compressed at most) before it stores it.

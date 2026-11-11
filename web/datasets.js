@@ -6,6 +6,7 @@ import { DATA_SET_FILES, DataSet } from './dataset.js';
 import { otherDeviceName, planSync } from './account.js';
 import { writeZip, zipEntries, zipRead } from './zip.js';
 import { readView } from './saves.js';
+import { downDirect, upDirect } from './direct.js';
 
 export const FIRST_SEASON = 2001, LAST_SEASON = 2025;          // the seasons the game has (seasons_db.h)
 const META = '.web.json';                                       // the page's note in a folder: { season }
@@ -168,8 +169,10 @@ export function createSetSync({ FS, root, sync, log, toast, account }) {
 
   async function up(name, base) {
     const l = local().get(name);
-    const r = await fetch(at(name), { method: 'PUT', body: await dataSetZip(FS, root, name),
-      headers: { ...CHANGE, 'x-base-etag': base, 'x-save-time': String(l.mtime) } });
+    const body = await dataSetZip(FS, root, name);
+    // Straight to the store (direct.js), or through the server when that is off.
+    const r = (await upDirect({ url: at(name), body, base, log, fields: { saved: l.mtime } }))
+      ?? await fetch(at(name), { method: 'PUT', body, headers: { ...CHANGE, 'x-base-etag': base, 'x-save-time': String(l.mtime) } });
     if (r.status === 409) return { conflict: true };
     if (r.status === 507 || r.status === 413) { if (!full) toast((await r.json()).error, { kind: 'bad', ms: 8000 }); full = true; return {}; }
     if (r.status === 401 || r.status === 403) { stopped = true; return {}; }
@@ -181,9 +184,10 @@ export function createSetSync({ FS, root, sync, log, toast, account }) {
   }
 
   async function down(name, as) {
-    const r = await fetch(at(name), { cache: 'no-store' });
+    const link = await downDirect({ url: at(name), log });
+    const r = link?.response ?? await fetch(at(name), { cache: 'no-store' });
     if (!r.ok) throw new Error(`${name} down: HTTP ${r.status}`);
-    const etag = r.headers.get('etag'), saved = Number(r.headers.get('x-saved')) || Date.now();
+    const etag = link?.etag ?? r.headers.get('etag'), saved = Number(link?.saved ?? r.headers.get('x-saved')) || Date.now();
     const [set] = await dataSetsInZip(new Uint8Array(await r.arrayBuffer()), as);
     writeDataSet(FS, root, as, set.files, { time: saved });
     const l = local().get(as);

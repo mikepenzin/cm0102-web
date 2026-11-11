@@ -19,20 +19,40 @@ const hmac = (key, data) => createHmac('sha256', key).update(data).digest();
 // RFC 3986 encoding, as Signature Version 4 wants it for query strings: everything but A-Z a-z 0-9 - _ . ~.
 export const uriEncode = (s) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
 
-// The Authorization header of a request (AWS Signature Version 4, "Authorization header", single chunk). headers must
-// hold host and every header to sign; all x-amz-* and host are signed, plus the names in alsoSign.
-export function signV4({ method, path, query = {}, headers, payloadHash, accessKeyId, secretAccessKey, region, service = 's3', alsoSign = [] }) {
-  const lower = Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), String(v).trim().replace(/\s+/g, ' ')]));
-  const signed = Object.keys(lower).filter((k) => k === 'host' || k.startsWith('x-amz-') || alsoSign.includes(k)).sort();
-  const amzDate = lower['x-amz-date'];
+const lowerHeaders = (headers) => Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), String(v).trim().replace(/\s+/g, ' ')]));
+const canonicalQueryOf = (query) => Object.keys(query).sort().map((k) => `${uriEncode(k)}=${uriEncode(query[k] ?? '')}`).join('&');
+
+// The signature of Signature Version 4 over a canonical request: lower holds the signed headers (lower case), signed
+// their sorted names.
+export function signatureV4({ method, path, query = {}, lower, signed, payloadHash, amzDate, secretAccessKey, region, service = 's3' }) {
   const day = amzDate.slice(0, 8);
-  const canonicalQuery = Object.keys(query).sort().map((k) => `${uriEncode(k)}=${uriEncode(query[k] ?? '')}`).join('&');
-  const canonical = [method, path, canonicalQuery, ...signed.map((k) => `${k}:${lower[k]}`), '', signed.join(';'), payloadHash].join('\n');
+  const canonical = [method, path, canonicalQueryOf(query), ...signed.map((k) => `${k}:${lower[k]}`), '', signed.join(';'), payloadHash].join('\n');
   const scope = `${day}/${region}/${service}/aws4_request`;
   const toSign = ['AWS4-HMAC-SHA256', amzDate, scope, sha256(canonical)].join('\n');
   const key = hmac(hmac(hmac(hmac(`AWS4${secretAccessKey}`, day), region), service), 'aws4_request');
-  const signature = createHmac('sha256', key).update(toSign).digest('hex');
-  return `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${scope}, SignedHeaders=${signed.join(';')}, Signature=${signature}`;
+  return createHmac('sha256', key).update(toSign).digest('hex');
+}
+
+// The Authorization header of a request (AWS Signature Version 4, "Authorization header", single chunk). headers must
+// hold host and every header to sign; all x-amz-* and host are signed, plus the names in alsoSign.
+export function signV4({ method, path, query = {}, headers, payloadHash, accessKeyId, secretAccessKey, region, service = 's3', alsoSign = [] }) {
+  const lower = lowerHeaders(headers);
+  const signed = Object.keys(lower).filter((k) => k === 'host' || k.startsWith('x-amz-') || alsoSign.includes(k)).sort();
+  const amzDate = lower['x-amz-date'];
+  const signature = signatureV4({ method, path, query, lower, signed, payloadHash, amzDate, secretAccessKey, region, service });
+  return `AWS4-HMAC-SHA256 Credential=${accessKeyId}/${amzDate.slice(0, 8)}/${region}/${service}/aws4_request, SignedHeaders=${signed.join(';')}, Signature=${signature}`;
+}
+
+// A link for one request without the keys (Signature Version 4, "query string"): the query of the link. headers: the
+// headers the request must carry with these values (signed, with host). The body is not signed (UNSIGNED-PAYLOAD): the
+// link takes any body that matches the signed headers, content-length among them when it is given.
+export function presignV4({ method, path, host, headers = {}, expires, amzDate, accessKeyId, secretAccessKey, region, service = 's3' }) {
+  const lower = lowerHeaders({ host, ...headers });
+  const signed = Object.keys(lower).sort();
+  const query = { 'X-Amz-Algorithm': 'AWS4-HMAC-SHA256', 'X-Amz-Credential': `${accessKeyId}/${amzDate.slice(0, 8)}/${region}/${service}/aws4_request`,
+    'X-Amz-Date': amzDate, 'X-Amz-Expires': String(expires), 'X-Amz-SignedHeaders': signed.join(';') };
+  const signature = signatureV4({ method, path, query, lower, signed, payloadHash: 'UNSIGNED-PAYLOAD', amzDate, secretAccessKey, region, service });
+  return `${canonicalQueryOf(query)}&X-Amz-Signature=${signature}`;
 }
 
 const amzNow = () => new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
@@ -76,7 +96,7 @@ export function createS3({ endpoint, bucket, accessKeyId, secretAccessKey, regio
     const all = { host, 'x-amz-date': amzNow(), 'x-amz-content-sha256': payloadHash, ...headers };
     all.authorization = signV4({ method, path, query, headers: all, payloadHash, accessKeyId, secretAccessKey, region, alsoSign: ['content-type'] });
     if (body) all['content-length'] = body.length;
-    const qs = Object.keys(query).sort().map((k) => `${uriEncode(k)}=${uriEncode(query[k] ?? '')}`).join('&');
+    const qs = canonicalQueryOf(query);
     return new Promise((resolveRequest, reject) => {
       const req = lib.request({ method, hostname, port: base.port || undefined,
         path: qs ? `${path}?${qs}` : path, headers: all, timeout: timeoutMs }, (res) => {
@@ -126,6 +146,33 @@ export function createS3({ endpoint, bucket, accessKeyId, secretAccessKey, regio
       if (r.status === 404) return null;
       if (r.status !== 200) throw fail(r, `get ${key}`);
       return r.body;
+    },
+    // A link that makes one request of method on key without the keys, for expires seconds: { url, headers }, the
+    // headers that the request must carry as they are (signed).
+    presign(method, key, { expires = 900, headers = {} } = {}) {
+      const path = `${prefix}/${key}`;
+      const q = presignV4({ method, path, host, headers, expires, amzDate: amzNow(), accessKeyId, secretAccessKey, region });
+      return { url: `${base.protocol}//${host}${path}?${q}`, headers };
+    },
+    // A copy of the object from on to (on the store, the bytes do not come here), with its metadata, or with metadata and
+    // type in place of it. The new ETag.
+    async copy(from, to, { metadata = null, type = 'application/octet-stream' } = {}) {
+      const headers = { 'x-amz-copy-source': `/${bucket}/${from}`, 'x-amz-metadata-directive': metadata ? 'REPLACE' : 'COPY',
+        ...(metadata ? { 'content-type': type, ...Object.fromEntries(Object.entries(metadata).map(([k, v]) => [`x-amz-meta-${k}`, String(v)])) } : {}) };
+      const r = await request('PUT', to, { headers });
+      const xml = r.body?.toString() ?? '';
+      if (r.status !== 200 || /<Error>/.test(xml)) throw fail(r, `copy ${from} to ${to}`);
+      return tag(xml, 'ETag');
+    },
+    // The bucket's CORS rules: pages of origins may PUT and GET with the links of presign (cloud.mjs, "direct").
+    async putCors(origins) {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?><CORSConfiguration><CORSRule>${origins.map((o) => `<AllowedOrigin>${o}</AllowedOrigin>`).join('')}`
+        + '<AllowedMethod>GET</AllowedMethod><AllowedMethod>PUT</AllowedMethod><AllowedMethod>HEAD</AllowedMethod>'
+        + '<AllowedHeader>*</AllowedHeader><ExposeHeader>ETag</ExposeHeader><MaxAgeSeconds>3600</MaxAgeSeconds></CORSRule></CORSConfiguration>';
+      const body = Buffer.from(xml);
+      const r = await request('PUT', '', { query: { cors: '' }, body,
+        headers: { 'content-type': 'application/xml', 'content-md5': createHash('md5').update(body).digest('base64') } });
+      if (r.status !== 200 && r.status !== 204) throw fail(r, 'put the bucket\'s CORS rules');
     },
     async delete(key) {
       const r = await request('DELETE', key);
