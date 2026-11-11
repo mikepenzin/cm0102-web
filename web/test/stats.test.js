@@ -79,6 +79,53 @@ test('the store: written when changed, read back, pruned after 400 days; reports
   assert.ok(again.data.people[`a:${B}`]);
 });
 
+test('two machines write the same object: the counts of both stay', async () => {
+  let t = Date.parse('2026-11-10T10:00:00Z');
+  const store = memoryStore();
+  const one = createStats({ store, now: () => t }), two = createStats({ store, now: () => t });
+  await Promise.all([one.ready, two.ready]);
+  await one.beat({ anon: A, session: 's1', seconds: 60, state: state(2) }, null);
+  await two.beat({ anon: A, session: 's2', seconds: 30 }, null);           // the same browser, a visit on the other machine
+  await two.beat({ anon: B, session: 's3', seconds: 10 }, null);
+  await one.report({ anon: A, message: 'one', log: [] }, null);
+  await two.report({ anon: B, message: 'two', log: [] }, null);
+  assert.equal(await one.flush(), true);
+  assert.equal(await two.flush(), true);
+  const read = async () => { const c = createStats({ store, now: () => t }); await c.ready; return c; };
+  let c = await read();
+  assert.equal(c.data.people[`a:${A}`].seconds, 90, 'both machines\' play');
+  assert.equal(c.data.people[`a:${A}`].sessions, 2);
+  assert.equal(c.data.people[`a:${A}`].reports, 1);
+  assert.deepEqual(c.data.people[`a:${A}`].saves, { n: 2, bytes: 2000 }, 'the state of the first machine: the second had none');
+  assert.equal(c.data.people[`a:${B}`].seconds, 10);
+  assert.equal(c.data.days['2026-11-10'].seconds, 100);
+  assert.equal(c.data.days['2026-11-10'].new, 2, 'A was new on both machines: one new person');
+  assert.deepEqual(c.data.reports.map((r) => r.message).sort(), ['one', 'two']);
+  assert.equal((await c.summary()).totals.activeToday, 2);
+  // More play on the first machine: added to what the store holds now, once.
+  t += 60000;
+  await one.beat({ anon: A, session: 's1', seconds: 10 }, null);
+  await one.flush();
+  assert.equal(await two.flush(), false, 'nothing new on the second');
+  c = await read();
+  assert.equal(c.data.people[`a:${A}`].seconds, 100);
+  assert.equal(c.data.people[`a:${A}`].sessions, 2);
+  // An account deleted on one machine goes, though the other machine still had it.
+  await two.beat({ anon: B, session: 's4', seconds: 5 }, { sub: '7', email: 'x@example.com', name: 'X' });
+  await two.flush();
+  await one.flush();
+  await one.beat({ anon: A, session: 's1', seconds: 1 }, null);
+  await one.flush();                                                      // the first machine now holds g:7 too
+  await two.forget('7');
+  await two.flush();
+  await one.beat({ anon: A, session: 's1', seconds: 1 }, null);
+  await one.flush();
+  c = await read();
+  assert.equal(c.data.people['g:7'], undefined);
+  assert.equal(c.data.people[`a:${B}`].account, undefined);
+  assert.equal(c.data.people[`a:${A}`].seconds, 102);
+});
+
 test('browserOf: the browser and the system in a few words', () => {
   assert.equal(browserOf('Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'), 'Safari 18 · iPad');
   assert.equal(browserOf('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0'), 'Edge 142 · Windows');

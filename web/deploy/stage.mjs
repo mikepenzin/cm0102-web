@@ -135,7 +135,10 @@ export async function stage(opts) {
   for (const sub of ['web', 'tools', 'game', 'build-web', 'build-web-asyncify']) {
     for (const p of walk(join(opts.out, sub))) if (!want.has(p)) { rmSync(p); removed++; }
   }
-  return { files: served.length, changed: changed.size, compressed, removed, raw, sent, keptToml, out: opts.out, asyncify: Boolean(second) };
+  // A fly.toml from before the health check and the 512 MB machine (web/deploy/README.md, "Size of the machine").
+  const oldToml = keptToml && !readFileSync(flyToml, 'utf8').includes('/healthz');
+  return { files: served.length, changed: changed.size, compressed, removed, raw, sent, keptToml, oldToml, out: opts.out,
+    asyncify: Boolean(second) };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -148,6 +151,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     console.log(r.asyncify ? 'with the Asyncify engine: Safari and iPad browsers can play'
       : `no Asyncify engine in ${opts.asyncify}: only browsers with JSPI (Chrome 137 and later) can play`);
     console.log(r.keptToml ? 'kept the fly.toml of the stage folder' : 'new fly.toml: run fly launch once (web/deploy/README.md)');
+    if (r.oldToml) console.log('your fly.toml has no health check and may have a 256 MB machine: web/deploy/README.md, "Size of the machine"');
     console.log(`next: cd ${r.out} && fly deploy`);
   } catch (err) {
     console.error(`stage: ${err.message}`);

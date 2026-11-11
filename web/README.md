@@ -451,7 +451,8 @@ What to know about the Asyncify engine:
   were also checked against the examples of AWS's Signature Version 4 documentation and the AWS SDK's signer.
 - `NODE_PATH=$(npm root -g) node web/test/page-check.cjs`: the page at full size (placeholder files with the sizes of
   the manifest, 460 MB) and an Emscripten stand-in in place of the engine (`test/fake-emscripten.js`): the browser
-  check, the load, the Saved games panel, a second start from the browser's cache. Needs Playwright.
+  check, the engine a browser with and without JSPI gets, the load, the Saved games panel, a second start from the
+  browser's cache. Needs Playwright.
 - `NODE_PATH=$(npm root -g) node web/test/cloud-check.mjs`: the accounts and cloud saves in Chromium, with stand-ins of
   Google, the S3 store (`test/fakes.mjs`, which checks every request's signature as S3 does), Paddle.js and the
   engine: the plans in the start box, the sign-in from the start box and from a small window while the game runs, the
@@ -471,6 +472,15 @@ What to know about the Asyncify engine:
   question before leaving, and a start without a connection. Build the probe first:
   `web/test/build-probe.sh <SDL2 source folder> <probe folder>` (an unpacked SDL2 release of libsdl.org, and `emcc`
   on the PATH). Needs Playwright.
+
+GitHub runs the unit tests and the page, editor and cloud checks on each push that changes `web/`
+(`.github/workflows/web.yml`).
+
+`RECOMP_GUARD=1` is a test switch of the native game (macOS, Linux): the guest memory that the browser build keeps for
+itself (0x21000000 to 0x60000000) and the memory past the heap's top, which the browser does not have, fault there
+too. A stray pointer that only breaks the browser game ("memory access out of bounds") then stops the native game at
+the access, with `recomp: guard: an access to guest …` in the log and the stack under gdb. Run a season jump with it
+(`docs/TESTING.md`, "Memory and big saves").
 
 ## Not yet
 

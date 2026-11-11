@@ -56,6 +56,10 @@ void *host_reserve(size_t size)
     return m;
 }
 
+/* The guard of RECOMP_GUARD is a test of macOS and Linux: the block here commits its pages on first use (on_fault). */
+int host_protect(void *addr, size_t size, int open) { (void)addr; (void)size; (void)open; return -1; }
+void host_on_fault(void (*note)(const void *addr)) { (void)note; }
+
 /* UTF-8 and UTF-16. */
 static int to_wide(const char *s, wchar_t *out, int room)
 {

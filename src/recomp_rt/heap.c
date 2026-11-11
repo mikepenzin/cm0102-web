@@ -31,7 +31,8 @@
 void rt_web_heap_top(uint32_t top);   /* host/web.c: the browser's memory reaches the new top */
 #define HEAP_GREW() rt_web_heap_top(heap_top)
 #else
-#define HEAP_GREW() ((void)0)
+void rt_guard_heap_top(uint32_t top);   /* rt.c: the test switch RECOMP_GUARD follows the top */
+#define HEAP_GREW() rt_guard_heap_top(heap_top)
 #endif
 
 int rt_heap_bump = 0;

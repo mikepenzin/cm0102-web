@@ -3,6 +3,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
@@ -32,7 +33,7 @@ before(async () => {
 after(() => { server.close(); s3fake.close(); google.close(); rmSync(tmp, { recursive: true, force: true }); });
 
 // A browser, as far as these tests need one: cookies of the site, and redirects followed by hand.
-function browser() {
+function browser(at = base) {
   const jar = new Map();
   const keep = (r) => {
     for (const c of r.headers.getSetCookie()) {
@@ -45,8 +46,8 @@ function browser() {
   const cookie = () => [...jar].map(([k, v]) => `${k}=${v}`).join('; ');
   return {
     jar,
-    get: (path, headers = {}) => fetch(path.startsWith('http') ? path : `${base}${path}`, { redirect: 'manual', headers: { cookie: cookie(), ...headers } }).then(keep),
-    send: (method, path, body, headers = {}) => fetch(`${base}${path}`, { method, body, redirect: 'manual',
+    get: (path, headers = {}) => fetch(path.startsWith('http') ? path : `${at}${path}`, { redirect: 'manual', headers: { cookie: cookie(), ...headers } }).then(keep),
+    send: (method, path, body, headers = {}) => fetch(`${at}${path}`, { method, body, redirect: 'manual',
       headers: { cookie: cookie(), 'x-cm': '1', ...headers } }).then(keep),
     // The whole sign-in: the site, Google, and back. Resolves to the last answer (the redirect to the page).
     async signIn(mode = 'page') {
@@ -275,4 +276,38 @@ test('the sync plan: what goes up, what comes down, what is kept twice', async (
   assert.ok(!kinds(p).includes('down downNow') && kinds(p).includes('down newThere'));
   assert.equal(otherDeviceName('Arsenal.sav', new Set()), 'Arsenal (other device).sav');
   assert.equal(otherDeviceName('Arsenal.sav', new Set(['arsenal (other device).sav'])), 'Arsenal (other device) (2).sav');
+});
+
+test('uploads in memory at once stay within the budget: one past it waits for the next sync (503)', async () => {
+  const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
+  const gz = gzipSync(fakeSaveBytes(7));
+  const cloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'x'.repeat(40),
+    cloudFor: 'everyone', google: google.google, log: () => {}, uploadBudget: gz.length + 10 });
+  const two = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv'), cloud });
+  await new Promise((r) => two.listen(0, '127.0.0.1', r));
+  const at = `http://127.0.0.1:${two.address().port}`;
+  try {
+    google.user = { sub: '2000077', email: 'budget@example.com', email_verified: true, name: 'Budget' };
+    const b = browser(at);
+    await b.signIn();
+    // The first upload sends half its body and waits: it holds its size of the budget.
+    const cookie = [...b.jar].map(([k, v]) => `${k}=${v}`).join('; ');
+    let firstStatus;
+    const first = new Promise((resolveFirst) => {
+      const req = http.request(`${at}/api/saves/one.sav`, { method: 'PUT', headers: { cookie, 'x-cm': '1', 'content-length': gz.length,
+        'content-type': 'application/gzip' } }, (res) => { firstStatus = res.statusCode; res.resume(); res.on('end', resolveFirst); });
+      req.write(gz.subarray(0, 100));
+      setTimeout(() => req.end(gz.subarray(100)), 400);
+    });
+    await new Promise((r) => setTimeout(r, 150));
+    const busy = await b.send('PUT', '/api/saves/two.sav', gz);
+    assert.equal(busy.status, 503, 'past the budget while the first is in memory');
+    assert.equal(busy.headers.get('retry-after'), '30');
+    await first;
+    assert.equal(firstStatus, 200);
+    const again = await b.send('PUT', '/api/saves/two.sav', gz);
+    assert.equal(again.status, 200, 'the budget is free again once the first is stored');
+  } finally {
+    two.close();
+  }
 });

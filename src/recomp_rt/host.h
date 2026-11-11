@@ -24,6 +24,12 @@
  * on first use. NULL on failure. */
 void *host_reserve(size_t size);
 
+/* The guard of RECOMP_GUARD (rt.c), a test: host_protect makes a page-aligned part of the reserved block fault on
+ * any access (open 0) or open again (open 1), 0 on success, -1 where the host cannot (Windows, the browser).
+ * host_on_fault calls note with the address of each such fault before the program stops as it would without it. */
+int host_protect(void *addr, size_t size, int open);
+void host_on_fault(void (*note)(const void *addr));
+
 /* Files. host_open takes the O_ flags of <fcntl.h> and opens in binary mode. */
 int host_open(const char *path, int flags, int mode);
 long host_read(int fd, void *buf, uint32_t n);

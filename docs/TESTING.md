@@ -48,6 +48,8 @@ Long games run from 2001/02 to 2027/28 with all nations and different random see
 
 A game with all nations uses more memory each season. The heap now has room for about 2 GB of game data. A code test (`tests/recomp/test_heap.c`) fills a small heap and checks that it still serves new blocks.
 
+The browser game has less memory room than the native one: its own data sits at guest 0x21000000 to 0x60000000, and its memory ends 64 MB past the heap's top. `RECOMP_GUARD=1` makes those addresses fault in the native game too (`src/recomp_rt/rt.c`), so a stray pointer that would break only the browser game stops the native run where it happens. The data sweep with all nations runs with it (`RECOMP_GUARD=1 python3 tests/seasons/data_sweep_run.py … --nations all`), once from the game's own data and once from a recent data update.
+
 Saves can now be up to 4 GB. A save that would be larger stops with a clear message and keeps the earlier save. `tests/smoke/big_save_run.py` makes a save above 3 GB and loads it again, checks a season part above 2 GB, and checks the clean stop above 4 GB. It needs about 12 GB of free disk for a short time. These checks run at the merge of a memory or save change and in the long games at each release.
 
 ## Screen sweeps and smoke screenshots

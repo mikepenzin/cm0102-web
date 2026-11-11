@@ -98,8 +98,24 @@ ${ok ? 'setTimeout(() => window.close(), 300);' : ''}</script>`;
 // price: how the page names the price ("$5 a month").
 export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicUrl = null, cloudFor = 'listed', cloudUsers = [],
   upgradeUrl = null, maxSaves = 30, maxSets = 5, google = GOOGLE, paddle = null, price = '$5 a month', log = (t) => console.log(t),
-  onAccountDeleted = () => {} }) {
+  onAccountDeleted = () => {}, uploadBudget = 160 << 20 }) {
   const seal = sealer(sessionSecret);
+  // The uploads in memory at once (readBody holds each whole, for its check and its signature): a save is at most
+  // MAX_GZ, a data set MAX_SET_ZIP. Past uploadBudget an upload is turned away with 503 and goes at the next sync, so a
+  // few players saving at once cannot run the server's small machine out of memory (web/deploy/README.md).
+  let held = 0;
+  const hold = (req, res, max) => {
+    const n = Math.min(Number(req.headers['content-length']) || max, max);
+    if (held + n > uploadBudget && held > 0) {
+      req.resume();
+      res.writeHead(503, { 'Content-Type': 'application/json', 'Retry-After': '30', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ error: 'the server is busy with other uploads: it goes at the next sync' }));
+      return null;
+    }
+    held += n;
+    let freed = false;
+    return () => { if (!freed) { freed = true; held -= n; } };
+  };
   const users = new Set(cloudUsers.map((e) => e.trim().toLowerCase()).filter(Boolean));
   const accounts = new Map();               // google id -> { account, at }: the record, read at most once a minute
 
@@ -248,6 +264,12 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   async function putSave(req, res, user, name) {
     const length = Number(req.headers['content-length']);
     if (length > MAX_GZ) { req.resume(); send(res, 413, { error: `a save may be ${MAX_GZ >> 20} MB at most, compressed` }); return; }
+    const free = hold(req, res, MAX_GZ);
+    if (!free) return;
+    try { await storeSave(req, res, user, name); } finally { free(); }
+  }
+
+  async function storeSave(req, res, user, name) {
     const body = await readBody(req, MAX_GZ);
     const { why, total } = await inspectSave(body);
     if (why) { send(res, 422, { error: `${name} was not stored: ${why}` }); return; }
@@ -304,6 +326,12 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     if (method === 'DELETE') { await s3.delete(key); send(res, 204); return; }
     if (method !== 'PUT') { send(res, 405, { error: 'GET, PUT or DELETE' }); return; }
     if (Number(req.headers['content-length']) > MAX_SET_ZIP) { req.resume(); send(res, 413, { error: `a data set may be ${MAX_SET_ZIP >> 20} MB at most, zipped` }); return; }
+    const free = hold(req, res, MAX_SET_ZIP);
+    if (!free) return;
+    try { await storeSet(req, res, user, name, key); } finally { free(); }
+  }
+
+  async function storeSet(req, res, user, name, key) {
     const body = await readBody(req, MAX_SET_ZIP);
     const { why, rawSize } = inspectSetZip(body);
     if (why) { send(res, 422, { error: `${name} was not stored: ${why}` }); return; }
@@ -415,6 +443,7 @@ export function cloudFromEnv(env = process.env, log, { onAccountDeleted } = {}) 
     cloudFor: env.CM_CLOUD_FOR === 'everyone' ? 'everyone' : 'listed', cloudUsers: (env.CM_CLOUD_USERS ?? '').split(','),
     upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, maxSets: Number(env.CM_CLOUD_MAX_SETS) || 5, log,
     price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env), onAccountDeleted,
+    uploadBudget: (Number(env.CM_UPLOAD_BUDGET_MB) || 160) << 20,
   });
   return { cloud, missing };
 }

@@ -126,6 +126,27 @@ Sign in with that Google account on the game's page, then open `/admin`. The tok
 `statistics: on (opt-out), kept in the bucket`. `CM_STATS=optin` asks players first (off until they turn them on in
 Help); `CM_STATS=off` turns them off.
 
+## Size of the machine
+
+One shared-CPU machine with 512 MB (`fly.toml`), which stops when nobody is visiting. The server streams the files
+from disk, so more players do not take more memory; what does is a cloud upload, which the server holds while it
+checks it (a save up to 64 MB compressed, a data set up to 48 MB zipped). Together the uploads in memory stay under
+`CM_UPLOAD_BUDGET_MB` (default 160); one past it is turned away and goes at the next sync. `/healthz` answers Fly's
+check, and the limits count requests (a first visit asks for several files at a time).
+
+A stage folder from before keeps its own `fly.toml`; the stage then prints `your fly.toml has no health check`. Once:
+
+```bash
+cd web/deploy/stage
+fly scale memory 512
+```
+
+and copy the `[http_service.concurrency]` and `[[http_service.checks]]` parts of `web/deploy/fly.toml` into
+`web/deploy/stage/fly.toml` (keep its `app =` line), then `fly deploy`.
+
+`fly launch` may have made two machines (`fly status` lists them). Both serve the same files, and the statistics
+add up across them (each write adds what its machine counted). One is enough: `fly scale count 1` leaves one.
+
 ## If something goes wrong
 
 | What you see | What to do |
@@ -137,7 +158,7 @@ Help); `CM_STATS=off` turns them off.
 | The upload of `fly deploy` keeps failing | `fly deploy --local-only` builds on your Mac instead (needs Docker Desktop) |
 | `failed to push registry.fly.io/…` with `_api.internal:5000 … connection refused` | Fly's internal registry did not answer; the image itself built. Try, one at a time: `fly deploy --wg=false` (the push goes over HTTPS instead of Fly's private network), `fly deploy --depot=false` (the other builder), `fly deploy --local-only` (builds on your Mac, needs Docker Desktop). If none works, it is on Fly's side: status.flyio.net and community.fly.io |
 | The site does not answer | `fly logs`: a good start prints `game files: 764 (461 MB)` and `open http://0.0.0.0:8080` |
-| The machine runs out of memory | `fly scale memory 512` |
+| The machine runs out of memory | `fly scale memory 1024`, or a lower `CM_UPLOAD_BUDGET_MB` (Size of the machine) |
 | `accounts and cloud saves: off, missing …` | Set the named secrets (Accounts and cloud saves) |
 | Google says `redirect_uri_mismatch` | The client's Authorized redirect URI must be exactly `https://<your-app>.fly.dev/auth/google/callback` |
 | Only some Google accounts can sign in | The Google app is still "Testing": Audience, Publish app |
@@ -174,12 +195,15 @@ since the last one. If Fly hands the app a fresh builder (its cache is gone), on
 - After one good start the page also starts without a connection, and it can be added to the home screen as an app
   (`web/README.md`, "As an app").
 
-Outgoing traffic is the main cost of hosting: check Fly's prices for your region before you share the address
-widely. The machine itself is the smallest (shared CPU, 256 MB), and `fly.toml` stops it when idle.
+Outgoing traffic is the main cost of hosting: each new player downloads the game files once (the stage prints the
+size of a first visit), and Fly bills outgoing data by the GB; check Fly's prices for your region before you share
+the address widely. A returning player downloads nothing, so a CDN in front adds little at first. The machine itself
+is small (shared CPU, 512 MB), and `fly.toml` stops it when idle.
 
 ## Notes
 
-- Players need Chrome 137 or later (JSPI). The page tells any other browser that it cannot run the game, before it
+- Players need Chrome 137 or later (JSPI), or, when the stage had the Asyncify engine, any browser with enough memory
+  (Safari, iPad: `web/README.md`, "Other browsers"). The page tells a browser that cannot run the game so, before it
   downloads anything.
 - The site hands out the files of the 2008 free release with the official patch, and the original's code translated
   to WebAssembly, as the Bosman Edition downloads do: an unofficial fan project (main README, Legal).

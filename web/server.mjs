@@ -175,6 +175,11 @@ export function createApp({ gameDir, buildDir, asyncifyDir = null, manifestPath,
         });
         return;
       }
+      if (url.pathname === '/healthz') {            // Fly's check (web/deploy/fly.toml): the server answers
+        res.writeHead(200, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' });
+        res.end(req.method === 'HEAD' ? undefined : 'ok\n');
+        return;
+      }
       if (url.pathname === '/admin') { sendFile(req, res, join(HERE, 'admin.html'), TYPES['.html']); return; }
       if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) {
         if (cloud) { cloud.handle(req, res, url); return; }

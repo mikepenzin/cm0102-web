@@ -101,6 +101,9 @@ test('listed files are served, everything else is refused', async () => {
     assert.equal((await fetch(`${base}${path}`)).status, 404, path);
   }
   assert.equal((await fetch(`${base}/files.json`, { method: 'POST' })).status, 405);
+  const health = await fetch(`${base}/healthz`);
+  assert.equal(health.status, 200, 'the check of the host');
+  assert.equal(await health.text(), 'ok\n');
 });
 
 test('the engine and the page: types and revalidation', async () => {

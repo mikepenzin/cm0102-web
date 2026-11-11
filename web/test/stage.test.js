@@ -57,6 +57,7 @@ test('a second stage keeps the fly.toml that fly launch wrote', async () => {
   const r = await stage(opts);
   assert.equal(r.keptToml, true);
   assert.equal(readFileSync(join(opts.out, 'fly.toml'), 'utf8'), 'app = "mine"\n');
+  assert.equal(r.oldToml, true, 'one from before the health check: the stage says so');
 });
 
 test('a later stage changes only what changed: the same files keep their time, a new engine is the only copy', async () => {

@@ -7,7 +7,8 @@
 // its anonymous record points at the account, and the account lists the browser.
 //
 // Everything lives in one object of the store (stats/stats.json), kept in memory and written every FLUSH ms when it
-// changed and when the server stops. One server machine writes it: with more machines each would keep its own count.
+// changed and when the server stops. Fly may run two machines of the app, so a write first reads the object again
+// and adds this machine's changes since its last read to what is there (merge): the counts of both machines stay.
 // Error reports go to reports/<day>/<time>-<random>.json, and the last ones stay listed in the object.
 
 const KEY = 'stats/stats.json';
@@ -24,6 +25,51 @@ const count = (v) => {
   return { n: Number.isFinite(n) && n >= 0 ? Math.min(n, 1e6) : 0, bytes: Number.isFinite(b) && b >= 0 ? Math.min(b, 1e13) : 0 };
 };
 const text = (v, max) => String(v ?? '').replace(/[\u0000-\u001f]/g, ' ').slice(0, max);
+const clone = (v) => JSON.parse(JSON.stringify(v));
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const PERSON_COUNTS = ['seconds', 'sessions', 'days', 'reports'];
+const DAY_COUNTS = ['seconds', 'sessions', 'new', 'reports'];
+
+// The object as the store holds it now (theirs), with this machine's changes since it last read it (from base to
+// mine) added. A count adds this machine's part to theirs; any other field of a person comes from the record that saw
+// the person last. What this machine removed (an account deleted, a person or a day pruned) goes.
+export function mergeStats(base, mine, theirs) {
+  const out = clone(theirs);
+  out.people ??= {};
+  out.days ??= {};
+  const notNew = [];                         // new here, but the other machine had them first: counted new once
+  for (const id of new Set([...Object.keys(mine.people), ...Object.keys(base.people ?? {})])) {
+    const m = mine.people[id], b = base.people?.[id], t = out.people[id];
+    if (!m) { delete out.people[id]; continue; }
+    if (b && same(m, b)) continue;                          // not changed here: theirs as it is
+    if (!t) { out.people[id] = m; continue; }
+    if (!b) notNew.push(day(m.first));
+    const p = (m.last ?? 0) >= (t.last ?? 0) ? { ...t, ...m } : { ...m, ...t };
+    for (const f of PERSON_COUNTS) p[f] = (t[f] ?? 0) + (m[f] ?? 0) - (b?.[f] ?? 0);
+    p.first = Math.min(t.first ?? m.first, m.first ?? t.first);
+    if (m.devices || t.devices) p.devices = [...new Set([...(t.devices ?? []), ...(m.devices ?? [])])].slice(-20);
+    const account = m.account !== b?.account ? m.account : t.account;
+    if (account) p.account = account; else delete p.account;
+    out.people[id] = p;
+  }
+  for (const k of new Set([...Object.keys(mine.days), ...Object.keys(base.days ?? {})])) {
+    const m = mine.days[k], b = base.days?.[k], t = out.days[k];
+    if (!m) { delete out.days[k]; continue; }
+    const d = { ...(t ?? {}), active: Math.max(t?.active ?? 0, m.active ?? 0) };
+    for (const f of DAY_COUNTS) d[f] = (t?.[f] ?? 0) + (m[f] ?? 0) - (b?.[f] ?? 0);
+    out.days[k] = d;
+  }
+  for (const k of notNew) if (out.days[k]?.new > 0) out.days[k].new--;
+  const today = [mine.today, out.today].filter((x) => x?.day).sort((a, b) => (a.day < b.day ? 1 : -1))[0] ?? mine.today;
+  out.today = { day: today.day, ids: [...new Set([...(mine.today?.day === today.day ? mine.today.ids : []),
+    ...(out.today?.day === today.day ? out.today.ids : [])])] };
+  const kept = new Set((mine.reports ?? []).map((r) => r.key));
+  const seen = new Set((base.reports ?? []).map((r) => r.key).filter((k) => !kept.has(k)));   // removed here (90 days)
+  out.reports = [...(mine.reports ?? []), ...(out.reports ?? [])].filter((r) => !seen.has(r.key) && seen.add(r.key))
+    .sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, KEEP_REPORTS);
+  out.version = 1;
+  return out;
+}
 
 // The browser and the system of a User-Agent, in a few words: no version past the major one, no device model.
 export function browserOf(ua = '') {
@@ -41,6 +87,7 @@ export function browserOf(ua = '') {
 export function createStats({ store = null, log = (t) => console.log(t), now = () => Date.now(), flushMs = FLUSH } = {}) {
   let data = { version: 1, people: {}, days: {}, today: { day: day(now()), ids: [] }, reports: [] };
   let dirty = false, timer = null, prunedReports = 0;
+  let base = clone(data);                    // the object as this machine last read or wrote it (mergeStats)
   const todayIds = new Set();
 
   const ready = (async () => {
@@ -50,6 +97,7 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
       if (buf) {
         const d = JSON.parse(buf.toString());
         data = { ...data, ...d };
+        base = clone(data);
         if (data.today?.day === day(now())) for (const id of data.today.ids ?? []) todayIds.add(id);
       }
     } catch (e) { log(`stats: not read: ${e.message}`); }
@@ -69,8 +117,8 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
   function person(id, t, fields) {
     let p = data.people[id];
     if (!p) {
-      p = data.people[id] = { id, first: t, last: t, seconds: 0, sessions: 0, days: 0, lastDay: null, saves: { n: 0, bytes: 0 },
-        older: { n: 0, bytes: 0 }, sets: { n: 0, bytes: 0 }, reports: 0 };
+      // saves, older and sets come with the first beat that reports the folder (the admin page reads them as 0 till then)
+      p = data.people[id] = { id, first: t, last: t, seconds: 0, sessions: 0, days: 0, lastDay: null, reports: 0 };
       dayOf(day(t)).new++;
     }
     Object.assign(p, fields);
@@ -179,7 +227,23 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     prune(t);
     data.today.ids = [...todayIds];
     dirty = false;
-    try { await store.put(KEY, Buffer.from(JSON.stringify(data))); return true; } catch (e) { dirty = true; log(`stats: not written: ${e.message}`); return false; }
+    let theirs = null;
+    try {
+      const buf = await store.get(KEY);
+      theirs = buf ? JSON.parse(buf.toString()) : null;
+    } catch (e) { dirty = true; log(`stats: not read before the write: ${e.message}`); return false; }
+    // From here to the put nothing waits, so a beat that comes meanwhile lands in the merged object.
+    const merged = theirs ? mergeStats(base, data, theirs) : data;
+    data = merged;
+    base = clone(merged);
+    todayIds.clear();
+    if (data.today?.day === day(now())) for (const id of data.today.ids ?? []) todayIds.add(id);
+    try { await store.put(KEY, Buffer.from(JSON.stringify(merged))); return true; } catch (e) {
+      base = theirs ? clone(theirs) : clone({ ...merged, people: {}, days: {}, reports: [] });   // the changes count again next time
+      dirty = true;
+      log(`stats: not written: ${e.message}`);
+      return false;
+    }
   }
 
   // What the admin page shows: totals, the days, the people (with their linked browsers) and the last reports.

@@ -1,0 +1,41 @@
+# The web app's tests (web/README.md, "Tests"): the unit tests, then the browser checks in Chromium. The checks use
+# stand-ins of the engine, Google, the S3 store and Paddle, and placeholder game files of the manifest's sizes, so
+# they need no game files, no engine build and no secrets.
+name: Web
+
+on:
+  push:
+    paths: ["web/**", "tools/clean_files/manifest.tsv", ".github/workflows/web.yml"]
+  pull_request:
+    paths: ["web/**", "tools/clean_files/manifest.tsv", ".github/workflows/web.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Unit tests
+        working-directory: web
+        run: npm test
+      - name: Playwright and its Chromium
+        run: |
+          npm install -g playwright@1.63.0
+          npx --yes playwright@1.63.0 install --with-deps chromium
+      - name: Page check (the load, the engine choice, Saved games, a second start)
+        run: NODE_PATH="$(npm root -g)" node web/test/page-check.cjs
+      - name: Editor check (the save and data set editors)
+        run: NODE_PATH="$(npm root -g)" node web/test/editor-check.mjs
+      - name: Cloud check (sign-in, cloud saves, the purchase)
+        run: NODE_PATH="$(npm root -g)" node web/test/cloud-check.mjs
