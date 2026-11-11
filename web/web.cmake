@@ -29,7 +29,10 @@ set(CM0102_WEB_LINK
     --profiling-funcs                     # names of the original's functions in the browser's stack traces
 )
 if(CM0102_WEB_SUSPEND STREQUAL "asyncify")
-    list(APPEND CM0102_WEB_LINK -sASYNCIFY -sASYNCIFY_STACK_SIZE=1048576)
+    # The Asyncify engine (web/README.md, "Other browsers"). Each sleep unwinds the whole call stack of the game into
+    # this buffer, every recompiled function on it with its locals; a release build does not check the buffer's end,
+    # so it has room to spare (the browser build's own heap, below 0x5F000000).
+    list(APPEND CM0102_WEB_LINK -sASYNCIFY -sASYNCIFY_STACK_SIZE=8388608)
 else()
     list(APPEND CM0102_WEB_LINK -sJSPI)
 endif()

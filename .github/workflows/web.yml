@@ -3,8 +3,10 @@
 # they need no game files, no engine build and no secrets.
 name: Web
 
+# A branch with a pull request runs once, as the pull request; main runs on each push.
 on:
   push:
+    branches: [main]
     paths: ["web/**", "tools/clean_files/manifest.tsv", ".github/workflows/web.yml"]
   pull_request:
     paths: ["web/**", "tools/clean_files/manifest.tsv", ".github/workflows/web.yml"]

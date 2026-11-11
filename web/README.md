@@ -484,8 +484,11 @@ the access, with `recomp: guard: an access to guest …` in the log and the stac
 
 ## Not yet
 
-- Only the base game: the season databases (`Seasons/*.zip`) and the extra data sets are not loaded.
+- The server hands out the base game only: the season databases of the desktop downloads (`Seasons/*.zip`) are not on
+  it. A player brings a data set of their own (Saved games, Data sets: Upload) or makes one in the data set editor.
 - The engine runs on the page's main thread. The concept design moves it to a Web Worker, with the new screens
   beside it.
 - The touch and keyboard parts are checked in a desktop browser that plays a touch device, with the real SDL
   backend, not on an iPad itself: the device's own keyboard and Safari can still differ.
+- The Asyncify engine (Other browsers) is checked with the stand-in engine only: a real build of it, its size and speed,
+  and its memory on a real iPad are still to try.
