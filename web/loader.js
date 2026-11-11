@@ -541,7 +541,7 @@ function requirements(info) {
     return { problems, warnings };
   }
   if (info.chosen.suspend !== 'asyncify' && !hasJspi())
-    problems.push('The engine needs JSPI, a WebAssembly feature that this browser lacks, and this server has no engine for other browsers. Chrome 137 or later on a computer has it.');
+    problems.push('The engine needs JSPI, a WebAssembly feature that this browser lacks, and this server has no engine for other browsers. Chrome 137 or later has it, and Safari 27 (iOS and iPadOS 27, in every browser of an iPhone or iPad).');
   try {                                              // the engine's own memory plan, on a memory that is then dropped
     const m = new WebAssembly.Memory({ initial: ENGINE_START_PAGES, maximum: ENGINE_MAX_PAGES });
     m.grow(ENGINE_NEED_PAGES - ENGINE_START_PAGES);
@@ -555,7 +555,7 @@ function requirements(info) {
 function blocked(problems, note = 'Nothing was downloaded.') {
   status('This browser cannot run the game');
   overlay(`<h1>This browser cannot run the game</h1><ul>${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>
-    <p>It runs in Chrome 137 or later on a Mac, Windows or Linux computer. ${esc(note)}</p>`, 'error');
+    <p>It runs in Chrome 137 or later, and in Safari 27 or later: on an iPad with iPadOS 27, in Safari or Chrome. ${esc(note)}</p>`, 'error');
 }
 
 // The engine file itself, compiled once while the game files download: a browser that lacks a WebAssembly feature the

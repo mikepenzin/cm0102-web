@@ -117,7 +117,7 @@ stops if one differs.
 | `cm0102_recomp: … not found` while configuring | Step 4: `-DCM0102_EXE` must name `cm0102.exe` in your game folder |
 | `engine: not built` | Step 4 did not finish: run the build again and send its last 30 lines |
 | `source: no such file or directory: …/emsdk_env.sh` | emsdk is in another folder: see the end of step 4 |
-| A box "This browser cannot run the game" | It names the reason; use Chrome 137 or later on a computer |
+| A box "This browser cannot run the game" | It names the reason; use Chrome 137 or later, or Safari 27 (iPadOS 27 on an iPad, in any browser) |
 | The game stops in the tab | Open "Engine log" under the game and send its last lines |
 
 "Engine log" holds every line the runtime prints (`recomp: ...`) and the page's own lines (`page: ...`).
@@ -422,8 +422,10 @@ browser that keeps no data (a private window), gets a warning but may start.
 
 ## Other browsers
 
-The engine of step 4 needs JSPI, which Chrome 137 and later have. Safari, and every browser on an iPad (they are all
-Safari inside), need a second build of the engine, with Asyncify in place of JSPI. The server serves both, and each
+The engine of step 4 needs JSPI, which Chrome 137 and later have, and Safari 27 and later (WebKit, WWDC26): so an
+iPad or iPhone on iPadOS or iOS 27 runs it in every browser, Chrome included (all of them are WebKit inside). Older
+Safari, and every browser of an iPad on iPadOS 26 or before, need a second build of the engine, with Asyncify in place
+of JSPI. The server serves both, and each
 browser gets the one it can run (`web/engine.js`): JSPI where the browser has it, else Asyncify.
 
 ```bash

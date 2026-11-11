@@ -226,7 +226,8 @@ is small (shared CPU, 512 MB), and `fly.toml` stops it when idle.
 
 ## Notes
 
-- Players need Chrome 137 or later (JSPI), or, when the stage had the Asyncify engine, any browser with enough memory
+- Players need a browser with JSPI: Chrome 137 or later, or Safari 27 or later (an iPad on iPadOS 27, in any browser);
+  or, when the stage had the Asyncify engine, any browser with enough memory
   (Safari, iPad: `web/README.md`, "Other browsers"). The page tells a browser that cannot run the game so, before it
   downloads anything.
 - The site hands out the files of the 2008 free release with the official patch, and the original's code translated
