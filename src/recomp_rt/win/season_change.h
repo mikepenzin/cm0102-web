@@ -194,8 +194,11 @@ void season_change_reset(void);                               /* before a new ga
 /* The season part of the save (season.c). Version 2 adds after the 16 bytes of version 1:
  *   u32 count, then count times: u32 season, u32 posted (1 when the item is sent), u32 length n, n bytes;
  *   u32 count, then count times: u32 record index (from [0xae23d0], 0x6b bytes a record), 51 bytes name in
- *       the data;
- *   u32 the last season point.
+ *       the data (the name, its 0 and 0 to the end of the field: two runs with the same clicks write the same
+ *       bytes; docs/research/2026-11-11-season-part-unset-bytes.md);
+ *   u32 the last season point;
+ *   from row A18, when qualifiers wait for the first running season: u32 count, then count times 20 bytes
+ *       (season_friendly_dates.c). No bytes at all when none wait.
  * season_change_part_size gives 0 when the game has none of these (the part stays version 1). A reader takes
  * these fields of a later version too and leaves what follows them. */
 uint32_t season_change_part_size(void);
