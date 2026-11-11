@@ -36,6 +36,7 @@ uint8_t *rt_web_memory(void);   /* host/web.c: the guest addresses are the wasm 
  * - past the top of the game's heap and 64 MB: the end of the browser's memory, where an access stops the game.
  *   The guard follows the top as the heap grows (rt_guard_heap_top, heap.c).
  * Each fault prints its guest address first. */
+#ifndef __EMSCRIPTEN__                       /* the browser build is what the guard plays: it has none */
 #define GUARD_HOST_FROM 0x21000000u          /* host/web.c WEB_GLOBAL_BASE */
 #define GUARD_HOST_TO 0x60000000u            /* the static block (kernel32.c) */
 #define GUARD_SLACK (64u << 20)              /* host/web.c WEB_SLACK */
@@ -57,7 +58,6 @@ static uint64_t guard_round(uint64_t v) { return (v + GUARD_ALIGN - 1) & ~(uint6
 
 static void guard_init(void)
 {
-#ifndef __EMSCRIPTEN__
     const char *v = getenv("RECOMP_GUARD");
     if (!v || strcmp(v, "1") != 0) return;
     uint64_t end = guard_round((uint64_t)RT_HEAP_BASE + GUARD_SLACK);
@@ -70,7 +70,6 @@ static void guard_init(void)
     host_on_fault(guard_note);
     fprintf(stderr, "recomp: guard on: %#x to %#x, and from %#llx (the heap's top and 64 MB)\n", GUARD_HOST_FROM,
             GUARD_HOST_TO, (unsigned long long)guard_end);
-#endif
 }
 
 /* heap.c: the game's heap reaches top. The memory that the browser would have grows past it. */
@@ -82,6 +81,9 @@ void rt_guard_heap_top(uint32_t top)
     if (host_protect(g_mem + guard_end, end - guard_end, 1) != 0) rt_fatal("RECOMP_GUARD: cannot open %#llx", (unsigned long long)guard_end);
     guard_end = end;
 }
+#else
+static void guard_init(void) {}
+#endif
 
 void rt_init(const char *exe_path)
 {
