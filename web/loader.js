@@ -97,7 +97,7 @@ const OUT_OF_MEMORY = /Array buffer allocation failed|out of memory|Cannot alloc
 let stats = null;                                    // stats.js, once files.json told the server's mode
 function fail(title, detail) {
   status(title);
-  stats?.report(`${title}: ${detail}`, lines.slice(-40), 'fail');
+  stats?.report(`${title}: ${detail}`, lines.slice(-60), 'fail');
   const last = lines.slice(-8).join('\n');
   const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. The page keeps the game
     files and all your saves, older copies and data sets in memory while it runs. Close other tabs, reload the page, and
@@ -111,10 +111,12 @@ function fail(title, detail) {
 
 // The stack of an error, in the log: for a stop of the engine it names the game's functions (the build keeps their
 // names, web/web.cmake --profiling-funcs: f_<address> is the original's function at that address), so the error
-// report says where the game was.
+// report says where the game was. Chrome keeps 10 frames of a stack unless told more; the game's own frames are many.
+const STACK_LINES = 30;
+try { Error.stackTraceLimit = STACK_LINES; } catch { /* not Chrome: the browser keeps its own number */ }
 function logStack(e) {
   const lines = String(e?.stack ?? '').split('\n').map((l) => l.trim()).filter(Boolean);
-  for (const l of lines.slice(0, 24)) log(`page: at ${l.replace(/^at /, '')}`);
+  for (const l of lines.slice(0, STACK_LINES)) log(`page: at ${l.replace(/^at /, '')}`);
 }
 
 addEventListener('error', (e) => { log(`page: ${e.message}`); logStack(e.error); });
