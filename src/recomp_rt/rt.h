@@ -43,6 +43,17 @@ static inline void wrf64(uint8_t *m, uint32_t a, double v) { memcpy(m + a, &v, 8
 double rdf80(const uint8_t *m, uint32_t a);
 void wrf80(uint8_t *m, uint32_t a, double v);
 
+/* A guest address the runtime's own code may read an object at: above the low page and below the top of the heap
+ * (heap.c). Every block of the game lies below that top: the image, the game stack, the static block and the heap.
+ * Above it the desktop build reads zeros, but the browser build has no memory there at all (host/web.c), and a read
+ * stops the game with "memory access out of bounds". So the runtime tests a value it is not sure is a pointer with
+ * this before it reads through it, and both builds give the same answer. The browser's crash on Exit (2026-11-12): the
+ * wrap of the empty function 0x5a8f60 (season_uefa_cup.c) also runs as the empty destructor of the 0x167-byte records
+ * that free_game_data frees (0x830398 -> 0x59a5a0 -> 0x9462bb), read a record's first word (a sum of money) as a
+ * vtable, and the old test (below 0xfff00000) let a debt of a few million through. */
+uint32_t rt_heap_top(void);
+static inline int rt_readable(uint32_t p) { return p >= 0x10000u && p < rt_heap_top(); }
+
 #define R8(a) rd8(M, (a))
 #define R16(a) rd16(M, (a))
 #define R32(a) rd32(M, (a))

@@ -257,7 +257,7 @@ RT_WRAP(00427320, cup_breaks_bra_champ_start)
 static const char *name_of(uint32_t comp, char *buf, size_t n)
 {
     uint32_t rec = rd32(g_mem, comp + NAME_AT);
-    snprintf(buf, n, "%.50s", rec >= 0x10000u && rec < 0xfff00000u ? win_str(rec + NAME_AT) : "");
+    snprintf(buf, n, "%.50s", rt_readable(rec) ? win_str(rec + NAME_AT) : "");
     return buf;
 }
 
@@ -321,7 +321,7 @@ static void log_fixture_years(const char *when)
     char buf[512];
     int n = snprintf(buf, sizeof buf, "recomp: cup_breaks: fixture years %s:", when);
     uint32_t first = rd32(g_mem, 0xae2a58u), b = first;
-    for (int i = 0; b >= 0x10000u && b < 0xfff00000u && i < 40 && n < (int)sizeof buf - 16; i++) {
+    for (int i = 0; rt_readable(b) && i < 40 && n < (int)sizeof buf - 16; i++) {
         n += snprintf(buf + n, sizeof buf - (size_t)n, " %d", (int16_t)rd16(g_mem, b + 0x1130));
         b = rd32(g_mem, b + 0x112c);
         if (b == first) break;
@@ -343,7 +343,7 @@ RT_WRAP(005aa680, cup_breaks_add_fixture)
     season_playoffs_fixture_log(rt_arg(0));
     if (logging() && season_code_on()) {
         uint32_t f = rt_arg(0);
-        int year = f >= 0x10000u && f < 0xfff00000u ? (int16_t)rd16(g_mem, f + 0x28) : 0;
+        int year = rt_readable(f) ? (int16_t)rd16(g_mem, f + 0x28) : 0;
         if (year >= SEASON_CUPS_NEVER || never_obj)
             fprintf(stderr, "recomp: cup_breaks: fixture added for %d (call from 0x%x)%s\n", year,
                     rd32(g_mem, cpu.esp),

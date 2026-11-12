@@ -25,7 +25,7 @@
 
 static uint32_t context;                /* the competition object of the call that runs, or 0 */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 /* The competition object of a competition object, stage object or record (club_comp: +0 the id, the slot of
  * g_comp_object_table [0xadadfc]; an object has its vtable at +0 and its record at +4). */

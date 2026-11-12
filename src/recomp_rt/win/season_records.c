@@ -1219,7 +1219,7 @@ RT_WRAP(0090dae0, virtual_staff_top_up)
         uint32_t objs = rd32(g_mem, 0xadadfcu);
         for (uint32_t id = 0; objs && rec && id < 1024; id++) {
             uint32_t o = rd32(g_mem, objs + 4 * id);
-            if (o >= 0x10000u && o < 0xfff00000u && rd32(g_mem, o + 4) == rec)
+            if (rt_readable(o) && rd32(g_mem, o + 4) == rec)
                 fprintf(stderr, "recomp: club records:   object %08x of record %u, vtable %08x, clubs %d\n", o, id,
                         rd32(g_mem, o), (int16_t)rd16(g_mem, o + 0x3e));
         }
@@ -1243,7 +1243,7 @@ void season_records_fixture_log(uint32_t fx, uint32_t ret)
     if (!v || strcmp(v, "2") || fx < 0x10000u) return;
     uint32_t rec = rd32(g_mem, fx + 0x14);
     char rn[52] = "";
-    if (rec >= 0x10000u && rec < 0xfff00000u) { memcpy(rn, g_mem + rec + 4, 51); rn[51] = 0; }
+    if (rt_readable(rec)) { memcpy(rn, g_mem + rec + 4, 51); rn[51] = 0; }
     /* A club pointer outside the club table: the fixture names no club. */
     uint32_t base = rd32(g_mem, 0xae23b4u), end = base + rd32(g_mem, 0xae235cu) * 0x245u;
     int bad = 0;
@@ -1274,7 +1274,7 @@ void season_records_league_log(uint32_t league, uint32_t ret)
     }
     if (!bad) return;
     char rn[52] = "";
-    if (rec >= 0x10000u && rec < 0xfff00000u) { memcpy(rn, g_mem + rec + 4, 51); rn[51] = 0; }
+    if (rt_readable(rec)) { memcpy(rn, g_mem + rec + 4, 51); rn[51] = 0; }
     fprintf(stderr, "recomp: club records: create_fixtures from %08x: league %08x vtable %08x %s, %d rows, %d not "
                     "clubs:", ret, league, rd32(g_mem, league), rn, n, bad);
     for (int i = 0; i < n; i++) {

@@ -37,7 +37,7 @@
 #define KEY_MUNSTER_LEAGUE 0x9cf850u
 #define KEY_POL_TOP 0x9cf858u
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 /* Fills the empty places from..to - 1 of cup with the clubs of the division of key not in the list, by
  * reputation; byte4 is the entry's round byte (+4). */

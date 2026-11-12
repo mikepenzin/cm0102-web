@@ -194,7 +194,7 @@ int season_game_changes(void)
     return season_code_on() && (season_start_year() != SEASON_FIRST_YEAR || season_changing_rules());
 }
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 int season_comp_objects(uint32_t *out, int max)
 {

@@ -75,7 +75,7 @@
 #define NO_CONTINENT 0xfffffffeu        /* -2: no continent has it (-1 is every continent at 0x5cc060) */
 
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int is_leap(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }
 static int days_in(int y) { return is_leap(y) ? 366 : 365; }

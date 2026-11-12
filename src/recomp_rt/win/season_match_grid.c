@@ -23,10 +23,10 @@ void o_006f46b0(void);
 static void name_at(uint32_t at, char *out)
 {
     out[0] = 0;
-    if (at >= 0x10000u && at < 0xfff00000u) memcpy(out, g_mem + at + 4, 51), out[51] = 0;
+    if (rt_readable(at)) memcpy(out, g_mem + at + 4, 51), out[51] = 0;
 }
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 RT_WRAP(006f46b0, match_grid_guard)
 {

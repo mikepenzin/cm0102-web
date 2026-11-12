@@ -62,7 +62,7 @@
 #define NEEDS_PERMIT 0x008c7560u
 #define BREXIT_YEAR 2021
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static const char *const uk_names[] = {"England", "Scotland", "Wales", "Northern Ireland"};
 

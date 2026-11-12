@@ -116,7 +116,7 @@ static int uc_format(int kind, const SeasonUefa *r, UcGroups *f)
 }
 #define WEEKDAY_UC 3                    /* the weekday of the UEFA Cup rounds of the original (0x9026a4) */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 static int uc_inner;                    /* 1: the wrap of the round table passes to the original */
 
 static uint32_t call_this(uint32_t fn, uint32_t self, int nargs, const uint32_t *args)

@@ -79,7 +79,7 @@
 #define F_GROUP_SLOT 0x0068a1c0u        /* league_round_set_match_slot, cdecl (table, round, slot, weekday, kind,
                                          * option, value) */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static uint32_t call_this(uint32_t fn, uint32_t self, int nargs, const uint32_t *args)
 {
@@ -158,6 +158,7 @@ static const SeasonCupGroups *format_at(uint32_t cup, int season)
 /* The object plays a group format: its season has one and it holds groups + 1 stages. */
 static const SeasonCupGroups *layout(uint32_t cup)
 {
+    if (!readable(cup)) return NULL;                   /* the wrap of 0x5a8f60 asks for any ecx (rt.h, rt_readable) */
     const SeasonCupGroups *g = format_at(cup, cup_season(cup));
     return g && (int32_t)rd32(g_mem, cup + CUP_STAGE_COUNT) == g->groups + 1 ? g : NULL;
 }

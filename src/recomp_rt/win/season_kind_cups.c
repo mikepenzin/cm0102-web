@@ -50,7 +50,7 @@ static int cups_off(void)
     return v && !strcmp(v, "off");
 }
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 /* Writes the format of the row to a table of n rounds. Returns the number of rounds that changed, or -1 when
  * the table has another round count than the row (nothing is written). A round that becomes two legs can end

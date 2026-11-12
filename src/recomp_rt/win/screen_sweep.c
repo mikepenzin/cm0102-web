@@ -51,7 +51,7 @@ static uint32_t objects[MAX_OBJECTS];
 static int count, next_item = -1, pass_season = -1, pushed, built_comp, built_history;
 static int waiting;                 /* 1: a competition screen, 2: a history screen, pushed and not built yet */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static uint32_t call(uint32_t fn, int n, const uint32_t *args)
 {

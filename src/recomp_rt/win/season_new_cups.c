@@ -51,7 +51,7 @@
 #define F_MALLOC 0x00944e46u
 #define F_FREE 0x009452cau
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static uint32_t call_cdecl(uint32_t fn, int nargs, const uint32_t *args)
 {

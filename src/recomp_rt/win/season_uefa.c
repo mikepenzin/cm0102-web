@@ -79,7 +79,7 @@
 #define PHASE2_PRIZE 0x124f80u          /* 1,200,000: the entry money of phase 2 (0x586065), here of the round of 16 */
 #define ROUND_CODE_R16 20               /* "Second Round" (round name function 0x4b4850; codes 10 to 150 are taken) */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static uint32_t call_this(uint32_t fn, uint32_t self, int nargs, const uint32_t *args)
 {

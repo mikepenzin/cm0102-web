@@ -41,7 +41,7 @@
 #define F_MATCH_DATE 0x00521eb0u        /* cup_set_round_match_date, cdecl (table, round, day, month, year+, weekday,
                                          * kick-off slot, year, venue) */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int season_game(void)
 {

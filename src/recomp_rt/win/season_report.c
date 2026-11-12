@@ -111,7 +111,7 @@ static const SeasonCompClass *class_of(uint32_t vtable)
 }
 
 /* A pointer of the game that can be read: inside the 32-bit space and not near 0. */
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static void write_cup_rounds(FILE *f, int season, const char *phase, const char *slot, const char *file,
                              uint32_t obj);

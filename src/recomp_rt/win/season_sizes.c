@@ -37,7 +37,7 @@
 #define MIN_CLUBS 2
 #define MAX_CLUBS 60
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 /* A season game with the sizes on. Test switch RECOMP_LEAGUE_SIZES=off: the original's counts and places (the
  * club moves of slice 15 still run). */

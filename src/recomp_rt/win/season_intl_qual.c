@@ -113,7 +113,7 @@ static int logging(void)
     return on;
 }
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 /* The World Cup year of a section's campaign, or 0 outside the gate. */
 static int wc_year(uint32_t self)

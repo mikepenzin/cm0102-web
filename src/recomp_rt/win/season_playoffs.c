@@ -106,7 +106,7 @@ static int final_gap(int year)
 }
 #define NO_WEEKDAY 0xffffffffu          /* Date::Date 0x549f70 keeps the date for weekday -1 (src/si/date.c) */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int playoffs_on(void)
 {

@@ -112,7 +112,7 @@ static const SeasonRuleKind *const season_rule_kinds[] = {
 
 static int log_on = -1;                 /* RECOMP_SEASON_CHANGE_LOG=1: each change and each news text */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int logging(void)
 {
