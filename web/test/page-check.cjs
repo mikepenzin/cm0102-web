@@ -98,6 +98,31 @@ const PORT = 8097;
       await c.close();
     }
 
+    // Exit Game (code 0) right after a save: the box waits for the browser's storage, and leaving meanwhile asks first.
+    {
+      const c = await b.newContext({ viewport: { width: 1100, height: 760 } });
+      const pg = await c.newPage();
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await pg.click('#consent-no').catch(() => {});
+      await pg.click('#go');
+      await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      await pg.evaluate(() => {
+        const FS = window.Module.FS, syncfs = FS.syncfs.bind(FS);
+        window.__exitStored = false;
+        FS.syncfs = (populate, cb) => syncfs(populate, (e) => setTimeout(() => { if (!populate) window.__exitStored = true; cb(e); }, populate ? 0 : 3000));
+      });
+      await pg.evaluate(() => window.Module.onExit(0));
+      const during = (await pg.textContent('#overlay')).replace(/\s+/g, ' ');
+      const asks = await pg.evaluate(() => { const e = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(e); return e.defaultPrevented; });
+      await pg.waitForFunction(() => /Reload the page to play again/.test(document.getElementById('overlay').textContent), null, { timeout: 10000 }).catch(() => {});
+      const after = (await pg.textContent('#overlay')).replace(/\s+/g, ' ');
+      const asksAfter = await pg.evaluate(() => { const e = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(e); return e.defaultPrevented; });
+      check('Exit Game: the saves are stored before the box says the game ended, and leaving meanwhile asks first',
+        /go to this browser's storage/.test(during) && asks && /Reload the page to play again/.test(after)
+          && await pg.evaluate(() => window.__exitStored) && !asksAfter, `${during.slice(0, 80)} | ${after.slice(0, 80)} | asks ${asks}/${asksAfter}`);
+      await c.close();
+    }
+
     // A server with both builds (CM_WEB_BUILD_ASYNCIFY) and a browser without JSPI (Safari, an iPad): the page runs the
     // Asyncify build, and asks for no file of the JSPI one.
     fs.mkdirSync(asyncDir);
@@ -233,10 +258,15 @@ const PORT = 8097;
     await p.evaluate(() => {
       sessionStorage.removeItem('saved-before-restart');
       const FS = window.Module.FS, syncfs = FS.syncfs.bind(FS);
-      FS.syncfs = (populate, cb) => syncfs(populate, (e) => { if (!populate) sessionStorage.setItem('saved-before-restart', '1'); cb(e); });
+      // A slow storage (a large save on a phone): 9 s, past the 8 s after which the page once loaded again anyway.
+      FS.syncfs = (populate, cb) => syncfs(populate, (e) => setTimeout(() => {
+        if (!populate) sessionStorage.setItem('saved-before-restart', '1');
+        cb(e);
+      }, populate ? 0 : 9000));
     });
-    const reloaded = p.waitForNavigation({ timeout: 20000 }).then(() => true, () => false);
+    const reloaded = p.waitForNavigation({ timeout: 30000 }).then(() => true, () => false);
     await p.evaluate(() => window.Module.rtRestart());
+    check('Restart Game: the page shows it is storing the saves', /Restarting/.test(await p.textContent('body')));
     check('Restart Game: the page loads again', await reloaded);
     await p.waitForFunction(() => window.__fake, null, { timeout: 120000 });
     check('the user folder went to the browser\'s storage before the reload, and the game starts again by itself',

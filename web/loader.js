@@ -127,7 +127,7 @@ addEventListener('unhandledrejection', (e) => log(`page: ${e.reason?.stack ?? e.
 let running = false, leaving = false;
 let keyboard = null;
 guardKeys();
-guardLeave(() => running && !leaving);
+guardLeave(() => (running || storing) && !leaving);
 const canvas = $('canvas');
 const layout = mountLayout({ app: $('app'), bar: $('bar'), stage: $('stage'), canvas, chip: $('type-chip'), isTouch: TOUCH });
 mountTouch({ canvas, stage: $('stage'), fx: $('fx'), onFirstTouch: resumeAudio, onTap: (x, y) => keyboard?.onTap(x, y) });
@@ -389,6 +389,26 @@ function forgetUserStorage() {
   return true;
 }
 
+// Everything of the user folder into the browser's storage now, the files written a moment ago too (the vault leaves
+// those for its next round otherwise): for Restart Game and Exit, after which the page goes or the game is over. The
+// promise ends when both writes did (or failed: the log says so). Leaving the page meanwhile asks first (storing).
+let storing = 0;
+function storeEverything() {
+  const FS = window.Module?.FS;
+  if (!FS) return Promise.resolve();
+  storing++;
+  const vaultDone = vault?.active ? vault.persist({ force: true }).catch((e) => log(`page: the vault: ${e?.message ?? e}`)) : null;
+  const folderDone = new Promise((done) => FS.syncfs(false, (err) => {
+    if (err && closedStorage(err) && forgetUserStorage()) {
+      FS.syncfs(false, (again) => { if (again) log(`page: the user folder was not saved: ${again}`); done(); });
+      return;
+    }
+    if (err) log(`page: the user folder was not saved: ${err}`);
+    done();
+  }));
+  return Promise.all([vaultDone, folderDone]).finally(() => { storing--; });
+}
+
 // Writes the user folder to IndexedDB. A call while a write runs makes one more write after it, so nothing is missed.
 let syncing = false, syncAgain = false, reopened = false;
 function sync() {
@@ -486,13 +506,15 @@ function runEngine(files, info) {
     // Restart Game (the game's restart_game 0x68dbc0, WinExec in kernel32.c, host_restart in host/web.c): the user
     // folder goes to the browser's storage, then the page loads again, which starts the game as a visit does.
     rtRestart: () => {
-      running = false;                                   // no question before the page goes
-      log('page: Restart Game: the page loads again');
-      const FS = window.Module.FS;
-      const go = () => location.reload();
-      Promise.all([vault?.active ? vault.persist({ force: true }).catch(() => {}) : null,
-        new Promise((done) => FS.syncfs(false, () => done()))]).then(go, go);
-      setTimeout(go, 8000);                              // at the latest
+      running = false;
+      log('page: Restart Game: the saves go to the browser\'s storage, then the page loads again');
+      overlay('<h1>Restarting…</h1><p>Your saves go to this browser\'s storage first.</p>');
+      // Not before the saves are stored: a large save on a phone can take longer than the 8 s this once allowed, and
+      // the reload then lost it. A minute is the most the page waits for a storage that does not answer.
+      let gone = false;
+      const go = () => { if (gone) return; gone = true; leaving = true; location.reload(); };
+      storeEverything().then(go, go);
+      setTimeout(() => { if (!gone) log('page: Restart Game: the storage did not answer in a minute; the page loads again'); go(); }, 60000);
     },
     print: log,
     printErr: log,
@@ -604,9 +626,14 @@ function runEngine(files, info) {
     },
     onExit: (code) => {
       running = false;
-      sync();
-      if (code === 0) { status('The game ended'); overlay('<h1>The game ended</h1><p>Reload the page to play again. Your saves stay in this browser.</p>'); }
-      else fail(`The game ended with code ${code}`, 'Help, Engine log says why. Your saves stay in this browser.');
+      // Exit right after a save: the save is stored before the box says the game ended (closing the tab meanwhile
+      // asks first), where an ordinary write would leave a file of the last moment for later.
+      const stored = storeEverything();
+      if (code === 0) {
+        status('Saving…');
+        overlay('<h1>The game ended</h1><p>Your saves go to this browser\'s storage…</p>');
+        stored.finally(() => { status('The game ended'); overlay('<h1>The game ended</h1><p>Reload the page to play again. Your saves stay in this browser.</p>'); });
+      } else fail(`The game ended with code ${code}`, 'Help, Engine log says why. Your saves stay in this browser.');
     },
     onAbort: (what) => { running = false; logStack(what); fail('The game stopped', String(what)); },
   };
