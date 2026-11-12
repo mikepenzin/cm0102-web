@@ -11,7 +11,7 @@
     for (const part of p.split('/').filter(Boolean)) { cur += `/${part}`; dirs.add(cur); }
   };
   const enoent = (p) => Object.assign(new Error(`ENOENT ${p}`), { errno: 44 });
-  window.__syncs = { load: 0, store: 0 };
+  window.__syncs = { load: 0, store: 0, opened: 0 };
   M.FS = {
     mkdirTree,
     mkdir(p) { if (dirs.has(p)) throw Object.assign(new Error(`EEXIST ${p}`), { errno: 20 }); dirs.add(p); },
@@ -43,10 +43,20 @@
       if (!dirs.has(point)) throw new Error(`mount point ${point} missing`);
       mounts.push(point);
     },
-    syncfs(populate, cb) { window.__syncs[populate ? 'load' : 'store']++; setTimeout(() => cb(null), 5); },
+    // As IDBFS: a write keeps its connection in IDBFS.dbs; one the browser closed fails as Chrome's does.
+    syncfs(populate, cb) {
+      window.__syncs[populate ? 'load' : 'store']++;
+      const dbs = M.IDBFS.dbs;
+      if (!populate && dbs['/user']?.closed) {
+        setTimeout(() => cb(new DOMException("Failed to execute 'transaction' on 'IDBDatabase': The database connection is closing.", 'InvalidStateError')), 5);
+        return;
+      }
+      if (!populate && !dbs['/user']) { dbs['/user'] = { closed: false, close() { this.closed = true; } }; window.__syncs.opened++; }
+      setTimeout(() => cb(null), 5);
+    },
   };
   // As newer Emscripten: IDBFS is an exported runtime method (web/web.cmake), and FS has no filesystems table.
-  M.IDBFS = { name: 'IDBFS' };
+  M.IDBFS = { name: 'IDBFS', dbs: {} };
   M.ENV = {};
   let deps = 0, started = false;
   M.addRunDependency = () => { deps++; };

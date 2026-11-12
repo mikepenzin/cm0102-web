@@ -158,6 +158,12 @@ the browser takes a Suspending import only inside `WebAssembly.promising`. The A
 vault; files that an earlier visit put in it come back into the user folder. `?vault=0` or localStorage `cm0102-vault` = `off` turns it
 off (the files in it then come back into the user folder).
 
+**A connection the browser closes.** The browser can close a site's IndexedDB connection by itself (Android's Chrome
+did, in an error report of November 2026); every transaction on it then fails with "The database connection is
+closing". The vault opens it again at its next request and tries that request once more. For the user folder the page
+drops IDBFS's kept connection (`IDBFS.dbs`) when a write fails that way and writes again, which opens a new one; a
+second failure in a row is reported as before ("the user folder was not saved").
+
 The browser may delete the saves by itself, without asking: when the disk runs low (unless it agreed to keep the
 site's storage, `navigator.storage.persist`), when browsing data is cleared, when a private window closes, and in
 Safari after 7 days without a visit unless the page is on the home screen. Saved games and Help say so

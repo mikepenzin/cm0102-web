@@ -357,8 +357,22 @@ async function primeOffline(info) {
 
 // ---- The engine. ----
 
+// The browser can close a site's IndexedDB connection by itself (Android's Chrome does). Emscripten's IDBFS keeps the
+// closed one in IDBFS.dbs, so every later write of the user folder fails with "The database connection is closing".
+// The page drops it, and the next write opens a new one.
+const closedStorage = (err) => /InvalidStateError|connection is closing|AbortError|UnknownError/i.test(`${err?.name ?? ''} ${err?.message ?? err}`);
+function forgetUserStorage() {
+  const M = window.Module, idbfs = M?.IDBFS || M?.FS?.filesystems?.IDBFS;
+  if (!idbfs?.dbs) return false;
+  for (const k of Object.keys(idbfs.dbs)) {
+    try { idbfs.dbs[k].close(); } catch { /* closed already */ }
+    delete idbfs.dbs[k];
+  }
+  return true;
+}
+
 // Writes the user folder to IndexedDB. A call while a write runs makes one more write after it, so nothing is missed.
-let syncing = false, syncAgain = false;
+let syncing = false, syncAgain = false, reopened = false;
 function sync() {
   const FS = window.Module?.FS;
   if (!FS) return;
@@ -367,7 +381,14 @@ function sync() {
   syncing = true;
   FS.syncfs(false, (err) => {
     syncing = false;
-    if (err) { log(`page: the user folder was not saved: ${err}`); toast('The save did not reach this browser\'s storage', { kind: 'bad', ms: 6000 }); }
+    if (err && !reopened && closedStorage(err) && forgetUserStorage()) {
+      reopened = true;                                 // once per failing run: a second failure is reported
+      log('page: the browser closed the storage of the user folder; the page opens it again');
+      syncAgain = true;
+    } else if (err) {
+      log(`page: the user folder was not saved: ${err}`);
+      toast('The save did not reach this browser\'s storage', { kind: 'bad', ms: 6000 });
+    } else reopened = false;
     if (syncAgain) { syncAgain = false; sync(); }
   });
 }

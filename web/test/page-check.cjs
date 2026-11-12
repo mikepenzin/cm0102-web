@@ -200,6 +200,14 @@ const PORT = 8097;
     await p.evaluate(() => window.Module.FS.writeFile('/user/Auto 2001-07-20.sav', new Uint8Array(0x416ec + 8)));
     await p.waitForFunction((n) => window.__syncs.store > n, storesNow, { timeout: 8000 }).catch(() => {});
     check('a new save from the game goes to IndexedDB within seconds', (await p.evaluate(() => window.__syncs.store)) > storesNow);
+    // The browser closes the user folder's IndexedDB connection (Android's Chrome does): the page opens it again.
+    const openedBefore = await p.evaluate(() => { window.Module.IDBFS.dbs['/user'].closed = true; return window.__syncs.opened; });
+    await p.evaluate(() => window.Module.FS.writeFile('/user/Auto 2001-07-27.sav', new Uint8Array(0x416ec + 8)));
+    await p.waitForFunction((n) => window.__syncs.opened > n, openedBefore, { timeout: 8000 }).catch(() => {});
+    const reopenLog = await p.textContent('#log');
+    check('a connection the browser closed is opened again and the save is written',
+      (await p.evaluate(() => window.__syncs.opened)) > openedBefore && /opens it again/.test(reopenLog) && !/user folder was not saved/.test(reopenLog),
+      reopenLog.split('\n').filter((l) => /storage|not saved/.test(l)).slice(-3).join(' | '));
 
     const first = (await p.textContent('#log')).match(/page: \d+ files in .*/)?.[0] ?? '';
     check('the first visit downloads every file', /: 0\.0 MB from this browser/.test(first), first);
@@ -284,6 +292,23 @@ const PORT = 8097;
     check('an older engine on a touch device: no Keyboard button, a line in the log',
       (await o.locator('#kbd-open:not([hidden])').count()) === 0 && /build it again for the Keyboard button/.test(await o.textContent('#log')));
     await oc.close();
+    // The vault after the browser closed its IndexedDB connection (an Android report): its next request opens it
+    // again, where it once failed with "The database connection is closing" until the page was loaded again.
+    const vc = await b.newContext();
+    const v = await vc.newPage();
+    await v.goto(`http://127.0.0.1:${PORT}/privacy`);
+    const reopen = await v.evaluate(async () => {
+      const { createVault } = await import('/vault.js');
+      let last = null;
+      const idb = { open: (n, ver) => { const r = indexedDB.open(n, ver); r.addEventListener('success', () => { last = r.result; }); return r; } };
+      const vault = createVault({ FS: {}, idb });
+      await vault.open();
+      const first = last;
+      first.close();
+      try { await vault.clear(); return { ok: last !== first }; } catch (e) { return { ok: false, error: `${e.name}: ${e.message}` }; }
+    });
+    check('the vault opens its storage again after the browser closed it', reopen.ok, reopen.error ?? '');
+    await vc.close();
     if (process.argv[2]) await p.screenshot({ path: process.argv[2] });
   } finally {
     await b.close();

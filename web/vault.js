@@ -55,11 +55,35 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
   let chain = Promise.resolve();
   const serial = (fn) => { const p = chain.then(fn); chain = p.catch(() => {}); return p; };
 
-  const store = (mode) => db.transaction([STORE], mode).objectStore(STORE);
-  const get = (key) => done(store('readonly').get(key));
-  const put = (key, value) => done(store('readwrite').put(value, key));
-  const del = (key) => done(store('readwrite').delete(key));
-  const keys = () => done(store('readonly').getAllKeys());
+  // The browser can close the connection by itself (Android's Chrome does, for example when it frees memory or the
+  // site's storage is cleared): onclose fires, and every transaction after it fails with "The database connection is
+  // closing". The vault then opens it again at its next request, and a request that met the closing tries once more.
+  let opening = null;
+  const connect = () => opening ??= openDB(idb, VAULT_DB, 1, (d) => {
+    if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE);
+  }).then((d) => {
+    const gone = () => { if (db === d) db = null; };
+    d.onclose = () => { gone(); log('page: the vault: the browser closed its storage; it opens again at the next use'); };
+    d.onversionchange = () => { d.close(); gone(); };
+    db = d;
+    return d;
+  }).finally(() => { opening = null; });
+  const closing = (e) => e?.name === 'InvalidStateError' || e?.name === 'AbortError' || e?.name === 'UnknownError';
+  async function request(mode, ask) {
+    for (let tries = 0; ; tries++) {
+      const d = db ?? await connect();
+      try {
+        return await ask(d.transaction([STORE], mode).objectStore(STORE));
+      } catch (e) {
+        if (tries || !closing(e)) throw e;
+        if (db === d) db = null;
+      }
+    }
+  }
+  const get = (key) => request('readonly', (s) => done(s.get(key)));
+  const put = (key, value) => request('readwrite', (s) => done(s.put(value, key)));
+  const del = (key) => request('readwrite', (s) => done(s.delete(key)));
+  const keys = () => request('readonly', (s) => done(s.getAllKeys()));
 
   const lookup = (path) => { try { return FS.lookupPath(path).node; } catch { return null; } };
   const pathOf = (node) => { try { return FS.getPath(node); } catch { return null; } };
@@ -68,7 +92,7 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
   const evict = (node) => { node.contents = new Uint8Array(0); node.vault = 'out'; };
 
   async function open() {
-    db = await openDB(idb, VAULT_DB, 1, (d) => { if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE); });
+    await connect();
   }
 
   // The vault's files that IDBFS of an earlier page kept: each one moves to the vault, one at a time, so that only one
@@ -96,13 +120,12 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
   }
 
   async function records() {
-    const out = [];
-    await new Promise((ok, bad) => {
-      const c = store('readonly').openCursor();
-      c.onsuccess = () => { const cur = c.result; if (!cur) { ok(); return; } out.push({ key: cur.key, size: cur.value.size, mtime: cur.value.mtime }); cur.continue(); };
+    return request('readonly', (s) => new Promise((ok, bad) => {
+      const out = [];
+      const c = s.openCursor();
+      c.onsuccess = () => { const cur = c.result; if (!cur) { ok(out); return; } out.push({ key: cur.key, size: cur.value.size, mtime: cur.value.mtime }); cur.continue(); };
       c.onerror = () => bad(c.error);
-    });
-    return out;
+    }));
   }
 
   // A placeholder for each record: the game sees the file, its size and its time; its contents stay in the vault.
@@ -294,7 +317,7 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
 
   // The records into the user folder's IDBFS store took place (materialize, then a sync): the vault empties, so that
   // a later page with the vault on does not bring back files that were deleted meanwhile.
-  const clear = () => serial(() => done(store('readwrite').clear()));
+  const clear = () => serial(() => request('readwrite', (s) => done(s.clear())));
 
   // IDBFS leaves the vault's files alone once they moved to the vault (migrateFrom), placeholders above all: their
   // contents are not in memory.
