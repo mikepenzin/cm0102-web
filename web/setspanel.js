@@ -46,6 +46,12 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
     const done = [], refused = [];
     const taken = () => listDataSets(FS, root).map((s) => s.name);
     const zips = files.filter((f) => /\.zip$/i.test(f.name)), dats = files.filter((f) => /\.dat$/i.test(f.name));
+    // Anything else was once left out without a word, so a database as a .rar (as many are shared) seemed to do nothing.
+    for (const f of files.filter((x) => !/\.(zip|dat)$/i.test(x.name))) {
+      refused.push(/\.(rar|7z)$/i.test(f.name)
+        ? `${f.name}: a .rar or .7z cannot be read here. Unpack it (on a phone, a file manager app can), then upload the folder as a .zip, or its .dat files.`
+        : `${f.name}: a data set uploads as a .zip, or as its .dat files.`);
+    }
     for (const f of zips) {
       say(`Reading ${f.name}…`);
       try {

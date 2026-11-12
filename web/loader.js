@@ -223,6 +223,10 @@ function cloudHintOnce() {
 }
 $('help-close').onclick = () => $('help').close();
 $('fullscreen').onclick = () => layout.toggleFullscreen();
+// A phone's or tablet's file picker turns the accept list into file types it knows; .sav and .dat are none of them, and
+// a downloaded zip often has a general type, so the picker could grey out the very file. The page checks each file
+// itself (saves.js, setspanel.js), so on a touch device the picker shows every file.
+if (TOUCH) for (const id of ['saves-file', 'sets-file']) $(id).removeAttribute('accept');
 // Full screen with no room beside the picture: the page's buttons sit over its top right corner, where the game has
 // buttons too (a player's Transfer tab, for one). The fold button folds them into a small tab on the right edge
 // (index.html, #app.bar-folded), and the choice stays for later visits.

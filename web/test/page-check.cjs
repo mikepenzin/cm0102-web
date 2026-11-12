@@ -279,6 +279,12 @@ const PORT = 8097;
     await t.tap('#kbd-open');
     check('the button again closes the keyboard', (await t.evaluate(() => document.activeElement?.id)) !== 'kbd'
       && (await t.textContent('#kbd-open span')) === 'Keyboard' && (await t.locator('#kbd-open svg').count()) === 1);
+    check('a touch device\'s file pickers show every file (the page checks them itself)',
+      (await t.getAttribute('#saves-file', 'accept')) === null && (await t.getAttribute('#sets-file', 'accept')) === null);
+    await t.setInputFiles('#sets-file', { name: 'Update 2026.rar', mimeType: 'application/vnd.rar', buffer: Buffer.from('Rar!\x1a\x07\x00') });
+    await t.waitForFunction(() => /rar/.test(document.getElementById('sets-note').textContent), null, { timeout: 5000 }).catch(() => {});
+    check('a database as a .rar gets a message, not silence', /Update 2026\.rar: a \.rar or \.7z cannot be read here/.test(await t.textContent('#sets-note')),
+      await t.textContent('#sets-note'));
     check('no page errors on the touch device', terrors.length === 0, terrors.join('; '));
     await tc.close();
     // An engine built before the keyboard calls: no button, and the log says to build it again.
