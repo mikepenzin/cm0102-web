@@ -567,7 +567,7 @@ function runEngine(files, info) {
       if (code === 0) { status('The game ended'); overlay('<h1>The game ended</h1><p>Reload the page to play again. Your saves stay in this browser.</p>'); }
       else fail(`The game ended with code ${code}`, 'Help, Engine log says why. Your saves stay in this browser.');
     },
-    onAbort: (what) => { running = false; fail('The game stopped', String(what)); },
+    onAbort: (what) => { running = false; logStack(what); fail('The game stopped', String(what)); },
   };
   const s = document.createElement('script');
   s.src = engineUrl(info.chosen, 'cm0102_recomp.js');
