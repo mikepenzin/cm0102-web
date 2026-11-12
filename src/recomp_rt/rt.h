@@ -52,7 +52,15 @@ void wrf80(uint8_t *m, uint32_t a, double v);
  * that free_game_data frees (0x830398 -> 0x59a5a0 -> 0x9462bb), read a record's first word (a sum of money) as a
  * vtable, and the old test (below 0xfff00000) let a debt of a few million through. */
 uint32_t rt_heap_top(void);
-static inline int rt_readable(uint32_t p) { return p >= 0x10000u && p < rt_heap_top(); }
+/* Also not 0x21000000 to 0x60000000: no block of the game lies there (the native RECOMP_GUARD protects the range),
+ * but in the browser it holds the engine's own data, C stack and heap (host/web.c), so a sum of money in that range
+ * taken for a pointer would read, or let the runtime write, the engine's memory. */
+#define RT_HOST_FROM 0x21000000u
+#define RT_HOST_TO 0x60000000u
+static inline int rt_readable(uint32_t p)
+{
+    return p >= 0x10000u && p < rt_heap_top() && (p < RT_HOST_FROM || p >= RT_HOST_TO);
+}
 
 #define R8(a) rd8(M, (a))
 #define R16(a) rd16(M, (a))

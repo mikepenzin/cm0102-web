@@ -111,12 +111,33 @@ void o_00586fa0(void);
 RT_WRAP(004bfa30, label_round_name) { with_comp(rt_arg(0), o_004bfa30); }
 /* comp_screens_draw_league_table_tab, cdecl (comp, top, bottom) */
 RT_WRAP(00491380, table_tab_round_name) { with_comp(rt_arg(0), o_00491380); }
+/* The cup views read a cup's round table through +0x45 (not 0 once the draw is made) and +0xa3 (the table: a Cup,
+ * docs/research/2026-10-17-cup-round-record.md). The Friendly competition (Friendly::Friendly 0x5c1f80 sets vtable
+ * 0x96ae7c at 0x5c1fee) is no cup, but a click on "Friendly" in a fixture list opens its screen, and its first view is
+ * the cup rounds tab 0x492980 (0x490797..0x4907a8: not a League_Stage). In a game of the October 2026 data (2025/26)
+ * its bytes at +0x45 are not 0 and at +0xa3 hold no address, so the tab read through them (0x492bb0..0x492bbd) past
+ * the end of the browser's memory: "memory access out of bounds" (a guarded native screen sweep, 2026-11-12; the
+ * desktop build read zeros there). With +0x45 0 the rounds tab and the schedule tab 0x4947a0 show the original's own
+ * text instead ("The draw has not yet been made.", 0x492b97 to 0x492c3d; 0x49485a), as they do for Friendly with the
+ * 2001 data. So for the Friendly object, or any whose round table is not a readable address, +0x45 reads 0 during
+ * the draw and is put back after it; a cup with a table is drawn as before. */
+#define FRIENDLY_VTABLE 0x0096ae7cu
+static void cup_view(uint32_t comp, void (*original)(void))
+{
+    int hide = readable(comp) && rd32(g_mem, comp + 0x45) != 0 &&
+               (rd32(g_mem, comp) == FRIENDLY_VTABLE || !readable(rd32(g_mem, comp + 0xa3)));
+    uint32_t drawn = hide ? rd32(g_mem, comp + 0x45) : 0;
+    if (hide) wr32(g_mem, comp + 0x45, 0);
+    with_comp(comp, original);
+    if (hide) wr32(g_mem, comp + 0x45, drawn);
+}
+
 /* comp_screens_draw_cup_rounds_tab, cdecl (comp, top, bottom) */
-RT_WRAP(00492980, rounds_tab_round_name) { with_comp(rt_arg(0), o_00492980); }
+RT_WRAP(00492980, rounds_tab_round_name) { cup_view(rt_arg(0), o_00492980); }
 /* comp_screens_draw_fixtures_tab, cdecl (comp, top, bottom): calls 0x4bffc0 */
 RT_WRAP(00493ee0, fixtures_tab_round_name) { with_comp(rt_arg(0), o_00493ee0); }
-/* comp_screens_draw_schedule_tab, cdecl (comp, top, bottom): calls 0x4bffc0 */
-RT_WRAP(004947a0, schedule_tab_round_name) { with_comp(rt_arg(0), o_004947a0); }
+/* comp_screens_draw_schedule_tab, cdecl (comp, top, bottom): calls 0x4bffc0; tests +0x45 as the rounds tab does */
+RT_WRAP(004947a0, schedule_tab_round_name) { cup_view(rt_arg(0), o_004947a0); }
 /* comp_screens_draw_average_points_tab, cdecl (comp, top, bottom) */
 RT_WRAP(00495050, points_tab_round_name) { with_comp(rt_arg(0), o_00495050); }
 /* printouts_write_league_tables, cdecl (record, file) */
