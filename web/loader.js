@@ -99,14 +99,21 @@ function fail(title, detail) {
   status(title);
   stats?.report(`${title}: ${detail}`, lines.slice(-60), 'fail');
   const last = lines.slice(-8).join('\n');
-  const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. The page keeps the game
-    files and all your saves, older copies and data sets in memory while it runs. Close other tabs, reload the page, and
-    in Saved games download and delete the saves and older copies you no longer play.</p>` : '';
+  // The memory of a tab is only given back for sure when the tab is closed (a page that loaded again in the same tab
+  // once kept the game before it: letEngineGo), so that is the first thing to try.
+  const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. Close this tab and
+    open the game in a new one. If it happens again, close other tabs or quit the browser and open it again. Your saves
+    stay in this browser.</p>` : '';
   overlay(`<h1>${esc(title)}</h1><p>${esc(detail)}</p>${memory}${last ? `<pre class="small" style="white-space:pre-wrap;margin:0 0 14px">${esc(last)}</pre>` : ''}
     <div class="row"><button class="primary" id="fail-again">Start again</button><span class="small">Your saves stay in this browser.</span></div>`, 'error');
   // The way on: the page loads again, after the user folder went to the browser's storage.
   const again = $('fail-again');
-  if (again) again.onclick = () => { running = false; leaving = true; sync(); setTimeout(() => location.reload(), 600); };
+  if (again) again.onclick = () => {
+    running = false; leaving = true;
+    const go = () => location.reload();
+    storeEverything().then(() => letEngineGo()).then(go, go);
+    setTimeout(go, 15000);                             // a storage that does not answer
+  };
 }
 
 // The stack of an error, in the log: for a stop of the engine it names the game's functions (the build keeps their
@@ -486,6 +493,62 @@ function vaultWanted() {
   try { return localStorage.getItem('cm0102-vault') !== 'off'; } catch { return true; }
 }
 
+// Letting the engine go when the page goes. With JSPI the game never returns: between frames its stack is parked
+// inside emscripten_sleep. The browser keeps a parked stack alive after the page is gone, and with it the engine, its
+// memory and the 467 MB of game files (measured in Chromium, 2026-11-12: about 515 MB more in the tab's process at
+// each load of the page, until "Array buffer allocation failed" or the tab died). So the page wraps the engine's
+// sleep: when the page is about to go (Restart Game, Start again, a reload, a closed tab), the sleep in progress
+// ends with an error, the game's stack unwinds through main, and nothing stays parked.
+// The engine's own sleep still runs inside (web/web.cmake builds it; Emscripten wraps it in WebAssembly.Suspending,
+// which is how the page finds it: suspendingMade).
+class EngineLetGo extends Error {
+  constructor() { super('the page let the engine go'); this.name = 'EngineLetGo'; }
+}
+const engine = { letGo: false, wake: null, ended: Promise.resolve(), stoppable: false };
+const suspendingMade = new WeakMap();                // each WebAssembly.Suspending the engine makes -> its function
+function watchSuspending() {
+  const Real = WebAssembly.Suspending;
+  if (typeof Real !== 'function') return () => {};
+  function Suspending(fn) {
+    const s = new Real(fn);
+    suspendingMade.set(s, fn);
+    return s;
+  }
+  Suspending.prototype = Real.prototype;
+  try { WebAssembly.Suspending = Suspending; } catch { return () => {}; }
+  return () => { try { WebAssembly.Suspending = Real; } catch { /* stays wrapped: harmless */ } };
+}
+// The imports of the engine (instantiateWasm): its sleep becomes one the page can end.
+function stoppableSleep(imports, unwatch) {
+  const Real = Object.getPrototypeOf(imports?.env?.emscripten_sleep ?? {})?.constructor;
+  const sleep = suspendingMade.get(imports?.env?.emscripten_sleep);
+  unwatch();
+  if (typeof sleep !== 'function' || typeof Real !== 'function') return false;
+  imports.env.emscripten_sleep = new Real((ms) => new Promise((resolve, reject) => {
+    if (engine.letGo) { reject(new EngineLetGo()); return; }
+    const wake = () => reject(new EngineLetGo());
+    engine.wake = wake;
+    sleep(ms).then((v) => { if (engine.wake === wake) engine.wake = null; resolve(v); }, reject);
+  }));
+  engine.stoppable = true;
+  return true;
+}
+// Ends the game for good. The promise ends when the game's stack is gone (at once when it never ran or cannot be ended).
+function letEngineGo() {
+  if (!engine.letGo) {
+    engine.letGo = true;
+    running = false;
+    const wake = engine.wake;
+    engine.wake = null;
+    wake?.();
+  }
+  return engine.stoppable ? engine.ended : Promise.resolve();
+}
+// Any other way out of the page (a reload, a closed tab, another address): the sleep ends inside this event, and the
+// stack unwinds before the page is gone. A page that comes back from the browser's back/forward cache has no game.
+addEventListener('pagehide', () => { letEngineGo(); });
+addEventListener('pageshow', (e) => { if (e.persisted && engine.letGo) location.reload(); });
+
 function runEngine(files, info) {
   const wasmUrl = engineUrl(info.chosen, 'cm0102_recomp.wasm');
   // The vault opens files lazily only on a JSPI engine in a browser with WebAssembly.Suspending; otherwise (or turned
@@ -495,10 +558,13 @@ function runEngine(files, info) {
   let hooked = false;
   const plainInstantiate = (imports, receive) => WebAssembly.instantiateStreaming(fetch(wasmUrl), imports).then((r) => receive(r.instance))
     .catch(async () => receive((await WebAssembly.instantiate(await (await fetch(wasmUrl)).arrayBuffer(), imports)).instance));
+  const jspi = info.chosen.suspend === 'jspi' && typeof WebAssembly.Suspending === 'function';
+  const unwatch = jspi ? watchSuspending() : () => {};
   window.Module = {
     canvas,
-    ...(vault && lazy ? { instantiateWasm: (imports, receive) => {
-      hooked = vault.instantiate(imports, receive, wasmUrl);
+    ...(jspi ? { instantiateWasm: (imports, receive) => {
+      if (!stoppableSleep(imports, unwatch)) log('page: this engine\'s sleep cannot be ended: a reload of the page keeps its memory');
+      hooked = vault && lazy ? vault.instantiate(imports, receive, wasmUrl) : false;
       if (!hooked) plainInstantiate(imports, receive);
       return {};
     } } : {}),
@@ -513,7 +579,8 @@ function runEngine(files, info) {
       // the reload then lost it. A minute is the most the page waits for a storage that does not answer.
       let gone = false;
       const go = () => { if (gone) return; gone = true; leaving = true; location.reload(); };
-      storeEverything().then(go, go);
+      const letGo = () => letEngineGo().then(go, go);    // the game's stack ends first, so the old page's memory is freed
+      storeEverything().then(letGo, letGo);
       setTimeout(() => { if (!gone) log('page: Restart Game: the storage did not answer in a minute; the page loads again'); go(); }, 60000);
     },
     print: log,
@@ -618,10 +685,14 @@ function runEngine(files, info) {
       primeOffline(info).catch((e) => log(`page: not kept for a start without a connection: ${e}`));
       log(`page: main(${M.arguments.join(' ')})`);
       try {
+        const quiet = (e) => e?.name === 'ExitStatus' || e?.name === 'EngineLetGo';   // an exit, or the page's own stop
         const r = M.callMain(M.arguments);
-        if (r && typeof r.then === 'function') r.catch((e) => { if (e?.name !== 'ExitStatus') { running = false; logStack(e); fail('The game stopped', String(e)); } });
+        if (r && typeof r.then === 'function') {
+          engine.ended = r.then(() => {}, () => {});
+          r.catch((e) => { if (!quiet(e)) { running = false; logStack(e); fail('The game stopped', String(e)); } });
+        }
       } catch (e) {
-        if (e?.name !== 'ExitStatus') { running = false; logStack(e); fail('The game stopped', String(e)); }
+        if (e?.name !== 'ExitStatus' && e?.name !== 'EngineLetGo') { running = false; logStack(e); fail('The game stopped', String(e)); }
       }
     },
     onExit: (code) => {
@@ -635,7 +706,7 @@ function runEngine(files, info) {
         stored.finally(() => { status('The game ended'); overlay('<h1>The game ended</h1><p>Reload the page to play again. Your saves stay in this browser.</p>'); });
       } else fail(`The game ended with code ${code}`, 'Help, Engine log says why. Your saves stay in this browser.');
     },
-    onAbort: (what) => { running = false; logStack(what); fail('The game stopped', String(what)); },
+    onAbort: (what) => { if (engine.letGo) return; running = false; logStack(what); fail('The game stopped', String(what)); },
   };
   const s = document.createElement('script');
   s.src = engineUrl(info.chosen, 'cm0102_recomp.js');
@@ -760,8 +831,10 @@ async function start() {
   } catch (e) {
     await compiled;
     if (!compileError) {
-      fail('A game file did not load', `${e.message ?? e}. The connection may have dropped. The game files that arrived stay in this `
-        + 'browser: Start again goes on with the rest.');
+      // Not a dropped connection when the browser had no memory for the file: fail() says what to do then.
+      fail('A game file did not load', OUT_OF_MEMORY.test(String(e?.message ?? e)) ? `${e.message ?? e}.`
+        : `${e.message ?? e}. The connection may have dropped. The game files that arrived stay in this `
+          + 'browser: Start again goes on with the rest.');
       return;
     }
   }

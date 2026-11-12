@@ -83,7 +83,19 @@
     g.fillStyle = '#123'; g.fillRect(0, 0, 800, 600);
     g.fillStyle = '#fff'; g.font = '20px sans-serif';
     g.fillText(`stand-in engine: ${files.size} files, main(${args.join(' ')})`, 40, 300);
+    // As a JSPI build: main never returns; it parks in emscripten_sleep between frames (the wasm of the page
+    // check's JSPI case is a loop of emscripten_sleep(5)).
+    if (parked) {
+      window.__main = WebAssembly.promising(parked.exports.main)();
+      window.__parked = true;
+      return window.__main;
+    }
+    return undefined;
   };
+  // A JSPI build gets its imports through the loader's instantiateWasm, the sleep as a WebAssembly.Suspending.
+  let parked = null;
+  window.__sleeps = 0;
+  const jspi = typeof M.instantiateWasm === 'function' && typeof WebAssembly.Suspending === 'function';
   // The runtime's keyboard calls (rt_web_type, rt_web_key in user32.c), recorded; and SDL's window key listener,
   // which counts the keys it sees (keyboard.js must keep the keys of its field away from it).
   window.__typed = [];
@@ -105,6 +117,11 @@
   fetch(M.locateFile('cm0102_recomp.wasm')).then((r) => {
     window.__wasmType = r.headers.get('content-type');
     for (const f of M.preRun) f();
+    if (jspi) {
+      deps++;
+      const imports = { env: { emscripten_sleep: new WebAssembly.Suspending((ms) => { window.__sleeps++; return new Promise((ok) => setTimeout(ok, ms)); }) } };
+      M.instantiateWasm(imports, (instance) => { parked = instance; M.removeRunDependency('wasm'); });
+    }
     if (deps === 0) init();
   });
 })();

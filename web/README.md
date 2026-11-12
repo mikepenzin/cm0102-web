@@ -177,8 +177,19 @@ Delete removes a save or an older copy (with Cloud Saves, a save in the cloud go
 zip of every save, older copy and data set, as the save folder holds them (`zipOfBlobs`, `zip.js`: the files are stored
 as they are and the zip is made of their Blobs, so the vault's files go from disk and a backup needs no memory). While the game runs,
 the page keeps the game files and the whole user folder in memory: every save, older copy and data set. A browser that
-runs out of memory stops the game with "Array buffer allocation failed"; the page then says so and suggests deleting
-saves and older copies that are no longer played (download them first to keep them). The game's working files
+runs out of memory stops the game with "Array buffer allocation failed"; the page then says so and suggests closing the
+tab and opening the game in a new one.
+
+**The engine is let go when the page goes (`loader.js`, letEngineGo).** A JSPI engine never returns from main: between
+frames its stack is parked inside `emscripten_sleep`. The browser kept such a parked stack alive after the page was
+gone, and with it the engine, its memory and the 467 MB of game files: in Chromium the tab's process grew by about
+515 MB at each load of the page (Restart Game, Start again, a plain reload), 12.6 GB after 23 loads, and a player's
+Chrome answered "Array buffer allocation failed" while reading the game files (12 November 2026). The page now wraps
+the engine's sleep (it finds it as the `WebAssembly.Suspending` that Emscripten makes for the import
+`env.emscripten_sleep`), and before the page goes (Restart Game, Start again, and `pagehide` for every other way out)
+the sleep in progress ends with the error `EngineLetGo`: the game's stack unwinds through main and nothing stays
+parked. With that the process stays near 800 MB over 45 loads. An engine whose sleep the page cannot find logs
+"this engine's sleep cannot be ended". The game's working files
 (`*.tmp`, the parts of the game in play, written at a load and at each save) do not go to IndexedDB (`skipWorkFiles`,
 `saves.js`): a save packs them into its `.sav`, and copying them at every sync held tens of MB more in memory.
 

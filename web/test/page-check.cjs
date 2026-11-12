@@ -98,6 +98,54 @@ const PORT = 8097;
       await c.close();
     }
 
+    // A JSPI engine never returns from main: between frames its stack is parked in emscripten_sleep, and the browser
+    // kept a parked stack, with the engine and the game files, alive after the page was gone (about 0.5 GB more at
+    // each load of the page). The page ends the sleep when it goes. The stand-in's wasm here is a loop of
+    // emscripten_sleep(5): (import "env" "emscripten_sleep" (func (param i32))) (export "main").
+    {
+      const PARKED = Buffer.from([0, 0x61, 0x73, 0x6d, 1, 0, 0, 0,
+        1, 8, 2, 0x60, 1, 0x7f, 0, 0x60, 0, 0,
+        2, 0x18, 1, 3, 0x65, 0x6e, 0x76, 0x10, ...Buffer.from('emscripten_sleep'), 0, 0,
+        3, 2, 1, 1,
+        7, 8, 1, 4, 0x6d, 0x61, 0x69, 0x6e, 0, 1,
+        0x0a, 0x0d, 1, 0x0b, 0, 3, 0x40, 0x41, 5, 0x10, 0, 0x0c, 0, 0x0b, 0x0b]);
+      const good = fs.readFileSync(path.join(build, 'cm0102_recomp.wasm'));
+      fs.writeFileSync(path.join(build, 'cm0102_recomp.wasm'), PARKED);
+      fs.writeFileSync(path.join(build, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=jspi\n');
+      const c = await b.newContext({ viewport: { width: 1100, height: 760 } });
+      const pg = await c.newPage();
+      const errs = [];
+      pg.on('pageerror', (e) => errs.push(e.message));
+      pg.on('dialog', (d) => d.accept().catch(() => {}));
+      const start = async () => {          // the first visit asks; a later one starts by itself
+        await pg.waitForFunction(() => window.__parked || document.getElementById('go')?.offsetParent, null, { timeout: 120000 });
+        if (!(await pg.evaluate(() => Boolean(window.__parked)))) {
+          await pg.click('#consent-no').catch(() => {});
+          await pg.click('#go');
+        }
+        await pg.waitForFunction(() => window.__parked && window.__sleeps > 3, null, { timeout: 120000 });
+        // What main's promise ends with, kept over the reload.
+        await pg.evaluate(() => { sessionStorage.removeItem('engine-ended'); window.__main.catch((e) => sessionStorage.setItem('engine-ended', e?.name ?? String(e))); });
+      };
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await start();
+      check('a JSPI engine runs through the page\'s sleep (parked between frames)', await pg.evaluate(() => window.__sleeps > 3));
+      await pg.reload();
+      await pg.waitForFunction(() => document.readyState === 'complete');
+      check('a reload of the page ends the parked engine before the page goes',
+        (await pg.evaluate(() => sessionStorage.getItem('engine-ended'))) === 'EngineLetGo', String(await pg.evaluate(() => sessionStorage.getItem('engine-ended'))));
+      await start();
+      const reloaded = pg.waitForNavigation({ timeout: 30000 }).then(() => true, () => false);
+      await pg.evaluate(() => { window.Module.rtRestart(); });
+      check('Restart Game ends the engine, then the page loads again', await reloaded
+        && (await pg.evaluate(() => sessionStorage.getItem('engine-ended'))) === 'EngineLetGo');
+      await pg.waitForFunction(() => window.__parked || document.getElementById('go')?.offsetParent, null, { timeout: 120000 });
+      check('the page\'s own stop of the engine shows no error box', !/The game stopped/.test(await pg.textContent('body')) && errs.length === 0, errs.join('; '));
+      await c.close();
+      fs.writeFileSync(path.join(build, 'cm0102_recomp.wasm'), good);
+      fs.writeFileSync(path.join(build, 'CMakeCache.txt'), 'CM0102_WEB_SUSPEND:STRING=asyncify\n');
+    }
+
     // Exit Game (code 0) right after a save: the box waits for the browser's storage, and leaving meanwhile asks first.
     {
       const c = await b.newContext({ viewport: { width: 1100, height: 760 } });
