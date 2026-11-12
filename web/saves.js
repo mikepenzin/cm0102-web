@@ -120,7 +120,8 @@ export function readBlobNow(FS, path) {
   return vaultRef && node?.vault === 'out' ? vaultRef.blob(path) : new Blob([fileView(FS, path)]);
 }
 
-// Every file to keep, as the save folder holds them: the saves, backups/ (older copies) and Databases/ (data sets).
+// Every file to keep, as the save folder holds them: the saves, backups/ (older copies), tactics/ (the game's tactics,
+// tactics.js) and Databases/ (data sets).
 function allFiles(FS) {
   const out = [];
   const walk = (dir, rel) => {
@@ -136,6 +137,7 @@ function allFiles(FS) {
   };
   for (const f of listSaves(FS).saves) out.push({ path: f.path, name: f.name, size: f.size });
   walk(`${SAVE_DIR}/backups`, 'backups');
+  walk(`${SAVE_DIR}/tactics`, 'tactics');
   walk(`${SAVE_DIR}/Databases`, 'Databases');
   return out;
 }
@@ -221,7 +223,7 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
       } });
       const day = new Date().toISOString().slice(0, 10);
       saveLink(zip, `CM 01-02 saves ${day}.zip`);
-      say(`Downloaded ${files.length} files (${mb(total)}) as one zip: the saves, the older copies (backups) and the data sets (Databases), as the save folder holds them.`);
+      say(`Downloaded ${files.length} files (${mb(total)}) as one zip: the saves, the older copies (backups), the tactics and the data sets (Databases), as the save folder holds them.`);
       log(`page: downloaded all: ${files.length} files, ${mb(total)}`);
     } catch (err) { say(`The zip was not made: ${err.message}`, true); }
     b.disabled = false;

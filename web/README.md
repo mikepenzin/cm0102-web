@@ -217,6 +217,16 @@ server list) and gives Cloud Saves to an account, or takes a gift back (`POST /a
 (localStorage `cm0102-stats` = `off`). `CM_STATS=optout`: on until the player turns them off, with no question (not for
 players in the EU, whose consent rules want the question); `CM_STATS=off`: none. Without a bucket they stay in memory only. The privacy page says what is collected.
 
+**Tactics (`tactics.js`).** The game keeps a player's tactics as it does on a PC: Tactics, Save As on the tactics screen
+writes `<name>.tct` in the folder `tactics` of the user folder, and Tactics, Load lists that folder. Saved games has a
+Tactics section to download them, upload others (from the PC game or a friend; several at once) and delete them, and
+Download all takes them too (`tactics/` in the zip). An upload must be a tactic of the game: a version word of
+0x98EC54 to 0x98EC5E at offset 0, in either byte order (big-endian when the file ends with 0xF1FFFFF1, as the loader
+0x5b5d10 reads it). The presets that ship in `Data` (`*.pct`) store the version plus 0x075BCD15 and differ in nothing
+else from the same tactic saved by the game; the tactics screen's Load refuses such a file ("Unable To Load"), so an
+upload of one, as a `.pct` or a `.tct`, is stored with the plain version and as `.tct`, and then loads. They stay in the
+browser's storage with the rest of the user folder; Cloud Saves do not carry them yet.
+
 ## Cloud saves
 
 Players can sign in with Google. An account with cloud saves keeps its saved games in the cloud as well as in the

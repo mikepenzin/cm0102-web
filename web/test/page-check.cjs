@@ -268,6 +268,30 @@ const PORT = 8097;
     check('a file that is not a save, and a file that is not .sav, are refused',
       /junk\.sav: it is too short/.test(refusedNote) && /only \.sav files/.test(refusedNote) && !/junk/.test(await p.textContent('#saves-list')), refusedNote);
     if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-saves.png') });
+    // Tactics (tactics.js): a tactic saved by the game, a preset's .pct (its version plus 0x075BCD15, which the game's
+    // Load refuses: the page stores the plain one), and two files that are not tactics.
+    const tct = (version) => { const t = Buffer.alloc(1476); t.writeUInt32LE(version, 0); t.writeUInt32LE(0xf2fffff2, 1472); return t; };
+    await p.setInputFiles('#tactics-file', [
+      { name: 'My 4-4-2.tct', mimeType: 'application/octet-stream', buffer: tct(0x98ec5e) },
+      { name: '442_diamond_default.pct', mimeType: 'application/octet-stream', buffer: tct(0x07f4b971) },
+      { name: 'junk.tct', mimeType: 'application/octet-stream', buffer: Buffer.from('hello') },
+      { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('x') }]);
+    await p.waitForFunction(() => /Uploaded/.test(document.getElementById('tactics-note').textContent));
+    const tacticsNote = await p.textContent('#tactics-note');
+    const stored = await p.evaluate(() => {
+      const FS = window.Module.FS, v = (f) => new DataView(FS.readFile(f).buffer).getUint32(0, true);
+      return [v('/user/tactics/My 4-4-2.tct'), v('/user/tactics/442_diamond_default.tct')];
+    });
+    check('tactics upload into the folder tactics; a preset is made loadable; other files are refused with a reason',
+      stored[0] === 0x98ec5e && stored[1] === 0x98ec5c && /Uploaded My 4-4-2, 442_diamond_default/.test(tacticsNote)
+        && /junk\.tct: it is too short/.test(tacticsNote) && /notes\.txt: only \.tct files/.test(tacticsNote)
+        && /My 4-4-2/.test(await p.textContent('#tactics-list')), `${stored.map((x) => x.toString(16))} | ${tacticsNote}`);
+    const [tdl] = await Promise.all([p.waitForEvent('download'), p.click('#tactics-list button[data-tactic="1"]')]);
+    const tdlPath = await tdl.path();
+    check('a tactic downloads as its .tct file', tdl.suggestedFilename() === 'My 4-4-2.tct' && fs.readFileSync(tdlPath).equals(tct(0x98ec5e)), tdl.suggestedFilename());
+    await p.click('#tactics-list button[data-tactic-delete="0"]');
+    check('a tactic is deleted', !(await p.evaluate(() => window.Module.FS.readdir('/user/tactics').includes('442_diamond_default.tct')))
+      && !/442_diamond_default/.test(await p.textContent('#tactics-list')));
     await p.click('#saves-close');
     const storesNow = await p.evaluate(() => window.__syncs.store);
     await p.evaluate(() => window.Module.FS.writeFile('/user/Auto 2001-07-20.sav', new Uint8Array(0x416ec + 8)));

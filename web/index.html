@@ -118,10 +118,11 @@
     overscroll-behavior: contain; margin: 0 -6px; padding: 0 6px; }
   dialog .dlg-body > * { flex: none; }
   dialog .dlg-list { flex: 0 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+  dialog .dlg-list:has(tr + tr) { min-height: 76px; }     /* the header and one row: never squeezed under its header */
   dialog .dlg-list:has(tr + tr + tr) { min-height: 118px; }
   dialog .dlg-list tr:first-child th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
   dialog .dlg-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
-  #sets:not([hidden]) { display: contents; }
+  #sets:not([hidden]), #tactics:not([hidden]) { display: contents; }
   /* Narrow screens: a list keeps its columns whole and scrolls sideways, not one letter a line. */
   @media (max-width: 640px) {
     dialog .dlg-list table { width: max-content; min-width: 100%; }
@@ -309,9 +310,19 @@
     <p id="saves-note" class="small" role="status"></p>
     <div class="row">
       <button class="primary" id="saves-upload">Upload a save…</button>
-      <button id="saves-all" title="One zip of every save, older copy and data set, as the save folder holds them">Download all</button>
+      <button id="saves-all" title="One zip of every save, older copy, tactic and data set, as the save folder holds them">Download all</button>
       <input type="file" id="saves-file" accept=".sav" multiple hidden>
     </div>
+    <section id="tactics" hidden>
+      <h3>Tactics</h3>
+      <p class="small">The tactics you saved on the tactics screen (Tactics, Save As). Download one to keep it or to use it
+      in the PC game; upload a .tct file, from the PC game or from a friend, then use Tactics, Load on the tactics
+      screen. A preset's .pct file works too.</p>
+      <div id="tactics-list" class="dlg-list"></div>
+      <p id="tactics-note" class="small" role="status"></p>
+      <div class="row"><button id="tactics-upload">Upload a tactic…</button>
+        <input type="file" id="tactics-file" accept=".tct,.pct" multiple hidden></div>
+    </section>
     <section id="sets" hidden>
       <h3>Data sets <span class="small">for new games</span></h3>
       <p class="small">Your own databases: a copy of the game's data that you edited, or one you uploaded (an Update Team

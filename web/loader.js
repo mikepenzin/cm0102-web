@@ -11,6 +11,7 @@ import { createVault } from './vault.js';
 import { engineUrl, hasJspi, pickEngine } from './engine.js';
 import { mountEditor } from './editor.js';
 import { mountSetsPanel } from './setspanel.js';
+import { mountTacticsPanel } from './tactics.js';
 import { createSetSync, listDataSets } from './datasets.js';
 import { LEGAL_LINKS, createCloudSync, mountAccount, plansHtml } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
@@ -234,7 +235,7 @@ $('fullscreen').onclick = () => layout.toggleFullscreen();
 // A phone's or tablet's file picker turns the accept list into file types it knows; .sav and .dat are none of them, and
 // a downloaded zip often has a general type, so the picker could grey out the very file. The page checks each file
 // itself (saves.js, setspanel.js), so on a touch device the picker shows every file.
-if (TOUCH) for (const id of ['saves-file', 'sets-file']) $(id).removeAttribute('accept');
+if (TOUCH) for (const id of ['saves-file', 'sets-file', 'tactics-file']) $(id).removeAttribute('accept');
 // Full screen with no room beside the picture: the page's buttons sit over its top right corner, where the game has
 // buttons too (a player's Transfer tab, for one). The fold button folds them into a small tab on the right edge
 // (index.html, #app.bar-folded), and the choice stays for later visits.
@@ -663,6 +664,7 @@ function runEngine(files, info) {
       setSync?.run();                                   // the cloud's data sets come in while the game starts
       mountSavesPanel({ FS, sync, log, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),
         openPromo: () => { $('saves').close(); account.open(); }, edit: (name) => editor.openSave(name) });
+      mountTacticsPanel({ FS, sync, log });
       keyboard = mountKeyboard({ log, layout, toast });
       // What the engine says about itself, a few times a second: the size of its picture, and the text entry that takes
       // keys (user32.c). An engine built before these calls has neither; the page then works without them.
