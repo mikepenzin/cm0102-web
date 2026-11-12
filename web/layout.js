@@ -37,6 +37,20 @@ export function shiftForRow(top0, cssH, rowY, visibleH) {
   return Math.round(Math.max(wanted, most));
 }
 
+// Full screen: where the page's buttons go (index.html, #app.fs[data-bar]). 'side': a column in the room beside the
+// picture, 'top': a row in the room above it (a phone held upright); in both they cover none of the game. 'over': no
+// room, so over the picture's top right corner, where the player can fold them into a tab on the edge (loader.js).
+// The picture is centred, so box.left and box.top are the room on each side. thick: the bar's thickness; length: its
+// length along its buttons; availW x availH: the stage.
+export const BAR_THICK = 48, BAR_STEP = 42;
+export function barPlace(box, availW, availH, length, thick = BAR_THICK) {
+  const edge = 8;
+  if (!box) return 'over';
+  if (box.left >= thick + edge && availH >= length + 2 * edge) return 'side';
+  if (box.top >= thick + edge && availW >= length + 2 * edge) return 'top';
+  return 'over';
+}
+
 export function mountLayout({ app, bar, stage, canvas, chip, isTouch }) {
   const vv = window.visualViewport;
   const state = {
@@ -89,6 +103,12 @@ export function mountLayout({ app, bar, stage, canvas, chip, isTouch }) {
     s.setProperty('--ct', `${top}px`);
     s.setProperty('--shift', `${shift}px`);
     s.setProperty('--covered', `${availH - visibleH}px`);     // what the on-screen keyboard hides: messages stay above it
+    if (app.classList.contains('fs')) {
+      const buttons = bar ? bar.querySelectorAll('button:not([hidden])').length : 6;
+      app.dataset.bar = barPlace({ left, top }, availW, availH, buttons * BAR_STEP + 10);
+      app.style.setProperty('--side-room', `${left}px`);
+      app.style.setProperty('--top-room', `${top}px`);
+    } else delete app.dataset.bar;
     if (chip) {
       const showChip = isTouch && state.typingRow >= 0 && !state.fieldFocused;
       chip.hidden = !showChip;

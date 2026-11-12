@@ -1,7 +1,7 @@
 // Tests of the layout's arithmetic (web/layout.js): the canvas size for a picture, and the move for the keyboard.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fitPicture, shiftForRow } from '../layout.js';
+import { BAR_STEP, barPlace, fitPicture, shiftForRow } from '../layout.js';
 
 test('fitPicture: whole multiples of the picture\'s shape, as large as fits', () => {
   // 1280x800 is 8 by 5: a stage of 1470x704 takes 8*140 by 5*140.
@@ -34,4 +34,19 @@ test('shiftForRow: the row comes into view above the keyboard, and the picture l
   assert.equal(shiftForRow(60, 700, 690, 420), 420 - 760);
   // A picture that already ends above the keyboard does not move.
   assert.equal(shiftForRow(0, 300, 290, 420), 0);
+});
+
+test('barPlace: the page\'s buttons go beside or above the picture when there is room, else over its corner', () => {
+  // A phone held sideways (844x390): a 1280x800 picture 624x390, 110 pixels of room on each side.
+  const phone = fitPicture(1280, 800, 844, 390, 3);
+  const left = (844 - phone.cssW) / 2;
+  assert.equal(barPlace({ left, top: 0 }, 844, 390, 7 * BAR_STEP + 10), 'side');
+  // Room beside it, but too short for the column of buttons: over the corner.
+  assert.equal(barPlace({ left: 110, top: 0 }, 700, 250, 7 * BAR_STEP + 10), 'over');
+  // Held upright (390x844): room above and below the picture, a row there.
+  assert.equal(barPlace({ left: 0, top: 300 }, 390, 844, 7 * BAR_STEP + 10), 'top');
+  // An iPad (1180x820, 16:10 like the picture): a few pixels of room only.
+  const pad = fitPicture(1280, 800, 1180, 820, 2);
+  assert.equal(barPlace({ left: (1180 - pad.cssW) / 2, top: (820 - pad.cssH) / 2 }, 1180, 820, 7 * BAR_STEP + 10), 'over');
+  assert.equal(barPlace(null, 800, 600, 300), 'over');
 });

@@ -223,6 +223,20 @@ function cloudHintOnce() {
 }
 $('help-close').onclick = () => $('help').close();
 $('fullscreen').onclick = () => layout.toggleFullscreen();
+// Full screen with no room beside the picture: the page's buttons sit over its top right corner, where the game has
+// buttons too (a player's Transfer tab, for one). The fold button folds them into a small tab on the right edge
+// (index.html, #app.bar-folded), and the choice stays for later visits.
+const FOLD_KEY = 'cm0102-bar-folded';
+function setBarFolded(on, remember = true) {
+  $('app').classList.toggle('bar-folded', on);
+  const label = on ? 'Show the buttons' : 'Hide these buttons';
+  $('bar-fold').setAttribute('aria-expanded', String(!on));
+  $('bar-fold').setAttribute('aria-label', label);
+  $('bar-fold').title = label;
+  if (remember) try { if (on) localStorage.setItem(FOLD_KEY, '1'); else localStorage.removeItem(FOLD_KEY); } catch { /* storage off */ }
+}
+try { if (localStorage.getItem(FOLD_KEY)) setBarFolded(true, false); } catch { /* storage off: open */ }
+$('bar-fold').onclick = () => setBarFolded(!$('app').classList.contains('bar-folded'));
 layout.onFullscreen((on) => {
   $('fullscreen').setAttribute('aria-pressed', String(on));
   $('fullscreen').setAttribute('aria-label', on ? 'Leave full screen' : 'Full screen');

@@ -292,6 +292,55 @@ const PORT = 8097;
     check('an older engine on a touch device: no Keyboard button, a line in the log',
       (await o.locator('#kbd-open:not([hidden])').count()) === 0 && /build it again for the Keyboard button/.test(await o.textContent('#log')));
     await oc.close();
+    // Full screen on a touch device. A phone held sideways has room beside the picture: the page's buttons go there as
+    // a column and cover none of the game. An iPad has none: they sit over the corner, and the fold button folds them
+    // into a small tab on the right edge, which stays folded at the next visit (a player could not reach a player's
+    // Transfer tab under them).
+    const overlap = (a, c) => a.x < c.x + c.width && c.x < a.x + a.width && a.y < c.y + c.height && c.y < a.y + a.height;
+    async function fullScreenOn(viewport) {
+      const ctx = await b.newContext({ viewport, hasTouch: true, isMobile: true });
+      const pg = await ctx.newPage();
+      const errs = [];
+      pg.on('pageerror', (e) => errs.push(e.message));
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await pg.waitForSelector('#go');
+      await pg.click('#consent-no').catch(() => {});
+      await pg.click('#go');
+      await pg.waitForFunction(() => window.__fake && !document.getElementById('fullscreen').hidden, null, { timeout: 120000 });
+      await pg.tap('#fullscreen');
+      await pg.waitForFunction(() => document.getElementById('app').classList.contains('fs'), null, { timeout: 5000 }).catch(() => {});
+      await pg.waitForTimeout(300);
+      return { ctx, pg, errs };
+    }
+    const phone = await fullScreenOn({ width: 844, height: 390 });
+    const phoneBar = await phone.pg.locator('#bar').boundingBox(), phoneCanvas = await phone.pg.locator('#canvas').boundingBox();
+    check('full screen on a phone held sideways: the buttons are a column beside the game, over none of it',
+      (await phone.pg.evaluate(() => document.getElementById('app').dataset.bar)) === 'side' && !overlap(phoneBar, phoneCanvas)
+        && phoneBar.height > phoneBar.width && (await phone.pg.locator('#bar-fold').isVisible()) === false,
+      `${await phone.pg.evaluate(() => document.getElementById('app').dataset.bar)} bar ${JSON.stringify(phoneBar)} canvas ${JSON.stringify(phoneCanvas)}`);
+    if (process.argv[2]) await phone.pg.screenshot({ path: process.argv[2].replace(/\.png$/, '-fs-phone.png') });
+    check('no page errors in full screen on the phone', phone.errs.length === 0, phone.errs.join('; '));
+    await phone.ctx.close();
+    const pad = await fullScreenOn({ width: 1180, height: 820 });
+    const padOpen = await pad.pg.locator('#bar').boundingBox();
+    check('full screen on an iPad: the buttons over the corner, with the fold button',
+      (await pad.pg.evaluate(() => document.getElementById('app').dataset.bar)) === 'over' && (await pad.pg.locator('#bar-fold').isVisible()),
+      await pad.pg.evaluate(() => document.getElementById('app').dataset.bar));
+    await pad.pg.tap('#bar-fold');
+    const padFolded = await pad.pg.locator('#bar').boundingBox();
+    const shown = await pad.pg.evaluate(() => [...document.querySelectorAll('#bar > *')].filter((e) => e.offsetParent !== null).map((e) => e.id));
+    check('the fold button folds them into a small tab on the right edge',
+      JSON.stringify(shown) === '["bar-fold"]' && padFolded.width < 40 && padFolded.width * padFolded.height < padOpen.width * padOpen.height / 4
+        && Math.abs(padFolded.x + padFolded.width - 1180) < 2 && (await pad.pg.getAttribute('#bar-fold', 'aria-expanded')) === 'false',
+      `${JSON.stringify(shown)} open ${JSON.stringify(padOpen)} folded ${JSON.stringify(padFolded)}`);
+    if (process.argv[2]) await pad.pg.screenshot({ path: process.argv[2].replace(/\.png$/, '-fs-folded.png') });
+    await pad.pg.reload();
+    await pad.pg.waitForFunction(() => document.getElementById('app').classList.contains('bar-folded'), null, { timeout: 15000 }).catch(() => {});
+    check('the bar stays folded at the next visit', await pad.pg.evaluate(() => document.getElementById('app').classList.contains('bar-folded')));
+    await pad.pg.evaluate(() => document.getElementById('bar-fold').click());
+    check('and the tab opens it again', !(await pad.pg.evaluate(() => document.getElementById('app').classList.contains('bar-folded'))));
+    check('no page errors in full screen on the iPad', pad.errs.length === 0, pad.errs.join('; '));
+    await pad.ctx.close();
     // The vault after the browser closed its IndexedDB connection (an Android report): its next request opens it
     // again, where it once failed with "The database connection is closing" until the page was loaded again.
     const vc = await b.newContext();

@@ -240,6 +240,20 @@
   @media (hover: none) { #app.fs #bar { opacity: .65; } }
   #app.fs .brand, #app.fs #status, #app.fs #bar button span { display: none; }
   #app.fs #bar button { padding: 0 9px; }
+  /* Room beside the picture (layout.js, barPlace): the buttons as a column in it; room above it (a phone held
+     upright): a row in it. Neither covers any of the game, so neither fades. */
+  #app.fs[data-bar="side"] #bar { flex-direction: column; opacity: 1; max-height: calc(100% - 16px);
+    right: calc(env(safe-area-inset-right) + max(4px, (var(--side-room, 56px) - 48px) / 2)); }
+  #app.fs[data-bar="top"] #bar { opacity: 1; top: calc(env(safe-area-inset-top) + max(4px, (var(--top-room, 56px) - 48px) / 2)); }
+  /* No room: over the picture's top right corner. The fold button (the last one) folds the others away, and the bar
+     becomes a small tab on the right edge whose button opens it again (loader.js, cm0102-bar-folded). */
+  #bar-fold { display: none; }
+  #app.fs[data-bar="over"] #bar-fold { display: inline-flex; }
+  #app.fs[data-bar="over"].bar-folded #bar > :not(#bar-fold) { display: none !important; }
+  #app.fs[data-bar="over"].bar-folded #bar { top: 50%; right: env(safe-area-inset-right); transform: translateY(-50%);
+    padding: 3px 2px 3px 3px; border-right: 0; border-radius: 10px 0 0 10px; }
+  #app.fs[data-bar="over"].bar-folded #bar-fold { padding: 0 3px; }
+  #app.fs[data-bar="over"].bar-folded #bar-fold svg { transform: scaleX(-1); }
 
   @media (prefers-reduced-motion: reduce) { #canvas { transition: none; } #type-chip, .toast { animation: none; } }
 </style>
@@ -261,6 +275,8 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8M12 16.6h.01"/></svg><span>Help</span></button>
     <button id="fullscreen" hidden aria-label="Full screen">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg><span>Full screen</span></button>
+    <button id="bar-fold" aria-expanded="true" aria-label="Hide these buttons" title="Hide these buttons">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
   </header>
   <div id="stage">
     <canvas id="canvas" tabindex="0" width="1280" height="800" aria-label="The game"></canvas>
@@ -344,6 +360,7 @@
       <tr><td>Long press, or a tap with two fingers</td><td>A click of the right button</td></tr>
       <tr><td>Drag with two fingers</td><td>The mouse wheel: lists scroll with your fingers</td></tr>
       <tr><td>Tap a text box, or Tap to type</td><td>The keyboard opens; it closes when the text is entered</td></tr>
+      <tr><td>› in full screen</td><td>Folds the page's buttons into a tab at the right edge, so they cover none of the game; tap the tab to open them. When the screen is wider than the game they sit beside it.</td></tr>
     </table>
     <h3>Your saved games</h3>
     <p class="small">Save in the game as usual. The saves stay in this browser.<span id="help-storage"></span> Saved games
