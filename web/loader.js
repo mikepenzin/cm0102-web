@@ -266,33 +266,56 @@ async function keepStorage() {
 
 // Every listed file, from the cache or the server, read as a stream so the bar moves inside the large ones
 // (language.ldb is 195 MB). counts.cached and counts.fetched get the bytes of each kind.
+// A game file that did not come (the connection dropped, the transfer was cut short, the server failed) is asked for
+// again after these pauses before the start stops; a phone on mobile data loses its connection now and then.
+const FILE_TRIES = [2000, 5000, 10000];
+
 async function download(files, cache, onBytes, counts, signal) {
   const out = new Map();
   let next = 0;
+  // The body of r into an array of the file's size; got(n) counts the bytes as they come.
+  async function readAll(r, f, fromCache, got = () => {}) {
+    const buf = new Uint8Array(f.size), reader = r.body.getReader();
+    let at = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (at + value.length > f.size) throw new Error(`${f.path}: more than ${f.size} bytes`);
+      buf.set(value, at);
+      at += value.length;
+      onBytes(value.length, fromCache);
+      got(value.length);
+    }
+    if (at !== f.size) throw Object.assign(new Error(`${f.path}: ${at} of ${f.size} bytes`), { again: true });
+    return buf;
+  }
   async function one() {
     while (next < files.length) {
       const f = files[next++];
       const url = fileUrl(f);
-      let r = cache ? await cache.match(url) : undefined, storing = null;
-      const fromCache = Boolean(r);
-      if (!r) {
-        r = await fetch(url, { signal });
-        if (!r.ok) throw new Error(`${f.path}: HTTP ${r.status}`);
-        if (cache) storing = cache.put(url, r.clone()).catch((e) => log(`page: ${f.path} was not kept in the browser: ${e}`));
+      const kept = cache ? await cache.match(url) : undefined;
+      let buf;
+      if (kept) buf = await readAll(kept, f, true);
+      else {
+        for (let i = 0; ; i++) {
+          let got = 0;
+          try {
+            const r = await fetch(url, { signal });
+            if (!r.ok) throw Object.assign(new Error(`${f.path}: HTTP ${r.status}`), { again: r.status >= 500 });
+            const storing = cache ? cache.put(url, r.clone()).catch((e) => log(`page: ${f.path} was not kept in the browser: ${e}`)) : null;
+            buf = await readAll(r, f, false, (n) => { got += n; });
+            if (storing) await storing;
+            break;
+          } catch (e) {
+            if (got) onBytes(-got, false);                 // the bytes of the try that failed come again
+            const again = e.name !== 'AbortError' && (e instanceof TypeError || e.again);
+            if (!again || i >= FILE_TRIES.length || signal?.aborted) throw e;
+            log(`page: ${f.path}: ${e.message}; asked for again in ${FILE_TRIES[i] / 1000} s`);
+            await new Promise((ok) => setTimeout(ok, FILE_TRIES[i]));
+          }
+        }
       }
-      const buf = new Uint8Array(f.size), reader = r.body.getReader();
-      let at = 0;
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (at + value.length > f.size) throw new Error(`${f.path}: more than ${f.size} bytes`);
-        buf.set(value, at);
-        at += value.length;
-        onBytes(value.length, fromCache);
-      }
-      if (at !== f.size) throw new Error(`${f.path}: ${at} of ${f.size} bytes`);
-      if (storing) await storing;
-      counts[fromCache ? 'cached' : 'fetched'] += f.size;
+      counts[kept ? 'cached' : 'fetched'] += f.size;
       out.set(f.path, buf);
     }
   }
@@ -601,7 +624,7 @@ function meter(total) {
     while (marks.length > 2 && now - marks[0][0] > 4000) marks.shift();
     const [t0, g0] = marks[0];
     const rate = now - t0 > 400 ? (got - g0) / ((now - t0) / 1000) : 0;
-    if (!rate) return '';
+    if (!(rate > 0)) return '';                       // none yet, or a try that failed was taken back
     const left = (total - got) / rate;
     return ` · ${mb(rate)}/s · ${left < 90 ? `about ${Math.max(1, Math.round(left))} s left` : `about ${Math.round(left / 60)} min left`}`;
   };
@@ -666,7 +689,11 @@ async function start() {
     await compiled;
   } catch (e) {
     await compiled;
-    if (!compileError) { fail('A game file did not load', String(e.message ?? e)); return; }
+    if (!compileError) {
+      fail('A game file did not load', `${e.message ?? e}. The connection may have dropped. The game files that arrived stay in this `
+        + 'browser: Start again goes on with the rest.');
+      return;
+    }
   }
   if (compileError) {
     log(`page: the engine does not compile here: ${compileError}`);

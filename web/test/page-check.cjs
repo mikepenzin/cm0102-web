@@ -148,6 +148,9 @@ const PORT = 8097;
         && (await p.evaluate(() => [localStorage.getItem('cm0102-anon'), localStorage.getItem('cm0102-stats')])).join() === ',off', statsCalls.join(' | '));
     check('the start box names the size of the download', /461 MB of game files download into this browser once/.test(await p.textContent('#overlay')), (await p.textContent('#overlay p')).trim().slice(0, 90));
     if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-start.png') });
+    // The connection drops once during the first download: that file is asked for again, and the start goes on.
+    let dropped = 0;
+    await p.route('**/game/Data/staff.dat*', (route) => (dropped++ === 0 ? route.abort('connectionreset') : route.continue()));
     const t0 = Date.now();
     await p.click('#go');
     await p.waitForFunction(() => /MB of 461 MB/.test(document.getElementById('bytes')?.textContent ?? ''), null, { timeout: 30000 }).catch(() => {});
@@ -156,6 +159,9 @@ const PORT = 8097;
     const f = await p.evaluate(() => window.__fake);
     check('every file reached the engine', f.files === rows.length + 4, `${f.files} files`);
     check('every byte reached the engine', f.bytes === total + 4 * 2, `${(f.bytes / 1048576).toFixed(0)} MB in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+    check('a file whose download was cut is asked for again, and the start goes on',
+      dropped === 2 && /staff\.dat: .*asked for again in 2 s/.test(await p.textContent('#log')), `${dropped} requests of staff.dat`);
+    await p.unroute('**/game/Data/staff.dat*');
     check('the file system owns the arrays (no copy)', f.owned);
     check('the exe and the season tables are in /game', f.exe && f.rules);
     check('main gets the game folder', JSON.stringify(f.args) === JSON.stringify(['--game', '/game']), f.args.join(' '));
