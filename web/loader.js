@@ -207,8 +207,10 @@ function plansForStart(me) {
   if (me.user?.cloud) return `<p class="small">Signed in as ${esc(me.user.email)} · Cloud Saves are on: your saves from other devices come in when the game starts.</p>`;
   if (me.user) return `<p class="small">Signed in as ${esc(me.user.email)} · Free plan. Cloud Saves (${esc(me.offer.price)}) keep your saves on all your
     devices: <a href="#" id="go-plans">see Cloud Saves</a>.</p>${links}`;
-  return `${plansHtml(me.offer, me.maxSaves)}<p class="small"><a href="/auth/google/start?mode=page" id="go-signin">Sign in with Google</a>
-    to get Cloud Saves, or to bring the cloud saves you have. Playing needs no account.</p>${links}`;
+  // Signed out: the game is free, and Cloud Saves is a note under it, not a plan to pick.
+  return `<div class="addon"><b>Optional: Cloud Saves</b> · ${esc(me.offer.price)}. Your saves on every computer and iPad,
+    backed up after each save. <a href="/auth/google/start?mode=page" id="go-signin">Sign in with Google</a> to get it, or to
+    bring the cloud saves you have. Playing needs no account.</div>${links}`;
 }
 // Once in this browser, after its first save: a player without Cloud Saves hears that they exist.
 function cloudHintOnce() {
@@ -666,7 +668,7 @@ async function start() {
       keep copies: a browser may delete a site's data by itself.</p>
       ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
       ${TOUCH ? '<p class="small">On a touch screen: tap to click, long press for the right button, two fingers to scroll. Help has the list.</p>' : ''}
-      <button class="primary" id="go">Start the game</button>
+      <div class="row"><button class="primary" id="go">Start the game</button><span class="free-note">Free · no account, no payment</span></div>
       ${plansForStart(await Promise.race([account.ready, new Promise((r) => setTimeout(r, 1500))]))}`);
     if ($('go-plans')) $('go-plans').onclick = (e) => { e.preventDefault(); account.open(); };
     await new Promise((r) => { $('go').onclick = r; });

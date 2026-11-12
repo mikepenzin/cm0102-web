@@ -20,7 +20,9 @@
   td:first-child { color: var(--text); white-space: nowrap; padding-right: 16px; }
   .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 18px 0; }
   .plan { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
-  .plan.pro { border-color: var(--accent); }
+  .plan.on { border-color: var(--accent); }        /* the free game: what everybody has */
+  .plan .tag { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+  .plan.on .tag { color: var(--accent); }
   .plan h3 { margin: 0; font-size: 16px; }
   .plan .price { color: var(--text); font-size: 22px; font-weight: 650; margin: 4px 0 8px; }
   .plan ul { margin: 0; padding-left: 18px; }
@@ -34,9 +36,10 @@
   <h1>Pricing</h1>
   <p>The game is free to play in your browser. Cloud Saves keep your saved games on all your devices.</p>
   <div class="plans">
-    <div class="plan">
-      <h3>Free</h3>
-      <div class="price">$0</div>
+    <div class="plan on">
+      <span class="tag">Included · no account</span>
+      <h3>The game</h3>
+      <div class="price">Free</div>
       <ul>
         <li>The whole game, in your browser</li>
         <li>Your saves stay in that browser</li>
@@ -45,6 +48,7 @@
       </ul>
     </div>
     <div class="plan pro">
+      <span class="tag">Optional add-on</span>
       <h3>Cloud Saves</h3>
       <div class="price">{{PRICE}}</div>
       <ul>

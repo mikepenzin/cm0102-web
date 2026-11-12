@@ -157,7 +157,12 @@
   #account-open.on .dot { display: inline-block; }
   .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
   .plan { background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
-  .plan.pro { border-color: var(--accent); }
+  .plan.on { border-color: var(--accent); }        /* the free game: what everybody has */
+  .plan .tag { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+  .plan.on .tag { color: var(--accent); }
+  .free-note { color: var(--accent); font-weight: 600; font-size: 14px; }
+  .addon { margin: 16px 0 10px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 13px; }
+  .addon b { color: var(--text); }
   .plan h4 { margin: 0; font-size: 14px; }
   .plan .price { font-size: 19px; font-weight: 650; margin: 2px 0 6px; color: var(--text); }
   .plan ul { margin: 0; padding-left: 17px; color: var(--muted); font-size: 13px; }

@@ -84,8 +84,9 @@ try {
   await a.waitForSelector('#go');
   check('signed out: the bar says Sign in', await a.isVisible('#account-open') && (await a.textContent('#account-open span')) === 'Sign in');
   check('the start box offers the sign-in', await a.isVisible('#go-signin'));
-  const startPlans = (await a.innerText('#overlay .plans')).replace(/\s+/g, ' ');
-  check('the start box shows the plans: Free, and Cloud Saves at $5 a month', /Free \$0/.test(startPlans) && /Cloud Saves \$5 a month/.test(startPlans), startPlans);
+  const startBox = (await a.innerText('#overlay')).replace(/\s+/g, ' ');
+  check('the start box says the game is free, and Cloud Saves an optional add-on at $5 a month',
+    /Start the game Free · no account, no payment/.test(startBox) && /Optional: Cloud Saves · \$5 a month/.test(startBox) && !(await a.$('#overlay .plans')), startBox.slice(0, 300));
   check('and the links to pricing, terms, refunds and privacy', (await a.$$eval('#overlay .legal a', (as) => as.map((x) => x.getAttribute('href')))).join() === '/pricing,/terms,/refunds,/privacy');
   await shot(a, 'start');
   await Promise.all([a.waitForURL(`${BASE}/`), a.click('#go-signin')]);
