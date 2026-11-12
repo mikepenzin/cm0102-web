@@ -98,6 +98,7 @@ void win_save_window(void);
 void win_present(void);                /* show the primary surface */
 void win_poll_events(void);            /* SDL events to the message queue */
 void win_game_work(void);              /* user32.c: game work ran in this pass, no idle sleep (#58) */
+void win_progress_idle(void);          /* display.c: the game waits for the player; the progress stage ended */
 /* user32.c: a hook on the game's random function 0x90cfc0 (cdecl (range)): called after each call with the esp of
  * the call (the return address is at [esp]), the caller's edi and the result, returns the result to use. NULL
  * when no code asks for it (season_uefa_qual.c, the Champions League group draw). */

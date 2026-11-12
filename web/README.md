@@ -121,6 +121,10 @@ stops if one differs.
 | The game stops in the tab | Open "Engine log" under the game and send its last lines |
 
 "Engine log" holds every line the runtime prints (`recomp: ...`) and the page's own lines (`page: ...`).
+A stage of a long job that takes 2 seconds or more writes its time, for example `recomp: progress: Player histories
+took 5.0 s` (`display.c`, progress_note): a new game on a computer with the October 2026 data and six leagues took
+8, 5, 2.5, 10 and 14 seconds for Player Initialisation, Player histories, Initialising game data, Initialising
+Leagues and Creating Shortlists. A player who says the game stopped at a stage can send these lines.
 
 First run: 9 November 2026, on a MacBook Air in Chrome: the database load, a new game, and days to 12.8.01 with the
 cup and Champions League rounds. What to expect:

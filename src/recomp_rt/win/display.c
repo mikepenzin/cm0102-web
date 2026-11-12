@@ -15,7 +15,10 @@
 #include "options.h"
 
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #define CLASSIC_W 800u
 #define CLASSIC_H 600u
@@ -247,9 +250,50 @@ static uint32_t sye(uint32_t v) { return scale(v, rt_screen_h, CLASSIC_H, 1); }
  * at the scaled places: the panel (100, 555)-(790, 590), the text (120, 565)-(250, 580) and the bar
  * (270, 565)-(770, 580) filled from x 272 over 496 pixels, or the text alone over (120, 565)-(770, 580).
  * Step 0 first darkens the screen once (0x55f2c0 on the screen manager of the record). */
+/* The engine log gets the time of each stage of a long job, for example a new game's "Player histories" or
+ * "Initialising Leagues": a phone or a tablet takes far longer than a computer, and a player's engine log or error
+ * report then says which stage took the time, or after which one the game stopped. A stage runs from its first
+ * progress call to the next stage, or to its last call when the game then waits for the player (win_progress_idle),
+ * so the player's time on a screen is not counted. Only the log: a stage under 2 s writes nothing. */
+static char stage[64];
+static double stage_first, stage_latest;
+
+static double mono_seconds(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (double)ts.tv_sec + ts.tv_nsec / 1e9;
+}
+
+static void stage_close(double end)
+{
+    if (stage[0] && end - stage_first >= 2.0) fprintf(stderr, "recomp: progress: %s took %.1f s\n", stage, end - stage_first);
+    stage[0] = 0;
+}
+
+static void progress_note(uint32_t text)
+{
+    double now = mono_seconds();
+    char name[64] = "";
+    if (text) snprintf(name, sizeof name, "%s", win_str(text));
+    if (strcmp(name, stage)) {
+        stage_close(now - stage_latest < 5.0 ? now : stage_latest);
+        snprintf(stage, sizeof stage, "%s", name);
+        stage_first = now;
+    }
+    stage_latest = now;
+}
+
+/* user32.c, idle_rest: the game waits for the player, so the stage in progress ended at its last call. */
+void win_progress_idle(void)
+{
+    if (stage[0]) stage_close(stage_latest);
+}
+
 RT_REPLACE(005e76f0, progress_box)
 {
     uint32_t text = rt_arg(0), step = rt_arg(1), total = rt_arg(2);
+    progress_note(text);
     if (rd32(g_mem, 0xaebe0cu)) { rt_ret_cdecl(0); return; }        /* the display is off */
     rt_callback(0x68d520u, 0, NULL);                                /* the message pump */
     if (!text) { rt_ret_cdecl(0); return; }

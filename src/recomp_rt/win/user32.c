@@ -1127,6 +1127,7 @@ static void idle_rest(uint32_t widget)
     }
     if (idle_sleep == SLEEP_OFF || widget != 0xffffu || buttons || q_head != q_tail) return;
     if (idle_sleep == SLEEP_ON && (now - last_input_at < IDLE_AFTER || now - last_work_at < WORK_HOLD)) return;
+    win_progress_idle();                        /* display.c: the time of the last long stage, for the log */
     sleep_count++;
     SDL_Delay(1);
 }
