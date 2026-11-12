@@ -101,9 +101,10 @@ function fail(title, detail) {
   const last = lines.slice(-8).join('\n');
   // The memory of a tab is only given back for sure when the tab is closed (a page that loaded again in the same tab
   // once kept the game before it: letEngineGo), so that is the first thing to try.
-  const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. Close this tab and
-    open the game in a new one. If it happens again, close other tabs or quit the browser and open it again. Your saves
-    stay in this browser.</p>` : '';
+  const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. <b>Close this tab
+    and open the game in a new one</b>: loading the page again in this same tab does not give its memory back. If it
+    happens again, close the other tabs of this site, or quit the browser and open it again. Your saves stay in this
+    browser.</p>` : '';
   overlay(`<h1>${esc(title)}</h1><p>${esc(detail)}</p>${memory}${last ? `<pre class="small" style="white-space:pre-wrap;margin:0 0 14px">${esc(last)}</pre>` : ''}
     <div class="row"><button class="primary" id="fail-again">Start again</button><span class="small">Your saves stay in this browser.</span></div>`, 'error');
   // The way on: the page loads again, after the user folder went to the browser's storage.
