@@ -55,6 +55,12 @@
     border: 2px solid rgba(255, 255, 255, .9); animation: ping .32s ease-out forwards; }
   .ping.right { width: 60px; height: 60px; margin: -30px 0 0 -30px; border-color: var(--accent); border-width: 3px; animation-duration: .5s; }
   @keyframes ping { from { transform: scale(.35); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+  /* A held finger (touch.js): the ring fills until the long press is a right click. */
+  .ping.hold { width: 60px; height: 60px; margin: -30px 0 0 -30px; border: 3px solid var(--accent); opacity: .85;
+    animation: hold linear forwards; }
+  @keyframes hold { from { transform: scale(.25); opacity: .25; } to { transform: scale(1); opacity: .95; } }
+  /* Right click armed: the button shows it until the tap. */
+  #right-click[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
   #type-chip { position: absolute; left: var(--chip-x, 50%); top: var(--chip-y, 50%); z-index: 3;
     transform: translate(-100%, -50%); background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
@@ -266,6 +272,8 @@
     <span id="status" role="status">Loading…</span>
     <button id="kbd-open" hidden aria-pressed="false" aria-label="Keyboard">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg><span>Keyboard</span></button>
+    <button id="right-click" hidden aria-pressed="false" aria-label="Right click" title="The next tap on the game is a click of the right button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 3v7.5M6 10.5h12"/><path d="M12.6 3.6a5.4 5.4 0 0 1 4.8 5.4v.9h-4.8z" fill="currentColor" stroke="none"/></svg><span>Right click</span></button>
     <button id="saves-open" hidden aria-label="Saved games">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5M5 17v1.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span>Saved games</span></button>
     <button id="editor-open" hidden aria-label="Editor">
@@ -369,7 +377,8 @@
     <table>
       <tr><td>Tap</td><td>A click</td></tr>
       <tr><td>Drag</td><td>Hold the button and move: scroll bars, the tactics board</td></tr>
-      <tr><td>Long press, or a tap with two fingers</td><td>A click of the right button</td></tr>
+      <tr><td>Right click, then a tap</td><td>A click of the right button where you tap. On the tactics screen, a player's instructions</td></tr>
+      <tr><td>Long press (a ring fills), or a tap with two fingers</td><td>A click of the right button</td></tr>
       <tr><td>Drag with two fingers</td><td>The mouse wheel: lists scroll with your fingers</td></tr>
       <tr><td>Tap a text box, or Tap to type</td><td>The keyboard opens; it closes when the text is entered</td></tr>
       <tr><td>› in full screen</td><td>Folds the page's buttons into a tab at the right edge, so they cover none of the game; tap the tab to open them. When the screen is wider than the game they sit beside it.</td></tr>

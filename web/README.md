@@ -423,8 +423,17 @@ code addresses and the checks: `docs/research/2026-11-10-data-set-editor.md`.
 |---|---|
 | Tap | A click |
 | Drag | The button held and moved: scroll bars, the tactics board |
-| Long press, or a tap with two fingers | A click of the right button |
+| Right click (the button in the bar), then a tap | A click of the right button where you tap |
+| Long press (a ring fills under the finger), or a tap with two fingers | A click of the right button |
 | Drag with two fingers | The mouse wheel: lists scroll with your fingers |
+
+The game needs the right button for much of its tactics: a right click on a player, in the list or on the board,
+opens his instructions (Passing, Tackling, Forward Runs, Marking and the rest). A long press is that click, but a
+finger that wanders more than 12 pixels before 450 ms makes it a drag, and on the board a drag moves the player.
+The Right click button (`touch.js`, armRight) has no timing: tap it, then tap the player, and that one tap is the
+right click; the button turns green while it waits and is off again after it. The long press shows a ring that fills
+under the finger and, on Android, the phone buzzes when it becomes the right click. Both opened a player's
+instructions on the real tactics screen with touch in Chromium (November 2026).
 
 The game draws its text entries (a name, a search) on the canvas, so the device does not open its keyboard by
 itself. When a text entry of the game takes keys, a "Tap to type" chip shows at it: tap the chip, or the text entry,

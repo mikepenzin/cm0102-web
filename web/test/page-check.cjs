@@ -348,7 +348,7 @@ const PORT = 8097;
     check('the second visit gives the engine every byte', again.bytes === total + 4 * 2, second);
     check('the second visit asks the server for no game file', gameRequests.length === 0, `${gameRequests.length} requests`);
     await p.click('#help-open');
-    check('Help lists the gestures and holds the engine log', /Long press, or a tap with two fingers/.test(await p.textContent('#help')) && /page: main\(--game \/game\)/.test(await p.textContent('#log')));
+    check('Help lists the gestures and holds the engine log', /Long press \(a ring fills\), or a tap with two fingers/.test(await p.textContent('#help')) && /Right click, then a tap/.test(await p.textContent('#help')) && /page: main\(--game \/game\)/.test(await p.textContent('#log')));
     if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-help.png') });
     await p.click('#help-close');
     check('no page errors', errors.length === 0, errors.join('; '));
@@ -387,6 +387,31 @@ const PORT = 8097;
     await t.waitForFunction(() => /rar/.test(document.getElementById('sets-note').textContent), null, { timeout: 5000 }).catch(() => {});
     check('a database as a .rar gets a message, not silence', /Update 2026\.rar: a \.rar or \.7z cannot be read here/.test(await t.textContent('#sets-note')),
       await t.textContent('#sets-note'));
+    // The Right click button: the next tap on the game is a click of the right button, then it is off again; a long
+    // press (a ring fills under the finger) is one too.
+    await t.evaluate(() => { window.__downs = []; document.getElementById('canvas').addEventListener('mousedown', (e) => window.__downs.push(e.button), true); });
+    check('a touch device gets the Right click button', await t.isVisible('#right-click'));
+    await t.tap('#right-click');
+    const armed = await t.getAttribute('#right-click', 'aria-pressed');
+    const cb = await t.locator('#canvas').boundingBox();
+    await t.touchscreen.tap(cb.x + cb.width / 2, cb.y + cb.height / 2);
+    await t.waitForTimeout(200);
+    const afterArmed = await t.evaluate(() => [...window.__downs]);
+    await t.touchscreen.tap(cb.x + cb.width / 3, cb.y + cb.height / 3);
+    await t.waitForTimeout(200);
+    check('Right click, then a tap: a right click there, and the button is off again; the next tap is a left click',
+      armed === 'true' && afterArmed.at(-1) === 2 && (await t.getAttribute('#right-click', 'aria-pressed')) === 'false'
+        && (await t.evaluate(() => window.__downs.at(-1))) === 0, `${armed} ${JSON.stringify(await t.evaluate(() => window.__downs))}`);
+    const cdp = await tc.newCDPSession(t);
+    const at = { x: Math.round(cb.x + cb.width / 2), y: Math.round(cb.y + cb.height / 2), id: 1 };
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [at] });
+    await t.waitForTimeout(200);
+    const ring = await t.locator('#fx .ping.hold').count();
+    await t.waitForTimeout(400);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await t.waitForTimeout(150);
+    check('a long press: a ring fills under the finger, then a right click', ring === 1 && (await t.evaluate(() => window.__downs.at(-1))) === 2
+      && (await t.locator('#fx .ping.hold').count()) === 0, `ring ${ring}, ${JSON.stringify(await t.evaluate(() => window.__downs))}`);
     check('no page errors on the touch device', terrors.length === 0, terrors.join('; '));
     await tc.close();
     // An engine built before the keyboard calls: no button, and the log says to build it again.

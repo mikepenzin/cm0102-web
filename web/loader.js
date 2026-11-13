@@ -139,7 +139,17 @@ guardKeys();
 guardLeave(() => (running || storing) && !leaving);
 const canvas = $('canvas');
 const layout = mountLayout({ app: $('app'), bar: $('bar'), stage: $('stage'), canvas, chip: $('type-chip'), isTouch: TOUCH });
-mountTouch({ canvas, stage: $('stage'), fx: $('fx'), onFirstTouch: resumeAudio, onTap: (x, y) => keyboard?.onTap(x, y) });
+// The Right click button (touch devices): the next tap on the game is a click of the right button. A long press does
+// the same, but a finger that wanders turns it into a drag, and on the tactics board a drag moves the player.
+const setRightButton = (on) => $('right-click').setAttribute('aria-pressed', String(on));
+const touch = mountTouch({ canvas, stage: $('stage'), fx: $('fx'), onFirstTouch: resumeAudio, onTap: (x, y) => keyboard?.onTap(x, y),
+  onRightUsed: () => setRightButton(false) });
+$('right-click').onclick = () => {
+  const on = !touch.rightArmed;
+  touch.armRight(on);
+  setRightButton(on);
+  if (on) toast('Tap the game: that tap is a right click', { ms: 2500 });
+};
 mountBusy($('busy'));
 
 function resumeAudio() {
@@ -631,6 +641,7 @@ function runEngine(files, info) {
       running = true;
       canvas.dataset.engine = '1';
       $('fullscreen').hidden = !layout.canFullscreen || isStandalone();
+      $('right-click').hidden = !TOUCH;
       canvas.focus({ preventScroll: true });
       setInterval(sync, 15000);
       if (vault?.active && typeof vault.exports?.rt_web_choose_data_set === 'function' && typeof WebAssembly.promising === 'function') {
