@@ -638,6 +638,38 @@ const PORT = 8097;
       check('no page errors with two tabs', errs.length === 0, errs.join('; '));
       await ctx.close();
     }
+
+    // A page from before one tab at a time (it takes no turn) in another tab. The saves' storage is now version 2: a
+    // page of the last code closes its version 1 connection when asked and cannot open it again, so it writes nothing
+    // more there; an older one that keeps its connection holds the new page up, which says so and goes on once it closes.
+    {
+      const ctx = await b.newContext({ viewport: { width: 1000, height: 700 } });
+      const old = await ctx.newPage(), fresh = await ctx.newPage();
+      await old.goto(`http://127.0.0.1:${PORT}/privacy`);
+      await old.evaluate(() => new Promise((ok) => {
+        const r = indexedDB.open('cm0102-vault', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('files');
+        r.onsuccess = () => { window.__old = r.result; ok(); };      // no onversionchange: it keeps the connection
+      }));
+      await fresh.goto(`http://127.0.0.1:${PORT}/`);
+      await fresh.waitForSelector('#go');
+      await fresh.click('#go');
+      await fresh.waitForFunction(() => /An older page of the game/.test(document.getElementById('overlay').textContent), null, { timeout: 60000 }).catch(() => {});
+      const held = (await fresh.textContent('#overlay')).replace(/\s+/g, ' ').trim();
+      const startedWhileHeld = await fresh.evaluate(() => Boolean(window.__fake));
+      await old.evaluate(() => window.__old.close());
+      await fresh.waitForFunction(() => window.__fake, null, { timeout: 60000 }).catch(() => {});
+      check('an older page that keeps the saves\' storage open: the new page waits and says so, then starts once it is closed',
+        /The game is open in another tab/.test(held) && /An older page of the game runs in another tab/.test(held) && !startedWhileHeld
+          && await fresh.evaluate(() => Boolean(window.__fake)), held.slice(0, 160));
+      const shutOut = await old.evaluate(() => new Promise((ok) => {
+        const r = indexedDB.open('cm0102-vault', 1);
+        r.onsuccess = () => { r.result.close(); ok('opened'); };
+        r.onerror = () => ok(r.error.name);
+      }));
+      check('and a page of the earlier code cannot open the saves\' storage again (version 1), so it removes nothing', shutOut === 'VersionError', shutOut);
+      await ctx.close();
+    }
     if (process.argv[2]) await p.screenshot({ path: process.argv[2] });
   } finally {
     await b.close();

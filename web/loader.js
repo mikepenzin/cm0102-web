@@ -422,6 +422,13 @@ function storeEverything() {
   const FS = window.Module?.FS;
   if (!FS || handedOver) return Promise.resolve();
   storing++;
+  return stillMine().then((mine) => {
+    if (mine) return storeAll(FS);
+    stopHere(false);
+    return undefined;
+  }).finally(() => { storing--; });
+}
+function storeAll(FS) {
   const vaultDone = vault?.active ? vaultRound({ force: true }) : null;
   const folderDone = new Promise((done) => FS.syncfs(false, (err) => {
     if (err && closedStorage(err) && forgetUserStorage()) {
@@ -431,13 +438,14 @@ function storeEverything() {
     if (err) log(`page: the user folder was not saved: ${err}`);
     done();
   }));
-  return Promise.all([vaultDone, folderDone]).finally(() => { storing--; });
+  return Promise.all([vaultDone, folderDone]);
 }
 
 // One round of the vault (vault.persist). A save it could not store stays in this tab's memory and is tried again at
 // the next round; the player is told once, until a round works again: the next visit would not have that save.
 let vaultFailing = false;
-function vaultRound(options) {
+async function vaultRound(options) {
+  if (!(await stillMine())) { stopHere(false); return undefined; }
   return vault.persist(options).then(() => {
     if (!vaultFailing) return;
     vaultFailing = false;
@@ -460,6 +468,12 @@ function sync() {
   if (vault?.active) vaultRound();
   if (syncing) { syncAgain = true; return; }
   syncing = true;
+  stillMine().then((mine) => {
+    if (!mine || handedOver) { syncing = false; if (!mine) stopHere(false); return; }
+    writeFolder(FS);
+  });
+}
+function writeFolder(FS) {
   FS.syncfs(false, (err) => {
     syncing = false;
     if (err && !reopened && closedStorage(err) && forgetUserStorage()) {
@@ -590,7 +604,7 @@ function runEngine(files, info) {
   // The vault opens files lazily only on a JSPI engine in a browser with WebAssembly.Suspending; otherwise (or turned
   // off) it is there only to give back what an earlier visit put in it (prepareVault: restore).
   const lazy = vaultWanted() && info.chosen.suspend === 'jspi' && typeof WebAssembly.Suspending === 'function';
-  vault = typeof indexedDB !== 'undefined' ? createVault({ FS: () => window.Module?.FS, log }) : null;
+  vault = typeof indexedDB !== 'undefined' ? createVault({ FS: () => window.Module?.FS, log, onBlocked: olderPageBlocks }) : null;
   let hooked = false;
   const plainInstantiate = (imports, receive) => WebAssembly.instantiateStreaming(fetch(wasmUrl), imports).then((r) => receive(r.instance))
     .catch(async () => receive((await WebAssembly.instantiate(await (await fetch(wasmUrl)).arrayBuffer(), imports)).instance));
@@ -820,7 +834,7 @@ function meter(total) {
 // browser without Web Locks starts as before.
 const TURN = 'cm0102-game';
 const TURN_WAIT = 90000;                               // for the other tab to stop: its storing can take a while
-let turnRelease = null, startAbort = null;
+let turnRelease = null, startAbort = null, turnClient = null;
 const turnChannel = (() => { try { return new BroadcastChannel(TURN); } catch { return null; } })();
 const timeoutSignal = (ms) => { const c = new AbortController(); setTimeout(() => c.abort(new DOMException('timed out', 'TimeoutError')), ms); return c.signal; };
 const within = (p, ms) => Promise.race([Promise.resolve(p).catch(() => {}), new Promise((r) => setTimeout(r, ms))]);
@@ -834,6 +848,7 @@ function takeTurn(options = {}) {
       if (!lock) { ok(false); return undefined; }
       granted = true;
       ok(true);
+      navigator.locks.query?.().then(({ held }) => { turnClient = held.find((l) => l.name === TURN)?.clientId ?? null; }).catch(() => {});
       return new Promise((release) => { turnRelease = release; });
     }).catch((e) => {
       if (granted) { turnRelease = null; stopHere(false); return; }   // taken without asking: Play here anyway
@@ -867,6 +882,33 @@ async function stopHere(store) {
   $('turn-back').onclick = () => { leaving = true; location.reload(); };
 }
 turnChannel?.addEventListener('message', (e) => { if (e.data?.type === 'take' && turnRelease) stopHere(true); });
+
+// Whether this tab still has the turn, as the browser says now. A tab whose turn another took without asking (Play here
+// anyway, while this one was paused) learns it from its lock request only later: each write of the storage asks first.
+async function stillMine() {
+  if (handedOver) return false;                        // not before: a hand-over stores the saves first, with the turn
+  if (!turnClient || typeof navigator.locks?.query !== 'function') return true;
+  try {
+    const { held } = await navigator.locks.query();
+    return held.some((l) => l.name === TURN && l.clientId === turnClient);
+  } catch { return true; }
+}
+
+// A page of the game from before one tab at a time runs in another tab and keeps the saves' storage open (vault.js,
+// VAULT_VERSION): this one waits until that tab is closed or loaded again, and says so.
+function olderPageBlocks(on) {
+  if (on) {
+    log('page: an older page of the game, in another tab, keeps the saves\' storage open: waiting until it is closed or loaded again');
+    status('The game is open in another tab');
+    overlay(`<h1>The game is open in another tab</h1><p>An older page of the game runs in another tab or window of this
+      browser. Close that tab or load it again: the game then goes on here by itself. Two at once would delete each other's
+      saves.</p><div class="row"><i class="spin"></i>Waiting for the other tab…</div>`);
+  } else {
+    log('page: the other tab let the saves\' storage go');
+    status(running ? '' : 'Starting the engine…');
+    overlay(running ? '' : '<h1>Starting the engine</h1><div class="row"><i class="spin"></i>The first start can take a minute.</div>');
+  }
+}
 
 // Before the game files load: true when this tab may run the game. A Restart's reload can come before the page it
 // replaces is gone, so the first try waits a moment.

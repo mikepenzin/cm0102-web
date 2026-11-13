@@ -19,6 +19,11 @@
 // earlier visit put in the vault then come back into the user folder (materialize).
 
 export const VAULT_DB = 'cm0102-vault';
+// Version 2 shuts out the pages from before one tab at a time (loader.js, myTurn): such a page takes no turn, and its
+// rounds removed the records of other tabs. Opening version 2 asks its connection to close; the page then cannot open
+// version 1 again, so it reads and writes nothing more here. A page so old that it keeps its connection open holds the
+// opening up (blocked) until it is closed or loaded again: onBlocked says so.
+export const VAULT_VERSION = 2;
 const STORE = 'files';
 const IDBFS_STORE = 'FILE_DATA', IDBFS_VERSION = 21;   // Emscripten's IDBFS: one database per mount point
 const O_TRUNC = 512;                                    // Emscripten's flags (musl)
@@ -36,20 +41,25 @@ const isTemp = (path) => /^\/user\/temp_save_file\.sav$/i.test(path);
 
 const done = (r) => new Promise((ok, bad) => { r.onsuccess = () => ok(r.result); r.onerror = () => bad(r.error); });
 
-function openDB(idb, name, version, upgrade) {
+// onBlocked(true): another page's connection holds the opening up, which goes on once it closes; onBlocked(false): it
+// went on. Without onBlocked a blocked opening fails.
+function openDB(idb, name, version, upgrade, onBlocked = null) {
   return new Promise((ok, bad) => {
-    let r;
+    let r, blocked = false;
     try { r = idb.open(name, version); } catch (e) { bad(e); return; }
     r.onupgradeneeded = (e) => upgrade(r.result, e.target.transaction);
-    r.onsuccess = () => ok(r.result);
+    r.onsuccess = () => { if (blocked) onBlocked(false); ok(r.result); };
     r.onerror = () => bad(r.error);
-    r.onblocked = () => bad(new Error(`the browser's storage ${name} is in use by another tab`));
+    r.onblocked = () => {
+      if (!onBlocked) { bad(new Error(`the browser's storage ${name} is in use by another tab`)); return; }
+      if (!blocked) { blocked = true; onBlocked(true); }
+    };
   });
 }
 
 // FS: the engine's FS (Module.FS), or a function that gives it (the engine is instantiated before its FS is there).
 // log(text): the engine log. idb: indexedDB (a test can pass another).
-export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.indexedDB, stable = STABLE }) {
+export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.indexedDB, stable = STABLE, onBlocked = null }) {
   const getFS = typeof fsOrGetter === 'function' ? fsOrGetter : () => fsOrGetter;
   const FS = new Proxy({}, { get: (_, k) => getFS()[k], set: (_, k, v) => { getFS()[k] = v; return true; } });
   let db = null, active = false, filtering = false, memory = null, exportsOf = null;
@@ -63,9 +73,9 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
   // site's storage is cleared): onclose fires, and every transaction after it fails with "The database connection is
   // closing". The vault then opens it again at its next request, and a request that met the closing tries once more.
   let opening = null;
-  const connect = () => opening ??= openDB(idb, VAULT_DB, 1, (d) => {
+  const connect = () => opening ??= openDB(idb, VAULT_DB, VAULT_VERSION, (d) => {
     if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE);
-  }).then((d) => {
+  }, onBlocked).then((d) => {
     const gone = () => { if (db === d) db = null; };
     d.onclose = () => { gone(); log('page: the vault: the browser closed its storage; it opens again at the next use'); };
     d.onversionchange = () => { d.close(); gone(); };
