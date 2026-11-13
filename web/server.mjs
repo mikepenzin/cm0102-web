@@ -28,7 +28,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..');
 const SEASON_TABLES = ['rules.tsv', 'names.tsv', 'clubs.tsv', 'club_records.tsv'];
 // The page: these files of web/, and nothing else of it. web/deploy/stage.mjs stages the same list, and the server's own.
-export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'account.js', 'savedit.js', 'dataset.js', 'datasets.js', 'zip.js', 'editor.js', 'setspanel.js', 'tactics.js', 'vault.js', 'stats.js', 'engine.js', 'direct.js', 'sw.js',
+export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'account.js', 'savedit.js', 'dataset.js', 'datasets.js', 'zip.js', 'editor.js', 'setspanel.js', 'tactics.js', 'report.js', 'vault.js', 'stats.js', 'engine.js', 'direct.js', 'sw.js',
   'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html', 'refunds.html', 'pricing.html'];
 // The server's own files; it also imports saves.js, savedit.js, dataset.js and zip.js of the page (PAGE_FILES).
 export const SERVER_FILES = ['server.mjs', 'cloud.mjs', 'auth.mjs', 'billing.mjs', 's3.mjs', 'stats.mjs', 'admin.html', 'package.json'];
@@ -142,6 +142,22 @@ async function statsRoute(req, res, url, { stats, cloud, admins, adminToken }) {
     json(res, 204, null);
     return;
   }
+  if (path === '/api/report/send' || path === '/api/report/save' || path === '/api/report/save-done') {
+    // A report the player sends (Send to the developer, report.js), and its save: from this site's page only. The save
+    // goes straight to the store, so only when the page may go there (the store's CORS rules: cloud.mjs, direct).
+    if (req.method !== 'POST') { json(res, 405, { error: 'POST only' }); return; }
+    const from = req.headers.origin;
+    if (req.headers['x-cm'] !== '1' || (from && new URL(from).host !== req.headers.host)) { req.resume(); json(res, 403, { error: 'not from this site' }); return; }
+    const body = await readJson(req, path === '/api/report/send' ? 2 << 20 : 4 << 10);
+    if (path === '/api/report/send') {
+      const r = await stats.send(body, user, req.headers['user-agent'], Boolean(await cloud?.directReady));
+      json(res, r.error ? 400 : 201, r);
+    } else {
+      const { status = 200, ...r } = path === '/api/report/save' ? await stats.saveLink(body) : await stats.saveDone(body);
+      json(res, status, r);
+    }
+    return;
+  }
   if (path === '/api/stats/beat' || path === '/api/report') {
     if (req.method !== 'POST') { json(res, 405, { error: 'POST only' }); return; }
     const from = req.headers.origin;
@@ -205,7 +221,8 @@ export function createApp({ gameDir, buildDir, asyncifyDir = null, manifestPath,
   return http.createServer((req, res) => {
     try {
       const url = new URL(req.url, 'http://x');
-      if (stats && (url.pathname === '/api/stats/beat' || url.pathname === '/api/stats/choice' || url.pathname === '/api/report' || url.pathname.startsWith('/api/admin/'))) {
+      if (stats && (url.pathname === '/api/stats/beat' || url.pathname === '/api/stats/choice' || url.pathname === '/api/report'
+        || url.pathname.startsWith('/api/report/') || url.pathname.startsWith('/api/admin/'))) {
         statsRoute(req, res, url, { stats, cloud, admins: adminSet, adminToken: token }).catch((err) => {
           if (res.headersSent) { res.destroy(err); return; }
           json(res, err.status ?? 500, { error: err.status ? err.message : 'the server failed' });

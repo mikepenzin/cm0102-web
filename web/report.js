@@ -1,0 +1,133 @@
+// Send to the developer (web/README.md, "Send to the developer"): after an error, or from Help, the player sends the
+// engine log, a note and a save of their choice to the server (stats.mjs: send, saveLink, saveDone). The log goes
+// first, so it arrives even when the save does not. The save goes packed (gzip) straight to the store, with a link the
+// server signs, as the cloud saves do; the admin page lists the report and gets the save.
+import { listSaves, readBlob } from './saves.js';
+
+export const REPORT_LOG_LINES = 2000;
+const HEADER = 0x416ec;                                // a save's container header (saves.js)
+// A read that starts this far into a save is a load: the Load Game list reads each save's header only, 270,336 bytes
+// (the header in 4 KB reads), and a load reads the parts after it (a run of the real engine, 13 November 2026: a 46 MB
+// save, the list read 270,336 bytes of each of two saves; the load opened the chosen one about 100 times, 68 MB).
+const PAST_HEADER = HEADER + 0x10000;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const mb = (n) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
+// What the report says of the page: its size, the device's memory (Chrome tells it, rounded), touch or mouse.
+const pageInfo = () => `${innerWidth}x${innerHeight}, ${navigator.deviceMemory ? `${navigator.deviceMemory} GB of memory` : 'memory not told'}${
+  matchMedia('(pointer: coarse)').matches ? ', touch' : ''}`;
+
+async function post(path, body) {
+  const r = await fetch(path, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json', 'x-cm': '1' },
+    body: JSON.stringify(body) });
+  let j = {};
+  try { j = await r.json(); } catch { /* no body */ }
+  if (!r.ok) throw new Error(j.error ?? `the server answered ${r.status}`);
+  return j;
+}
+
+// The save packed with gzip, read from its Blob in pieces (a save of the vault from disk). onBytes(n): read so far.
+export function pack(blob, onBytes = () => {}) {
+  let done = 0;
+  const count = new TransformStream({ transform(chunk, c) { done += chunk.byteLength; onBytes(done); c.enqueue(chunk); } });
+  return new Response(blob.stream().pipeThrough(count).pipeThrough(new CompressionStream('gzip'))).blob();
+}
+
+// A PUT with progress (fetch tells none for an upload). onPart(0..1).
+function put(url, headers, blob, onPart) {
+  return new Promise((ok, bad) => {
+    const x = new XMLHttpRequest();
+    x.open('PUT', url);
+    for (const [k, v] of Object.entries(headers)) x.setRequestHeader(k, v);
+    x.upload.onprogress = (e) => { if (e.lengthComputable) onPart(e.loaded / e.total); };
+    x.onload = () => (x.status >= 200 && x.status < 300 ? ok() : bad(new Error(`the store answered ${x.status}`)));
+    x.onerror = () => bad(new Error('the connection to the store failed'));
+    x.send(blob);
+  });
+}
+
+// The save the game has in play: the last one it read from past its header (a load), or the last one it wrote in place
+// (a save: temp_save_file.sav renamed). FS: the engine's FS, wrapped once.
+export function watchSaveInPlay(FS) {
+  let inPlay = null;
+  const isSave = (p) => typeof p === 'string' && /^\/user\/[^/]+\.sav$/i.test(p) && !/\/temp_save_file\.sav$/i.test(p);
+  const read = FS.read, rename = FS.rename;
+  if (typeof read !== 'function' || typeof rename !== 'function') return () => null;
+  FS.read = (stream, buffer, offset, length, position) => {
+    const at = typeof position === 'number' ? position : stream?.position;
+    const n = read(stream, buffer, offset, length, position);
+    if (n > 0 && at >= PAST_HEADER && (stream.isSave ??= isSave(stream.path))) inPlay = stream.path;
+    return n;
+  };
+  FS.rename = (from, to) => {
+    const r = rename(from, to);
+    if (isSave(to)) inPlay = to;
+    return r;
+  };
+  return () => inPlay;
+}
+
+// Wires the dialog of index.html (#report). FS(): the engine's FS or null; lines(): the engine log; who(): what the
+// statistics may add ({ anon, session, engine, vault, cloud }); inPlay(): the path of the save in play, or null.
+export function mountReport({ FS = () => null, lines = () => [], who = () => ({}), inPlay = () => null, log = () => {} }) {
+  const dialog = $('report'), note = $('report-note'), choice = $('report-save'), state = $('report-state');
+  const sendBtn = $('report-send');
+  let context = { message: '', where: '' }, sending = false;
+  const say = (text, bad = false) => { state.textContent = text; state.className = bad ? 'small bad' : 'small'; };
+
+  function open({ message = '', where = '' } = {}) {
+    if (sending) { dialog.showModal(); return; }
+    context = { message, where };
+    let saves = [], fs = null;
+    try { fs = FS(); saves = fs ? listSaves(fs).saves : []; } catch { /* no folder yet */ }
+    const playing = inPlay(), pick = saves.some((f) => f.path === playing) ? playing : saves[0]?.path ?? '';
+    choice.innerHTML = `<option value="">${fs ? 'No save' : 'No save: the game did not start, so its saves cannot be read'}</option>${saves.map((f) =>
+      `<option value="${esc(f.path)}"${f.path === pick ? ' selected' : ''}>${esc(f.name)} (${mb(f.size)})${f.path === playing ? ', in play' : ''}</option>`).join('')}`;
+    $('report-error').textContent = message ? `The error: ${message}` : '';
+    $('report-error').hidden = !message;
+    say('');
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Send';
+    dialog.showModal();
+  }
+
+  sendBtn.onclick = async () => {
+    if (sending) return;
+    sending = true;
+    sendBtn.disabled = true;
+    const path = choice.value, fs = FS();
+    const save = path && fs ? listSaves(fs).saves.find((f) => f.path === path) : null;
+    let sent = null;
+    try {
+      say('Sending the log…');
+      sent = await post('/api/report/send', { ...who(), message: context.message, where: [context.where, pageInfo()].filter(Boolean).join('; '), note: note.value,
+        log: lines().slice(-REPORT_LOG_LINES) });
+      log(`page: report sent (${sent.key})`);
+      if (save && !sent.saves) {
+        say(`The log was sent. ${save.name} was not: this server takes no saves. Download it in Saved games and send it another way.`, true);
+        return;
+      }
+      if (save) {
+        say(`Packing ${save.name}…`);
+        const gz = await pack(await readBlob(fs, save.path), (n) => say(`Packing ${save.name}: ${Math.min(100, Math.floor((100 * n) / save.size))}%`));
+        const link = await post('/api/report/save', { key: sent.key, token: sent.token, name: save.name, size: gz.size, rawSize: save.size });
+        await put(link.url, link.headers, gz, (part) => say(`Sending ${save.name} (${mb(gz.size)} packed): ${Math.floor(100 * part)}%`));
+        await post('/api/report/save-done', { key: sent.key, token: sent.token });
+        log(`page: report ${sent.key}: ${save.name} sent (${mb(gz.size)} packed)`);
+      }
+      say(`Sent${save ? `, with ${save.name}` : ''}. Thank you: the developer has it now.`);
+      note.value = '';
+      sendBtn.textContent = 'Sent';
+    } catch (err) {
+      log(`page: report: ${err.message}`);
+      say(sent ? `The log was sent, but ${save?.name ?? 'the save'} was not: ${err.message}. Download it in Saved games and send it another way.`
+        : `Nothing was sent: ${err.message}. Try again in a moment.`, true);
+      if (!sent) sendBtn.disabled = false;
+    } finally {
+      sending = false;
+    }
+  };
+  $('report-close').onclick = () => dialog.close();
+  return { open };
+}

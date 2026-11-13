@@ -243,6 +243,20 @@ server list) and gives Cloud Saves to an account, or takes a gift back (`POST /a
 (localStorage `cm0102-stats` = `off`). `CM_STATS=optout`: on until the player turns them off, with no question (not for
 players in the EU, whose consent rules want the question); `CM_STATS=off`: none. Without a bucket they stay in memory only. The privacy page says what is collected.
 
+**Send to the developer (`report.js`).** The error box (and Help, Something wrong?) has Send to the developer: a dialog
+with the error, a note the player may write, and a choice of saved game, preset to the save in play (the last one the
+game read past its 262 KB header, which a load does and the Load Game list does not, or the last one it wrote; else the
+newest). Send posts the note, the error and the last 2,000 lines of the engine log (`/api/report/send`); the server
+keeps it as a report file marked as sent, with no need of the statistics' consent, since the player sends it. The log
+goes first, so it arrives even when the save does not. The save then goes packed with gzip in the browser, straight to
+the bucket with a link the server signs for its packed size (`/api/report/save`, then `/api/report/save-done`, which
+checks it is there), as `reports/<day>/<time>-<random>.sav.gz` beside the report. Only the page that sent the report can
+add its save (a token in the report file, gone once the save is there). A server without a bucket, or whose bucket
+takes no uploads from the page (the CORS rules that the cloud sets, Cloud saves below), takes the log only, and the
+dialog says to send the save another way. A save may be 400 MB packed; a machine takes 40 saves and 4 GB a day. The
+admin page marks such a report "Sent by the player", shows the note and the save, and Download the save gets it from
+the bucket (a link for an hour) and unpacks it under its own name. Reports and saves go after 90 days.
+
 **Tactics (`tactics.js`).** The game keeps a player's tactics as it does on a PC: Tactics, Save As on the tactics screen
 writes `<name>.tct` in the folder `tactics` of the user folder, and Tactics, Load lists that folder. Saved games has a
 Tactics section to download them, upload others (from the PC game or a friend; several at once) and delete them, and

@@ -33,7 +33,7 @@ const PORT = 8097;
   fs.writeFileSync(path.join(game, 'Data/staff.dat.br'), zlib.brotliCompressSync(fs.readFileSync(path.join(game, 'Data/staff.dat'))));
 
   const server = spawn(process.execPath, [path.join(ROOT, 'web/server.mjs')], {
-    env: { ...process.env, CM_GAME_DIR: game, CM_WEB_BUILD: build, CM_WEB_BUILD_ASYNCIFY: asyncDir, PORT: String(PORT), CM_WEB_SKIP_VERIFY: '1' },
+    env: { ...process.env, CM_GAME_DIR: game, CM_WEB_BUILD: build, CM_WEB_BUILD_ASYNCIFY: asyncDir, PORT: String(PORT), CM_WEB_SKIP_VERIFY: '1', CM_ADMIN_TOKEN: 'page-check-admin-token' },
     stdio: ['ignore', 'pipe', 'inherit'],
   });
   await new Promise((r) => server.stdout.on('data', (d) => { process.stdout.write(`server: ${d}`); if (/open http/.test(d)) r(); }));
@@ -91,6 +91,25 @@ const PORT = 8097;
         /page: at f_0068dbc0/.test(await pg.textContent('#log')), (await pg.textContent('#log')).split('\n').filter((l) => /page: at/.test(l)).slice(0, 2).join(' | '));
       await pg.evaluate(() => window.Module.onExit(70));
       const box = (await pg.textContent('#overlay')).replace(/\s+/g, ' ');
+      // Send to the developer, from the box: the log, a note and a save of the player's choice. This server keeps no
+      // files (no bucket), so the log goes and the box says the save did not.
+      const hasReport = await pg.locator('#fail-report').count() === 1;
+      await pg.click('#fail-report');
+      const dlg = await pg.evaluate(() => ({ open: document.getElementById('report').open, error: document.getElementById('report-error').textContent,
+        options: [...document.querySelectorAll('#report-save option')].map((o) => `${o.selected ? '*' : ''}${o.textContent}`) }));
+      await pg.fill('#report-note', 'I pressed Exit and it stopped.');
+      await pg.click('#report-send');
+      await pg.waitForFunction(() => /was sent|Sent/.test(document.getElementById('report-state').textContent), null, { timeout: 15000 }).catch(() => {});
+      const said = await pg.textContent('#report-state');
+      const adm = await (await fetch(`http://127.0.0.1:${PORT}/api/admin/stats`, { headers: { authorization: 'Bearer page-check-admin-token' } })).json();
+      const listed = adm.reports?.[0] ?? {};
+      check('the error box: Send to the developer opens with the error and the saves, the newest chosen',
+        hasReport && dlg.open && /The game ended with code 70/.test(dlg.error) && dlg.options[0] === 'No save' && /^\*Harbour City 2001-07-14\.sav \(0\.3 MB\)/.test(dlg.options[1] ?? ''),
+        JSON.stringify(dlg));
+      check('Send: the report reaches the server with the note; a server without a bucket says the save did not go',
+        listed.sent === true && listed.note === 'I pressed Exit and it stopped.' && /The game ended with code 70/.test(listed.message)
+          && /The log was sent\. Harbour City 2001-07-14\.sav was not: this server takes no saves/.test(said), `${said} | ${JSON.stringify(listed)}`);
+      await pg.click('#report-close');
       const again = pg.waitForNavigation({ timeout: 15000 }).then(() => true, () => false);
       await pg.click('#fail-again');
       check('a stop of the game: the box says so and Start again loads the page again',

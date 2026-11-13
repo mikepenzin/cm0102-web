@@ -182,6 +182,10 @@
   #sets-note { white-space: pre-line; }
   #sets tr.use td { background: var(--raised); }
   #sets tr.use label { display: inline-flex; gap: 8px; align-items: center; margin-right: 10px; }
+  .report-field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0 0; font-size: 14px; }
+  .report-field textarea, .report-field select { font: inherit; font-size: 16px; color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; width: 100%; box-sizing: border-box; }
+  .report-field textarea { resize: vertical; min-height: 64px; }
   #sets select { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
   dialog#saves { width: min(820px, calc(100vw - 24px)); }
   td.acts button + button { margin-left: 6px; }
@@ -411,8 +415,29 @@
       <summary>Engine log</summary>
       <pre id="log"></pre>
     </details>
+    <div id="help-report" hidden>
+      <h3>Something wrong?</h3>
+      <p class="small">Send to the developer sends the engine log and, if you choose, a saved game, so the problem can be
+      found. <button id="help-report-open" class="link">Send to the developer</button></p>
+    </div>
     </div>
     <div class="row dlg-foot"><span class="spacer"></span><button id="help-close">Close</button></div>
+  </dialog>
+
+  <dialog id="report" aria-labelledby="report-title">
+    <h2 id="report-title">Send to the developer</h2>
+    <div class="dlg-body">
+    <p class="small">This sends the engine log of this visit, the error, your browser's name and the engine's version, and
+    the saved game you choose here. Nothing else of your browser goes with it. Reports and saves are deleted after 90
+    days. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
+    <p id="report-error" class="small bad" hidden></p>
+    <label class="report-field">What happened? (you may leave it empty)
+      <textarea id="report-note" rows="3" maxlength="2000" placeholder="For example: I loaded my save and the game stopped."></textarea></label>
+    <label class="report-field">Saved game to send
+      <select id="report-save"></select></label>
+    <p id="report-state" class="small" role="status"></p>
+    </div>
+    <div class="row dlg-foot"><span class="spacer"></span><button class="primary" id="report-send">Send</button><button id="report-close">Close</button></div>
   </dialog>
 </div>
 <script type="module" src="loader.js"></script>

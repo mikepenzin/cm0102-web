@@ -10,12 +10,20 @@
 // changed and when the server stops. Fly may run two machines of the app, so a write first reads the object again
 // and adds this machine's changes since its last read to what is there (merge): the counts of both machines stay.
 // Error reports go to reports/<day>/<time>-<random>.json, and the last ones stay listed in the object.
+// A report the player sends (Send to the developer, report.js) goes there too, with a longer log and a note; its save,
+// when the player sends one, goes beside it as <time>-<random>.sav.gz, straight from the page to the store with a link
+// this server signs (saveLink, saveDone), as the cloud saves do. Both go with the other report files after 90 days.
+import { randomBytes } from 'node:crypto';
 
 const KEY = 'stats/stats.json';
 const FLUSH = 120000;
 const KEEP_DAYS = 400;              // daily totals and people idle this long go (the privacy page says 13 months)
 const KEEP_REPORTS = 200;           // reports listed in the object
 const REPORT_DAYS = 90;             // report files older than this go (the privacy page says so)
+const MAX_SENT_LOG = 2000;          // lines of the log in a report the player sent
+const MAX_SENT_SAVE = 400 << 20;    // a save the player sent, packed (gzip)
+const SENT_SAVES_A_DAY = 40;        // saves sent a day, on this machine: a bound on what the store takes
+const SENT_BYTES_A_DAY = 4 * 2 ** 30;           // and their packed bytes (4 GB)
 const MAX_BEAT_SECONDS = 180;       // a beat counts at most this much play: the page sends one each minute
 const ANON = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -87,6 +95,7 @@ export function browserOf(ua = '') {
 export function createStats({ store = null, log = (t) => console.log(t), now = () => Date.now(), flushMs = FLUSH } = {}) {
   let data = { version: 1, people: {}, days: {}, today: { day: day(now()), ids: [] }, reports: [] };
   let dirty = false, timer = null, prunedReports = 0;
+  let sentToday = { day: '', saves: 0, bytes: 0 };
   let base = clone(data);                    // the object as this machine last read or wrote it (mergeStats)
   const todayIds = new Set();
 
@@ -182,6 +191,81 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     return { key };
   }
 
+  // A report the player sent (report.js): the message of the error box (or none, from Help), a note, the log of the
+  // visit and what the page says of itself (where). It needs no consent of the statistics: the player sends it. With a
+  // store that signs links and takes the page's uploads (direct), the answer has a token, which lets that page add a save.
+  async function send(body, user, ua = '', direct = false) {
+    await ready;
+    const anon = String(body?.anon ?? '');
+    const t = now();
+    rollDay(t);
+    const id = user ? `g:${user.sub}` : ANON.test(anon) ? `a:${anon}` : 'a:unknown';
+    const note = String(body?.note ?? '').replace(/[\u0000-\u0009\u000b-\u001f]/g, ' ').slice(0, 2000);
+    const token = store?.presign && direct ? randomBytes(16).toString('hex') : null;
+    const r = {
+      at: new Date(t).toISOString(), id, sent: true, message: text(body?.message, 500) || 'No error box: sent from Help', note,
+      engine: text(body?.engine, 40), browser: browserOf(ua), where: text(body?.where, 400),
+      log: (Array.isArray(body?.log) ? body.log : []).slice(-MAX_SENT_LOG).map((l) => text(l, 400)),
+      ...(token ? { token } : {}), save: null,
+    };
+    const key = `reports/${day(t)}/${t}-${Math.random().toString(36).slice(2, 8)}.json`;
+    if (store) {
+      try { await store.put(key, Buffer.from(JSON.stringify(r, null, 1))); } catch (e) { log(`stats: report not written: ${e.message}`); return { error: 'the report was not stored: try again later' }; }
+    }
+    data.reports.unshift({ at: r.at, id, message: r.message, browser: r.browser, engine: r.engine, key, sent: true, note: note.slice(0, 200) });
+    data.reports.length = Math.min(data.reports.length, KEEP_REPORTS);
+    dayOf(day(t)).reports++;
+    if (data.people[id]) data.people[id].reports = (data.people[id].reports ?? 0) + 1;
+    dirty = true;
+    return { key, token, saves: Boolean(token) };
+  }
+
+  // The report file of a sent report whose token is this one, or why not.
+  async function sentReport(key, token) {
+    if (!store || typeof key !== 'string' || !/^reports\/\d{4}-\d{2}-\d{2}\/\d+-[a-z0-9]+\.json$/.test(key)) return { status: 404, error: 'no such report' };
+    const buf = await store.get(key);
+    const r = buf ? JSON.parse(buf.toString()) : null;
+    if (!r?.sent) return { status: 404, error: 'no such report' };
+    if (!r.token || typeof token !== 'string' || token !== r.token) return { status: 403, error: 'not the page that sent this report' };
+    return { r };
+  }
+
+  // A link to send the save of a sent report with ({ key, token, name, size, rawSize }): the size is the packed one,
+  // which the link signs.
+  async function saveLink(body) {
+    const { r, status, error } = await sentReport(body?.key, body?.token);
+    if (!r) return { status, error };
+    const size = Math.floor(Number(body?.size)), rawSize = Math.floor(Number(body?.rawSize));
+    if (!(size > 0) || size > MAX_SENT_SAVE) return { status: 413, error: `a save may be ${MAX_SENT_SAVE >> 20} MB at most, packed` };
+    const today = day(now());
+    if (sentToday.day !== today) sentToday = { day: today, saves: 0, bytes: 0 };
+    if (sentToday.saves >= SENT_SAVES_A_DAY || sentToday.bytes + size > SENT_BYTES_A_DAY)
+      return { status: 503, error: 'the server takes no more saves today: try again tomorrow' };
+    sentToday.saves++;
+    sentToday.bytes += size;
+    const saveKey = body.key.replace(/\.json$/, '.sav.gz');
+    r.save = { name: text(body?.name, 120), size, rawSize: rawSize > 0 ? rawSize : null, key: saveKey, done: false };
+    await store.put(body.key, Buffer.from(JSON.stringify(r, null, 1)));
+    const link = store.presign('PUT', saveKey, { headers: { 'content-type': 'application/gzip', 'content-length': size } });
+    const { 'content-length': _, ...headers } = link.headers;    // the browser sets the length of the body itself
+    return { url: link.url, headers: Object.fromEntries(Object.entries(headers).map(([k, v]) => [k, String(v)])) };
+  }
+
+  // The save reached the store ({ key, token }): the report says so, and its token goes.
+  async function saveDone(body) {
+    const { r, status, error } = await sentReport(body?.key, body?.token);
+    if (!r) return { status, error };
+    if (!r.save) return { status: 400, error: 'no save was announced' };
+    const h = await store.head(r.save.key);
+    if (!h) return { status: 404, error: 'the save did not reach the store' };
+    r.save = { ...r.save, size: h.size, done: true };
+    delete r.token;
+    await store.put(body.key, Buffer.from(JSON.stringify(r, null, 1)));
+    const listed = data.reports.find((x) => x.key === body.key);
+    if (listed) { listed.save = { name: r.save.name, size: h.size, rawSize: r.save.rawSize }; dirty = true; }
+    return { status: 200, ok: true, size: h.size };
+  }
+
   // A player's answer to the question about the statistics (stats.js): a count of the day, nothing of the player.
   async function choice(allowed) {
     await ready;
@@ -192,10 +276,14 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     dirty = true;
   }
 
+  // A report file for the admin page; a sent save comes with a link to get it (an hour).
   async function reportFile(key) {
     if (!/^reports\/\d{4}-\d{2}-\d{2}\/\d+-[a-z0-9]+\.json$/.test(key) || !store) return null;
     const buf = await store.get(key);
-    return buf ? JSON.parse(buf.toString()) : null;
+    if (!buf) return null;
+    const { token, ...r } = JSON.parse(buf.toString());
+    if (r.save?.done && store.presign) r.saveUrl = store.presign('GET', r.save.key, { expires: 3600 }).url;
+    return r;
   }
 
   // An account that was deleted: its record goes, and its browsers no longer point at it.
@@ -295,12 +383,13 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
   }
   async function stop() { if (timer) clearInterval(timer); timer = null; await flush(); }
 
-  return { ready, beat, choice, report, reportFile, forget, flush, summary, start, stop, get data() { return data; } };
+  return { ready, beat, choice, report, send, saveLink, saveDone, reportFile, forget, flush, summary, start, stop, get data() { return data; } };
 }
 
-// The store of an S3 client (s3.mjs): getBuffer and put.
+// The store of an S3 client (s3.mjs): getBuffer and put; head and presign for the saves that players send.
 export function statsStore(s3) {
   if (!s3) return null;
   return { get: (key) => s3.getBuffer(key), put: (key, buf) => s3.put(key, buf, { type: 'application/json' }),
-    list: (prefix) => s3.list(prefix), delete: (key) => s3.delete(key) };
+    list: (prefix) => s3.list(prefix), delete: (key) => s3.delete(key), head: (key) => s3.head(key),
+    ...(s3.presign ? { presign: (method, key, opts) => s3.presign(method, key, opts) } : {}) };
 }

@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { createApp } from '../server.mjs';
 import { createCloud } from '../cloud.mjs';
-import { createStats } from '../stats.mjs';
+import { createStats, statsStore } from '../stats.mjs';
 import { createS3 } from '../s3.mjs';
 import { fakeDataSet, fakeGoogle, fakeS3, fakeSaveBytes, paddleEvent, signPaddle } from './fakes.mjs';
 import { writeZip } from '../zip.js';
@@ -50,7 +50,7 @@ const FAKE_PADDLE = `window.Paddle = {
   Initialize(o) { window.__paddleInit = o; },
   Checkout: { open(o) { window.__paddleOpen = o; setTimeout(() => window.__paddleInit.eventCallback({ name: 'checkout.completed', data: {} }), 200); } },
 };`;
-const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, stats: createStats(), statsMode: 'optout',
+const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, stats: createStats({ store: statsStore(s3) }), statsMode: 'optout',
   admins: ['player@example.com'] });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
@@ -344,6 +344,43 @@ try {
   await g.click('#account-close');
   await adm.close();
   await gctx.close();
+
+  // ---- Send to the developer, from Help: the log, a note and a save; the save goes packed straight to the store. ----
+  await a.click('#help-open');
+  check('Help offers Send to the developer', await a.isVisible('#help-report-open'));
+  await a.click('#help-report-open');
+  await a.selectOption('#report-save', '/user/Harbour City 2001-07-14.sav');
+  await a.fill('#report-note', 'My save does not load.');
+  await shot(a, 'report-dialog');
+  const sentBytes = await a.evaluate(() => Array.from(window.Module.FS.readFile('/user/Harbour City 2001-07-14.sav')));
+  await a.click('#report-send');
+  await a.waitForFunction(() => /^Sent|was not|Nothing/.test(document.getElementById('report-state').textContent), null, { timeout: 20000 }).catch(() => {});
+  const reportSaid = await a.textContent('#report-state');
+  check('Send: the log and the save go, and the dialog says so', /^Sent, with Harbour City 2001-07-14\.sav\. Thank you/.test(reportSaid), reportSaid);
+  await a.click('#report-close');
+  const adminData = await a.evaluate(async () => (await fetch('/api/admin/stats', { credentials: 'same-origin' })).json());
+  const sentReport = adminData.reports.find((r) => r.sent);
+  const full = await a.evaluate(async (key) => (await fetch(`/api/admin/report?key=${encodeURIComponent(key)}`, { credentials: 'same-origin' })).json(), sentReport?.key ?? '');
+  const got = full.saveUrl ? gunzipSync(Buffer.from(await (await fetch(full.saveUrl)).arrayBuffer())) : Buffer.alloc(0);
+  check('the admin data: the report with the note, the account, the log, and the save as it was sent',
+    sentReport?.note === 'My save does not load.' && full.id === 'g:4000004' && full.log.length > 10 && full.save?.done === true
+      && full.save.rawSize === sentBytes.length && got.equals(Buffer.from(sentBytes)) && full.token === undefined,
+    JSON.stringify({ ...full, log: full.log?.length, saveUrl: Boolean(full.saveUrl) }).slice(0, 400));
+  // The admin page: the report is marked as sent, and its save downloads unpacked, under its own name.
+  const adm2 = await a.context().newPage();
+  await adm2.goto(`${BASE}/admin`);
+  await adm2.waitForSelector('.tag.sent', { timeout: 10000 }).catch(() => {});
+  await adm2.click('.tag.sent + a');
+  await adm2.waitForSelector('#report-save-get', { timeout: 10000 }).catch(() => {});
+  const [dl] = await Promise.all([adm2.waitForEvent('download', { timeout: 15000 }).catch(() => null), adm2.click('#report-save-get')]);
+  const dlPath = dl ? await dl.path() : null;
+  const { readFileSync } = await import('node:fs');
+  check('the admin page: Sent by the player, the note, and Download the save gives the save itself',
+    /Sent by the player/.test(await adm2.innerText('.reports')) && /My save does not load\./.test(await adm2.innerText('#report'))
+      && dl?.suggestedFilename() === 'Harbour City 2001-07-14.sav' && Boolean(dlPath) && readFileSync(dlPath).equals(Buffer.from(sentBytes)),
+    `${dl?.suggestedFilename()} ${dlPath ? readFileSync(dlPath).length : 'no file'}`);
+  await shot(adm2, 'admin-sent-report');
+  await adm2.close();
 
   check('no page errors', errors.length === 0, errors.join('; '));
   check('the server logged no failure', !logs.some((l) => /fail|not written|not read/.test(l)), logs.join('; '));

@@ -31,7 +31,8 @@
   th.num, td.num { text-align: right; }
   tr.linked td { color: var(--muted); }
   .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; border: 1px solid var(--line); color: var(--muted); }
-  .tag.account { border-color: var(--accent); color: var(--accent); } .tag.cloud { border-color: var(--warn); color: var(--warn); }
+  .tag.account { border-color: var(--accent); color: var(--accent); } .tag.sent { border-color: var(--accent); color: var(--accent); margin-right: 6px; }
+  #report-head { margin: 12px 0 6px; } #report-head button { margin-left: 8px; } .tag.cloud { border-color: var(--warn); color: var(--warn); }
   .msg { padding: 40px 0; text-align: center; color: var(--muted); }
   .bad { color: var(--bad); }
   svg text { fill: var(--muted); font-size: 10px; }
@@ -156,8 +157,10 @@ function render() {
     <section><h2>Error reports</h2>
       ${data.reports.length ? `<div class="scroll"><table class="reports"><thead><tr><th>When</th><th>Who</th><th>Message</th><th>Browser</th><th>Engine</th></tr></thead><tbody>
         ${data.reports.map((r, i) => `<tr><td>${esc(when(r.at))}</td><td class="small">${esc(data.people.find((p) => p.id === r.id)?.email ?? r.id.slice(0, 10))}</td>
-          <td><a href="#" data-report="${i}">${esc(r.message)}</a></td><td>${esc(r.browser)}</td><td class="small">${esc(r.engine)}</td></tr>`).join('')}
-      </tbody></table></div><pre id="report" hidden></pre>` : '<p class="muted">No error reports.</p>'}
+          <td>${r.sent ? '<span class="tag sent">Sent by the player</span>' : ''}<a href="#" data-report="${i}">${esc(r.message)}</a>${
+            r.note ? `<div class="small muted">${esc(r.note)}</div>` : ''}${r.save ? `<div class="small">Save: ${esc(r.save.name)} (${mb(r.save.rawSize ?? r.save.size)})</div>` : ''}</td>
+          <td>${esc(r.browser)}</td><td class="small">${esc(r.engine)}</td></tr>`).join('')}
+      </tbody></table></div><div id="report-head" hidden></div><pre id="report" hidden></pre>` : '<p class="muted">No error reports.</p>'}
     </section>`;
   $('filter').oninput = (e) => { filter = e.target.value; $('people').innerHTML = peopleRows(); };
   $('people').onclick = (e) => { const b = e.target.closest('[data-give]'); if (b) give(b.dataset.give, b.dataset.on === '1'); };
@@ -165,12 +168,38 @@ function render() {
   document.querySelectorAll('[data-report]').forEach((a) => {
     a.onclick = async (e) => {
       e.preventDefault();
-      const r = data.reports[Number(a.dataset.report)], box = $('report');
+      const r = data.reports[Number(a.dataset.report)], box = $('report'), head = $('report-head');
       box.hidden = false;
+      head.hidden = true;
       box.textContent = 'Loading…';
       const res = await fetch(`/api/admin/report?key=${encodeURIComponent(r.key)}`, { credentials: 'same-origin' });
       const full = res.ok ? await res.json() : null;
-      box.textContent = full ? `${full.at} · ${full.id} · ${full.browser} · ${full.engine}\n${full.message}\n\n${full.log.join('\n')}` : 'The report file is not in the store.';
+      box.textContent = full ? `${full.at} · ${full.id} · ${full.browser} · ${full.engine}${full.where ? ` · ${full.where}` : ''}\n${full.message}${
+        full.note ? `\n\nThe player wrote:\n${full.note}` : ''}\n\n${full.log.join('\n')}` : 'The report file is not in the store.';
+      // A save the player sent: kept packed (gzip) in the store; the button unpacks it and saves it under its own name.
+      if (full?.save) {
+        head.hidden = false;
+        head.innerHTML = full.saveUrl
+          ? `Save: <b>${esc(full.save.name)}</b> (${mb(full.save.rawSize ?? full.save.size)}, ${mb(full.save.size)} packed)<button id="report-save-get">Download the save</button> <a href="${esc(full.saveUrl)}" class="small">packed (.gz)</a>`
+          : `Save: ${esc(full.save.name)}: ${full.save.done ? 'the store gives no link' : 'it did not arrive'}`;
+        const get = $('report-save-get');
+        if (get) get.onclick = async () => {
+          get.disabled = true;
+          get.textContent = 'Getting it…';
+          try {
+            const got = await fetch(full.saveUrl);
+            if (!got.ok) throw new Error(`the store answered ${got.status}`);
+            const blob = await new Response(got.body.pipeThrough(new DecompressionStream('gzip'))).blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = full.save.name;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+            get.textContent = 'Download the save';
+          } catch (err) { get.textContent = `Not got: ${err.message}`; }
+          get.disabled = false;
+        };
+      }
       box.scrollIntoView({ block: 'nearest' });
     };
   });

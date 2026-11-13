@@ -91,6 +91,8 @@ export function startStats({ info, state, extra = () => ({}), isRunning = () => 
       post('/api/report', { anon: anonId(), session, message: String(message).slice(0, 500), log: lines.slice(-60), where, ...extra() }, true)
         .catch((e) => log(`page: the error report was not sent: ${e.message}`));
     },
+    // What a report the player sends may say of this browser (report.js): its id only when the statistics are allowed.
+    who() { return { ...(statsAllowed(mode) ? { anon: anonId() } : {}), session, ...extra() }; },
     // The player allowed them just now: the visit counts at once.
     allowed() { beat(); },
     get mode() { return mode; },

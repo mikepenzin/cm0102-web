@@ -198,3 +198,61 @@ test('the routes: a beat only from the page, the admin data only for an admin', 
     rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+test('a report the player sends: a note and a long log, a save by a signed link with its token, a link for the admin', async () => {
+  let t = Date.parse('2026-11-13T20:00:00Z');
+  const store = memoryStore();
+  const signed = [];
+  store.head = async (k) => (store.m.has(k) ? { size: store.m.get(k).length } : null);
+  store.presign = (method, key, { headers = {} } = {}) => { signed.push([method, key, headers]); return { url: `https://store.example/${key}?sig=${method}`, headers: { ...headers, host: 'store.example' } }; };
+  const s = createStats({ store, now: () => t });
+  const log = Array.from({ length: 2500 }, (_, i) => `line ${i}`);
+  const sent = await s.send({ message: 'The game stopped: RuntimeError', note: 'I loaded BIF.\nThen it stopped.', log, engine: 'jspi v1', where: 'the error box' },
+    null, 'Mozilla/5.0 (Windows NT 10.0) Chrome/142.0', true);
+  assert.match(sent.key, /^reports\/2026-11-13\/\d+-[a-z0-9]+\.json$/);
+  assert.equal(sent.saves, true);
+  assert.match(sent.token, /^[0-9a-f]{32}$/);
+  const file = JSON.parse(store.m.get(sent.key).toString());
+  assert.equal(file.log.length, 2000, 'the last 2,000 lines');
+  assert.equal(file.log.at(-1), 'line 2499');
+  assert.equal(file.note, 'I loaded BIF.\nThen it stopped.', 'the note keeps its lines');
+  assert.equal(file.id, 'a:unknown', 'no id without the statistics');
+  assert.equal(s.data.reports[0].sent, true);
+  // The save: only with the token; the link signs the packed size.
+  assert.equal((await s.saveLink({ key: sent.key, token: 'nope', size: 10 })).status, 403);
+  assert.equal((await s.saveLink({ key: '../accounts/x.json', token: sent.token, size: 10 })).status, 404);
+  assert.equal((await s.saveLink({ key: sent.key, token: sent.token, size: 500 << 20 })).status, 413);
+  const link = await s.saveLink({ key: sent.key, token: sent.token, name: 'BIF (2).sav', size: 1234, rawSize: 177 << 20 });
+  const saveKey = sent.key.replace(/\.json$/, '.sav.gz');
+  assert.match(link.url, new RegExp(`${saveKey.replace(/[.()]/g, '\\$&')}\\?sig=PUT`));
+  assert.equal(link.headers['content-length'], undefined, 'the browser sets the length itself');
+  assert.deepEqual(signed[0], ['PUT', saveKey, { 'content-type': 'application/gzip', 'content-length': 1234 }]);
+  assert.equal((await s.saveDone({ key: sent.key, token: sent.token })).status, 404, 'not there yet');
+  store.m.set(saveKey, Buffer.alloc(1234));
+  assert.equal((await s.saveDone({ key: sent.key, token: sent.token })).ok, true);
+  assert.equal((await s.saveLink({ key: sent.key, token: sent.token, size: 10 })).status, 403, 'the token is gone once the save arrived');
+  const admin = await s.reportFile(sent.key);
+  assert.equal(admin.token, undefined);
+  assert.deepEqual({ ...admin.save, key: undefined }, { name: 'BIF (2).sav', size: 1234, rawSize: 177 << 20, key: undefined, done: true });
+  assert.match(admin.saveUrl, /\?sig=GET$/);
+  assert.deepEqual(s.data.reports[0].save, { name: 'BIF (2).sav', size: 1234, rawSize: 177 << 20 });
+  // Without a store that signs links, or without direct uploads, a report has no token: the log only.
+  const plain = createStats({ store: memoryStore(), now: () => t });
+  assert.deepEqual([(await plain.send({ log: ['x'] }, null, '', true)).saves, (await s.send({ log: ['x'] }, null, '', false)).saves], [false, false]);
+  // At most SENT_SAVES_A_DAY links a day.
+  let refused = null;
+  for (let i = 0; i < 45 && !refused; i++) {
+    const r = await s.send({ log: [] }, null, '', true);
+    const l = await s.saveLink({ key: r.key, token: r.token, name: 'x.sav', size: 10 });
+    if (l.status === 503) refused = i;
+  }
+  assert.equal(refused, 39, 'the 41st save of the day is turned away');
+  t += 86400000;
+  const next = await s.send({ log: [] }, null, '', true);
+  assert.ok((await s.saveLink({ key: next.key, token: next.token, name: 'x.sav', size: 10 })).url, 'a new day');
+  // The report files and saves go after 90 days.
+  t += 91 * 86400000;
+  await s.beat({ anon: A, session: 'z', seconds: 1 }, null);
+  await s.flush();
+  assert.equal(store.m.has(saveKey), false, 'the save went with its report');
+});

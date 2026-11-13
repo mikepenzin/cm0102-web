@@ -18,6 +18,7 @@ import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
 import { mountLayout } from './layout.js';
 import { mountTouch } from './touch.js';
 import { guardLeave, isStandalone, keepAwake, mountBusy, toast } from './ui.js';
+import { mountReport, watchSaveInPlay } from './report.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -96,6 +97,7 @@ function userFolderSizes(FS) {
 // copies, data sets) in memory while the game runs.
 const OUT_OF_MEMORY = /Array buffer allocation failed|out of memory|Cannot allocate|could not allocate/i;
 let stats = null;                                    // stats.js, once files.json told the server's mode
+let report = null, saveInPlay = () => null;          // Send to the developer (report.js), when the server takes reports
 function fail(title, detail) {
   status(title);
   stats?.report(`${title}: ${detail}`, lines.slice(-60), 'fail');
@@ -107,7 +109,8 @@ function fail(title, detail) {
     happens again, close the other tabs of this site, or quit the browser and open it again. Your saves stay in this
     browser.</p>` : '';
   overlay(`<h1>${esc(title)}</h1><p>${esc(detail)}</p>${memory}${last ? `<pre class="small" style="white-space:pre-wrap;margin:0 0 14px">${esc(last)}</pre>` : ''}
-    <div class="row"><button class="primary" id="fail-again">Start again</button><span class="small">Your saves stay in this browser.</span></div>`, 'error');
+    <div class="row"><button class="primary" id="fail-again">Start again</button>${report ? '<button id="fail-report">Send to the developer</button>' : ''}<span class="small">Your saves stay in this browser.</span></div>`, 'error');
+  if ($('fail-report')) $('fail-report').onclick = () => report.open({ message: `${title}: ${detail}`, where: 'the error box' });
   // The way on: the page loads again, after the user folder went to the browser's storage.
   const again = $('fail-again');
   if (again) again.onclick = () => {
@@ -621,6 +624,7 @@ function runEngine(files, info) {
     locateFile: (name) => engineUrl(info.chosen, name),
     preRun: [() => {
       const M = window.Module, FS = M.FS;
+      saveInPlay = watchSaveInPlay(FS);                // which save a report sends by default
       install(FS, files);
       files.clear();
       FS.mkdirTree('/user');
@@ -917,6 +921,11 @@ async function start() {
   stats = startStats({ info, log, isRunning: () => running, state: folderState,
     extra: () => ({ engine: `${info.chosen.suspend ?? 'unknown'} ${info.chosen.version}`, vault: Boolean(vault?.active), cloud: Boolean(account.me?.user?.cloud) }) });
   mountStatsChoice(info);
+  if (info.stats) {
+    report = mountReport({ FS: () => window.Module?.FS ?? null, lines: () => lines, who: () => stats?.who?.() ?? {}, inPlay: () => saveInPlay(), log });
+    $('help-report').hidden = false;
+    $('help-report-open').onclick = () => { $('help').close(); report.open({ where: 'Help' }); };
+  }
   const { problems, warnings } = requirements(info);
   if (problems.length) { log(`page: blocked: ${problems.join(' ')}`); stats.report(`blocked: ${problems.join(' ')}`, [], 'requirements'); blocked(problems); return; }
   if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').catch((e) => log(`page: no service worker: ${e}`));
