@@ -280,12 +280,16 @@ const PORT = 8097;
     check('an uploaded save lands in the save folder and is listed',
       inFs === got.length && /Leeds 2002-05-01\.sav/.test(await p.textContent('#saves-list')));
     check('an upload is written to IndexedDB at once', (await p.evaluate(() => window.__syncs.store)) > storesBefore);
+    // An empty save (0 bytes), as an empty Download made it (two tabs, a player's report): its own message.
     await p.setInputFiles('#saves-file', [{ name: 'junk.sav', mimeType: 'application/octet-stream', buffer: Buffer.from('hello') },
+      { name: 'St-Etienne 2002-02-13.sav', mimeType: 'application/octet-stream', buffer: Buffer.alloc(0) },
       { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('x') }]);
     await p.waitForFunction(() => /notes\.txt/.test(document.getElementById('saves-note').textContent));
     const refusedNote = await p.textContent('#saves-note');
-    check('a file that is not a save, and a file that is not .sav, are refused',
-      /junk\.sav: it is too short/.test(refusedNote) && /only \.sav files/.test(refusedNote) && !/junk/.test(await p.textContent('#saves-list')), refusedNote);
+    check('a file that is not a save, an empty save and a file that is not .sav are refused, each with its reason',
+      /junk\.sav: it is too short to be a saved game of CM 01\/02: 1 KB, where a saved game has at least 262 KB/.test(refusedNote)
+        && /St-Etienne 2002-02-13\.sav: the file is empty \(0 bytes\)/.test(refusedNote) && /only \.sav files/.test(refusedNote)
+        && !/junk|St-Etienne/.test(await p.textContent('#saves-list')), refusedNote);
     if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-saves.png') });
     // Tactics (tactics.js): a tactic saved by the game, a preset's .pct (its version plus 0x075BCD15, which the game's
     // Load refuses: the page stores the plain one), and two files that are not tactics.
