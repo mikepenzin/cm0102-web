@@ -14,6 +14,7 @@ const PAST_HEADER = HEADER + 0x10000;
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const mb = (n) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
+const size = (n) => (n < 1048576 ? `${n === 0 ? 0 : Math.max(1, Math.round(n / 1024))} KB` : mb(n));
 // What the report says of the page: its size, the device's memory (Chrome tells it, rounded), touch or mouse.
 const pageInfo = () => `${innerWidth}x${innerHeight}, ${navigator.deviceMemory ? `${navigator.deviceMemory} GB of memory` : 'memory not told'}${
   matchMedia('(pointer: coarse)').matches ? ', touch' : ''}`;
@@ -70,20 +71,25 @@ export function watchSaveInPlay(FS) {
 
 // Wires the dialog of index.html (#report). FS(): the engine's FS or null; lines(): the engine log; who(): what the
 // statistics may add ({ anon, session, engine, vault, cloud }); inPlay(): the path of the save in play, or null.
+// open({ message, where, files }): files are Files the player gave the page that it refused (an upload): they are
+// offered first, so the file that did not load can go to the developer as it is.
 export function mountReport({ FS = () => null, lines = () => [], who = () => ({}), inPlay = () => null, log = () => {} }) {
   const dialog = $('report'), note = $('report-note'), choice = $('report-save'), state = $('report-state');
   const sendBtn = $('report-send');
-  let context = { message: '', where: '' }, sending = false;
+  let context = { message: '', where: '' }, sending = false, offered = [];
   const say = (text, bad = false) => { state.textContent = text; state.className = bad ? 'small bad' : 'small'; };
 
-  function open({ message = '', where = '' } = {}) {
+  function open({ message = '', where = '', files = [] } = {}) {
     if (sending) { dialog.showModal(); return; }
     context = { message, where };
+    offered = [...files];
     let saves = [], fs = null;
     try { fs = FS(); saves = fs ? listSaves(fs).saves : []; } catch { /* no folder yet */ }
-    const playing = inPlay(), pick = saves.some((f) => f.path === playing) ? playing : saves[0]?.path ?? '';
-    choice.innerHTML = `<option value="">${fs ? 'No save' : 'No save: the game did not start, so its saves cannot be read'}</option>${saves.map((f) =>
-      `<option value="${esc(f.path)}"${f.path === pick ? ' selected' : ''}>${esc(f.name)} (${mb(f.size)})${f.path === playing ? ', in play' : ''}</option>`).join('')}`;
+    const playing = inPlay();
+    const pick = offered.length ? null : saves.some((f) => f.path === playing) ? playing : saves[0]?.path ?? '';
+    choice.innerHTML = `<option value="">${fs || offered.length ? 'No save' : 'No save: the game did not start, so its saves cannot be read'}</option>${
+      offered.map((f, i) => `<option value="file:${i}"${i === 0 ? ' selected' : ''}>${esc(f.name)} (${size(f.size)}), the file you uploaded</option>`).join('')}${
+      saves.map((f) => `<option value="${esc(f.path)}"${f.path === pick ? ' selected' : ''}>${esc(f.name)} (${size(f.size)})${f.path === playing ? ', in play' : ''}</option>`).join('')}`;
     $('report-error').textContent = message ? `The error: ${message}` : '';
     $('report-error').hidden = !message;
     say('');
@@ -96,8 +102,16 @@ export function mountReport({ FS = () => null, lines = () => [], who = () => ({}
     if (sending) return;
     sending = true;
     sendBtn.disabled = true;
-    const path = choice.value, fs = FS();
-    const save = path && fs ? listSaves(fs).saves.find((f) => f.path === path) : null;
+    const value = choice.value, fs = FS();
+    let save = null;
+    if (value.startsWith('file:')) {
+      const f = offered[Number(value.slice(5))];
+      if (f) save = { name: f.name, size: f.size, blob: async () => f, uploaded: true };
+    } else if (value && fs) {
+      const f = listSaves(fs).saves.find((x) => x.path === value);
+      if (f) save = { name: f.name, size: f.size, blob: () => readBlob(fs, f.path) };
+    }
+    const elsewhere = () => (save?.uploaded ? 'Send the file another way.' : 'Download it in Saved games and send it another way.');
     let sent = null;
     try {
       say('Sending the log…');
@@ -105,12 +119,12 @@ export function mountReport({ FS = () => null, lines = () => [], who = () => ({}
         log: lines().slice(-REPORT_LOG_LINES) });
       log(`page: report sent (${sent.key})`);
       if (save && !sent.saves) {
-        say(`The log was sent. ${save.name} was not: this server takes no saves. Download it in Saved games and send it another way.`, true);
+        say(`The log was sent. ${save.name} was not: this server takes no saves. ${elsewhere()}`, true);
         return;
       }
       if (save) {
         say(`Packing ${save.name}…`);
-        const gz = await pack(await readBlob(fs, save.path), (n) => say(`Packing ${save.name}: ${Math.min(100, Math.floor((100 * n) / save.size))}%`));
+        const gz = await pack(await save.blob(), (n) => say(`Packing ${save.name}: ${Math.min(100, Math.floor((100 * n) / Math.max(1, save.size)))}%`));
         const link = await post('/api/report/save', { key: sent.key, token: sent.token, name: save.name, size: gz.size, rawSize: save.size });
         await put(link.url, link.headers, gz, (part) => say(`Sending ${save.name} (${mb(gz.size)} packed): ${Math.floor(100 * part)}%`));
         await post('/api/report/save-done', { key: sent.key, token: sent.token });
@@ -121,7 +135,7 @@ export function mountReport({ FS = () => null, lines = () => [], who = () => ({}
       sendBtn.textContent = 'Sent';
     } catch (err) {
       log(`page: report: ${err.message}`);
-      say(sent ? `The log was sent, but ${save?.name ?? 'the save'} was not: ${err.message}. Download it in Saved games and send it another way.`
+      say(sent ? `The log was sent, but ${save?.name ?? 'the save'} was not: ${err.message}. ${elsewhere()}`
         : `Nothing was sent: ${err.message}. Try again in a moment.`, true);
       if (!sent) sendBtn.disabled = false;
     } finally {

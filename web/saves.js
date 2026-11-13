@@ -178,10 +178,23 @@ export function storageWarning(cloudOn) {
 // the cloud sync of account.js, or null when the account has no cloud saves.
 // promo(): a line about Cloud Saves for a player without them, or null; openPromo() shows them. edit(name): opens the
 // save editor (editor.js) on a save of the folder.
-export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () => null, openPromo = () => {}, edit = null }) {
+// report(): Send to the developer (report.js), or null: a message of the panel that says something went wrong offers it,
+// with the files of an upload that were refused.
+export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () => null, openPromo = () => {}, edit = null, report = () => null }) {
   const dialog = document.getElementById('saves'), list = document.getElementById('saves-list');
   const note = document.getElementById('saves-note'), input = document.getElementById('saves-file');
-  const say = (text, bad = false) => { note.textContent = text; note.className = bad ? 'small bad' : 'small'; };
+  const say = (text, bad = false, files = []) => {
+    note.textContent = text;
+    note.className = bad ? 'small bad' : 'small';
+    const r = bad || files.length ? report() : null;
+    if (!r) return;
+    const b = document.createElement('button');
+    b.className = 'link';
+    b.id = 'saves-report';
+    b.textContent = 'Send to the developer';
+    b.onclick = () => { dialog.close(); r.open({ message: text, where: 'Saved games', files }); };
+    note.append(' ', b);
+  };
   let shown = { saves: [], backups: [] }, watched = null;
 
   function render() {
@@ -273,14 +286,14 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
     catch (err) { say(`${f.name} could not be read: ${err.message}`, true); }
   });
   input.onchange = async () => {
-    const done = [], refused = [];
+    const done = [], refused = [], refusedFiles = [];
     for (const file of input.files) {
       const taken = new Set(listSaves(FS).saves.map((f) => f.name.toLowerCase()));
       const name = saveName(file.name, taken);
-      if (!name) { refused.push(`${file.name}: only .sav files are saved games`); continue; }
+      if (!name) { refused.push(`${file.name}: only .sav files are saved games`); refusedFiles.push(file); continue; }
       const bytes = new Uint8Array(await file.arrayBuffer());
       const why = checkSave(bytes);
-      if (why) { refused.push(`${file.name}: ${why}`); continue; }
+      if (why) { refused.push(`${file.name}: ${why}`); refusedFiles.push(file); continue; }
       FS.writeFile(`${SAVE_DIR}/${name}`, bytes);
       done.push(name);
       log(`page: uploaded the save ${name} (${mb(bytes.length)})`);
@@ -289,7 +302,7 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
     if (done.length) sync();
     render();
     say([done.length ? `Uploaded ${done.join(', ')}. Open Load Game in the game to play it.` : '', ...refused].filter(Boolean).join('\n'),
-      refused.length > 0 && done.length === 0);
+      refused.length > 0 && done.length === 0, refusedFiles);
   };
   document.getElementById('saves-open').hidden = false;
 }

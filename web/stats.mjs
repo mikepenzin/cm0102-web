@@ -244,7 +244,7 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     sentToday.saves++;
     sentToday.bytes += size;
     const saveKey = body.key.replace(/\.json$/, '.sav.gz');
-    r.save = { name: text(body?.name, 120), size, rawSize: rawSize > 0 ? rawSize : null, key: saveKey, done: false };
+    r.save = { name: text(body?.name, 120), size, rawSize: rawSize >= 0 ? rawSize : null, key: saveKey, done: false };   // 0: an empty file
     await store.put(body.key, Buffer.from(JSON.stringify(r, null, 1)));
     const link = store.presign('PUT', saveKey, { headers: { 'content-type': 'application/gzip', 'content-length': size } });
     const { 'content-length': _, ...headers } = link.headers;    // the browser sets the length of the body itself

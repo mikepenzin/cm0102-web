@@ -381,6 +381,23 @@ try {
     `${dl?.suggestedFilename()} ${dlPath ? readFileSync(dlPath).length : 'no file'}`);
   await shot(adm2, 'admin-sent-report');
   await adm2.close();
+  // An upload that is refused (an empty save, as an empty Download made one) offers the same, with that file: it goes
+  // as it is, and the admin data says it was empty.
+  await a.click('#saves-open');
+  await a.setInputFiles('#saves-file', { name: 'St-Etienne 2002-02-13.sav', mimeType: 'application/octet-stream', buffer: Buffer.alloc(0) });
+  await a.waitForSelector('#saves-report', { timeout: 10000 }).catch(() => {});
+  await a.click('#saves-report');
+  await a.click('#report-send');
+  await a.waitForFunction(() => /^Sent|was not|Nothing/.test(document.getElementById('report-state').textContent), null, { timeout: 20000 }).catch(() => {});
+  const emptySaid = await a.textContent('#report-state');
+  const adminData2 = await a.evaluate(async () => (await fetch('/api/admin/stats', { credentials: 'same-origin' })).json());
+  const emptyReport = adminData2.reports.find((r) => /the file is empty/.test(r.message));
+  const emptyFull = await a.evaluate(async (key) => (await fetch(`/api/admin/report?key=${encodeURIComponent(key)}`, { credentials: 'same-origin' })).json(), emptyReport?.key ?? '');
+  const emptyGot = emptyFull.saveUrl ? gunzipSync(Buffer.from(await (await fetch(emptyFull.saveUrl)).arrayBuffer())) : null;
+  check('a refused upload: Send to the developer sends that file, and the admin data has it (0 bytes)',
+    /^Sent, with St-Etienne 2002-02-13\.sav\./.test(emptySaid) && emptyFull.save?.done === true && emptyFull.save.rawSize === 0 && emptyGot?.length === 0
+      && emptyFull.where?.startsWith('Saved games'), `${emptySaid} | ${JSON.stringify(emptyFull.save)}`);
+  await a.click('#report-close');
 
   check('no page errors', errors.length === 0, errors.join('; '));
   check('the server logged no failure', !logs.some((l) => /fail|not written|not read/.test(l)), logs.join('; '));

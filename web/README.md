@@ -254,7 +254,9 @@ server list) and gives Cloud Saves to an account, or takes a gift back (`POST /a
 (localStorage `cm0102-stats` = `off`). `CM_STATS=optout`: on until the player turns them off, with no question (not for
 players in the EU, whose consent rules want the question); `CM_STATS=off`: none. Without a bucket they stay in memory only. The privacy page says what is collected.
 
-**Send to the developer (`report.js`).** The error box (and Help, Something wrong?) has Send to the developer: a dialog
+**Send to the developer (`report.js`).** The error box, a message of Saved games that says something went wrong (a
+refused upload, a download that failed), and Help (Something wrong?) have Send to the developer. After a refused upload
+the dialog offers the refused files first, so the file that did not load goes as it is (an empty one too). It is a dialog
 with the error, a note the player may write, and a choice of saved game, preset to the save in play (the last one the
 game read past its 262 KB header, which a load does and the Load Game list does not, or the last one it wrote; else the
 newest). Send posts the note, the error and the last 2,000 lines of the engine log (`/api/report/send`); the server

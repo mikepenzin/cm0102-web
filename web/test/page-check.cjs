@@ -104,7 +104,7 @@ const PORT = 8097;
       const adm = await (await fetch(`http://127.0.0.1:${PORT}/api/admin/stats`, { headers: { authorization: 'Bearer page-check-admin-token' } })).json();
       const listed = adm.reports?.[0] ?? {};
       check('the error box: Send to the developer opens with the error and the saves, the newest chosen',
-        hasReport && dlg.open && /The game ended with code 70/.test(dlg.error) && dlg.options[0] === 'No save' && /^\*Harbour City 2001-07-14\.sav \(0\.3 MB\)/.test(dlg.options[1] ?? ''),
+        hasReport && dlg.open && /The game ended with code 70/.test(dlg.error) && dlg.options[0] === 'No save' && /^\*Harbour City 2001-07-14\.sav \(262 KB\)/.test(dlg.options[1] ?? ''),
         JSON.stringify(dlg));
       check('Send: the report reaches the server with the note; a server without a bucket says the save did not go',
         listed.sent === true && listed.note === 'I pressed Exit and it stopped.' && /The game ended with code 70/.test(listed.message)
@@ -291,6 +291,24 @@ const PORT = 8097;
         && /St-Etienne 2002-02-13\.sav: the file is empty \(0 bytes\)/.test(refusedNote) && /only \.sav files/.test(refusedNote)
         && !/junk|St-Etienne/.test(await p.textContent('#saves-list')), refusedNote);
     if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-saves.png') });
+    // A refused upload offers Send to the developer, with the refused files first: the file that did not load can go to
+    // the developer as it is (this server keeps no files, so here the log goes and the dialog says the file did not).
+    await p.click('#saves-report');
+    const offered = await p.evaluate(() => ({ open: document.getElementById('report').open, savesOpen: document.getElementById('saves').open,
+      options: [...document.querySelectorAll('#report-save option')].map((o) => `${o.selected ? '*' : ''}${o.textContent}`) }));
+    await p.selectOption('#report-save', { label: 'St-Etienne 2002-02-13.sav (0 KB), the file you uploaded' });
+    await p.click('#report-send');
+    await p.waitForFunction(() => /was sent|Sent/.test(document.getElementById('report-state').textContent), null, { timeout: 15000 }).catch(() => {});
+    const offeredSaid = await p.textContent('#report-state');
+    const lastReport = (await (await fetch(`http://127.0.0.1:${PORT}/api/admin/stats`, { headers: { authorization: 'Bearer page-check-admin-token' } })).json()).reports?.[0] ?? {};
+    check('a refused upload: Send to the developer offers the refused files first, and the report says why they were refused',
+      offered.open && !offered.savesOpen && offered.options[1] === '*junk.sav (1 KB), the file you uploaded'
+        && offered.options[2] === 'St-Etienne 2002-02-13.sav (0 KB), the file you uploaded'
+        && /St-Etienne 2002-02-13\.sav: the file is empty/.test(lastReport.message) && lastReport.sent === true
+        && /St-Etienne 2002-02-13\.sav was not: this server takes no saves\. Send the file another way/.test(offeredSaid),
+      `${JSON.stringify(offered.options)} | ${offeredSaid}`);
+    await p.click('#report-close');
+    await p.click('#saves-open');
     // Tactics (tactics.js): a tactic saved by the game, a preset's .pct (its version plus 0x075BCD15, which the game's
     // Load refuses: the page stores the plain one), and two files that are not tactics.
     const tct = (version) => { const t = Buffer.alloc(1476); t.writeUInt32LE(version, 0); t.writeUInt32LE(0xf2fffff2, 1472); return t; };

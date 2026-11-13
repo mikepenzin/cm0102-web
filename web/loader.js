@@ -714,7 +714,7 @@ function runEngine(files, info) {
       $('sets').hidden = false;
       $('saves-open').addEventListener('click', () => sets.render());
       setSync?.run();                                   // the cloud's data sets come in while the game starts
-      mountSavesPanel({ FS, sync, log, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),
+      mountSavesPanel({ FS, sync, log, report: () => report, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),
         openPromo: () => { $('saves').close(); account.open(); }, edit: (name) => editor.openSave(name) });
       mountTacticsPanel({ FS, sync, log });
       keyboard = mountKeyboard({ log, layout, toast });
