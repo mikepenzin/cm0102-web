@@ -419,7 +419,7 @@ function storeEverything() {
   const FS = window.Module?.FS;
   if (!FS || handedOver) return Promise.resolve();
   storing++;
-  const vaultDone = vault?.active ? vault.persist({ force: true }).catch((e) => log(`page: the vault: ${e?.message ?? e}`)) : null;
+  const vaultDone = vault?.active ? vaultRound({ force: true }) : null;
   const folderDone = new Promise((done) => FS.syncfs(false, (err) => {
     if (err && closedStorage(err) && forgetUserStorage()) {
       FS.syncfs(false, (again) => { if (again) log(`page: the user folder was not saved: ${again}`); done(); });
@@ -431,12 +431,30 @@ function storeEverything() {
   return Promise.all([vaultDone, folderDone]).finally(() => { storing--; });
 }
 
+// One round of the vault (vault.persist). A save it could not store stays in this tab's memory and is tried again at
+// the next round; the player is told once, until a round works again: the next visit would not have that save.
+let vaultFailing = false;
+function vaultRound(options) {
+  return vault.persist(options).then(() => {
+    if (!vaultFailing) return;
+    vaultFailing = false;
+    log('page: the vault stores again');
+    toast('Your saves are in this browser\'s storage again');
+  }, (e) => {
+    log(`page: the vault: ${e?.name ?? 'Error'}: ${e?.message ?? e}`);
+    if (vaultFailing) return;
+    vaultFailing = true;
+    toast(`A save did not reach this browser's storage${/Quota/i.test(e?.name ?? '') ? ': the disk, or the room the browser gives this site, is full' : ''}. It stays in this tab: keep the tab open and Download the save.`,
+      { kind: 'bad', ms: 15000 });
+  });
+}
+
 // Writes the user folder to IndexedDB. A call while a write runs makes one more write after it, so nothing is missed.
 let syncing = false, syncAgain = false, reopened = false;
 function sync() {
   const FS = window.Module?.FS;
   if (!FS || handedOver) return;
-  if (vault?.active) vault.persist().catch((e) => log(`page: the vault: ${e?.message ?? e}`));
+  if (vault?.active) vaultRound();
   if (syncing) { syncAgain = true; return; }
   syncing = true;
   FS.syncfs(false, (err) => {
@@ -659,7 +677,7 @@ function runEngine(files, info) {
       watcher = { rebase() { lastSaves = seen = savesSignature(FS); } };
       setInterval(() => {
         if (handedOver) return;
-        if (vault?.active) vault.persist().catch((e) => log(`page: the vault: ${e?.message ?? e}`));
+        if (vault?.active) vaultRound();
         const now = savesSignature(FS);
         if (now !== lastSaves && now === seen) {
           if (now.length >= lastSaves.length) { toast('Saved in this browser'); if (!cloud) cloudHintOnce(); }
@@ -698,7 +716,7 @@ function runEngine(files, info) {
         }, 200);
       }
       keepAwake();
-      const onHide = () => { if (handedOver) return; if (vault?.active) vault.persist({ force: true }).catch(() => {}); sync(); };
+      const onHide = () => { if (handedOver) return; if (vault?.active) vaultRound({ force: true }); sync(); };
       addEventListener('pagehide', onHide);
       document.addEventListener('visibilitychange', () => { if (document.hidden) onHide(); });
       primeOffline(info).catch((e) => log(`page: not kept for a start without a connection: ${e}`));

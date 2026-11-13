@@ -85,8 +85,18 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
     }
   }
   const get = (key) => request('readonly', (s) => done(s.get(key)));
-  const put = (key, value) => request('readwrite', (s) => done(s.put(value, key)));
-  const del = (key) => request('readwrite', (s) => done(s.delete(key)));
+  // A write counts once its transaction committed. A request's success comes before the commit, and the commit can
+  // still fail (a full disk, or the site's room in the browser: QuotaExceededError); the vault once dropped a save's
+  // contents from memory on the request's success, and a failed commit then lost the save.
+  const committed = (s, r) => new Promise((ok, bad) => {
+    const t = s.transaction;
+    const no = () => bad(t.error ?? r.error ?? new DOMException('the browser\'s storage did not keep the write', 'AbortError'));
+    t.oncomplete = () => ok(r.result);
+    t.onabort = no;
+    t.onerror = no;
+  });
+  const put = (key, value) => request('readwrite', (s) => committed(s, s.put(value, key)));
+  const del = (key) => request('readwrite', (s) => committed(s, s.delete(key)));
   const keys = () => request('readonly', (s) => done(s.getAllKeys()));
 
   const lookup = (path) => { try { return FS.lookupPath(path).node; } catch { return null; } };

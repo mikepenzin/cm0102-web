@@ -162,6 +162,16 @@ the browser takes a Suspending import only inside `WebAssembly.promising`. The A
 vault; files that an earlier visit put in it come back into the user folder. `?vault=0` or localStorage `cm0102-vault` = `off` turns it
 off (the files in it then come back into the user folder).
 
+**A write counts when it is committed (`vault.js`, committed).** An IndexedDB request's success comes before its
+transaction commits, and the commit can still fail: a full disk, or the room the browser gives the site
+(QuotaExceededError). The vault once took the request's success as stored and dropped the save from memory; after a
+failed commit the save was in neither place. The tab still listed it at its size, a Download of it was empty, and the
+next visit did not list it. A player reported two saves of two days as 0 KB files and gone from the list (13 November
+2026); this or two tabs (below) would each do that, and which one did is not known. Now a put or a delete waits for its
+transaction's `complete`; on a failure the save stays in the tab's memory, the next round tries again, and the page
+says once "A save did not reach this browser's storage … keep the tab open and Download the save" (`vaultRound`,
+`loader.js`), then again when a round works.
+
 **A connection the browser closes.** The browser can close a site's IndexedDB connection by itself (Android's Chrome
 did, in an error report of November 2026); every transaction on it then fails with "The database connection is
 closing". The vault opens it again at its next request and tries that request once more. For the user folder the page

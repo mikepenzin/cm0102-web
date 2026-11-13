@@ -548,6 +548,43 @@ const PORT = 8097;
       && twoVaults.deleted === 1, JSON.stringify(twoVaults));
     check('a save whose stored copy is gone fails to read, not an empty file',
       /the browser's storage no longer has St-Etienne 2002-02-13\.sav/.test(twoVaults.lost) && twoVaults.listed === 300000, twoVaults.lost);
+    // A write whose commit fails after its request succeeded (a full disk or quota: QuotaExceededError at the commit):
+    // the vault once took the request's success for stored and dropped the save from memory, so the save was lost.
+    // Now the save stays in memory, reads whole, and the next round stores it.
+    const commitFails = await v.evaluate(async () => {
+      const { createVault } = await import('/vault.js');
+      const nodes = new Map();
+      const FS = {
+        streams: [], cwd: () => '/', mkdirTree() {}, modeStringToFlags: () => 0,
+        lookupPath(p) { if (nodes.has(p)) return { node: nodes.get(p) }; if (p === '/user') return { node: {} }; throw new Error(`ENOENT ${p}`); },
+        getPath: (n) => n.path,
+        writeFile(p, data) { const n = nodes.get(p) ?? { path: p }; nodes.set(p, n); n.contents = data; n.usedBytes = data.length; n.mtime = Date.now(); },
+        readFile(p) { const n = nodes.get(p); return n.contents.slice(0, n.usedBytes); },
+        readdir: (d) => (d === '/user' ? ['.', '..', ...[...nodes.keys()].map((k) => k.slice(6))] : (() => { throw new Error('ENOENT'); })()),
+        stat(p) { if (nodes.has(p)) return { mode: 0o100644, size: nodes.get(p).usedBytes, mtime: new Date() }; if (p === '/user') return { mode: 0o040755 }; throw new Error('ENOENT'); },
+        isFile: (m) => (m & 0o170000) === 0o100000, isDir: (m) => (m & 0o170000) === 0o040000,
+      };
+      indexedDB.deleteDatabase('cm0102-vault');
+      const vault = createVault({ FS, stable: 0 });
+      await vault.open(); vault.active = true; await vault.mount();
+      const realPut = IDBObjectStore.prototype.put;
+      IDBObjectStore.prototype.put = function (...args) {
+        const r = realPut.apply(this, args);
+        r.addEventListener('success', () => { try { this.transaction.abort(); } catch { /* done */ } });
+        return r;
+      };
+      FS.writeFile('/user/Saint-Etienne 2001-11-02.sav', new Uint8Array(400000).fill(3));
+      let failed = '';
+      try { await vault.persist(); } catch (e) { failed = e.name || e.message; }
+      IDBObjectStore.prototype.put = realPut;
+      const inMemory = (await vault.blob('/user/Saint-Etienne 2001-11-02.sav')).size;
+      const again = await vault.persist();
+      const stored = (await vault.records()).map((r) => `${r.key}:${r.size}`);
+      return { failed, inMemory, again: again.stored, stored };
+    });
+    check('a write whose commit fails keeps the save in memory, and the next round stores it',
+      commitFails.failed !== '' && commitFails.inMemory === 400000 && commitFails.again === 1
+        && commitFails.stored.join() === '/user/Saint-Etienne 2001-11-02.sav:400000', JSON.stringify(commitFails));
     await vc.close();
 
     // One tab at a time: a second tab of the game asks first; Play here stops the first one, which stores its saves,
