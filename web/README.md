@@ -171,8 +171,9 @@ second failure in a row is reported as before ("the user folder was not saved").
 **One tab at a time (`loader.js`, myTurn).** Every tab of the game writes the same storage, and each write once removed
 what another tab had stored meanwhile: IDBFS's sync removes the files it does not have, and the vault's round removed
 every record it did not know. A save made in one tab was gone from the storage 2 seconds later, while that tab still
-listed it, and its Download was an empty file; a player who uploaded that file was told it was "too short to be a saved
-game" (13 November 2026). The tab that runs the game now holds a Web Lock (`cm0102-game`), taken before the game files
+listed it, and its Download was an empty file, which an upload refuses as "too short to be a saved game". A player's
+screenshot of that message (13 November 2026, with nothing else known about the file) led to the find; whether two
+tabs made that file is not known. The tab that runs the game now holds a Web Lock (`cm0102-game`), taken before the game files
 load. A second tab says "The game is open in another tab" and offers Play here: it asks the first tab over a
 BroadcastChannel to stop, and that tab ends its game (letEngineGo), stores its saves (storeEverything, as Restart Game
 does), writes nothing from then on, lets the lock go and says "The game moved to another tab". What was not saved in

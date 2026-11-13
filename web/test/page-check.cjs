@@ -491,8 +491,8 @@ const PORT = 8097;
     });
     check('the vault opens its storage again after the browser closed it', reopen.ok, reopen.error ?? '');
     // Two tabs' vaults on one storage, each over its own file system (a small one like MEMFS): tab A's round once
-    // removed the save tab B had just stored, and B's Download of it was then an empty file ("too short", a player's
-    // report). Now a round removes only the records its own page knew, and a placeholder without one fails to read.
+    // removed the save tab B had just stored, and B's Download of it was then an empty file, which an upload refuses
+    // as "too short". Now a round removes only the records its own page knew, and a placeholder without one fails to read.
     const twoVaults = await v.evaluate(async () => {
       const { createVault } = await import('/vault.js');
       const makeFS = () => {

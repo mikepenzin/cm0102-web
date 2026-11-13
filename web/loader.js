@@ -792,8 +792,8 @@ function meter(total) {
 
 // ---- One tab at a time ----
 // Every tab of the game writes the same storage: the user folder (IDBFS) and the vault. A write of one tab removed what
-// another had stored meanwhile: a player's new save went that way, and its Download was an empty file ("too short to be
-// a saved game"). So one tab plays at a time. The tab that runs the game holds a Web Lock; a tab that wants to start
+// another had stored meanwhile: a new save went that way, and its Download was an empty file, which an upload refuses as
+// "too short to be a saved game". So one tab plays at a time. The tab that runs the game holds a Web Lock; a tab that wants to start
 // asks it to stop (BroadcastChannel), and it ends its game, puts its saves in the storage and lets the lock go. A
 // browser without Web Locks starts as before.
 const TURN = 'cm0102-game';
