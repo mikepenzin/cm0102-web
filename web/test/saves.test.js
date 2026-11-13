@@ -34,7 +34,9 @@ function fakeFS(entries) {
 test('checkSave: a save container passes; other files are named for what they are', () => {
   assert.equal(checkSave(save()), null);
   assert.equal(checkSave(save(40)), null);
-  assert.match(checkSave(new Uint8Array(100)), /too short/);
+  assert.match(checkSave(new Uint8Array(100)), /too short.*: 1 KB, where a saved game has at least 262 KB/);
+  assert.match(checkSave(new Uint8Array(150000)), /: 146 KB, /);
+  assert.match(checkSave(new Uint8Array(0)), /the file is empty \(0 bytes\)/);
   const notASave = save();
   new DataView(notASave.buffer).setInt32(0, 7, true);
   assert.match(checkSave(notASave), /not a saved game/);

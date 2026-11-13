@@ -490,7 +490,98 @@ const PORT = 8097;
       try { await vault.clear(); return { ok: last !== first }; } catch (e) { return { ok: false, error: `${e.name}: ${e.message}` }; }
     });
     check('the vault opens its storage again after the browser closed it', reopen.ok, reopen.error ?? '');
+    // Two tabs' vaults on one storage, each over its own file system (a small one like MEMFS): tab A's round once
+    // removed the save tab B had just stored, and B's Download of it was then an empty file ("too short", a player's
+    // report). Now a round removes only the records its own page knew, and a placeholder without one fails to read.
+    const twoVaults = await v.evaluate(async () => {
+      const { createVault } = await import('/vault.js');
+      const makeFS = () => {
+        const nodes = new Map(), dirs = new Set(['/', '/user']);
+        const enoent = (p) => Object.assign(new Error(`ENOENT ${p}`), { errno: 44 });
+        return {
+          streams: [], cwd: () => '/',
+          mkdirTree: (p) => { let cur = ''; for (const part of p.split('/').filter(Boolean)) { cur += `/${part}`; dirs.add(cur); } },
+          modeStringToFlags: (m) => (m.includes('w') ? 577 : 0),
+          lookupPath(p) { if (nodes.has(p)) return { node: nodes.get(p) }; if (dirs.has(p)) return { node: { path: p } }; throw enoent(p); },
+          getPath: (n) => n.path,
+          writeFile(p, data) { const n = nodes.get(p) ?? { path: p }; nodes.set(p, n); n.contents = data; n.usedBytes = data.length; n.mtime = Date.now(); },
+          readFile(p) { const n = nodes.get(p); if (!n) throw enoent(p); return n.contents.slice(0, n.usedBytes); },
+          unlink(p) { if (!nodes.delete(p)) throw enoent(p); },
+          readdir(d) {
+            if (!dirs.has(d)) throw enoent(d);
+            const names = new Set(['.', '..']);
+            for (const p of [...nodes.keys(), ...dirs]) if (p.startsWith(`${d}/`)) names.add(p.slice(d.length + 1).split('/')[0]);
+            return [...names];
+          },
+          stat(p) {
+            if (nodes.has(p)) return { mode: 0o100644, size: nodes.get(p).usedBytes, mtime: new Date(nodes.get(p).mtime) };
+            if (dirs.has(p)) return { mode: 0o040755, size: 0, mtime: new Date(0) };
+            throw enoent(p);
+          },
+          isFile: (m) => (m & 0o170000) === 0o100000, isDir: (m) => (m & 0o170000) === 0o040000,
+        };
+      };
+      indexedDB.deleteDatabase('cm0102-vault');
+      const A = makeFS(), B = makeFS();
+      const va = createVault({ FS: A, stable: 0 }), vb = createVault({ FS: B, stable: 0 });
+      for (const x of [va, vb]) { await x.open(); x.active = true; await x.mount(); }
+      A.writeFile('/user/Old.sav', new Uint8Array(1000).fill(1));
+      await va.persist();
+      const name = '/user/St-Etienne 2002-02-13.sav';
+      B.writeFile(name, new Uint8Array(300000).fill(7));
+      await vb.persist();
+      const roundA = await va.persist();
+      const kept = (await vb.blob(name)).size;
+      A.unlink('/user/Old.sav');
+      const deleted = await va.persist();                      // a save the page itself deleted still goes
+      // A placeholder whose record went some other way (the browser's storage, an older page): its read fails.
+      const C = makeFS();
+      const vc2 = createVault({ FS: C, stable: 0 });
+      await vc2.open(); vc2.active = true; await vc2.mount();
+      await vb.persist();
+      await new Promise((ok) => { const r = indexedDB.open('cm0102-vault'); r.onsuccess = () => { const t = r.result.transaction(['files'], 'readwrite'); t.objectStore('files').delete(name); t.oncomplete = () => { r.result.close(); ok(); }; }; });
+      let lost;
+      try { lost = `read ${(await vc2.blob(name)).size} bytes`; } catch (e) { lost = e.message; }
+      return { removedByA: roundA.removed, kept, deleted: deleted.removed, lost, listed: C.stat(name).size };
+    });
+    check('two tabs: one tab\'s round leaves the save the other just stored', twoVaults.removedByA === 0 && twoVaults.kept === 300000
+      && twoVaults.deleted === 1, JSON.stringify(twoVaults));
+    check('a save whose stored copy is gone fails to read, not an empty file',
+      /the browser's storage no longer has St-Etienne 2002-02-13\.sav/.test(twoVaults.lost) && twoVaults.listed === 300000, twoVaults.lost);
     await vc.close();
+
+    // One tab at a time: a second tab of the game asks first; Play here stops the first one, which stores its saves,
+    // then writes nothing more, and the game starts in the second.
+    {
+      const ctx = await b.newContext({ viewport: { width: 1000, height: 700 } });
+      const one = await ctx.newPage(), two = await ctx.newPage();
+      const errs = [];
+      for (const pg of [one, two]) { pg.on('pageerror', (e) => errs.push(e.message)); pg.on('dialog', (d) => d.accept().catch(() => {})); }
+      await one.goto(`http://127.0.0.1:${PORT}/`);
+      await one.waitForSelector('#go');
+      await one.click('#go');
+      await one.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      await two.goto(`http://127.0.0.1:${PORT}/`);
+      await two.waitForSelector('#turn-take', { timeout: 30000 }).catch(() => {});
+      const asked = (await two.textContent('#overlay')).replace(/\s+/g, ' ').trim();
+      check('a second tab does not start: it says the game is open in another tab, and offers Play here',
+        /The game is open in another tab/.test(asked) && /two would delete each other's saves/.test(asked)
+          && await two.locator('#turn-take').count() === 1 && !(await two.evaluate(() => Boolean(window.__fake))), asked.slice(0, 160));
+      const storesBefore = await one.evaluate(() => window.__syncs.store);
+      await two.click('#turn-take');
+      await two.waitForFunction(() => window.__fake, null, { timeout: 60000 }).catch(() => {});
+      await one.waitForSelector('#turn-back', { timeout: 10000 }).catch(() => {});
+      const moved = (await one.textContent('#overlay')).replace(/\s+/g, ' ').trim();
+      const storesAfter = await one.evaluate(() => window.__syncs.store);
+      check('Play here: the first tab stores its saves, says the game moved, and the game starts in the second',
+        /The game moved to another tab/.test(moved) && storesAfter > storesBefore && await two.evaluate(() => Boolean(window.__fake)),
+        `${moved.slice(0, 80)}; stores ${storesBefore} -> ${storesAfter}`);
+      await one.evaluate(() => window.Module.FS.writeFile('/user/Late 2001-08-01.sav', new Uint8Array(0x416ec + 8)));
+      await one.waitForTimeout(3000);
+      check('the tab that handed over writes nothing more to the browser\'s storage', (await one.evaluate(() => window.__syncs.store)) === storesAfter);
+      check('no page errors with two tabs', errs.length === 0, errs.join('; '));
+      await ctx.close();
+    }
     if (process.argv[2]) await p.screenshot({ path: process.argv[2] });
   } finally {
     await b.close();

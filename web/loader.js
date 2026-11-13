@@ -134,6 +134,9 @@ addEventListener('unhandledrejection', (e) => log(`page: ${e.reason?.stack ?? e.
 // ---- Before the engine: the listeners that must run ahead of SDL's, and the layout. ----
 
 let running = false, leaving = false;
+// One tab at a time (myTurn, below): another tab took the game. turnGone at once, handedOver after this tab's last store;
+// from then on nothing of this tab writes the browser's storage.
+let turnGone = false, handedOver = false;
 let keyboard = null;
 guardKeys();
 guardLeave(() => (running || storing) && !leaving);
@@ -414,7 +417,7 @@ function forgetUserStorage() {
 let storing = 0;
 function storeEverything() {
   const FS = window.Module?.FS;
-  if (!FS) return Promise.resolve();
+  if (!FS || handedOver) return Promise.resolve();
   storing++;
   const vaultDone = vault?.active ? vault.persist({ force: true }).catch((e) => log(`page: the vault: ${e?.message ?? e}`)) : null;
   const folderDone = new Promise((done) => FS.syncfs(false, (err) => {
@@ -432,7 +435,7 @@ function storeEverything() {
 let syncing = false, syncAgain = false, reopened = false;
 function sync() {
   const FS = window.Module?.FS;
-  if (!FS) return;
+  if (!FS || handedOver) return;
   if (vault?.active) vault.persist().catch((e) => log(`page: the vault: ${e?.message ?? e}`));
   if (syncing) { syncAgain = true; return; }
   syncing = true;
@@ -636,6 +639,7 @@ function runEngine(files, info) {
     }],
     onRuntimeInitialized: () => {
       const M = window.Module, FS = M.FS;
+      if (turnGone) return;                            // another tab took the game while this one started
       overlay('');
       status('');
       running = true;
@@ -654,6 +658,7 @@ function runEngine(files, info) {
       let lastSaves = savesSignature(FS), seen = lastSaves;
       watcher = { rebase() { lastSaves = seen = savesSignature(FS); } };
       setInterval(() => {
+        if (handedOver) return;
         if (vault?.active) vault.persist().catch((e) => log(`page: the vault: ${e?.message ?? e}`));
         const now = savesSignature(FS);
         if (now !== lastSaves && now === seen) {
@@ -693,7 +698,7 @@ function runEngine(files, info) {
         }, 200);
       }
       keepAwake();
-      const onHide = () => { if (vault?.active) vault.persist({ force: true }).catch(() => {}); sync(); };
+      const onHide = () => { if (handedOver) return; if (vault?.active) vault.persist({ force: true }).catch(() => {}); sync(); };
       addEventListener('pagehide', onHide);
       document.addEventListener('visibilitychange', () => { if (document.hidden) onHide(); });
       primeOffline(info).catch((e) => log(`page: not kept for a start without a connection: ${e}`));
@@ -785,6 +790,98 @@ function meter(total) {
   };
 }
 
+// ---- One tab at a time ----
+// Every tab of the game writes the same storage: the user folder (IDBFS) and the vault. A write of one tab removed what
+// another had stored meanwhile: a player's new save went that way, and its Download was an empty file ("too short to be
+// a saved game"). So one tab plays at a time. The tab that runs the game holds a Web Lock; a tab that wants to start
+// asks it to stop (BroadcastChannel), and it ends its game, puts its saves in the storage and lets the lock go. A
+// browser without Web Locks starts as before.
+const TURN = 'cm0102-game';
+const TURN_WAIT = 90000;                               // for the other tab to stop: its storing can take a while
+let turnRelease = null, startAbort = null;
+const turnChannel = (() => { try { return new BroadcastChannel(TURN); } catch { return null; } })();
+const timeoutSignal = (ms) => { const c = new AbortController(); setTimeout(() => c.abort(new DOMException('timed out', 'TimeoutError')), ms); return c.signal; };
+const within = (p, ms) => Promise.race([Promise.resolve(p).catch(() => {}), new Promise((r) => setTimeout(r, ms))]);
+
+// true when this tab has the turn (options: those of navigator.locks.request), false when another tab kept it.
+function takeTurn(options = {}) {
+  if (typeof navigator.locks?.request !== 'function') return Promise.resolve(true);
+  return new Promise((ok, bad) => {
+    let granted = false;
+    navigator.locks.request(TURN, options, (lock) => {
+      if (!lock) { ok(false); return undefined; }
+      granted = true;
+      ok(true);
+      return new Promise((release) => { turnRelease = release; });
+    }).catch((e) => {
+      if (granted) { turnRelease = null; stopHere(false); return; }   // taken without asking: Play here anyway
+      if (e?.name === 'AbortError' || e?.name === 'TimeoutError') ok(false); else bad(e);
+    });
+  });
+}
+
+// This tab stops for another one: the game ends, the saves go to the storage (store), then nothing of this tab writes
+// there again and the lock goes.
+async function stopHere(store) {
+  if (turnGone) return;
+  turnGone = true;
+  log(`page: the game moves to another tab${store ? ': it stops here, and the saves go to the browser\'s storage first' : ''}`);
+  running = false;
+  if (!store) handedOver = true;                       // the other tab plays already: not one more write from here
+  startAbort?.abort();
+  status('The game moved to another tab');
+  overlay(`<h1>The game moves to another tab</h1><div class="row"><i class="spin"></i>${store ? 'Your saves go to this browser\'s storage first.' : 'The game here stops.'}</div>`);
+  await within(letEngineGo(), 10000);
+  if (store) await within(storeEverything(), 60000);
+  handedOver = true;
+  turnRelease?.();
+  turnRelease = null;
+  for (const id of ['saves-open', 'editor-open', 'kbd-open', 'right-click']) if ($(id)) $(id).hidden = true;   // they would change nothing stored
+  for (const d of document.querySelectorAll('dialog[open]')) d.close();
+  overlay(`<h1>The game moved to another tab</h1><p>${store ? 'It runs in the other tab now, with your saves.'
+    : 'Another tab took it without waiting for this one: what this tab had not put in the browser\'s storage yet is not there.'}
+    You can close this one.</p>
+    <div class="row"><button class="primary" id="turn-back">Play here</button></div>`);
+  $('turn-back').onclick = () => { leaving = true; location.reload(); };
+}
+turnChannel?.addEventListener('message', (e) => { if (e.data?.type === 'take' && turnRelease) stopHere(true); });
+
+// Before the game files load: true when this tab may run the game. A Restart's reload can come before the page it
+// replaces is gone, so the first try waits a moment.
+async function myTurn() {
+  try {
+    if (await takeTurn({ signal: timeoutSignal(1500) })) return true;
+  } catch (e) { log(`page: one tab at a time did not work here (${e?.message ?? e}): the game starts`); return true; }
+  log('page: the game runs in another tab of this browser');
+  status('The game is open in another tab');
+  overlay(`<h1>The game is open in another tab</h1>
+    <p>CM 01/02 runs in another tab or window of this browser. One may play at a time: two would delete each other's
+    saves from the browser's storage.</p>
+    <p class="small">Play here stops the game in the other tab, after it puts its saves in the browser's storage. What was
+    not saved in the game is lost there, as when that tab closes.</p>
+    <div class="row"><button class="primary" id="turn-take">Play here</button></div>`);
+  await new Promise((r) => { $('turn-take').onclick = r; });
+  for (;;) {
+    status('Stopping the game in the other tab…');
+    overlay('<h1>Stopping the game in the other tab</h1><div class="row"><i class="spin"></i>Its saves go to the browser\'s storage first.</div>');
+    turnChannel?.postMessage({ type: 'take' });
+    let got = false;
+    try { got = await takeTurn({ signal: timeoutSignal(TURN_WAIT) }); } catch (e) { log(`page: ${e?.message ?? e}`); }
+    if (got) { log('page: the other tab stopped; the game runs here'); return true; }
+    log(`page: the other tab did not stop in ${TURN_WAIT / 1000} s`);
+    status('The other tab did not stop');
+    overlay(`<h1>The other tab did not stop</h1><p>It does not answer: the browser may have paused it. Close the other tab
+      or window of this site, then press Try again. Play here anyway starts the game here at once; the other tab then stops
+      when it wakes, without storing what it had not stored yet.</p>
+      <div class="row"><button class="primary" id="turn-again">Try again</button><button id="turn-steal">Play here anyway</button></div>`, 'error');
+    const choice = await new Promise((r) => { $('turn-again').onclick = () => r('again'); $('turn-steal').onclick = () => r('steal'); });
+    if (choice === 'steal') {
+      log('page: the game runs here; the other tab stops when it wakes');
+      if (await takeTurn({ steal: true })) return true;
+    }
+  }
+}
+
 async function start() {
   overlay('<div class="row"><i class="spin"></i>Checking the files…</div>');
   status('Checking the files…');
@@ -826,11 +923,13 @@ async function start() {
     if ($('go-plans')) $('go-plans').onclick = (e) => { e.preventDefault(); account.open(); };
     await new Promise((r) => { $('go').onclick = r; });
   }
+  if (!await myTurn()) return;
   overlay(`<h1>${toGet > 0 ? 'Loading the game files' : 'Starting'}</h1><div class="bar"><i id="bar-fill"></i></div><div class="small" id="bytes"></div>`);
   status('Loading the game files…');
   const t0 = performance.now();
   const counts = { cached: 0, fetched: 0 };
   const abort = new AbortController();
+  startAbort = abort;                                  // another tab takes the game meanwhile: the download stops
   const speed = meter(info.totalBytes);
   let got = 0, compileError = null, files;
   // The engine is checked while the files load; if this browser cannot compile it, the download stops.
@@ -844,6 +943,7 @@ async function start() {
     await compiled;
   } catch (e) {
     await compiled;
+    if (turnGone) return;
     if (!compileError) {
       // Not a dropped connection when the browser had no memory for the file: fail() says what to do then.
       fail('A game file did not load', OUT_OF_MEMORY.test(String(e?.message ?? e)) ? `${e.message ?? e}.`
@@ -859,6 +959,7 @@ async function start() {
   }
   log(`page: ${info.files.length} files in ${((performance.now() - t0) / 1000).toFixed(1)} s: ${mb(counts.cached)} from this browser, ${mb(counts.fetched)} downloaded`);
   pruneCache(cache, info.files).catch((e) => log(`page: old game files not removed: ${e}`));
+  if (turnGone) return;
   overlay('<h1>Starting the engine</h1><div class="row"><i class="spin"></i>The first start can take a minute.</div>');
   status('Starting the engine…');
   runEngine(files, info);

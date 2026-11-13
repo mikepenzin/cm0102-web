@@ -70,8 +70,12 @@ export function savesSignature(FS) {
 // null when bytes look like a saved game of CM 01/02 (its container header), else why not. bytes may be only the start
 // of the file (at least its header, SAVE_HEADER bytes) when total gives the whole length: the server checks so.
 export const SAVE_HEADER = HEADER;
+// A file too short says its size: an empty one (0 bytes) is a copy that never got the save, such as a Download of a
+// save whose stored copy another tab of the game had removed (vault.js).
 export function checkSave(bytes, total = bytes.length) {
-  if (total < HEADER || bytes.length < HEADER) return 'it is too short to be a saved game of CM 01/02';
+  if (total === 0) return 'the file is empty (0 bytes): the copy or download that made it did not get the saved game';
+  if (total < HEADER || bytes.length < HEADER)
+    return `it is too short to be a saved game of CM 01/02: ${Math.max(1, Math.round(total / 1024))} KB, where a saved game has at least ${Math.round(HEADER / 1024)} KB (most have tens of MB)`;
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const version = dv.getInt32(0, true), count = dv.getInt32(8, true);
   if (![1, 2, 3, 4].includes(version) || count < 1 || count > MAX_ENTRIES) return 'it is not a saved game of CM 01/02';
@@ -208,14 +212,20 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
   // One zip of everything (zipOfBlobs: the files of the vault go from disk, not through memory).
   document.getElementById('saves-all').onclick = async (e) => {
     const b = e.currentTarget;
-    const files = allFiles(FS);
+    let files = allFiles(FS);
     if (!files.length) { say('There is nothing to download yet.'); return; }
-    const total = files.reduce((a, f) => a + f.size, 0);
     b.disabled = true;
     let done = 0, shown = -1;
     try {
-      const entries = [];
-      for (const f of files) entries.push({ name: f.name, blob: await readBlob(FS, f.path) });
+      // A file the browser's storage no longer has stays out, and the note names it: the others still go in the zip.
+      const entries = [], lost = [];
+      for (const f of files) {
+        try { entries.push({ name: f.name, blob: await readBlob(FS, f.path), size: f.size }); }
+        catch (err) { lost.push(f.name); log(`page: download all: ${f.name} left out: ${err.message}`); }
+      }
+      if (!entries.length) throw new Error(`the browser's storage no longer has ${lost.join(', ')}`);
+      files = entries;
+      const total = files.reduce((a, f) => a + f.size, 0);
       const zip = await zipOfBlobs(entries, { onBytes: (n) => {
         done += n;
         const pct = Math.floor((done / total) * 100);
@@ -223,7 +233,8 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
       } });
       const day = new Date().toISOString().slice(0, 10);
       saveLink(zip, `CM 01-02 saves ${day}.zip`);
-      say(`Downloaded ${files.length} files (${mb(total)}) as one zip: the saves, the older copies (backups), the tactics and the data sets (Databases), as the save folder holds them.`);
+      say(`Downloaded ${files.length} files (${mb(total)}) as one zip: the saves, the older copies (backups), the tactics and the data sets (Databases), as the save folder holds them.${
+        lost.length ? `\nLeft out, because the browser's storage no longer has them: ${lost.join(', ')}.` : ''}`, lost.length > 0);
       log(`page: downloaded all: ${files.length} files, ${mb(total)}`);
     } catch (err) { say(`The zip was not made: ${err.message}`, true); }
     b.disabled = false;

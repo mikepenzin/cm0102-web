@@ -10,7 +10,10 @@
 // - a file that the game or the page writes stays in memory until it is closed and has not changed for STABLE ms,
 //   then it goes into the vault and becomes a placeholder;
 // - a renamed file keeps its record (the record moves to the new name before anything new is stored under the old
-//   one), a deleted file loses it.
+//   one), a deleted file loses it;
+// - the page removes only the records it knows (mounted or stored by it): another tab's are not its own. Two tabs of
+//   the game removed each other's new saves every 2 seconds that way, and a Download of such a save then gave an empty
+//   file (loader.js now lets one tab play at a time; this is the second guard).
 // The rest of the user folder (settings.txt, game.cfg, the fitted .lng files, the notes of the data sets) stays with
 // IDBFS. Without JSPI (an Asyncify build, an old browser) the vault is off and the page works as before; files that an
 // earlier visit put in the vault then come back into the user folder (materialize).
@@ -51,6 +54,7 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
   const FS = new Proxy({}, { get: (_, k) => getFS()[k], set: (_, k, v) => { getFS()[k] = v; return true; } });
   let db = null, active = false, filtering = false, memory = null, exportsOf = null;
   const managed = new Set();                    // the nodes with a record in the vault (placeholders and loaded files)
+  const mine = new Set();                       // the records this page mounted or stored: the only ones it removes
   const loading = new Map();
   let chain = Promise.resolve();
   const serial = (fn) => { const p = chain.then(fn); chain = p.catch(() => {}); return p; };
@@ -132,6 +136,7 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
   async function mount() {
     let n = 0, bytes = 0;
     for (const r of await records()) {
+      mine.add(r.key);
       if (lookup(r.key)) continue;              // a file there already (an older page put it in IDBFS): it wins
       FS.mkdirTree(r.key.slice(0, r.key.lastIndexOf('/')));
       FS.writeFile(r.key, new Uint8Array(0));
@@ -256,9 +261,9 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
     const old = node.vaultKey;
     if (old === path) return;
     const rec = await get(old);
-    if (rec) await put(path, rec);
+    if (rec) { await put(path, rec); mine.add(path); }
     node.vaultKey = path;
-    if (![...managed].some((m) => m !== node && m.vaultKey === old)) await del(old);
+    if (![...managed].some((m) => m !== node && m.vaultKey === old)) { await del(old); mine.delete(old); }
   }
 
   // One pass: renamed files keep their records; written files go into the vault (and out of memory when closed);
@@ -277,6 +282,7 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
         for (const other of [...managed]) if (other !== node && other.vaultKey === p) { const q = alive(other); if (q && q !== p) await rekey(other, q); }
         const size = node.usedBytes, mtime = node.mtime;
         await put(p, { size, mtime, blob: new Blob([node.contents ? node.contents.subarray(0, size) : new Uint8Array(0)]) });
+        mine.add(p);
         stored++;
         if (lookup(p) !== node || node.mtime !== mtime || node.usedBytes !== size || node.vault) continue;   // changed meanwhile
         node.vaultKey = p; node.vaultMtime = mtime; node.vaultSize = size;
@@ -284,19 +290,27 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
         if (!inUse(node) && !node.vaultPin) evict(node); else node.vault = 'in';
       }
       const wanted = new Set([...managed].map((n) => n.vaultKey));
-      for (const k of await keys()) if (!wanted.has(k)) { await del(k); removed++; }
+      const there = new Set(await keys());
+      for (const k of [...mine]) {
+        if (wanted.has(k)) continue;
+        mine.delete(k);
+        if (there.has(k)) { await del(k); removed++; }
+      }
       return { stored, removed };
     });
   }
 
   // For the page: the file's bytes (a copy the caller may change) or a Blob (for a download or an upload), without
-  // bringing a placeholder's contents into the engine's memory.
+  // bringing a placeholder's contents into the engine's memory. A placeholder whose record is gone fails: its node has
+  // no contents, and a Download once made an empty file of it.
+  async function record(node, path) {
+    const rec = await serial(() => get(node.vaultKey));
+    if (!rec) throw new Error(`the browser's storage no longer has ${path.slice(path.lastIndexOf('/') + 1)}`);
+    return rec;
+  }
   async function bytes(path) {
     const node = lookup(path);
-    if (node?.vault === 'out') {
-      const rec = await serial(() => get(node.vaultKey));
-      if (rec) return new Uint8Array(await rec.blob.arrayBuffer());
-    }
+    if (node?.vault === 'out') return new Uint8Array(await (await record(node, path)).blob.arrayBuffer());
     return FS.readFile(path);
   }
   async function view(path) {
@@ -307,10 +321,7 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
   }
   async function blob(path) {
     const node = lookup(path);
-    if (node?.vault === 'out') {
-      const rec = await serial(() => get(node.vaultKey));
-      if (rec) return rec.blob;
-    }
+    if (node?.vault === 'out') return (await record(node, path)).blob;
     const n = node ?? FS.lookupPath(path).node;
     return new Blob([n.contents instanceof Uint8Array ? n.contents.subarray(0, n.usedBytes ?? n.contents.length) : FS.readFile(path)]);
   }

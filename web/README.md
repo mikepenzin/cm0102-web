@@ -168,6 +168,21 @@ closing". The vault opens it again at its next request and tries that request on
 drops IDBFS's kept connection (`IDBFS.dbs`) when a write fails that way and writes again, which opens a new one; a
 second failure in a row is reported as before ("the user folder was not saved").
 
+**One tab at a time (`loader.js`, myTurn).** Every tab of the game writes the same storage, and each write once removed
+what another tab had stored meanwhile: IDBFS's sync removes the files it does not have, and the vault's round removed
+every record it did not know. A save made in one tab was gone from the storage 2 seconds later, while that tab still
+listed it, and its Download was an empty file; a player who uploaded that file was told it was "too short to be a saved
+game" (13 November 2026). The tab that runs the game now holds a Web Lock (`cm0102-game`), taken before the game files
+load. A second tab says "The game is open in another tab" and offers Play here: it asks the first tab over a
+BroadcastChannel to stop, and that tab ends its game (letEngineGo), stores its saves (storeEverything, as Restart Game
+does), writes nothing from then on, lets the lock go and says "The game moved to another tab". What was not saved in
+the game is lost there, as when the tab closes. A tab that does not answer in 90 seconds (the browser may have paused
+it) gets Try again, or Play here anyway, which steals the lock; that tab then stops when it wakes, without storing. As
+a second guard, the vault's round removes only the records its own page mounted or stored, and reading a placeholder
+whose record is gone fails ("the browser's storage no longer has …") where it once gave an empty file; Download all
+leaves such a file out and names it. An upload that is too short says its size, and an empty one says so. A browser
+without Web Locks starts as before.
+
 The browser may delete the saves by itself, without asking: when the disk runs low (unless it agreed to keep the
 site's storage, `navigator.storage.persist`), when browsing data is cleared, when a private window closes, and in
 Safari after 7 days without a visit unless the page is on the home screen. Saved games and Help say so
