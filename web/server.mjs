@@ -21,7 +21,7 @@ import { createReadStream, existsSync, readdirSync, readFileSync, statSync } fro
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudFromEnv, paddleFromEnv } from './cloud.mjs';
-import { createStats, statsStore } from './stats.mjs';
+import { MAX_SENT_THROUGH, createStats, statsStore } from './stats.mjs';
 import { s3FromEnv } from './s3.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -124,6 +124,17 @@ function readJson(req, limit) {
     req.on('error', bad);
   });
 }
+// The bytes of a request (a sent save through the server), at most limit.
+function readRaw(req, limit) {
+  return new Promise((ok, bad) => {
+    const parts = [];
+    let n = 0;
+    req.on('data', (c) => { n += c.length; if (n > limit) { bad(Object.assign(new Error('too large'), { status: 413 })); req.destroy(); } else parts.push(c); });
+    req.on('end', () => ok(Buffer.concat(parts)));
+    req.on('error', bad);
+  });
+}
+let reportHeld = 0;                                  // bytes of sent saves in memory now (save-body), at most MAX_SENT_THROUGH
 const json = (res, status, body) => {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
   res.end(status === 204 ? undefined : JSON.stringify(body));
@@ -142,18 +153,31 @@ async function statsRoute(req, res, url, { stats, cloud, admins, adminToken }) {
     json(res, 204, null);
     return;
   }
-  if (path === '/api/report/send' || path === '/api/report/save' || path === '/api/report/save-done') {
+  if (path === '/api/report/send' || path === '/api/report/save' || path === '/api/report/save-done' || path === '/api/report/save-body') {
     // A report the player sends (Send to the developer, report.js), and its save: from this site's page only. The save
-    // goes straight to the store, so only when the page may go there (the store's CORS rules: cloud.mjs, direct).
+    // goes straight to the store when the page may go there (the store's CORS rules: cloud.mjs, direct), else, or when
+    // the store does not let the page in after all, through this server (save-body: the packed bytes, ?key=&token=).
     if (req.method !== 'POST') { json(res, 405, { error: 'POST only' }); return; }
     const from = req.headers.origin;
     if (req.headers['x-cm'] !== '1' || (from && new URL(from).host !== req.headers.host)) { req.resume(); json(res, 403, { error: 'not from this site' }); return; }
+    if (path === '/api/report/save-body') {
+      const length = Number(req.headers['content-length']);
+      if (!(length > 0) || length > MAX_SENT_THROUGH) { req.resume(); json(res, 413, { error: `a save may be ${MAX_SENT_THROUGH >> 20} MB at most, packed, through the server` }); return; }
+      if (reportHeld + length > MAX_SENT_THROUGH) { req.resume(); json(res, 503, { error: 'the server is taking another save: try again in a minute' }); return; }
+      reportHeld += length;
+      try {
+        const buf = await readRaw(req, MAX_SENT_THROUGH);
+        const { status = 200, ...r } = await stats.saveBody({ key: url.searchParams.get('key'), token: url.searchParams.get('token') }, buf);
+        json(res, status, r);
+      } finally { reportHeld -= length; }
+      return;
+    }
     const body = await readJson(req, path === '/api/report/send' ? 2 << 20 : 4 << 10);
     if (path === '/api/report/send') {
-      const r = await stats.send(body, user, req.headers['user-agent'], Boolean(await cloud?.directReady));
+      const r = await stats.send(body, user, req.headers['user-agent']);
       json(res, r.error ? 400 : 201, r);
     } else {
-      const { status = 200, ...r } = path === '/api/report/save' ? await stats.saveLink(body) : await stats.saveDone(body);
+      const { status = 200, ...r } = path === '/api/report/save' ? await stats.saveLink(body, Boolean(await cloud?.directReady)) : await stats.saveDone(body);
       json(res, status, r);
     }
     return;

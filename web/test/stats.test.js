@@ -208,7 +208,7 @@ test('a report the player sends: a note and a long log, a save by a signed link 
   const s = createStats({ store, now: () => t });
   const log = Array.from({ length: 2500 }, (_, i) => `line ${i}`);
   const sent = await s.send({ message: 'The game stopped: RuntimeError', note: 'I loaded BIF.\nThen it stopped.', log, engine: 'jspi v1', where: 'the error box' },
-    null, 'Mozilla/5.0 (Windows NT 10.0) Chrome/142.0', true);
+    null, 'Mozilla/5.0 (Windows NT 10.0) Chrome/142.0');
   assert.match(sent.key, /^reports\/2026-11-13\/\d+-[a-z0-9]+\.json$/);
   assert.equal(sent.saves, true);
   assert.match(sent.token, /^[0-9a-f]{32}$/);
@@ -222,7 +222,7 @@ test('a report the player sends: a note and a long log, a save by a signed link 
   assert.equal((await s.saveLink({ key: sent.key, token: 'nope', size: 10 })).status, 403);
   assert.equal((await s.saveLink({ key: '../accounts/x.json', token: sent.token, size: 10 })).status, 404);
   assert.equal((await s.saveLink({ key: sent.key, token: sent.token, size: 500 << 20 })).status, 413);
-  const link = await s.saveLink({ key: sent.key, token: sent.token, name: 'BIF (2).sav', size: 1234, rawSize: 177 << 20 });
+  const link = await s.saveLink({ key: sent.key, token: sent.token, name: 'BIF (2).sav', size: 1234, rawSize: 177 << 20 }, true);
   const saveKey = sent.key.replace(/\.json$/, '.sav.gz');
   assert.match(link.url, new RegExp(`${saveKey.replace(/[.()]/g, '\\$&')}\\?sig=PUT`));
   assert.equal(link.headers['content-length'], undefined, 'the browser sets the length itself');
@@ -236,20 +236,32 @@ test('a report the player sends: a note and a long log, a save by a signed link 
   assert.deepEqual({ ...admin.save, key: undefined }, { name: 'BIF (2).sav', size: 1234, rawSize: 177 << 20, key: undefined, done: true });
   assert.match(admin.saveUrl, /\?sig=GET$/);
   assert.deepEqual(s.data.reports[0].save, { name: 'BIF (2).sav', size: 1234, rawSize: 177 << 20 });
-  // Without a store that signs links, or without direct uploads, a report has no token: the log only.
+  // Without a store, a report has no token: the log only.
+  assert.equal((await createStats({ now: () => t }).send({ log: ['x'] }, null, '')).saves, false);
+  // A store the page may not reach (no CORS rules: direct off), or one that signs no links: the save goes through the
+  // server (saveBody), after saveLink announced it.
   const plain = createStats({ store: memoryStore(), now: () => t });
-  assert.deepEqual([(await plain.send({ log: ['x'] }, null, '', true)).saves, (await s.send({ log: ['x'] }, null, '', false)).saves], [false, false]);
+  const viaServer = await plain.send({ log: ['x'] }, null, '');
+  assert.equal(viaServer.saves, true);
+  assert.equal((await plain.saveBody({ key: viaServer.key, token: viaServer.token }, Buffer.from('gz'))).status, 400, 'announced first');
+  assert.deepEqual(await plain.saveLink({ key: viaServer.key, token: viaServer.token, name: 'St-Etienne 2002-02-13.sav', size: 20, rawSize: 0 }, true), { direct: false });
+  assert.equal((await plain.saveBody({ key: viaServer.key, token: 'nope' }, Buffer.from('gz'))).status, 403);
+  assert.equal((await plain.saveBody({ key: viaServer.key, token: viaServer.token }, Buffer.alloc(0))).status, 413);
+  assert.deepEqual(await plain.saveBody({ key: viaServer.key, token: viaServer.token }, Buffer.alloc(20, 1)), { status: 200, ok: true, size: 20 });
+  const viaFile = await plain.reportFile(viaServer.key);
+  assert.deepEqual([viaFile.save.done, viaFile.save.size, viaFile.save.rawSize, viaFile.token], [true, 20, 0, undefined]);
+  assert.equal(viaFile.saveUrl, undefined, 'a store that signs no links gives the admin no link');
   // At most SENT_SAVES_A_DAY links a day.
   let refused = null;
   for (let i = 0; i < 45 && !refused; i++) {
-    const r = await s.send({ log: [] }, null, '', true);
-    const l = await s.saveLink({ key: r.key, token: r.token, name: 'x.sav', size: 10 });
+    const r = await s.send({ log: [] }, null, '');
+    const l = await s.saveLink({ key: r.key, token: r.token, name: 'x.sav', size: 10 }, true);
     if (l.status === 503) refused = i;
   }
   assert.equal(refused, 39, 'the 41st save of the day is turned away');
   t += 86400000;
-  const next = await s.send({ log: [] }, null, '', true);
-  assert.ok((await s.saveLink({ key: next.key, token: next.token, name: 'x.sav', size: 10 })).url, 'a new day');
+  const next = await s.send({ log: [] }, null, '');
+  assert.ok((await s.saveLink({ key: next.key, token: next.token, name: 'x.sav', size: 10 }, true)).url, 'a new day');
   // The report files and saves go after 90 days.
   t += 91 * 86400000;
   await s.beat({ anon: A, session: 'z', seconds: 1 }, null);

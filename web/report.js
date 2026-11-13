@@ -1,7 +1,8 @@
 // Send to the developer (web/README.md, "Send to the developer"): after an error, or from Help, the player sends the
 // engine log, a note and a save of their choice to the server (stats.mjs: send, saveLink, saveDone). The log goes
 // first, so it arrives even when the save does not. The save goes packed (gzip) straight to the store, with a link the
-// server signs, as the cloud saves do; the admin page lists the report and gets the save.
+// server signs, as the cloud saves do; when the store does not let the page in (its CORS rules: the first try on the
+// live site failed so, 13 November 2026), it goes through the server (saveBody). The admin page lists the report.
 import { listSaves, readBlob } from './saves.js';
 
 export const REPORT_LOG_LINES = 2000;
@@ -35,15 +36,21 @@ export function pack(blob, onBytes = () => {}) {
   return new Response(blob.stream().pipeThrough(count).pipeThrough(new CompressionStream('gzip'))).blob();
 }
 
-// A PUT with progress (fetch tells none for an upload). onPart(0..1).
-function put(url, headers, blob, onPart) {
+// An upload with progress (fetch tells none for an upload). onPart(0..1). who: 'the store' or 'the server', for the
+// messages; the server's own error text when it gives one.
+function upload(method, url, headers, blob, onPart, who) {
   return new Promise((ok, bad) => {
     const x = new XMLHttpRequest();
-    x.open('PUT', url);
+    x.open(method, url);
     for (const [k, v] of Object.entries(headers)) x.setRequestHeader(k, v);
     x.upload.onprogress = (e) => { if (e.lengthComputable) onPart(e.loaded / e.total); };
-    x.onload = () => (x.status >= 200 && x.status < 300 ? ok() : bad(new Error(`the store answered ${x.status}`)));
-    x.onerror = () => bad(new Error('the connection to the store failed'));
+    x.onload = () => {
+      if (x.status >= 200 && x.status < 300) { ok(); return; }
+      let why = null;
+      try { why = JSON.parse(x.responseText).error; } catch { /* not the server's JSON */ }
+      bad(new Error(why ?? `${who} answered ${x.status}`));
+    };
+    x.onerror = () => bad(new Error(`the connection to ${who} failed`));
     x.send(blob);
   });
 }
@@ -126,9 +133,23 @@ export function mountReport({ FS = () => null, lines = () => [], who = () => ({}
         say(`Packing ${save.name}…`);
         const gz = await pack(await save.blob(), (n) => say(`Packing ${save.name}: ${Math.min(100, Math.floor((100 * n) / Math.max(1, save.size)))}%`));
         const link = await post('/api/report/save', { key: sent.key, token: sent.token, name: save.name, size: gz.size, rawSize: save.size });
-        await put(link.url, link.headers, gz, (part) => say(`Sending ${save.name} (${mb(gz.size)} packed): ${Math.floor(100 * part)}%`));
-        await post('/api/report/save-done', { key: sent.key, token: sent.token });
-        log(`page: report ${sent.key}: ${save.name} sent (${mb(gz.size)} packed)`);
+        const onPart = (part) => say(`Sending ${save.name} (${size(gz.size)} packed): ${Math.floor(100 * part)}%`);
+        let direct = false;
+        if (link.direct) {
+          try {
+            await upload('PUT', link.url, link.headers, gz, onPart, 'the store');
+            direct = true;
+          } catch (err) {
+            // The store did not let this page in (no CORS rule for this site, or a wrong one): the server takes it.
+            log(`page: report: the store did not take the save from this page (${err.message}): it goes through the server`);
+          }
+        }
+        if (direct) await post('/api/report/save-done', { key: sent.key, token: sent.token });
+        else {
+          await upload('POST', `/api/report/save-body?key=${encodeURIComponent(sent.key)}&token=${encodeURIComponent(sent.token)}`,
+            { 'content-type': 'application/gzip', 'x-cm': '1' }, gz, onPart, 'the server');
+        }
+        log(`page: report ${sent.key}: ${save.name} sent (${size(gz.size)} packed${direct ? '' : ', through the server'})`);
       }
       say(`Sent${save ? `, with ${save.name}` : ''}. Thank you: the developer has it now.`);
       note.value = '';

@@ -398,6 +398,24 @@ try {
     /^Sent, with St-Etienne 2002-02-13\.sav\./.test(emptySaid) && emptyFull.save?.done === true && emptyFull.save.rawSize === 0 && emptyGot?.length === 0
       && emptyFull.where?.startsWith('Saved games'), `${emptySaid} | ${JSON.stringify(emptyFull.save)}`);
   await a.click('#report-close');
+  // A store that does not let the page in (its CORS rules missing or wrong, as on the live site at the first try): the
+  // save goes through the server, and arrives all the same.
+  s3fake.faults.corsGone = true;
+  await a.click('#help-open');
+  await a.click('#help-report-open');
+  await a.selectOption('#report-save', '/user/Harbour City 2001-07-14.sav');
+  const viaBytes = await a.evaluate(() => Array.from(window.Module.FS.readFile('/user/Harbour City 2001-07-14.sav')));
+  await a.click('#report-send');
+  await a.waitForFunction(() => /^Sent|was not|Nothing/.test(document.getElementById('report-state').textContent), null, { timeout: 20000 }).catch(() => {});
+  const viaSaid = await a.textContent('#report-state');
+  s3fake.faults.corsGone = false;
+  await a.click('#report-close');
+  const adminData3 = await a.evaluate(async () => (await fetch('/api/admin/stats', { credentials: 'same-origin' })).json());
+  const viaFull = await a.evaluate(async (key) => (await fetch(`/api/admin/report?key=${encodeURIComponent(key)}`, { credentials: 'same-origin' })).json(), adminData3.reports.find((r) => r.sent)?.key ?? '');
+  const viaGot = viaFull.saveUrl ? gunzipSync(Buffer.from(await (await fetch(viaFull.saveUrl)).arrayBuffer())) : Buffer.alloc(0);
+  check('a store that does not let the page in: the save goes through the server and arrives whole',
+    /^Sent, with Harbour City 2001-07-14\.sav\./.test(viaSaid) && /the store did not take the save from this page .* it goes through the server/.test(await a.textContent('#log'))
+      && viaFull.save?.done === true && viaGot.equals(Buffer.from(viaBytes)), `${viaSaid} | ${JSON.stringify(viaFull.save)}`);
 
   check('no page errors', errors.length === 0, errors.join('; '));
   check('the server logged no failure', !logs.some((l) => /fail|not written|not read/.test(l)), logs.join('; '));

@@ -12,7 +12,8 @@
 // Error reports go to reports/<day>/<time>-<random>.json, and the last ones stay listed in the object.
 // A report the player sends (Send to the developer, report.js) goes there too, with a longer log and a note; its save,
 // when the player sends one, goes beside it as <time>-<random>.sav.gz, straight from the page to the store with a link
-// this server signs (saveLink, saveDone), as the cloud saves do. Both go with the other report files after 90 days.
+// this server signs (saveLink, saveDone), as the cloud saves do; when the store does not let the page in (its CORS rules),
+// the page sends it through this server (saveBody). Both go with the other report files after 90 days.
 import { randomBytes } from 'node:crypto';
 
 const KEY = 'stats/stats.json';
@@ -22,6 +23,7 @@ const KEEP_REPORTS = 200;           // reports listed in the object
 const REPORT_DAYS = 90;             // report files older than this go (the privacy page says so)
 const MAX_SENT_LOG = 2000;          // lines of the log in a report the player sent
 const MAX_SENT_SAVE = 400 << 20;    // a save the player sent, packed (gzip)
+export const MAX_SENT_THROUGH = 150 << 20;   // one sent through this server (saveBody): it is held in memory while it goes
 const SENT_SAVES_A_DAY = 40;        // saves sent a day, on this machine: a bound on what the store takes
 const SENT_BYTES_A_DAY = 4 * 2 ** 30;           // and their packed bytes (4 GB)
 const MAX_BEAT_SECONDS = 180;       // a beat counts at most this much play: the page sends one each minute
@@ -193,15 +195,15 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
 
   // A report the player sent (report.js): the message of the error box (or none, from Help), a note, the log of the
   // visit and what the page says of itself (where). It needs no consent of the statistics: the player sends it. With a
-  // store that signs links and takes the page's uploads (direct), the answer has a token, which lets that page add a save.
-  async function send(body, user, ua = '', direct = false) {
+  // store, the answer has a token, which lets that page add a save.
+  async function send(body, user, ua = '') {
     await ready;
     const anon = String(body?.anon ?? '');
     const t = now();
     rollDay(t);
     const id = user ? `g:${user.sub}` : ANON.test(anon) ? `a:${anon}` : 'a:unknown';
     const note = String(body?.note ?? '').replace(/[\u0000-\u0009\u000b-\u001f]/g, ' ').slice(0, 2000);
-    const token = store?.presign && direct ? randomBytes(16).toString('hex') : null;
+    const token = store ? randomBytes(16).toString('hex') : null;
     const r = {
       at: new Date(t).toISOString(), id, sent: true, message: text(body?.message, 500) || 'No error box: sent from Help', note,
       engine: text(body?.engine, 40), browser: browserOf(ua), where: text(body?.where, 400),
@@ -231,8 +233,9 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
   }
 
   // A link to send the save of a sent report with ({ key, token, name, size, rawSize }): the size is the packed one,
-  // which the link signs.
-  async function saveLink(body) {
+  // which the link signs. direct: the page may send it to the store (its CORS rules); { direct: false } else, and the page
+  // sends it through this server (saveBody).
+  async function saveLink(body, direct = false) {
     const { r, status, error } = await sentReport(body?.key, body?.token);
     if (!r) return { status, error };
     const size = Math.floor(Number(body?.size)), rawSize = Math.floor(Number(body?.rawSize));
@@ -246,9 +249,21 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     const saveKey = body.key.replace(/\.json$/, '.sav.gz');
     r.save = { name: text(body?.name, 120), size, rawSize: rawSize >= 0 ? rawSize : null, key: saveKey, done: false };   // 0: an empty file
     await store.put(body.key, Buffer.from(JSON.stringify(r, null, 1)));
+    if (!direct || !store.presign) return { direct: false };
     const link = store.presign('PUT', saveKey, { headers: { 'content-type': 'application/gzip', 'content-length': size } });
     const { 'content-length': _, ...headers } = link.headers;    // the browser sets the length of the body itself
-    return { url: link.url, headers: Object.fromEntries(Object.entries(headers).map(([k, v]) => [k, String(v)])) };
+    return { direct: true, url: link.url, headers: Object.fromEntries(Object.entries(headers).map(([k, v]) => [k, String(v)])) };
+  }
+
+  // The save of a sent report through this server ({ key, token } and its packed bytes), after saveLink announced it:
+  // for a page that the store does not let in.
+  async function saveBody(body, buf) {
+    const { r, status, error } = await sentReport(body?.key, body?.token);
+    if (!r) return { status, error };
+    if (!r.save) return { status: 400, error: 'no save was announced' };
+    if (!buf?.length || buf.length > MAX_SENT_THROUGH) return { status: 413, error: `a save may be ${MAX_SENT_THROUGH >> 20} MB at most, packed, through the server` };
+    await (store.putFile ?? store.put)(r.save.key, buf, 'application/gzip');
+    return finishSave(body.key, r, buf.length);
   }
 
   // The save reached the store ({ key, token }): the report says so, and its token goes.
@@ -258,12 +273,17 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     if (!r.save) return { status: 400, error: 'no save was announced' };
     const h = await store.head(r.save.key);
     if (!h) return { status: 404, error: 'the save did not reach the store' };
-    r.save = { ...r.save, size: h.size, done: true };
+    return finishSave(body.key, r, h.size);
+  }
+
+  // The save is in the store: the report says so, and its token goes.
+  async function finishSave(key, r, size) {
+    r.save = { ...r.save, size, done: true };
     delete r.token;
-    await store.put(body.key, Buffer.from(JSON.stringify(r, null, 1)));
-    const listed = data.reports.find((x) => x.key === body.key);
-    if (listed) { listed.save = { name: r.save.name, size: h.size, rawSize: r.save.rawSize }; dirty = true; }
-    return { status: 200, ok: true, size: h.size };
+    await store.put(key, Buffer.from(JSON.stringify(r, null, 1)));
+    const listed = data.reports.find((x) => x.key === key);
+    if (listed) { listed.save = { name: r.save.name, size, rawSize: r.save.rawSize }; dirty = true; }
+    return { status: 200, ok: true, size };
   }
 
   // A player's answer to the question about the statistics (stats.js): a count of the day, nothing of the player.
@@ -383,7 +403,7 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
   }
   async function stop() { if (timer) clearInterval(timer); timer = null; await flush(); }
 
-  return { ready, beat, choice, report, send, saveLink, saveDone, reportFile, forget, flush, summary, start, stop, get data() { return data; } };
+  return { ready, beat, choice, report, send, saveLink, saveDone, saveBody, reportFile, forget, flush, summary, start, stop, get data() { return data; } };
 }
 
 // The store of an S3 client (s3.mjs): getBuffer and put; head and presign for the saves that players send.
@@ -391,5 +411,6 @@ export function statsStore(s3) {
   if (!s3) return null;
   return { get: (key) => s3.getBuffer(key), put: (key, buf) => s3.put(key, buf, { type: 'application/json' }),
     list: (prefix) => s3.list(prefix), delete: (key) => s3.delete(key), head: (key) => s3.head(key),
+    putFile: (key, buf, type) => s3.put(key, buf, { type }),
     ...(s3.presign ? { presign: (method, key, opts) => s3.presign(method, key, opts) } : {}) };
 }

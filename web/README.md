@@ -264,9 +264,12 @@ keeps it as a report file marked as sent, with no need of the statistics' consen
 goes first, so it arrives even when the save does not. The save then goes packed with gzip in the browser, straight to
 the bucket with a link the server signs for its packed size (`/api/report/save`, then `/api/report/save-done`, which
 checks it is there), as `reports/<day>/<time>-<random>.sav.gz` beside the report. Only the page that sent the report can
-add its save (a token in the report file, gone once the save is there). A server without a bucket, or whose bucket
-takes no uploads from the page (the CORS rules that the cloud sets, Cloud saves below), takes the log only, and the
-dialog says to send the save another way. A save may be 400 MB packed; a machine takes 40 saves and 4 GB a day. The
+add its save (a token in the report file, gone once the save is there). When the bucket does not let the page in (its
+CORS rules missing or wrong: on the live site the first try failed so, "the connection to the store failed", where Cloud
+Saves had gone through the server unnoticed), the page sends the packed save through the server instead
+(`/api/report/save-body`, at most 150 MB packed, one at a time in memory), and the engine log says why. A server without
+a bucket takes the log only, and the dialog says to send the save another way. A save may be 400 MB packed straight to
+the bucket; a machine takes 40 saves and 4 GB a day. The
 admin page marks such a report "Sent by the player", shows the note and the save, and Download the save gets it from
 the bucket (a link for an hour) and unpacks it under its own name. Reports and saves go after 90 days.
 
