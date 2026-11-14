@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · CM 01/02 in the Browser</title>
+<meta name="theme-color" content="#0b0d10">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<style>
+  :root { --bg: #0b0d10; --panel: #151a20; --text: #e8ebef; --muted: #97a2af; --line: #29313b; --accent: #35b673; color-scheme: dark; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 28px 0 6px; }
+  p, li { color: var(--muted); }
+  b { color: var(--text); font-weight: 600; }
+  a { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+  td { border-top: 1px solid var(--line); padding: 7px 8px 7px 0; vertical-align: top; color: var(--muted); }
+  td:first-child { color: var(--text); white-space: nowrap; padding-right: 16px; }
+  nav { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; }
+  nav a { margin-right: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy</h1>
+  <p>CM 01/02 in the Browser is an unofficial fan project. The game runs in your browser, on your device.</p>
+
+  <h2>What this site keeps in your browser</h2>
+  <p>To play, the page keeps in your browser's storage on your device: the game files (so they download once), your saved
+  games, your data sets and the game's settings, and a few choices of the page (for example your answer about the
+  statistics). They are needed for the game to work, stay on your device and are not sent anywhere; with Cloud Saves,
+  your saves and data sets also go to your account (below). Without an account the site sets no cookies. Only if you
+  allow the statistics does the page also keep a random id of your browser for them (next section).</p>
+
+  <h2>Usage statistics (only if you allow them)</h2>
+  <p>The page asks you once whether it may send them, with Allow and No thanks. Until you allow them it sends nothing
+  for them and keeps no id for them. If you say no, only your answer goes to the server, with no id and nothing else, so
+  that we can count how many people say yes and no. If you allow them: while the game runs, the page tells the server once a minute how long it was played (while the tab is visible and
+  you use it) and how many saved games, older copies and data sets your browser keeps, with their total size. With it
+  go a random id that your browser made for this site (not your name or email) and the browser's name and system, for
+  example "Chrome 142 · Mac". If you are signed in, the statistics count for your account, and the random id of the
+  browser is linked to it. If the game stops on an error, its message and the last lines of the game's log go to the
+  server too. No IP address is kept, and nothing of your saved games is sent.</p>
+  <p>We use the statistics to see how many people play and how much, and to find errors. They are not sold or given to
+  anyone. A browser's statistics are deleted after 13 months without a visit; error reports after 90 days. You can change
+  your answer any time in Help, Statistics; turning them off stops them at once and deletes the browser's random id
+  from your browser.</p>
+
+  <h2>Send to the developer (only when you press it)</h2>
+  <p>After an error, and in Help, Send to the developer sends a report that you start yourself: the engine log of this
+  visit (what the game wrote while it ran), the error's message, what you write in the box, the size of the page and the
+  device's memory as the browser tells them, your browser's name and system, and the engine's version. If you choose a
+  saved game in the dialog, that file goes too: it holds the game world and your manager's name as you typed it. With
+  the statistics allowed, the browser's random id goes with the report, and when you are signed in, your account. No IP
+  address is kept. We use reports only to find and fix errors; they are not sold or given to anyone, and the report and
+  its saved game are deleted after 90 days.</p>
+
+  <h2>With an account</h2>
+  <p>You sign in with your Google account. Google tells this site:</p>
+  <table>
+    <tr><td>Your Google account id</td><td>A number that names your account; your saves are kept under it.</td></tr>
+    <tr><td>Your email address</td><td>To show which account is signed in, and to give cloud saves to the accounts that have them.</td></tr>
+    <tr><td>Your name and picture</td><td>Your name is shown on the Account button. The picture is not used or kept.</td></tr>
+  </table>
+  <p>The site asks Google for nothing else: not your contacts, your files or your mail. It keeps your account id, email
+  address, name, the date you first and last signed in, and your plan.</p>
+
+  <h2>Cloud saves</h2>
+  <p>If your account has cloud saves, each saved game you make goes to the site's storage, with its file name, its size
+  and the time it was saved; so do the data sets (your own copies of the game's database) that you make or upload. The storage is Tigris, an object store of Fly.io, where this site runs. Nothing else of the
+  game goes there. Your browser sends and gets these files from Tigris itself, with a link that this site makes for each
+  file and that works for 15 minutes, so Tigris sees your browser's IP address as any web server does.</p>
+
+  <h2>Payments</h2>
+  <p>Cloud Saves are paid through Paddle.com, the Merchant of Record of our orders. You give your card or other payment
+  details to Paddle, not to this site; Paddle's <a href="https://www.paddle.com/legal/privacy">privacy notice</a> covers
+  them. Paddle tells this site the id and the state of your subscription (active, canceled) and the end of the period
+  you paid for, which the site keeps with your account to know whether Cloud Saves are on.</p>
+
+  <h2>Cookies</h2>
+  <p>A signed-in browser holds one cookie, <b>cm_session</b>, for 30 days: it says which account is signed in. During the
+  sign-in a second cookie, <b>cm_oauth</b>, holds the state of the sign-in for at most 10 minutes. This site sets no other
+  cookies, and has no ads and no tracking. The checkout, when you open it to buy Cloud Saves, is Paddle's, and loads
+  Paddle's script; Paddle's privacy notice covers it.</p>
+
+  <h2>Deleting your data</h2>
+  <p>Account, then <b>Delete account</b>, removes your account, all of your cloud saves and your account's usage statistics from the storage at once. The
+  saves in your browser stay until you clear the site's data in the browser. Signing out removes the cookie from the
+  browser. A running Cloud Saves subscription is canceled first (Account, Manage subscription). Paddle keeps the
+  records of your payments as the law asks of a seller.</p>
+
+  <h2>Contact</h2>
+  <p>{{SELLER}}: {{CONTACT}}.</p>
+
+  <nav><a href="/">The game</a><a href="/pricing">Pricing</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a><a href="/privacy">Privacy</a></nav>
+</main>
+</body>
+</html>

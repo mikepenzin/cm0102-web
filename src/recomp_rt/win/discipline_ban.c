@@ -21,7 +21,7 @@
 static int32_t nation_key(uint32_t row, uint32_t field)
 {
     uint32_t nation = rd32(g_mem, row + field);
-    return nation >= 0x10000u && nation < 0xfff00000u ? (int32_t)rd32(g_mem, nation) : -1;
+    return rt_readable(nation) ? (int32_t)rd32(g_mem, nation) : -1;
 }
 
 uint32_t rt_discipline_ban_entry(uint32_t discipline, uint32_t staff)

@@ -212,7 +212,7 @@ uint32_t rt_club_world_waits(uint32_t obj)
 static const char *name_of(uint32_t comp, char *buf, size_t n)
 {
     uint32_t rec = rd32(g_mem, comp + NAME_AT);
-    snprintf(buf, n, "%.50s", rec >= 0x10000u && rec < 0xfff00000u ? win_str(rec + NAME_AT) : "");
+    snprintf(buf, n, "%.50s", rt_readable(rec) ? win_str(rec + NAME_AT) : "");
     return buf;
 }
 

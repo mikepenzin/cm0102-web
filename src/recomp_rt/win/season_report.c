@@ -111,7 +111,7 @@ static const SeasonCompClass *class_of(uint32_t vtable)
 }
 
 /* A pointer of the game that can be read: inside the 32-bit space and not near 0. */
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static void write_cup_rounds(FILE *f, int season, const char *phase, const char *slot, const char *file,
                              uint32_t obj);
@@ -186,6 +186,11 @@ static void sweep_comp(FILE *f, int season, const char *phase, const char *file,
      * League holds no club by design, club count +0x3e 0 and one zeroed row (season_kind_club_world.c, part b).
      * Only the original form has 3 stage slots (+0x2c). */
     if (rd32(g_mem, obj) == 0x97119cu && (int32_t)rd32(g_mem, obj + 0x2c) != 3) return;
+    /* A league the game never plays: no year at +0x40 and no club count at +0x3e, as the French Lower Division (FraFirst
+     * record, vtable 0x96a904), whose clubs the game keeps in A Lower Division (2026-10-17-club-moves-and-names.md,
+     * "The French CFA and Lower Division"). It shares the file name of Ligue 1, so the rule of fra_first is not its rule.
+     * The rules report skips such objects too (2026-10-21-expected-files-060.md). */
+    if ((int16_t)rd16(g_mem, obj + 0x40) == 0 && (int16_t)rd16(g_mem, obj + 0x3e) == 0) return;
     const SeasonRule *r = season_rules_find(season, file, 0);
     if (!r || r->clubs <= 0) return;
     int n = (int16_t)rd16(g_mem, obj + 0x3e);

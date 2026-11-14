@@ -24,6 +24,7 @@
 char win_game_dir[1024];
 char win_exe_path[1024];
 char win_command_line[1024];
+char **win_argv;
 int win_trace;
 
 /* The game's stack: 16 MB below the runtime's memory. */
@@ -76,6 +77,7 @@ static void default_game_dir(char *out, size_t room)
 
 int main(int argc, char **argv)
 {
+    win_argv = argv;
     char game[1024] = "";
     int first = 1;
     if (argc > 1 && !strcmp(argv[1], "--game")) {

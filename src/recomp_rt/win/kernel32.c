@@ -85,6 +85,20 @@ uint32_t win_static_alloc(uint32_t size)
 }
 
 /* Process start. */
+/* The game starts a program in one place only: Restart Game. restart_game (0x68dbc0) runs its clean-up (0x5cc7d0),
+ * closes its single-instance handle ([0xb67a28], CloseHandle) and calls WinExec with its own command line
+ * (GetCommandLineA, SW_SHOWDEFAULT), then exit (0x945934). So WinExec starts this program again with the arguments of
+ * this start (host_restart; in the browser the page loads again) and returns only when it could not: 2 (the file was
+ * not found), after which the game ends as the original does. */
+RT_IMPORT(WinExec)
+{
+    fprintf(stderr, "recomp: Restart Game: the program starts again\n");
+    fflush(stderr);
+    host_restart(win_argv);
+    fprintf(stderr, "recomp: Restart Game: the program could not start again, so it ends\n");
+    rt_ret_stdcall(2, 2);
+}
+
 RT_IMPORT(GetCommandLineA)
 {
     static uint32_t line;

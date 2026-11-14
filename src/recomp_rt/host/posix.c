@@ -9,6 +9,7 @@
 #else
 #include <sys/resource.h>
 #endif
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +23,37 @@ void *host_reserve(size_t size)
     void *m = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_NORESERVE, -1, 0);
     return m == MAP_FAILED ? NULL : m;
 }
+
+#ifdef __EMSCRIPTEN__
+int host_protect(void *addr, size_t size, int open) { (void)addr; (void)size; (void)open; return -1; }
+void host_on_fault(void (*note)(const void *addr)) { (void)note; }
+#else
+int host_protect(void *addr, size_t size, int open)
+{
+    return mprotect(addr, size, open ? PROT_READ | PROT_WRITE : PROT_NONE);
+}
+
+static void (*fault_note)(const void *addr);
+
+static void on_fault(int sig, siginfo_t *info, void *context)
+{
+    (void)context;
+    if (fault_note) fault_note(info->si_addr);
+    signal(sig, SIG_DFL);                    /* the access runs again on return and stops the program as before */
+}
+
+void host_on_fault(void (*note)(const void *addr))
+{
+    fault_note = note;
+    struct sigaction sa;
+    memset(&sa, 0, sizeof sa);
+    sa.sa_sigaction = on_fault;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGBUS, &sa, NULL);            /* macOS reports an access to a protected page as SIGBUS */
+}
+#endif
 
 int host_open(const char *path, int flags, int mode) { return open(path, flags, mode); }
 long host_read(int fd, void *buf, uint32_t n) { return (long)read(fd, buf, n); }
@@ -45,7 +77,13 @@ int host_unlink(const char *path) { return unlink(path); }
 int host_rmdir(const char *path) { return rmdir(path); }
 int host_rename(const char *from, const char *to) { return rename(from, to); }
 int host_replace(const char *from, const char *to) { return rename(from, to); }
-int host_sync(FILE *f) { return fsync(fileno(f)); }
+int host_sync(FILE *f)
+{
+#ifdef __EMSCRIPTEN__
+    if (host_web_page_call) return 0;            /* fd_sync would wait for the browser (host.h) */
+#endif
+    return fsync(fileno(f));
+}
 
 HostDir *host_opendir(const char *path) { return (HostDir *)opendir(path); }
 
@@ -79,6 +117,16 @@ int host_program_path(char *out, size_t room)
 }
 
 int host_current_dir(char *out, size_t room) { return getcwd(out, room) != NULL; }
+
+#ifndef __EMSCRIPTEN__
+void host_restart(char *const argv[])
+{
+    char self[PATH_MAX];
+    if (!host_program_path(self, sizeof self)) return;
+    fflush(NULL);
+    execv(self, argv);                     /* the same process id, a new program; returns only on failure */
+}
+#endif
 
 int host_user_dir(char *out, size_t room)
 {

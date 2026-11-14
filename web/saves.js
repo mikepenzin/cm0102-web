@@ -1,0 +1,308 @@
+// The Saved games panel (web/README.md): the saves in the user folder, to download as files and to upload back.
+//
+// The saves stay where the game writes them: the user folder /user, which loader.js keeps in IndexedDB. localStorage
+// is not a place for them: it holds a few MB of text per site, and a save holds the whole game world.
+//
+// The game writes *.sav files in the user folder (src/recomp_rt/win/files.c; the option save_folder can name another
+// folder, which the browser build does not use). A save in progress is temp_save_file.sav, renamed when it is done;
+// older copies are in backups/ (option save_backups).
+import { zipOfBlobs } from './zip.js';
+
+export const SAVE_DIR = '/user';
+const TEMP = 'temp_save_file.sav';
+const HEADER = 0x416ec, ENTRY = 0x10c, MAX_ENTRIES = 1000;     // the save container (tools/save/savfile.py)
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const mb = (n) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
+const when = (d) => d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
+function files(FS, dir) {
+  let names;
+  try { names = FS.readdir(dir); } catch { return []; }
+  const out = [];
+  for (const name of names) {
+    if (!/\.sav$/i.test(name) || name.toLowerCase() === TEMP) continue;
+    try {
+      const st = FS.stat(`${dir}/${name}`);
+      if (FS.isFile(st.mode)) out.push({ name, path: `${dir}/${name}`, size: st.size, mtime: new Date(st.mtime) });
+    } catch { /* gone meanwhile */ }
+  }
+  return out.sort((a, b) => b.mtime - a.mtime);
+}
+
+export function listSaves(FS) { return { saves: files(FS, SAVE_DIR), backups: files(FS, `${SAVE_DIR}/backups`) }; }
+
+// The game's working files: the parts of the game in play (*.tmp, written at a load and at each save, tens of MB in a
+// big game) live only while the game runs, and a save packs them into its .sav. IDBFS would copy each changed one into
+// IndexedDB at every sync, all of them in one transaction that holds the copies in memory until it ends. That also
+// ran during a load, while the game wrote them. A path of the user folder that the sync leaves out:
+export const isWorkFile = (path) => /\.tmp$/i.test(path);
+
+// Makes IDBFS (Emscripten's IndexedDB file system) leave the working files out: a sync to IndexedDB does not store
+// them and removes the ones an earlier page stored; a read from IndexedDB does not bring them back. The rest is
+// IDBFS.syncfs as Emscripten has it (getLocalSet, getRemoteSet, reconcile). An IDBFS without those parts is left as it
+// is. Returns true when the sync was changed.
+// skip(path): more paths to leave out (the vault's files, vault.js); called at each sync.
+export function skipWorkFiles(IDBFS, skip = () => false) {
+  if (!IDBFS || typeof IDBFS.getLocalSet !== 'function' || typeof IDBFS.getRemoteSet !== 'function'
+    || typeof IDBFS.reconcile !== 'function') return false;
+  const drop = (set) => { for (const path of Object.keys(set.entries)) if (isWorkFile(path) || skip(path)) delete set.entries[path]; };
+  IDBFS.syncfs = (mount, populate, callback) => {
+    IDBFS.getLocalSet(mount, (err, local) => {
+      if (err) return callback(err);
+      IDBFS.getRemoteSet(mount, (err2, remote) => {
+        if (err2) return callback(err2);
+        drop(local);                    // never stored, never removed here
+        if (populate) drop(remote);     // not read back; a sync to IndexedDB removes them there (not in the local set)
+        IDBFS.reconcile(populate ? remote : local, populate ? local : remote, callback);
+      });
+    });
+  };
+  return true;
+}
+
+// A short text that changes whenever a save file is added, changed or removed (the watcher of loader.js).
+export function savesSignature(FS) {
+  const { saves, backups } = listSaves(FS);
+  return [...saves, ...backups].map((f) => `${f.path}:${f.size}:${+f.mtime}`).join('|');
+}
+
+// null when bytes look like a saved game of CM 01/02 (its container header), else why not. bytes may be only the start
+// of the file (at least its header, SAVE_HEADER bytes) when total gives the whole length: the server checks so.
+export const SAVE_HEADER = HEADER;
+// A file too short says its size: an empty one (0 bytes) is a copy that never got the save, such as a Download of a
+// save whose stored copy another tab of the game had removed (vault.js).
+export function checkSave(bytes, total = bytes.length) {
+  if (total === 0) return 'the file is empty (0 bytes): the copy or download that made it did not get the saved game';
+  if (total < HEADER || bytes.length < HEADER)
+    return `it is too short to be a saved game of CM 01/02: ${Math.max(1, Math.round(total / 1024))} KB, where a saved game has at least ${Math.round(HEADER / 1024)} KB (most have tens of MB)`;
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const version = dv.getInt32(0, true), count = dv.getInt32(8, true);
+  if (![1, 2, 3, 4].includes(version) || count < 1 || count > MAX_ENTRIES) return 'it is not a saved game of CM 01/02';
+  for (let k = 0; k < count; k++)
+    if (dv.getUint32(12 + k * ENTRY, true) > total) return 'the saved game is damaged: a part starts after its end';
+  return null;
+}
+
+// The name an uploaded file gets in the save folder, or null when it is not a .sav file.
+export function saveName(fileName, taken) {
+  let base = String(fileName).split(/[\\/]/).pop().replace(/[\u0000-\u001f:*?"<>|]/g, '_').trim();
+  if (!/\.sav$/i.test(base) || base.length <= 4) return null;
+  if (base.toLowerCase() === TEMP) base = 'uploaded save.sav';
+  if (!taken.has(base.toLowerCase())) return base;
+  const stem = base.slice(0, -4);
+  for (let i = 2; ; i++) if (!taken.has(`${stem} (${i}).sav`.toLowerCase())) return `${stem} (${i}).sav`;
+}
+
+// The bytes of a file of the engine's file system without a copy: a view of the array where the memory file system keeps
+// the file (it can be larger than the file). FS.readFile would first make a copy of the whole file, 75 MB for a big save,
+// at a time when the page's memory can be short. Use the view at once (new Blob copies it); a later write can change
+// it. A file system without such an array gives FS.readFile's copy.
+export function fileView(FS, path) {
+  try {
+    const node = FS.lookupPath(path).node, c = node?.contents;
+    if (c instanceof Uint8Array) return c.subarray(0, node.usedBytes ?? c.length);
+  } catch { /* below */ }
+  return FS.readFile(path);
+}
+
+// The vault (vault.js) when it is on: saves, older copies and data sets are then placeholders in the user folder, and
+// the page reads them with these. Without it they read from the engine's memory, as before.
+let vaultRef = null;
+export function useVault(vault) { vaultRef = vault; }
+// The file's bytes, a copy that the caller may change (the editors).
+export async function readBytes(FS, path) { return vaultRef ? vaultRef.bytes(path) : FS.readFile(path); }
+// The file's bytes for reading only (a zip): no copy of a file in memory.
+export async function readView(FS, path) { return vaultRef ? vaultRef.view(path) : fileView(FS, path); }
+// The file as a Blob, for a download or an upload: a placeholder's comes from the browser's storage, not memory.
+export async function readBlob(FS, path) { return vaultRef ? vaultRef.blob(path) : new Blob([fileView(FS, path)]); }
+// The same at once for a file in memory (a Blob made now, so it matches a stat taken just before), a promise only for a
+// placeholder, whose contents do not change while it waits.
+export function readBlobNow(FS, path) {
+  let node = null;
+  try { node = FS.lookupPath(path).node; } catch { /* not this FS */ }
+  return vaultRef && node?.vault === 'out' ? vaultRef.blob(path) : new Blob([fileView(FS, path)]);
+}
+
+// Every file to keep, as the save folder holds them: the saves, backups/ (older copies), tactics/ (the game's tactics,
+// tactics.js) and Databases/ (data sets).
+function allFiles(FS) {
+  const out = [];
+  const walk = (dir, rel) => {
+    let names = [];
+    try { names = FS.readdir(dir).filter((n) => n !== '.' && n !== '..'); } catch { return; }
+    for (const n of names) {
+      const p = `${dir}/${n}`, r = rel ? `${rel}/${n}` : n;
+      let st;
+      try { st = FS.stat(p); } catch { continue; }
+      if (FS.isDir(st.mode)) walk(p, r);
+      else out.push({ path: p, name: r, size: st.size });
+    }
+  };
+  for (const f of listSaves(FS).saves) out.push({ path: f.path, name: f.name, size: f.size });
+  walk(`${SAVE_DIR}/backups`, 'backups');
+  walk(`${SAVE_DIR}/tactics`, 'tactics');
+  walk(`${SAVE_DIR}/Databases`, 'Databases');
+  return out;
+}
+
+const saveLink = (blob, name) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
+};
+
+async function download(FS, f) { saveLink(new Blob([await readBlob(FS, f.path)], { type: 'application/octet-stream' }), f.name); }
+
+const CLOUD = { cloud: 'In the cloud', up: 'Saving…', here: 'Only here', waiting: 'Not yet' };
+
+// What the browser may do to the saves on its own. kept: the answer of navigator.storage.persist (loader.js): 'kept'
+// when the browser agreed to keep the site's storage when the disk runs low. It still deletes it when the player
+// clears browsing data, when a private window closes, and Safari (iPhone, iPad, Mac) deletes a site's storage after 7
+// days without a visit, unless the page is on the home screen.
+let storageKept = 'unknown';
+export function setStorageKept(kept) { storageKept = kept; }
+export function storageWarning(cloudOn) {
+  const when = 'when browsing data is cleared, when a private window closes, and in Safari (iPhone, iPad, Mac) after 7 days without a visit, unless the page is on the home screen';
+  if (cloudOn) return `The browser can delete the saves here by itself, without asking: when the disk runs low, ${when}. The saves marked In the cloud then come back at the next start; download the others you want to keep.`;
+  if (storageKept === 'kept') return `This browser agreed to keep these saves when the disk runs low, but it still deletes them by itself, without asking, ${when}. Download the saves you want to keep, or use Cloud Saves.`;
+  return `The browser can delete these saves by itself, without asking: when the disk runs low, ${when}. Download the saves you want to keep, or use Cloud Saves.`;
+}
+
+// Wires the panel of index.html to the engine's file system. sync() writes the user folder to IndexedDB now. cloud():
+// the cloud sync of account.js, or null when the account has no cloud saves.
+// promo(): a line about Cloud Saves for a player without them, or null; openPromo() shows them. edit(name): opens the
+// save editor (editor.js) on a save of the folder.
+// report(): Send to the developer (report.js), or null: a message of the panel that says something went wrong offers it,
+// with the files of an upload that were refused.
+export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () => null, openPromo = () => {}, edit = null, report = () => null }) {
+  const dialog = document.getElementById('saves'), list = document.getElementById('saves-list');
+  const note = document.getElementById('saves-note'), input = document.getElementById('saves-file');
+  const say = (text, bad = false, files = []) => {
+    note.textContent = text;
+    note.className = bad ? 'small bad' : 'small';
+    const r = bad || files.length ? report() : null;
+    if (!r) return;
+    const b = document.createElement('button');
+    b.className = 'link';
+    b.id = 'saves-report';
+    b.textContent = 'Send to the developer';
+    b.onclick = () => { dialog.close(); r.open({ message: text, where: 'Saved games', files }); };
+    note.append(' ', b);
+  };
+  let shown = { saves: [], backups: [] }, watched = null;
+
+  function render() {
+    shown = listSaves(FS);
+    const c = cloud();
+    document.getElementById('saves-where').textContent = c ? 'Your saves are in this browser and in the cloud.' : 'Your saves stay in this browser.';
+    document.getElementById('saves-risk').textContent = storageWarning(Boolean(c));
+    const p = promo(), box = document.getElementById('saves-promo');
+    box.hidden = !p;
+    if (p) { box.firstChild.textContent = `${p} `; box.querySelector('button').onclick = openPromo; }
+    const state = (f) => {
+      const st = c.status(f.name, f);
+      return `<td class="cloud ${st}">${CLOUD[st]}${st === 'cloud' ? ` <button class="link" data-remove="${esc(f.name)}" title="Remove from the cloud; it stays here">Remove</button>` : ''}</td>`;
+    };
+    const row = (f, i, kind) => `<tr><td>${esc(f.name)}</td><td class="num">${mb(f.size)}</td><td>${esc(when(f.mtime))}</td>
+      ${c ? (kind === 'save' ? state(f) : '<td></td>') : ''}<td class="acts">${edit && kind === 'save' ? `<button data-edit="${i}">Edit</button>` : ''}<button data-kind="${kind}" data-i="${i}">Download</button><button class="link" data-delete="${kind}" data-i="${i}">Delete</button></td></tr>`;
+    list.innerHTML = shown.saves.length
+      ? `<table><tr><th>Save</th><th class="num">Size</th><th>Saved</th>${c ? '<th>Cloud</th>' : ''}<th></th></tr>${shown.saves.map((f, i) => row(f, i, 'save')).join('')}</table>`
+      : '<p class="small">No saved games yet. Save in the game (Game Options, Save Game), or upload one.</p>';
+    if (shown.backups.length) list.innerHTML += `<details><summary>Older copies (${shown.backups.length})</summary><table>
+      ${shown.backups.map((f, i) => row(f, i, 'backup')).join('')}</table></details>`;
+    if (c && c !== watched) { watched = c; c.onChange(() => { if (dialog.open) render(); }); }
+  }
+
+  document.getElementById('saves-open').onclick = () => { say(''); render(); dialog.showModal(); };
+  document.getElementById('saves-close').onclick = () => dialog.close();
+  document.getElementById('saves-upload').onclick = () => input.click();
+  // One zip of everything (zipOfBlobs: the files of the vault go from disk, not through memory).
+  document.getElementById('saves-all').onclick = async (e) => {
+    const b = e.currentTarget;
+    let files = allFiles(FS);
+    if (!files.length) { say('There is nothing to download yet.'); return; }
+    b.disabled = true;
+    let done = 0, shown = -1;
+    try {
+      // A file the browser's storage no longer has stays out, and the note names it: the others still go in the zip.
+      const entries = [], lost = [];
+      for (const f of files) {
+        try { entries.push({ name: f.name, blob: await readBlob(FS, f.path), size: f.size }); }
+        catch (err) { lost.push(f.name); log(`page: download all: ${f.name} left out: ${err.message}`); }
+      }
+      if (!entries.length) throw new Error(`the browser's storage no longer has ${lost.join(', ')}`);
+      files = entries;
+      const total = files.reduce((a, f) => a + f.size, 0);
+      const zip = await zipOfBlobs(entries, { onBytes: (n) => {
+        done += n;
+        const pct = Math.floor((done / total) * 100);
+        if (pct !== shown) { shown = pct; say(`Packing ${files.length} files (${mb(total)}): ${pct}%`); }
+      } });
+      const day = new Date().toISOString().slice(0, 10);
+      saveLink(zip, `CM 01-02 saves ${day}.zip`);
+      say(`Downloaded ${files.length} files (${mb(total)}) as one zip: the saves, the older copies (backups), the tactics and the data sets (Databases), as the save folder holds them.${
+        lost.length ? `\nLeft out, because the browser's storage no longer has them: ${lost.join(', ')}.` : ''}`, lost.length > 0);
+      log(`page: downloaded all: ${files.length} files, ${mb(total)}`);
+    } catch (err) { say(`The zip was not made: ${err.message}`, true); }
+    b.disabled = false;
+  };
+  list.addEventListener('click', async (e) => {
+    const ed = e.target.closest('button[data-edit]');
+    if (ed && edit) { dialog.close(); edit(shown.saves[Number(ed.dataset.edit)].name); return; }
+    const r = e.target.closest('button[data-remove]');
+    if (r && cloud()) {
+      const name = r.dataset.remove;
+      r.disabled = true;
+      try { await cloud().remove(name); say(`${name} is no longer in the cloud. It stays in this browser.`); log(`page: ${name} removed from the cloud`); }
+      catch (err) { say(`${name} was not removed: ${err.message}`, true); }
+      render();
+      return;
+    }
+    const d = e.target.closest('button[data-delete]');
+    if (d) {
+      const backup = d.dataset.delete === 'backup', f = (backup ? shown.backups : shown.saves)[Number(d.dataset.i)];
+      const inCloud = !backup && cloud()?.status(f.name, f) === 'cloud';
+      if (!confirm(`Delete ${backup ? 'this older copy of ' : ''}${f.name}${inCloud ? ' here and in the cloud' : ''}? This cannot be undone; Download keeps a copy first.`)) return;
+      try {
+        if (inCloud) await cloud().remove(f.name);
+        FS.unlink(f.path);
+        sync();
+        say(`${backup ? 'The older copy of ' : ''}${f.name} is deleted.`);
+        log(`page: deleted the ${backup ? 'older copy' : 'save'} ${f.name}`);
+      } catch (err) { say(`${f.name} was not deleted: ${err.message}`, true); }
+      render();
+      return;
+    }
+    const b = e.target.closest('button[data-i]');
+    if (!b) return;
+    const f = (b.dataset.kind === 'backup' ? shown.backups : shown.saves)[Number(b.dataset.i)];
+    try { await download(FS, f); say(`Downloaded ${f.name}.`); log(`page: downloaded the save ${f.name}`); }
+    catch (err) { say(`${f.name} could not be read: ${err.message}`, true); }
+  });
+  input.onchange = async () => {
+    const done = [], refused = [], refusedFiles = [];
+    for (const file of input.files) {
+      const taken = new Set(listSaves(FS).saves.map((f) => f.name.toLowerCase()));
+      const name = saveName(file.name, taken);
+      if (!name) { refused.push(`${file.name}: only .sav files are saved games`); refusedFiles.push(file); continue; }
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const why = checkSave(bytes);
+      if (why) { refused.push(`${file.name}: ${why}`); refusedFiles.push(file); continue; }
+      FS.writeFile(`${SAVE_DIR}/${name}`, bytes);
+      done.push(name);
+      log(`page: uploaded the save ${name} (${mb(bytes.length)})`);
+    }
+    input.value = '';
+    if (done.length) sync();
+    render();
+    say([done.length ? `Uploaded ${done.join(', ')}. Open Load Game in the game to play it.` : '', ...refused].filter(Boolean).join('\n'),
+      refused.length > 0 && done.length === 0, refusedFiles);
+  };
+  document.getElementById('saves-open').hidden = false;
+}

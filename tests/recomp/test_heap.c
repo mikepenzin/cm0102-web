@@ -26,6 +26,8 @@ void rt_fatal(const char *fmt, ...)
     longjmp(fatal_jump, 1);
 }
 
+void rt_guard_heap_top(uint32_t top) { (void)top; }   /* rt.c: the test switch RECOMP_GUARD, not in this test */
+
 static int failures;
 #define CHECK(c, ...) do { if (!(c)) { failures++; printf("FAIL %s:%d: ", __FILE__, __LINE__); printf(__VA_ARGS__); printf("\n"); } } while (0)
 

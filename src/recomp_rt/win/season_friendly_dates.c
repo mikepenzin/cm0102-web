@@ -75,7 +75,7 @@
 #define NO_CONTINENT 0xfffffffeu        /* -2: no continent has it (-1 is every continent at 0x5cc060) */
 
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int is_leap(int y) { return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0; }
 static int days_in(int y) { return is_leap(y) ? 366 : 365; }
@@ -490,12 +490,14 @@ static void move_pending(void)
 }
 
 /* The list in the season part: the count, then 20 bytes an entry (16 in a save before the stage bound: record id,
- * home, away, year, day; then the stage's last year and day). */
+ * home, away, year, day; then the stage's last year and day). An empty list has no bytes, not even the count. */
 #define ENTRY 20u
 uint32_t season_friendly_part_size(void) { return pending_count ? 4u + ENTRY * (uint32_t)pending_count : 0u; }
 
 void season_friendly_part_write(uint8_t *out)
 {
+    /* The size above is 0: a count here would be 4 bytes after the end of the part's buffer (season.c add_part). */
+    if (!pending_count) return;
     uint32_t n = (uint32_t)pending_count;
     memcpy(out, &n, 4);
     for (int i = 0; i < pending_count; i++) {

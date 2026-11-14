@@ -47,7 +47,7 @@
 #define GROUP_ROUND_SIZE 0x41u          /* a match day of a League round table (0x68a160) */
 #define STAGE_SIZE 0xeeu                /* a League_Stage (operator new 0xee at 0x585855) */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static uint32_t call_this(uint32_t fn, uint32_t self, int nargs, const uint32_t *args)
 {

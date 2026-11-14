@@ -43,6 +43,25 @@ static inline void wrf64(uint8_t *m, uint32_t a, double v) { memcpy(m + a, &v, 8
 double rdf80(const uint8_t *m, uint32_t a);
 void wrf80(uint8_t *m, uint32_t a, double v);
 
+/* A guest address the runtime's own code may read an object at: above the low page and below the top of the heap
+ * (heap.c). Every block of the game lies below that top: the image, the game stack, the static block and the heap.
+ * Above it the desktop build reads zeros, but the browser build has no memory there at all (host/web.c), and a read
+ * stops the game with "memory access out of bounds". So the runtime tests a value it is not sure is a pointer with
+ * this before it reads through it, and both builds give the same answer. The browser's crash on Exit (2026-11-12): the
+ * wrap of the empty function 0x5a8f60 (season_uefa_cup.c) also runs as the empty destructor of the 0x167-byte records
+ * that free_game_data frees (0x830398 -> 0x59a5a0 -> 0x9462bb), read a record's first word (a sum of money) as a
+ * vtable, and the old test (below 0xfff00000) let a debt of a few million through. */
+uint32_t rt_heap_top(void);
+/* Also not 0x21000000 to 0x60000000: no block of the game lies there (the native RECOMP_GUARD protects the range),
+ * but in the browser it holds the engine's own data, C stack and heap (host/web.c), so a sum of money in that range
+ * taken for a pointer would read, or let the runtime write, the engine's memory. */
+#define RT_HOST_FROM 0x21000000u
+#define RT_HOST_TO 0x60000000u
+static inline int rt_readable(uint32_t p)
+{
+    return p >= 0x10000u && p < rt_heap_top() && (p < RT_HOST_FROM || p >= RT_HOST_TO);
+}
+
 #define R8(a) rd8(M, (a))
 #define R16(a) rd16(M, (a))
 #define R32(a) rd32(M, (a))
@@ -336,6 +355,7 @@ uint32_t rt_cup_add(uint32_t original, uint32_t base, uint32_t entrants, uint32_
 uint32_t rt_fra_lge_first(uint32_t original, uint32_t edx);   /* FraLgeCup first loop limit (0x5bd244) */
 uint32_t rt_fa_cup_takes(uint32_t esp);   /* EngFaCup places by pool (0x56ffe4) */
 uint32_t rt_fra_cfa_lower_cap(uint32_t original);              /* FraCfa lower club cap (0x5b92e8) */
+uint32_t rt_fra_lower_cap(uint32_t original);                  /* FraLower lower club cap (0x5bd71d) */
 uint32_t rt_ita_cup_first_position(uint32_t original);   /* ItaCup second loop start (0x63fb16) */
 uint32_t rt_cup_places_list(uint32_t list, uint32_t bytes);  /* provincial and Polish cup lists, cleared */
 uint32_t rt_promote_expected(uint32_t league, uint32_t up, uint32_t original);  /* ItaSerA chain counts (0x642476) */

@@ -40,7 +40,7 @@
 static int pass_season;              /* the season of the last before hook, valid on the day it was set */
 static int pass_day, pass_year;
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int active(void)
 {

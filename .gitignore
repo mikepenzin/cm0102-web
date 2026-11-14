@@ -16,3 +16,5 @@ __pycache__/
 site/assets/
 .taste-skill/
 build-*/
+# The staged web app for hosting: it holds the game files (web/deploy/stage.mjs).
+web/deploy/stage/

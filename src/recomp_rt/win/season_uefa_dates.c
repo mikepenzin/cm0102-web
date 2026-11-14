@@ -21,7 +21,7 @@
 #define F_DATE 0x00549f70u
 #define ROUND_SIZE 0x68u
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 /* Date::Date into a scratch block below the frame: the s16 day of the year and the s16 year. */
 static int make_date(int day, int month, int year, int *doy, int *yr)

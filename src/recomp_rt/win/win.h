@@ -27,6 +27,7 @@ extern char win_user_dir[1024];        /* host folder of every write: ~/Library/
 const char *win_save_folder(void);   /* files.c: the folder of the saved games (save_folder or the user folder) */
 int win_game_date(int *year, int *month, int *day);   /* savename.c: the game date, month and day from 1; 0 when unknown */
 extern char win_exe_path[1024];        /* host path of the player's cm0102.exe: the CD drive D:\ */
+extern char **win_argv;                 /* main's arguments: Restart Game starts the program again with them */
 extern char win_command_line[1024];    /* the Windows command line: "cm0102.exe" and the options */
 extern int win_trace;                  /* RECOMP_TRACE: print each import call */
 
@@ -97,6 +98,7 @@ void win_save_window(void);
 void win_present(void);                /* show the primary surface */
 void win_poll_events(void);            /* SDL events to the message queue */
 void win_game_work(void);              /* user32.c: game work ran in this pass, no idle sleep (#58) */
+void win_progress_idle(void);          /* display.c: the game waits for the player; the progress stage ended */
 /* user32.c: a hook on the game's random function 0x90cfc0 (cdecl (range)): called after each call with the esp of
  * the call (the return address is at [esp]), the caller's edi and the result, returns the result to use. NULL
  * when no code asks for it (season_uefa_qual.c, the Champions League group draw). */
@@ -109,6 +111,7 @@ extern uint32_t win_wndproc;
  * returns 1, or returns 0 when the key has nothing to press now. */
 extern uint32_t keys_display;                  /* the screen manager of the last input poll */
 int keys_typing(void);                         /* 1 while a text entry takes keys */
+int keys_typing_row(void);                     /* its middle row in the picture, or -1 (the browser build's page) */
 int keys_continue_game(int *x, int *y);        /* Continue Game in the left bar */
 int keys_back(int *x, int *y);                 /* the Back arrow in the left bar */
 int keys_outside_popup(int *x, int *y);        /* a place outside the open popup */

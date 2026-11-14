@@ -37,7 +37,7 @@
 #define SQUAD 50
 #define FILL_TO 15                  /* the squad check of 0x90d2f0 (0x90d469) */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int injured(uint32_t player)
 {

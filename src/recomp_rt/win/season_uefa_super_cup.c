@@ -39,7 +39,7 @@
 #define VENUE_STADIUM 0x10u             /* the stadium record of the cup's +0x24 (0x85c5a7) */
 #define VENUE_MONACO 0x8000u            /* 0x57a48d */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int same_name(const char *a, const char *b, size_t n)
 {

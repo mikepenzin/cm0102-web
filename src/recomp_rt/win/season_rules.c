@@ -26,6 +26,22 @@ static char *text;                 /* the file, with a NUL at the end of each fi
 static SeasonRule *rows;
 static int nrows;
 
+/* An index of the rows by season for season_rules_find: the first row of each season and the next row of the same
+ * season, in the order of the table, so a find reads the rows of its season only (about 280 of 7,102) and finds
+ * the row that the scan of the whole table finds. Built at the first find after a load. */
+#define INDEX_FIRST 1900
+#define INDEX_SPAN 300
+static int *next_same;
+static int first_of[INDEX_SPAN];
+static int indexed = -1;            /* 1: built, 0: a season outside the span (the finds scan the table), -1: not built */
+
+static void drop_index(void)
+{
+    free(next_same);
+    next_same = NULL;
+    indexed = -1;
+}
+
 static void drop(void)
 {
     free(text);
@@ -33,6 +49,29 @@ static void drop(void)
     text = NULL;
     rows = NULL;
     nrows = 0;
+    drop_index();
+}
+
+static void build_index(void)
+{
+    int last[INDEX_SPAN];
+    drop_index();
+    indexed = 0;
+    for (int k = 0; k < INDEX_SPAN; k++) first_of[k] = last[k] = -1;
+    if (nrows <= 0 || !(next_same = malloc((size_t)nrows * sizeof *next_same))) return;
+    for (int i = 0; i < nrows; i++) {
+        int k = rows[i].season - INDEX_FIRST;
+        if (k < 0 || k >= INDEX_SPAN) {
+            free(next_same);
+            next_same = NULL;
+            return;
+        }
+        next_same[i] = -1;
+        if (last[k] >= 0) next_same[last[k]] = i;
+        else first_of[k] = i;
+        last[k] = i;
+    }
+    indexed = 1;
 }
 
 /* A count of the file: digits, or a code. -100 when the field fits neither. */
@@ -187,6 +226,7 @@ int season_rules_load(const char *path)
         nrows++;
     }
     if (nrows != want) return fail(path, lineno, "fewer rows than line 1 says");
+    drop_index();
     return nrows;
 }
 
@@ -236,6 +276,13 @@ static int new_file(const SeasonRule *r, const char *file)
 
 const SeasonRule *season_rules_find(int season, const char *file, int n)
 {
+    if (indexed < 0) build_index();
+    if (indexed == 1) {
+        if (season < INDEX_FIRST || season >= INDEX_FIRST + INDEX_SPAN) return NULL;
+        for (int i = first_of[season - INDEX_FIRST]; i >= 0; i = next_same[i])
+            if ((has_file(rows[i].comp_file, file) || new_file(&rows[i], file)) && n-- == 0) return &rows[i];
+        return NULL;
+    }
     for (int i = 0; i < nrows; i++)
         if (rows[i].season == season && (has_file(rows[i].comp_file, file) || new_file(&rows[i], file)) && n-- == 0)
             return &rows[i];

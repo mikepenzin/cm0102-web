@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>CM 01/02 admin</title>
+<style>
+  :root { --bg: #0b0d10; --panel: #14181d; --raised: #1b2027; --line: #262c34; --text: #e7eaee; --muted: #8b95a2; --accent: #3ccf7f;
+    --warn: #e5a43a; --bad: #ef6b6b; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0;
+    background: var(--bg); z-index: 2; }
+  header h1 { font-size: 17px; margin: 0; } header .spacer { flex: 1; }
+  main { padding: 18px 20px 40px; max-width: 1400px; margin: 0 auto; }
+  button, input { font: inherit; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
+  button { cursor: pointer; }
+  .muted { color: var(--muted); } .small { font-size: 12px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-bottom: 18px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .card b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .card span { color: var(--muted); font-size: 12px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; }
+  section h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .scroll { overflow: auto; max-height: 70vh; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.22) transparent; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); white-space: nowrap; }
+  th { position: sticky; top: 0; background: var(--panel); color: var(--muted); font-weight: 500; font-size: 12px; border-top: 0; cursor: pointer; user-select: none; }
+  th.num, td.num { text-align: right; }
+  tr.linked td { color: var(--muted); }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; border: 1px solid var(--line); color: var(--muted); }
+  .tag.account { border-color: var(--accent); color: var(--accent); } .tag.sent { border-color: var(--accent); color: var(--accent); margin-right: 6px; }
+  #report-head { margin: 12px 0 6px; } #report-head button { margin-left: 8px; } .tag.cloud { border-color: var(--warn); color: var(--warn); }
+  .msg { padding: 40px 0; text-align: center; color: var(--muted); }
+  .bad { color: var(--bad); }
+  svg text { fill: var(--muted); font-size: 10px; }
+  pre { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 12px/1.4 ui-monospace, Menlo, monospace;
+    max-height: 50vh; overflow: auto; }
+  .reports td:nth-child(3) { white-space: normal; min-width: 320px; }
+  a { color: var(--accent); }
+  td .give { padding: 2px 9px; font-size: 12px; margin-left: 6px; }
+  td .give.on { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<header><h1>CM 01/02 admin</h1><span class="muted small" id="at"></span><span class="spacer"></span><button id="refresh">Refresh</button></header>
+<main id="main"><p class="msg">Loading…</p></main>
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const mb = (n) => (n >= 1073741824 ? `${(n / 1073741824).toFixed(1)} GB` : `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`);
+const hours = (s) => (s >= 3600 ? `${(s / 3600).toFixed(1)} h` : `${Math.round(s / 60)} min`);
+const when = (t) => new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+const ago = (t) => { const m = (Date.now() - t) / 60000; return m < 60 ? `${Math.round(m)} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; };
+let data = null, sortKey = 'last', sortDir = -1, filter = '';
+
+async function load() {
+  const r = await fetch('/api/admin/stats', { credentials: 'same-origin' });
+  if (r.status === 401) { $('main').innerHTML = '<p class="msg">Sign in with Google <a href="/">on the game\'s page</a> with an admin account (CM_ADMIN_EMAILS), then come back here.</p>'; return; }
+  if (r.status === 403) { $('main').innerHTML = '<p class="msg">This account is not an admin. The server\'s CM_ADMIN_EMAILS lists the admins.</p>'; return; }
+  if (!r.ok) { $('main').innerHTML = `<p class="msg bad">The server answered ${r.status}.</p>`; return; }
+  data = await r.json();
+  render();
+}
+
+function chart(days) {
+  const w = 900, h = 170, pad = 26, n = days.length || 1, bw = Math.min(30, (w - pad * 2) / n);
+  const maxA = Math.max(1, ...days.map((d) => d.active)), maxH = Math.max(1, ...days.map((d) => d.seconds / 3600));
+  const bars = days.map((d, i) => {
+    const bh = (d.active / maxA) * (h - pad * 2);
+    return `<rect x="${pad + i * bw + 1}" y="${h - pad - bh}" width="${Math.max(1, bw - 2)}" height="${bh}" rx="2" fill="#3ccf7f" opacity=".75"><title>${d.day}: ${d.active} active, ${hours(d.seconds)}, ${d.new} new, ${d.reports} reports</title></rect>`;
+  }).join('');
+  const line = days.map((d, i) => `${pad + i * bw + bw / 2},${h - pad - (d.seconds / 3600 / maxH) * (h - pad * 2)}`).join(' ');
+  const labels = days.filter((_, i) => i % Math.ceil(n / 8) === 0).map((d) => `<text x="${pad + days.indexOf(d) * bw}" y="${h - 8}">${d.day.slice(5)}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Active people and hours played per day">${bars}
+    <polyline points="${line}" fill="none" stroke="#e5a43a" stroke-width="2"/>${labels}
+    <text x="${pad}" y="14">people active per day (bars, top ${maxA}) · hours played (line, top ${maxH.toFixed(1)} h)</text></svg>`;
+}
+
+const COLS = [
+  ['who', 'Who'], ['kind', 'Kind'], ['plan', 'Cloud Saves'], ['first', 'First seen'], ['last', 'Last seen'], ['seconds', 'Played', 'num'], ['sessions', 'Visits', 'num'],
+  ['days', 'Days', 'num'], ['saves', 'Saves', 'num'], ['older', 'Older copies', 'num'], ['sets', 'Data sets', 'num'], ['reports', 'Errors', 'num'],
+  ['browser', 'Browser'], ['engine', 'Engine'],
+];
+const keyOf = (p, k) => (k === 'who' ? (p.email || p.id) : k === 'saves' || k === 'older' || k === 'sets' ? p[k]?.n ?? 0
+  : k === 'plan' ? (p.plan?.cloud ? (p.plan.from === 'subscription' ? 3 : 2) : p.kind === 'account' ? 1 : 0) : p[k] ?? '');
+const day = (t) => new Date(t).toLocaleDateString(undefined, { dateStyle: 'medium' });
+
+// The account's plan (the server reads each account record), and the button that gives Cloud Saves or takes back a gift.
+function planCell(p) {
+  if (p.kind !== 'account') return '';
+  const pl = p.plan;
+  if (!data.accountsOn) return '<span class="muted small">no accounts</span>';
+  if (!pl) return '<span class="muted small">no record</span>';
+  const what = pl.from === 'subscription' ? `paid${pl.until ? ` · to ${esc(day(pl.until))}` : ''}`
+    : pl.given ? `given by an admin${pl.givenAt ? ` · ${esc(day(pl.givenAt))}` : ''}` : pl.cloud ? 'given (server list)' : 'free';
+  const button = pl.given ? `<button class="give" data-give="${esc(p.id)}" data-on="0">Take back</button>`
+    : pl.cloud ? '' : `<button class="give on" data-give="${esc(p.id)}" data-on="1">Give</button>`;
+  return `<span class="${pl.cloud ? '' : 'muted'}">${what}</span>${button}`;
+}
+
+async function give(id, on) {
+  const p = data.people.find((x) => x.id === id);
+  if (!confirm(`${on ? 'Give Cloud Saves to' : 'Take back the Cloud Saves given to'} ${p?.email ?? id}? It counts from the player's next page load.`)) return;
+  const r = await fetch('/api/admin/cloud', { method: 'POST', credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', 'x-cm': '1' }, body: JSON.stringify({ id, on }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { alert(`Not changed: ${j.error ?? `the server answered ${r.status}`}`); return; }
+  if (p) { p.plan = j.plan; p.cloud = j.plan.cloud; }
+  $('people').innerHTML = peopleRows();
+}
+
+function peopleRows() {
+  const f = filter.toLowerCase();
+  const list = data.people.filter((p) => !f || `${p.email ?? ''} ${p.name ?? ''} ${p.id} ${p.browser ?? ''}`.toLowerCase().includes(f));
+  list.sort((a, b) => { const x = keyOf(a, sortKey), y = keyOf(b, sortKey); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
+  const byId = Object.fromEntries(data.people.map((p) => [p.id, p]));
+  return list.map((p) => `<tr class="${p.account ? 'linked' : ''}">
+    <td>${p.kind === 'account' ? `${esc(p.email)}<br><span class="small muted">${esc(p.name)}</span>` : `<span class="small">${esc(p.id.slice(2, 10))}…</span>${p.account ? `<br><span class="small">→ ${esc(byId[p.account]?.email ?? 'account')}</span>` : ''}`}</td>
+    <td><span class="tag ${p.kind === 'account' ? 'account' : ''}">${p.kind === 'account' ? 'account' : 'anonymous'}</span>${p.cloud ? ' <span class="tag cloud">cloud</span>' : ''}${p.vault ? '' : ' <span class="tag" title="the vault was off in its last visit">no vault</span>'}</td>
+    <td>${planCell(p)}</td>
+    <td>${esc(when(p.first))}</td><td title="${esc(when(p.last))}">${esc(ago(p.last))}</td>
+    <td class="num">${hours(p.seconds)}</td><td class="num">${p.sessions}</td><td class="num">${p.days}</td>
+    <td class="num">${p.saves?.n ?? 0} <span class="small muted">${mb(p.saves?.bytes ?? 0)}</span></td>
+    <td class="num">${p.older?.n ?? 0} <span class="small muted">${mb(p.older?.bytes ?? 0)}</span></td>
+    <td class="num">${p.sets?.n ?? 0} <span class="small muted">${mb(p.sets?.bytes ?? 0)}</span></td>
+    <td class="num">${p.reports ? `<span class="bad">${p.reports}</span>` : 0}</td>
+    <td>${esc(p.browser)}</td><td class="small">${esc(p.engine)}</td></tr>`).join('');
+}
+
+function render() {
+  const t = data.totals;
+  $('at').textContent = `as of ${when(data.at)}`;
+  const card = (label, value, sub = '') => `<div class="card"><span>${label}</span><b>${value}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
+  $('main').innerHTML = `
+    <div class="cards">
+      ${card('People', t.people, `${t.accounts} with an account · ${t.anonymous} anonymous`)}
+      ${card('Active today', t.activeToday, `${t.active7} in 7 days · ${t.active30} in 30`)}
+      ${card('Hours played', t.hours.toFixed(1), t.people ? `${(t.hours / t.people).toFixed(1)} h a person` : '')}
+      ${card('Cloud Saves', t.cloud, 'people with the plan')}
+      ${card('Saves', t.saves, mb(t.savesBytes))}
+      ${card('Older copies', t.older, mb(t.olderBytes))}
+      ${card('Data sets', t.sets, mb(t.setsBytes))}
+      ${card('Error reports', t.reports7, 'in 7 days')}
+      ${card('Said yes to statistics', t.allowed30 + t.declined30 ? `${Math.round(100 * t.allowed30 / (t.allowed30 + t.declined30))}%` : '–',
+        `${t.allowed30} yes · ${t.declined30} no, in 30 days`)}
+    </div>
+    <section><h2>Days</h2>${chart(data.days)}</section>
+    <section><h2>People</h2>
+      <div class="tools"><input id="filter" type="search" placeholder="Search an email, a name, an id, a browser" value="${esc(filter)}" style="min-width:320px">
+        <span class="small muted">${data.people.length} records. A browser that signed in counts with its account (grey rows).</span></div>
+      <div class="scroll"><table><thead><tr>${COLS.map(([k, label, cls]) => `<th data-k="${k}" class="${cls ?? ''}">${label}${sortKey === k ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('')}</tr></thead>
+        <tbody id="people">${peopleRows()}</tbody></table></div>
+    </section>
+    <section><h2>Error reports</h2>
+      ${data.reports.length ? `<div class="scroll"><table class="reports"><thead><tr><th>When</th><th>Who</th><th>Message</th><th>Browser</th><th>Engine</th></tr></thead><tbody>
+        ${data.reports.map((r, i) => `<tr><td>${esc(when(r.at))}</td><td class="small">${esc(data.people.find((p) => p.id === r.id)?.email ?? r.id.slice(0, 10))}</td>
+          <td>${r.sent ? '<span class="tag sent">Sent by the player</span>' : ''}<a href="#" data-report="${i}">${esc(r.message)}</a>${
+            r.note ? `<div class="small muted">${esc(r.note)}</div>` : ''}${r.save ? `<div class="small">Save: ${esc(r.save.name)} (${mb(r.save.rawSize ?? r.save.size)})</div>` : ''}</td>
+          <td>${esc(r.browser)}</td><td class="small">${esc(r.engine)}</td></tr>`).join('')}
+      </tbody></table></div><div id="report-head" hidden></div><pre id="report" hidden></pre>` : '<p class="muted">No error reports.</p>'}
+    </section>`;
+  $('filter').oninput = (e) => { filter = e.target.value; $('people').innerHTML = peopleRows(); };
+  $('people').onclick = (e) => { const b = e.target.closest('[data-give]'); if (b) give(b.dataset.give, b.dataset.on === '1'); };
+  document.querySelectorAll('th[data-k]').forEach((th) => { th.onclick = () => { const k = th.dataset.k; sortDir = sortKey === k ? -sortDir : -1; sortKey = k; render(); }; });
+  document.querySelectorAll('[data-report]').forEach((a) => {
+    a.onclick = async (e) => {
+      e.preventDefault();
+      const r = data.reports[Number(a.dataset.report)], box = $('report'), head = $('report-head');
+      box.hidden = false;
+      head.hidden = true;
+      box.textContent = 'Loading…';
+      const res = await fetch(`/api/admin/report?key=${encodeURIComponent(r.key)}`, { credentials: 'same-origin' });
+      const full = res.ok ? await res.json() : null;
+      box.textContent = full ? `${full.at} · ${full.id} · ${full.browser} · ${full.engine}${full.where ? ` · ${full.where}` : ''}\n${full.message}${
+        full.note ? `\n\nThe player wrote:\n${full.note}` : ''}\n\n${full.log.join('\n')}` : 'The report file is not in the store.';
+      // A save the player sent: kept packed (gzip) in the store; the button unpacks it and saves it under its own name.
+      if (full?.save) {
+        head.hidden = false;
+        head.innerHTML = full.saveUrl
+          ? `Save: <b>${esc(full.save.name)}</b> (${mb(full.save.rawSize ?? full.save.size)}, ${mb(full.save.size)} packed)<button id="report-save-get">Download the save</button> <a href="${esc(full.saveUrl)}" class="small">packed (.gz)</a>`
+          : `Save: ${esc(full.save.name)}: ${full.save.done ? 'the store gives no link' : 'it did not arrive'}`;
+        const get = $('report-save-get');
+        if (get) get.onclick = async () => {
+          get.disabled = true;
+          get.textContent = 'Getting it…';
+          try {
+            const got = await fetch(full.saveUrl);
+            if (!got.ok) throw new Error(`the store answered ${got.status}`);
+            const blob = await new Response(got.body.pipeThrough(new DecompressionStream('gzip'))).blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = full.save.name;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+            get.textContent = 'Download the save';
+          } catch (err) { get.textContent = `Not got: ${err.message}`; }
+          get.disabled = false;
+        };
+      }
+      box.scrollIntoView({ block: 'nearest' });
+    };
+  });
+}
+
+$('refresh').onclick = load;
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>

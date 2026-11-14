@@ -1,0 +1,36 @@
+# Fly.io settings of the web app (web/deploy/README.md). `fly launch --no-deploy --copy-config --name <app>` in the
+# stage folder sets the app name and region the first time; later stages keep that file.
+app = "cm0102-web"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# The machine only serves files, and stops when nobody is visiting.
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # A first visit asks for the game files several at a time, so the limits count requests, not connections: the
+  # server streams files from disk and holds little per request. Past the soft limit Fly starts another machine, when
+  # the app has one (web/deploy/README.md, "Size of the machine").
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 150
+    hard_limit = 250
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/healthz"
+    timeout = "5s"
+
+# 512 MB: Node and the statistics take some 80 MB, and each cloud upload is held in memory while it is checked (a save
+# up to 64 MB, a data set up to 48 MB; CM_UPLOAD_BUDGET_MB, default 160, caps them together).
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

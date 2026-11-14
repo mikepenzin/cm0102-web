@@ -39,7 +39,7 @@
 #define TABLE_SIZE 25
 #define MIN_SQUAD 11
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int squad_of(uint32_t club)
 {

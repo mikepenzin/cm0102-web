@@ -253,9 +253,9 @@ uint32_t season_comps_record(const char *name)
 
 const char *season_comps_file(uint32_t obj)
 {
-    if (obj < 0x10000u || obj >= 0xfff00000u) return NULL;
+    if (!rt_readable(obj)) return NULL;
     uint32_t rec = rd32(g_mem, obj + 4);
-    if (rec < 0x10000u || rec >= 0xfff00000u) return NULL;
+    if (!rt_readable(rec)) return NULL;
     const char *n = season_change_data_name(rec);
     for (int i = 0; n && i < season_comp_def_count; i++) {
         const SeasonCompDef *d = def_at(i);
@@ -355,7 +355,7 @@ uint32_t season_comps_def_vtable(const SeasonCompDef *d, uint32_t vtable, int sl
 
 const char *season_comps_file_of(uint32_t obj)
 {
-    if (obj < 0x10000u || obj >= 0xfff00000u) return NULL;
+    if (!rt_readable(obj)) return NULL;
     uint32_t vt = rd32(g_mem, obj);
     for (int i = 0; vt && i < season_comp_def_count && i < MAX_DEFS; i++)
         if (def_vtables[i] == vt) return season_comp_defs[i]->file;

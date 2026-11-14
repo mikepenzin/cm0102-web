@@ -56,6 +56,10 @@ void *host_reserve(size_t size)
     return m;
 }
 
+/* The guard of RECOMP_GUARD is a test of macOS and Linux: the block here commits its pages on first use (on_fault). */
+int host_protect(void *addr, size_t size, int open) { (void)addr; (void)size; (void)open; return -1; }
+void host_on_fault(void (*note)(const void *addr)) { (void)note; }
+
 /* UTF-8 and UTF-16. */
 static int to_wide(const char *s, wchar_t *out, int room)
 {
@@ -424,4 +428,21 @@ int host_pick_folder(const char *title, char *out, size_t room)
     size_t n = strlen(out);
     while (n > 3 && out[n - 1] == '/') out[--n] = 0;
     return 1;
+}
+
+/* The game's Restart Game (kernel32.c, WinExec): a new process with this one's command line, then this one ends. */
+void host_restart(char *const argv[])
+{
+    (void)argv;
+    wchar_t *line = _wcsdup(GetCommandLineW());     /* CreateProcessW may write into its command line */
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof si;
+    if (!line || !CreateProcessW(NULL, line, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) { free(line); return; }
+    free(line);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    fflush(NULL);
+    exit(0);
 }

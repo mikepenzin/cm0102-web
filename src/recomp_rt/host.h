@@ -24,6 +24,12 @@
  * on first use. NULL on failure. */
 void *host_reserve(size_t size);
 
+/* The guard of RECOMP_GUARD (rt.c), a test: host_protect makes a page-aligned part of the reserved block fault on
+ * any access (open 0) or open again (open 1), 0 on success, -1 where the host cannot (Windows, the browser).
+ * host_on_fault calls note with the address of each such fault before the program stops as it would without it. */
+int host_protect(void *addr, size_t size, int open);
+void host_on_fault(void (*note)(const void *addr));
+
 /* Files. host_open takes the O_ flags of <fcntl.h> and opens in binary mode. */
 int host_open(const char *path, int flags, int mode);
 long host_read(int fd, void *buf, uint32_t n);
@@ -46,6 +52,14 @@ int host_replace(const char *from, const char *to);
 /* Flushes the file to the disk. 0 on success. Call fflush first. */
 int host_sync(FILE *f);
 
+#ifdef __EMSCRIPTEN__
+/* The browser build (host/web.c): nonzero while the page calls the runtime between two frames, outside the
+ * game's turn (rt_web_choose_data_set). Nothing may wait for the browser then: JSPI stops such a wait with "trying
+ * to suspend without WebAssembly.promising". host_sync, which is FS.syncfs of the browser's storage (fd_sync), then
+ * only flushes, and the page saves the folder to the browser's storage itself after the call. */
+extern int host_web_page_call;
+#endif
+
 /* Folder listing: each name, "." and ".." included, then NULL. */
 typedef struct HostDir HostDir;
 HostDir *host_opendir(const char *path);
@@ -56,6 +70,11 @@ void host_closedir(HostDir *d);
 int host_realpath(const char *path, char *out, size_t room);
 /* The path of the running program. 0 on failure. */
 int host_program_path(char *out, size_t room);
+
+/* Starts this program again with the arguments of this start (argv as main got it), and ends this one: the game's
+ * Restart Game (restart_game 0x68dbc0 runs it through WinExec, kernel32.c). Returns only when it could not. In the
+ * browser the page saves the user folder and loads again (loader.js, Module.rtRestart). */
+void host_restart(char *const argv[]);
 /* The current folder. 0 on failure. */
 int host_current_dir(char *out, size_t room);
 /* The folder for every write of the game, not yet created: ~/Library/Application Support/cm0102 or

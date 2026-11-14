@@ -69,7 +69,7 @@ static const uint32_t REGION_KEYS[3] = {0x9cf994u, 0x9cf9a4u, 0x9cf998u};   /* N
 #define MAX_PICK 64
 #define DEFAULT_COUNT 16            /* Q601: no known count */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static uint32_t call_cdecl(uint32_t fn, int nargs, const uint32_t *args)
 {

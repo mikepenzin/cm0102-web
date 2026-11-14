@@ -73,7 +73,7 @@
 #define F_SET_POSITION 0x004a2540u  /* set a predicted position, thiscall (club, position), ret 8 */
 #define F_BY_LATITUDE 0x0053fd40u   /* the compare of the Spanish and Portuguese group deals (push at 0x85067f, 0x7d02c5) */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int divisions_on(void)
 {

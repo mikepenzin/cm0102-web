@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing · CM 01/02 in the Browser</title>
+<meta name="theme-color" content="#0b0d10">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<style>
+  :root { --bg: #0b0d10; --panel: #151a20; --text: #e8ebef; --muted: #97a2af; --line: #29313b; --accent: #35b673; color-scheme: dark; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 28px 0 6px; }
+  p, li { color: var(--muted); }
+  b { color: var(--text); font-weight: 600; }
+  a { color: var(--accent); }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+  td { border-top: 1px solid var(--line); padding: 7px 8px 7px 0; vertical-align: top; color: var(--muted); }
+  td:first-child { color: var(--text); white-space: nowrap; padding-right: 16px; }
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 18px 0; }
+  .plan { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .plan.on { border-color: var(--accent); }        /* the free game: what everybody has */
+  .plan .tag { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+  .plan.on .tag { color: var(--accent); }
+  .plan h3 { margin: 0; font-size: 16px; }
+  .plan .price { color: var(--text); font-size: 22px; font-weight: 650; margin: 4px 0 8px; }
+  .plan ul { margin: 0; padding-left: 18px; }
+  .updated { font-size: 13px; }
+  nav { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; }
+  nav a { margin-right: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pricing</h1>
+  <p>The game is free to play in your browser. Cloud Saves keep your saved games on all your devices.</p>
+  <div class="plans">
+    <div class="plan on">
+      <span class="tag">Included · no account</span>
+      <h3>The game</h3>
+      <div class="price">Free</div>
+      <ul>
+        <li>The whole game, in your browser</li>
+        <li>Your saves stay in that browser</li>
+        <li>Download and upload saves as files</li>
+        <li>No account needed</li>
+      </ul>
+    </div>
+    <div class="plan pro">
+      <span class="tag">Optional add-on</span>
+      <h3>Cloud Saves</h3>
+      <div class="price">{{PRICE}}</div>
+      <ul>
+        <li>Your saves on every computer, laptop and iPad</li>
+        <li>Each save backed up right after you save</li>
+        <li>Play on two devices: both versions are kept</li>
+        <li>Up to 30 saved games in the cloud</li>
+        <li>Sign in with your Google account</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>What you pay for</h2>
+  <p>Cloud Saves is a service: we store your own saved games and keep them the same on your devices. You do not pay
+  for the game, which is free with or without Cloud Saves.</p>
+
+  <h2>Why sign in with Google</h2>
+  <p>Signing in is how your cloud saves know they are yours, on any device. Signing in alone changes nothing else: an
+  account without Cloud Saves plays exactly like no account. We get your email address and name from Google, nothing
+  else (<a href="/privacy">Privacy</a>).</p>
+
+  <h2>Paying, cancelling, refunds</h2>
+  <p>Cloud Saves renew every month until you cancel. Cancel any time from Account, Manage subscription, in the game's
+  page: Cloud Saves then run to the end of the month you paid for. A full refund within 14 days of any payment, no
+  questions asked (<a href="/refunds">Refunds</a>).</p>
+  <p>Our order process is conducted by our online reseller Paddle.com. Paddle.com is the Merchant of Record for all our
+  orders. Paddle provides all customer service inquiries and handles returns. Prices may include sales tax or VAT,
+  depending on where you live.</p>
+
+  <h2>Contact</h2>
+  <p>{{SELLER}}: {{CONTACT}}.</p>
+  <p>CM 01/02 in the Browser is an unofficial fan project. It is not affiliated with or endorsed by Sports Interactive,
+  SEGA, Eidos or Square Enix. Championship Manager is a trademark of Square Enix.</p>
+
+  <nav><a href="/">The game</a><a href="/pricing">Pricing</a><a href="/terms">Terms</a><a href="/refunds">Refunds</a><a href="/privacy">Privacy</a></nav>
+</main>
+</body>
+</html>

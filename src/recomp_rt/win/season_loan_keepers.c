@@ -33,7 +33,7 @@
 #define IS_HUMAN 0x600a50u              /* cdecl (club, 0, 1, 0, 0), nonzero for a human club */
 #define SQUAD_COUNT_RET 0x8c2402u       /* the return address of the squad count in 0x8c2180's loan path */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static int keeper(uint32_t staff)
 {

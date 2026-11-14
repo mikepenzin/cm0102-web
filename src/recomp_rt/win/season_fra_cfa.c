@@ -22,6 +22,7 @@
 #define KEY_A 0x9cf5ccu
 #define KEY_B 0x9cf5d0u
 #define GROUPS_CLUBS 0x48
+#define LOWER_CLUBS 0x28           /* FraLower's array (0x5bd6e9) */
 
 uint32_t rt_fra_cfa_lower_cap(uint32_t original)
 {
@@ -42,5 +43,33 @@ uint32_t rt_fra_cfa_lower_cap(uint32_t original)
     if ((uint32_t)cap != original && !said++)
         fprintf(stderr, "recomp: french cfa: %d clubs of the two upper divisions, so up to %d lower clubs (the "
                         "original takes %u)\n", upper, cap, original);
+    return (uint32_t)cap;
+}
+
+/* FraLower::FraLower 0x5bd600 (the National's background league) fills a stack array of 40 (0x28) with every club of
+ * the National (division key [0x9cf5d4], 0x5bd6db..0x5bd6ed) and up to 20 French clubs (+0x53 [0x9cf300]) of A Lower
+ * Division [0x9cf764] with no zone record (+0x60), the cap at 0x5bd71d. It shuffles the clubs it took (0x4afb40 at
+ * 0x5bd758) and makes two tables of 20 from the array (FraLower::create_table 0x5be230, called at 0x5bd769 for +0 and
+ * +0x50), which reads each place as a club (0x5be2d7) without a count. With a National of 19 (the October 2026 Data
+ * Update in 2025/26) the last place kept a stack value: natively it read zeros, in the browser the memory of the
+ * page, and the game stopped later with "memory access out of bounds". In a season game the cap is 40 less the
+ * National's clubs, so the lower division fills the array when it holds enough clubs. The base game keeps 20. */
+uint32_t rt_fra_lower_cap(uint32_t original)
+{
+    if (!season_game_changes()) return original;
+    uint32_t base = rd32(g_mem, CLUBS);
+    int32_t count = (int32_t)rd32(g_mem, CLUB_COUNT) - 2 * (int32_t)rd32(g_mem, NATION_COUNT);
+    int32_t national = (int32_t)rd32(g_mem, 0x9cf5d4u);
+    int in_national = 0;
+    for (int32_t i = 0; i < count; i++) {
+        uint32_t d = rd32(g_mem, base + (uint32_t)i * CLUB_SIZE + CLUB_DIVISION);
+        if (d && (int32_t)rd32(g_mem, d) == national) in_national++;
+    }
+    int cap = LOWER_CLUBS - in_national;
+    if (cap < 0) cap = 0;
+    static int said;
+    if ((uint32_t)cap != original && !said++)
+        fprintf(stderr, "recomp: french national: %d clubs in the National, so up to %d lower clubs (the original "
+                        "takes %u)\n", in_national, cap, original);
     return (uint32_t)cap;
 }

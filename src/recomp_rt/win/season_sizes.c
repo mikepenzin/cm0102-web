@@ -37,7 +37,7 @@
 #define MIN_CLUBS 2
 #define MAX_CLUBS 60
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 /* A season game with the sizes on. Test switch RECOMP_LEAGUE_SIZES=off: the original's counts and places (the
  * club moves of slice 15 still run). */
@@ -266,6 +266,52 @@ uint32_t rt_fra_lge_first(uint32_t original, uint32_t edx)
     int room = (int)(rt_cup_room(0x60u, 54u, 0x9cf5d0u, 0x9cf5ccu, 0u) / 6u), limit = room - from_cfa;
     if (limit < base) limit = base;
     return (uint32_t)(limit - (int)edx);
+}
+
+/* FraLgeCup::collect_entrants 0x5bd160, thiscall, ret 0, called by the constructor 0x5bc980 (0x5bca0a) and by
+ * start_new_season 0x5bd420: both loops of National clubs skip a club whose last division (+0x5b) is not set
+ * (0x5bd222..0x5bd227, 0x5bd2c4..0x5bd2c9). A database that leaves it unset for National clubs can then fill fewer
+ * places than the room (rt_cup_room at 0x5bd2ac) even with enough clubs: the October 2026 Data Update in 2025/26
+ * has 19 National clubs, 15 from another division, 2 from the CFA and 2 with none, so 17 of 18, 53 entrants, and
+ * the constructor stopped at fra_lge_cup.cpp 73 (0x5bca3a; the box at 0x5bcb21). Only when the two loops would fall
+ * short, the wrap gives as many of those clubs as the room needs their own division as the last one for the time
+ * of the call (in the order of the club table), so the first loop takes them, and then puts the old value back. */
+void o_005bd160(void);
+
+RT_WRAP(005bd160, fra_lge_entrants)
+{
+    uint32_t table = rd32(g_mem, CLUBS);
+    int count = (int)rd32(g_mem, CLUB_COUNT);
+    if (!sizes_on() || !readable(table)) {
+        o_005bd160();
+        return;
+    }
+    int32_t national = (int32_t)rd32(g_mem, 0x9cf5d4u), cfa = (int32_t)rd32(g_mem, 0x9cf5d8u);
+    int other = 0, from_cfa = 0, none = 0;
+    for (int i = 0; i < count; i++) {
+        uint32_t at = table + (uint32_t)i * CLUB_SIZE, div = rd32(g_mem, at + CLUB_DIVISION), last = rd32(g_mem, at + 0x5bu);
+        if (!readable(div) || (int32_t)rd32(g_mem, div) != national) continue;
+        if (!last) none++;
+        else if (readable(last)) { if ((int32_t)rd32(g_mem, last) == cfa) from_cfa++; else other++; }
+    }
+    int room = (int)(rt_cup_room(0x60u, 54u, 0x9cf5d0u, 0x9cf5ccu, 0u) / 6u), need = room - other - from_cfa;
+    if (need <= 0 || none == 0) {
+        o_005bd160();
+        return;
+    }
+    if (need > none) need = none;
+    uint32_t set[64];
+    int n = 0;
+    for (int i = 0; i < count && n < need && n < 64; i++) {
+        uint32_t at = table + (uint32_t)i * CLUB_SIZE, div = rd32(g_mem, at + CLUB_DIVISION);
+        if (!readable(div) || (int32_t)rd32(g_mem, div) != national || rd32(g_mem, at + 0x5bu)) continue;
+        wr32(g_mem, at + 0x5bu, div);
+        set[n++] = at;
+    }
+    fprintf(stderr, "recomp: league sizes: French League Cup: %d National clubs with no last division count as from "
+            "the National (%d from another division, %d from the CFA, room %d)\n", n, other, from_cfa, room);
+    o_005bd160();
+    for (int k = 0; k < n; k++) wr32(g_mem, set[k] + 0x5bu, 0);
 }
 
 /* EngFaCup::collect_entrants 0x56fab0 (O294) puts the National League clubs ([0x9cf69c]) in a stack array at

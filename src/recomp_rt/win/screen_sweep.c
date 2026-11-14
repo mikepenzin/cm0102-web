@@ -15,7 +15,8 @@
  * The screen of a record is only opened when [0xadadfc][record id] is the object, as the news click tests
  * (0x764470..0x7644dc). The objects of record_utils (ReserveComp, BIntComp, Under21IntComp and the others) are left
  * out: they hold the records of reserve and international squads, have no stage, and Comp::get_stage 0x48d200
- * stops at "comp.cpp 878" (0x48d289) for them. The game never opens their screen. A pass starts at the first human
+ * stops at "comp.cpp 878" (0x48d289) for them. The game never opens their screen. So are the two French
+ * placeholders (placeholder below), found by a sweep with France in it (2026-11-12). A pass starts at the first human
  * turn and at the first turn of each September, and takes one screen a turn, so a season's pass is spread over its
  * first months. The log names each screen
  * ("recomp: screen sweep: ... view n"), writes "recomp: screen sweep: built" at its first build and counts the
@@ -51,7 +52,7 @@ static uint32_t objects[MAX_OBJECTS];
 static int count, next_item = -1, pass_season = -1, pushed, built_comp, built_history;
 static int waiting;                 /* 1: a competition screen, 2: a history screen, pushed and not built yet */
 
-static int readable(uint32_t p) { return p >= 0x10000u && p < 0xfff00000u; }
+static int readable(uint32_t p) { return rt_readable(p); }
 
 static uint32_t call(uint32_t fn, int n, const uint32_t *args)
 {
@@ -114,13 +115,24 @@ static int openable(uint32_t obj)
     return id >= 0 && id < slots && rd32(g_mem, table + 4u * (uint32_t)id) == obj;
 }
 
+/* The two placeholders that FraFirst::FraFirst 0x5bb160 makes for the French CFA and the lower divisions:
+ * FraCfaStubComp (vtable 0x96a994, set again by its destructor at 0x5bb580) and FraLowerStubComp (0x96a904, at
+ * 0x5bb5b0). Like the objects of record_utils they have no stage (+0x2c 0, +0xc NULL), so the stages view stops at
+ * "comp.cpp 878" (Comp::get_stage 0x48d200), and the game lists neither under Competitions, France. */
+static int placeholder(uint32_t obj)
+{
+    uint32_t vt = readable(obj) ? rd32(g_mem, obj) : 0;
+    return vt == 0x0096a994u || vt == 0x0096a904u;
+}
+
 static void start_pass(int season)
 {
     uint32_t all[MAX_OBJECTS];
     int n = season_change_comps(all, MAX_OBJECTS);
     count = 0;
     for (int i = 0; i < n; i++)
-        if (openable(all[i]) && strcmp(season_change_file(all[i]), "record_utils")) objects[count++] = all[i];
+        if (openable(all[i]) && strcmp(season_change_file(all[i]), "record_utils") && !placeholder(all[i]))
+            objects[count++] = all[i];
     next_item = 0;
     pass_season = season;
     pushed = built_comp = built_history = 0;

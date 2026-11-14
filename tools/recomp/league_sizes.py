@@ -189,4 +189,12 @@ INSNS.update(DATES)
 INSNS[0x5B92E8] = ("cmp word ptr [esp + 0x10], 0x22",
                    "t0 = R16(esp + 0x10u); t1 = rt_fra_cfa_lower_cap(0x22u) & 0xffffu; t2 = ((t0 - t1 - 0) & 0xffffu); "
                    "SETF(K_SUB | SZ2, t0, t1, t2, 0);")
+# FraLower::FraLower 0x5bd600 fills a stack array of 40 (0x28) with every club of the National [0x9cf5d4] and up to
+# 20 French clubs of A Lower Division [0x9cf764] with no zone (`cmp word ptr [esp + 0x10], 0x14`), shuffles the ones
+# it took (0x4afb40 at 0x5bd758) and makes two tables of 20 (0x5be230 at 0x5bd769, the second at +0x50). With a
+# National of 19 (October 2026 Data Update, 2025/26) the last place kept a stack value that the table took as a club.
+# In a season game the cap is 40 less the National's clubs.
+INSNS[0x5BD71D] = ("cmp word ptr [esp + 0x10], 0x14",
+                   "t0 = R16(esp + 0x10u); t1 = rt_fra_lower_cap(0x14u) & 0xffffu; t2 = ((t0 - t1 - 0) & 0xffffu); "
+                   "SETF(K_SUB | SZ2, t0, t1, t2, 0);")
 INSNS.update(CUP_INSNS)

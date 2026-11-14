@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>CM 01/02 in the Browser</title>
+<meta name="theme-color" content="#0b0d10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CM 01/02">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<style>
+  :root {
+    --bg: #0b0d10; --panel: #151a20; --raised: #1d242c; --text: #e8ebef; --muted: #97a2af; --line: #29313b;
+    --accent: #35b673; --accent-ink: #06140c; --bad: #ff7b72; --warn: #e3b341; --bar-h: 44px;
+    color-scheme: dark;
+  }
+  @media (pointer: coarse) { :root { --bar-h: 50px; } }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }      /* also for the elements that a rule below gives a display */
+  html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: var(--bg); }
+  body { color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none;
+    -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+  #app { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--bg);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+  /* The bar above the game. */
+  #bar { flex: none; height: var(--bar-h); display: flex; align-items: center; gap: 8px; padding: 0 10px 0 14px;
+    background: var(--panel); border-bottom: 1px solid var(--line); min-width: 0; }
+  .brand { font-weight: 650; letter-spacing: .01em; white-space: nowrap; }
+  #status { color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  button { font: inherit; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0 12px; height: 32px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+  @media (pointer: coarse) { button { height: 38px; padding: 0 14px; } }
+  button:hover { border-color: #3a4552; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  button svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  @media (max-width: 720px) { #bar button span { display: none; } #bar button { padding: 0 10px; } }
+
+  /* The game. The size and place of the canvas come from layout.js, as variables on the stage; they are !important
+     so that a size SDL writes on the canvas itself cannot take their place. */
+  #stage { flex: 1; min-height: 0; position: relative; overflow: hidden; background: #000; }
+  #canvas { position: absolute; display: block; background: #000; outline: none; touch-action: none;
+    left: var(--cl, 0px) !important; top: var(--ct, 0px) !important;
+    width: var(--cw, 100%) !important; height: var(--ch, 100%) !important;
+    transform: translateY(var(--shift, 0px)); transition: transform .18s ease; }
+  #fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .ping { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .9); animation: ping .32s ease-out forwards; }
+  .ping.right { width: 60px; height: 60px; margin: -30px 0 0 -30px; border-color: var(--accent); border-width: 3px; animation-duration: .5s; }
+  @keyframes ping { from { transform: scale(.35); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+  /* A held finger (touch.js): the ring fills until the long press is a right click. */
+  .ping.hold { width: 60px; height: 60px; margin: -30px 0 0 -30px; border: 3px solid var(--accent); opacity: .85;
+    animation: hold linear forwards; }
+  @keyframes hold { from { transform: scale(.25); opacity: .25; } to { transform: scale(1); opacity: .95; } }
+  /* Right click armed: the button shows it until the tap. */
+  #right-click[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  #type-chip { position: absolute; left: var(--chip-x, 50%); top: var(--chip-y, 50%); z-index: 3;
+    transform: translate(-100%, -50%); background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+    font-weight: 650; box-shadow: 0 4px 18px rgba(0, 0, 0, .5); animation: chip 1.6s ease-in-out infinite; }
+  @keyframes chip { 50% { box-shadow: 0 4px 18px rgba(0, 0, 0, .5), 0 0 0 7px rgba(53, 182, 115, .28); } }
+
+  #busy { position: absolute; left: 12px; top: 12px; z-index: 3; display: flex; align-items: center; gap: 8px; opacity: 0;
+    padding: 6px 12px 6px 9px; border-radius: 999px; background: rgba(21, 26, 32, .9); border: 1px solid var(--line);
+    color: var(--muted); pointer-events: none; will-change: opacity; }
+  .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent);
+    animation: spin .8s linear infinite; will-change: transform; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #toasts { position: absolute; left: 0; right: 0; bottom: calc(14px + var(--covered, 0px)); z-index: 4; display: flex; flex-direction: column;
+    align-items: center; gap: 6px; pointer-events: none; padding: 0 12px; }
+  .toast { background: rgba(21, 26, 32, .94); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, .45); animation: rise .18s ease-out; max-width: 100%; text-align: center; }
+  .toast.bad { border-color: var(--bad); color: var(--bad); }
+  @keyframes rise { from { transform: translateY(8px); opacity: 0; } }
+
+  /* The question about the statistics (stats.js, consent): over the game and the start box, in a corner; the two
+     answers look the same, so neither is the easy one. */
+  #consent { position: absolute; left: 12px; bottom: calc(12px + var(--covered, 0px)); z-index: 6; max-width: 400px; padding: 12px 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 34px rgba(0, 0, 0, .5); font-size: 13px; }
+  #consent p { margin: 0 0 10px; color: var(--muted); } #consent p b { color: var(--text, inherit); }
+  #consent .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } #consent .row a { margin-left: 4px; }
+  #consent .small { margin: 8px 0 0; font-size: 12px; }
+  @media (max-width: 520px) { #consent { right: 12px; max-width: none; } }
+
+  /* The boxes over the game: start, progress, errors. */
+  #overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 16px;
+    background: radial-gradient(ellipse at center, rgba(11, 13, 16, .82), rgba(11, 13, 16, .96)); overflow: auto; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; max-width: 540px; width: 100%;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .5); }
+  .box h1 { font-size: 19px; margin: 0 0 8px; letter-spacing: -.01em; }
+  .box p { margin: 0 0 14px; color: var(--muted); }
+  .box.error { border-color: var(--bad); }
+  .box.error h1 { color: var(--bad); }
+  .box ul { margin: 0 0 14px; padding-left: 18px; color: var(--muted); }
+  .box .primary { height: 42px; padding: 0 20px; font-size: 15px; }
+  .box .row { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+  .bar { height: 10px; background: var(--raised); border-radius: 5px; overflow: hidden; margin: 10px 0 8px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 5px; transition: width .2s linear; }
+  .small { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bad { color: var(--bad); }
+
+  /* The hidden field of the on-screen keyboard (keyboard.js): at the top, where the keyboard never covers it, so the
+     device does not scroll the page to it; not visible; 16px, so the device does not zoom the page when it gets the focus. */
+  #kbd { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; margin: 0;
+    font-size: 16px; background: transparent; color: transparent; caret-color: transparent; pointer-events: none; }
+
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px;
+    width: min(660px, calc(100vw - 24px)); max-height: calc(100% - 24px); box-shadow: 0 18px 50px rgba(0, 0, 0, .55);
+    -webkit-user-select: text; user-select: text; }
+  dialog::backdrop { background: rgba(0, 0, 0, .55); }
+  /* Every dialog: the title on top, the body between, the buttons at the bottom always in view. The lists scroll on
+     their own (.dlg-list); the body scrolls only when even the shortest lists leave it too little room. */
+  dialog[open] { display: flex; flex-direction: column; overflow: hidden; }
+  dialog > * { flex: none; }
+  dialog .dlg-body { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column;
+    overscroll-behavior: contain; margin: 0 -6px; padding: 0 6px; }
+  dialog .dlg-body > * { flex: none; }
+  dialog .dlg-list { flex: 0 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+  dialog .dlg-list:has(tr + tr) { min-height: 76px; }     /* the header and one row: never squeezed under its header */
+  dialog .dlg-list:has(tr + tr + tr) { min-height: 118px; }
+  dialog .dlg-list tr:first-child th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
+  dialog .dlg-foot { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  #sets:not([hidden]), #tactics:not([hidden]) { display: contents; }
+  /* Narrow screens: a list keeps its columns whole and scrolls sideways, not one letter a line. */
+  @media (max-width: 640px) {
+    dialog .dlg-list table { width: max-content; min-width: 100%; }
+    dialog .dlg-list th, dialog .dlg-list td { overflow-wrap: normal; white-space: nowrap; }
+    dialog .dlg-list:has(tr + tr + tr) { min-height: 150px; }
+  }
+  /* Slim scroll bars in the dialogs, the overlay and the log. */
+  dialog *, #overlay, #log { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .22) transparent; }
+  dialog ::-webkit-scrollbar, #overlay::-webkit-scrollbar, #log::-webkit-scrollbar { width: 6px; height: 6px; }
+  dialog ::-webkit-scrollbar-track, #overlay::-webkit-scrollbar-track, #log::-webkit-scrollbar-track { background: transparent; }
+  dialog ::-webkit-scrollbar-thumb, #overlay::-webkit-scrollbar-thumb, #log::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, .22); border-radius: 6px; }
+  dialog ::-webkit-scrollbar-thumb:hover, #overlay::-webkit-scrollbar-thumb:hover, #log::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, .38); }
+  dialog h2 { font-size: 17px; margin: 0 0 6px; }
+  dialog h3 { font-size: 13px; margin: 16px 0 4px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  dialog table { width: 100%; border-collapse: collapse; margin: 6px 0; font-variant-numeric: tabular-nums; }
+  dialog th, dialog td { text-align: left; padding: 6px 6px; border-top: 1px solid var(--line); overflow-wrap: anywhere; vertical-align: top; }
+  dialog th { color: var(--muted); font-weight: 500; font-size: 12px; border-top: 0; }
+  dialog td:first-child { white-space: nowrap; }
+  dialog .num { text-align: right; white-space: nowrap; }
+  dialog .row { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+  dialog .spacer { flex: 1; }
+  dialog p { margin: 0 0 8px; }
+  #saves-note, #account-note { white-space: pre-line; }
+  dialog td.cloud { white-space: nowrap; color: var(--muted); }
+  dialog td.cloud.cloud { color: var(--accent); }
+  button.link { background: none; border: 0; padding: 0 4px; height: auto; color: var(--muted); text-decoration: underline; }
+  a { color: var(--accent); }
+  a.button { display: inline-flex; align-items: center; height: 38px; padding: 0 16px; border-radius: 8px; text-decoration: none; }
+  a.button.primary { background: var(--accent); color: var(--accent-ink); font-weight: 650; }
+  #account-open .dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: -2px; }
+  #account-open.on .dot { display: inline-block; }
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
+  .plan { background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .plan.on { border-color: var(--accent); }        /* the free game: what everybody has */
+  .plan .tag { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+  .plan.on .tag { color: var(--accent); }
+  .free-note { color: var(--accent); font-weight: 600; font-size: 14px; }
+  .addon { margin: 16px 0 10px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 13px; }
+  .addon b { color: var(--text); }
+  .plan h4 { margin: 0; font-size: 14px; }
+  .plan .price { font-size: 19px; font-weight: 650; margin: 2px 0 6px; color: var(--text); }
+  .plan ul { margin: 0; padding-left: 17px; color: var(--muted); font-size: 13px; }
+  .box .plans { margin-top: 16px; }
+  .legal { margin: 10px 0 0 !important; }
+  .check { display: flex; gap: 8px; align-items: flex-start; } .check input { margin-top: 3px; }
+  .warn { border-left: 3px solid #d9a441; padding: 2px 0 2px 10px; margin: 6px 0 8px !important; }
+  .promo { border: 1px solid var(--accent); border-radius: 8px; padding: 7px 10px; margin: 8px 0 !important; }
+  td.acts { white-space: nowrap; }
+  #sets-note { white-space: pre-line; }
+  #sets tr.use td { background: var(--raised); }
+  #sets tr.use label { display: inline-flex; gap: 8px; align-items: center; margin-right: 10px; }
+  .report-field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0 0; font-size: 14px; }
+  .report-field textarea, .report-field select { font: inherit; font-size: 16px; color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; width: 100%; box-sizing: border-box; }
+  .report-field textarea { resize: vertical; min-height: 64px; }
+  #sets select { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
+  dialog#saves { width: min(820px, calc(100vw - 24px)); }
+  td.acts button + button { margin-left: 6px; }
+
+  /* The save editor (editor.js): the players on the left, the one chosen on the right; one at a time when narrow. */
+  dialog#editor { width: min(1180px, calc(100vw - 16px)); height: calc(100% - 16px); max-height: none; padding: 14px 16px;
+    display: none; flex-direction: column; gap: 6px; }
+  dialog#editor[open] { display: flex; }
+  .ed-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ed-head h2 { margin: 0; }
+  #editor-note { margin: 0; min-height: 1.2em; white-space: pre-line; }
+  .ed-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 14px; }
+  .ed-list { display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  #editor-search { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; }
+  #editor-results { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+  .ed-row { display: grid; grid-template-columns: 1fr auto; text-align: left; height: auto; padding: 7px 10px; gap: 0 8px; white-space: normal; }
+  .ed-row b { font-weight: 600; } .ed-row span { grid-column: 1; color: var(--muted); font-size: 12px; }
+  .ed-row i { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-style: normal; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ed-row.on { border-color: var(--accent); } .ed-row.edited b::after { content: " ●"; color: var(--accent); }
+  .ed-form { overflow: auto; min-height: 0; padding-right: 4px; }
+  .ed-form .ed-title h3 { margin: 0; font-size: 18px; color: var(--text); text-transform: none; letter-spacing: 0; font-weight: 650; }
+  .ed-form h4 { margin: 14px 0 6px; font-size: 13px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .05em; }
+  .ed-form h4 .small { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .ed-title .ed-back { display: none; padding: 0; margin-bottom: 4px; }
+  .ed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 10px; }
+  .ed-grid.pos { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .ed-grid.pos input { width: 52px; }
+  .ed-grid label { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); }
+  .ed-grid input { width: 64px; font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 6px; padding: 4px 6px; text-align: right; font-variant-numeric: tabular-nums; }
+  .ed-grid input[type=date] { width: auto; text-align: left; }
+  .ed-grid input[type=text], .ed-grid select { width: 100%; max-width: 260px; text-align: left; font: inherit; font-size: 16px;
+    color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; }
+  .ed-grid label.wide { grid-column: span 2; }
+  .ed-grid select.changed { border-color: var(--accent); }
+  .ed-search { display: flex; gap: 6px; } .ed-search input { flex: 1; min-width: 0; }
+  #editor-home { overflow: auto; min-height: 0; }
+  #editor-home h4 { margin: 12px 0 4px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .ed-files { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
+  .ed-file { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; }
+  .ed-file span { flex: 1; overflow-wrap: anywhere; }
+  #editor-new-name { flex: 1; max-width: 340px; font: inherit; font-size: 16px; color: var(--text); background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+  .ed-grid input.changed { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 760px) {
+    .ed-grid label.wide { grid-column: 1 / -1; }
+    .ed-body { grid-template-columns: 1fr; }
+    .ed-body.detail .ed-list { display: none; } .ed-body:not(.detail) .ed-form { display: none; }
+    .ed-title .ed-back { display: inline-flex; }
+  }
+  .promo .link { color: var(--accent); }
+  details summary { cursor: pointer; color: var(--muted); padding: 4px 0; }
+  #log { margin: 4px 0 0; padding: 8px 10px; max-height: 34vh; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace;
+    color: var(--muted); white-space: pre-wrap; background: var(--bg); border-radius: 8px; border: 1px solid var(--line); }
+
+  /* Full screen: the bar becomes a small set of buttons over the corner of the game. */
+  #app.fs #bar { position: absolute; top: calc(8px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right));
+    z-index: 6; height: auto; padding: 4px; gap: 4px; border: 1px solid var(--line); border-radius: 12px;
+    background: rgba(21, 26, 32, .86); opacity: .3; transition: opacity .2s; }
+  #app.fs #bar:hover, #app.fs #bar:focus-within { opacity: 1; }
+  @media (hover: none) { #app.fs #bar { opacity: .65; } }
+  #app.fs .brand, #app.fs #status, #app.fs #bar button span { display: none; }
+  #app.fs #bar button { padding: 0 9px; }
+  /* Room beside the picture (layout.js, barPlace): the buttons as a column in it; room above it (a phone held
+     upright): a row in it. Neither covers any of the game, so neither fades. */
+  #app.fs[data-bar="side"] #bar { flex-direction: column; opacity: 1; max-height: calc(100% - 16px);
+    right: calc(env(safe-area-inset-right) + max(4px, (var(--side-room, 56px) - 48px) / 2)); }
+  #app.fs[data-bar="top"] #bar { opacity: 1; top: calc(env(safe-area-inset-top) + max(4px, (var(--top-room, 56px) - 48px) / 2)); }
+  /* No room: over the picture's top right corner. The fold button (the last one) folds the others away, and the bar
+     becomes a small tab on the right edge whose button opens it again (loader.js, cm0102-bar-folded). */
+  #bar-fold { display: none; }
+  #app.fs[data-bar="over"] #bar-fold { display: inline-flex; }
+  #app.fs[data-bar="over"].bar-folded #bar > :not(#bar-fold) { display: none !important; }
+  #app.fs[data-bar="over"].bar-folded #bar { top: 50%; right: env(safe-area-inset-right); transform: translateY(-50%);
+    padding: 3px 2px 3px 3px; border-right: 0; border-radius: 10px 0 0 10px; }
+  #app.fs[data-bar="over"].bar-folded #bar-fold { padding: 0 3px; }
+  #app.fs[data-bar="over"].bar-folded #bar-fold svg { transform: scaleX(-1); }
+
+  @media (prefers-reduced-motion: reduce) { #canvas { transition: none; } #type-chip, .toast { animation: none; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="bar">
+    <span class="brand">CM 01/02</span>
+    <span id="status" role="status">Loading…</span>
+    <button id="kbd-open" hidden aria-pressed="false" aria-label="Keyboard">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg><span>Keyboard</span></button>
+    <button id="right-click" hidden aria-pressed="false" aria-label="Right click" title="The next tap on the game is a click of the right button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 3v7.5M6 10.5h12"/><path d="M12.6 3.6a5.4 5.4 0 0 1 4.8 5.4v.9h-4.8z" fill="currentColor" stroke="none"/></svg><span>Right click</span></button>
+    <button id="saves-open" hidden aria-label="Saved games">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5M5 17v1.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span>Saved games</span></button>
+    <button id="editor-open" hidden aria-label="Editor">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="m14 8 2 2"/></svg><span>Editor</span></button>
+    <button id="account-open" hidden aria-label="Sign in">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c.8-3.3 3.6-5.2 7-5.2s6.2 1.9 7 5.2"/></svg><span>Sign in</span><i class="dot" aria-hidden="true"></i></button>
+    <button id="help-open" aria-label="Help">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8M12 16.6h.01"/></svg><span>Help</span></button>
+    <button id="fullscreen" hidden aria-label="Full screen">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg><span>Full screen</span></button>
+    <button id="bar-fold" aria-expanded="true" aria-label="Hide these buttons" title="Hide these buttons">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
+  </header>
+  <div id="stage">
+    <canvas id="canvas" tabindex="0" width="1280" height="800" aria-label="The game"></canvas>
+    <div id="fx" aria-hidden="true"></div>
+    <button id="type-chip" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg>Tap to type</button>
+    <div id="busy" aria-hidden="true"><i class="spin"></i>Working…</div>
+    <div id="toasts" role="status" aria-live="polite"></div>
+    <div id="consent" role="dialog" aria-labelledby="consent-title" hidden>
+      <p><b id="consent-title">Help us improve the game?</b> May we count how long you play and how many saves and data
+        sets you keep, under a random id of this browser? Never your files, your name or your IP address. If the game
+        stops on an error, its message goes too.</p>
+      <div class="row"><button id="consent-yes">Allow</button><button id="consent-no">No thanks</button>
+        <a href="/privacy" target="_blank" rel="noopener">Privacy</a></div>
+      <p class="small">You can change it any time in Help, Statistics.</p>
+    </div>
+    <div id="overlay"></div>
+  </div>
+  <input id="kbd" type="text" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+    enterkeyhint="done" aria-label="Type into the game">
+
+  <dialog id="saves" aria-labelledby="saves-title">
+    <h2 id="saves-title">Saved games</h2>
+    <div class="dlg-body">
+    <p class="small"><span id="saves-where">Your saves stay in this browser.</span> Download one to keep a copy on your
+    device or to play it on another one; upload a .sav file to play it here.</p>
+    <p id="saves-risk" class="small warn"></p>
+    <p id="saves-promo" class="small promo" hidden><span></span><button class="link">See Cloud Saves</button></p>
+    <div id="saves-list" class="dlg-list"></div>
+    <p id="saves-note" class="small" role="status"></p>
+    <div class="row">
+      <button class="primary" id="saves-upload">Upload a save…</button>
+      <button id="saves-all" title="One zip of every save, older copy, tactic and data set, as the save folder holds them">Download all</button>
+      <input type="file" id="saves-file" accept=".sav" multiple hidden>
+    </div>
+    <section id="tactics" hidden>
+      <h3>Tactics</h3>
+      <p class="small">The tactics you saved on the tactics screen (Tactics, Save As). Download one to keep it or to use it
+      in the PC game; upload a .tct file, from the PC game or from a friend, then use Tactics, Load on the tactics
+      screen. A preset's .pct file works too.</p>
+      <div id="tactics-list" class="dlg-list"></div>
+      <p id="tactics-note" class="small" role="status"></p>
+      <div class="row"><button id="tactics-upload">Upload a tactic…</button>
+        <input type="file" id="tactics-file" accept=".tct,.pct" multiple hidden></div>
+    </section>
+    <section id="sets" hidden>
+      <h3>Data sets <span class="small">for new games</span></h3>
+      <p class="small">Your own databases: a copy of the game's data that you edited, or one you uploaded (an Update Team
+      database, for example). Use one to start a new game with it. Upload a database as a .zip, or as its .dat files
+      together; a .rar or .7z must be unpacked and zipped first.</p>
+      <div id="sets-list" class="dlg-list"></div>
+      <p id="sets-note" class="small" role="status"></p>
+      <div class="row"><button id="sets-upload">Upload a data set…</button><button id="sets-new">New data set…</button>
+        <input type="file" id="sets-file" accept=".zip,.dat" multiple hidden></div>
+    </section>
+    </div>
+    <div class="row dlg-foot"><span class="spacer"></span><button id="saves-close">Close</button></div>
+  </dialog>
+
+  <dialog id="editor" aria-labelledby="editor-title">
+    <div class="ed-head"><button class="link" id="editor-home-button" type="button">← Editor</button>
+      <h2 id="editor-title">Editor</h2><span id="editor-file" class="small"></span>
+      <span class="spacer"></span><button class="primary" id="editor-save" hidden disabled>Save</button><button id="editor-close">Close</button></div>
+    <p id="editor-note" class="small" role="status"></p>
+    <div id="editor-home"></div>
+    <div class="ed-body" hidden>
+      <div class="ed-list"><div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" autocomplete="off" spellcheck="false">
+        <button id="editor-add" type="button" hidden>Add a player</button></div>
+        <div id="editor-results"></div></div>
+      <div class="ed-form" id="editor-form"></div>
+    </div>
+    <datalist id="editor-clubs"></datalist>
+  </dialog>
+
+  <dialog id="account" aria-labelledby="account-title">
+    <h2 id="account-title">Your account</h2>
+    <div class="dlg-body">
+    <div id="account-body"></div>
+    <p id="account-note" class="small" role="status"></p>
+    </div>
+    <div class="row dlg-foot"><span class="spacer"></span><button id="account-close">Close</button></div>
+  </dialog>
+
+  <dialog id="help" aria-labelledby="help-title">
+    <h2 id="help-title">How to play here</h2>
+    <div class="dlg-body">
+    <p class="small">The game runs in this tab, on your device. The mouse and the keys work as in the game. On the tactics
+    board, drag a player with the right button to give him a run. On a Mac, Control and a click is the right button, and
+    Control and a drag the right-button drag.</p>
+    <h3>On a touch screen</h3>
+    <table>
+      <tr><td>Tap</td><td>A click</td></tr>
+      <tr><td>Drag</td><td>Hold the button and move: scroll bars, the tactics board</td></tr>
+      <tr><td>Right click, then a tap or a drag</td><td>The right button: a tap is a right click (on the tactics screen, a player's instructions), a drag is a right-button drag (on the tactics board, a player's run)</td></tr>
+      <tr><td>Long press (a ring fills), then lift or drag</td><td>The right button: lift for a right click, or keep the finger down and drag for a right-button drag (a player's run)</td></tr>
+      <tr><td>A tap with two fingers</td><td>A click of the right button</td></tr>
+      <tr><td>Drag with two fingers</td><td>The mouse wheel: lists scroll with your fingers</td></tr>
+      <tr><td>Tap a text box, or Tap to type</td><td>The keyboard opens; it closes when the text is entered</td></tr>
+      <tr><td>› in full screen</td><td>Folds the page's buttons into a tab at the right edge, so they cover none of the game; tap the tab to open them. When the screen is wider than the game they sit beside it.</td></tr>
+    </table>
+    <h3>Your saved games</h3>
+    <p class="small">Save in the game as usual. The saves stay in this browser.<span id="help-storage"></span> Saved games
+    downloads them as files and uploads them again, also to and from the desktop game, and its Edit button changes the
+    players of a save: ability, attributes, positions, age.</p>
+    <h3>Editor</h3>
+    <p class="small">The Editor button changes the players of a saved game, or makes a data set for new games: your own copy
+    of the database, where you change players and add new ones. Saved games lists the data sets: Use one for your next
+    new game, download it as a zip, or upload one (an Update Team database, for example).</p>
+    <div id="help-cloud" hidden>
+      <h3>Cloud saves</h3>
+      <p class="small">With Cloud Saves, each save goes to the cloud, and the game started on another computer or iPad
+      gets it. Sign in with Google (Sign in, in the bar) to get them. <a href="/pricing" target="_blank" rel="noopener">Pricing</a> ·
+      <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
+    </div>
+    <h3>As an app</h3>
+    <p class="small">Add the page to the home screen (on an iPad: Share, then Add to Home Screen) or install it from the
+    address bar. It then opens without the browser's bars, and it starts without a connection once it has run.</p>
+    <div id="help-stats" hidden>
+      <h3>Statistics</h3>
+      <label class="small check"><input type="checkbox" id="help-stats-on"> Send usage statistics: play time, and how many
+        saves and data sets you have. They go with a random id of this browser (or your account when you are signed in),
+        never your files, and no IP address is kept. When the game stops on an error, its message and the last lines of the
+        engine log go too. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></label>
+    </div>
+    <details>
+      <summary>Engine log</summary>
+      <pre id="log"></pre>
+    </details>
+    <div id="help-report" hidden>
+      <h3>Something wrong?</h3>
+      <p class="small">Send to the developer sends the engine log and, if you choose, a saved game, so the problem can be
+      found. <button id="help-report-open" class="link">Send to the developer</button></p>
+    </div>
+    </div>
+    <div class="row dlg-foot"><span class="spacer"></span><button id="help-close">Close</button></div>
+  </dialog>
+
+  <dialog id="report" aria-labelledby="report-title">
+    <h2 id="report-title">Send to the developer</h2>
+    <div class="dlg-body">
+    <p class="small">This sends the engine log of this visit, the error, your browser's name and the engine's version, and
+    the saved game you choose here. Nothing else of your browser goes with it. Reports and saves are deleted after 90
+    days. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
+    <p id="report-error" class="small bad" hidden></p>
+    <label class="report-field">What happened? (you may leave it empty)
+      <textarea id="report-note" rows="3" maxlength="2000" placeholder="For example: I loaded my save and the game stopped."></textarea></label>
+    <label class="report-field">Saved game to send
+      <select id="report-save"></select></label>
+    <p id="report-state" class="small" role="status"></p>
+    </div>
+    <div class="row dlg-foot"><span class="spacer"></span><button class="primary" id="report-send">Send</button><button id="report-close">Close</button></div>
+  </dialog>
+</div>
+<script type="module" src="loader.js"></script>
+</body>
+</html>

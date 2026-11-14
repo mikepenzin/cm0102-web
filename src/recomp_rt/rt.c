@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 Cpu cpu;
 Fpu fpu;
@@ -22,13 +23,79 @@ uint32_t rt_image_size(void) { return image_size; }
 static uint32_t u32_at(const uint8_t *p) { uint32_t v; memcpy(&v, p, 4); return v; }
 static uint16_t u16_at(const uint8_t *p) { uint16_t v; memcpy(&v, p, 2); return v; }
 
+#ifdef __EMSCRIPTEN__
+uint8_t *rt_web_memory(void);   /* host/web.c: the guest addresses are the wasm memory itself */
+#endif
+
+/* RECOMP_GUARD=1, a test switch of the native game (macOS, Linux): the guest memory that the browser build does not
+ * give the game faults here too, so a stray access that does harm only in the browser stops the native game where it
+ * happens, under gdb with its stack. Two parts (host/web.c):
+ * - from GLOBAL_BASE 0x21000000 to the static block at 0x60000000: the browser build's own data, C stack and heap. A
+ *   write there breaks the page's engine at some later time ("memory access out of bounds" in 2026-11-10-league-sizes.md,
+ *   the French National).
+ * - past the top of the game's heap and 64 MB: the end of the browser's memory, where an access stops the game.
+ *   The guard follows the top as the heap grows (rt_guard_heap_top, heap.c).
+ * Each fault prints its guest address first. */
+#ifndef __EMSCRIPTEN__                       /* the browser build is what the guard plays: it has none */
+#define GUARD_HOST_FROM 0x21000000u          /* host/web.c WEB_GLOBAL_BASE */
+#define GUARD_HOST_TO 0x60000000u            /* the static block (kernel32.c) */
+#define GUARD_SLACK (64u << 20)              /* host/web.c WEB_SLACK */
+#define GUARD_ALIGN 0x10000u                 /* a wasm page, and a whole number of host pages */
+#define GUARD_SPAN (((uint64_t)1 << 32) + 0x10000u)   /* the reserved block */
+static uint64_t guard_end;                   /* 0: no guard; else where the memory that the browser would have ends */
+
+static void guard_note(const void *addr)
+{
+    const uint8_t *a = addr;
+    if (a < g_mem || a >= g_mem + GUARD_SPAN) return;
+    uint64_t guest = (uint64_t)(a - g_mem);
+    fprintf(stderr, "recomp: guard: an access to guest %#llx, %s\n", (unsigned long long)guest,
+            guest >= GUARD_HOST_FROM && guest < GUARD_HOST_TO ? "where the browser build keeps its own data"
+                                                               : "past the end of the browser's memory");
+}
+
+static uint64_t guard_round(uint64_t v) { return (v + GUARD_ALIGN - 1) & ~(uint64_t)(GUARD_ALIGN - 1); }
+
+static void guard_init(void)
+{
+    const char *v = getenv("RECOMP_GUARD");
+    if (!v || strcmp(v, "1") != 0) return;
+    uint64_t end = guard_round((uint64_t)RT_HEAP_BASE + GUARD_SLACK);
+    if (host_protect(g_mem + GUARD_HOST_FROM, GUARD_HOST_TO - GUARD_HOST_FROM, 0) != 0
+        || host_protect(g_mem + end, GUARD_SPAN - end, 0) != 0) {
+        fprintf(stderr, "recomp: RECOMP_GUARD: this system cannot protect memory, so no guard\n");
+        return;
+    }
+    guard_end = end;
+    host_on_fault(guard_note);
+    fprintf(stderr, "recomp: guard on: %#x to %#x, and from %#llx (the heap's top and 64 MB)\n", GUARD_HOST_FROM,
+            GUARD_HOST_TO, (unsigned long long)guard_end);
+}
+
+/* heap.c: the game's heap reaches top. The memory that the browser would have grows past it. */
+void rt_guard_heap_top(uint32_t top)
+{
+    if (!guard_end || (uint64_t)top + GUARD_SLACK / 2 <= guard_end) return;
+    uint64_t end = guard_round((uint64_t)top + GUARD_SLACK);
+    if (end > GUARD_SPAN) end = GUARD_SPAN;
+    if (host_protect(g_mem + guard_end, end - guard_end, 1) != 0) rt_fatal("RECOMP_GUARD: cannot open %#llx", (unsigned long long)guard_end);
+    guard_end = end;
+}
+#else
+static void guard_init(void) {}
+#endif
+
 void rt_init(const char *exe_path)
 {
+#ifdef __EMSCRIPTEN__
+    g_mem = rt_web_memory();
+#else
     /* 4 GB and a page, so that an access at the top of the 32-bit space stays inside. */
     size_t span = (size_t)1 << 32;
     void *m = host_reserve(span + 0x10000);
     if (!m) rt_fatal("cannot reserve 4 GB of address space");
     g_mem = m;
+#endif
 
     FILE *f = host_fopen(exe_path, "rb");
     if (!f) rt_fatal("cannot open %s", exe_path);
@@ -53,6 +120,7 @@ void rt_init(const char *exe_path)
     for (uint32_t i = 0; i < rt_iat_size; i++) wr32(g_mem, rt_iat[i].iat, rt_iat[i].stub);
     fpu_init();
     fpu.cw = 0x27f;                        /* what Windows gives a new process */
+    guard_init();
 }
 
 void fpu_init(void)
