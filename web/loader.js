@@ -794,6 +794,15 @@ const ENGINE_START_PAGES = 12288;                    // -sINITIAL_MEMORY=768 MB 
 const ENGINE_NEED_PAGES = 0x74000000 / PAGE;         // host/web.c grows the memory to the guest heap at 0x70000000 + 64 MB
 const ENGINE_MAX_PAGES = 65536;                      // -sMAXIMUM_MEMORY=4GB
 
+// An iPhone or an iPad, by name, or null: every browser there is WebKit inside (Chrome too), so the answer is the
+// system's version, not another browser. An iPad asks for the desktop site and says Mac, with a touch screen.
+function appleMobile() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPod/.test(ua)) return 'iPhone';
+  if (/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'iPad';
+  return null;
+}
+
 function requirements(info) {
   const problems = [], warnings = [];
   if (typeof WebAssembly !== 'object' || typeof WebAssembly.instantiate !== 'function') {
@@ -801,7 +810,9 @@ function requirements(info) {
     return { problems, warnings };
   }
   if (info.chosen.suspend !== 'asyncify' && !hasJspi())
-    problems.push('The engine needs JSPI, a WebAssembly feature that this browser lacks, and this server has no engine for other browsers. Chrome 137 or later has it, and Safari 27 (iOS and iPadOS 27, in every browser of an iPhone or iPad).');
+    problems.push(appleMobile()
+      ? `The engine needs JSPI, a WebAssembly feature that this ${appleMobile()} does not have yet. ${appleMobile() === 'iPad' ? 'iPadOS' : 'iOS'} 27 has it, in every browser (Safari and Chrome alike): update in Settings, General, Software Update, then open the game again.`
+      : 'The engine needs JSPI, a WebAssembly feature that this browser lacks, and this server has no engine for other browsers. Chrome 137 or later has it, and Safari 27 (iOS and iPadOS 27, in every browser of an iPhone or iPad).');
   try {                                              // the engine's own memory plan, on a memory that is then dropped
     const m = new WebAssembly.Memory({ initial: ENGINE_START_PAGES, maximum: ENGINE_MAX_PAGES });
     m.grow(ENGINE_NEED_PAGES - ENGINE_START_PAGES);
@@ -815,7 +826,8 @@ function requirements(info) {
 function blocked(problems, note = 'Nothing was downloaded.') {
   status('This browser cannot run the game');
   overlay(`<h1>This browser cannot run the game</h1><ul>${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>
-    <p>It runs in Chrome 137 or later, and in Safari 27 or later: on an iPad with iPadOS 27, in Safari or Chrome. ${esc(note)}</p>`, 'error');
+    <p>${appleMobile() ? `It runs on an ${appleMobile()} with ${appleMobile() === 'iPad' ? 'iPadOS' : 'iOS'} 27 or later, and on a computer in Chrome 137 or later or Safari 27 or later.`
+      : 'It runs in Chrome 137 or later, and in Safari 27 or later: on an iPhone or iPad with iOS or iPadOS 27, in Safari or Chrome.'} ${esc(note)}</p>`, 'error');
 }
 
 // The engine file itself, compiled once while the game files download: a browser that lacks a WebAssembly feature the

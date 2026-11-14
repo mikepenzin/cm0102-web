@@ -64,6 +64,13 @@ const PORT = 8097;
     let g = await gate('no JSPI', { suspend: 'jspi', init: () => { delete WebAssembly.Suspending; } });
     check('a JSPI build in a browser without JSPI is blocked before any download',
       /cannot run the game/.test(g.box) && /JSPI/.test(g.box) && g.start === 0 && g.asked.length === 0, g.box.slice(0, 120));
+    // An iPhone without JSPI (iOS 26 or before; jjcastle on Reddit, 14 November 2026): the box says to update iOS, as
+    // every browser there is WebKit, Chrome too.
+    g = await gate('iPhone without JSPI', { suspend: 'jspi', init: () => { delete WebAssembly.Suspending; },
+      ctx: { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0 Mobile/15E148 Safari/604.1', hasTouch: true, isMobile: true } });
+    check('an iPhone without JSPI is told to update iOS to 27 (Settings, General, Software Update), before any download',
+      /this iPhone does not have yet\. iOS 27 has it, in every browser \(Safari and Chrome alike\): update in Settings, General, Software Update/.test(g.box)
+        && /It runs on an iPhone with iOS 27 or later/.test(g.box) && g.start === 0 && g.asked.length === 0, g.box.slice(0, 260));
     g = await gate('no memory', { init: () => { WebAssembly.Memory = function () { throw new RangeError('could not allocate memory'); }; } });
     check('a browser that refuses the memory is blocked before any download',
       /memory that the engine needs/.test(g.box) && g.start === 0 && g.asked.length === 0, g.box.slice(0, 120));
