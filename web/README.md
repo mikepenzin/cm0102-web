@@ -479,8 +479,9 @@ code addresses and the checks: `docs/research/2026-11-10-data-set-editor.md`.
 |---|---|
 | Tap | A click |
 | Drag | The button held and moved: scroll bars, the tactics board |
-| Right click (the button in the bar), then a tap | A click of the right button where you tap |
-| Long press (a ring fills under the finger), or a tap with two fingers | A click of the right button |
+| Right click (the button in the bar), then a tap or a drag | The right button for that touch: a tap is a right click, a drag a right-button drag |
+| Long press (a ring fills under the finger), then lift or drag | The right button, down when the ring fills and up when the finger lifts: a right click, or a right-button drag |
+| Tap with two fingers | A click of the right button |
 | Drag with two fingers | The mouse wheel: lists scroll with your fingers |
 
 The game needs the right button for much of its tactics: a right click on a player, in the list or on the board,
@@ -490,6 +491,17 @@ The Right click button (`touch.js`, armRight) has no timing: tap it, then tap th
 right click; the button turns green while it waits and is off again after it. The long press shows a ring that fills
 under the finger and, on Android, the phone buzzes when it becomes the right click. Both opened a player's
 instructions on the real tactics screen with touch in Chromium (November 2026).
+
+A player's run (the dashed arrow on the board) is a drag with the right button: the game drags a widget of flag 0x100
+while the right button is held (`FUN_00561210`, `b67a38`; docs/research/2026-10-13-input-inventory.md 2.6). A player
+on Reddit could not make one (14 November 2026): a long press and Right click then gave a right click only, the button
+down and up at once. Now the long press puts the right button down when the ring has filled and lets it go when the
+finger lifts, so a finger kept down drags with it; after Right click, the next touch is the right button's for its
+whole length, a tap or a drag. On a Mac, Control and a click is the right button (a trackpad makes no other
+right-button drag easily), but the browser reports the left button with Control, which the game took for a left
+click: on the game, the page turns it into the right button from the press to the release (`mountMacRightButton`,
+`touch.js`). The game reads no Control with a click, so nothing is lost. With a mouse the right-button drag worked
+already (a run of the real engine in Chromium: the dashed target while held, the run after the release).
 
 The game draws its text entries (a name, a search) on the canvas, so the device does not open its keyboard by
 itself. When a text entry of the game takes keys, a "Tap to type" chip shows at it: tap the chip, or the text entry,

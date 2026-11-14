@@ -73,7 +73,7 @@ const PORT = 8097;
       /cannot compile the engine/.test(g.box) && /download of the game files was stopped/.test(g.box) && gameAsked < rows.length / 2,
       `${gameAsked} of ${rows.length} game files asked for`);
     g = await gate('touch only', { ctx: { hasTouch: true, isMobile: true } });
-    check('a touch device is told the gestures and may start', /tap to click, long press for the right button, two fingers to scroll/.test(g.box) && g.start === 1, g.box.slice(0, 200));
+    check('a touch device is told the gestures and may start', /tap to click, long press for the right button \(keep the finger down to drag with it\), two fingers to scroll/.test(g.box) && g.start === 1, g.box.slice(0, 200));
 
     // The game stops (an exit code, as Restart Game gave before WinExec was replaced): the box names it and offers
     // Start again, which loads the page again.
@@ -389,7 +389,11 @@ const PORT = 8097;
     check('the second visit gives the engine every byte', again.bytes === total + 4 * 2, second);
     check('the second visit asks the server for no game file', gameRequests.length === 0, `${gameRequests.length} requests`);
     await p.click('#help-open');
-    check('Help lists the gestures and holds the engine log', /Long press \(a ring fills\), or a tap with two fingers/.test(await p.textContent('#help')) && /Right click, then a tap/.test(await p.textContent('#help')) && /page: main\(--game \/game\)/.test(await p.textContent('#log')));
+    const helpText = (await p.textContent('#help')).replace(/\s+/g, ' ');
+    check('Help lists the gestures, the right-button drag of a run (and the Mac\'s Control), and holds the engine log',
+      /Long press \(a ring fills\), then lift or drag/.test(helpText) && /Right click, then a tap or a drag/.test(helpText) && /A tap with two fingers/.test(helpText)
+        && /drag a player with the right button to give him a run/.test(helpText) && /On a Mac, Control and a click is the right button/.test(helpText)
+        && /page: main\(--game \/game\)/.test(await p.textContent('#log')));
     if (process.argv[2]) await p.screenshot({ path: process.argv[2].replace(/\.png$/, '-help.png') });
     await p.click('#help-close');
     check('no page errors', errors.length === 0, errors.join('; '));
@@ -453,8 +457,67 @@ const PORT = 8097;
     await t.waitForTimeout(150);
     check('a long press: a ring fills under the finger, then a right click', ring === 1 && (await t.evaluate(() => window.__downs.at(-1))) === 2
       && (await t.locator('#fx .ping.hold').count()) === 0, `ring ${ring}, ${JSON.stringify(await t.evaluate(() => window.__downs))}`);
+    // A player's run on the tactics board is a drag with the right button (a Reddit report: it could not be made by touch).
+    // The long press puts the right button down and the finger drags it; after Right click, a drag is the right button's.
+    await t.evaluate(() => {
+      window.__seq = [];
+      const c = document.getElementById('canvas');
+      c.addEventListener('mousedown', (e) => window.__seq.push(`down${e.button}`), true);
+      c.addEventListener('mousemove', (e) => { if (e.buttons) window.__seq.push(`move${e.buttons}`); }, true);
+      document.addEventListener('mouseup', (e) => window.__seq.push(`up${e.button}@${Math.round(e.clientY)}`), true);
+    });
+    const dragBy = async (pressMs) => {
+      await t.evaluate(() => { window.__seq.length = 0; });
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [at] });
+      await t.waitForTimeout(pressMs);
+      for (let i = 1; i <= 5; i++) {
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...at, y: at.y - i * 20 }] });
+        await t.waitForTimeout(30);
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await t.waitForTimeout(150);
+      return (await t.evaluate(() => window.__seq.join(' '))).replace(/(move2 )+/g, 'move2… ');
+    };
+    const longDrag = await dragBy(600);
+    check('a long press, then a drag: the right button goes down, drags with the finger, and goes up where it lifts',
+      longDrag === `down2 move2… up2@${at.y - 100}`, longDrag);
+    await t.tap('#right-click');
+    const armedDrag = await dragBy(50);
+    check('Right click, then a drag: a drag with the right button, and the button is off again',
+      armedDrag === `down2 move2… up2@${at.y - 100}` && (await t.getAttribute('#right-click', 'aria-pressed')) === 'false', armedDrag);
+    const plainDrag = (await dragBy(50)).replace(/(move1 )+/g, 'move1… ');
+    check('a plain drag is still the left button\'s (a player moved on the board)', plainDrag === `down0 move1… up0@${at.y - 100}`, plainDrag);
     check('no page errors on the touch device', terrors.length === 0, terrors.join('; '));
     await tc.close();
+    // A Mac: Control and a click is the right button there (and a trackpad's only easy right-button drag); the browser
+    // reports the left button with Control, so the page turns it into the right button for the game, press to release.
+    {
+      const mc = await b.newContext({ viewport: { width: 1024, height: 768 } });
+      await mc.addInitScript(() => { Object.defineProperty(Navigator.prototype, 'userAgentData', { get: () => ({ platform: 'macOS' }) }); });
+      const m = await mc.newPage();
+      await m.goto(`http://127.0.0.1:${PORT}/`);
+      await m.waitForSelector('#go');
+      await m.click('#go');
+      await m.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      await m.evaluate(() => {
+        window.__seq = [];
+        const c = document.getElementById('canvas');
+        c.addEventListener('mousedown', (e) => window.__seq.push(`down${e.button}`));
+        document.addEventListener('mouseup', (e) => window.__seq.push(`up${e.button}`));
+      });
+      const cb2 = await m.locator('#canvas').boundingBox();
+      const mx = cb2.x + cb2.width / 2, my = cb2.y + cb2.height / 2;
+      await m.mouse.move(mx, my);
+      await m.keyboard.down('Control');
+      await m.mouse.down();
+      await m.mouse.move(mx, my - 60, { steps: 5 });
+      await m.keyboard.up('Control');                     // let go before the button: the release is still the right one's
+      await m.mouse.up();
+      await m.mouse.click(mx, my);
+      const macSeq = await m.evaluate(() => window.__seq.join(' '));
+      check('a Mac: Control and a drag is the right button for the game, a plain click the left', macSeq === 'down2 up2 down0 up0', macSeq);
+      await mc.close();
+    }
     // An engine built before the keyboard calls: no button, and the log says to build it again.
     const oc = await b.newContext({ viewport: { width: 1024, height: 768 }, hasTouch: true });
     await oc.addInitScript(() => { window.__oldEngine = true; });

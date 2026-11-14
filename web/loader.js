@@ -16,7 +16,7 @@ import { createSetSync, listDataSets } from './datasets.js';
 import { LEGAL_LINKS, createCloudSync, mountAccount, plansHtml } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
 import { mountLayout } from './layout.js';
-import { mountTouch } from './touch.js';
+import { mountMacRightButton, mountTouch } from './touch.js';
 import { guardLeave, isStandalone, keepAwake, mountBusy, toast } from './ui.js';
 import { mountReport, watchSaveInPlay } from './report.js';
 
@@ -164,6 +164,7 @@ function resumeAudio() {
 }
 
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());      // the game uses the right button
+mountMacRightButton({ canvas });                     // a Mac: Control and a click (or a drag) is the right button's
 // A click of a real mouse gives the keys to the game. Not a click that touch.js made, and not while the on-screen
 // keyboard's field has the focus: taking the focus from it would close the keyboard at every tap.
 canvas.addEventListener('mousedown', (e) => {
@@ -986,7 +987,7 @@ async function start() {
       <p class="small">Your saved games stay in this browser too. Saved games downloads them, one by one or all at once, so you
       keep copies: a browser may delete a site's data by itself.</p>
       ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
-      ${TOUCH ? '<p class="small">On a touch screen: tap to click, long press for the right button, two fingers to scroll. Help has the list.</p>' : ''}
+      ${TOUCH ? '<p class="small">On a touch screen: tap to click, long press for the right button (keep the finger down to drag with it), two fingers to scroll. Help has the list.</p>' : ''}
       <div class="row"><button class="primary" id="go">Start the game</button><span class="free-note">Free · no account, no payment</span></div>
       ${plansForStart(await Promise.race([account.ready, new Promise((r) => setTimeout(r, 1500))]))}`);
     if ($('go-plans')) $('go-plans').onclick = (e) => { e.preventDefault(); account.open(); };
