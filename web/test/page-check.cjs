@@ -89,8 +89,11 @@ const PORT = 8097;
         window.dispatchEvent(new ErrorEvent('error', { message: 'RuntimeError: test trap', error: f_0068dbc0() })); });
       check('an error\'s stack goes to the log: the report says where it happened',
         /page: at f_0068dbc0/.test(await pg.textContent('#log')), (await pg.textContent('#log')).split('\n').filter((l) => /page: at/.test(l)).slice(0, 2).join(' | '));
-      await pg.evaluate(() => window.Module.onExit(70));
+      // The game's own fatal box before the exit (the runtime logs it, waits.c): the error box quotes it.
+      await pg.evaluate(() => { window.Module.printErr('recomp: message box from 0x555c66: Error: v3.9.68 discipline..cpp 274'); window.Module.onExit(70); });
       const box = (await pg.textContent('#overlay')).replace(/\s+/g, ' ');
+      check('an exit after the game\'s own error box: the box quotes it and where it came from',
+        /The game stopped on an error of its own: "v3\.9\.68 discipline\.\.cpp 274" \(at 0x555c66\)/.test(box), box.slice(0, 200));
       // Send to the developer, from the box: the log, a note and a save of the player's choice. This server keeps no
       // files (no bucket), so the log goes and the box says the save did not.
       const hasReport = await pg.locator('#fail-report').count() === 1;

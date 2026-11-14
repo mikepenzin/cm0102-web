@@ -235,6 +235,11 @@ parked. With that the process stays near 800 MB over 45 loads. An engine whose s
 The page sends a heartbeat each minute while the game runs (`stats.js`): the seconds played since the last one (the
 tab visible and an input in the last 5 minutes) and how many saves, older copies and data sets the browser keeps,
 with their size. A stop of the game sends an error report with the last lines of the engine log (at most 3 a visit).
+The game's own fatal errors show a box "Error" with only "v3.9.68 <source>..cpp <line>" and then exit with -1 (419
+sites in the original, each `gui_show_message_box` 0x5e8290 then `exit(-1)` 0x945934). The runtime logs every box of
+the game with its caller, and a fatal one with the return addresses on its stack (`waits.c`), and the page's error box
+quotes it ("The game stopped on an error of its own: …"), so a report names the check that failed. Before that, a
+player's save that would not load reported only "The game ended with code -1" (14 November 2026).
 The page asks first (`CM_STATS` opt-in, the default): a card with Allow and No thanks, which look the same; before a
 yes nothing is sent and no id is stored, and No thanks sends only the answer with no id (`/api/stats/choice`), which the
 admin page counts as the share of players who said yes. Help, Statistics changes the answer; off deletes the id.

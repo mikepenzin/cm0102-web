@@ -121,6 +121,18 @@ function fail(title, detail) {
   };
 }
 
+// The game's own fatal box, the last one before an exit: the runtime logs it (waits.c: "recomp: message box from
+// <caller>: Error: v3.9.68 <source>..cpp <line>"), and the game then exits with -1. The player saw that box; the error
+// box of the page and its report name it, so the check that failed can be found. A player's save that would not load
+// gave only "The game ended with code -1" (14 November 2026).
+function fatalBox() {
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const m = /^recomp: message box from (0x[0-9a-f]+): Error: (.+)$/.exec(lines[i]);
+    if (m) return { site: m[1], text: m[2] };
+  }
+  return null;
+}
+
 // The stack of an error, in the log: for a stop of the engine it names the game's functions (the build keeps their
 // names, web/web.cmake --profiling-funcs: f_<address> is the original's function at that address), so the error
 // report says where the game was. Chrome keeps 10 frames of a stack unless told more; the game's own frames are many.
@@ -760,7 +772,12 @@ function runEngine(files, info) {
         status('Saving…');
         overlay('<h1>The game ended</h1><p>Your saves go to this browser\'s storage…</p>');
         stored.finally(() => { status('The game ended'); overlay('<h1>The game ended</h1><p>Reload the page to play again. Your saves stay in this browser.</p>'); });
-      } else fail(`The game ended with code ${code}`, 'Help, Engine log says why. Your saves stay in this browser.');
+      } else {
+        const box = fatalBox();
+        fail(`The game ended with code ${code}`, box
+          ? `The game stopped on an error of its own: "${box.text}" (at ${box.site}). Send to the developer, with the save you loaded, so it can be looked at. Your saves stay in this browser.`
+          : 'Help, Engine log says why. Your saves stay in this browser.');
+      }
     },
     onAbort: (what) => { if (engine.letGo) return; running = false; logStack(what); fail('The game stopped', String(what)); },
   };

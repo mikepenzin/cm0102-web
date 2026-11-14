@@ -210,6 +210,8 @@ static int cd_box(void)
  * pushed at 0x535890, 0x1e48 at 0x533ca4), which is still on the stack at the call (argument 8). */
 static int lng_count_box(void) { return rd32(g_mem, cpu.esp) == rt_site_lng_count_box && rt_arg(8) == 0x1e68; }
 
+#define FATAL_TITLE 0x9870e0u      /* "Error": the title of the game's fatal box (pushed at 0x41b703 and the like) */
+
 /* The message box of the game: its own loop draws it and waits for Ok. */
 RT_WRAP(005e8290, message_box)
 {
@@ -223,12 +225,17 @@ RT_WRAP(005e8290, message_box)
         rt_ret_cdecl(0);
         return;
     }
-    if (getenv("RECOMP_SCREEN_LOG")) {     /* the box waits for a click: say which box (test runs) */
-        /* Every 32-bit address lies inside g_mem (rt_init maps 4 GB and a page), so the reads stay inside;
-         * the precision stops at 200 bytes when a text has no end. */
-        uint32_t title = rt_arg(0), text = rt_arg(1);
-        fprintf(stderr, "recomp: message box from %#x: %.200s: %.200s\n", rd32(g_mem, cpu.esp),
-                title ? (const char *)(g_mem + title) : "", text ? (const char *)(g_mem + text) : "");
+    /* Every box goes to the log, with its caller: the browser's error reports carry the log, and the fatal box
+     * "Error" says only "v3.9.68 <source>..cpp <line>" before the game exits with -1 (419 sites: sprintf of
+     * "v%s %s.%s %d" 0x9870e8, this box with the title "Error" 0x9870e0, game_fatal_cleanup 0x5cc7d0, exit(-1)
+     * 0x945934; for example 0x41b6ed..0x41b726). A player's report of a save that would not load had only "The game
+     * ended with code -1" (14 November 2026). The texts are the game's own, short and the same for every player. */
+    uint32_t title = rt_arg(0), text = rt_arg(1);
+    /* Every 32-bit address lies inside g_mem (rt_init maps 4 GB and a page), so the reads stay inside; the
+     * precision stops at 200 bytes when a text has no end. */
+    fprintf(stderr, "recomp: message box from %#x: %.200s: %.200s\n", rd32(g_mem, cpu.esp),
+            title ? (const char *)(g_mem + title) : "", text ? (const char *)(g_mem + text) : "");
+    if (title == FATAL_TITLE || getenv("RECOMP_SCREEN_LOG")) {
         /* The values on the stack that look like return addresses of the game's code, so that a test log
          * names the callers of an error box. A value is only a guess: the scan does not follow the frames.
          * The upper bound 0x944000 is the end of the game's code: it leaves out the C runtime part of .text
