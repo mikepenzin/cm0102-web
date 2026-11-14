@@ -525,6 +525,13 @@ bar. It then opens full screen, without the browser's bars. After one good start
 files are all in the browser, so it also starts with no connection (`web/sw.js`). With a connection the server is
 always asked first, so a new version is used at once. This needs https, or 127.0.0.1 on your own computer.
 
+Checked on the real engine (14 November 2026): one start with a connection, then the browser offline: the game started
+in 4 seconds, its 467 MB of files all from the browser, and the save made before was there. The page check does the
+same with the stand-in engine. Without a connection, Cloud Saves, sign-in, Send to the developer and the statistics
+wait; the saves of the flight stay in the browser, and Cloud Saves send them once the connection is back. The browser
+must have room for the game files (a browser that refuses them, as one with a full disk does, has nothing to start
+from), and Safari deletes a site's files after 7 days without a visit unless the page is on the home screen.
+
 ## Browser requirements
 
 The page checks the browser before it downloads anything, and stops with the reasons when the game cannot run:

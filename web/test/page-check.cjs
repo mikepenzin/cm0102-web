@@ -734,6 +734,31 @@ const PORT = 8097;
       await ctx.close();
     }
 
+    // A flight: one start with a connection, then none. The service worker gives the page, files.json and the engine,
+    // the browser's cache the game files, and the saves are there (checked with the real engine too, 14 November 2026:
+    // the start took 4 s offline).
+    {
+      const ctx = await b.newContext({ viewport: { width: 1000, height: 700 } });
+      let pg = await ctx.newPage();
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await pg.waitForSelector('#go');
+      await pg.click('#go');
+      await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      await pg.waitForFunction(async () => Boolean((await navigator.serviceWorker.getRegistration())?.active), null, { timeout: 20000 }).catch(() => {});
+      await pg.waitForTimeout(4000);                    // primeOffline: the page's files, files.json and the engine
+      await pg.close();
+      await ctx.setOffline(true);
+      pg = await ctx.newPage();
+      const errs = [];
+      pg.on('pageerror', (e) => errs.push(e.message));
+      await pg.goto(`http://127.0.0.1:${PORT}/`).catch((e) => errs.push(e.message));
+      const startedOffline = await pg.waitForFunction(() => window.__fake, null, { timeout: 60000 }).then(() => true, () => false);
+      const fromBrowser = startedOffline ? ((await pg.textContent('#log')).match(/page: \d+ files in .*/)?.[0] ?? '') : (await pg.textContent('#overlay').catch(() => '')).replace(/\s+/g, ' ');
+      check('without a connection (a flight), after one start with one: the game starts from the browser, every file from it',
+        startedOffline && /0\.0 MB downloaded/.test(fromBrowser) && /Harbour City/.test(await pg.evaluate(() => window.Module.FS.readdir('/user').join(','))), `${fromBrowser.slice(0, 140)} ${errs.join('; ')}`);
+      await ctx.close();
+    }
+
     // A page from before one tab at a time (it takes no turn) in another tab. The saves' storage is now version 2: a
     // page of the last code closes its version 1 connection when asked and cannot open it again, so it writes nothing
     // more there; an older one that keeps its connection holds the new page up, which says so and goes on once it closes.
