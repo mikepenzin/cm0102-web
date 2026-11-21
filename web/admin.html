@@ -6,92 +6,485 @@
 <meta name="robots" content="noindex">
 <title>CM 01/02 admin</title>
 <style>
-  :root { --bg: #0b0d10; --panel: #14181d; --raised: #1b2027; --line: #262c34; --text: #e7eaee; --muted: #8b95a2; --accent: #3ccf7f;
-    --warn: #e5a43a; --bad: #ef6b6b; color-scheme: dark; }
+  :root { --bg: #0b0d10; --panel: #14181d; --raised: #1b2027; --hover: #222a33; --line: #262c34; --line2: #333c47; --text: #e7eaee; --muted: #8b95a2;
+    --accent: #3ccf7f; --accent-dim: rgba(60, 207, 127, .14); --warn: #e5a43a; --warn-dim: rgba(229, 164, 58, .12); --bad: #ef6b6b; --bad-dim: rgba(239, 107, 107, .12);
+    --bar: #3ccf7f; color-scheme: dark; }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--line); position: sticky; top: 0;
-    background: var(--bg); z-index: 2; }
-  header h1 { font-size: 17px; margin: 0; } header .spacer { flex: 1; }
-  main { padding: 18px 20px 40px; max-width: 1400px; margin: 0 auto; }
-  button, input { font: inherit; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
-  button { cursor: pointer; transition: border-color 150ms, background-color 150ms; }
-  button:hover:not(:disabled) { border-color: #3a4552; background-color: #252d37; }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  input:focus { border-color: var(--accent); }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .muted { color: var(--muted); } .small { font-size: 12px; }
-  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; margin-bottom: 18px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
-  .card b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; margin-top: 2px; }
-  .card span { color: var(--muted); font-size: 12px; }
-  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; }
-  section h2 { font-size: 14px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
-  .tools { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
-  .scroll { overflow: auto; max-height: 70vh; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.22) transparent; }
-  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-  th, td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); white-space: nowrap; }
-  th { position: sticky; top: 0; background: var(--panel); color: var(--muted); font-weight: 500; font-size: 12px; border-top: 0; cursor: pointer; user-select: none; }
-  th.num, td.num { text-align: right; }
-  tr.linked td { color: var(--muted); }
-  .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; border: 1px solid var(--line); color: var(--muted); }
-  .tag.account { border-color: var(--accent); color: var(--accent); } .tag.sent { border-color: var(--accent); color: var(--accent); margin-right: 6px; }
-  #report-head { margin: 12px 0 6px; } #report-head button { margin-left: 8px; } .tag.cloud { border-color: var(--warn); color: var(--warn); }
-  .msg { padding: 40px 0; text-align: center; color: var(--muted); }
-  .bad { color: var(--bad); }
-  svg text { fill: var(--muted); font-size: 10px; }
-  pre { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 12px/1.4 ui-monospace, Menlo, monospace;
-    max-height: 50vh; overflow: auto; }
-  .reports td:nth-child(3) { white-space: normal; min-width: 320px; }
   a { color: var(--accent); }
-  td .give { padding: 2px 9px; font-size: 12px; margin-left: 6px; }
-  td .give.on { border-color: var(--accent); color: var(--accent); }
+  button, input, select { font: inherit; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; min-height: 34px; }
+  button { cursor: pointer; transition: border-color 150ms, background-color 150ms; white-space: nowrap; }
+  button:hover:not(:disabled) { border-color: var(--line2); background-color: var(--hover); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.primary { border-color: var(--accent); color: var(--accent); }
+  button.small { min-height: 28px; padding: 2px 10px; font-size: 12px; }
+  input:focus, select:focus { border-color: var(--accent); outline: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .muted { color: var(--muted); } .small { font-size: 12px; } .bad { color: var(--bad); } .good { color: var(--accent); } .warn { color: var(--warn); }
+  .spacer { flex: 1; }
+  code { font: 12px ui-monospace, Menlo, monospace; color: var(--muted); }
+
+  /* The header: the title, the time of the data and Refresh; the tabs under it. */
+  header { position: sticky; top: 0; z-index: 5; background: rgba(11, 13, 16, .94); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+  .bar { display: flex; align-items: center; gap: 12px; padding: 10px 20px 0; max-width: 1280px; margin: 0 auto; }
+  .bar h1 { font-size: 16px; margin: 0; white-space: nowrap; }
+  #at { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  nav.tabs { display: flex; gap: 2px; padding: 6px 14px 0; max-width: 1280px; margin: 0 auto; overflow-x: auto; scrollbar-width: none; }
+  nav.tabs::-webkit-scrollbar { display: none; }
+  nav.tabs a { color: var(--muted); text-decoration: none; padding: 8px 10px 9px; border-bottom: 2px solid transparent; white-space: nowrap; font-weight: 500; }
+  nav.tabs a:hover { color: var(--text); }
+  nav.tabs a[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+  .count { display: inline-block; min-width: 20px; padding: 0 6px; margin-left: 4px; border-radius: 10px; background: var(--raised); color: var(--muted); font-size: 11px;
+    text-align: center; font-variant-numeric: tabular-nums; line-height: 18px; }
+  .count.alert { background: var(--bad-dim); color: var(--bad); }
+  .count:empty { display: none; }
+
+  main { padding: 18px 20px 48px; max-width: 1280px; margin: 0 auto; }
+  .view { display: none; }
+  body[data-tab="overview"] #view-overview, body[data-tab="people"] #view-people, body[data-tab="errors"] #view-errors, body[data-tab="library"] #view-library { display: block; }
+  body.gated .view, body.gated nav.tabs { display: none; }
+  .msg { padding: 48px 0; text-align: center; color: var(--muted); }
+  #oops { display: none; margin-bottom: 14px; padding: 8px 12px; border-radius: 8px; background: var(--warn-dim); color: var(--warn); font-size: 13px; }
+  #oops.on { display: block; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+  .panel h2 { font-size: 13px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .panel h2 .spacer + * { text-transform: none; letter-spacing: 0; }
+
+  /* Overview: what to look at, the totals, the days. */
+  .attention { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .attention .item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--raised); border: 1px solid var(--line); }
+  .attention .item .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--muted); }
+  .attention .item.t-bad .dot { background: var(--bad); } .attention .item.t-warn .dot { background: var(--warn); } .attention .item.t-good .dot { background: var(--accent); }
+  .attention .item .what { flex: 1; min-width: 0; }
+  .attention .item .what b { font-weight: 600; }
+  .attention .item .what .small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+  .card .label { color: var(--muted); font-size: 12px; }
+  .card b { display: block; font-size: 24px; line-height: 1.2; font-variant-numeric: tabular-nums; margin: 2px 0; }
+  .card .sub { color: var(--muted); font-size: 12px; }
+  a.card { color: inherit; text-decoration: none; } a.card:hover { border-color: var(--line2); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex: none; }
+  .seg button { border: 0; border-radius: 0; min-height: 30px; padding: 3px 11px; background: transparent; color: var(--muted); font-size: 13px; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--raised); color: var(--text); }
+  .charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .chart { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px 10px; min-width: 0; }
+  .chart .title { font-size: 12px; color: var(--muted); }
+  .chart .value { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.25; }
+  .chart .readout { font-size: 12px; color: var(--muted); min-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chart .readout.live { color: var(--text); }
+  .plot { position: relative; height: 96px; margin-top: 10px; border-bottom: 1px solid var(--line2); display: flex; align-items: flex-end; gap: 2px; touch-action: pan-y; cursor: crosshair; }
+  .plot.dense { gap: 1px; }
+  .plot .grid { position: absolute; left: 0; right: 0; top: 0; border-top: 1px dashed var(--line); pointer-events: none; }
+  .plot .grid span { position: absolute; right: 0; top: -15px; font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .plot i { flex: 1; min-width: 0; background: var(--bar); opacity: .8; border-radius: 3px 3px 0 0; pointer-events: none; }
+  .plot.dense i { border-radius: 1px 1px 0 0; }
+  .plot.hovering i { opacity: .35; } .plot.hovering i.on { opacity: 1; }
+  .axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .delta { font-size: 12px; } .delta.up-good, .delta.down-good { color: var(--accent); } .delta.up-bad, .delta.down-bad { color: var(--bad); } .delta.flat { color: var(--muted); }
+
+  /* The lists: tools above, a table on a wide screen, cards on a phone. */
+  .tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .tools input[type="search"] { flex: 1 1 260px; min-width: 0; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border-radius: 16px; min-height: 30px; padding: 3px 12px; font-size: 13px; color: var(--muted); background: transparent; }
+  .chip[aria-pressed="true"] { background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
+  .chip .n { color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+  .filter-on { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px 2px 10px; border-radius: 16px; background: var(--warn-dim); color: var(--warn); font-size: 12px; max-width: 100%; }
+  .filter-on span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .filter-on button { min-height: 22px; padding: 0 7px; border: 0; background: transparent; color: var(--warn); }
+  .status { font-size: 12px; color: var(--muted); }
+  label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 9px 10px; border-top: 1px solid var(--line); vertical-align: middle; }
+  thead th { border-top: 0; color: var(--muted); font-weight: 500; font-size: 12px; white-space: nowrap; }
+  th[data-k] { cursor: pointer; user-select: none; } th[data-k]:hover { color: var(--text); }
+  th.num, td.num { text-align: right; }
+  tbody tr.person { cursor: pointer; }
+  tbody tr.person:hover td { background: rgba(255, 255, 255, .02); }
+  tr.person.open td { background: rgba(255, 255, 255, .03); }
+  tr.linked td { color: var(--muted); }
+  .who .main { font-weight: 500; overflow-wrap: anywhere; }
+  .who .sub { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+  .tag { display: inline-block; padding: 0 7px; border-radius: 10px; font-size: 11px; line-height: 18px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+  .tag.sent { border-color: var(--accent); color: var(--accent); margin-right: 6px; }
+  .tag.warn { border-color: var(--warn); color: var(--warn); }
+  .plan { white-space: nowrap; }
+  .plan .give { margin-left: 8px; }
+  td.more { width: 36px; text-align: right; color: var(--muted); }
+  tr.open td.more { color: var(--text); }
+  .chev { display: inline-block; transition: transform 150ms; } tr.open .chev { transform: rotate(180deg); }
+  tr.detail td { background: rgba(255, 255, 255, .03); border-top: 0; padding: 4px 10px 14px; }
+  dl.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px 18px; margin: 4px 0 0; }
+  dl.facts dt { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  dl.facts dd { margin: 1px 0 0; overflow-wrap: anywhere; }
+  .detail-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .browsers { margin: 12px 0 0; padding: 0; list-style: none; font-size: 12px; color: var(--muted); }
+  .browsers li { padding: 3px 0; }
+  .more-row { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+  .empty { padding: 28px 0; text-align: center; color: var(--muted); }
+
+  /* Error reports: the messages that come most, then each report. */
+  .groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .group { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 8px 12px; min-height: 0; background: var(--bg); white-space: normal; }
+  .group[aria-pressed="true"] { border-color: var(--warn); }
+  .group .times { flex: none; min-width: 42px; padding: 2px 8px; border-radius: 10px; background: var(--bad-dim); color: var(--bad); font-weight: 600; text-align: center;
+    font-variant-numeric: tabular-nums; font-size: 12px; }
+  .group .text { flex: 1; min-width: 0; }
+  .group .text div:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .reports .rep td { vertical-align: top; }
+  .reports .when { white-space: nowrap; }
+  .reports .message { min-width: 260px; }
+  .reports .message a { color: var(--text); text-decoration: none; }
+  .reports .message a:hover { color: var(--accent); text-decoration: underline; }
+  .reports .message a { overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .reports .note { font-size: 12px; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
+  .reports .actions { white-space: nowrap; text-align: right; }
+  .linkish { background: none; border: 0; padding: 0; min-height: 0; color: inherit; text-align: left; text-decoration: underline dotted var(--line2); text-underline-offset: 3px;
+    overflow-wrap: anywhere; white-space: normal; }
+  .linkish:hover:not(:disabled) { background: none; color: var(--accent); }
+
+  /* The report window: its log, Copy, the save. */
+  dialog#report-dialog { width: min(980px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--line2); border-radius: 14px;
+    background: var(--panel); color: var(--text); flex-direction: column; overflow: hidden; }
+  dialog#report-dialog[open] { display: flex; }
+  dialog::backdrop { background: rgba(0, 0, 0, .6); }
+  .dlg-head { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px 8px; }
+  .dlg-head h3 { margin: 0; font-size: 15px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .dlg-meta { padding: 0 16px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+  .dlg-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  #report-head { padding: 10px 16px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  #report-head[hidden] { display: none; }
+  #report-head button { margin-left: 4px; }
+  pre#report { flex: 1; margin: 0; padding: 12px 16px 16px; white-space: pre-wrap; overflow-wrap: anywhere; overflow: auto; font: 12px/1.45 ui-monospace, Menlo, monospace;
+    background: var(--bg); min-height: 120px; }
+  .copied { font-size: 12px; color: var(--accent); }
+
+  /* The database library. */
+  .lib-form { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) auto; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .lib-form .wide { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .lib-form .wide input { flex: 1 1 260px; min-width: 0; }
+  .lib-form input[type="file"] { padding: 5px 8px; min-width: 0; }
+  #library td.note { white-space: normal; font-size: 12px; color: var(--muted); }
+  #library img { display: block; border-radius: 4px; }
+  .lib-actions { white-space: nowrap; text-align: right; }
+
+  @media (max-width: 860px) { .charts { grid-template-columns: minmax(0, 1fr); } .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 720px) {
+    .bar { padding: 10px 16px 0; } nav.tabs { padding: 4px 8px 0; } main { padding: 14px 16px 40px; }
+    #at { display: none; }
+    .panel { padding: 12px; border-radius: 10px; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .card b { font-size: 20px; }
+    .lib-form { grid-template-columns: minmax(0, 1fr); }
+    /* Each row of a list is a card. */
+    table.stack thead { display: none; }
+    table.stack, table.stack tbody, table.stack tr, table.stack td { display: block; width: 100%; }
+    table.stack tr { border-top: 1px solid var(--line); padding: 10px 0; position: relative; }
+    table.stack tbody tr:first-child { border-top: 0; }
+    table.stack td { border: 0; padding: 2px 0; text-align: left; }
+    table.stack td[data-label]::before { content: attr(data-label); color: var(--muted); font-size: 12px; margin-right: 8px; }
+    table.stack td.num { text-align: left; }
+    #people tr.person { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px 10px; padding-right: 36px; }
+    #people tr.person td.who, #people tr.person td.plan { grid-column: 1 / -1; }
+    #people tr.person td.plan:empty { display: none; }
+    #people tr.person td[data-label]::before { display: block; margin: 0; }
+    #people td.more { position: absolute; right: 0; top: 10px; width: auto; }
+    #people tr.detail { padding: 4px 0 12px; border-top: 0; }
+    #people tr.detail td { padding: 10px; border-radius: 8px; }
+    dl.facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    nav.tabs a { padding: 8px 8px 9px; }
+    .long { display: none; }
+    .reports .message { min-width: 0; }
+    .reports .actions { text-align: left; padding-top: 6px; }
+    #library tr { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 2px 12px; }
+    #library td:first-child { grid-row: span 5; }
+    .lib-actions { text-align: left; padding-top: 6px; }
+    dialog#report-dialog { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; margin: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
-<body>
-<header><h1>CM 01/02 admin</h1><span class="muted small" id="at"></span><span class="spacer"></span><button id="refresh">Refresh</button></header>
-<main id="main"><p class="msg">Loading…</p></main>
-<main id="library" hidden></main>
+<body data-tab="overview" class="gated">
+<header>
+  <div class="bar"><h1>CM 01/02 admin</h1><span id="at"></span><span class="spacer"></span><button id="refresh">Refresh</button></div>
+  <nav class="tabs" aria-label="Parts of the admin page">
+    <a href="#overview" data-tab="overview">Overview</a>
+    <a href="#people" data-tab="people">People<span class="count" id="n-people"></span></a>
+    <a href="#errors" data-tab="errors">Error<span class="long"> report</span>s<span class="count" id="n-errors"></span></a>
+    <a href="#library" data-tab="library">Library<span class="count" id="n-library"></span></a>
+  </nav>
+</header>
+<main>
+  <div id="oops" role="status"></div>
+  <div id="main"><p class="msg">Loading…</p></div>
+
+  <div class="view" id="view-overview"></div>
+
+  <div class="view" id="view-people">
+    <div class="panel">
+      <div class="tools">
+        <input id="filter" type="search" placeholder="Search an email, a name, an id, a browser" aria-label="Search people">
+        <label class="small muted">Sort <select id="sort" aria-label="Sort people by"></select></label>
+        <button id="sort-dir" class="small" aria-label="Turn the order round">↓</button>
+      </div>
+      <div class="tools">
+        <div class="chips" id="kinds"></div>
+        <span class="spacer"></span>
+        <label class="check"><input type="checkbox" id="linked"> Browsers that signed in</label>
+      </div>
+      <p class="status" id="people-status"></p>
+      <table class="stack people-table"><thead><tr id="people-head"></tr></thead><tbody id="people"></tbody></table>
+      <div class="more-row" id="people-more"></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-errors">
+    <div class="panel" id="groups-panel"><h2>Messages that come most <span class="spacer"></span><span class="small muted" id="groups-note"></span></h2><div class="groups" id="groups"></div></div>
+    <div class="panel">
+      <div class="tools">
+        <input id="err-filter" type="search" placeholder="Search a message, a note, an email" aria-label="Search error reports">
+        <div class="chips" id="err-kinds"></div>
+      </div>
+      <div class="tools" id="err-active"></div>
+      <p class="status" id="errors-status"></p>
+      <table class="stack reports"><thead><tr><th>When</th><th>Who</th><th>Message</th><th>Browser</th><th></th></tr></thead><tbody id="reports"></tbody></table>
+      <div class="more-row" id="errors-more"></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-library"><div id="library" hidden></div><p class="msg" id="library-none" hidden></p></div>
+</main>
+
+<dialog id="report-dialog" aria-labelledby="report-title">
+  <div class="dlg-head"><h3 id="report-title"></h3><button id="report-x" class="small" aria-label="Close">Close</button></div>
+  <div class="dlg-meta" id="report-meta"></div>
+  <div class="dlg-tools">
+    <button id="report-copy" class="primary">Copy report</button>
+    <button id="report-copy-log">Copy log only</button>
+    <button id="report-txt">Download .txt</button>
+    <span class="copied" id="report-copied" aria-live="polite"></span>
+  </div>
+  <div id="report-head" hidden></div>
+  <pre id="report"></pre>
+</dialog>
+
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const mb = (n) => (n >= 1073741824 ? `${(n / 1073741824).toFixed(1)} GB` : `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`);
 const hours = (s) => (s >= 3600 ? `${(s / 3600).toFixed(1)} h` : `${Math.round(s / 60)} min`);
+const num = (n) => Number(n ?? 0).toLocaleString();
 const when = (t) => new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-const ago = (t) => { const m = (Date.now() - t) / 60000; return m < 60 ? `${Math.round(m)} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; };
-let data = null, sortKey = 'last', sortDir = -1, filter = '';
+const day = (t) => new Date(t).toLocaleDateString(undefined, { dateStyle: 'medium' });
+const ago = (t) => {
+  const m = (Date.now() - new Date(t).getTime()) / 60000;
+  return m < 1 ? 'just now' : m < 60 ? `${Math.round(m)} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
+};
+const DAY_MS = 86400000;
+let data = null, library = null;
+
+// ---- Tabs: the address's #part picks one, so a link or a reload opens the same part. ----
+const TABS = ['overview', 'people', 'errors', 'library'];
+function showTab() {
+  const tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
+  document.body.dataset.tab = tab;
+  document.querySelectorAll('nav.tabs a').forEach((a) => (a.dataset.tab === tab ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+}
+const go = (tab) => { if (location.hash !== `#${tab}`) location.hash = tab; else showTab(); window.scrollTo({ top: 0 }); };
+window.addEventListener('hashchange', showTab);
+showTab();
 
 async function load() {
-  const r = await fetch('/api/admin/stats', { credentials: 'same-origin' });
-  if (r.status === 401) { $('main').innerHTML = '<p class="msg">Sign in with Google <a href="/">on the game\'s page</a> with an admin account (CM_ADMIN_EMAILS), then come back here.</p>'; return; }
-  if (r.status === 403) { $('main').innerHTML = '<p class="msg">This account is not an admin. The server\'s CM_ADMIN_EMAILS lists the admins.</p>'; return; }
-  if (!r.ok) { $('main').innerHTML = `<p class="msg bad">The server answered ${r.status}.</p>`; return; }
+  let r;
+  try { r = await fetch('/api/admin/stats', { credentials: 'same-origin' }); } catch {
+    if (data) { oops('Not refreshed: the server did not answer. The figures are from before.'); return; }
+    gate('<p class="msg bad">The server did not answer.</p>'); return;
+  }
+  if (r.status === 401) { gate('<p class="msg">Sign in with Google <a href="/">on the game\'s page</a> with an admin account (CM_ADMIN_EMAILS), then come back here.</p>'); return; }
+  if (r.status === 403) { gate('<p class="msg">This account is not an admin. The server\'s CM_ADMIN_EMAILS lists the admins.</p>'); return; }
+  if (!r.ok) { if (data) oops(`Not refreshed: the server answered ${r.status}.`); else gate(`<p class="msg bad">The server answered ${r.status}.</p>`); return; }
   data = await r.json();
-  render();
+  oops('');
+  $('main').innerHTML = '';
+  document.body.classList.remove('gated');
+  renderAll();
+}
+function gate(html) { document.body.classList.add('gated'); $('main').innerHTML = html; }
+function oops(text) { $('oops').textContent = text; $('oops').classList.toggle('on', Boolean(text)); }
+
+function renderAll() {
+  $('at').textContent = `Updated ${new Date(data.at).toLocaleTimeString(undefined, { timeStyle: 'short' })} · every minute`;
+  $('at').title = when(data.at);
+  $('n-people').textContent = num(data.totals.people);
+  const week = data.reports.filter((r) => Date.parse(r.at) >= Date.now() - 7 * DAY_MS).length;
+  $('n-errors').textContent = week || '';
+  $('n-errors').className = `count${data.reports.some((r) => Date.parse(r.at) >= Date.now() - DAY_MS) ? ' alert' : ''}`;
+  renderOverview();
+  renderPeople();
+  renderErrors();
 }
 
-function chart(days) {
-  const w = 900, h = 170, pad = 26, n = days.length || 1, bw = Math.min(30, (w - pad * 2) / n);
-  const maxA = Math.max(1, ...days.map((d) => d.active)), maxH = Math.max(1, ...days.map((d) => d.seconds / 3600));
-  const bars = days.map((d, i) => {
-    const bh = (d.active / maxA) * (h - pad * 2);
-    return `<rect x="${pad + i * bw + 1}" y="${h - pad - bh}" width="${Math.max(1, bw - 2)}" height="${bh}" rx="2" fill="#3ccf7f" opacity=".75"><title>${d.day}: ${d.active} active, ${hours(d.seconds)}, ${d.new} new, ${d.reports} reports</title></rect>`;
-  }).join('');
-  const line = days.map((d, i) => `${pad + i * bw + bw / 2},${h - pad - (d.seconds / 3600 / maxH) * (h - pad * 2)}`).join(' ');
-  const labels = days.filter((_, i) => i % Math.ceil(n / 8) === 0).map((d) => `<text x="${pad + days.indexOf(d) * bw}" y="${h - 8}">${d.day.slice(5)}</text>`).join('');
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Active people and hours played per day">${bars}
-    <polyline points="${line}" fill="none" stroke="#e5a43a" stroke-width="2"/>${labels}
-    <text x="${pad}" y="14">people active per day (bars, top ${maxA}) · hours played (line, top ${maxH.toFixed(1)} h)</text></svg>`;
-}
-
-const COLS = [
-  ['who', 'Who'], ['kind', 'Kind'], ['plan', 'Cloud Saves'], ['first', 'First seen'], ['last', 'Last seen'], ['seconds', 'Played', 'num'], ['sessions', 'Visits', 'num'],
-  ['days', 'Days', 'num'], ['saves', 'Saves', 'num'], ['older', 'Older copies', 'num'], ['sets', 'Data sets', 'num'], ['reports', 'Errors', 'num'],
-  ['browser', 'Browser'], ['engine', 'Engine'],
+// ---- Overview ----
+let range = 30;
+const METRICS = [
+  { key: 'active', title: 'People active a day', of: (d) => d.active, sum: false, unit: (v) => `${num(v)} ${v === 1 ? 'person' : 'people'}`, upIs: 'good' },
+  { key: 'hours', title: 'Hours played', of: (d) => d.seconds / 3600, sum: true, unit: (v) => `${v.toFixed(1)} h`, upIs: 'good' },
+  { key: 'new', title: 'New people', of: (d) => d.new, sum: true, unit: (v) => `${num(v)} new`, upIs: 'good' },
+  { key: 'reports', title: 'Error reports', of: (d) => d.reports, sum: true, unit: (v) => `${num(v)} ${v === 1 ? 'report' : 'reports'}`, upIs: 'bad' },
 ];
-const keyOf = (p, k) => (k === 'who' ? (p.email || p.id) : k === 'saves' || k === 'older' || k === 'sets' ? p[k]?.n ?? 0
+// Every day of the last `n`, a day with no record as 0 (the server lists only days that had something).
+function lastDays(n) {
+  const byDay = Object.fromEntries(data.days.map((d) => [d.day, d]));
+  const end = data.days.length ? Date.parse(`${data.days[data.days.length - 1].day}T00:00:00Z`) : Date.parse(`${data.at.slice(0, 10)}T00:00:00Z`);
+  const out = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const k = new Date(end - i * DAY_MS).toISOString().slice(0, 10);
+    out.push(byDay[k] ?? { day: k, active: 0, seconds: 0, sessions: 0, new: 0, reports: 0, allowed: 0, declined: 0, none: true });
+  }
+  return out;
+}
+const dayLabel = (k, long = false) => new Date(`${k}T00:00:00Z`).toLocaleDateString(undefined,
+  long ? { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' } : { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const total = (days, m) => { const s = days.reduce((a, d) => a + m.of(d), 0); return m.sum ? s : s / (days.length || 1); };
+const shown = (m, v) => (m.key === 'hours' ? `${v >= 100 ? num(Math.round(v)) : v.toFixed(1)} h` : m.sum ? num(Math.round(v)) : v < 10 ? v.toFixed(1) : num(Math.round(v)));
+
+function chartHtml(m, i) {
+  const all = lastDays(range * 2), days = all.slice(range), before = all.slice(0, range);
+  const hasBefore = data.days.length && data.days[0].day <= before[0].day;   // the server keeps 90 days
+  const now = total(days, m), was = total(before, m);
+  let delta = '';
+  if (hasBefore) {
+    const ch = was ? (now - was) / was : now ? 1 : 0, pct = Math.round(Math.abs(ch) * 100);
+    const dir = Math.abs(ch) < 0.005 ? 'flat' : ch > 0 ? 'up' : 'down';
+    const tone = dir === 'flat' ? 'flat' : `${dir}-${(dir === 'up') === (m.upIs === 'good') ? 'good' : 'bad'}`;
+    delta = dir === 'flat' ? `<span class="delta flat">same as the ${range} days before</span>`
+      : `<span class="delta ${tone}">${dir === 'up' ? '▲' : '▼'} ${was ? `${pct}%` : `from 0`} on the ${range} days before</span>`;
+  }
+  const values = days.map((d) => m.of(d)), max = Math.max(...values), peak = days[values.indexOf(max)];
+  const bars = values.map((v) => `<i style="height:${max ? Math.max(v > 0 ? 2 : 0, (v / max) * 100) : 0}%"></i>`).join('');
+  const sub = m.sum ? `in ${range} days` : `on average · most ${num(max)}${peak ? `, ${dayLabel(peak.day)}` : ''}`;
+  return `<div class="chart" data-m="${i}">
+    <div class="title">${m.title}</div>
+    <div class="value">${shown(m, now)} <span class="small muted" style="font-weight:400">${sub}</span></div>
+    <div class="readout">${delta || '&nbsp;'}</div>
+    <div class="plot${days.length > 45 ? ' dense' : ''}" role="img" aria-label="${esc(`${m.title}, each of the last ${range} days; most ${shown(m, max)}`)}">
+      ${max ? `<div class="grid"><span>${m.key === 'hours' ? `${max.toFixed(1)} h` : num(max)}</span></div>` : ''}${bars}</div>
+    <div class="axis"><span>${dayLabel(days[0].day)}</span><span>${range > 7 ? dayLabel(days[Math.floor(days.length / 2)].day) : ''}</span><span>Today</span></div>
+  </div>`;
+}
+
+function attention() {
+  const t = Date.now(), items = [];
+  const day1 = data.reports.filter((r) => Date.parse(r.at) >= t - DAY_MS);
+  const sent7 = data.reports.filter((r) => r.sent && Date.parse(r.at) >= t - 7 * DAY_MS);
+  if (sent7.length) items.push({ tone: 'bad', text: `<b>${sent7.length} ${sent7.length === 1 ? 'report' : 'reports'} sent by players</b> in the last 7 days`,
+    sub: sent7.map((r) => r.note || r.message).slice(0, 2).join(' · '), act: 'sent', label: 'Read them' });
+  if (day1.length) items.push({ tone: 'warn', text: `<b>${day1.length} error ${day1.length === 1 ? 'report' : 'reports'}</b> in the last 24 hours`,
+    sub: `the last ${ago(day1[0].at)}: ${day1[0].message}`, act: 'errors', label: 'Open' });
+  const top = groups(data.reports.filter((r) => Date.parse(r.at) >= t - 7 * DAY_MS))[0];
+  if (top && top.n >= 2) items.push({ tone: 'warn', text: `<b>One message came ${top.n} times</b> in 7 days, from ${top.who.size} ${top.who.size === 1 ? 'person' : 'people'}`,
+    sub: top.message, act: `msg`, msg: top.message, label: 'Show' });
+  const noCard = (library ?? []).filter((e) => e.card === undefined).length;
+  if (noCard) items.push({ tone: 'warn', text: `<b>${noCard} ${noCard === 1 ? 'database has' : 'databases have'} no picture yet</b> in the library`, sub: 'Library, Make their pictures', act: 'library', label: 'Go' });
+  if (!items.length) items.push({ tone: 'good', text: '<b>Nothing to look at.</b> No error reports in the last 24 hours, none sent by a player in 7 days.' });
+  return items;
+}
+
+function renderOverview() {
+  const t = data.totals;
+  const answers = t.allowed30 + t.declined30;
+  const card = (label, value, sub = '', href = '') => `<${href ? `a href="${href}"` : 'div'} class="card"><div class="label">${label}</div><b>${value}</b>${sub ? `<div class="sub">${sub}</div>` : ''}</${href ? 'a' : 'div'}>`;
+  $('view-overview').innerHTML = `
+    <div class="panel"><h2>To look at</h2><div class="attention">${attention().map((a, i) => `<div class="item t-${a.tone}"><span class="dot"></span>
+      <div class="what">${a.text}${a.sub ? `<span class="small muted">${esc(a.sub)}</span>` : ''}</div>${a.act ? `<button class="small" data-act="${i}">${a.label}</button>` : ''}</div>`).join('')}</div></div>
+    <div class="cards">
+      ${card('People', num(t.people), `${num(t.accounts)} with an account · ${num(t.anonymous)} anonymous`, '#people')}
+      ${card('Active today', num(t.activeToday), `${num(t.active7)} in 7 days · ${num(t.active30)} in 30`)}
+      ${card('Hours played', num(Math.round(t.hours)), t.people ? `${(t.hours / t.people).toFixed(1)} h a person` : '')}
+      ${card('Cloud Saves', num(t.cloud), 'people with the plan')}
+      ${card('Saves', num(t.saves), `${mb(t.savesBytes)} · ${num(t.older)} older copies (${mb(t.olderBytes)})`)}
+      ${card('Data sets', num(t.sets), mb(t.setsBytes))}
+      ${card('Error reports', `<span class="${t.reports7 ? 'bad' : ''}">${num(t.reports7)}</span>`, 'in 7 days', '#errors')}
+      ${card('Said yes to statistics', answers ? `${Math.round(100 * t.allowed30 / answers)}%` : '–', `${num(t.allowed30)} yes · ${num(t.declined30)} no, in 30 days`)}
+    </div>
+    <div class="panel"><h2>Days <span class="spacer"></span><span class="seg" role="group" aria-label="How many days">${[7, 30, 90].map((n) =>
+      `<button data-range="${n}" aria-pressed="${range === n}">${n} days</button>`).join('')}</span></h2>
+      <div class="charts">${METRICS.map(chartHtml).join('')}</div>
+      <p class="small muted" style="margin:10px 0 0">Point at a bar for its day. Days run in UTC; today is still counting.</p></div>`;
+  const items = attention();
+  $('view-overview').querySelectorAll('[data-act]').forEach((b) => {
+    b.onclick = () => {
+      const a = items[Number(b.dataset.act)];
+      if (a.act === 'library') { go('library'); return; }
+      errState = { ...errState, kind: a.act === 'sent' ? 'sent' : 'all', msg: a.act === 'msg' ? a.msg : null, who: null, shown: 25 };
+      renderErrors();
+      go('errors');
+    };
+  });
+  $('view-overview').querySelectorAll('[data-range]').forEach((b) => { b.onclick = () => { range = Number(b.dataset.range); renderOverview(); }; });
+  // The hover readout: the day under the pointer (a finger too) and its value.
+  $('view-overview').querySelectorAll('.chart').forEach((c) => {
+    const m = METRICS[Number(c.dataset.m)], days = lastDays(range), plot = c.querySelector('.plot'), out = c.querySelector('.readout'), rest = out.innerHTML;
+    const bars = plot.querySelectorAll('i');
+    const at = (e) => {
+      const r = plot.getBoundingClientRect(), i = Math.min(days.length - 1, Math.max(0, Math.floor(((e.clientX - r.left) / r.width) * days.length)));
+      plot.classList.add('hovering');
+      bars.forEach((b, j) => b.classList.toggle('on', j === i));
+      const d = days[i];
+      out.classList.add('live');
+      out.textContent = `${dayLabel(d.day, true)}: ${m.unit(m.of(d))}${m.key === 'active' ? ` · ${hours(d.seconds)} · ${num(d.new)} new` : ''}`;
+    };
+    plot.onpointermove = at;
+    plot.onpointerdown = at;
+    plot.onpointerleave = () => { plot.classList.remove('hovering'); bars.forEach((b) => b.classList.remove('on')); out.classList.remove('live'); out.innerHTML = rest; };
+  });
+}
+
+// ---- People ----
+const SORTS = [['last', 'Last seen'], ['first', 'First seen'], ['seconds', 'Played'], ['sessions', 'Visits'], ['days', 'Days played'], ['saves', 'Saves'],
+  ['sets', 'Data sets'], ['reports', 'Errors'], ['plan', 'Cloud Saves'], ['who', 'Name']];
+const COLS = [['who', 'Who'], ['plan', 'Cloud Saves'], ['last', 'Last seen'], ['seconds', 'Played', 'num'], ['saves', 'Saves', 'num'], ['reports', 'Errors', 'num']];
+const KINDS = [['all', 'All', () => true], ['account', 'Accounts', (p) => p.kind === 'account'], ['anon', 'Anonymous', (p) => p.kind !== 'account'],
+  ['cloud', 'Cloud Saves', (p) => p.cloud || p.plan?.cloud], ['errors', 'With errors', (p) => p.reports > 0], ['week', 'Seen in 7 days', (p) => p.last >= Date.now() - 7 * DAY_MS]];
+const PAGE = 50;
+let sortKey = 'last', sortDir = -1, filter = '', kind = 'all', showLinked = false, peopleShown = PAGE;
+const expanded = new Set();
+const keyOf = (p, k) => (k === 'who' ? (p.email || p.id).toLowerCase() : k === 'saves' || k === 'older' || k === 'sets' ? p[k]?.n ?? 0
   : k === 'plan' ? (p.plan?.cloud ? (p.plan.from === 'subscription' || p.plan.from === 'membership' ? 3 : 2) : p.kind === 'account' ? 1 : 0) : p[k] ?? '');
-const day = (t) => new Date(t).toLocaleDateString(undefined, { dateStyle: 'medium' });
+
+$('sort').innerHTML = SORTS.map(([k, label]) => `<option value="${k}">${label}</option>`).join('');
+$('filter').oninput = (e) => { filter = e.target.value; peopleShown = PAGE; renderPeople(); };
+$('sort').onchange = (e) => { sortKey = e.target.value; sortDir = sortKey === 'who' ? 1 : -1; renderPeople(); };
+$('sort-dir').onclick = () => { sortDir = -sortDir; renderPeople(); };
+$('linked').onchange = (e) => { showLinked = e.target.checked; peopleShown = PAGE; renderPeople(); };
+$('kinds').onclick = (e) => { const b = e.target.closest('[data-kind]'); if (b) { kind = b.dataset.kind; peopleShown = PAGE; renderPeople(); } };
+$('people-head').onclick = (e) => {
+  const th = e.target.closest('th[data-k]');
+  if (!th) return;
+  const k = th.dataset.k;
+  sortDir = sortKey === k ? -sortDir : k === 'who' ? 1 : -1;
+  sortKey = k;
+  renderPeople();
+};
+$('people-more').onclick = (e) => { const b = e.target.closest('[data-more]'); if (b) { peopleShown = b.dataset.more === 'all' ? Infinity : peopleShown + PAGE; renderPeople(); } };
+$('people').onclick = (e) => {
+  const give_ = e.target.closest('[data-give]');
+  if (give_) { e.stopPropagation(); give(give_.dataset.give, give_.dataset.on === '1'); return; }
+  const errs = e.target.closest('[data-their-errors]');
+  if (errs) { showErrorsOf(errs.dataset.theirErrors); return; }
+  const cp = e.target.closest('[data-copy-id]');
+  if (cp) { copy(cp.dataset.copyId, cp); return; }
+  if (e.target.closest('tr.detail, a, button:not([data-toggle])')) return;
+  const tr = e.target.closest('tr.person');
+  if (!tr || getSelection().toString()) return;
+  const id = tr.dataset.id;
+  expanded.has(id) ? expanded.delete(id) : expanded.add(id);
+  renderPeople();
+};
 
 // The account's plan (the server reads each account record), and the button that gives Cloud Saves or takes back a gift.
 function planCell(p) {
@@ -102,9 +495,9 @@ function planCell(p) {
   const what = pl.from === 'subscription' ? `paid${pl.until ? ` · to ${esc(day(pl.until))}` : ''}`
     : pl.from === 'membership' ? `member${pl.level ? ` (${esc(pl.level)})` : ''}${pl.until ? ` · to ${esc(day(pl.until))}` : ''}`
     : pl.given ? `given by an admin${pl.givenAt ? ` · ${esc(day(pl.givenAt))}` : ''}` : pl.cloud ? 'given (server list)' : 'free';
-  const button = pl.given ? `<button class="give" data-give="${esc(p.id)}" data-on="0">Take back</button>`
-    : pl.cloud ? '' : `<button class="give on" data-give="${esc(p.id)}" data-on="1">Give</button>`;
-  return `<span class="${pl.cloud ? '' : 'muted'}">${what}</span>${button}`;
+  const button = pl.given ? `<button class="give small" data-give="${esc(p.id)}" data-on="0">Take back</button>`
+    : pl.cloud ? '' : `<button class="give small primary" data-give="${esc(p.id)}" data-on="1">Give</button>`;
+  return `<span class="${pl.cloud ? 'good' : 'muted'}">${what}</span>${button}`;
 }
 
 async function give(id, on) {
@@ -115,143 +508,281 @@ async function give(id, on) {
   const j = await r.json().catch(() => ({}));
   if (!r.ok) { alert(`Not changed: ${j.error ?? `the server answered ${r.status}`}`); return; }
   if (p) { p.plan = j.plan; p.cloud = j.plan.cloud; }
-  $('people').innerHTML = peopleRows();
+  renderPeople();
 }
 
-function peopleRows() {
-  const f = filter.toLowerCase();
-  const list = data.people.filter((p) => !f || `${p.email ?? ''} ${p.name ?? ''} ${p.id} ${p.browser ?? ''}`.toLowerCase().includes(f));
-  list.sort((a, b) => { const x = keyOf(a, sortKey), y = keyOf(b, sortKey); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
+function whoHtml(p, byId, browsersOf) {
+  if (p.kind === 'account') {
+    const n = browsersOf[p.id]?.length ?? 0;
+    return `<div class="main">${esc(p.email)}</div><div class="sub">${esc(p.name)}${n ? `${p.name ? ' · ' : ''}${n} ${n === 1 ? 'browser' : 'browsers'}` : ''}</div>`;
+  }
+  return `<div class="main">Anonymous <code>${esc(p.id.slice(2, 10))}</code></div>${p.account ? `<div class="sub">signed in as ${esc(byId[p.account]?.email ?? 'an account')}</div>`
+    : `<div class="sub">${esc(p.browser)}</div>`}`;
+}
+
+function detailHtml(p, browsersOf) {
+  const mine = browsersOf[p.id] ?? [];
+  const sized = (x) => `${num(x?.n ?? 0)} · ${mb(x?.bytes ?? 0)}`;
+  const fact = (k, v) => `<div><dt>${k}</dt><dd>${v}</dd></div>`;
+  const reports = p.reports + mine.reduce((a, b) => a + (b.reports ?? 0), 0);
+  return `<tr class="detail"><td colspan="${COLS.length + 1}"><dl class="facts">
+    ${fact('First seen', esc(when(p.first)))}${fact('Last seen', esc(when(p.last)))}${fact('Played', `${hours(p.seconds)} in ${num(p.sessions)} visits, ${num(p.days)} days`)}
+    ${fact('Saves', sized(p.saves))}${fact('Older copies', sized(p.older))}${fact('Data sets', sized(p.sets))}
+    ${fact('Browser', esc(p.browser) || '–')}${fact('Engine', `<span class="small">${esc(p.engine) || '–'}</span>`)}
+    ${fact('Vault', p.vault ? 'on' : '<span class="warn">off in the last visit</span>')}${fact('Id', `<code>${esc(p.id)}</code>`)}
+  </dl>${mine.length ? `<ul class="browsers">${mine.map((b) => `<li>Browser <code>${esc(b.id.slice(2, 10))}</code> · ${esc(b.browser)} · seen ${esc(ago(b.last))} · ${hours(b.seconds)} before it signed in</li>`).join('')}</ul>` : ''}
+  <div class="detail-tools">${reports ? `<button class="small" data-their-errors="${esc(p.id)}">Their error reports (${reports})</button>` : ''}
+    <button class="small" data-copy-id="${esc(p.email || p.id)}">Copy ${p.email ? 'email' : 'id'}</button></div></td></tr>`;
+}
+
+function renderPeople() {
+  if (!data) return;
   const byId = Object.fromEntries(data.people.map((p) => [p.id, p]));
-  return list.map((p) => `<tr class="${p.account ? 'linked' : ''}">
-    <td>${p.kind === 'account' ? `${esc(p.email)}<br><span class="small muted">${esc(p.name)}</span>` : `<span class="small">${esc(p.id.slice(2, 10))}…</span>${p.account ? `<br><span class="small">→ ${esc(byId[p.account]?.email ?? 'account')}</span>` : ''}`}</td>
-    <td><span class="tag ${p.kind === 'account' ? 'account' : ''}">${p.kind === 'account' ? 'account' : 'anonymous'}</span>${p.cloud ? ' <span class="tag cloud">cloud</span>' : ''}${p.vault ? '' : ' <span class="tag" title="the vault was off in its last visit">no vault</span>'}</td>
-    <td>${planCell(p)}</td>
-    <td>${esc(when(p.first))}</td><td title="${esc(when(p.last))}">${esc(ago(p.last))}</td>
-    <td class="num">${hours(p.seconds)}</td><td class="num">${p.sessions}</td><td class="num">${p.days}</td>
-    <td class="num">${p.saves?.n ?? 0} <span class="small muted">${mb(p.saves?.bytes ?? 0)}</span></td>
-    <td class="num">${p.older?.n ?? 0} <span class="small muted">${mb(p.older?.bytes ?? 0)}</span></td>
-    <td class="num">${p.sets?.n ?? 0} <span class="small muted">${mb(p.sets?.bytes ?? 0)}</span></td>
-    <td class="num">${p.reports ? `<span class="bad">${p.reports}</span>` : 0}</td>
-    <td>${esc(p.browser)}</td><td class="small">${esc(p.engine)}</td></tr>`).join('');
+  const browsersOf = {};
+  for (const p of data.people) if (p.account) (browsersOf[p.account] ??= []).push(p);
+  const base = data.people.filter((p) => showLinked || !p.account);
+  const f = filter.trim().toLowerCase();
+  const found = base.filter((p) => !f || `${p.email ?? ''} ${p.name ?? ''} ${p.id} ${p.browser ?? ''}`.toLowerCase().includes(f));
+  $('kinds').innerHTML = KINDS.map(([k, label, test]) => `<button class="chip" data-kind="${k}" aria-pressed="${kind === k}">${label}<span class="n">${num(found.filter(test).length)}</span></button>`).join('');
+  const list = found.filter(KINDS.find(([k]) => k === kind)[2]);
+  list.sort((a, b) => { const x = keyOf(a, sortKey), y = keyOf(b, sortKey); return (x < y ? -1 : x > y ? 1 : 0) * sortDir; });
+  $('sort').value = sortKey;
+  $('sort-dir').textContent = sortDir < 0 ? '↓' : '↑';
+  $('people-head').innerHTML = COLS.map(([k, label, cls]) => `<th data-k="${k}" class="${cls ?? ''}" aria-sort="${sortKey === k ? (sortDir < 0 ? 'descending' : 'ascending') : 'none'}">${label}${sortKey === k ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('') + '<th></th>';
+  const page = list.slice(0, peopleShown);
+  $('people-status').textContent = list.length ? `${page.length < list.length ? `${num(page.length)} of ` : ''}${num(list.length)} ${list.length === 1 ? 'person' : 'people'}${showLinked ? '' : '. A browser that signed in counts with its account.'}` : '';
+  $('people').innerHTML = page.length ? page.map((p) => {
+    const open = expanded.has(p.id);
+    return `<tr class="person${p.account ? ' linked' : ''}${open ? ' open' : ''}" data-id="${esc(p.id)}">
+      <td class="who">${whoHtml(p, byId, browsersOf)}</td>
+      <td class="plan">${planCell(p)}</td>
+      <td data-label="Last seen" title="${esc(when(p.last))}">${esc(ago(p.last))}</td>
+      <td class="num" data-label="Played">${hours(p.seconds)}</td>
+      <td class="num" data-label="Saves">${num(p.saves?.n ?? 0)}</td>
+      <td class="num" data-label="Errors">${p.reports ? `<span class="bad">${p.reports}</span>` : '0'}</td>
+      <td class="more"><button class="small" data-toggle aria-expanded="${open}" aria-label="Details" style="min-width:30px;padding:2px 6px"><span class="chev">▾</span></button></td></tr>
+      ${open ? detailHtml(p, browsersOf) : ''}`;
+  }).join('') : `<tr><td colspan="${COLS.length + 1}" class="empty">No one${f ? ` matches “${esc(filter)}”` : ''}.</td></tr>`;
+  const left = list.length - page.length;
+  $('people-more').innerHTML = left > 0 ? `<button data-more="page">Show ${Math.min(PAGE, left)} more</button>${left > PAGE ? `<button data-more="all">Show all ${num(list.length)}</button>` : ''}` : '';
 }
 
-function render() {
-  const t = data.totals;
-  $('at').textContent = `as of ${when(data.at)}`;
-  const card = (label, value, sub = '') => `<div class="card"><span>${label}</span><b>${value}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
-  $('main').innerHTML = `
-    <div class="cards">
-      ${card('People', t.people, `${t.accounts} with an account · ${t.anonymous} anonymous`)}
-      ${card('Active today', t.activeToday, `${t.active7} in 7 days · ${t.active30} in 30`)}
-      ${card('Hours played', t.hours.toFixed(1), t.people ? `${(t.hours / t.people).toFixed(1)} h a person` : '')}
-      ${card('Cloud Saves', t.cloud, 'people with the plan')}
-      ${card('Saves', t.saves, mb(t.savesBytes))}
-      ${card('Older copies', t.older, mb(t.olderBytes))}
-      ${card('Data sets', t.sets, mb(t.setsBytes))}
-      ${card('Error reports', t.reports7, 'in 7 days')}
-      ${card('Said yes to statistics', t.allowed30 + t.declined30 ? `${Math.round(100 * t.allowed30 / (t.allowed30 + t.declined30))}%` : '–',
-        `${t.allowed30} yes · ${t.declined30} no, in 30 days`)}
-    </div>
-    <section><h2>Days</h2>${chart(data.days)}</section>
-    <section><h2>People</h2>
-      <div class="tools"><input id="filter" type="search" placeholder="Search an email, a name, an id, a browser" value="${esc(filter)}" style="min-width:320px">
-        <span class="small muted">${data.people.length} records. A browser that signed in counts with its account (grey rows).</span></div>
-      <div class="scroll"><table><thead><tr>${COLS.map(([k, label, cls]) => `<th data-k="${k}" class="${cls ?? ''}">${label}${sortKey === k ? (sortDir < 0 ? ' ↓' : ' ↑') : ''}</th>`).join('')}</tr></thead>
-        <tbody id="people">${peopleRows()}</tbody></table></div>
-    </section>
-    <section><h2>Error reports</h2>
-      ${data.reports.length ? `<div class="scroll"><table class="reports"><thead><tr><th>When</th><th>Who</th><th>Message</th><th>Browser</th><th>Engine</th></tr></thead><tbody>
-        ${data.reports.map((r, i) => `<tr><td>${esc(when(r.at))}</td><td class="small">${esc(data.people.find((p) => p.id === r.id)?.email ?? r.id.slice(0, 10))}</td>
-          <td>${r.sent ? '<span class="tag sent">Sent by the player</span>' : ''}<a href="#" data-report="${i}">${esc(r.message)}</a>${
-            r.note ? `<div class="small muted">${esc(r.note)}</div>` : ''}${r.save ? `<div class="small">Save: ${esc(r.save.name)} (${mb(r.save.rawSize ?? r.save.size)})</div>` : ''}</td>
-          <td>${esc(r.browser)}</td><td class="small">${esc(r.engine)}</td></tr>`).join('')}
-      </tbody></table></div><div id="report-head" hidden></div><pre id="report" hidden></pre>` : '<p class="muted">No error reports.</p>'}
-    </section>`;
-  $('filter').oninput = (e) => { filter = e.target.value; $('people').innerHTML = peopleRows(); };
-  $('people').onclick = (e) => { const b = e.target.closest('[data-give]'); if (b) give(b.dataset.give, b.dataset.on === '1'); };
-  document.querySelectorAll('th[data-k]').forEach((th) => { th.onclick = () => { const k = th.dataset.k; sortDir = sortKey === k ? -sortDir : -1; sortKey = k; render(); }; });
-  document.querySelectorAll('[data-report]').forEach((a) => {
-    a.onclick = async (e) => {
-      e.preventDefault();
-      const r = data.reports[Number(a.dataset.report)], box = $('report'), head = $('report-head');
-      box.hidden = false;
-      head.hidden = true;
-      box.textContent = 'Loading…';
-      const res = await fetch(`/api/admin/report?key=${encodeURIComponent(r.key)}`, { credentials: 'same-origin' });
-      const full = res.ok ? await res.json() : null;
-      box.textContent = full ? `${full.at} · ${full.id} · ${full.browser} · ${full.engine}${full.where ? ` · ${full.where}` : ''}\n${full.message}${
-        full.note ? `\n\nThe player wrote:\n${full.note}` : ''}\n\n${full.log.join('\n')}` : 'The report file is not in the store.';
-      // A save the player sent: kept packed (gzip) in the store; the button unpacks it and saves it under its own name.
-      if (full?.save) {
-        head.hidden = false;
-        head.innerHTML = full.saveUrl
-          ? `Save: <b>${esc(full.save.name)}</b> (${mb(full.save.rawSize ?? full.save.size)}, ${mb(full.save.size)} packed)<button id="report-save-get">Download the save</button> <a href="${esc(full.saveUrl)}" class="small">packed (.gz)</a>`
-          : `Save: ${esc(full.save.name)}: ${full.save.done ? 'the store gives no link' : 'it did not arrive'}`;
-        const get = $('report-save-get');
-        if (get) get.onclick = async () => {
-          get.disabled = true;
-          get.textContent = 'Getting it…';
-          try {
-            const got = await fetch(full.saveUrl);
-            if (!got.ok) throw new Error(`the store answered ${got.status}`);
-            const blob = await new Response(got.body.pipeThrough(new DecompressionStream('gzip'))).blob();
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = full.save.name;
-            link.click();
-            setTimeout(() => URL.revokeObjectURL(link.href), 60000);
-            get.textContent = 'Download the save';
-          } catch (err) {
-            // The bucket's CORS rules do not let this page read it (a page cannot tell why a fetch failed): the
-            // packed link opens as a plain download, which needs no CORS.
-            get.textContent = 'Not got here: use the packed (.gz) link';
-          }
-          get.disabled = false;
-        };
-      }
-      box.scrollIntoView({ block: 'nearest' });
-    };
-  });
+// ---- Error reports ----
+let errState = { kind: 'all', msg: null, who: null, text: '', shown: 25 };
+const groups = (reports) => {
+  const by = new Map();
+  for (const r of reports) {
+    const g = by.get(r.message) ?? { message: r.message, n: 0, last: r.at, who: new Set(), sent: 0 };
+    g.n++; g.who.add(r.id); if (r.sent) g.sent++; if (r.at > g.last) g.last = r.at;
+    by.set(r.message, g);
+  }
+  return [...by.values()].sort((a, b) => b.n - a.n || (a.last < b.last ? 1 : -1));
+};
+const emailOf = (id) => data.people.find((p) => p.id === id)?.email;
+const whoOf = (id) => { const p = data.people.find((x) => x.id === id); return p?.email ?? (p?.account ? emailOf(p.account) : null) ?? `anonymous ${id.slice(2, 10)}`; };
+function showErrorsOf(id) {
+  const ids = new Set([id, ...data.people.filter((p) => p.account === id).map((p) => p.id)]);
+  errState = { ...errState, kind: 'all', msg: null, who: { ids, label: whoOf(id) }, shown: 25 };
+  renderErrors();
+  go('errors');
 }
+$('err-filter').oninput = (e) => { errState.text = e.target.value; errState.shown = 25; renderErrors(); };
+$('err-kinds').onclick = (e) => { const b = e.target.closest('[data-ek]'); if (b) { errState.kind = b.dataset.ek; errState.shown = 25; renderErrors(); } };
+$('err-active').onclick = (e) => { const b = e.target.closest('[data-clear]'); if (b) { errState[b.dataset.clear] = null; renderErrors(); } };
+$('groups').onclick = (e) => { const b = e.target.closest('[data-group]'); if (b) { const m = shownGroups[Number(b.dataset.group)].message; errState.msg = errState.msg === m ? null : m; errState.shown = 25; renderErrors(); } };
+$('errors-more').onclick = () => { errState.shown += 25; renderErrors(); };
+$('reports').onclick = (e) => {
+  const open = e.target.closest('[data-report]');
+  if (open) { e.preventDefault(); openReport(data.reports[Number(open.dataset.report)]); return; }
+  const cp = e.target.closest('[data-copy]');
+  if (cp) { const r = data.reports[Number(cp.dataset.copy)]; copy(fullReport(r).then((f) => (f ? reportText(f) : Promise.reject(new Error('not in the store')))), cp); return; }
+  const who = e.target.closest('[data-who]');
+  if (who) { filter = who.dataset.who; $('filter').value = filter; kind = 'all'; showLinked = true; $('linked').checked = true; peopleShown = PAGE; renderPeople(); go('people'); }
+};
+let shownGroups = [];
+
+function renderErrors() {
+  if (!data) return;
+  const all = data.reports;
+  shownGroups = groups(all).slice(0, 6);
+  $('groups-panel').hidden = !all.length;
+  $('groups-note').textContent = all.length ? `of the last ${all.length} reports` : '';
+  $('groups').innerHTML = shownGroups.map((g, i) => `<button class="group" data-group="${i}" aria-pressed="${errState.msg === g.message}">
+    <span class="times">×${g.n}</span><span class="text"><div>${esc(g.message)}</div><div class="small muted">last ${esc(ago(g.last))} · ${g.who.size} ${g.who.size === 1 ? 'person' : 'people'}${g.sent ? ` · ${g.sent} sent by the player` : ''}</div></span></button>`).join('');
+  const f = errState.text.trim().toLowerCase();
+  const byText = all.filter((r) => !f || `${r.message} ${r.note ?? ''} ${whoOf(r.id)} ${r.browser ?? ''}`.toLowerCase().includes(f))
+    .filter((r) => !errState.msg || r.message === errState.msg).filter((r) => !errState.who || errState.who.ids.has(r.id));
+  $('err-kinds').innerHTML = [['all', 'All'], ['sent', 'Sent by the player']].map(([k, label]) =>
+    `<button class="chip" data-ek="${k}" aria-pressed="${errState.kind === k}">${label}<span class="n">${byText.filter((r) => k === 'all' || r.sent).length}</span></button>`).join('');
+  const list = byText.filter((r) => errState.kind === 'all' || r.sent);
+  $('err-active').innerHTML = [errState.msg && `<span class="filter-on"><span>Message: ${esc(errState.msg)}</span><button data-clear="msg" aria-label="Clear">×</button></span>`,
+    errState.who && `<span class="filter-on"><span>From ${esc(errState.who.label)}</span><button data-clear="who" aria-label="Clear">×</button></span>`].filter(Boolean).join('');
+  $('err-active').hidden = !errState.msg && !errState.who;
+  const page = list.slice(0, errState.shown);
+  $('errors-status').textContent = all.length ? `${page.length < list.length ? `${page.length} of ` : ''}${list.length} ${list.length === 1 ? 'report' : 'reports'}, the newest first` : '';
+  $('reports').innerHTML = page.length ? page.map((r) => {
+    const i = all.indexOf(r);
+    return `<tr class="rep"><td class="when" data-label="" title="${esc(when(r.at))}">${esc(ago(r.at))}<div class="small muted">${esc(when(r.at))}</div></td>
+      <td data-label="From"><button class="linkish small" data-who="${esc(emailOf(r.id) ?? r.id)}" title="Find in People">${esc(whoOf(r.id))}</button></td>
+      <td class="message">${r.sent ? '<span class="tag sent">Sent by the player</span>' : ''}<a href="#" data-report="${i}">${esc(r.message)}</a>${
+        r.note ? `<div class="note">“${esc(r.note)}”</div>` : ''}${r.save ? `<div class="small">Save: ${esc(r.save.name)} (${mb(r.save.rawSize ?? r.save.size)})</div>` : ''}</td>
+      <td class="small muted" data-label="">${esc(r.browser)}<div>${esc(r.engine)}</div></td>
+      <td class="actions"><button class="small" data-report="${i}">Open</button> <button class="small" data-copy="${i}">Copy</button></td></tr>`;
+  }).join('') : `<tr><td colspan="5" class="empty">${all.length ? 'No report matches.' : 'No error reports.'}</td></tr>`;
+  $('errors-more').innerHTML = list.length > page.length ? `<button>Show ${Math.min(25, list.length - page.length)} more</button>` : '';
+}
+
+// The whole report (its log), from the store, kept for a second open or copy.
+const reportCache = new Map();
+function fullReport(r) {
+  if (!reportCache.has(r.key)) {
+    reportCache.set(r.key, fetch(`/api/admin/report?key=${encodeURIComponent(r.key)}`, { credentials: 'same-origin' })
+      .then((res) => (res.ok ? res.json() : null)).catch(() => null).then((f) => { if (!f) reportCache.delete(r.key); return f; }));
+  }
+  return reportCache.get(r.key);
+}
+const reportText = (full) => `${full.at} · ${full.id}${emailOf(full.id) ? ` (${emailOf(full.id)})` : ''} · ${full.browser} · ${full.engine}${full.where ? ` · ${full.where}` : ''}\n${full.message}${
+  full.note ? `\n\nThe player wrote:\n${full.note}` : ''}\n\n${(full.log ?? []).join('\n')}`;
+
+// Copy to the clipboard. A text that is still coming (a report from the store) goes as a promise, so Safari keeps the click.
+async function copy(text, button) {
+  const say = (t) => {
+    const out = button.id === 'report-copy' || button.id === 'report-copy-log' ? $('report-copied') : null;
+    if (out) { out.textContent = t; clearTimeout(out.timer); out.timer = setTimeout(() => { out.textContent = ''; }, 2000); return; }
+    const was = button.dataset.label ?? button.textContent;
+    button.dataset.label = was;
+    button.textContent = t;
+    clearTimeout(button.timer);
+    button.timer = setTimeout(() => { button.textContent = was; delete button.dataset.label; }, 1500);
+  };
+  try {
+    if (typeof text !== 'string' && window.ClipboardItem && navigator.clipboard?.write) {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'text/plain': Promise.resolve(text).then((t) => new Blob([t], { type: 'text/plain' })) })]);
+        say('Copied');
+        return;
+      } catch (err) { if (err?.message === 'not in the store') throw err; }
+    }
+    const t = await text;
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(t);
+    else {
+      const area = Object.assign(document.createElement('textarea'), { value: t });
+      area.style.cssText = 'position:fixed;opacity:0';
+      (button.closest('dialog') ?? document.body).append(area);
+      area.select();
+      const ok = document.execCommand('copy');
+      area.remove();
+      if (!ok) throw new Error('refused');
+    }
+    say('Copied');
+  } catch (err) {
+    say(err?.message === 'not in the store' ? 'Not in the store' : 'Not copied');
+  }
+}
+
+let openFull = null;
+async function openReport(r) {
+  const dlg = $('report-dialog'), box = $('report'), head = $('report-head');
+  $('report-title').textContent = r.message;
+  $('report-meta').innerHTML = [esc(when(r.at)), esc(whoOf(r.id)), esc(r.browser), `<span>${esc(r.engine)}</span>`, r.sent ? '<span class="good">sent by the player</span>' : ''].filter(Boolean).map((x) => `<span>${x}</span>`).join('');
+  head.hidden = true;
+  box.textContent = 'Loading…';
+  openFull = null;
+  ['report-copy', 'report-copy-log', 'report-txt'].forEach((id) => { $(id).disabled = true; });
+  $('report-copied').textContent = '';
+  if (!dlg.open) dlg.showModal();
+  box.scrollTop = 0;
+  const full = await fullReport(r);
+  if (!dlg.open) return;
+  openFull = full;
+  box.textContent = full ? reportText(full) : 'The report file is not in the store.';
+  ['report-copy', 'report-copy-log', 'report-txt'].forEach((id) => { $(id).disabled = !full; });
+  if (full?.where) $('report-meta').insertAdjacentHTML('beforeend', `<span>${esc(full.where)}</span>`);
+  // A save the player sent: kept packed (gzip) in the store; the button unpacks it and saves it under its own name.
+  if (full?.save) {
+    head.hidden = false;
+    head.innerHTML = full.saveUrl
+      ? `Save: <b>${esc(full.save.name)}</b> (${mb(full.save.rawSize ?? full.save.size)}, ${mb(full.save.size)} packed)<button id="report-save-get" class="small primary">Download the save</button> <a href="${esc(full.saveUrl)}" class="small">packed (.gz)</a>`
+      : `Save: ${esc(full.save.name)}: ${full.save.done ? 'the store gives no link' : 'it did not arrive'}`;
+    const get = $('report-save-get');
+    if (get) get.onclick = async () => {
+      get.disabled = true;
+      get.textContent = 'Getting it…';
+      try {
+        const got = await fetch(full.saveUrl);
+        if (!got.ok) throw new Error(`the store answered ${got.status}`);
+        const blob = await new Response(got.body.pipeThrough(new DecompressionStream('gzip'))).blob();
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = full.save.name;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+        get.textContent = 'Download the save';
+      } catch (err) {
+        // The bucket's CORS rules do not let this page read it (a page cannot tell why a fetch failed): the
+        // packed link opens as a plain download, which needs no CORS.
+        get.textContent = 'Not got here: use the packed (.gz) link';
+      }
+      get.disabled = false;
+    };
+  }
+}
+$('report-x').onclick = () => $('report-dialog').close();
+$('report-dialog').onclick = (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); };   // a click on the backdrop
+$('report-copy').onclick = (e) => openFull && copy(reportText(openFull), e.currentTarget);
+$('report-copy-log').onclick = (e) => openFull && copy((openFull.log ?? []).join('\n'), e.currentTarget);
+$('report-txt').onclick = () => {
+  if (!openFull) return;
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([reportText(openFull)], { type: 'text/plain' }));
+  link.download = `report ${openFull.at.replace(/[:T]/g, '-').slice(0, 19)}.txt`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+};
 
 // ---- The database library (library.mjs): data sets every player can get, each for a season. Its own part of the
 // page, not redrawn by the statistics' refresh (an upload in progress keeps its form). ----
 const FIRST = 2001, LAST = 2026;                 // 2026/27: a database after the game's last season (library.mjs)
 const seasonText = (y) => `${y}/${String((y + 1) % 100).padStart(2, '0')}`;
-let library = [], editing = null;
+let editing = null;
 const CHANGE = { 'content-type': 'application/json', 'x-cm': '1' };
 async function loadLibrary() {
   const r = await fetch('/api/admin/library', { credentials: 'same-origin' }).catch(() => null);
   if (!r || !r.ok) {
-    $('library').hidden = r?.status !== 404;
-    if (r?.status === 404) $('library').innerHTML = '<section><h2>Database library</h2><p class="muted">The library needs the bucket (BUCKET_NAME and its key).</p></section>';
+    $('library').hidden = true;
+    $('library-none').hidden = false;
+    $('library-none').textContent = r?.status === 404 ? 'The library needs the bucket (BUCKET_NAME and its key).' : r?.status === 401 || r?.status === 403 ? '' : 'The library did not load.';
     return;
   }
   library = (await r.json()).entries;
   $('library').hidden = false;
+  $('library-none').hidden = true;
+  $('n-library').textContent = library.length || '';
   renderLibrary();
+  if (data) renderOverview();
 }
 function renderLibrary() {
   const seasons = [];
   for (let y = LAST; y >= FIRST; y--) seasons.push(`<option value="${y}">${seasonText(y)}</option>`);
-  $('library').innerHTML = `<section><h2>Database library</h2>
-    <p class="small muted">Data sets that every player can get, free and with no account (Saved games, Data sets, Get a database), each for the
+  $('library').innerHTML = `<div class="panel"><h2>${editing ? `Change ${esc(editing.name)}` : 'Add a database'}</h2>
+    <p class="small muted" style="margin:0 0 10px">Data sets that every player can get, free and with no account (Saved games, Data sets, Get a database), each for the
       season a new game starts in. A zip of the 20 database files, as Download of a data set gives it (other Data files in it come along).</p>
-    <div class="tools">
-      ${editing ? '' : '<input type="file" id="lib-file" accept=".zip,application/zip">'}
-      <input id="lib-name" placeholder="Name, as players see it" maxlength="60" style="min-width:220px">
-      <label class="small muted">Season <select id="lib-season">${seasons.join('')}</select></label>
-      <input id="lib-note" placeholder="A note: who made it, what it holds" maxlength="500" style="min-width:320px">
-      <button id="lib-add" class="give on">${editing ? 'Save changes' : 'Add to the library'}</button>${editing ? '<button id="lib-cancel">Cancel</button>' : ''}
-      <span id="lib-msg" class="small"></span>
+    <div class="lib-form">
+      ${editing ? '' : '<input type="file" id="lib-file" accept=".zip,application/zip" aria-label="The zip">'}
+      <input id="lib-name" placeholder="Name, as players see it" maxlength="60" aria-label="Name">
+      <label class="small muted" style="display:flex;gap:6px;align-items:center">Season <select id="lib-season">${seasons.join('')}</select></label>
+      <div class="wide"><input id="lib-note" placeholder="A note: who made it, what it holds" maxlength="500" aria-label="Note">
+        <button id="lib-add" class="primary">${editing ? 'Save changes' : 'Add to the library'}</button>${editing ? '<button id="lib-cancel">Cancel</button>' : ''}</div>
     </div>
-    ${library.some((e) => e.card === undefined) ? `<p class="small muted">Some databases came before the pictures: <button id="lib-cards">Make their pictures</button>
-      <span id="lib-cards-msg"></span></p>` : ''}
-    ${library.length ? `<div class="scroll"><table><thead><tr><th>Picture</th><th>Name</th><th>Season</th><th>Size</th><th>Note</th><th>Added</th><th></th></tr></thead><tbody>
-      ${library.map((e) => `<tr><td>${e.card ? `<img src="/api/library/${esc(e.id)}/card" width="64" height="48" alt="" loading="lazy" style="display:block;border-radius:4px">` : `<span class="small muted">${e.card === false ? 'none' : '–'}</span>`}</td><td>${esc(e.name)}</td><td>${seasonText(e.season)}</td><td>${mb(e.size)}</td><td class="small" style="white-space:normal">${esc(e.note)}</td>
-        <td class="small">${esc(when(e.added))}</td><td><button data-lib-edit="${esc(e.id)}">Edit</button> <button data-lib-remove="${esc(e.id)}">Remove</button></td></tr>`).join('')}
-    </tbody></table></div>` : '<p class="muted">Nothing in the library yet.</p>'}</section>`;
+    <span id="lib-msg" class="small"></span>
+    ${library.some((e) => e.card === undefined) ? `<p class="small muted">Some databases came before the pictures: <button id="lib-cards" class="small">Make their pictures</button>
+      <span id="lib-cards-msg"></span></p>` : ''}</div>
+    <div class="panel"><h2>In the library <span class="count">${library.length}</span></h2>
+    ${library.length ? `<table class="stack"><thead><tr><th>Picture</th><th>Name</th><th>Season</th><th class="num">Size</th><th>Note</th><th>Added</th><th></th></tr></thead><tbody>
+      ${library.map((e) => `<tr><td>${e.card ? `<img src="/api/library/${esc(e.id)}/card" width="64" height="48" alt="" loading="lazy">` : `<span class="small muted">${e.card === false ? 'no picture' : '–'}</span>`}</td>
+        <td><b style="font-weight:500">${esc(e.name)}</b></td><td data-label="Season">${seasonText(e.season)}</td><td class="num" data-label="Size">${mb(e.size)}</td><td class="note">${esc(e.note)}</td>
+        <td class="small muted" data-label="Added">${esc(day(e.added))}</td><td class="lib-actions"><button class="small" data-lib-edit="${esc(e.id)}">Edit</button> <button class="small" data-lib-remove="${esc(e.id)}">Remove</button></td></tr>`).join('')}
+    </tbody></table>` : '<p class="empty">Nothing in the library yet.</p>'}</div>`;
   const say = (t, bad = false) => { $('lib-msg').textContent = t; $('lib-msg').className = `small ${bad ? 'bad' : 'muted'}`; };
   if (editing) { $('lib-name').value = editing.name; $('lib-season').value = String(editing.season); $('lib-note').value = editing.note; }
   else $('lib-file').onchange = () => { const f = $('lib-file').files[0]; if (f && !$('lib-name').value) $('lib-name').value = f.name.replace(/\.zip$/i, '').slice(0, 60); };
@@ -305,7 +836,7 @@ function renderLibrary() {
       $('lib-add').disabled = false;
     }
   };
-  document.querySelectorAll('[data-lib-edit]').forEach((b) => { b.onclick = () => { editing = library.find((e) => e.id === b.dataset.libEdit); renderLibrary(); }; });
+  document.querySelectorAll('[data-lib-edit]').forEach((b) => { b.onclick = () => { editing = library.find((e) => e.id === b.dataset.libEdit); renderLibrary(); window.scrollTo({ top: 0 }); }; });
   document.querySelectorAll('[data-lib-remove]').forEach((b) => {
     b.onclick = async () => {
       const e = library.find((x) => x.id === b.dataset.libRemove);
@@ -329,7 +860,7 @@ function put(url, body, headers, onPart, same) {
   });
 }
 
-$('refresh').onclick = load;
+$('refresh').onclick = () => { load(); loadLibrary(); };
 load();
 loadLibrary();
 setInterval(load, 60000);

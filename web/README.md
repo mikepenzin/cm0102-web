@@ -345,8 +345,14 @@ for it. The server (`stats.mjs`) keeps one object in the bucket (`stats/stats.js
 the server stops) and the reports as files (`reports/<day>/…`, deleted after 90 days); people idle for 400 days go.
 Each write reads the object again and adds what its machine counted since (`mergeStats`), so two machines both count.
 
-`/admin` shows the totals (people, accounts and anonymous, active today, in 7 and 30 days, hours played, saves, older
-copies, data sets, errors), the last 90 days, every person (sortable, searchable) and the error reports with their log.
+`/admin` has four tabs (the address's `#overview`, `#people`, `#errors`, `#library` opens one). Overview: what to look
+at (reports sent by players, reports in the last 24 hours, a message that comes again, databases with no picture), the
+totals (people, accounts and anonymous, active today, in 7 and 30 days, hours played, saves, older copies, data sets,
+errors) and four charts of the last 7, 30 or 90 days (people active a day, hours played, new people, error reports),
+each against the days before. People: 50 at a time, searchable, sortable, with filters (accounts, anonymous, Cloud
+Saves, with errors, seen in 7 days); a row opens its details. Error reports: the messages that come most, then each
+report; a report opens with its log, and Copy report, Copy log only and Download .txt (Copy in the list copies it
+without opening). A phone gets each row as a card.
 It is open to the Google accounts of `CM_ADMIN_EMAILS` (comma separated, signed in on the game's page) and to a request
 with `Authorization: Bearer <CM_ADMIN_TOKEN>` (16 characters or more). Such an account has an Admin panel button in
 its Account dialog (`/api/me` says `admin`), which opens `/admin` in a tab of its own, so the game goes on. The people
