@@ -119,6 +119,18 @@
   #consent p { margin: 0 0 10px; color: var(--muted); } #consent p b { color: var(--text, inherit); }
   #consent .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } #consent .row a { margin-left: 4px; }
   #consent .small { margin: 8px 0 0; font-size: 12px; }
+  /* The first-visit tour (tour.js): a card beside one of the page's buttons, which wears a ring meanwhile. Fixed to the
+     window, so it can sit beside the bar wherever the bar is (a row above the game, a column beside it, full screen). */
+  #tour { position: fixed; z-index: 8; width: min(300px, calc(100vw - 16px)); padding: 12px 14px; background: var(--panel);
+    border: 1px solid var(--line-hi); border-radius: var(--r-lg); box-shadow: 0 12px 34px rgba(0, 0, 0, .55); font-size: 13px;
+    animation: tour-in 180ms cubic-bezier(.23, 1, .32, 1); }
+  #tour h3 { margin: 0 0 4px; font-size: 14px; }
+  #tour p { margin: 0; color: var(--muted); line-height: 1.45; }
+  #tour .tour-count { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
+  #tour .row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  #tour .spacer { flex: 1; }
+  @keyframes tour-in { from { opacity: 0; transform: translateY(-4px); } }
+  .tour-target { outline: 2px solid var(--accent) !important; outline-offset: 2px; position: relative; z-index: 7; }
   @media (max-width: 520px) { #consent { right: 12px; max-width: none; } }
 
   /* The boxes over the game: start, progress, errors. */
@@ -432,7 +444,7 @@
      busy mark turns, slower). */
   @media (prefers-reduced-motion: reduce) {
     #canvas, button, a, input, select, textarea, .bar i, #app.fs #bar { transition: none; }
-    #type-chip, .toast, .ping:not(.hold) { animation: none; }
+    #type-chip, .toast, .ping:not(.hold), #tour { animation: none; }
     .ping:not(.hold) { opacity: 0; }
     button:active:not(:disabled) { transform: none; }
     .spin { animation-duration: 1.6s; }
@@ -613,6 +625,7 @@
       <p class="small">Send to the developer sends the engine log and, if you choose, a saved game, so the problem can be
       found. <button id="help-report-open" class="link">Send to the developer</button></p>
     </div>
+    <p class="small" id="help-tour-row" hidden>New to the buttons around the game? <button id="help-tour" class="link">Show the tour</button></p>
     </div>
     <div class="row dlg-foot"><span class="spacer"></span><button id="help-close">Close</button></div>
   </dialog>

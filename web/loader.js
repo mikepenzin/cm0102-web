@@ -14,7 +14,8 @@ import { mountSetsPanel } from './setspanel.js';
 import { mountTacticsPanel } from './tactics.js';
 import { createSetSync, listDataSets } from './datasets.js';
 import { LEGAL_LINKS, createCloudSync, keepInCloud, mountAccount, plansHtml } from './account.js';
-import { guardKeys, hasTouch, mountKeyboard } from './keyboard.js';
+import { guardKeys, hasTouch, mountKeyboard, onPageKey } from './keyboard.js';
+import { mountTour } from './tour.js';
 import { mountLayout } from './layout.js';
 import { mountMacRightButton, mountTouch } from './touch.js';
 import { fitBar, guardLeave, isFullAlready, isStandalone, keepAwake, mountBusy, toast } from './ui.js';
@@ -221,7 +222,8 @@ canvas.addEventListener('mousedown', (e) => {
 });
 
 // The page's own buttons: after one is used, the keys belong to the game again.
-const backToGame = () => { if (!document.querySelector('dialog[open]') && document.activeElement !== $('kbd')) canvas.focus({ preventScroll: true }); };
+// Not while the tour's card is up: Help's "Show the tour" closes Help, whose close event comes after the card took the focus.
+const backToGame = () => { if (!document.querySelector('dialog[open]') && document.activeElement !== $('kbd') && !$('tour')) canvas.focus({ preventScroll: true }); };
 $('bar').addEventListener('click', (e) => { if (e.target.closest('button') && !e.target.closest('#kbd-open')) setTimeout(backToGame); });
 for (const d of document.querySelectorAll('dialog')) d.addEventListener('close', backToGame);
 $('help-open').onclick = () => $('help').showModal();
@@ -324,6 +326,10 @@ function cloudHintOnce() {
   setTimeout(() => toast(`${hint} See ${account.me?.user ? 'your name' : 'Sign in'}, top right.`, { ms: 9000 }), 2500);
 }
 $('help-close').onclick = () => $('help').close();
+// The first-visit tour (tour.js): once in this browser after the game has started, and from Help at any time.
+const tour = mountTour({ storage: (() => { try { return localStorage; } catch { return null; } })(), onPageKey,
+  onEnd: () => { if (!document.querySelector('dialog[open]')) canvas.focus({ preventScroll: true }); } });
+$('help-tour').onclick = () => { $('help').close(); tour.start(); };
 $('fullscreen').onclick = () => layout.toggleFullscreen();
 // A phone's or tablet's file picker turns the accept list into file types it knows; .sav and .dat are none of them, and
 // a downloaded zip often has a general type, so the picker could grey out the very file. The page checks each file
@@ -406,6 +412,12 @@ async function download(files, cache, onBytes, counts, signal, { lazy = false } 
   let next = 0;
   // The body of r into an array of the file's size; got(n) counts the bytes as they come.
   async function readAll(r, f, fromCache, got = () => {}) {
+    // An empty file: the browser's cache gives its copy with no body at all (the stand-in game's empty .dat files made a
+    // second visit stop on "Cannot read properties of null (reading 'getReader')").
+    if (!r.body) {
+      if (f.size === 0) return new Uint8Array(0);
+      throw Object.assign(new Error(`${f.path}: no body, where ${f.size} bytes were wanted`), { again: !fromCache });
+    }
     const buf = new Uint8Array(f.size), reader = r.body.getReader();
     let at = 0;
     for (;;) {
@@ -898,6 +910,9 @@ function runEngine(files, info) {
       $('sets').hidden = false;
       $('saves-open').addEventListener('click', () => sets.render());
       setSync?.run();                                   // the cloud's data sets come in while the game starts
+      $('help-tour-row').hidden = false;
+      // The tour waits a moment for the bar's last buttons and the layout; not over a dialog or a box the page shows.
+      setTimeout(() => { if (running && !handedOver && !document.querySelector('dialog[open]') && !$('overlay').innerHTML.trim()) tour.maybeStart(); }, 1500);
       // Play (play.js): a save's Play button; with a game in play, through Restart Game's path.
       const player = mountPlay({ module: () => window.Module, log, toast, restart: () => window.Module.rtRestart(), isRunning: () => running });
       mountSavesPanel({ FS, sync, log, report: () => report, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),

@@ -22,6 +22,11 @@ const pageOwns = (target) => {
   return target instanceof Element && target.closest('button, a, input, textarea, select, summary, [contenteditable]') !== null;
 };
 
+// The page's own key handlers for keys this guard keeps from the game: the guard stops each such key on the window,
+// before it reaches an element's own listener, so a part of the page that wants one (the tour's Escape) registers here.
+const pageKeyListeners = new Set();
+export function onPageKey(fn) { pageKeyListeners.add(fn); return () => pageKeyListeners.delete(fn); }
+
 // Before the engine starts: its keyboard listeners come later, so this one runs first.
 export function guardKeys() {
   for (const type of ['keydown', 'keypress', 'keyup']) {
@@ -34,6 +39,7 @@ export function guardKeys() {
         }
       } else if (pageOwns(e.target)) {
         e.stopImmediatePropagation();                         // the page's own part takes the key; the game does not
+        if (type === 'keydown') for (const fn of pageKeyListeners) fn(e);
       }
     }, true);
   }

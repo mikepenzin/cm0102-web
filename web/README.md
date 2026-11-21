@@ -728,6 +728,19 @@ One system for every part of the page (`index.html`, its `:root`), from the UI s
   wheel and its right click, and a page zoomed by a pinch would leave the game half out of view. Every field is 16px,
   so no browser zooms into one either.
 
+## The first-visit tour
+
+Once in a browser, a moment after the game has started, a card beside each of the page's own buttons says what it is
+for (`tour.js`): Saved games, Editor, Right click (on a touch device) and Help, with Back, Next or Done, and Skip the
+tour. The button it is about wears a green ring. New players arrive from Facebook groups and the video guides and see
+a row of icons around the game (on a phone, icons only; held sideways, a column), and one could not find the Editor.
+The card sits below its button when the buttons are a row and beside them when they are a column, never over one of
+them; it does not hold the game, and Escape ends it while it has the focus. Help's "Show the tour" runs it again. A
+step whose button is not shown is left out (Right click on a computer; in full screen with the buttons folded away,
+none: the tour then waits for a later visit). The browser keeps `cm0102-tour-seen` in localStorage once the tour has
+ended; a private window keeps nothing and shows it at each visit. `test/tour-check.mjs` runs it on a laptop, a phone
+held upright and one held sideways.
+
 ## On an iPad or another touch device
 
 | Do | The game gets |
