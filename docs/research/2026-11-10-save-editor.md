@@ -30,7 +30,7 @@ Juventus save:
 
 The staff rows are the 110-byte records that convert_staff (0x52caa1) makes from the 157-byte file rows; the offsets
 are those of `staff_fields` in `src/cm3/database.c`: names at +0x04, +0x08, +0x0c, date of birth +0x10 (a Date.cpp
-date, 8 bytes), year +0x18, nation +0x1a, club +0x39, player data row +0x61 (-1: none). A player row's id at +0 is its
+date, 8 bytes), +0x18 (in a save: the age, see below), nation +0x1a, club +0x39, player data row +0x61 (-1: none). A player row's id at +0 is its
 row (54,772 of 54,772). Current ability i16 at +0x05 (1..190 in the save), potential i16 at +0x07 (1..200), twelve
 position bytes at +0x0f (0..20), the 42 attribute bytes at +0x1b..+0x44 in the order of
 `docs/research/2026-10-21-goalkeeper-attributes.md`.
@@ -100,7 +100,11 @@ and the editor shows the other two the same way (inference: they are stored as t
 - A byte that already shows the wanted rating stays as it is, so a player changed in one attribute keeps every other
   byte.
 - Dates as Date.cpp writes them (FUN_00549f70, tables 0x9b8448 and 0x9b8460, `src/si/date.c`): the day of the year from
-  0, the year, and the leap flag. The year at staff +0x18 gets the year of birth too.
+  0, the year, and the leap flag. Staff +0x18 is not the year in a saved game but the age: Del Piero, born 9.11.74,
+  holds 26 there in a save of 14.7.01 (a new game of the Bosman Edition, recorded 21 November 2026), and an edit that
+  wrote 1974 there showed "Born 9.11.74 (Age -74)" on his Profile in the game. The editor now leaves it, and moves it
+  by the years a new date of birth moves (`SaveGame.write`). The game function that reads it for the Profile is not
+  yet found; the 2026-10-16 note on foreign players infers the same (+0x18 the age).
 - Only staff.dat and player.dat change (checked with `tools/save/savfile.py` on an edited copy of the Juventus save).
 
 ## Not done

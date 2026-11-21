@@ -1,4 +1,4 @@
-// The site of the how-to videos and of the screens review (make-videos.mjs, screens.mjs): the server with the stand-in
+// The site of the screens review (screens.mjs): the server with the stand-in
 // engine, the game's own database as a small data set (fakes.mjs), accounts with the stand-ins of Google and the store,
 // and a database library of three examples. startDemoSite() → { BASE, tmp, s3, close }.
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';

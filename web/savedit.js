@@ -313,7 +313,7 @@ export class SaveGame {
       const po = d * PLAYER_SIZE;
       const born = readDate(s.b, o + 0x10);
       out.push({ row: i, data: d, name: full || '(no name)', key: fold(full), club: this.clubs.get(s.dv.getInt32(o + 0x39, true)) ?? '',
-        nation: this.nations.get(s.dv.getInt32(o + 0x1a, true)) ?? '', born: born?.year ?? s.dv.getUint16(o + 0x18, true),
+        nation: this.nations.get(s.dv.getInt32(o + 0x1a, true)) ?? '', born: born?.year ?? '',
         ca: p.dv.getInt16(po + 5, true), pa: p.dv.getInt16(po + 7, true), pos: positionText(p.b.subarray(po + 0x0f, po + 0x1b)) });
     }
     this.list = out;
@@ -339,7 +339,7 @@ export class SaveGame {
       attrs[a.name] = shown(a, b, ca, gk);
     }
     return { ca, pa: p.dv.getInt16(po + 7, true), positions: [...p.b.subarray(po + 0x0f, po + 0x1b)], attrs,
-      born: readDate(s.b, o + 0x10), birthYear: s.dv.getUint16(o + 0x18, true) };
+      born: readDate(s.b, o + 0x10), age: s.dv.getUint16(o + 0x18, true) };
   }
 
   // Writes the fields (as read gives them, changed). A relative attribute keeps its byte when it still shows the
@@ -364,9 +364,12 @@ export class SaveGame {
     p.dv.setInt16(po + 5, ca, true);
     p.dv.setInt16(po + 7, pa, true);
     p.b.set(positions, po + 0x0f);
-    if (f.born) {
+    // In a saved game staff +0x18 is the age, not the year of birth (Del Piero, born 9.11.74, holds 26 on 14.7.01;
+    // 1974 there showed "Age -74" in the game). A new year of birth moves the age by as many years.
+    const was = readDate(s.b, o + 0x10);
+    if (f.born && (!was || was.year !== f.born.year || was.month !== f.born.month || was.day !== f.born.day)) {
       writeDate(s.b, o + 0x10, f.born);
-      s.dv.setUint16(o + 0x18, f.born.year, true);
+      if (was) s.dv.setUint16(o + 0x18, Math.max(0, s.dv.getUint16(o + 0x18, true) - (f.born.year - was.year)), true);
     }
     this.file.changed(this.staff.name);
     this.file.changed(this.player.name);

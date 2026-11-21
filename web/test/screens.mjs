@@ -1,6 +1,6 @@
 // Every screen of the page, on a laptop and on a phone, for a review of the look (web/README.md, "Look and feel"):
 // the start box, the bar over the game, Saved games and its three tabs, the editor, the account, Help, Send to the
-// developer, the legal pages and the admin page. The stand-in site of the videos (demo-site.mjs).
+// developer, the legal pages and the admin page. The stand-in site (demo-site.mjs).
 // NODE_PATH=$(npm root -g) node web/test/screens.mjs <folder>     → <folder>/<laptop|phone>-NN-<screen>.png
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';

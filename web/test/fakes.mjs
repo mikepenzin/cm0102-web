@@ -206,7 +206,9 @@ export async function fakeSaveGame(players = [
     const o = i * 110;
     staff.writeInt32LE(i, o); staff.writeInt32LE(i + 1, o + 4); staff.writeInt32LE(i + 1, o + 8); staff.writeInt32LE(0, o + 0x0c);
     writeDate(staff, o + 0x10, { year: p.born[0], month: p.born[1], day: p.born[2] });
-    staff.writeUInt16LE(p.born[0], o + 0x18); staff.writeInt32LE(0, o + 0x1a); staff.writeInt32LE(p.club, o + 0x39); staff[o + 0x3d] = 11;
+    // In a save +0x18 is the age on the game's date (a game of 14 July 2001 here), not the year of birth.
+    staff.writeUInt16LE(2001 - p.born[0] - (p.born[1] > 7 || (p.born[1] === 7 && p.born[2] > 14) ? 1 : 0), o + 0x18);
+    staff.writeInt32LE(0, o + 0x1a); staff.writeInt32LE(p.club, o + 0x39); staff[o + 0x3d] = 11;
     staff[o + 0x58] = 16; staff[o + 0x5f] = 2; staff.writeInt32LE(i, o + 0x61); staff.writeInt32LE(-1, o + 0x65); staff.writeInt32LE(-1, o + 0x69);
     const q = i * 70;
     player.writeInt32LE(i, q); player.writeInt16LE(p.ca, q + 5); player.writeInt16LE(p.pa, q + 7);

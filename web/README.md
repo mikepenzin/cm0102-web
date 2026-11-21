@@ -889,20 +889,27 @@ What to know about the Asyncify engine:
   sign-out, a free account that buys Cloud Saves while its game runs (checkout, webhook, the save goes up), and one
   that joins as a Buy Me a Coffee member in another tab (webhook, Cloud Saves on by themselves, Your membership).
   Needs Playwright.
-- `NODE_PATH=$(npm root -g) node web/test/make-videos.mjs <folder> [editor|app]`: the two how-to videos for players,
-  `editor.mp4` (Saved games, Edit, a search, a change, Apply, Save; the Editor button, a new data set, Databases, Use)
-  and `app.mp4` (the start; Saved games: Play, Download, Upload, Download all; the Tactics tab; the Databases tab: Get a
-  database from the library, Use; Full screen, Cloud Saves, Help, Add to Home Screen), about 1.5 minutes each, 1920x1080
-  H.264. The page is recorded in Chromium (1280x800) on the stand-in site of `test/demo-site.mjs` (the stand-in engine,
-  the checks' small saves and data set, a library of three example databases), with a pointer drawn on it; the game's
-  own screen is not in them (a panel says where the game runs). Each step's words and the box it points at go into a
-  log, and `test/videos-compose.mjs` makes a HyperFrames project of it (`<folder>/<name>-project/`, the skill in
-  `.claude/skills/hyperframes`): a title card, the capture in a frame with a caption under it for each step and a zoom
-  on a small target, an end card; then renders it with the HyperFrames CLI (npm, pinned, its telemetry off).
-  `CM_VIDEO_MUSIC` (or `CM_VIDEO_MUSIC_APP`, `CM_VIDEO_MUSIC_EDITOR`) names a music file that plays under the film from
-  its start, at 0.6 (about -18 LUFS for a track mastered at -13.5), faded out over the end card's last 4 s; the
-  published films have two takes of a Suno track made for them ("Matchday Manager"), kept outside git. Without it the
-  films are silent. CM_SELLER and CM_COFFEE_URL as on the server. Make them again after the page changes.
+- `CM_VIDEO_SAVE=<a .sav> NODE_PATH=$(npm root -g) node web/test/make-videos.mjs <folder> [editor|app]`: the two
+  how-to videos for players, `editor.mp4` (Saved games, Edit, a search, a change, Apply, Save; Play, and the player in
+  the game's Find with his new Pace; the Editor button, a new data set, Databases, Use) and `app.mp4` (the start; the
+  game's main menu; Saved games: Upload, Download, Download all, Play, and the game where it was left; Game Options,
+  Save Game; the Tactics tab; the Databases tab: Get a database from the library, Use; Full screen, Cloud Saves, Help,
+  Add to Home Screen), 1920x1080 H.264. The page is recorded in Chromium (1280x800) on a real site, `CM_VIDEO_SITE`
+  (default `https://cm0102-web.fly.dev`; or a local server with the game's files), with the real engine, so the game's
+  own screens are in them; each film starts in a new browser profile. The page's scripts (`web/*.js`) come from this
+  checkout (the service worker off), so a change to the page is in the films before it is deployed. `CM_VIDEO_SAVE` is a save of the real game,
+  Juventus in 2001/02 (a new game with Italy, Juventus taken, saved on its first day): the films upload it. The waits
+  (the game files' download, the game starting and its Game Settings, a save loading) are recorded but cut out of the
+  capture. The game's own buttons are pressed at places in its 1280x800 picture (`AT` in the script), held 150 ms as a
+  hand would. Each step's words and the box it points at go into a log, and `test/videos-compose.mjs` makes a
+  HyperFrames project of it (`<folder>/<name>-project/`, the skill in `.claude/skills/hyperframes`): a title card, the
+  capture in a frame with a caption under it for each step and a zoom on a small target, an end card; then renders it
+  with the HyperFrames CLI (npm, pinned, its telemetry off). The music is a take of "Matchday Manager", a Suno track made for the films, in
+  `test/video-music/` (one take for each film; its README says what the files are): it plays under the film from its
+  start, at 0.6 (about -18 LUFS for a track mastered at -13.5), faded out over the end card's last 4 s.
+  `CM_VIDEO_MUSIC` (or `CM_VIDEO_MUSIC_APP`, `CM_VIDEO_MUSIC_EDITOR`) names another file, or `none`. `node
+  web/test/videos-music.mjs <folder> [editor|app]` makes the films again from their projects with the music, without a
+  new recording. Make them again after the page changes.
 - `NODE_PATH=$(npm root -g) node web/test/screens.mjs <folder>`: every screen of the page on a laptop (1280x800) and a
   phone (an iPhone 13), for a review of the look: the start, the bar over the game, Saved games and its three tabs, the
   editor, the account, Help, Send to the developer, the legal pages and the admin page.

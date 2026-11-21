@@ -75,6 +75,18 @@ test('the saved game: players, search, read, write; only the changed tables chan
   assert.equal(h.read(h.search('buffon')[0].row).attrs.Pace, 12, 'the other player is as he was');
 });
 
+test('a saved game keeps the age at staff +0x18: only a new year of birth moves it', async () => {
+  const g = new SaveGame(await fakeSaveGame());
+  const row = g.search('del piero')[0].row;
+  const f = g.read(row);
+  assert.equal(f.age, 26, 'born 9 November 1974, a game of 14 July 2001');
+  f.attrs.Pace = 20;
+  g.write(row, f);
+  assert.equal(g.read(row).age, 26, 'a change of ratings leaves the age (it once got 1974: "Age -74" in the game)');
+  g.write(row, { ...g.read(row), born: { year: 1980, month: 11, day: 9 } });
+  assert.equal(g.read(row).age, 20, 'six years younger');
+});
+
 test('a file that is not a saved game, or not one this editor knows', async () => {
   assert.throws(() => new SaveGame(new Uint8Array(100)), /too short/);
   const b = await fakeSaveGame();
