@@ -84,6 +84,8 @@ async function recorder(name) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, acceptDownloads: true,
     serviceWorkers: 'block', recordVideo: { dir, size: { width: 1280, height: 800 } } });
   await ctx.addInitScript(OVERLAY);
+  // The first-visit tour (tour.js) is not in the films: they show the buttons themselves.
+  await ctx.addInitScript(() => { try { localStorage.setItem('cm0102-tour-seen', '1'); } catch { /* none */ } });
   // The page's own scripts from this checkout (the films show the page about to be released); the engine, the game
   // files and the server's answers from the site. The service worker is off: it would answer for the page.
   await ctx.route((url) => url.origin === new URL(BASE).origin && PAGE_JS.has(url.pathname.slice(1)), (route) =>
