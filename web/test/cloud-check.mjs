@@ -373,7 +373,7 @@ try {
   await g.waitForTimeout(4000);                                       // its first heartbeat: the admin page lists it
   const adm = await a.context().newPage();
   adm.on('dialog', (dlg) => dlg.accept());                           // "Give Cloud Saves to …?"
-  await adm.goto(`${BASE}/admin`);
+  await adm.goto(`${BASE}/admin#people`);
   await adm.waitForSelector('[data-give="g:6000006"]', { timeout: 15000 });
   const row = () => adm.locator('#people tr', { hasText: 'gift@example.com' }).innerText();
   check('the admin page: a free account has a Give button, the admin\'s own (server list) none',
@@ -421,7 +421,7 @@ try {
     JSON.stringify({ ...full, log: full.log?.length, saveUrl: Boolean(full.saveUrl) }).slice(0, 400));
   // The admin page: the report is marked as sent, and its save downloads unpacked, under its own name.
   const adm2 = await a.context().newPage();
-  await adm2.goto(`${BASE}/admin`);
+  await adm2.goto(`${BASE}/admin#errors`);
   await adm2.waitForSelector('.tag.sent', { timeout: 10000 }).catch(() => {});
   await adm2.click('.tag.sent + a');
   await adm2.waitForSelector('#report-save-get', { timeout: 10000 }).catch(() => {});
@@ -664,7 +664,7 @@ try {
     adminPage.on('pageerror', (e) => errors.push(e.message));
     await adminPage.goto(`${BASE}/auth/google/start?mode=page`);
     await adminPage.waitForSelector('#go');
-    await adminPage.goto(`${BASE}/admin`);
+    await adminPage.goto(`${BASE}/admin#library`);
     await adminPage.waitForSelector('#library:not([hidden]) #lib-file', { timeout: 20000 });
     const dbZip = Buffer.from(await writeZip(Object.entries(fakeDataSet()).map(([name, data]) => ({ name: `Update 2011/${name}`, data }))));
     await adminPage.setInputFiles('#lib-file', { name: 'Update 2011.zip', mimeType: 'application/zip', buffer: dbZip });
