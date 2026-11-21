@@ -11,15 +11,16 @@
 // http://127.0.0.1:8080). Each film starts in a new browser profile, so it downloads the game files once (cut out).
 // The page's scripts (web/*.js) come from this checkout, so a change to the page shows before it is deployed.
 // CM_VIDEO_SAVE: a saved game of the real game, Juventus in 2001/02 (the editor film edits Del Piero in it); a new game
-// with Italy and Juventus, saved on its first day, is enough. CM_VIDEO_MUSIC (or CM_VIDEO_MUSIC_APP,
-// CM_VIDEO_MUSIC_EDITOR) names a music file for the films (videos-compose.mjs; not in git).
+// with Italy and Juventus, saved on its first day, is enough. The music is the film's take of "Matchday Manager"
+// (test/video-music/); CM_VIDEO_MUSIC (or CM_VIDEO_MUSIC_APP, CM_VIDEO_MUSIC_EDITOR) names another file, or none.
+// Other music on a film already made: node web/test/videos-music.mjs <folder> [editor|app].
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { composeVideo, render } from './videos-compose.mjs';
+import { composeVideo, musicOf, render } from './videos-compose.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -183,8 +184,7 @@ async function recorder(name) {
     execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', webm, '-vf', `fps=30${keep}`, '-c:v', 'libx264', '-preset', 'slow', '-crf', '14', '-r', '30', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', capture]);
     const steps = captions.map((c) => ({ ...c, start: cutTime(cuts, c.start), end: cutTime(cuts, c.end) }));
     rmSync(project, { recursive: true, force: true });
-    // The music of this film: CM_VIDEO_MUSIC_<NAME> (APP, EDITOR), else CM_VIDEO_MUSIC for both, else none.
-    const music = process.env[`CM_VIDEO_MUSIC_${name.toUpperCase()}`] || process.env.CM_VIDEO_MUSIC || null;
+    const music = musicOf(name);
     const seconds = composeVideo({ dir: project, capture, log: { captions: steps }, music });
     writeFileSync(join(project, 'steps.json'), JSON.stringify({ steps, cuts }, null, 1));
     render(project, `${mp4}.part.mp4`);

@@ -893,11 +893,12 @@ What to know about the Asyncify engine:
   hand would. Each step's words and the box it points at go into a log, and `test/videos-compose.mjs` makes a
   HyperFrames project of it (`<folder>/<name>-project/`, the skill in `.claude/skills/hyperframes`): a title card, the
   capture in a frame with a caption under it for each step and a zoom on a small target, an end card; then renders it
-  with the HyperFrames CLI (npm, pinned, its telemetry off). `CM_VIDEO_MUSIC` (or `CM_VIDEO_MUSIC_APP`,
-  `CM_VIDEO_MUSIC_EDITOR`) names a music file that plays under the film from its start, at 0.6 (about -18 LUFS for a
-  track mastered at -13.5), faded out over the end card's last 4 s; the published films have two takes of a Suno track
-  made for them ("Matchday Manager"), kept outside git. Without it the films are silent. Make them again after the page
-  changes.
+  with the HyperFrames CLI (npm, pinned, its telemetry off). The music is a take of "Matchday Manager", a Suno track made for the films, in
+  `test/video-music/` (one take for each film; its README says what the files are): it plays under the film from its
+  start, at 0.6 (about -18 LUFS for a track mastered at -13.5), faded out over the end card's last 4 s.
+  `CM_VIDEO_MUSIC` (or `CM_VIDEO_MUSIC_APP`, `CM_VIDEO_MUSIC_EDITOR`) names another file, or `none`. `node
+  web/test/videos-music.mjs <folder> [editor|app]` makes the films again from their projects with the music, without a
+  new recording. Make them again after the page changes.
 - `NODE_PATH=$(npm root -g) node web/test/screens.mjs <folder>`: every screen of the page on a laptop (1280x800) and a
   phone (an iPhone 13), for a review of the look: the start, the bar over the game, Saved games and its three tabs, the
   editor, the account, Help, Send to the developer, the legal pages and the admin page.

@@ -233,6 +233,14 @@ export function hyperframes(args, { cwd } = {}) {
   });
 }
 
+// The music of a film (editor, app): CM_VIDEO_MUSIC_<NAME>, else CM_VIDEO_MUSIC for both, else its take of
+// "Matchday Manager" in test/video-music/. "none": no music.
+export function musicOf(name) {
+  const named = process.env[`CM_VIDEO_MUSIC_${name.toUpperCase()}`] || process.env.CM_VIDEO_MUSIC;
+  if (named) return named === 'none' ? null : resolve(named);
+  return resolve(HERE, 'video-music', `matchday-manager-${name}.mp3`);
+}
+
 export function render(dir, output) {
   return hyperframes(['render', '--output', resolve(output), '--quality', 'delivery'], { cwd: dir });
 }
