@@ -831,7 +831,12 @@ What to know about the Asyncify engine:
   address. The browser build's own data starts at 0x21000000, in the gap that the game never uses, and the memory
   grows as the game's heap grows. Every block of the game sits where it sits on the desktop.
 - Time: the game's screen loop never returns. With JSPI the runtime's sleeps hand the time to the page: the idle
-  sleep, and a short one at least every 12 ms while the game polls for input (`rt_web_yield`).
+  sleep, and a short one at least every 12 ms while the game polls for input (`rt_web_yield`). Inside the game's long
+  work, where it polls for nothing, the page gets a moment every 100 ms (`rt_web_breathe`) from two hooks: the
+  random function (0x90cfc0, which a day's processing calls without end) and the steps of the game's sorts: the swap
+  of the C library's qsort (0x9454d5) and the two comparators of `PlayerStats::PlayerStats` (0x7bfd50), which a new
+  game runs for seconds while it sorts every player's history. It froze the page for 1.4 s and 0.7 s in Chromium;
+  now 0.19 s at most (21 November 2026, `docs/superpowers/specs/2026-11-21-sort-breathe-design.md`).
 - Files: the page puts the game files into Emscripten's file system before `main` starts; the runtime's POSIX host
   (`host/posix.c`) reads them as on Linux. The page keeps the game files in the browser's cache storage, each under
   its version (its SHA-256 in the manifest), so a later start downloads nothing. With a JSPI engine, the files larger

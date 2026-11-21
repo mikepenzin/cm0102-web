@@ -1133,6 +1133,30 @@ RT_WRAP(0090cfc0, game_random)
     if (win_random_hook && !rt_unwinding) cpu.eax = win_random_hook(esp, edi, cpu.eax);
 }
 
+void o_009454d5(void);
+void o_007c6d90(void);
+void o_007c6de0(void);
+
+/* The game's sorts. A new game froze the page for 1.8 s and 0.8 s in Chromium while PlayerStats::PlayerStats
+ * (0x7bfd50, from create_game 0x828110) sorted every player's history with the C library's qsort (0x945333), seconds
+ * more on a phone; qsort calls no random, so the page had no moment (docs/superpowers/specs/2026-11-21-sort-breathe-
+ * design.md). In the browser, every 1024th step of a sort lets the page have a moment if it had none for 100 ms
+ * (host/web.c, rt_web_breathe), as the random function above does. A step is a swap of qsort (swap(a, b, width) at
+ * 0x9454d5, a byte loop that the partition and the short sort call) or a comparison of PlayerStats' two comparators
+ * (0x7c6d90 by club, 0x7c6de0 by staff: cdecl(a, b) to -1, 0 or 1): a list already nearly in order is compared much
+ * and swapped little, and swaps alone still left 0.42 s. Only time passes; nothing of the game changes. */
+static void sort_step(void)
+{
+#ifdef __EMSCRIPTEN__
+    static uint32_t steps;
+    if (!(++steps & 0x3ffu)) rt_web_breathe();
+#endif
+}
+
+RT_WRAP(009454d5, sort_swap) { sort_step(); o_009454d5(); }
+RT_WRAP(007c6d90, history_by_club) { sort_step(); o_007c6d90(); }
+RT_WRAP(007c6de0, history_by_staff) { sort_step(); o_007c6de0(); }
+
 static void print_sleep_count(void) { fprintf(stderr, "recomp: idle sleeps %llu\n", (unsigned long long)sleep_count); }
 
 static void idle_rest(uint32_t widget)
