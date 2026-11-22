@@ -129,3 +129,13 @@ test('data set names for the Databases folder', () => {
   assert.match(dataSetNameProblem('a/b', taken), /cannot have/);
   assert.match(dataSetNameProblem('  ', taken), /Give/);
 });
+
+test('search: every name of a player, accents aside, though the list shows his common name', () => {
+  const ds = new DataSet(fakeDataSet());
+  ds.add(fields({ first: 'Paulo', second: 'da Silva Mendonça', common: 'Mendonça' }));
+  ds.add(fields({ first: 'Marcelo', second: 'Mendonça de Mattos', common: 'Marcelo Mattos', ca: 190 }));
+  const names = (text) => ds.search(text).map((p) => p.name);
+  assert.deepEqual(names('mendonca'), ['Mendonça', 'Marcelo Mattos'], 'the name as the list shows it first, then the better player');
+  assert.deepEqual(names('Paulo Mendonca'), ['Mendonça'], 'his first name and his common name');
+  assert.deepEqual(names('paulo silva'), ['Mendonça'], 'his first and second names');
+});

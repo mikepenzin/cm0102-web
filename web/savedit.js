@@ -309,11 +309,12 @@ export class SaveGame {
       const d = s.dv.getInt32(o + 0x61, true);
       if (d < 0 || d >= p.count) continue;
       const name = (k, list) => { const id = s.dv.getInt32(o + k, true); return id >= 0 && id < list.length ? list[id] : ''; };
-      const common = name(0x0c, this.commonNames);
-      const full = common || `${name(0x04, this.firstNames)} ${name(0x08, this.secondNames)}`.trim();
+      // The list shows the common name when there is one; the search finds him by every name he has.
+      const common = name(0x0c, this.commonNames), both = `${name(0x04, this.firstNames)} ${name(0x08, this.secondNames)}`.trim();
+      const full = common || both;
       const po = d * PLAYER_SIZE;
       const born = readDate(s.b, o + 0x10);
-      out.push({ row: i, data: d, name: full || '(no name)', key: fold(full), club: this.clubs.get(s.dv.getInt32(o + 0x39, true)) ?? '',
+      out.push({ row: i, data: d, name: full || '(no name)', key: fold(`${both} ${common}`), club: this.clubs.get(s.dv.getInt32(o + 0x39, true)) ?? '',
         nation: this.nations.get(s.dv.getInt32(o + 0x1a, true)) ?? '', born: born?.year ?? '',
         ca: p.dv.getInt16(po + 5, true), pa: p.dv.getInt16(po + 7, true), pos: positionText(p.b.subarray(po + 0x0f, po + 0x1b)) });
     }
@@ -326,7 +327,10 @@ export class SaveGame {
     const words = fold(text).split(/\s+/).filter(Boolean);
     const all = this.players();
     const hit = words.length ? all.filter((x) => words.every((w) => x.key.includes(w) || fold(x.club).includes(w))) : all;
-    return [...hit].sort((a, b) => b.ca - a.ca).slice(0, limit);
+    // A player whose name as the list shows it has the words comes first ("Mendonca": Mendonça before Marcelo Mattos,
+    // who is Marcelo Mendonça de Mattos), then the best known.
+    const shown = new Set(hit.filter((x) => words.every((w) => fold(x.name).includes(w))));
+    return [...hit].sort((a, b) => shown.has(b) - shown.has(a) || b.ca - a.ca).slice(0, limit);
   }
 
   // The fields of one player as the editor shows them.

@@ -133,3 +133,14 @@ test('a saved game from a Blob: only the header and the edited tables are read; 
   assert.deepEqual(out, viaBytes.toBytes());
   await assert.rejects(SaveGame.open(new Blob([new Uint8Array(100)])), /too short/);
 });
+
+test('the saved game\'s search: every name of a player, accents aside, though the list shows his common name', async () => {
+  const g = new SaveGame(await fakeSaveGame([
+    { first: 'Paulo', second: 'da Silva Mendonça', common: 'Mendonça', ca: 120, pa: 150, gk: 1, born: [1980, 3, 3], club: 0, fill: 10 },
+    { first: 'Marcelo', second: 'Mendonça de Mattos', common: 'Marcelo Mattos', ca: 187, pa: 194, gk: 1, born: [1984, 2, 10], club: 0, fill: 12 },
+  ]));
+  const names = (text) => g.search(text).map((p) => p.name);
+  assert.deepEqual(names('mendonca'), ['Mendonça', 'Marcelo Mattos'], 'the name as the list shows it first, then the better player');
+  assert.deepEqual(names('Paulo Mendonca'), ['Mendonça'], 'his first name and his common name');
+  assert.deepEqual(names('paulo silva'), ['Mendonça'], 'his first and second names');
+});

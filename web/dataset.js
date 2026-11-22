@@ -175,9 +175,10 @@ export class DataSet {
       const s = this.row(6, i), d = i32(s, this.link.player);
       if (!(s[0x5f] & 2) || d < 0 || d >= nP) continue;
       const p = this.row(10, d);
-      const common = this.name(15, i32(s, 0x0c));
-      const full = common || `${this.name(13, i32(s, 0x04))} ${this.name(14, i32(s, 0x08))}`.trim();
-      out.push({ row: i, data: d, name: full || '(no name)', key: fold(full), club: this.clubName(i32(s, 0x39)),
+      // The list shows the common name when there is one; the search finds him by every name he has.
+      const common = this.name(15, i32(s, 0x0c)), both = `${this.name(13, i32(s, 0x04))} ${this.name(14, i32(s, 0x08))}`.trim();
+      const full = common || both;
+      out.push({ row: i, data: d, name: full || '(no name)', key: fold(`${both} ${common}`), club: this.clubName(i32(s, 0x39)),
         nation: this.nationName(i32(s, 0x1a)), born: this.bornOut(readDate(s, 0x10))?.year ?? u16(s, 0x18),
         ca: i16(p, 5), pa: i16(p, 7), pos: positionText(p.subarray(0x0f, 0x1b)) });
     }
@@ -189,7 +190,10 @@ export class DataSet {
     const words = fold(text).split(/\s+/).filter(Boolean);
     const all = this.players();
     const hit = words.length ? all.filter((x) => words.every((w) => x.key.includes(w) || fold(x.club).includes(w))) : all;
-    return [...hit].sort((a, b) => b.ca - a.ca || a.name.localeCompare(b.name)).slice(0, limit);
+    // A player whose name as the list shows it has the words comes first ("Mendonca": Mendonça before Marcelo Mattos,
+    // who is Marcelo Mendonça de Mattos), then the best known.
+    const shown = new Set(hit.filter((x) => words.every((w) => fold(x.name).includes(w))));
+    return [...hit].sort((a, b) => shown.has(b) - shown.has(a) || b.ca - a.ca || a.name.localeCompare(b.name)).slice(0, limit);
   }
 
   read(row) {

@@ -201,10 +201,11 @@ export async function fakeSaveGame(players = [
   const { encodeRuns, writeDate } = await import('../savedit.js');
   const names = (list) => { const b = Buffer.alloc(list.length * 60); list.forEach((n, i) => { b.write(n, i * 60, 'latin1'); b.writeInt32LE(i, i * 60 + 0x33); b.writeInt32LE(-1, i * 60 + 0x37); b[i * 60 + 0x3b] = 1; }); return b; };
   const first = ['', ...players.map((p) => p.first), 'Marcello'], second = ['', ...players.map((p) => p.second), 'Lippi'];
+  const common = ['', ...players.map((p) => p.common).filter(Boolean)];
   const staff = Buffer.alloc((players.length + 1) * 110), player = Buffer.alloc(players.length * 70);
   players.forEach((p, i) => {
     const o = i * 110;
-    staff.writeInt32LE(i, o); staff.writeInt32LE(i + 1, o + 4); staff.writeInt32LE(i + 1, o + 8); staff.writeInt32LE(0, o + 0x0c);
+    staff.writeInt32LE(i, o); staff.writeInt32LE(i + 1, o + 4); staff.writeInt32LE(i + 1, o + 8); staff.writeInt32LE(p.common ? common.indexOf(p.common) : 0, o + 0x0c);
     writeDate(staff, o + 0x10, { year: p.born[0], month: p.born[1], day: p.born[2] });
     // In a save +0x18 is the age on the game's date (a game of 14 July 2001 here), not the year of birth.
     staff.writeUInt16LE(2001 - p.born[0] - (p.born[1] > 7 || (p.born[1] === 7 && p.born[2] > 14) ? 1 : 0), o + 0x18);
@@ -222,7 +223,7 @@ export async function fakeSaveGame(players = [
   const club = Buffer.alloc(581); club.writeInt32LE(0, 0); club.write('Juventus', 4, 'latin1');
   const natClub = Buffer.alloc(581); natClub.writeInt32LE(1, 0); natClub.write('Italy', 4, 'latin1');
   const nation = Buffer.alloc(290); nation.writeInt32LE(0, 0); nation.write('Italy', 4, 'latin1');
-  const tables = [['first_names.dat', 13, names(first)], ['second_names.dat', 14, names(second)], ['common_names.dat', 15, names([''])],
+  const tables = [['first_names.dat', 13, names(first)], ['second_names.dat', 14, names(second)], ['common_names.dat', 15, names(common)],
     ['club.dat', 0, club], ['nat_club.dat', 1, natClub], ['nation.dat', 4, nation], ['staff.dat', 6, staff], ['player.dat', 10, player]];
   const sizes = { 13: 60, 14: 60, 15: 60, 0: 581, 1: 581, 4: 290, 6: 110, 10: 70 };
   const index = Buffer.alloc(8 + 22 * 0x43 + 0x1cc, 0xcc);           // the save writes stack bytes after the entries
