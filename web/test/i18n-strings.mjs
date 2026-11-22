@@ -21,6 +21,25 @@ export function stringsOf(js) {
   return out;
 }
 
+// The plural texts of a script: Map of tn's one-form -> its other-form (a table keys a plural by its one-form).
+export function pluralsOf(js) {
+  const out = new Map();
+  for (const m of js.matchAll(new RegExp(String.raw`\btn\([^,]+,\s*\{\s*one:\s*(?:${LIT})\s*,\s*other:\s*(?:${LIT})`, 'g'))) out.set(litOf(m, 1), litOf(m, 4));
+  return out;
+}
+
+// Every plural text of the page: Map one-form -> other-form.
+export function pagePlurals(web = WEB) {
+  const out = new Map();
+  for (const f of readdirSync(web).filter((n) => n.endsWith('.js') && !n.startsWith('i18n-') && !NOT_PAGE.has(n))) {
+    const js = readFileSync(join(web, f), 'utf8');
+    if (!SHARED.has(f)) { for (const [one, other] of pluralsOf(js)) out.set(one, other); continue; }
+    // The shared modules' counts: { key: '…', other: '…', n } (saves.js, textOf).
+    for (const m of js.matchAll(new RegExp(String.raw`\bkey:\s*(?:${LIT})\s*,\s*other:\s*(?:${LIT})`, 'g'))) out.set(litOf(m, 1), litOf(m, 4));
+  }
+  return out;
+}
+
 // The English of index.html's marked text: data-t on a leaf element (its text), data-t-html (its inner HTML),
 // data-t-attr (the named attributes' values). Whitespace as apply() makes it.
 export function htmlStrings(html) {
@@ -38,7 +57,7 @@ export function htmlStrings(html) {
 
 // The modules the server imports too: their thrown errors' key: '…' only.
 const SHARED = new Set(['zip.js', 'savedit.js', 'dataset.js', 'saves.js', 'upload.js']);
-const NOT_PAGE = new Set(['sw.js', 'i18n.js']);
+const NOT_PAGE = new Set(['sw.js']);
 
 // Every English text of the page: Map english -> Set of files.
 export function pageStrings(web = WEB) {

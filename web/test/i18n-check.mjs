@@ -63,6 +63,93 @@ try {
     check('a browser in a language the game does not speak (Japanese): English', await p.evaluate(() => document.documentElement.lang) === 'en');
     await ctx.close();
   }
+  {
+    // The sweep: a German table that is the English between "DE:" and ":ED", so any text a player reads outside the
+    // two is English the page did not put through t, tn or data-t. A sentence with a link or bold in it is one text:
+    // its pieces after the link are inside its marks. Save names, sizes, dates, the legal pages' names (English, as
+    // the pages are) and the brand are the allowed exceptions; the library's entries are the server's (data-raw).
+    const { pageStrings, pagePlurals } = await import('./i18n-strings.mjs');
+    const sweep = {}, plurals = pagePlurals();
+    for (const s of pageStrings().keys()) sweep[s] = plurals.has(s) ? { one: `DE:${s}:ED`, other: `DE:${plurals.get(s)}:ED` } : `DE:${s}:ED`;
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await ctx.route('**/i18n-de.js', (r) => r.fulfill({ contentType: 'text/javascript', body: `export default ${JSON.stringify(sweep)};` }));
+    // Every toast as it shows (they go after a few seconds): the saved one, the cloud hint after it.
+    await ctx.addInitScript(() => {
+      window.__toasts = [];
+      new MutationObserver((list) => { for (const m of list) for (const n of m.addedNodes) if (n.classList?.contains('toast')) window.__toasts.push(n.textContent); })
+        .observe(document, { childList: true, subtree: true });
+    });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errors.push(e.message));
+    const english = () => p.evaluate(() => {
+      const ALLOW = /^([\d\s.,:/·%()+×–—-]+(MB|KB|GB|s|min|h)?$|CM 01\/02$|Pricing$|Terms$|Refunds$|Privacy$|.*\.(sav|tct|zip)$|Made with$|by .+$|×$|›$|English$|Español$|Português$|Italiano$|Français$|Deutsch$|Nederlands$|Dansk$|Norsk$|Svenska$)/;
+      const out = [];
+      const visible = (el) => el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+      // The pieces of a text that are outside every text's marks. depth: how many texts are open where it starts.
+      const outside = (s, depth = 0) => {
+        const out = [];
+        let piece = '';
+        for (const part of s.split(/(DE:|:ED)/)) {
+          if (part === 'DE:') { if (!depth) { out.push(piece); piece = ''; } depth++; } else if (part === ':ED') depth = Math.max(0, depth - 1);
+          else if (!depth) piece += part;
+        }
+        out.push(piece);
+        return out.map((x) => x.trim().replace(/\s+/g, ' ')).filter(Boolean);
+      };
+      // How many texts are open where a text node starts, within its block (a paragraph, a cell, a button...).
+      const depthAt = (n) => {
+        const block = n.parentElement.closest('p,li,td,th,h1,h2,h3,h4,label,button,summary,legend,dt,dd,div') ?? document.body;
+        let d = 0;
+        const w = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+        for (let m = w.nextNode(); m && m !== n; m = w.nextNode()) for (const k of m.textContent.match(/DE:|:ED/g) ?? []) d = k === 'DE:' ? d + 1 : Math.max(0, d - 1);
+        return d;
+      };
+      const walk = (root) => {
+        const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        for (let n = w.nextNode(); n; n = w.nextNode()) {
+          if (!n.textContent.trim() || !visible(n.parentElement) || n.parentElement.closest('script,style,#log,.raw,[data-raw]')) continue;
+          for (const s of outside(n.textContent, depthAt(n))) if (!ALLOW.test(s)) out.push(s.slice(0, 80));
+        }
+        for (const el of root.querySelectorAll('[title],[aria-label],[placeholder]')) {
+          if (!visible(el)) continue;
+          for (const a of ['title', 'aria-label', 'placeholder']) { const v = el.getAttribute(a); for (const x of outside(v ?? '')) if (!ALLOW.test(x)) out.push(`@${a}: ${x.slice(0, 60)}`); }
+        }
+      };
+      walk(document.body);
+      for (const s of window.__toasts ?? []) for (const x of outside(s)) if (!ALLOW.test(x)) out.push(`toast: ${x.slice(0, 80)}`);
+      return [...new Set(out)];
+    });
+    await p.goto(`${site.BASE}/?lang=de`);
+    await p.waitForSelector('#go');
+    const startBox = await english();
+    await start(p);
+    await p.waitForSelector('#tour', { timeout: 15000 }).catch(() => {});
+    const tour = await english();
+    await p.locator('#tour-skip').click().catch(() => {});
+    await p.locator('#saves-open').click();
+    await p.setInputFiles('#saves-file', { name: 'junk.sav', mimeType: 'application/octet-stream', buffer: Buffer.from('hello') });
+    // The refusal is in Saved games' note (the sweep of Saved games reads it), not a toast.
+    await p.waitForFunction(() => /junk\.sav/.test(document.getElementById('saves-note').textContent) && window.__toasts.length >= 2, null, { timeout: 15000 }).catch(() => {});
+    const toastsSeen = await p.evaluate(() => window.__toasts.length), refusal = await p.textContent('#saves-note');
+    const saves = await english();
+    for (const tab of ['tactics', 'sets']) { await p.locator(`#saves .tabs [data-tab="${tab}"]`).click(); await p.waitForTimeout(300); }
+    const tabs = await english();
+    await p.locator('#saves-close').click();
+    await p.locator('#account-open').click();
+    const account = await english();
+    await p.locator('#account-close').click();
+    await p.locator('#help-open').click();
+    const help = await english();
+    const log = await p.evaluate(() => document.getElementById('log').textContent);
+    const left = { startBox, tour, saves, tabs, account, help };
+    const n = Object.values(left).reduce((a, x) => a + x.length, 0);
+    check('the page in a language: no English left in the start box, the bar, the tour, Saved games, Account, Help, the toasts and a refused upload', n === 0,
+      Object.entries(left).filter(([, x]) => x.length).map(([k, x]) => `${k}: ${x.slice(0, 12).join(' | ')}`).join(' || '));
+    check('the toasts and the refusal were seen: saved, the cloud hint, and junk.sav refused in Saved games', toastsSeen >= 2 && /junk\.sav/.test(refusal),
+      `${await p.evaluate(() => window.__toasts.join(' | '))} || ${refusal}`);
+    check('the engine log stays English', !/DE:/.test(log));
+    await ctx.close();
+  }
   check('no page errors', errors.length === 0, errors.join(' | '));
 } finally {
   await browser.close();

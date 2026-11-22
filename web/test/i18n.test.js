@@ -2,7 +2,7 @@
 // language, the lookup with English as the floor, placeholders and plurals.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LANGUAGES, pickLanguage, useTable, t, tn } from '../i18n.js';
+import { LANGUAGES, pickLanguage, priceText, useTable, t, tn } from '../i18n.js';
 
 test('the languages: English and the nine of the game, each named in its own language', () => {
   assert.deepEqual(LANGUAGES.map((l) => l.code), ['en', 'es', 'pt', 'it', 'fr', 'de', 'nl', 'da', 'no', 'sv']);
@@ -65,7 +65,19 @@ test('the page\'s strings: t, tn and data-t found in the code and the page', asy
   const { stringsOf, htmlStrings } = await import('./i18n-strings.mjs');
   const js = "toast(t('Saved {name}', { name })); x = tn(n, { one: '{n} save', other: '{n} saves' }); t(\"Two\"); t(`Three`); t(variable);";
   assert.deepEqual([...stringsOf(js)].sort(), ['Saved {name}', 'Three', 'Two', '{n} save']);
+  const { pluralsOf } = await import('./i18n-strings.mjs');
+  assert.deepEqual([...pluralsOf(js)], [['{n} save', '{n} saves']]);
   const html = `<h2 data-t>How to play
     here</h2><p data-t-html>Read <a href="/x">this</a>.</p><button data-t-attr="title,aria-label" title="Close it" aria-label="Close">x</button>`;
   assert.deepEqual([...htmlStrings(html)].sort(), ['Close', 'Close it', 'How to play here', 'Read <a href="/x">this</a>.']);
+});
+
+test('the price from the server (CM_PRICE, "$5 a month"): its period in the page\'s language, any other as it is', () => {
+  useTable('de', { '{amount} a month': '{amount} im Monat' });
+  assert.equal(priceText('$5 a month'), '$5 im Monat');
+  assert.equal(priceText('€4.50 a month'), '€4.50 im Monat');
+  assert.equal(priceText('$50 once'), '$50 once', 'a price the page does not know: as it comes');
+  assert.equal(priceText(undefined), '');
+  useTable('en', {});
+  assert.equal(priceText('$5 a month'), '$5 a month');
 });
