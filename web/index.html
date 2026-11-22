@@ -123,11 +123,13 @@
      window, so it can sit beside the bar wherever the bar is (a row above the game, a column beside it, full screen). */
   #tour { position: fixed; z-index: 8; width: min(300px, calc(100vw - 16px)); padding: 12px 14px; background: var(--panel);
     border: 1px solid var(--line-hi); border-radius: var(--r-lg); box-shadow: 0 12px 34px rgba(0, 0, 0, .55); font-size: 13px;
-    animation: tour-in 180ms cubic-bezier(.23, 1, .32, 1); }
+    animation: tour-in 180ms cubic-bezier(.23, 1, .32, 1); max-height: calc(100dvh - 16px); overflow-y: auto; }
+  /* A phone held sideways: little height, room in width; a long language's step stays whole, its buttons on screen. */
+  @media (max-height: 520px) { #tour { width: min(440px, calc(100vw - 16px)); } }
   #tour h3 { margin: 0 0 4px; font-size: 14px; }
   #tour p { margin: 0; color: var(--muted); line-height: 1.45; }
   #tour .tour-count { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 4px; }
-  #tour .row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  #tour .row { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }   /* a longer language: Skip on a line of its own */
   #tour .spacer { flex: 1; }
   @keyframes tour-in { from { opacity: 0; transform: translateY(-4px); } }
   .tour-target { outline: 2px solid var(--accent) !important; outline-offset: 2px; position: relative; z-index: 7; }
@@ -228,6 +230,7 @@
   @media (hover: hover) and (pointer: fine) { #saves .tabs button:hover { color: var(--text); } }
   #saves .tabs button:focus-visible { outline-offset: -2px; border-radius: var(--r-sm) var(--r-sm) 0 0; }
   @media (pointer: coarse) { #saves .tabs button { height: 44px; } }
+  @media (max-width: 480px) { #saves .tabs button { padding: 0 8px; } }   /* three tabs in French or Portuguese on a phone */
   #saves:has(#tactics[hidden]) .tabs [data-tab="tactics"], #saves:has(#sets[hidden]) .tabs [data-tab="sets"] { display: none; }
   #saves:has(#tactics[hidden]):has(#sets[hidden]) .tabs { display: none; }
   #saves:not([data-tab="tactics"]) #tactics, #saves:not([data-tab="sets"]) #sets, #saves[data-tab]:not([data-tab="saves"]) .tab-saves { display: none !important; }
@@ -273,7 +276,7 @@
   #help td { overflow-wrap: normal; }
   #help td:first-child { white-space: normal; width: 40%; color: var(--text); }
   dialog .num { text-align: right; white-space: nowrap; }
-  dialog .row { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+  dialog .row { display: flex; gap: 8px; align-items: center; margin-top: 14px; flex-wrap: wrap; }   /* a phone in a longer language: buttons on two lines */
   dialog .spacer { flex: 1; }
   dialog p { margin: 0 0 8px; }
   #saves-note, #account-note { white-space: pre-line; }
