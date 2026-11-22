@@ -385,7 +385,7 @@
   #editor-new-name { min-width: 0; flex: 1 1 12em; }
   /* No player picked yet: say what the pane is for, not an empty half of the dialog. */
   .ed-form:empty { display: grid; place-items: center; }
-  .ed-form:empty::before { content: 'Pick a player from the list to change him.'; color: var(--muted); padding: 24px; text-align: center; }
+  .ed-form:empty::before { content: attr(data-empty); color: var(--muted); padding: 24px; text-align: center; }
   #editor-home h4 { margin: 12px 0 4px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
   .ed-files { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
   .ed-file { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--r); }
@@ -462,196 +462,196 @@
   <header id="bar">
     <span class="brand">CM 01/02</span>
     <span id="status" role="status">Loading…</span>
-    <button id="kbd-open" hidden aria-pressed="false" aria-label="Keyboard">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg><span>Keyboard</span></button>
-    <button id="right-click" hidden aria-pressed="false" aria-label="Right click" title="The next tap on the game is a click of the right button">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 3v7.5M6 10.5h12"/><path d="M12.6 3.6a5.4 5.4 0 0 1 4.8 5.4v.9h-4.8z" fill="currentColor" stroke="none"/></svg><span>Right click</span></button>
-    <button id="saves-open" hidden aria-label="Saved games">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5M5 17v1.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span>Saved games</span></button>
-    <button id="editor-open" hidden aria-label="Editor">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="m14 8 2 2"/></svg><span>Editor</span></button>
+    <button id="kbd-open" hidden aria-pressed="false" aria-label="Keyboard" data-t-attr="aria-label">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg><span data-t>Keyboard</span></button>
+    <button id="right-click" hidden aria-pressed="false" aria-label="Right click" title="The next tap on the game is a click of the right button" data-t-attr="aria-label,title">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 3v7.5M6 10.5h12"/><path d="M12.6 3.6a5.4 5.4 0 0 1 4.8 5.4v.9h-4.8z" fill="currentColor" stroke="none"/></svg><span data-t>Right click</span></button>
+    <button id="saves-open" hidden aria-label="Saved games" data-t-attr="aria-label">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0-3.5-3.5M12 14l3.5-3.5M5 17v1.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V17"/></svg><span data-t>Saved games</span></button>
+    <button id="editor-open" hidden aria-label="Editor" data-t-attr="aria-label">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="m14 8 2 2"/></svg><span data-t>Editor</span></button>
     <button id="account-open" hidden aria-label="Sign in">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 19.5c.8-3.3 3.6-5.2 7-5.2s6.2 1.9 7 5.2"/></svg><span>Sign in</span><i class="dot" aria-hidden="true"></i></button>
-    <a id="coffee-open" class="button coffee" hidden target="_blank" rel="noopener" aria-label="Buy me a coffee" title="Like the game? Buy the developer a coffee">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V9Z"/><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 4.5c0 1 1 1 1 2M11.5 4.5c0 1 1 1 1 2"/></svg><span>Buy me a coffee</span></a>
-    <button id="update" hidden class="primary" aria-label="New version" title="A new version of the game is out: load it (your saves are stored first)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.05-4.95M19 4.5V8h-3.5"/></svg><span>New version</span></button>
-    <button id="help-open" aria-label="Help">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8M12 16.6h.01"/></svg><span>Help</span></button>
-    <button id="fullscreen" hidden aria-label="Full screen">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg><span>Full screen</span></button>
-    <button id="bar-fold" aria-expanded="true" aria-label="Hide these buttons" title="Hide these buttons">
+    <a id="coffee-open" class="button coffee" hidden target="_blank" rel="noopener" aria-label="Buy me a coffee" title="Like the game? Buy the developer a coffee" data-t-attr="aria-label,title">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V9Z"/><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 4.5c0 1 1 1 1 2M11.5 4.5c0 1 1 1 1 2"/></svg><span data-t>Buy me a coffee</span></a>
+    <button id="update" hidden class="primary" aria-label="New version" title="A new version of the game is out: load it (your saves are stored first)" data-t-attr="aria-label,title">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.05-4.95M19 4.5V8h-3.5"/></svg><span data-t>New version</span></button>
+    <button id="help-open" aria-label="Help" data-t-attr="aria-label">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2 1-1.2 1.8M12 16.6h.01"/></svg><span data-t>Help</span></button>
+    <button id="fullscreen" hidden aria-label="Full screen" data-t-attr="aria-label">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg><span data-t>Full screen</span></button>
+    <button id="bar-fold" aria-expanded="true" aria-label="Hide these buttons" title="Hide these buttons" data-t-attr="aria-label,title">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
   </header>
   <div id="stage">
-    <canvas id="canvas" tabindex="0" width="1280" height="800" aria-label="The game"></canvas>
+    <canvas id="canvas" tabindex="0" width="1280" height="800" aria-label="The game" data-t-attr="aria-label"></canvas>
     <div id="fx" aria-hidden="true"></div>
     <button id="type-chip" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg>Tap to type</button>
-    <div id="busy" aria-hidden="true"><i class="spin"></i>Working…</div>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M7 14h10"/></svg><span data-t>Tap to type</span></button>
+    <div id="busy" aria-hidden="true"><i class="spin"></i><span data-t>Working…</span></div>
     <div id="toasts" role="status" aria-live="polite"></div>
     <div id="consent" role="dialog" aria-labelledby="consent-title" hidden>
-      <p><b id="consent-title">Help us improve the game?</b> May we count how long you play and how many saves and data
+      <p><b id="consent-title" data-t>Help us improve the game?</b> <span data-t>May we count how long you play and how many saves and data
         sets you keep, under a random id of this browser? Never your files, your name or your IP address. If the game
-        stops on an error, its message goes too.</p>
-      <div class="row"><button id="consent-yes">Allow</button><button id="consent-no">No thanks</button>
+        stops on an error, its message goes too.</span></p>
+      <div class="row"><button id="consent-yes" data-t>Allow</button><button id="consent-no" data-t>No thanks</button>
         <a href="/privacy" target="_blank" rel="noopener">Privacy</a></div>
-      <p class="small">You can change it any time in Help, Statistics.</p>
+      <p class="small" data-t>You can change it any time in Help, Statistics.</p>
     </div>
     <div id="overlay"></div>
   </div>
   <footer id="made"></footer>
   <input id="kbd" type="text" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-    enterkeyhint="done" aria-label="Type into the game">
+    enterkeyhint="done" aria-label="Type into the game" data-t-attr="aria-label">
 
   <dialog id="saves" aria-labelledby="saves-title">
     <h2 id="saves-title" data-t>Saved games</h2>
-    <div class="tabs" role="tablist" aria-label="Saved games">
-      <button role="tab" id="tab-saves" data-tab="saves" aria-selected="true" aria-controls="saves-panel">Saves</button><button role="tab" id="tab-tactics" data-tab="tactics" aria-selected="false" aria-controls="tactics" tabindex="-1">Tactics</button><button role="tab" id="tab-sets" data-tab="sets" aria-selected="false" aria-controls="sets" tabindex="-1">Databases</button>
+    <div class="tabs" role="tablist" aria-label="Saved games" data-t-attr="aria-label">
+      <button role="tab" id="tab-saves" data-tab="saves" aria-selected="true" aria-controls="saves-panel" data-t>Saves</button><button role="tab" id="tab-tactics" data-tab="tactics" aria-selected="false" aria-controls="tactics" tabindex="-1" data-t>Tactics</button><button role="tab" id="tab-sets" data-tab="sets" aria-selected="false" aria-controls="sets" tabindex="-1" data-t>Databases</button>
     </div>
     <div class="dlg-body">
     <div class="tab-saves" id="saves-panel" role="tabpanel" aria-labelledby="tab-saves">
-    <p class="small"><span id="saves-where">Your saves stay in this browser.</span> Download one to keep a copy on your
-    device or to play it on another one; upload a .sav file to play it here.</p>
+    <p class="small"><span id="saves-where">Your saves stay in this browser.</span> <span data-t>Download one to keep a copy on your
+    device or to play it on another one; upload a .sav file to play it here.</span></p>
     <p id="saves-risk" class="small warn"></p>
-    <p id="saves-promo" class="small promo" hidden><span></span><button class="link">See Cloud Saves</button></p>
+    <p id="saves-promo" class="small promo" hidden><span></span><button class="link" data-t>See Cloud Saves</button></p>
     <p id="saves-space" class="small"></p>
     <div id="saves-list" class="dlg-list"></div>
     <p id="saves-note" class="small" role="status"></p>
     <div class="row">
-      <button class="primary" id="saves-upload">Upload a save…</button>
-      <button id="saves-all" title="One zip of every save, older copy, tactic and data set, as the save folder holds them">Download all</button>
+      <button class="primary" id="saves-upload" data-t>Upload a save…</button>
+      <button id="saves-all" title="One zip of every save, older copy, tactic and data set, as the save folder holds them" data-t-attr="title" data-t>Download all</button>
       <input type="file" id="saves-file" accept=".sav,.zip" multiple hidden>
     </div>
     </div>
     <section id="tactics" role="tabpanel" aria-labelledby="tab-tactics" hidden>
-      <h3>Tactics</h3>
-      <p class="small">The tactics you saved on the tactics screen (Tactics, Save As). Download one to keep it or to use it
+      <h3 data-t>Tactics</h3>
+      <p class="small" data-t>The tactics you saved on the tactics screen (Tactics, Save As). Download one to keep it or to use it
       in the PC game; upload a .tct file, from the PC game or from a friend, then use Tactics, Load on the tactics
       screen. A preset's .pct file works too.</p>
       <div id="tactics-list" class="dlg-list"></div>
       <p id="tactics-note" class="small" role="status"></p>
-      <div class="row"><button id="tactics-upload">Upload a tactic…</button>
+      <div class="row"><button id="tactics-upload" data-t>Upload a tactic…</button>
         <input type="file" id="tactics-file" accept=".tct,.pct" multiple hidden></div>
     </section>
     <section id="sets" role="tabpanel" aria-labelledby="tab-sets" hidden>
-      <h3>Data sets <span class="small">for new games</span></h3>
-      <ol class="steps small" aria-label="How to play with another database">
+      <h3 data-t-html>Data sets <span class="small">for new games</span></h3>
+      <ol class="steps small" aria-label="How to play with another database" data-t-attr="aria-label">
         <li><span id="sets-step1"><b>Upload</b> a database, or make one from the game's data</span></li>
-        <li><span>Press <b>Use</b>, choose its season</span></li>
-        <li><span>Start a new game</span></li></ol>
-      <h3 class="sets-head">Your data sets</h3>
+        <li><span data-t-html>Press <b>Use</b>, choose its season</span></li>
+        <li><span data-t>Start a new game</span></li></ol>
+      <h3 class="sets-head" data-t>Your data sets</h3>
       <div id="sets-list" class="dlg-list"></div>
       <p id="sets-note" class="small" role="status"></p>
-      <div class="row"><button id="sets-upload">Upload a data set…</button><button id="sets-new">New data set…</button>
-        <span class="small">Upload a .zip, or the .dat files together (unpack a .rar or .7z first).</span>
+      <div class="row"><button id="sets-upload" data-t>Upload a data set…</button><button id="sets-new" data-t>New data set…</button>
+        <span class="small" data-t>Upload a .zip, or the .dat files together (unpack a .rar or .7z first).</span>
         <input type="file" id="sets-file" accept=".zip,.dat" multiple hidden></div>
       <h3 id="sets-lib-head" class="sets-head" hidden>Available to download</h3>
       <div id="sets-lib" class="dlg-list" hidden></div>
     </section>
     </div>
-    <div class="row dlg-foot"><span class="spacer"></span><button id="saves-close">Close</button></div>
+    <div class="row dlg-foot"><span class="spacer"></span><button id="saves-close" data-t>Close</button></div>
   </dialog>
 
   <dialog id="editor" aria-labelledby="editor-title">
-    <div class="ed-head"><button class="link" id="editor-home-button" type="button">← Editor</button>
+    <div class="ed-head"><button class="link" id="editor-home-button" type="button" data-t>← Editor</button>
       <h2 id="editor-title">Editor</h2><span id="editor-file" class="small"></span>
-      <span class="spacer"></span><button class="primary" id="editor-save" hidden disabled>Save</button><button id="editor-close">Close</button></div>
+      <span class="spacer"></span><button class="primary" id="editor-save" hidden disabled>Save</button><button id="editor-close" data-t>Close</button></div>
     <p id="editor-note" class="small" role="status"></p>
     <div id="editor-home"></div>
     <div class="ed-body" hidden>
-      <div class="ed-list"><div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" aria-label="Search a player or a club" autocomplete="off" spellcheck="false">
-        <button id="editor-add" type="button" hidden>Add a player</button></div>
+      <div class="ed-list"><div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" aria-label="Search a player or a club" data-t-attr="placeholder,aria-label" autocomplete="off" spellcheck="false">
+        <button id="editor-add" type="button" hidden data-t>Add a player</button></div>
         <div id="editor-results"></div></div>
-      <div class="ed-form" id="editor-form"></div>
+      <div class="ed-form" id="editor-form" data-t-attr="data-empty" data-empty="Pick a player from the list to change him."></div>
     </div>
     <datalist id="editor-clubs"></datalist>
   </dialog>
 
   <dialog id="account" aria-labelledby="account-title">
-    <h2 id="account-title">Your account</h2>
+    <h2 id="account-title" data-t>Your account</h2>
     <div class="dlg-body">
     <div id="account-body"></div>
     <p id="account-note" class="small" role="status"></p>
     </div>
-    <div class="row dlg-foot"><span class="spacer"></span><button id="account-close">Close</button></div>
+    <div class="row dlg-foot"><span class="spacer"></span><button id="account-close" data-t>Close</button></div>
   </dialog>
 
   <dialog id="help" aria-labelledby="help-title">
     <h2 id="help-title" data-t>How to play here</h2>
     <p class="row lang-row"><label for="help-lang" data-t>Language</label> <select id="help-lang"></select></p>
     <div class="dlg-body">
-    <p class="small">The game runs in this tab, on your device. The mouse and the keys work as in the game. On the tactics
+    <p class="small" data-t>The game runs in this tab, on your device. The mouse and the keys work as in the game. On the tactics
     board, drag a player with the right button to give him a run. On a Mac, Control and a click is the right button, and
     Control and a drag the right-button drag.</p>
-    <p class="small" id="help-videos" hidden>New here? Two short videos show how to play here and how to edit a saved game:
-    <a class="youtube" target="_blank" rel="noopener">the video guides on YouTube</a>.</p>
-    <p class="small" id="help-coffee" hidden>Like the game in your browser? It is made in spare time:
-    <a class="coffee" target="_blank" rel="noopener">buy me a coffee</a>.</p>
-    <h3>On a touch screen</h3>
+    <p class="small" id="help-videos" hidden><span data-t>New here? Two short videos show how to play here and how to edit a saved game:</span>
+    <a class="youtube" target="_blank" rel="noopener" data-t>the video guides on YouTube</a>.</p>
+    <p class="small" id="help-coffee" hidden><span data-t>Like the game in your browser? It is made in spare time:</span>
+    <a class="coffee" target="_blank" rel="noopener" data-t>buy me a coffee</a>.</p>
+    <h3 data-t>On a touch screen</h3>
     <table>
-      <tr><td>Tap</td><td>A click</td></tr>
-      <tr><td>Drag</td><td>Hold the button and move: scroll bars, the tactics board</td></tr>
-      <tr><td>Right click, then a tap or a drag</td><td>The right button: a tap is a right click (on the tactics screen, a player's instructions), a drag is a right-button drag (on the tactics board, a player's run)</td></tr>
-      <tr><td>Long press (a ring fills), then lift or drag</td><td>The right button: lift for a right click, or keep the finger down and drag for a right-button drag (a player's run)</td></tr>
-      <tr><td>A tap with two fingers</td><td>A click of the right button</td></tr>
-      <tr><td>Drag with two fingers</td><td>The mouse wheel: lists scroll with your fingers</td></tr>
-      <tr><td>Tap a text box, or Tap to type</td><td>The keyboard opens; it closes when the text is entered</td></tr>
-      <tr><td>› in full screen</td><td>Folds the page's buttons into a tab at the right edge, so they cover none of the game; tap the tab to open them. When the screen is wider than the game they sit beside it.</td></tr>
+      <tr><td data-t>Tap</td><td data-t>A click</td></tr>
+      <tr><td data-t>Drag</td><td data-t>Hold the button and move: scroll bars, the tactics board</td></tr>
+      <tr><td data-t>Right click, then a tap or a drag</td><td data-t>The right button: a tap is a right click (on the tactics screen, a player's instructions), a drag is a right-button drag (on the tactics board, a player's run)</td></tr>
+      <tr><td data-t>Long press (a ring fills), then lift or drag</td><td data-t>The right button: lift for a right click, or keep the finger down and drag for a right-button drag (a player's run)</td></tr>
+      <tr><td data-t>A tap with two fingers</td><td data-t>A click of the right button</td></tr>
+      <tr><td data-t>Drag with two fingers</td><td data-t>The mouse wheel: lists scroll with your fingers</td></tr>
+      <tr><td data-t>Tap a text box, or Tap to type</td><td data-t>The keyboard opens; it closes when the text is entered</td></tr>
+      <tr><td data-t>› in full screen</td><td data-t>Folds the page's buttons into a tab at the right edge, so they cover none of the game; tap the tab to open them. When the screen is wider than the game they sit beside it.</td></tr>
     </table>
-    <h3>Your saved games</h3>
-    <p class="small">Save in the game as usual. The saves stay in this browser.<span id="help-storage"></span> Saved games
+    <h3 data-t>Your saved games</h3>
+    <p class="small"><span data-t>Save in the game as usual. The saves stay in this browser.</span><span id="help-storage"></span> <span data-t>Saved games
     downloads them as files and uploads them again, also to and from the desktop game, and its Edit button changes the
-    players of a save: ability, attributes, positions, age.</p>
-    <h3>Editor</h3>
-    <p class="small">The Editor button changes the players of a saved game, or makes a data set for new games: your own copy
+    players of a save: ability, attributes, positions, age.</span></p>
+    <h3 data-t>Editor</h3>
+    <p class="small" data-t>The Editor button changes the players of a saved game, or makes a data set for new games: your own copy
     of the database, where you change players and add new ones. Saved games lists the data sets: Use one for your next
     new game, download it as a zip, or upload one (an Update Team database, for example).</p>
     <div id="help-cloud" hidden>
-      <h3>Cloud saves</h3>
-      <p class="small">With Cloud Saves, each save goes to the cloud, and the game started on another computer or iPad
-      gets it. Sign in with Google (Sign in, in the bar) to get them. <a href="/pricing" target="_blank" rel="noopener">Pricing</a> ·
+      <h3 data-t>Cloud saves</h3>
+      <p class="small"><span data-t>With Cloud Saves, each save goes to the cloud, and the game started on another computer or iPad
+      gets it. Sign in with Google (Sign in, in the bar) to get them.</span> <a href="/pricing" target="_blank" rel="noopener">Pricing</a> ·
       <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
     </div>
-    <h3>As an app</h3>
-    <p class="small">Add the page to the home screen (on an iPad: Share, then Add to Home Screen) or install it from the
+    <h3 data-t>As an app</h3>
+    <p class="small" data-t>Add the page to the home screen (on an iPad: Share, then Add to Home Screen) or install it from the
     address bar. It then opens without the browser's bars, and it starts without a connection once it has run.</p>
     <div id="help-stats" hidden>
-      <h3>Statistics</h3>
-      <label class="small check"><input type="checkbox" id="help-stats-on"> Send usage statistics: play time, and how many
+      <h3 data-t>Statistics</h3>
+      <label class="small check"><input type="checkbox" id="help-stats-on"> <span data-t>Send usage statistics: play time, and how many
         saves and data sets you have. They go with a random id of this browser (or your account when you are signed in),
         never your files, and no IP address is kept. When the game stops on an error, its message and the last lines of the
-        engine log go too. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></label>
+        engine log go too.</span> <a href="/privacy" target="_blank" rel="noopener">Privacy</a></label>
     </div>
     <details>
-      <summary>Engine log</summary>
+      <summary data-t>Engine log</summary>
       <pre id="log"></pre>
     </details>
     <div id="help-report" hidden>
-      <h3>Something wrong?</h3>
-      <p class="small">Send to the developer sends the engine log and, if you choose, a saved game, so the problem can be
-      found. <button id="help-report-open" class="link">Send to the developer</button></p>
+      <h3 data-t>Something wrong?</h3>
+      <p class="small"><span data-t>Send to the developer sends the engine log and, if you choose, a saved game, so the problem can be
+      found.</span> <button id="help-report-open" class="link" data-t>Send to the developer</button></p>
     </div>
-    <p class="small" id="help-tour-row" hidden>New to the buttons around the game? <button id="help-tour" class="link">Show the tour</button></p>
+    <p class="small" id="help-tour-row" hidden><span data-t>New to the buttons around the game?</span> <button id="help-tour" class="link" data-t>Show the tour</button></p>
     </div>
-    <div class="row dlg-foot"><span class="spacer"></span><button id="help-close">Close</button></div>
+    <div class="row dlg-foot"><span class="spacer"></span><button id="help-close" data-t>Close</button></div>
   </dialog>
 
   <dialog id="report" aria-labelledby="report-title">
-    <h2 id="report-title">Send to the developer</h2>
+    <h2 id="report-title" data-t>Send to the developer</h2>
     <div class="dlg-body">
-    <p class="small">This sends the engine log of this visit, the error, what you write here, your browser's name and system,
+    <p class="small"><span data-t>This sends the engine log of this visit, the error, what you write here, your browser's name and system,
     the engine's version, the size of the page and the device's memory, and the saved game you choose here. With the
     statistics allowed, this browser's random id goes too, and when you are signed in, your account. Reports and saves
-    are deleted after 90 days. <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
+    are deleted after 90 days.</span> <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
     <p id="report-error" class="small bad" hidden></p>
-    <label class="report-field">What happened? (you may leave it empty)
-      <textarea id="report-note" rows="3" maxlength="2000" placeholder="For example: I loaded my save and the game stopped."></textarea></label>
-    <label class="report-field">Saved game to send
+    <label class="report-field"><span data-t>What happened? (you may leave it empty)</span>
+      <textarea id="report-note" rows="3" maxlength="2000" placeholder="For example: I loaded my save and the game stopped." data-t-attr="placeholder"></textarea></label>
+    <label class="report-field"><span data-t>Saved game to send</span>
       <select id="report-save"></select></label>
     <p id="report-state" class="small" role="status"></p>
     </div>
-    <div class="row dlg-foot"><span class="spacer"></span><button class="primary" id="report-send">Send</button><button id="report-close">Close</button></div>
+    <div class="row dlg-foot"><span class="spacer"></span><button class="primary" id="report-send">Send</button><button id="report-close" data-t>Close</button></div>
   </dialog>
 </div>
 <script type="module" src="loader.js"></script>
