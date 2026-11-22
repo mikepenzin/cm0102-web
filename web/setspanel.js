@@ -161,11 +161,14 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
   const card = (e) => (e.card
     ? `<img class="lib-card" src="/api/library/${encodeURIComponent(e.id)}/card" width="64" height="48" alt="" loading="lazy" decoding="async">`
     : `<span class="lib-card none" aria-hidden="true">${seasonText(e.season)}</span>`);
+  // The first of the tab's steps: get one from the library when it has some, else upload or make one (also on a
+  // server with no library, where drawLibrary never runs).
+  const drawStep = () => { $('sets-step1').innerHTML = entries.length ? t('<b>Get</b> a database below, or upload your own') : t('<b>Upload</b> a database, or make one from the game\'s data'); };
   function drawLibrary() {
     const have = new Set(listDataSets(FS, root).map((s) => s.library?.id).filter(Boolean));
     head.hidden = lib.hidden = !entries.length;
     head.innerHTML = `${esc(t('Available to download'))} <span>${esc(t('· {databases}, free', { databases: tn(entries.length, { one: '{n} database', other: '{n} databases' }) }))}</span>`;
-    $('sets-step1').innerHTML = entries.length ? t('<b>Get</b> a database below, or upload your own') : t('<b>Upload</b> a database, or make one from the game\'s data');
+    drawStep();
     lib.innerHTML = entries.length ? `<table><tr><th>${esc(t('Database'))}</th><th>${esc(t('Season'))}</th><th class="num">${esc(t('Size'))}</th><th></th></tr>
       ${entries.map((e, i) => `<tr><td><div class="lib-db">${card(e)}<div data-raw>${esc(e.name)}${e.note ? `<div class="small">${esc(e.note)}</div>` : ''}</div></div></td><td>${seasonText(e.season)}</td>
         <td class="num">${MB(e.size)}</td><td class="acts"><div class="btns"><button class="primary" data-lib-get="${i}">${esc(have.has(e.id) ? t('Get again') : t('Get'))}</button></div></td></tr>`).join('')}</table>` : '';
@@ -240,6 +243,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
   $('sets-upload').onclick = () => input.click();
   $('sets-new').onclick = () => { $('saves').close(); create(); };
   input.onchange = async () => { const files = [...input.files]; input.value = ''; await upload(files); };
-  onLanguage(() => { drawOwn(); if (library) drawLibrary(); });   // the lists in the new language (no new ask of the library)
+  drawStep();
+  onLanguage(() => { drawOwn(); if (library) drawLibrary(); else drawStep(); });   // the lists in the new language (no new ask of the library)
   return { render, say };
 }

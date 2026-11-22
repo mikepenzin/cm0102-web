@@ -43,12 +43,13 @@ test('tn: plural forms by the language\'s own rules, English as the floor', () =
 // The tables against the page (web/test/i18n-strings.mjs): placeholders equal, no entry left behind by an edited
 // sentence; the missing ones listed, and a failure only with I18N_STRICT=1 (before a language is announced).
 test('the translation tables match the page\'s English', async () => {
-  const { pageStrings, tables, checkTables } = await import('./i18n-strings.mjs');
+  const { pageStrings, pagePlurals, tables, checkTables } = await import('./i18n-strings.mjs');
   const strings = pageStrings();
-  const report = checkTables(strings, await tables());
+  const report = checkTables(strings, await tables(), pagePlurals());
   for (const [code, r] of report) if (r.missing.length) console.log(`# ${code}: ${r.missing.length} missing`);
   assert.deepEqual([...report].flatMap(([code, r]) => r.placeholders.map((e) => `${code}: ${e}`)), [], 'placeholders of a translation equal its English\'s');
   assert.deepEqual([...report].flatMap(([code, r]) => r.stale.map((e) => `${code}: ${e}`)), [], 'no entry whose English is no longer on the page');
+  assert.deepEqual([...report].flatMap(([code, r]) => r.forms.map((e) => `${code}: ${e}`)), [], 'a plural has every form of its language');
   if (process.env.I18N_STRICT === '1') assert.deepEqual([...report].flatMap(([code, r]) => r.missing.map((e) => `${code}: ${e}`)), []);
 });
 
@@ -59,6 +60,15 @@ test('the check finds a wrong placeholder, a stale entry and a missing one', asy
   assert.deepEqual(r.placeholders, ['Saved {name} → Gespeichert {nom}', '{n} save (other) → Spielstände']);
   assert.deepEqual(r.stale, ['Gone']);
   assert.deepEqual(r.missing, ['Help']);
+});
+
+test('the check finds a plural without its forms: a plain string, or a category of the language left out', async () => {
+  const { checkTables } = await import('./i18n-strings.mjs');
+  const strings = new Map([['{n} save', new Set(['x.js'])], ['{n} file', new Set(['x.js'])], ['{n} tactic', new Set(['x.js'])]]);
+  const plurals = new Map([['{n} save', '{n} saves'], ['{n} file', '{n} files'], ['{n} tactic', '{n} tactics']]);
+  const r = checkTables(strings, new Map([['fr', { '{n} save': '{n} sauvegardes', '{n} file': { one: '{n} fichier', other: '{n} fichiers' },
+    '{n} tactic': { one: '{n} tactique', many: '{n} tactiques', other: '{n} tactiques' } }]]), plurals).get('fr');
+  assert.deepEqual(r.forms, ['{n} save: not a plural', '{n} file: no many']);
 });
 
 test('the page\'s strings: t, tn and data-t found in the code and the page', async () => {

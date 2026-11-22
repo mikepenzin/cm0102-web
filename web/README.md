@@ -761,7 +761,8 @@ The English is the key: `t('Saved {name}', { name })`, `tn(n, { one: '{n} save',
 (each language's plural rules, `Intl.PluralRules`), and in `index.html` `data-t` (the text), `data-t-html` (a
 sentence with a link or bold in it) and `data-t-attr="title,aria-label"`. A text missing from a table shows in
 English, so a new feature never breaks a language. The modules the server imports too (`zip.js`, `savedit.js`,
-`dataset.js`, `saves.js`, `upload.js`) never import `i18n.js`: their errors carry `key` and `vars` beside the English
+`dataset.js`, `saves.js`, `upload.js`) never import `i18n.js` themselves (`tactics.js` does, and does nothing with it
+on the server): their errors carry `key` and `vars` beside the English
 message, and Saved games gets the page's `t` and `tn` when it is mounted. What stays English: the engine log and the
 report to the developer, the server's own answers (its error texts, library names), save and file names, and the
 legal pages, whose links say "(English)" in the other languages. The price from the server (`CM_PRICE`, "$5 a
@@ -769,9 +770,9 @@ month") shows its period in the page's language when it has that shape (`priceTe
 
 The tables were translated by machine; Help says so in the other languages and offers Send to the developer for a
 better word. To change a word, edit its entry in `i18n-<code>.js`; to add a text, write it through `t` and add it to
-the nine tables. `I18N_STRICT=1 node --test web/test/i18n.test.js` fails on a text missing from a table, an entry
-whose English is no longer on the page, a wrong `{placeholder}` or a plural without its forms; without
-`I18N_STRICT` it lists the missing ones only. `test/i18n-check.mjs` chooses the language by `?lang=`, by the browser
+the nine tables. `node --test web/test/i18n.test.js` (and CI) fails on an entry whose English is no longer on the
+page, a wrong `{placeholder}` and a plural without every form of its language, and lists the texts missing from a
+table; with `I18N_STRICT=1` a missing text fails too. `test/i18n-check.mjs` chooses the language by `?lang=`, by the browser
 and in Help (with a dialog open), and sweeps the start box, the bar, the tour, Saved games, Account, Help, two toasts
 and a refused upload with a stand-in table that marks every text: any English left outside the marks fails.
 `test/screens.mjs <folder> de` takes every screen in one language on a laptop and a phone held upright and sideways,

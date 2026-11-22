@@ -150,6 +150,23 @@ try {
     check('the engine log stays English', !/DE:/.test(log));
     await ctx.close();
   }
+  {
+    // A server with no database library: the Databases tab's steps in the page's language too (its first step is
+    // written by the library's list when there is one).
+    const bare = await startDemoSite({ withLibrary: false });
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    await ctx.addInitScript(() => { try { localStorage.setItem('cm0102-tour-seen', '1'); } catch { /* none */ } });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errors.push(e.message));
+    await p.goto(`${bare.BASE}/?lang=de`);
+    await start(p);
+    await p.locator('#saves-open').click();
+    await p.locator('#saves .tabs [data-tab="sets"]').click();
+    const step = await p.textContent('#sets-step1');
+    check('no library on the server: the Databases tab\'s first step in German', !/Upload a database|make one from the game/.test(step), step);
+    await ctx.close();
+    await bare.close();
+  }
   check('no page errors', errors.length === 0, errors.join(' | '));
 } finally {
   await browser.close();

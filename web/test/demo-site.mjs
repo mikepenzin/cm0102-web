@@ -16,7 +16,7 @@ import { fakeDataSet, fakeGoogle, fakeS3 } from './fakes.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-export async function startDemoSite({ adminToken } = {}) {
+export async function startDemoSite({ adminToken, withLibrary = true } = {}) {   // withLibrary false: a server with no library
   // The site, as the checks make it: the game's own database as a small data set, the stand-in engine.
   const tmp = mkdtempSync(join(tmpdir(), 'cm0102-videos-'));
   const game = join(tmp, 'game'), build = join(tmp, 'build-web');
@@ -53,7 +53,7 @@ export async function startDemoSite({ adminToken } = {}) {
     libEntries.push({ id, name: name.replace('/', '-'), season, note, size: zip.length, rawSize: zip.length, added: new Date().toISOString() });
   }
   await s3.put('library/index.json', Buffer.from(JSON.stringify({ entries: libEntries })), { type: 'application/json' });
-  const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, library,
+  const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, library: withLibrary ? library : null,
     stats: createStats({ store: statsStore(null) }), statsMode: 'optout', adminToken,
     site: { seller: process.env.CM_SELLER || '', price: '$5 a month', coffee, youtube: process.env.CM_YOUTUBE_URL } });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));

@@ -85,8 +85,9 @@ export async function tables(web = WEB) {
 const marks = (s) => [...String(s).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',');
 
 // Per language: missing (English with no entry), stale (entries whose English is not on the page), placeholders (an
-// entry whose {placeholders} differ from its English's; a plural entry, each of its forms).
-export function checkTables(strings, tablesByCode) {
+// entry whose {placeholders} differ from its English's; a plural entry, each of its forms), forms (a plural, one of
+// plurals: one-form -> other-form, that is not { category: text } with every category of the language's rules).
+export function checkTables(strings, tablesByCode, plurals = new Map()) {
   const report = new Map();
   for (const [code, table] of tablesByCode) {
     const missing = [...strings.keys()].filter((s) => !(s in table));
@@ -96,7 +97,16 @@ export function checkTables(strings, tablesByCode) {
       if (typeof tr === 'string') { if (marks(tr) !== marks(en)) placeholders.push(`${en} → ${tr}`); continue; }
       for (const [cat, form] of Object.entries(tr ?? {})) if (marks(form) !== marks(en)) placeholders.push(`${en} (${cat}) → ${form}`);
     }
-    report.set(code, { missing, stale, placeholders });
+    const forms = [];
+    const cats = new Intl.PluralRules(code).resolvedOptions().pluralCategories;
+    for (const en of plurals.keys()) {
+      if (!(en in table)) continue;
+      const tr = table[en];
+      if (typeof tr !== 'object' || !tr) { forms.push(`${en}: not a plural`); continue; }
+      const gone = cats.filter((c) => !tr[c]);
+      if (gone.length) forms.push(`${en}: no ${gone.join(', ')}`);
+    }
+    report.set(code, { missing, stale, placeholders, forms });
   }
   return report;
 }
