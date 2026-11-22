@@ -19,12 +19,34 @@ const HEADER = 0x416ec, ENTRY = 0x10c, MAX_ENTRIES = 1000;     // the save conta
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const mb = (n) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
 const when = (d) => d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-// The date of a list's row: the day over the time, never broken (Saved games, Tactics, Data sets).
+// The date of a list's row: the day over the time, never broken (Saved games, Tactics, Data sets). In the page's
+// language (the lang of the page, which i18n.js sets), or the browser's own format when the page is in English.
+const dateLocale = () => {
+  const l = typeof document === 'object' ? document.documentElement?.lang : '';
+  return l && l !== 'en' ? l : undefined;
+};
 export const whenCell = (d) => {
-  const t = new Date(d);
-  return `<td class="when">${esc(t.toLocaleDateString(undefined, { dateStyle: 'medium' }))}<br><span class="small">${esc(t.toLocaleTimeString(undefined, { timeStyle: 'short' }))}</span></td>`;
+  const t = new Date(d), locale = dateLocale();
+  return `<td class="when">${esc(t.toLocaleDateString(locale, { dateStyle: 'medium' }))}<br><span class="small">${esc(t.toLocaleTimeString(locale, { timeStyle: 'short' }))}</span></td>`;
 };
 const size = (n) => (n >= 2 ** 30 ? `${(n / 2 ** 30).toFixed(1)} GB` : `${Math.max(1, Math.round(n / 2 ** 20))} MB`);
+
+// The text a player reads, in the page's language. This module never imports i18n.js (the server imports this one): the
+// page passes its t and tn (loader.js); without them it is English. A text is { key, vars }: key is the English with
+// {placeholders}, written key: '…' so the check of the tables finds it here (web/test/i18n-strings.mjs); a var may be a
+// text too (a reason inside a sentence); { key, other, n, vars } is a count with its noun (tn's one and other forms).
+const fill = (s, v) => s.replace(/\{(\w+)\}/g, (m, k) => (v && k in v ? String(v[k]) : m));
+const englishT = (s, v) => fill(s, v);
+const englishTn = (n, forms, v = {}) => fill(n === 1 ? forms.one : forms.other, { ...v, n });
+function textOf(m, t = englishT, tn = englishTn) {
+  if (m === null || typeof m !== 'object') return String(m ?? '');
+  const vars = m.vars && Object.fromEntries(Object.entries(m.vars).map(([k, v]) => [k, v && typeof v === 'object' && 'key' in v ? textOf(v, t, tn) : v]));
+  return 'other' in m ? tn(m.n, { one: m.key, other: m.other }, vars) : t(m.key, vars);
+}
+// An error as a text: its key and vars (zip.js, upload.js, dataset.js), else its English message as it is.
+const errText = (e) => ({ key: e?.key ?? String(e?.message ?? e), vars: e?.vars });
+// A reason a file is refused: its English (message), key and vars.
+const reason = (m) => ({ message: textOf(m), key: m.key, vars: m.vars });
 
 // Download all in parts. A zip holds 4 GB (zip.js), and six saves of 690 MB pass that: one zip was refused, with no way
 // to take fewer. The files in their order, in groups of at most limit bytes; a file larger than that goes alone.
@@ -43,9 +65,10 @@ export function zipParts(files, limit = PART_LIMIT) {
 // What the saves take and the room left. estimate: navigator.storage.estimate()'s answer ({ usage, quota }: what the
 // browser allows this site, which a nearly full disk can still refuse), or null when the browser does not tell.
 const roomLeft = (estimate) => (estimate && estimate.quota > 0 ? Math.max(0, estimate.quota - (estimate.usage ?? 0)) : null);
-export function spaceText(estimate, bytes, count) {
-  const head = `${count} ${count === 1 ? 'save' : 'saves'}, ${size(bytes)}`, room = roomLeft(estimate);
-  return room === null ? head : `${head} · this browser allows about ${size(room)} more`;
+// t, tn: the page's translation (i18n.js), else English.
+export function spaceText(estimate, bytes, count, t = englishT, tn = englishTn) {
+  const head = { key: '{n} save, {size}', other: '{n} saves, {size}', n: count, vars: { size: size(bytes) } }, room = roomLeft(estimate);
+  return textOf(room === null ? head : { key: '{saves} · this browser allows about {room} more', vars: { saves: head, room: size(room) } }, t, tn);
 }
 // Low: less room than two saves of the largest size (a save is written beside the one it replaces), or than 300 MB.
 export function lowOnSpace(estimate, biggest) {
@@ -117,24 +140,30 @@ export function savesSignature(FS) {
 export const SAVE_HEADER = HEADER;
 // A file too short says its size: an empty one (0 bytes) is a copy that never got the save, such as a Download of a
 // save whose stored copy another tab of the game had removed (vault.js).
-export function checkSave(bytes, total = bytes.length) {
-  if (total === 0) return 'the file is empty (0 bytes): the copy or download that made it did not get the saved game';
-  if (total < HEADER || bytes.length < HEADER)
-    return `it is too short to be a saved game of CM 01/02: ${Math.max(1, Math.round(total / 1024))} KB, where a saved game has at least ${Math.round(HEADER / 1024)} KB (most have tens of MB)`;
+// saveProblem: the same as { message (the English), key, vars }, for the page's translation; checkSave: the English.
+export function saveProblem(bytes, total = bytes.length) {
+  if (total === 0) return reason({ key: 'the file is empty (0 bytes): the copy or download that made it did not get the saved game' });
+  if (total < HEADER || bytes.length < HEADER) {
+    return reason({ key: 'it is too short to be a saved game of CM 01/02: {size} KB, where a saved game has at least {least} KB (most have tens of MB)',
+      vars: { size: Math.max(1, Math.round(total / 1024)), least: Math.round(HEADER / 1024) } });
+  }
   const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const version = dv.getInt32(0, true), count = dv.getInt32(8, true);
-  if (![1, 2, 3, 4].includes(version) || count < 1 || count > MAX_ENTRIES) return 'it is not a saved game of CM 01/02';
+  if (![1, 2, 3, 4].includes(version) || count < 1 || count > MAX_ENTRIES) return reason({ key: 'it is not a saved game of CM 01/02' });
   for (let k = 0; k < count; k++)
-    if (dv.getUint32(12 + k * ENTRY, true) > total) return 'the saved game is damaged: a part starts after its end';
+    if (dv.getUint32(12 + k * ENTRY, true) > total) return reason({ key: 'the saved game is damaged: a part starts after its end' });
   return null;
 }
+export function checkSave(bytes, total = bytes.length) { return saveProblem(bytes, total)?.message ?? null; }
 
 // A save from outside (an uploaded File, a cloud download: a Blob) into the save folder under name. It is checked by its
 // header alone. With the vault it goes to the browser's storage as it is (vault.adopt) and is never in the page's memory:
 // the page once read the whole file and copied it into the user folder, 3.4 GB in the tab for a save of 690 MB (15
-// November 2026). Without the vault it is a file in memory, as before. Resolves to null, or to why it is not a save.
-export async function storeSave(FS, name, blob, { mtime = Date.now(), owned = false } = {}) {
-  const why = checkSave(new Uint8Array(await blob.slice(0, HEADER).arrayBuffer()), blob.size);
+// November 2026). Without the vault it is a file in memory, as before. Resolves to null, or to why it is not a save
+// (storeSaveProblem: as saveProblem gives it, for the page's translation).
+export async function storeSave(FS, name, blob, opts) { return (await storeSaveProblem(FS, name, blob, opts))?.message ?? null; }
+export async function storeSaveProblem(FS, name, blob, { mtime = Date.now(), owned = false } = {}) {
+  const why = saveProblem(new Uint8Array(await blob.slice(0, HEADER).arrayBuffer()), blob.size);
   if (why) return why;
   const path = `${SAVE_DIR}/${name}`;
   // The vault keeps the Blob's bytes, not a reference to a file they came from (disk.js, ownable: an uploaded save, in
@@ -253,19 +282,23 @@ const saveLink = (blob, name) => {
 
 async function download(FS, f) { saveLink(new Blob([await readBlob(FS, f.path)], { type: 'application/octet-stream' }), f.name); }
 
-const CLOUD = { cloud: 'In the cloud', up: 'Saving…', later: 'Goes up soon', here: 'Only here', waiting: 'Not yet', big: 'Too large for the cloud' };
+const CLOUD = { cloud: { key: 'In the cloud' }, up: { key: 'Saving…' }, later: { key: 'Goes up soon' }, here: { key: 'Only here' },
+  waiting: { key: 'Not yet' }, big: { key: 'Too large for the cloud' } };
 
 // What the browser may do to the saves on its own. kept: the answer of navigator.storage.persist (loader.js): 'kept'
 // when the browser agreed to keep the site's storage when the disk runs low. It still deletes it when the player
 // clears browsing data, when a private window closes, and Safari (iPhone, iPad, Mac) deletes a site's storage after 7
-// days without a visit, unless the page is on the home screen.
+// days without a visit, unless the page is on the home screen. t: the page's translation (i18n.js), else English.
 let storageKept = 'unknown';
 export function setStorageKept(kept) { storageKept = kept; }
-export function storageWarning(cloudOn) {
-  const when = 'when browsing data is cleared, when a private window closes, and in Safari (iPhone, iPad, Mac) after 7 days without a visit, unless the page is on the home screen';
-  if (cloudOn) return `The browser can delete the saves here by itself, without asking: when the disk runs low, ${when}. The saves marked In the cloud then come back at the next start; download the others you want to keep.`;
-  if (storageKept === 'kept') return `This browser agreed to keep these saves when the disk runs low, but it still deletes them by itself, without asking, ${when}. Download the saves you want to keep, or use Cloud Saves.`;
-  return `The browser can delete these saves by itself, without asking: when the disk runs low, ${when}. Download the saves you want to keep, or use Cloud Saves.`;
+export function storageWarning(cloudOn, t = englishT) {
+  if (cloudOn) {
+    return textOf({ key: 'The browser can delete the saves here by itself, without asking: when the disk runs low, when browsing data is cleared, when a private window closes, and in Safari (iPhone, iPad, Mac) after 7 days without a visit, unless the page is on the home screen. The saves marked In the cloud then come back at the next start; download the others you want to keep.' }, t);
+  }
+  if (storageKept === 'kept') {
+    return textOf({ key: 'This browser agreed to keep these saves when the disk runs low, but it still deletes them by itself, without asking, when browsing data is cleared, when a private window closes, and in Safari (iPhone, iPad, Mac) after 7 days without a visit, unless the page is on the home screen. Download the saves you want to keep, or use Cloud Saves.' }, t);
+  }
+  return textOf({ key: 'The browser can delete these saves by itself, without asking: when the disk runs low, when browsing data is cleared, when a private window closes, and in Safari (iPhone, iPad, Mac) after 7 days without a visit, unless the page is on the home screen. Download the saves you want to keep, or use Cloud Saves.' }, t);
 }
 
 // Wires the panel of index.html to the engine's file system. sync() writes the user folder to IndexedDB now. cloud():
@@ -275,19 +308,27 @@ export function storageWarning(cloudOn) {
 // report(): Send to the developer (report.js), or null: a message of the panel that says something went wrong offers it,
 // with the files of an upload that were refused. play: Play (play.js), or null for an engine that cannot open a save
 // from the page.
-export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () => null, openPromo = () => {}, edit = null, report = () => null, play = null }) {
+// t, tn, onLanguage: the page's translation (i18n.js; this module does not import it, the server imports this one).
+// Without them the panel is English. The report and the log get the English.
+export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () => null, openPromo = () => {}, edit = null, report = () => null, play = null,
+  t = englishT, tn = englishTn, onLanguage = () => {} }) {
   const dialog = document.getElementById('saves'), list = document.getElementById('saves-list');
   const note = document.getElementById('saves-note'), input = document.getElementById('saves-file');
-  const say = (text, bad = false, files = []) => {
-    note.textContent = text;
+  const tx = (m) => textOf(m, t, tn);
+  const lines = (m) => (Array.isArray(m) ? m : [m]).filter(Boolean);
+  // m: a text ({ key, vars }), or a list of them, one a line. Shown in the page's language; the report gets the English.
+  let said = null;
+  const say = (m, bad = false, files = []) => {
+    said = { m, bad, files };
+    note.textContent = lines(m).map(tx).join('\n');
     note.className = bad ? 'small bad' : 'small';
     const r = bad || files.length ? report() : null;
     if (!r) return;
     const b = document.createElement('button');
     b.className = 'link';
     b.id = 'saves-report';
-    b.textContent = 'Send to the developer';
-    b.onclick = () => { dialog.close(); r.open({ message: text, where: 'Saved games', files }); };
+    b.textContent = tx({ key: 'Send to the developer' });
+    b.onclick = () => { dialog.close(); r.open({ message: lines(m).map((x) => textOf(x)).join('\n'), where: 'Saved games', files }); };
     note.append(' ', b);
   };
   let shown = { saves: [], backups: [] }, watched = null;
@@ -295,29 +336,31 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
   function render() {
     shown = listSaves(FS);
     const c = cloud();
-    document.getElementById('saves-where').textContent = c ? 'Your saves are in this browser and in the cloud.' : 'Your saves stay in this browser.';
-    document.getElementById('saves-risk').textContent = storageWarning(Boolean(c));
+    document.getElementById('saves-where').textContent = tx(c ? { key: 'Your saves are in this browser and in the cloud.' } : { key: 'Your saves stay in this browser.' });
+    document.getElementById('saves-risk').textContent = storageWarning(Boolean(c), t);
     const p = promo(), box = document.getElementById('saves-promo');
     box.hidden = !p;
     if (p) { box.firstChild.textContent = `${p} `; box.querySelector('button').onclick = openPromo; }
     const state = (f) => {
       const st = c.status(f.name, f);
-      return `<td class="cloud ${st}">${CLOUD[st]}${st === 'cloud' ? ` <button class="link" data-remove="${esc(f.name)}" title="Remove from the cloud; it stays here">Remove</button>` : ''}</td>`;
+      return `<td class="cloud ${st}">${esc(tx(CLOUD[st]))}${st === 'cloud' ? ` <button class="link" data-remove="${esc(f.name)}" title="${esc(tx({ key: 'Remove from the cloud; it stays here' }))}">${esc(tx({ key: 'Remove' }))}</button>` : ''}</td>`;
     };
     const row = (f, i, kind) => `<tr><td>${esc(f.name)}</td><td class="num">${mb(f.size)}</td>${whenCell(f.mtime)}
-      ${c ? (kind === 'save' ? state(f) : '<td></td>') : ''}<td class="acts"><div class="btns">${play?.can() && kind === 'save' ? `<button class="primary" data-play="${i}" title="Load this save in the game">Play</button>` : ''}${edit && kind === 'save' ? `<button data-edit="${i}">Edit</button>` : ''}<button data-kind="${kind}" data-i="${i}">Download</button><button class="link danger" data-delete="${kind}" data-i="${i}">Delete</button></div></td></tr>`;
+      ${c ? (kind === 'save' ? state(f) : '<td></td>') : ''}<td class="acts"><div class="btns">${play?.can() && kind === 'save' ? `<button class="primary" data-play="${i}" title="${esc(tx({ key: 'Load this save in the game' }))}">${esc(tx({ key: 'Play' }))}</button>` : ''}${edit && kind === 'save' ? `<button data-edit="${i}">${esc(tx({ key: 'Edit' }))}</button>` : ''}<button data-kind="${kind}" data-i="${i}">${esc(tx({ key: 'Download' }))}</button><button class="link danger" data-delete="${kind}" data-i="${i}">${esc(tx({ key: 'Delete' }))}</button></div></td></tr>`;
     list.innerHTML = shown.saves.length
-      ? `<table><tr><th>Save</th><th class="num">Size</th><th>Saved</th>${c ? '<th>Cloud</th>' : ''}<th></th></tr>${shown.saves.map((f, i) => row(f, i, 'save')).join('')}</table>`
-      : '<p class="small">No saved games yet. Save in the game (Game Options, Save Game), or upload one.</p>';
+      ? `<table><tr><th>${esc(tx({ key: 'Save' }))}</th><th class="num">${esc(tx({ key: 'Size' }))}</th><th>${esc(tx({ key: 'Saved' }))}</th>${c ? `<th>${esc(tx({ key: 'Cloud' }))}</th>` : ''}<th></th></tr>${shown.saves.map((f, i) => row(f, i, 'save')).join('')}</table>`
+      : `<p class="small">${esc(tx({ key: 'No saved games yet. Save in the game (Game Options, Save Game), or upload one.' }))}</p>`;
     // The older copies with what they take: the game keeps three of each save, 2 GB for one save of 690 MB.
-    if (shown.backups.length) list.innerHTML += `<details><summary>Older copies (${shown.backups.length}, ${size(shown.backups.reduce((a, f) => a + f.size, 0))})</summary>
-      <p class="small">The game keeps the last three copies of each save here, in case a save goes wrong.
-      <button class="link" id="backups-remove">Remove all older copies</button></p><table>
+    if (shown.backups.length) list.innerHTML += `<details><summary>${esc(tx({ key: 'Older copies ({n}, {size})', vars: { n: shown.backups.length, size: size(shown.backups.reduce((a, f) => a + f.size, 0)) } }))}</summary>
+      <p class="small">${esc(tx({ key: 'The game keeps the last three copies of each save here, in case a save goes wrong.' }))}
+      <button class="link" id="backups-remove">${esc(tx({ key: 'Remove all older copies' }))}</button></p><table>
       ${shown.backups.map((f, i) => row(f, i, 'backup')).join('')}</table></details>`;
     spaceState(FS).then((sp) => {
       const el = document.getElementById('saves-space');
-      el.textContent = sp.count || sp.bytes ? `${spaceText(sp.estimate, sp.bytes, sp.count)}${sp.low
-        ? '. That is little: a save may not fit. Download the saves you want to keep, then delete some here or remove the older copies.' : ''}` : '';
+      const space = spaceText(sp.estimate, sp.bytes, sp.count, t, tn);
+      el.textContent = sp.count || sp.bytes ? (sp.low
+        ? tx({ key: '{space}. That is little: a save may not fit. Download the saves you want to keep, then delete some here or remove the older copies.', vars: { space } })
+        : space) : '';
       el.className = sp.low ? 'small warn' : 'small';
     });
     if (c && c !== watched) { watched = c; c.onChange(() => { if (dialog.open) render(); }); }
@@ -328,11 +371,13 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
   document.getElementById('saves-upload').onclick = () => input.click();
   // One zip of everything (zipOfBlobs: the files of the vault go from disk, not through memory).
   // More than a zip holds: a part at each press (zipParts), the button says which is next.
-  let nextPart = 0;
-  document.getElementById('saves-all').onclick = async (e) => {
+  let nextPart = 0, partsNow = 1;
+  const allButton = document.getElementById('saves-all');
+  const allLabel = () => { allButton.textContent = tx(nextPart ? { key: 'Download part {part} of {parts}', vars: { part: nextPart + 1, parts: partsNow } } : { key: 'Download all' }); };
+  allButton.onclick = async (e) => {
     const b = e.currentTarget;
     const everything = allFiles(FS);
-    if (!everything.length) { say('There is nothing to download yet.'); return; }
+    if (!everything.length) { say({ key: 'There is nothing to download yet.' }); return; }
     const parts = zipParts(everything), part = Math.min(nextPart, parts.length - 1), of = parts.length > 1 ? ` (${part + 1} of ${parts.length})` : '';
     let files = parts[part];
     b.disabled = true;
@@ -344,33 +389,39 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
         try { entries.push({ name: f.name, blob: await readBlob(FS, f.path), size: f.size }); }
         catch (err) { lost.push(f.name); log(`page: download all: ${f.name} left out: ${err.message}`); }
       }
-      if (!entries.length) throw new Error(`the browser's storage no longer has ${lost.join(', ')}`);
+      if (!entries.length) {
+        throw Object.assign(new Error(`the browser's storage no longer has ${lost.join(', ')}`), { key: 'the browser\'s storage no longer has {names}', vars: { names: lost.join(', ') } });
+      }
       files = entries;
       const total = files.reduce((a, f) => a + f.size, 0);
       const zip = await zipOfBlobs(entries, { onBytes: (n) => {
         done += n;
         const pct = Math.floor((done / total) * 100);
-        if (pct !== shown) { shown = pct; say(`Packing ${files.length} files (${mb(total)}): ${pct}%`); }
+        if (pct !== shown) { shown = pct; say({ key: 'Packing {n} files ({size}): {pct}%', vars: { n: files.length, size: mb(total), pct } }); }
       } });
       const day = new Date().toISOString().slice(0, 10);
       saveLink(zip, `CM 01-02 saves ${day}${of}.zip`);
       nextPart = part + 1 < parts.length ? part + 1 : 0;
-      say(`Downloaded ${files.length} files (${mb(total)}) as ${parts.length > 1 ? `part ${part + 1} of ${parts.length}` : 'one zip'}: the saves, the older copies (backups), the tactics and the data sets (Databases), as the save folder holds them.${
-        nextPart ? `\nA zip holds 4 GB: press Download part ${nextPart + 1} of ${parts.length} for the next one.` : ''}${
-        lost.length ? `\nLeft out, because the browser's storage no longer has them: ${lost.join(', ')}.` : ''}`, lost.length > 0);
+      partsNow = parts.length;
+      const counts = { n: files.length, size: mb(total), part: part + 1, parts: parts.length };
+      say([parts.length > 1
+        ? { key: 'Downloaded {n} files ({size}) as part {part} of {parts}: the saves, the older copies (backups), the tactics and the data sets (Databases), as the save folder holds them.', vars: counts }
+        : { key: 'Downloaded {n} files ({size}) as one zip: the saves, the older copies (backups), the tactics and the data sets (Databases), as the save folder holds them.', vars: counts },
+      nextPart ? { key: 'A zip holds 4 GB: press Download part {part} of {parts} for the next one.', vars: { part: nextPart + 1, parts: parts.length } } : null,
+      lost.length ? { key: 'Left out, because the browser\'s storage no longer has them: {names}.', vars: { names: lost.join(', ') } } : null], lost.length > 0);
       log(`page: downloaded all${of}: ${files.length} files, ${mb(total)}`);
-    } catch (err) { say(`The zip was not made: ${err.message}`, true); }
-    b.textContent = nextPart ? `Download part ${nextPart + 1} of ${parts.length}` : 'Download all';
+    } catch (err) { say({ key: 'The zip was not made: {why}', vars: { why: errText(err) } }, true); }
+    allLabel();
     b.disabled = false;
   };
   list.addEventListener('click', async (e) => {
     if (e.target.closest('#backups-remove')) {
       const old = shown.backups, bytes = old.reduce((a, f) => a + f.size, 0);
-      if (!confirm(`Remove all ${old.length} older copies (${size(bytes)})? The saves themselves stay. This cannot be undone.`)) return;
+      if (!confirm(tx({ key: 'Remove all {n} older copies ({size})? The saves themselves stay. This cannot be undone.', vars: { n: old.length, size: size(bytes) } }))) return;
       let gone = 0;
       for (const f of old) { try { FS.unlink(f.path); gone++; } catch (err) { log(`page: ${f.path} was not removed: ${err.message}`); } }
       sync();
-      say(`Removed ${gone} older copies: ${size(bytes)} free again.`);
+      say({ key: 'Removed {n} older copies: {size} free again.', vars: { n: gone, size: size(bytes) } });
       log(`page: removed ${gone} older copies (${size(bytes)})`);
       render();
       return;
@@ -387,8 +438,8 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
     if (r && cloud()) {
       const name = r.dataset.remove;
       r.disabled = true;
-      try { await cloud().remove(name); say(`${name} is no longer in the cloud. It stays in this browser.`); log(`page: ${name} removed from the cloud`); }
-      catch (err) { say(`${name} was not removed: ${err.message}`, true); }
+      try { await cloud().remove(name); say({ key: '{name} is no longer in the cloud. It stays in this browser.', vars: { name } }); log(`page: ${name} removed from the cloud`); }
+      catch (err) { say({ key: '{name} was not removed: {why}', vars: { name, why: errText(err) } }, true); }
       render();
       return;
     }
@@ -396,46 +447,53 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
     if (d) {
       const backup = d.dataset.delete === 'backup', f = (backup ? shown.backups : shown.saves)[Number(d.dataset.i)];
       const inCloud = !backup && cloud()?.status(f.name, f) === 'cloud';
-      if (!confirm(`Delete ${backup ? 'this older copy of ' : ''}${f.name}${inCloud ? ' here and in the cloud' : ''}? This cannot be undone; Download keeps a copy first.`)) return;
+      const ask = backup ? { key: 'Delete this older copy of {name}? This cannot be undone; Download keeps a copy first.', vars: { name: f.name } }
+        : inCloud ? { key: 'Delete {name} here and in the cloud? This cannot be undone; Download keeps a copy first.', vars: { name: f.name } }
+          : { key: 'Delete {name}? This cannot be undone; Download keeps a copy first.', vars: { name: f.name } };
+      if (!confirm(tx(ask))) return;
       try {
         if (inCloud) await cloud().remove(f.name);
         FS.unlink(f.path);
         sync();
-        say(`${backup ? 'The older copy of ' : ''}${f.name} is deleted.`);
+        say(backup ? { key: 'The older copy of {name} is deleted.', vars: { name: f.name } } : { key: '{name} is deleted.', vars: { name: f.name } });
         log(`page: deleted the ${backup ? 'older copy' : 'save'} ${f.name}`);
-      } catch (err) { say(`${f.name} was not deleted: ${err.message}`, true); }
+      } catch (err) { say({ key: '{name} was not deleted: {why}', vars: { name: f.name, why: errText(err) } }, true); }
       render();
       return;
     }
     const b = e.target.closest('button[data-i]');
     if (!b) return;
     const f = (b.dataset.kind === 'backup' ? shown.backups : shown.saves)[Number(b.dataset.i)];
-    try { await download(FS, f); say(`Downloaded ${f.name}.`); log(`page: downloaded the save ${f.name}`); }
-    catch (err) { say(`${f.name} could not be read: ${err.message}`, true); }
+    try { await download(FS, f); say({ key: 'Downloaded {name}.', vars: { name: f.name } }); log(`page: downloaded the save ${f.name}`); }
+    catch (err) { say({ key: '{name} could not be read: {why}', vars: { name: f.name, why: errText(err) } }, true); }
   });
   // Each file by what it is (upload.js): its saves, its tactics, or why neither, with what to do.
   input.onchange = async () => {
     const done = [], tacticsDone = [], notes = [], refused = [], refusedFiles = [];
     for (const file of input.files) {
       let sorted;
-      try { sorted = await sortUpload(file); } catch (err) { sorted = { saves: [], tactics: [], notes: [], why: err.message }; }
-      notes.push(...sorted.notes);
-      if (sorted.why) { refused.push(`${file.name}: ${sorted.why}`); refusedFiles.push(file); continue; }
+      try { sorted = await sortUpload(file); } catch (err) { sorted = { saves: [], tactics: [], notes: [], noteKeys: [], why: err.message, whyKey: err.key, whyVars: err.vars }; }
+      notes.push(...sorted.notes.map((n, i) => sorted.noteKeys?.[i] ?? { key: n }));
+      if (sorted.why) {
+        refused.push({ key: '{file}: {why}', vars: { file: file.name, why: { key: sorted.whyKey ?? sorted.why, vars: sorted.whyVars } } });
+        refusedFiles.push(file);
+        continue;
+      }
       for (const one of sorted.saves) {
         const taken = new Set(listSaves(FS).saves.map((f) => f.name.toLowerCase()));
         const name = saveName(one.name, taken);
-        const label = one.name === file.name ? file.name : `${one.name} (in ${file.name})`;
-        if (one.size > 50 << 20) say(`Storing ${label} (${mb(one.size)})…`);
+        const label = one.name === file.name ? file.name : { key: '{name} (in {zip})', vars: { name: one.name, zip: file.name } };
+        if (one.size > 50 << 20) say({ key: 'Storing {name} ({size})…', vars: { name: label, size: mb(one.size) } });
         let why;
-        try { why = await storeSave(FS, name, await one.blob()); } catch (err) { why = `it was not stored: ${err.message}`; }
-        if (why) { refused.push(`${label}: ${why}`); refusedFiles.push(file); continue; }
+        try { why = await storeSaveProblem(FS, name, await one.blob()); } catch (err) { why = { key: 'it was not stored: {why}', vars: { why: errText(err) } }; }
+        if (why) { refused.push({ key: '{file}: {why}', vars: { file: label, why } }); refusedFiles.push(file); continue; }
         done.push(name);
         log(`page: uploaded the save ${name} (${mb(one.size)})${one.name === file.name ? '' : ` from ${file.name}`}`);
       }
-      for (const t of sorted.tactics) {
+      for (const tc of sorted.tactics) {
         try { FS.mkdirTree(TACTICS_DIR); } catch { /* there */ }
-        const name = tacticName(t.name, new Set(listTactics(FS).map((f) => f.name.toLowerCase())));
-        FS.writeFile(`${TACTICS_DIR}/${name}`, t.bytes);
+        const name = tacticName(tc.name, new Set(listTactics(FS).map((f) => f.name.toLowerCase())));
+        FS.writeFile(`${TACTICS_DIR}/${name}`, tc.bytes);
         tacticsDone.push(name.slice(0, -4));
         log(`page: uploaded the tactic ${name} through Saved games (from ${file.name})`);
       }
@@ -444,10 +502,18 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
     if (done.length || tacticsDone.length) sync();
     render();
     if (tacticsDone.length) document.dispatchEvent(new CustomEvent('cm-tactics-changed'));   // tactics.js: the list, the cloud
-    say([done.length ? `Uploaded ${done.join(', ')}. ${play?.can() ? 'Press Play to open it in the game.' : 'Open Restore Saved Game in the game to play it.'}` : '',
-      tacticsDone.length ? `${tacticsDone.join(', ')} ${tacticsDone.length > 1 ? 'are tactics: they are' : 'is a tactic: it is'} under Tactics now (on the tactics screen: Tactics, Load).` : '',
-      ...notes, ...refused].filter(Boolean).join('\n'),
-      refused.length > 0 && done.length === 0 && tacticsDone.length === 0, refusedFiles);
+    say([done.length ? (play?.can() ? { key: 'Uploaded {names}. Press Play to open it in the game.', vars: { names: done.join(', ') } }
+      : { key: 'Uploaded {names}. Open Restore Saved Game in the game to play it.', vars: { names: done.join(', ') } }) : null,
+    tacticsDone.length ? { key: '{names} is a tactic: it is under Tactics now (on the tactics screen: Tactics, Load).',
+      other: '{names} are tactics: they are under Tactics now (on the tactics screen: Tactics, Load).', n: tacticsDone.length, vars: { names: tacticsDone.join(', ') } } : null,
+    ...notes, ...refused],
+    refused.length > 0 && done.length === 0 && tacticsDone.length === 0, refusedFiles);
   };
+  // Another language: what is shown again in it.
+  onLanguage(() => {
+    allLabel();
+    if (said) say(said.m, said.bad, said.files);
+    if (dialog.open) render();
+  });
   document.getElementById('saves-open').hidden = false;
 }
