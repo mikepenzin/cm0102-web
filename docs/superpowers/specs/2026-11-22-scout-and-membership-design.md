@@ -85,12 +85,11 @@ behind an invitation to become a member. Every text in the page's languages, as 
 ## Decided
 
 - **Where:** the Editor, once a saved game is open (a data set shows no Scout tab): two tabs over the left
-  column, "Players" (the list
-  and search as now) and "Scout". On a phone the Scout's filters and results take the column; a result opens the
+  column, "Players" (the list and search as now) and "Scout". On a phone the Scout's filters and results take the column; a result opens the
   form as a picked player does, and Back returns to the results with the filters kept.
 - **Filters:** age from and to (blank: any); position (any, or one of the twelve, counting a rating of 15 or more);
-  minimum PA and minimum CA; up to three rows of attribute + minimum (the attributes the Editor shows for that kind
-  in its order and its names). A search runs when a filter changes (after a short pause while typing).
+  minimum PA and minimum CA; up to three rows of attribute + minimum (the attributes the Editor shows for a saved
+  game, in its order and its names). A search runs when a filter changes (after a short pause while typing).
 - **Results:** sorted by PA, then CA, then name; at most 100, with "and N more" when there are more. Each row: name,
   age, club (or "No club"), the position text, CA/PA, and the values of the chosen attributes.
 - **Free players:** the first 3 rows in full. Then up to 5 dimmed placeholder rows made of blank shapes (no data),
