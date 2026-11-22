@@ -35,9 +35,10 @@ const where = (p) => p.evaluate(() => {
 
 try {
   for (const [name, opts, want] of [
-    ['laptop', { viewport: { width: 1280, height: 800 } }, ['Saved games', 'Editor', 'Help']],
-    ['phone upright', { ...devices['iPhone 13'] }, ['Saved games', 'Editor', 'Right click', 'Help']],
-    ['phone sideways', { ...devices['iPhone 14 Pro Max landscape'] }, ['Saved games', 'Editor', 'Right click', 'Help']]]) {
+    ['laptop', { viewport: { width: 1280, height: 800 } }, ['Saved games', 'Cloud Saves', 'Editor', 'Full screen', 'Help']],
+    // Chromium offers full screen where an iPhone does not: there the step is left out, as its button is.
+    ['phone upright', { ...devices['iPhone 13'] }, ['Saved games', 'Cloud Saves', 'Editor', 'Keyboard', 'Right click', 'Full screen', 'Help']],
+    ['phone sideways', { ...devices['iPhone 14 Pro Max landscape'] }, ['Saved games', 'Cloud Saves', 'Editor', 'Keyboard', 'Right click', 'Full screen', 'Help']]]) {
     const ctx = await browser.newContext(opts);
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
@@ -45,9 +46,11 @@ try {
     await start(p);
     await p.waitForSelector('#tour', { timeout: 15000 });
     const steps = [];
-    for (let i = 0; i < 8; i++) {
+    let cloudText = '';
+    for (let i = 0; i < 10; i++) {
       await p.waitForTimeout(250);
       steps.push(await where(p));
+      if (steps.at(-1).title === 'Cloud Saves') cloudText = await p.textContent('#tour-text');
       if (SHOTS) await p.screenshot({ path: join(SHOTS, `tour-${name.replace(' ', '-')}-${i + 1}.png`) });
       const next = p.locator('#tour-next');
       const done = (await next.textContent()) === 'Done';
@@ -57,6 +60,8 @@ try {
     check(`${name}: the steps are the buttons that show, in order`, JSON.stringify(steps.map((s) => s.title)) === JSON.stringify(want), steps.map((s) => s.title).join(', '));
     check(`${name}: each card is on the screen, beside its button, over none of the page's buttons`, steps.every((s) => s.inside && !s.over),
       steps.filter((s) => !s.inside || s.over).map((s) => `${s.title}${s.over ? ' over a button' : ''}${s.inside ? '' : ' off the screen'}`).join(', '));
+    check(`${name}: the Cloud Saves step says what they do and how to turn them on, with the site's price`,
+      /all your devices/.test(cloudText) && /sign in with Google, then press "Become a member" \(£5 a month\)/.test(cloudText), cloudText);
     const after = await p.evaluate(() => ({ card: Boolean(document.getElementById('tour')), ring: document.querySelectorAll('.tour-target').length,
       seen: localStorage.getItem('cm0102-tour-seen'), focus: document.activeElement?.id }));
     check(`${name}: Done ends it, takes the ring off, gives the game the focus and marks it seen`, !after.card && after.ring === 0 && after.seen === '1'

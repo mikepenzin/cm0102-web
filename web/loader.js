@@ -15,7 +15,7 @@ import { mountTacticsPanel } from './tactics.js';
 import { createSetSync, listDataSets } from './datasets.js';
 import { LEGAL_LINKS, createCloudSync, keepInCloud, mountAccount, plansHtml } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard, onPageKey } from './keyboard.js';
-import { mountTour } from './tour.js';
+import { TOUR_STEPS, cloudStepText, mountTour } from './tour.js';
 import { mountLayout } from './layout.js';
 import { mountMacRightButton, mountTouch } from './touch.js';
 import { fitBar, guardLeave, isFullAlready, isStandalone, keepAwake, mountBusy, toast } from './ui.js';
@@ -328,6 +328,7 @@ function cloudHintOnce() {
 $('help-close').onclick = () => $('help').close();
 // The first-visit tour (tour.js): once in this browser after the game has started, and from Help at any time.
 const tour = mountTour({ storage: (() => { try { return localStorage; } catch { return null; } })(), onPageKey,
+  steps: TOUR_STEPS.map((s) => (s.target === 'account-open' ? { ...s, text: () => cloudStepText(account.me) } : s)),
   onEnd: () => { if (!document.querySelector('dialog[open]')) canvas.focus({ preventScroll: true }); } });
 $('help-tour').onclick = () => { $('help').close(); tour.start(); };
 $('fullscreen').onclick = () => layout.toggleFullscreen();

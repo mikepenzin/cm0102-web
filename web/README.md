@@ -731,8 +731,12 @@ One system for every part of the page (`index.html`, its `:root`), from the UI s
 ## The first-visit tour
 
 Once in a browser, a moment after the game has started, a card beside each of the page's own buttons says what it is
-for (`tour.js`): Saved games, Editor, Right click (on a touch device) and Help, with Back, Next or Done, and Skip the
-tour. The button it is about wears a green ring. New players arrive from Facebook groups and the video guides and see
+for (`tour.js`): Saved games, Cloud Saves (the Sign in or account button), Editor, Keyboard and Right click (on a touch
+device), Full screen (where the browser offers it: not on an iPhone) and Help, with Back, Next or Done, and Skip the
+tour. The Cloud Saves card says what they do (each save up right after it is made, the other devices get it when they
+start) and how to turn them on from here, in the Account dialog's own words for the account as it is: sign in with
+Google, then "Become a member" on Buy Me a Coffee with the same email or "Get Cloud Saves" with Paddle, at the
+site's price; or that they are on, or free (`cloudStepText`). The button it is about wears a green ring. New players arrive from Facebook groups and the video guides and see
 a row of icons around the game (on a phone, icons only; held sideways, a column), and one could not find the Editor.
 The card sits below its button when the buttons are a row and beside them when they are a column, never over one of
 them; it does not hold the game, and Escape ends it while it has the focus. Help's "Show the tour" runs it again. A

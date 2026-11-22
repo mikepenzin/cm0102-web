@@ -7,18 +7,39 @@
 
 export const TOUR_KEY = 'cm0102-tour-seen';
 
-// The steps, in order. A step whose button is not shown (the Right click button on a computer, the bar folded away in
-// full screen) is left out.
+// The steps, in order. A step whose button is not shown is left out: Keyboard and Right click show on a touch device
+// only, Full screen where the browser offers it and the page is not full already (not on an iPhone), Sign in where
+// the server has accounts. A text may be a function, read when its step shows (Cloud Saves: cloudStepText).
 export const TOUR_STEPS = [
   { target: 'saves-open', title: 'Saved games',
     text: 'Your saves live in this browser. Download keeps a copy on your device; Upload brings one in, also from the desktop game. Databases for a new game are here too.' },
+  { target: 'account-open', title: 'Cloud Saves', text: 'Cloud Saves keep your saves on all your devices.' },
   { target: 'editor-open', title: 'Editor',
     text: 'Change the players of a saved game, or make a database of your own for new games.' },
+  { target: 'kbd-open', title: 'Keyboard',
+    text: 'Opens your keyboard to type in the game: a manager\'s name, a search. When the game waits for text, a "Tap to type" sign shows beside the entry too.' },
   { target: 'right-click', title: 'Right click',
     text: 'Tap it, then tap the game: that tap is a right click (a player\'s instructions on the tactics screen). A long press on the game does it too.' },
+  { target: 'fullscreen', title: 'Full screen',
+    text: 'The game fills the screen. These buttons go beside it, or into a small tab at the edge (›) when there is no room. The same button leaves full screen.' },
   { target: 'help-open', title: 'Help',
-    text: 'The gestures, the video guides, and Send to the developer when something goes wrong.' },
+    text: 'The gestures, the video guides, and Send to the developer when something goes wrong. "Show the tour" there runs this tour again.' },
 ];
+
+// What the Cloud Saves step says, for the account as the page knows it (account.js, /api/me): what Cloud Saves do,
+// and how to turn them on from here, in the words of the Account dialog's own button.
+export function cloudStepText(me) {
+  const what = 'Cloud Saves keep your saves on all your devices: each save goes up right after you save it, and your other devices get it when they start.';
+  if (me?.user?.cloud) return `Cloud Saves are on for ${me.user.email}: each save goes up right after you save it, and your other devices get it when they start. This button shows them.`;
+  const offer = me?.offer;
+  if (offer?.free) return `${what} Sign in here with Google, and they are on, free.`;
+  const price = offer?.price ? ` (${offer.price})` : '';
+  const join = offer?.coffee
+    ? `press "Become a member"${price} and join on Buy Me a Coffee with the same email: they turn on by themselves a moment after`
+    : `press "Get Cloud Saves"${price} and pay: they turn on a moment after`;
+  if (me?.user) return `${what} To turn them on, open this button, ${join}. Until then your saves stay in this browser.`;
+  return `${what} To turn them on, open this button and sign in with Google, then ${join}. Without them your saves stay in this browser.`;
+}
 
 const GAP = 10;                 // between the card and its button
 const EDGE = 8;                 // the card keeps this far from the window's edges
@@ -81,7 +102,7 @@ export function mountTour({ doc = document, win = window, storage = null, steps 
     ring.classList.add('tour-target');
     card.querySelector('#tour-count').textContent = `${at + 1} of ${list.length}`;
     card.querySelector('#tour-title').textContent = step.title;
-    card.querySelector('#tour-text').textContent = step.text;
+    card.querySelector('#tour-text').textContent = typeof step.text === 'function' ? step.text() : step.text;
     card.querySelector('#tour-back').hidden = at === 0;
     card.querySelector('#tour-next').textContent = at + 1 < list.length ? 'Next' : 'Done';
     place();
