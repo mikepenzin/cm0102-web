@@ -7,6 +7,7 @@ import { otherDeviceName, planSync } from './account.js';
 import { writeZip, zipEntries, zipRead } from './zip.js';
 import { readView } from './saves.js';
 import { downDirect, upDirect } from './direct.js';
+import { t } from './i18n.js';
 
 export const FIRST_SEASON = 2001, LAST_SEASON = 2025;          // the seasons the game has (seasons_db.h)
 const META = '.web.json';                                       // the page's note in a folder: { season, library }
@@ -134,7 +135,11 @@ export async function dataSetsInZip(bytes, fallback) {
     if (parts.length && parts[parts.length - 1].toLowerCase() === 'data') parts.pop();
     out.push({ name: cleanName(parts.length ? parts[parts.length - 1] : fallback), files });
   }
-  if (!out.length) throw new Error(`no folder of the zip holds the ${DATA_SET_FILES.length} database files (${DATA_SET_FILES.slice(0, 3).join(', ')} and the others)`);
+  if (!out.length) {
+    const vars = { n: DATA_SET_FILES.length, files: DATA_SET_FILES.slice(0, 3).join(', ') };
+    throw Object.assign(new Error(`no folder of the zip holds the ${vars.n} database files (${vars.files} and the others)`),
+      { key: 'no folder of the zip holds the {n} database files ({files} and the others)', vars });
+  }
   return out;
 }
 
@@ -148,7 +153,7 @@ export async function chooseForNextGame(M, FS, root, name, season) {
     const args = ['rt_web_choose_data_set', 'number', ['string', 'number'], [name, season]];
     const r = M.chooseAsync ? await M.ccall(...args, { async: true }) : M.ccall(...args);
     if (r === 1) return 'now';
-    throw new Error('the game did not take this data set');
+    throw Object.assign(new Error('the game did not take this data set'), { key: 'the game did not take this data set' });
   }
   const path = `${root}/settings.txt`;
   let text = '';
@@ -211,7 +216,7 @@ export function createSetSync({ FS, root, sync, log, toast, account }) {
     state.sets[other] = { etag: null, ...local().get(other) };
     if ((await up(other, 'none')).conflict) return;
     const mine = await up(name, (await (await fetch('/api/datasets', { cache: 'no-store' })).json()).sets.find((s) => s.name === name)?.etag ?? 'none');
-    if (mine.up) toast(`${name} was also changed on another device. That version is kept as ${other}.`, { ms: 9000 });
+    if (mine.up) toast(t('{name} was also changed on another device. That version is kept as {other}.', { name, other }), { ms: 9000 });
   }
 
   async function once() {

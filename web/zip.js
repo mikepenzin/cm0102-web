@@ -2,6 +2,8 @@
 // and a zip that holds one or more data sets uploads. Deflate through the browser's CompressionStream; no library.
 // The format: PKWARE APPNOTE 6.3 (local headers, central directory, end record); no Zip64, so each file and the zip
 // stay under 4 GB, which a data set does by far.
+// An error a player may see keeps its English message and has key (the English with {placeholders}) and vars: the page
+// shows it translated (i18n.js, which this module never imports: the server imports it too).
 
 const TABLE = (() => {
   const t = new Uint32Array(256);
@@ -76,7 +78,7 @@ export async function zipOfBlobs(files, { date = new Date(), onBytes = () => {} 
   let at = 0;
   for (const f of files) {
     const name = utf8.encode(f.name), size = f.blob.size;
-    if (at + 30 + name.length + size > 0xffffffff || files.length > 0xffff) throw new Error('more than 4 GB or 65,535 files: download fewer at once');
+    if (at + 30 + name.length + size > 0xffffffff || files.length > 0xffff) throw Object.assign(new Error('more than 4 GB or 65,535 files: download fewer at once'), { key: 'more than 4 GB or 65,535 files: download fewer at once' });
     const crc = await crc32Blob(f.blob, onBytes);
     const local = new Uint8Array(30 + name.length), lv = new DataView(local.buffer);
     lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(6, 0x0800, true); lv.setUint16(8, 0, true);
@@ -106,18 +108,18 @@ export function zipEntries(zip) {
   const dv = new DataView(zip.buffer, zip.byteOffset, zip.byteLength);
   let e = -1;
   for (let i = zip.length - 22; i >= Math.max(0, zip.length - 22 - 0xffff); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
-  if (e < 0) throw new Error('it is not a zip file');
+  if (e < 0) throw Object.assign(new Error('it is not a zip file'), { key: 'it is not a zip file' });
   const count = dv.getUint16(e + 10, true), start = dv.getUint32(e + 16, true);
-  if (count === 0xffff || start === 0xffffffff) throw new Error('the zip is in the Zip64 format, which this page does not read');
+  if (count === 0xffff || start === 0xffffffff) throw Object.assign(new Error('the zip is in the Zip64 format, which this page does not read'), { key: 'the zip is in the Zip64 format, which this page does not read' });
   const out = [];
   let p = start;
   for (let k = 0; k < count; k++) {
-    if (p + 46 > zip.length || dv.getUint32(p, true) !== 0x02014b50) throw new Error('the zip is damaged');
+    if (p + 46 > zip.length || dv.getUint32(p, true) !== 0x02014b50) throw Object.assign(new Error('the zip is damaged'), { key: 'the zip is damaged' });
     const flags = dv.getUint16(p + 8, true), method = dv.getUint16(p + 10, true);
     const compressed = dv.getUint32(p + 20, true), size = dv.getUint32(p + 24, true);
     const n = dv.getUint16(p + 28, true), x = dv.getUint16(p + 30, true), c = dv.getUint16(p + 32, true);
     const name = fromUtf8.decode(zip.subarray(p + 46, p + 46 + n));
-    if (flags & 1) throw new Error(`${name} is encrypted`);
+    if (flags & 1) throw Object.assign(new Error(`${name} is encrypted`), { key: '{name} is encrypted', vars: { name } });
     out.push({ name, size, method, compressed, crc: dv.getUint32(p + 16, true), offset: dv.getUint32(p + 42, true) });
     p += 46 + n + x + c;
   }
@@ -127,18 +129,19 @@ export function zipEntries(zip) {
 // The bytes of one entry.
 export async function zipRead(zip, entry) {
   const dv = new DataView(zip.buffer, zip.byteOffset, zip.byteLength), o = entry.offset;
-  if (dv.getUint32(o, true) !== 0x04034b50) throw new Error(`${entry.name}: the zip is damaged`);
+  if (dv.getUint32(o, true) !== 0x04034b50) throw Object.assign(new Error(`${entry.name}: the zip is damaged`), { key: '{name}: the zip is damaged', vars: { name: entry.name } });
   const from = o + 30 + dv.getUint16(o + 26, true) + dv.getUint16(o + 28, true);
   const raw = zip.subarray(from, from + entry.compressed);
   let data;
   if (entry.method === 0) data = raw.slice();
   else if (entry.method === 8) {
     try { data = await through(raw, new DecompressionStream('deflate-raw')); }
-    catch { throw new Error(`${entry.name} is damaged: it does not unpack`); }
+    catch { throw Object.assign(new Error(`${entry.name} is damaged: it does not unpack`), { key: '{name} is damaged: it does not unpack', vars: { name: entry.name } }); }
   }
-  else throw new Error(`${entry.name} is packed in a way this page does not read (method ${entry.method})`);
-  if (data.length !== entry.size) throw new Error(`${entry.name}: ${data.length} of ${entry.size} bytes`);
-  if (crc32(data) !== entry.crc) throw new Error(`${entry.name} is damaged: its checksum does not match`);
+  else throw Object.assign(new Error(`${entry.name} is packed in a way this page does not read (method ${entry.method})`),
+    { key: '{name} is packed in a way this page does not read (method {method})', vars: { name: entry.name, method: entry.method } });
+  if (data.length !== entry.size) throw Object.assign(new Error(`${entry.name}: ${data.length} of ${entry.size} bytes`), { key: '{name}: {got} of {size} bytes', vars: { name: entry.name, got: data.length, size: entry.size } });
+  if (crc32(data) !== entry.crc) throw Object.assign(new Error(`${entry.name} is damaged: its checksum does not match`), { key: '{name} is damaged: its checksum does not match', vars: { name: entry.name } });
   return data;
 }
 
@@ -150,18 +153,18 @@ export async function zipBlobEntries(blob) {
   const tail = new Uint8Array(await blob.slice(tailFrom).arrayBuffer()), tv = new DataView(tail.buffer);
   let e = -1;
   for (let i = tail.length - 22; i >= 0; i--) if (tv.getUint32(i, true) === 0x06054b50) { e = i; break; }
-  if (e < 0) throw new Error('it is not a zip file');
+  if (e < 0) throw Object.assign(new Error('it is not a zip file'), { key: 'it is not a zip file' });
   const count = tv.getUint16(e + 10, true), dirSize = tv.getUint32(e + 12, true), start = tv.getUint32(e + 16, true);
-  if (count === 0xffff || start === 0xffffffff) throw new Error('the zip is in the Zip64 format, which this page does not read');
+  if (count === 0xffff || start === 0xffffffff) throw Object.assign(new Error('the zip is in the Zip64 format, which this page does not read'), { key: 'the zip is in the Zip64 format, which this page does not read' });
   const dir = new Uint8Array(await blob.slice(start, start + dirSize).arrayBuffer()), dv = new DataView(dir.buffer);
   const out = [];
   let p = 0;
   for (let k = 0; k < count; k++) {
-    if (p + 46 > dir.length || dv.getUint32(p, true) !== 0x02014b50) throw new Error('the zip is damaged');
+    if (p + 46 > dir.length || dv.getUint32(p, true) !== 0x02014b50) throw Object.assign(new Error('the zip is damaged'), { key: 'the zip is damaged' });
     const flags = dv.getUint16(p + 8, true), method = dv.getUint16(p + 10, true);
     const n = dv.getUint16(p + 28, true), x = dv.getUint16(p + 30, true), c = dv.getUint16(p + 32, true);
     const name = fromUtf8.decode(dir.subarray(p + 46, p + 46 + n));
-    if (flags & 1) throw new Error(`${name} is encrypted`);
+    if (flags & 1) throw Object.assign(new Error(`${name} is encrypted`), { key: '{name} is encrypted', vars: { name } });
     out.push({ name, method, crc: dv.getUint32(p + 16, true), compressed: dv.getUint32(p + 20, true), size: dv.getUint32(p + 24, true),
       offset: dv.getUint32(p + 42, true) });
     p += 46 + n + x + c;
@@ -173,16 +176,17 @@ export async function zipBlobEntries(blob) {
 // keeps a large Blob on disk). Its size and CRC-32 are checked.
 export async function zipBlobEntry(blob, entry) {
   const head = new DataView(await blob.slice(entry.offset, entry.offset + 30).arrayBuffer());
-  if (head.byteLength < 30 || head.getUint32(0, true) !== 0x04034b50) throw new Error(`${entry.name}: the zip is damaged`);
+  if (head.byteLength < 30 || head.getUint32(0, true) !== 0x04034b50) throw Object.assign(new Error(`${entry.name}: the zip is damaged`), { key: '{name}: the zip is damaged', vars: { name: entry.name } });
   const from = entry.offset + 30 + head.getUint16(26, true) + head.getUint16(28, true);
   const raw = blob.slice(from, from + entry.compressed);
   let data;
   if (entry.method === 0) data = raw;
   else if (entry.method === 8) {
     try { data = await new Response(raw.stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob(); }
-    catch { throw new Error(`${entry.name} is damaged: it does not unpack`); }
-  } else throw new Error(`${entry.name} is packed in a way this page does not read (method ${entry.method})`);
-  if (data.size !== entry.size) throw new Error(`${entry.name}: ${data.size} of ${entry.size} bytes`);
-  if (await crc32Blob(data) !== entry.crc) throw new Error(`${entry.name} is damaged: its checksum does not match`);
+    catch { throw Object.assign(new Error(`${entry.name} is damaged: it does not unpack`), { key: '{name} is damaged: it does not unpack', vars: { name: entry.name } }); }
+  } else throw Object.assign(new Error(`${entry.name} is packed in a way this page does not read (method ${entry.method})`),
+    { key: '{name} is packed in a way this page does not read (method {method})', vars: { name: entry.name, method: entry.method } });
+  if (data.size !== entry.size) throw Object.assign(new Error(`${entry.name}: ${data.size} of ${entry.size} bytes`), { key: '{name}: {got} of {size} bytes', vars: { name: entry.name, got: data.size, size: entry.size } });
+  if (await crc32Blob(data) !== entry.crc) throw Object.assign(new Error(`${entry.name} is damaged: its checksum does not match`), { key: '{name} is damaged: its checksum does not match', vars: { name: entry.name } });
   return data;
 }
