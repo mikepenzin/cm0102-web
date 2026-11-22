@@ -415,6 +415,12 @@
     #app:not(.fs) #bar button, #app:not(.fs) #bar a.coffee { flex: none; width: 42px; height: 36px; padding: 0; justify-content: center; }
     #app:not(.fs) #stage { min-width: 0; }
   }
+  /* ... and on a touch screen, kept off the top edge: iOS keeps it for its own swipe (Notification Centre) and a tap
+     there may never reach the page. The game's Action button sits in the picture's top right corner, and two players
+     on iPhones could not press it with the phone on its side (21 and 22 November 2026). */
+  @media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+    #app { padding-top: max(env(safe-area-inset-top), 20px); }
+  }
 
   /* Full screen: the bar becomes a small set of buttons over the corner of the game. */
   #app.fs #bar { position: absolute; top: calc(8px + env(safe-area-inset-top)); right: calc(8px + env(safe-area-inset-right));

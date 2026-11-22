@@ -539,7 +539,7 @@ const PORT = 8097;
         // 21 November 2026: the bar above took an eighth of it).
         sideways = await bp.evaluate(() => { const bar = document.getElementById('bar').getBoundingClientRect(), st = document.getElementById('stage').getBoundingClientRect();
           const shown = [...document.querySelectorAll('#bar > button, #bar > a')].filter((e) => e.offsetParent !== null).map((e) => e.getBoundingClientRect());
-          return { barW: Math.round(bar.width), barRight: Math.round(bar.right), barH: Math.round(bar.height), stageH: Math.round(st.height), stageW: Math.round(st.width),
+          return { barW: Math.round(bar.width), barRight: Math.round(bar.right), barH: Math.round(bar.height), stageH: Math.round(st.height), stageTop: Math.round(st.top), stageW: Math.round(st.width),
             vw: innerWidth, vh: innerHeight, column: shown.every((r, i) => i === 0 || r.top > shown[i - 1].top), inBar: shown.every((r) => r.bottom <= bar.bottom + 0.5) }; });
       }
       const hs = await bp.evaluate(() => [...document.querySelectorAll('#bar > button, #bar > a')].filter((e) => e.offsetParent !== null)
@@ -551,8 +551,8 @@ const PORT = 8097;
     check('the bar\'s buttons, Buy me a coffee among them, are one height on a computer, a phone, an iPad and a small window',
       barSizes.every((row) => { const hs = row.split(': ')[1].split(' ').map((x) => x.split('=')[1]); return hs.length >= 2 && hs.every((h) => h === hs[0]) && row.includes('coffee-open'); }),
       barSizes.join(' | '));
-    check('a phone held sideways: the bar is a column at the right edge, and the game has the whole height',
-      sideways && sideways.column && sideways.inBar && sideways.barRight === sideways.vw && sideways.barW <= 60 && sideways.stageH === sideways.vh
+    check('a phone held sideways: the bar is a column at the right edge, and the game has the height but the 20 pixels at the top edge (iOS keeps that edge)',
+      sideways && sideways.column && sideways.inBar && sideways.barRight === sideways.vw && sideways.barW <= 60 && sideways.stageH === sideways.vh - 20 && sideways.stageTop === 20
         && sideways.stageW === sideways.vw - sideways.barW, JSON.stringify(sideways));
     await p.click('#help-open');
     const helpText = (await p.textContent('#help')).replace(/\s+/g, ' ');
