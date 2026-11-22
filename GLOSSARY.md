@@ -259,7 +259,7 @@ The saved games of a member kept in the cloud and the same on every device where
 _Avoid_: cloud sync, backup
 
 **Scout**:
-The Editor's tab that finds a saved game's players by age, position, potential, ability and attributes. A free player sees the first 3 matches; a member sees them all.
+The Editor's tab that finds a saved game's players by age, position, potential, ability and attributes. A free player sees the first 3 matches; a member sees the best 100.
 _Avoid_: search (for the Scout), player finder, Genie Scout
 
 **Settings file**:

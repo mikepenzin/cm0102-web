@@ -991,6 +991,7 @@ function runEngine(files, info) {
       const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running,
         access: () => scoutAccess(account.me, keptMember()), inviteKind: () => inviteKind(account.me), invite: () => account.open(),
         onSetChange: (name, what) => (what === 'deleted' ? setSync?.deleted(name) : setSync?.run()) });
+      account.onAccountChange(() => editor.redraw());      // joined or signed out: the open Scout follows
       $('editor-open').hidden = false;
       $('editor-open').onclick = () => editor.open();
       const sets = mountSetsPanel({ FS, root: SAVE_DIR, sync, log, toast, module: () => window.Module, cloud: () => setSync,

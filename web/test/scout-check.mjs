@@ -82,6 +82,15 @@ async function editorOn(ctx, me) {
   await p.waitForSelector('#editor[open] .ed-row');
   return p;
 }
+// Scout chosen at once, while the save is still opening.
+async function scoutWhileOpening(ctx, me) {
+  const p = await editorOn(ctx, me);
+  await p.click('#editor-close');
+  await p.click('#saves-open');
+  await p.click('#saves-list tr:has-text("Scouting 2001-07-29.sav") button[data-edit]');
+  await p.click('#editor-tabs [data-pane="scout"]');
+  return p;
+}
 const scoutTab = async (p) => { await p.click('#editor-tabs [data-pane="scout"]'); await p.waitForSelector('#scout-results .ed-row'); };
 const rowNames = (p) => p.$$eval('#scout-results .ed-row b', (b) => b.map((x) => x.textContent));
 const pageHtml = (p) => p.evaluate(() => document.documentElement.outerHTML);
@@ -108,6 +117,29 @@ try {
     check('a result opens the player\'s form', (await p.textContent('#editor-form h3')).includes('Scoutson'));
     await p.click('#scout-invite');
     check('the invitation opens the Account dialog', await p.isVisible('#account[open]'));
+    // The player joins while the Scout is open: the account changes (the sign-in window's message), the Scout shows all.
+    await ctx.unroute('**/api/me');
+    await ctx.route('**/api/me', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(ME.member) }));
+    await p.evaluate(() => new BroadcastChannel('cm-account').postMessage({ ok: true }));
+    await p.waitForFunction(() => document.querySelectorAll('#scout-results .ed-row').length > 3, null, { timeout: 8000 }).catch(() => {});
+    check('the account becomes a member while the Scout is open: it shows every match at once, no invitation',
+      (await rowNames(p)).length === fifteenPlus && !(await p.$('#scout-invite')), (await rowNames(p)).join());
+    await ctx.close();
+  }
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await scoutWhileOpening(ctx, ME.free);
+    await p.waitForSelector('#scout-results .ed-row', { timeout: 10000 }).catch(() => {});
+    const html = await pageHtml(p);
+    check('Scout chosen while the save opens: its matches show, and the hidden Players list stays empty',
+      (await rowNames(p)).length === 3 && (await p.$$('#editor-results .ed-row')).length === 0 && NAMES.slice(3).every((n) => !html.includes(n.split(' ')[0])),
+      `${(await rowNames(p)).length} matches, ${(await p.$$('#editor-results .ed-row')).length} in the Players list`);
+    // A search typed in Players, then Scout before its pause ends: the Players list stays empty.
+    await p.click('#editor-tabs [data-pane="players"]');
+    await p.fill('#editor-search', 'scoutson');
+    await p.click('#editor-tabs [data-pane="scout"]');
+    await p.waitForTimeout(400);
+    check('a search typed just before choosing Scout does not fill the hidden Players list', (await p.$$('#editor-results .ed-row')).length === 0);
     await ctx.close();
   }
   {

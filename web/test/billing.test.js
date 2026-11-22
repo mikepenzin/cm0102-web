@@ -187,6 +187,10 @@ test('the legal pages: pricing, terms, refunds, privacy, with the seller, the co
     assert.doesNotMatch(html, /paddle/i, `${page}: Paddle is not named (no one bought through it)`);
     assert.match(html, /Membership/, `${page}: the plan is Membership`);
     if (page === 'pricing' || page === 'terms') assert.match(html, /Cloud Saves[\s\S]*Scout/, `${page}: what Membership holds`);
+    if (page === 'pricing' || page === 'terms') {
+      assert.doesNotMatch(html, /every (player|one)[^.]*match/, `${page}: the Scout shows at most 100 (scout.js SCOUT_LIMIT): no promise of every match`);
+      assert.match(html, /best 100/, `${page}: the limit said`);
+    }
     assert.match(html, /<footer class="made">Made with <svg[^>]*aria-label="love"[\s\S]*?<\/svg> by A\. Seller<\/footer>/, `${page}: the footer`);
   }
   assert.match(await (await fetch(`${base}/terms`)).text(), /A\. Seller/);

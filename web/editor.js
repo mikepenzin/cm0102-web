@@ -197,8 +197,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       model = await SaveGame.open(await readBlob(FS, `${dir}/${file}`));
       log(`page: ${file} opened in the editor: ${model.players().length} players`);
       dirty();
-      results();
-      search.focus();
+      redrawList();                                   // the Scout, if it was chosen while the save opened
+      if (pane === 'players') search.focus();
     } catch (e) {
       model = null;
       list.innerHTML = '';
@@ -273,6 +273,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // show: draw the pane now (false while a save is still opening).
   function setPane(which, show = true) {
     pane = which;
+    clearTimeout(timer);                              // a search typed in Players does not fill the list behind the Scout
     for (const b of tabs.querySelectorAll('[data-pane]')) b.setAttribute('aria-selected', String(b.dataset.pane === pane));
     const scouting = pane === 'scout';
     dialog.querySelector('.ed-search').hidden = scouting;
@@ -490,7 +491,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // ---- Wiring ----
 
   let timer = 0;
-  search.oninput = () => { clearTimeout(timer); timer = setTimeout(() => model && results(), 120); };
+  search.oninput = () => { clearTimeout(timer); timer = setTimeout(() => model && pane === 'players' && results(), 120); };
   list.onclick = (e) => { const b = e.target.closest('[data-row]'); if (b) show(Number(b.dataset.row)); };
   tabs.onclick = (e) => { const b = e.target.closest('[data-pane]'); if (b && b.dataset.pane !== pane) setPane(b.dataset.pane); };
   found.onclick = (e) => {
@@ -555,6 +556,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   return {
     openSave,
     openSet,
+    // The account changed (account.js): the Scout's matches for the account as it is now.
+    redraw() { if (dialog.open && model && pane === 'scout') runScout(); },
     open() { if (!dialog.open) dialog.showModal(); say(''); showHome(); },
   };
 }
