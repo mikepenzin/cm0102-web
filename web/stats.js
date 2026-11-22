@@ -1,7 +1,7 @@
 // Usage statistics of the page (web/README.md, "Statistics and the admin panel"; the server's side: stats.mjs).
 //
-// A heartbeat each minute while the game runs: the seconds played since the last one, and what the user folder holds
-// (saves, older copies, data sets: their number and size). A second counts as played when the tab is visible and the
+// A heartbeat each minute while the game runs: the seconds played since the last one, the browser's language
+// (navigator.language), and what the user folder holds (saves, older copies, data sets: their number and size). A second counts as played when the tab is visible and the
 // player clicked, typed or touched in the last 5 minutes. The browser has a random id of its own (localStorage
 // cm0102-anon): no name, no email and no IP address go with it; a signed-in account goes as the account. Error reports
 // (a stop of the game) go with the last lines of the engine log, a few per visit.
@@ -71,7 +71,7 @@ export function startStats({ info, state, extra = () => ({}), isRunning = () => 
     let s = null;
     try { s = state(); } catch { /* the folder is not there yet */ }
     try {
-      const r = await post('/api/stats/beat', { anon: anonId(), session, seconds, state: s, ...extra() }, keepalive);
+      const r = await post('/api/stats/beat', { anon: anonId(), session, seconds, state: s, lang: navigator.language, ...extra() }, keepalive);
       if (r.ok) played = Math.max(0, played - seconds);
     } catch { /* offline: the seconds go with the next one */ }
   }

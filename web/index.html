@@ -492,8 +492,8 @@
     <div id="busy" aria-hidden="true"><i class="spin"></i><span data-t>Working…</span></div>
     <div id="toasts" role="status" aria-live="polite"></div>
     <div id="consent" role="dialog" aria-labelledby="consent-title" hidden>
-      <p><b id="consent-title" data-t>Help us improve the game?</b> <span data-t>May we count how long you play and how many saves and data
-        sets you keep, under a random id of this browser? Never your files, your name or your IP address. If the game
+      <p><b id="consent-title" data-t>Help us improve the game?</b> <span data-t>May we count how long you play, how many saves and data
+        sets you keep and your browser's language, under a random id of this browser? Never your files, your name or your IP address. If the game
         stops on an error, its message goes too.</span></p>
       <div class="row"><button id="consent-yes" data-t>Allow</button><button id="consent-no" data-t>No thanks</button>
         <a href="/privacy" target="_blank" rel="noopener">Privacy</a> <span class="legal-en" data-t>(English)</span></div>
@@ -581,6 +581,8 @@
   <dialog id="help" aria-labelledby="help-title">
     <h2 id="help-title" data-t>How to play here</h2>
     <p class="row lang-row"><label for="help-lang" data-t>Language</label> <select id="help-lang"></select></p>
+    <p id="help-machine" class="small" hidden><span data-t>Translated by machine: tell us a better word.</span>
+      <button id="help-machine-report" class="link" data-t hidden>Send to the developer</button></p>
     <div class="dlg-body">
     <p class="small" data-t>The game runs in this tab, on your device. The mouse and the keys work as in the game. On the tactics
     board, drag a player with the right button to give him a run. On a Mac, Control and a click is the right button, and
@@ -619,8 +621,8 @@
     address bar. It then opens without the browser's bars, and it starts without a connection once it has run.</p>
     <div id="help-stats" hidden>
       <h3 data-t>Statistics</h3>
-      <label class="small check"><input type="checkbox" id="help-stats-on"> <span data-t>Send usage statistics: play time, and how many
-        saves and data sets you have. They go with a random id of this browser (or your account when you are signed in),
+      <label class="small check"><input type="checkbox" id="help-stats-on"> <span data-t>Send usage statistics: play time, how many
+        saves and data sets you have, and the browser's language. They go with a random id of this browser (or your account when you are signed in),
         never your files, and no IP address is kept. When the game stops on an error, its message and the last lines of the
         engine log go too.</span> <a href="/privacy" target="_blank" rel="noopener">Privacy</a> <span class="legal-en" data-t>(English)</span></label>
     </div>

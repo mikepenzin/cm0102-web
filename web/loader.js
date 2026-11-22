@@ -1345,6 +1345,8 @@ async function start() {
     report = mountReport({ FS: () => window.Module?.FS ?? null, lines: () => lines, who: () => stats?.who?.() ?? {}, inPlay: () => saveInPlay(), log });
     $('help-report').hidden = false;
     $('help-report-open').onclick = () => { $('help').close(); report.open({ where: 'Help' }); };
+    $('help-machine-report').hidden = false;
+    $('help-machine-report').onclick = () => { $('help').close(); report.open({ where: 'Help, a better word' }); };
   }
   const { problems, warnings } = requirements(info);
   sweepDisk().then((n) => { if (n) log(`page: ${n} unfinished file${n > 1 ? 's' : ''} of an earlier visit removed from the browser's disk`); });
@@ -1380,6 +1382,9 @@ async function start() {
   const [have, kept] = await Promise.all([cachedBytes(cache, info.files), keepStorage()]);
   log(`page: browser storage ${kept}; ${mb(have)} of the game files already in this browser`);
   setStorageKept(kept);
+  // In a language other than English, Help says the words are a machine's, and asks for better ones.
+  $('help-machine').hidden = language() === 'en';
+  onLanguage(() => { $('help-machine').hidden = language() === 'en'; });
   $('help-storage').textContent = ` ${storageWarning(false, t)}`;
   onLanguage(() => { $('help-storage').textContent = ` ${storageWarning(false, t)}`; });
   const toGet = info.totalBytes - have;

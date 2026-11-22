@@ -420,6 +420,8 @@ const PORT = 8097;
     check('Help, Statistics on: the id is made, the answer and a heartbeat go',
       (await p.evaluate(() => localStorage.getItem('cm0102-stats'))) === 'on' && /^[0-9a-f-]{36}$/.test(await p.evaluate(() => localStorage.getItem('cm0102-anon')) ?? '')
         && statsCalls.some((c) => c === '/api/stats/choice {"choice":"on"}') && statsCalls.some((c) => c.startsWith('/api/stats/beat')), statsCalls.join(' | ').slice(0, 300));
+    check('the heartbeat carries the browser\'s language', statsCalls.some((c) => c.startsWith('/api/stats/beat') && /"lang":"[a-z]{2}(-[A-Za-z]+)?"/.test(c)),
+      statsCalls.filter((c) => c.startsWith('/api/stats/beat')).join(' | ').slice(0, 300));
     await p.evaluate(() => document.getElementById('help-stats-on').click());
     check('and off again: the id is deleted', (await p.evaluate(() => [localStorage.getItem('cm0102-anon'), localStorage.getItem('cm0102-stats')])).join() === ',off');
     // Restart Game (the game's restart_game 0x68dbc0 through WinExec, host_restart in host/web.c): the page saves the
