@@ -121,6 +121,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     fileLabel.textContent = '';
     body.hidden = true;
     home.hidden = false;
+    $('editor-home-button').hidden = true;            // the start itself: no way back to it
     dirty();
     const saves = listSaves(FS).saves, sets = dataSets();
     const edit = esc(t('Edit')), del = esc(t('Delete'));
@@ -173,6 +174,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
 
   function showEditing(label, what) {
     home.hidden = true;
+    $('editor-home-button').hidden = false;
     body.hidden = false;
     body.classList.remove('detail');
     title.textContent = what;

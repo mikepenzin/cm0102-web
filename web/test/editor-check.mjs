@@ -51,6 +51,7 @@ async function dataSets(p, label) {
   await p.click('#editor-open');
   await p.waitForSelector('#editor[open] #editor-new');
   check(`${label}: the Editor lists the saved games and offers a new data set`, (await p.$$('[data-open-save]')).length === 2);
+  check(`${label}: on the Editor's start, no way back to it`, !(await p.isVisible('#editor-home-button')));
   await p.fill('#editor-new-name', 'May 2026');
   await p.click('#editor-new');
   check(`${label}: a name with a month and year is refused`, /season/.test(await p.textContent('#editor-note')));
