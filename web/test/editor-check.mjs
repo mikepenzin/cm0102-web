@@ -68,8 +68,10 @@ async function dataSets(p, label) {
   await p.fill('[data-f="Finishing"]', '20');
   await p.fill('[data-f="club"]', 'AC Milan (Italy)');
   await p.fill('[data-f="common"]', 'Pinturicchio');
-  await p.click('#editor-apply');
-  check(`${label}: Apply`, /^Applied/.test(await p.textContent('#editor-note')), await p.textContent('#editor-note'));
+  await p.press('[data-f="common"]', 'Tab');
+  check(`${label}: a change counts when the field is left, with no Apply`, /^Applied/.test(await p.textContent('#editor-note')) && !(await p.$('#editor-apply')),
+    await p.textContent('#editor-note'));
+  check(`${label}: the Save button shows once there is a change`, await p.isVisible('#editor-save'));
   await p.click('#editor-add');
   await p.waitForSelector('#editor-form [data-f="first"]');
   await p.fill('[data-f="first"]', 'Marco');
@@ -82,7 +84,7 @@ async function dataSets(p, label) {
   check(`${label}: Add this player`, /^Added/.test(await p.textContent('#editor-note')), await p.textContent('#editor-note'));
   check(`${label}: two players changed`, (await p.textContent('#editor-save')) === 'Save the data set (2 changed)');
   await p.fill('[data-f="club"]', 'Atletico Nowhere');
-  await p.click('#editor-apply');
+  await p.press('[data-f="club"]', 'Tab');
   check(`${label}: a club that does not exist is refused`, /no club called/.test(await p.textContent('#editor-note')));
   await p.click('#editor-save');
   await p.waitForFunction(() => /^Saved:/.test(document.getElementById('editor-note').textContent), null, { timeout: 30000 });
@@ -185,15 +187,18 @@ try {
         && (await p.inputValue('[data-f="Determination"]')) === '16' && (await p.inputValue('[data-f="born"]')) === '1974-11-09'
         && (await p.$$('#editor-form section')).length === 7);
     if (touch) check('phone: the list gives way to the player, with a way back', !(await p.isVisible('#editor-search')) && await p.isVisible('.ed-back'));
+    check(`${label}: no Save button before a change`, !(await p.isVisible('#editor-save')));
     await p.fill('[data-f="Pace"]', '20');
     await p.fill('[data-f="ca"]', '195');
-    await p.fill('[data-f="Heading"]', '1');
     await p.fill('[data-f="born"]', '1982-03-01');
-    check(`${label}: a changed field is marked`, await p.$eval('[data-f="Pace"]', (i) => i.classList.contains('changed')));
+    await p.fill('[data-f="Heading"]', '1');
+    await p.press('[data-f="Heading"]', 'Tab');
+    check(`${label}: a changed field is marked, and the focus moves on as in any form`, await p.$eval('[data-f="Pace"]', (i) => i.classList.contains('changed'))
+      && await p.evaluate(() => document.activeElement?.closest?.('#editor-form') !== null && document.activeElement?.dataset?.f !== 'Heading'));
+    check(`${label}: a value is coloured by its rating (Pace 20: high)`, await p.$eval('[data-f="Pace"]', (i) => i.dataset.band === 'high'));
     await shot(p, `${label}-form`);
-    await p.click('#editor-apply');
     const note = await p.textContent('#editor-note');
-    check(`${label}: Apply tells what the game cannot show as asked`, /Heading shows \d+: with this ability the game cannot show it as asked/.test(note), note);
+    check(`${label}: a change tells what the game cannot show as asked`, /Heading shows \d+: with this ability the game cannot show it as asked/.test(note), note);
     check(`${label}: the Save button counts the changed players`, (await p.textContent('#editor-save')) === 'Save the game file (1 changed)');
     await p.click('#editor-save');
     await p.waitForFunction(() => /^Saved:/.test(document.getElementById('editor-note').textContent));

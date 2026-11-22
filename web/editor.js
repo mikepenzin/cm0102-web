@@ -82,7 +82,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     note.className = bad ? 'small bad' : 'small';
   };
   const dirty = () => {
-    saveButton.hidden = !model;
+    saveButton.hidden = !model || edited.size === 0;       // shown once there is a change to save
     saveButton.disabled = edited.size === 0;
     const n = edited.size;
     if (kind === 'set') saveButton.textContent = n ? tn(n, { one: 'Save the data set ({n} changed)', other: 'Save the data set ({n} changed)' }) : t('Save the data set');
@@ -191,7 +191,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     if (!dialog.open) dialog.showModal();
     showEditing(file, t('Edit a saved game'));
     list.innerHTML = `<p class="small">${esc(t('Opening the saved game…'))}</p>`;
-    say(isRunning() ? () => t('If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.') : '');
+    say(isRunning() ? () => t('Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.') : '');
     await later();
     try {
       // From a Blob: the header and the tables the editor uses are read, not the whole save (690 MB for some players).
@@ -325,7 +325,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   }
 
   const num = (key, value, min, max, label = key) => `<label><span>${esc(label)}</span>
-    <input type="number" inputmode="numeric" min="${min}" max="${max}" data-f="${esc(key)}" value="${value}" data-was="${value}"></label>`;
+    <input type="number" inputmode="numeric" min="${min}" max="${max}" data-f="${esc(key)}" value="${value}" data-was="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
   const text = (key, value, label, wide = false) => `<label class="${wide ? 'wide' : ''}"><span>${esc(label)}</span>
     <input type="text" maxlength="50" data-f="${esc(key)}" value="${esc(value)}" data-was="${esc(value)}" autocomplete="off" spellcheck="false"></label>`;
   const date = (key, value, label) => `<label><span>${esc(label)}</span><input type="date" data-f="${key}" value="${value}" data-was="${value}" min="1940-01-01" max="2015-12-31"></label>`;
@@ -341,8 +341,11 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const groupName = groupNames(), attrName = attributeNames(), posName = positionNames();
     const f = row === null ? newPlayer() : model.read(row);
     const x = row === null ? null : model.players().find((p) => p.row === row);
-    const head = row === null ? `<h3>${esc(t('A new player'))}</h3><p class="small">${esc(t('Attributes left at 0 are random: the game sets them when a new game starts.'))}</p>`
-      : `<h3>${esc(playerName(x))}</h3><p class="small">${esc(x.club || t('No club'))} · ${esc(x.nation)}</p>`;
+    const head = row === null
+      ? `<div class="ed-name"><h3>${esc(t('A new player'))}</h3><span class="spacer"></span><button class="primary" id="editor-apply" type="button">${esc(t('Add this player'))}</button>
+        <button id="editor-reset" type="button">${esc(t('Clear'))}</button></div><p class="small">${esc(t('Attributes left at 0 are random: the game sets them when a new game starts.'))}</p>`
+      : `<div class="ed-name"><h3 id="editor-player">${esc(playerName(x))}</h3><span class="spacer"></span><button id="editor-reset" type="button" hidden>${esc(t('Undo changes'))}</button></div>
+        <p class="small" id="editor-player-from">${esc(x.club || t('No club'))} · ${esc(x.nation)}</p>`;
     const clubNow = set ? clubs.find((c) => c.id === f.club) : null;
     const who = set ? `<section><h4>${esc(t('Name and club'))}</h4><div class="ed-grid">
         ${text('first', f.first, t('First name'))}${text('second', f.second, t('Surname'))}${text('common', f.common, t('Known as (optional)'))}
@@ -362,16 +365,34 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       <section><h4>${esc(t('Positions'))} <span class="small">${esc(t('0 to 20; 20 is natural'))}</span></h4><div class="ed-grid pos">
         ${f.positions.map((v, i) => num(`pos${i}`, v, 0, 20, SHORT_POS[i]).replace('<span>', `<span title="${esc(posName[POSITIONS[i]] ?? POSITIONS[i])}">`)).join('')}
       </div></section>
-      ${GROUPS.map((g) => `<section><h4>${esc(groupName[g])}${g === 'Hidden' ? ` <span class="small">${esc(t('the game does not show these'))}</span>` : ''}${set && g === 'Technical' ? ` <span class="small">${esc(t('0 is random'))}</span>` : ''}</h4><div class="ed-grid">
-        ${attrs.filter((a) => a.group === g).map((a) => num(a.name, f.attrs[a.name], set ? 0 : 1, 20, attrName[a.name] ?? a.name)).join('')}</div></section>`).join('')}
-      <div class="row"><button class="primary" id="editor-apply" type="button">${row === null ? esc(t('Add this player')) : esc(t('Apply to {name}', { name: playerName(x) }))}</button>
-        <button id="editor-reset" type="button">${esc(row === null ? t('Clear') : t('Undo changes'))}</button></div>`;
+      <div class="ed-attrs">${GROUPS.map((g) => `<section><h4>${esc(groupName[g])}${g === 'Hidden' ? ` <span class="small">${esc(t('the game does not show these'))}</span>` : ''}${set && g === 'Technical' ? ` <span class="small">${esc(t('0 is random'))}</span>` : ''}</h4><div class="ed-grid">
+        ${attrs.filter((a) => a.group === g).map((a) => num(a.name, f.attrs[a.name], set ? 0 : 1, 20, attrName[a.name] ?? a.name)).join('')}</div></section>`).join('')}</div>`;
     body.classList.add('detail');
     form.scrollTop = 0;
     form.querySelector('.ed-back').onclick = () => { body.classList.remove('detail'); current = null; if (pane === 'scout') runScout(); else results(); };
-    $('editor-reset').onclick = () => show(row);
-    $('editor-apply').onclick = () => apply(row);
-    form.oninput = (e) => { const i = e.target.closest('[data-f]'); if (i) i.classList.toggle('changed', i.value !== i.dataset.was); };
+    if (row === null) {
+      form.onchange = null;                           // the form is the one of the player shown before: not his any more
+      $('editor-reset').onclick = () => show(null);
+      $('editor-apply').onclick = () => apply(null);
+    } else {
+      const was = f, wasEdited = edited.has(row);
+      $('editor-reset').onclick = () => {
+        try { model.write(row, was); } catch { /* as it was read: it writes */ }
+        if (!wasEdited) edited.delete(row);
+        if (index) scoutUpdate(index, model, row);
+        dirty();
+        show(row);
+        say(() => t('{name} is as he was.', { name: playerName(x) }));
+      };
+      // A change counts when its field is left (the change event), as in any form: no Apply to find.
+      form.onchange = (e) => { if (e.target.closest('[data-f]')) apply(row); };
+    }
+    form.oninput = (e) => {
+      const i = e.target.closest('[data-f]');
+      if (!i) return;
+      i.classList.toggle('changed', i.value !== i.dataset.was);
+      if (i.dataset.band) i.dataset.band = band(i.value);
+    };
     if (set && row === null) {                        // the club's nation is a good guess for a new player's
       const club = form.querySelector('[data-f="club"]');
       club.onchange = () => { const c = clubByLabel(club.value); if (c && c.nation >= 0) form.querySelector('[data-f="nation"]').value = String(c.nation); };
@@ -390,6 +411,34 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const s = String(v ?? '').trim();
     if (!s) return null;
     return clubs.find((c) => clubLabel(c) === s) ?? clubs.find((c) => c.name === s) ?? undefined;
+  }
+
+  // A rating's band, for its colour: the game's 1-20 scale; 0 (random in a data set) none.
+  function band(v) {
+    const n = Number(v);
+    return !(n > 0) ? 'none' : n <= 5 ? 'low' : n <= 10 ? 'mid' : n <= 15 ? 'good' : 'high';
+  }
+
+  // After a change of a shown player: the fields the game shows otherwise (a relative attribute at a new ability)
+  // take the value it shows; the name and club in the head follow; Undo shows.
+  function refresh(row) {
+    const f = model.read(row);
+    const set = kind === 'set';
+    for (const a of set ? DATA_ATTRIBUTES : ATTRIBUTES) {
+      const i = form.querySelector(`[data-f="${CSS.escape(a.name)}"]`);
+      if (i && document.activeElement !== i && Number(i.value) !== f.attrs[a.name]) {
+        i.value = f.attrs[a.name];
+        i.classList.toggle('changed', i.value !== i.dataset.was);
+        if (i.dataset.band) i.dataset.band = band(i.value);
+      }
+    }
+    const x = model.players().find((p) => p.row === row);
+    if (x) {
+      $('editor-player').textContent = playerName(x);
+      $('editor-player-from').textContent = `${x.club || t('No club')} · ${x.nation}`;
+    }
+    $('editor-reset').hidden = !edited.has(row);
+    redrawList();
   }
 
   function apply(row) {
@@ -416,7 +465,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         const r = row === null ? model.add(f) : (model.write(row, f), row);
         edited.add(r);
         dirty();
-        show(r);
+        if (row === null) show(r); else refresh(r);
         say(row === null ? () => t('Added. Save the data set to keep the changes.') : () => t('Applied. Save the data set to keep the changes.'));
         return;
       }
@@ -424,7 +473,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       edited.add(row);
       if (index) scoutUpdate(index, model, row);      // the Scout reads him again, not the whole save
       dirty();
-      show(row);
+      refresh(row);
       const m = Object.entries(missed);
       say(m.length ? () => {
         const attrName = attributeNames();

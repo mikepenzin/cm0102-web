@@ -241,9 +241,8 @@ async function editorVideo() {
   await v.say('His ability, positions, attributes and hidden attributes', 'Attributes go from 1 to 20, ability from 1 to 200', 3800);
   await v.type('[data-f="ca"]', '190');
   await v.type('[data-f="Pace"]', '20');
-  await v.say('A changed field is marked', 'change as many as you like', 2600);
-  await v.click('#editor-apply');
-  await v.say('Apply keeps the changes of this player', 'then pick another, or save', 3000);
+  await p.press('[data-f="Pace"]', 'Tab');
+  await v.say('A changed field is marked, and counts at once', 'change as many as you like, then pick another, or save', 3400);
   await v.point('#editor-save');
   await v.say('Save writes them into the saved game', 'The save as it was is kept too, as an older copy', 3400);
   await v.click('#editor-save');
@@ -275,7 +274,7 @@ async function editorVideo() {
   await p.waitForSelector('#editor-form [data-f="club"]');
   await v.say('Move a player to another club, change his contract or ratings', '', 2800);
   await v.type('[data-f="club"]', 'AC Milan (Italy)');
-  await v.click('#editor-apply');
+  await p.press('[data-f="club"]', 'Tab');
   await v.point('#editor-add');
   await v.say('Add a player creates a new one', '', 2400);
   await v.click('#editor-save');

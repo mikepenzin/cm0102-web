@@ -583,8 +583,13 @@ Saved games has an **Edit** button by each save. It opens the save editor (`edit
 - Search a player by name or club; the best players come first.
 - Change current and potential ability, date of birth, the twelve position ratings, the 31 attributes the game shows
   (Technical, Mental, Physical, Goalkeeping, with Determination) and the hidden ones (Consistency, Important Matches,
-  Injury Proneness, the feet, One On Ones and others). **Apply** puts the change into the save; **Save the game file**
-  writes it.
+  Injury Proneness, the feet, One On Ones and others). A change counts as soon as its field is left (Tab, Enter or a
+  tap elsewhere), with no Apply to find at the end of the form; **Undo changes** beside the name puts the player back
+  as he was shown, and **Save the game file**, shown once there is a change, writes them. A new player of a data set
+  has **Add this player** and **Clear** beside his name instead.
+- The values are coloured on the game's 1–20 scale (low, middling, good, high; a position only where he plays), and
+  the attribute groups stand side by side on a computer, as on the game's profile screen. On a phone the head is one
+  line (the file's name, Save, Close) and a player's form has one way back, to the list.
 - The numbers are those of the game's player profile. The game keeps 18 attributes relative to current ability (the
   technical ones, Anticipation, Decisions, Positioning): the editor turns them into the right bytes, and keeps them
   when the ability changes. A rating that the game cannot show with that ability (Heading 3 at ability 195, for
@@ -612,7 +617,7 @@ more there), the lowest potential (PA) and ability (CA), and up to three attribu
 the 1–20 scale the game shows (savedit.js's `read`: the game's own ratings, 0x543540). The matches come best first
 (PA, then CA, then name), at most 100; one opens the player's form, and Back on a phone returns to them with the
 filters kept. The players are read once when the tab opens (60,000 in about 200 ms in Node) and a search takes a few
-milliseconds; it runs 250 ms after the last change of a filter. Apply reads only the changed player again
+milliseconds; it runs 250 ms after the last change of a filter. A change of a player reads only him again
 (`scoutUpdate`). The two tabs are tabs to the keys too: the arrow keys, Home and End move between them (through
 keyboard.js's `onPageKey`, since its guard keeps the page's keys from the elements' own listeners). A data set has no
 Scout.
@@ -982,7 +987,7 @@ What to know about the Asyncify engine:
   that joins as a Buy Me a Coffee member in another tab (webhook, Cloud Saves on by themselves, Your membership).
   Needs Playwright.
 - `CM_VIDEO_SAVE=<a .sav> NODE_PATH=$(npm root -g) node web/test/make-videos.mjs <folder> [editor|app]`: the two
-  how-to videos for players, `editor.mp4` (Saved games, Edit, a search, a change, Apply, Save; Play, and the player in
+  how-to videos for players, `editor.mp4` (Saved games, Edit, a search, a change, Save; Play, and the player in
   the game's Find with his new Pace; the Editor button, a new data set, Databases, Use) and `app.mp4` (the start; the
   game's main menu; Saved games: Upload, Download, Download all, Play, and the game where it was left; Game Options,
   Save Game; the Tactics tab; the Databases tab: Get a database from the library, Use; Full screen, Cloud Saves, Help,
@@ -1007,7 +1012,8 @@ What to know about the Asyncify engine:
   editor, the account, Help, Send to the developer, the legal pages and the admin page.
 - `NODE_PATH=$(npm root -g) node web/test/editor-check.mjs`: the editors in Chromium, with a small saved game and a small
   data set in the game's formats (`test/fakes.mjs`). The save editor on a computer and a phone: Edit, search, change,
-  Apply, a rating out of reach, Save, the backup, a file that is not a full save. The data set editor: a name refused,
+  a change that counts when its field is left, a rating out of reach, the colours, Save shown after a change, Save,
+  the backup, a file that is not a full save. The data set editor: a name refused,
   New data set, an edit with a move to another club, Add a player, an unknown club refused, Save, Delete; the Data sets
   of Saved games: Use (through settings.txt and through the runtime call), Download, Upload of a zip and of the 20
   files, Delete. The cloud check adds a data set uploaded on one device that comes to the other.

@@ -147,7 +147,7 @@ try {
     await p.evaluate(() => { window.__reread = false; new MutationObserver(() => { if (/Reading the players/.test(document.getElementById('scout-results').textContent)) window.__reread = true; })
       .observe(document.getElementById('scout-results'), { childList: true, subtree: true }); });
     await p.fill('[data-f="pa"]', '199');
-    await p.click('#editor-apply');
+    await p.press('[data-f="pa"]', 'Tab');
     await p.waitForTimeout(400);
     const after = await rowNames(p);
     check('Apply in the Scout: the matches follow at once, the save not read again', !(await p.evaluate(() => window.__reread)) && after.length > 0,
