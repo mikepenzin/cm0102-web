@@ -27,12 +27,27 @@ import { watchRelease } from './release.js';
 import { watchProgress } from './progress.js';
 import { createTacticSync } from './tacticsync.js';
 import { reserveSaveRoom } from './room.js';
+import { LANGUAGES, LANG_KEY, language, pickLanguage, setLanguage } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const mb = (n) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
 const CONNECTIONS = 6;
 const TOUCH = hasTouch();
+
+// The page's language (i18n.js): ?lang=<code> (checks and screenshots), else the one chosen in Help, else the browser's
+// when the game speaks it, else English. Only a choice made in Help is kept; the start box shows in that language.
+const langParam = new URLSearchParams(location.search).get('lang');
+const keptLang = (() => { try { return localStorage.getItem(LANG_KEY); } catch { return null; } })();
+await setLanguage(pickLanguage({ stored: langParam ?? keptLang, browser: navigator.languages ?? [navigator.language] }), { keep: false });
+{
+  const select = $('help-lang');
+  for (const { code, name } of LANGUAGES) select.add(new Option(name, code));
+  select.value = language();
+  select.addEventListener('change', () => {
+    setLanguage(select.value, { storage: (() => { try { return localStorage; } catch { return null; } })() }).then((code) => { select.value = code; });
+  });
+}
 
 const lines = [];
 let progress = null;                                   // the game's long jobs in the bar (progress.js)

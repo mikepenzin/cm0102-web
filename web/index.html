@@ -505,7 +505,7 @@
     enterkeyhint="done" aria-label="Type into the game">
 
   <dialog id="saves" aria-labelledby="saves-title">
-    <h2 id="saves-title">Saved games</h2>
+    <h2 id="saves-title" data-t>Saved games</h2>
     <div class="tabs" role="tablist" aria-label="Saved games">
       <button role="tab" id="tab-saves" data-tab="saves" aria-selected="true" aria-controls="saves-panel">Saves</button><button role="tab" id="tab-tactics" data-tab="tactics" aria-selected="false" aria-controls="tactics" tabindex="-1">Tactics</button><button role="tab" id="tab-sets" data-tab="sets" aria-selected="false" aria-controls="sets" tabindex="-1">Databases</button>
     </div>
@@ -578,7 +578,8 @@
   </dialog>
 
   <dialog id="help" aria-labelledby="help-title">
-    <h2 id="help-title">How to play here</h2>
+    <h2 id="help-title" data-t>How to play here</h2>
+    <p class="row lang-row"><label for="help-lang" data-t>Language</label> <select id="help-lang"></select></p>
     <div class="dlg-body">
     <p class="small">The game runs in this tab, on your device. The mouse and the keys work as in the game. On the tactics
     board, drag a player with the right button to give him a run. On a Mac, Control and a click is the right button, and

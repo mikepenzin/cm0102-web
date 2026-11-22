@@ -45,3 +45,5 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node web/test/cloud-check.mjs
       - name: Tour check (the first-visit tour on a laptop and a phone)
         run: NODE_PATH="$(npm root -g)" node web/test/tour-check.mjs
+      - name: Language check (the page's language, its choice in Help)
+        run: NODE_PATH="$(npm root -g)" node web/test/i18n-check.mjs
