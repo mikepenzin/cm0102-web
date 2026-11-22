@@ -7,12 +7,14 @@ Asked by Max, 22 November 2026.
 Max sees players from other countries. The game itself speaks nine languages (its Game Settings, Language: the
 `Data/*.lng` files: English, Spanish, French, German, Dutch, Italian, Danish, Norwegian, Portuguese), but the page
 around it (the start box, the bar, Saved games, the editor, Account, Help, the tour, every message) is English only.
+(The game's files hold ten `.lng` files, `swe.lng` among them: language index 10, 0x535930..0x535a60,
+docs/research/2026-10-14-start-new-game-inventory.md. So Swedish too.)
 The page should speak the player's language where the game can too. To learn which languages the players really
 use, the anonymous statistics also count the browser's language.
 
 ## Goals
 
-- The page's own text in the eight other languages of the game: `es`, `pt`, `it`, `fr`, `de`, `nl`, `da`, `no`.
+- The page's own text in the nine other languages of the game: `es`, `pt`, `it`, `fr`, `de`, `nl`, `da`, `no`, `sv`.
 - The language is the browser's when it is one of these (its first match in `navigator.languages`; `nb` and `nn`
   count as `no`), else English. Help has a Language choice (the nine), kept in localStorage (`cm0102-lang`); it
   changes the page at once, with no reload (the game keeps running).
@@ -20,7 +22,8 @@ use, the anonymous statistics also count the browser's language.
 - Plurals by each language's own rules (`Intl.PluralRules`).
 - The statistics: each beat carries the browser's language (`navigator.language`, at most 16 characters); the admin
   page shows the people of the last 30 days by language (the primary subtag: `pt-BR` counts as `pt`), most first. The
-  consent box and the privacy page say that the browser's language is counted.
+  consent box and the privacy page say that the browser's language is counted. Players who said yes before are not
+  asked again (Max, 22 November 2026): the language is coarse, goes with the same random id, and names no one.
 
 ## Non-goals
 
@@ -82,18 +85,30 @@ in `server.mjs`, so the stage, the server and the service worker carry them). Ea
 **The page's text**: every sentence a player reads goes through `t`, `tn` or `data-t`. A sentence now built from
 pieces ("Saved " + name + " in the cloud") becomes one sentence with placeholders ("Saved {name} in the cloud"), so
 each language can order it. Text that names the game's own buttons or screens (Restore Saved Game, Game Options)
-keeps the game's English name in quotes where the game is in English, and the translation of the game's `.lng` file
-for that language where it has one (the translator looks it up there).
+keeps the game's English name, in quotes: the game starts in English for everyone, so that is what the player sees
+on the screen (decided after the builder check).
 
-**The translations**: written by Claude from the English, with the game's own `.lng` files of each language as the
-glossary for football and game words (Saved Game, Tactics, Squad, …), so the page and the game use the same words. A
+**Logs and reports stay English** (decided after the builder check). What the player reads is translated at the
+point it is shown; what goes to the log, to `stats.report` and to Send to the developer keeps the English, so the
+admin page and the reports stay readable and grouped. Where one text does both (`fail(title, detail)` in loader.js,
+the `blocked` problems, an error shown by `say` and logged), the call keeps the English and its variables, and the
+display translates them. Errors thrown in modules the server imports too (zip.js, savedit.js, dataset.js, saves.js,
+upload.js) keep their English `message` and gain `key` and `vars` (the English template and its values); the page
+shows `t(e.key ?? e.message, e.vars)`. Those modules never import i18n.js.
+
+**The translations**: written by Claude from the English, in the usual football words of each language. (The game's
+`.lng` files hold only the names of clubs, nations, competitions, cities and stadiums,
+docs/research/2026-10-13-database-inventory.md; the game's own screen text is in `language.ldb`, whose format is not
+researched; not needed here.) A
 native speaker among the players should read each language before it is announced; until then Help says "Translated
 by machine: tell us a better word" with the report button.
 
 **Checks** (`web/test/i18n.test.js`):
 - every English string passed to `t`/`tn` in the page's scripts (found by a parse of the literal first argument)
-  and every `data-t` text in `index.html` is in each language's table, or is listed as missing; the test fails when
-  any is missing, so a release has no gaps (English stays the floor at run time all the same);
+  and every `data-t` text in `index.html` is in each language's table, or is listed as missing. The regular test
+  (CI) prints the missing ones and does not fail on them, so a change that adds an English sentence can go in before
+  its translations; `I18N_STRICT=1` fails on any gap, run before a language is announced (decided after the builder
+  check);
 - every `{placeholder}` of an English text is in its translation, and none more;
 - no entry of a table whose English is no longer in the page (left behind by an edited sentence);
 - `pickLanguage` cases; plurals for each language (`tn` with 0, 1, 2, 5, 21).
