@@ -34,7 +34,7 @@ export function decodeRuns(raw, size) {
       o += n;
     }
   }
-  if (o < size) throw new Error(`a member ends early: ${o} of ${size} bytes`);
+  if (o < size) throw Object.assign(new Error(`a member ends early: ${o} of ${size} bytes`), { key: 'a member ends early: {got} of {size} bytes', vars: { got: o, size } });
   return { data: out, used: i };
 }
 
@@ -63,7 +63,7 @@ export class SaveFile {
   constructor(bytes) { this._init(bytes, bytes, bytes.length); }
 
   static async open(blob) {
-    if (blob.size < HEADER) throw new Error('it is too short to be a saved game');
+    if (blob.size < HEADER) throw Object.assign(new Error('it is too short to be a saved game'), { key: 'it is too short to be a saved game' });
     const f = Object.create(SaveFile.prototype);
     f._init(new Uint8Array(await blob.slice(0, HEADER).arrayBuffer()), blob, blob.size);
     return f;
@@ -71,12 +71,12 @@ export class SaveFile {
 
   // header: the first HEADER bytes; source: the file, bytes or a Blob, of size bytes.
   _init(header, source, size) {
-    if (size < HEADER || header.length < HEADER) throw new Error('it is too short to be a saved game');
+    if (size < HEADER || header.length < HEADER) throw Object.assign(new Error('it is too short to be a saved game'), { key: 'it is too short to be a saved game' });
     this.header = header;
     const dv = new DataView(header.buffer, header.byteOffset, header.byteLength);
     this.version = dv.getInt32(0, true);
     const count = dv.getInt32(8, true);
-    if (![1, 2, 3, 4].includes(this.version) || count < 1 || count > MAX_ENTRIES) throw new Error('it is not a saved game of CM 01/02');
+    if (![1, 2, 3, 4].includes(this.version) || count < 1 || count > MAX_ENTRIES) throw Object.assign(new Error('it is not a saved game of CM 01/02'), { key: 'it is not a saved game of CM 01/02' });
     this.compressed = this.version === 2 || this.version === 4;
     this.members = [];
     for (let k = 0; k < count; k++) {
@@ -85,7 +85,7 @@ export class SaveFile {
       let end = o + 8;
       while (end < o + ENTRY && header[end] !== 0) end++;
       const name = String.fromCharCode(...header.subarray(o + 8, end));
-      if (offset < HEADER || offset > size) throw new Error(`the saved game is damaged: ${name} starts outside the file`);
+      if (offset < HEADER || offset > size) throw Object.assign(new Error(`the saved game is damaged: ${name} starts outside the file`), { key: 'the saved game is damaged: {name} starts outside the file', vars: { name } });
       this.members.push({ index: k, offset, size: msize, name, raw: null, data: null, changed: false });
     }
     // Each member's raw bytes run to the next member (or the end of the file): a view of the bytes, or a slice of the
@@ -97,7 +97,7 @@ export class SaveFile {
 
   member(name) {
     const m = this.members.find((x) => x.name.toLowerCase() === name.toLowerCase());
-    if (!m) throw new Error(`the saved game has no ${name}`);
+    if (!m) throw Object.assign(new Error(`the saved game has no ${name}`), { key: 'the saved game has no {name}', vars: { name } });
     return m;
   }
 
@@ -115,7 +115,7 @@ export class SaveFile {
   // The member's bytes, decoded once; the array is the editor's to change (put marks it changed).
   read(name) {
     const m = this.member(name);
-    if (!(m.raw instanceof Uint8Array)) throw new Error(`${name} of the saved game was not read`);
+    if (!(m.raw instanceof Uint8Array)) throw Object.assign(new Error(`${name} of the saved game was not read`), { key: '{name} of the saved game was not read', vars: { name } });
     if (!m.data) m.data = this.compressed ? decodeRuns(m.raw, m.size).data : m.raw.slice(0, m.size);
     return m.data;
   }
@@ -140,7 +140,7 @@ export class SaveFile {
   // The whole file as bytes (a file from bytes).
   toBytes() {
     const { header, parts, size } = this._parts();
-    if (parts.some((p) => !(p instanceof Uint8Array))) throw new Error('a saved game read from a Blob is written with toBlob');
+    if (parts.some((p) => !(p instanceof Uint8Array))) throw Object.assign(new Error('a saved game read from a Blob is written with toBlob'), { key: 'a saved game read from a Blob is written with toBlob' });
     const out = new Uint8Array(size);
     out.set(header, 0);
     let o = HEADER;
@@ -259,7 +259,7 @@ const fold = (s) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 // The tables of index.dat: id -> { file, count }.
 function tablesOf(index) {
-  if (index.length < 8 + INDEX_ENTRIES * INDEX_ENTRY) throw new Error('the saved game has no table index');
+  if (index.length < 8 + INDEX_ENTRIES * INDEX_ENTRY) throw Object.assign(new Error('the saved game has no table index'), { key: 'the saved game has no table index' });
   const tables = {};
   const dv = new DataView(index.buffer, index.byteOffset, index.byteLength);
   for (let k = 0; k < INDEX_ENTRIES; k++) {
@@ -277,9 +277,10 @@ export class SaveGame {
     this.tables = tablesOf(this.file.read('index.dat'));
     const table = (id, size) => {
       const t = this.tables[id];
-      if (!t || !this.file.has(t.file)) throw new Error(`the saved game has no table ${id}`);
+      if (!t || !this.file.has(t.file)) throw Object.assign(new Error(`the saved game has no table ${id}`), { key: 'the saved game has no table {id}', vars: { id } });
       const b = this.file.read(t.file);
-      if (b.length !== t.count * size) throw new Error(`${t.file} holds ${b.length} bytes, not ${t.count} rows of ${size}`);
+      if (b.length !== t.count * size) throw Object.assign(new Error(`${t.file} holds ${b.length} bytes, not ${t.count} rows of ${size}`), { key: '{file} holds {bytes} bytes, not {rows} rows of {size}', vars: { file: t.file, bytes: b.length, rows: t.count, size } });
+
       return { name: t.file, b, count: t.count, dv: new DataView(b.buffer, b.byteOffset, b.byteLength) };
     };
     this.staff = table(6, STAFF_SIZE);

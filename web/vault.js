@@ -73,7 +73,7 @@ function openDB(idb, name, version, upgrade, onBlocked = null) {
     r.onsuccess = () => { if (blocked) onBlocked(false); ok(r.result); };
     r.onerror = () => bad(r.error);
     r.onblocked = () => {
-      if (!onBlocked) { bad(new Error(`the browser's storage ${name} is in use by another tab`)); return; }
+      if (!onBlocked) { bad(Object.assign(new Error(`the browser's storage ${name} is in use by another tab`), { key: 'the browser\'s storage {name} is in use by another tab', vars: { name } })); return; }
       if (!blocked) { blocked = true; onBlocked(true); }
     };
   });
@@ -135,14 +135,17 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
     if (rec.blob) return rec.blob;
     if (!rec.partsId) return new Blob([]);
     const parts = rec.parts ? await request('readonly', (s) => done(s.getAll(IDBKeyRange.bound(partKey(rec.partsId, 0), partKey(rec.partsId, rec.parts - 1))))) : [];
-    if (parts.length !== rec.parts) throw new Error(`the browser's storage has ${parts.length} of the ${rec.parts} parts of this file`);
+    if (parts.length !== rec.parts) {
+      throw Object.assign(new Error(`the browser's storage has ${parts.length} of the ${rec.parts} parts of this file`),
+        { key: 'the browser\'s storage has {have} of the {parts} parts of this file', vars: { have: parts.length, parts: rec.parts } });
+    }
     return new Blob(parts.map((x) => x.blob));
   }
   // A placeholder's Blob: a game file's from its source (the cache), a vault file's from its record.
   async function sourceOf(node) {
     if (node.vaultSource) return node.vaultSource();
     const rec = await get(node.vaultKey);
-    if (!rec) throw new Error(`the browser's storage has no ${node.vaultKey}`);
+    if (!rec) throw Object.assign(new Error(`the browser's storage has no ${node.vaultKey}`), { key: 'the browser\'s storage has no {name}', vars: { name: node.vaultKey } });
     return blobOf(rec);
   }
   const dropParts = (id) => request('readwrite', (s) => committed(s, s.delete(IDBKeyRange.bound(`${PART}${id}:`, `${PART}${id}:\uffff`))));
@@ -605,7 +608,11 @@ export function createVault({ FS: fsOrGetter, log = () => {}, idb = globalThis.i
   }
   async function record(node, path) {
     const rec = await serial(() => get(node.vaultKey));
-    if (!rec) throw new Error(`the browser's storage no longer has ${path.slice(path.lastIndexOf('/') + 1)}`);
+    if (!rec) {
+      const name = path.slice(path.lastIndexOf('/') + 1);
+      throw Object.assign(new Error(`the browser's storage no longer has ${name}`), { key: 'the browser\'s storage no longer has {name}', vars: { name } });
+    }
+
     return rec;
   }
   async function bytes(path) {

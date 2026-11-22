@@ -40,8 +40,12 @@ export class DataSetError extends Error {}
 // A text for a name field: Latin-1 (the game's code page for names is 1252; these are its Latin-1 part), at most 50.
 export function nameBytes(text) {
   const t = String(text ?? '').trim();
-  if (t.length > 50) throw new DataSetError(`"${t}" is longer than 50 letters`);
-  for (const ch of t) if (ch.charCodeAt(0) > 0xff || ch.charCodeAt(0) < 0x20) throw new DataSetError(`"${t}" has a letter the game cannot show: ${ch}`);
+  if (t.length > 50) throw Object.assign(new DataSetError(`"${t}" is longer than 50 letters`), { key: '"{name}" is longer than 50 letters', vars: { name: t } });
+  for (const ch of t) {
+    if (ch.charCodeAt(0) > 0xff || ch.charCodeAt(0) < 0x20) {
+      throw Object.assign(new DataSetError(`"${t}" has a letter the game cannot show: ${ch}`), { key: '"{name}" has a letter the game cannot show: {letter}', vars: { name: t, letter: ch } });
+    }
+  }
   return t;
 }
 
@@ -88,9 +92,9 @@ export class DataSet {
     this.files = new Map();
     for (const [name, bytes] of Object.entries(files)) this.files.set(name.toLowerCase(), { name, bytes });
     const missing = DATA_SET_FILES.filter((f) => !this.files.has(f));
-    if (missing.length) throw new DataSetError(`the data set lacks ${missing.join(', ')}`);
+    if (missing.length) throw Object.assign(new DataSetError(`the data set lacks ${missing.join(', ')}`), { key: 'the data set lacks {files}', vars: { files: missing.join(', ') } });
     const index = this.files.get('index.dat').bytes;
-    if (index.length < 8 + INDEX_ENTRIES * INDEX_ENTRY) throw new DataSetError('index.dat is too short');
+    if (index.length < 8 + INDEX_ENTRIES * INDEX_ENTRY) throw Object.assign(new DataSetError('index.dat is too short'), { key: 'index.dat is too short' });
     const dv = new DataView(index.buffer, index.byteOffset, index.byteLength);
     this.entries = [];
     for (let k = 0; k < INDEX_ENTRIES; k++) {
@@ -99,14 +103,15 @@ export class DataSet {
         count: dv.getInt32(o + 0x37, true), offset: dv.getInt32(o + 0x3b, true), format: dv.getInt32(o + 0x3f, true) });
     }
     const staff = this.entry(6);
-    if (staff.format !== 1 && staff.format !== 2) throw new DataSetError(`the staff table has format ${staff.format}`);
+    if (staff.format !== 1 && staff.format !== 2) throw Object.assign(new DataSetError(`the staff table has format ${staff.format}`), { key: 'the staff table has format {format}', vars: { format: staff.format } });
     this.staffSize = staff.format === 1 ? 157 : 110;
     this.link = staff.format === 1 ? { player: 0x91, nonPlayer: 0x99 } : { player: 0x61, nonPlayer: 0x69 };
     for (const e of this.entries) {
       if (e.count === 0 || !(e.table in ROW) && e.table !== 6) continue;
       const f = this.files.get(e.file), size = this.rowSize(e.table);
       if (!f || e.offset < 0 || e.count < 0 || e.offset + e.count * size > f.bytes.length)
-        throw new DataSetError(`table ${e.table} (${e.count} rows of ${size} at ${e.offset}) runs past the end of ${e.file}`);
+        throw Object.assign(new DataSetError(`table ${e.table} (${e.count} rows of ${size} at ${e.offset}) runs past the end of ${e.file}`),
+          { key: 'table {table} ({rows} rows of {size} at {offset}) runs past the end of {file}', vars: { table: e.table, rows: e.count, size, offset: e.offset, file: e.file } });
     }
     this.shift = 0;                     // the years its dates of birth and old contract ends lie early (dateShift)
     this.added = new Map();             // table -> [Uint8Array row]
@@ -117,7 +122,7 @@ export class DataSet {
 
   entry(table) {
     const e = this.entries.find((x) => x.table === table);
-    if (!e) throw new DataSetError(`index.dat has no table ${table}`);
+    if (!e) throw Object.assign(new DataSetError(`index.dat has no table ${table}`), { key: 'index.dat has no table {table}', vars: { table } });
     return e;
   }
 
@@ -127,7 +132,7 @@ export class DataSet {
   // The bytes of a row, to read or change in place.
   row(table, i) {
     const e = this.entry(table), size = this.rowSize(table);
-    if (i < 0 || i >= this.count(table)) throw new DataSetError(`row ${i} is not in table ${table}`);
+    if (i < 0 || i >= this.count(table)) throw Object.assign(new DataSetError(`row ${i} is not in table ${table}`), { key: 'row {row} is not in table {table}', vars: { row: i, table } });
     if (i >= e.count) return this.added.get(table)[i - e.count];
     return this.files.get(e.file).bytes.subarray(e.offset + i * size, e.offset + (i + 1) * size);
   }
@@ -261,20 +266,21 @@ export class DataSet {
 
   joinClub(club, id) {
     if (club < 0) return;
-    if (club >= this.count(0)) throw new DataSetError('a player can join a club, not a national team');
+    if (club >= this.count(0)) throw Object.assign(new DataSetError('a player can join a club, not a national team'), { key: 'a player can join a club, not a national team' });
     const c = this.row(0, club);
     for (let k = 0; k < SQUAD_SLOTS; k++) {
       const v = i32(c, SQUAD + 4 * k);
       if (v === id) return;
       if (v < 0) { set32(c, SQUAD + 4 * k, id); this.touch(0); return; }
     }
-    throw new DataSetError(`${this.clubName(club)} has ${SQUAD_SLOTS} players already: the game takes no more`);
+    throw Object.assign(new DataSetError(`${this.clubName(club)} has ${SQUAD_SLOTS} players already: the game takes no more`),
+      { key: '{club} has {count} players already: the game takes no more', vars: { club: this.clubName(club), count: SQUAD_SLOTS } });
   }
 
   // Writes the fields of a player (as read gives them, changed).
   write(row, f) {
     const s = this.row(6, row), p = this.row(10, i32(s, this.link.player));
-    if (!nameBytes(f.common) && !(nameBytes(f.first) && nameBytes(f.second))) throw new DataSetError('a player needs a first name and a surname, or a common name');
+    if (!nameBytes(f.common) && !(nameBytes(f.first) && nameBytes(f.second))) throw Object.assign(new DataSetError('a player needs a first name and a surname, or a common name'), { key: 'a player needs a first name and a surname, or a common name' });
     // The club first: a full club stops the change before anything else moves.
     const club = Number(f.club), old = i32(s, 0x39);
     if (club !== old) {
@@ -304,7 +310,8 @@ export class DataSet {
   // A new player: a staff row and a player row at the ends of their tables, the defaults of most players of the data
   // (no second nation, no national team, no caps, value and wage 0, personality 0), then the fields. Returns its row.
   add(f) {
-    if (this.entry(6).format !== 1) throw new DataSetError('players can be added to data sets in the format of the game\'s own data only');
+    if (this.entry(6).format !== 1) throw Object.assign(new DataSetError('players can be added to data sets in the format of the game\'s own data only'), { key: 'players can be added to data sets in the format of the game\'s own data only' });
+
     const id = this.count(6), data = this.count(10);
     const s = new Uint8Array(this.staffSize), p = new Uint8Array(70);
     set32(s, 0x00, id);
