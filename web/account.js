@@ -467,7 +467,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
           ? `<p class="small bad">${esc(t('Your Buy Me a Coffee membership ({level}) does not include Cloud Saves: change its level on Buy Me a Coffee.', { level: u.member.level }))}</p>` : ''}
         ${!buyable() ? `<p class="small">${esc(t('Cloud Saves are not on sale yet.'))}</p>`
           : offer.coffee ? `<div class="row"><button class="primary" id="account-buy">${esc(t('Become a member · {price}', { price: priceText(offer.price) }))}</button></div>
-          <p class="small">${t('Cloud Saves come with a Buy Me a Coffee membership. Join with this account\'s email, <b>{email}</b>: Cloud Saves then turn on by themselves. Renews every month; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (the Report button) and we will link it.', { email: esc(u.email) })}</p>`
+          <p class="small">${t('Cloud Saves come with a Buy Me a Coffee membership. Join with this account\'s email, <b>{email}</b>: Cloud Saves then turn on by themselves. Renews every month; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (Help, Send to the developer) and we will link it.', { email: esc(u.email) })}</p>`
           : `<div class="row"><button class="primary" id="account-buy">${esc(t('Get Cloud Saves · {price}', { price: priceText(offer.price) }))}</button></div>
           <p class="small">${esc(t('Renews every month; cancel any time. A full refund within 14 days of any payment. Payment by Paddle.'))}</p>`}
         ${own}${legal}`;
