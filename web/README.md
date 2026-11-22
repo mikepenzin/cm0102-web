@@ -407,7 +407,9 @@ browser's storage with the rest of the user folder, and with Cloud Saves they go
 
 ## Cloud saves
 
-Players can sign in with Google. An account with cloud saves keeps its saved games in the cloud as well as in the
+Cloud Saves are one of the two parts of **Membership**, the paid plan (the other is the Scout, "The Scout"): a member
+has both; the account record's flag stays `cloud`, and the settings below keep their names. Players can sign in with
+Google. An account with cloud saves keeps its saved games in the cloud as well as in the
 browser: a save made on one computer or iPad is there when the game starts on another. Without an account, or on an
 account without cloud saves, nothing changes: the saves stay in the browser, and Saved games downloads and uploads
 them as files.
@@ -601,6 +603,24 @@ Saved games has an **Edit** button by each save. It opens the save editor (`edit
 
 Contracts, clubs, names and reputations are not edited, and a saved game gets no new players. The facts, with the
 game's code addresses: `docs/research/2026-11-10-save-editor.md`.
+
+## The Scout
+
+A saved game open in the Editor has two tabs over its list: Players (the search, as before) and Scout (`scout.js`,
+`editor.js`). The Scout finds the save's players as of its last save by age (from–to), a position (a rating of 15 or
+more there), the lowest potential (PA) and ability (CA), and up to three attributes with the lowest value each, on
+the 1–20 scale the game shows (savedit.js's `read`: the game's own ratings, 0x543540). The matches come best first
+(PA, then CA, then name), at most 100; one opens the player's form, and Back on a phone returns to them with the
+filters kept. The players are read once when the tab opens (60,000 in about 200 ms in Node) and a search takes a few
+milliseconds; it runs 250 ms after the last change of a filter. A data set has no Scout.
+
+The Scout is part of Membership. A member sees every match; a free player the first 3, then blank shapes, the count
+("The Scout is part of Membership: 44 more players match.") and the Account dialog's own button (Sign in, Become a
+member, or Sign in with Google, free). The held-back players are never put in the page, and the Players list is
+emptied while the Scout shows. A member is whoever `/api/me` names with `user.cloud`; the last answer is kept in
+localStorage (`cm0102-member`), so a member offline keeps the whole Scout. Where no one could pay (no accounts, or
+nothing to buy, as on a server that gives Cloud Saves to a list of emails) everyone has the whole Scout. The limit is
+the browser's: the save lives there, and the server is not sent saves to scout them.
 
 ## Edit a data set
 
@@ -986,6 +1006,11 @@ What to know about the Asyncify engine:
   New data set, an edit with a move to another club, Add a player, an unknown club refused, Save, Delete; the Data sets
   of Saved games: Use (through settings.txt and through the runtime call), Download, Upload of a zip and of the 20
   files, Delete. The cloud check adds a data set uploaded on one device that comes to the other.
+- `NODE_PATH=$(npm root -g) node web/test/scout-check.mjs [screenshot folder]`: the Scout in Chromium on a saved game
+  of ten players, with `/api/me` played by Playwright: a free player (3 matches, the rest held back and nowhere in the
+  page, the invitation that opens the Account dialog), a filter, a match opened (and Back on a phone), a member (every
+  match, and offline the kept answer), signed out (Sign in), and no Scout on a data set. `test/scout.test.js` has the
+  filters, the access and the free cut, and a save of 60,000 players.
 - `NODE_PATH=$(npm root -g) node web/test/sdl-check.mjs <probe folder>`: the page against the real SDL browser
   backend. The probe (`test/sdlprobe.c`) opens its window and renderer as the runtime does and prints what SDL tells
   it. The check covers the layout (no bars, the screen's own pixels, a resized window, classic mode, full screen), the

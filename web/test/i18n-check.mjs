@@ -4,6 +4,7 @@
 //   NODE_PATH=$(npm root -g) node web/test/i18n-check.mjs
 import { createRequire } from 'node:module';
 import { startDemoSite } from './demo-site.mjs';
+import { fakeSaveGame } from './fakes.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -82,7 +83,7 @@ try {
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errors.push(e.message));
     const english = () => p.evaluate(() => {
-      const ALLOW = /^([\d\s.,:/·%()+×–—-]+(MB|KB|GB|s|min|h)?$|CM 01\/02$|Pricing$|Terms$|Refunds$|Privacy$|.*\.(sav|tct|zip)$|Made with$|by .+$|×$|›$|English$|Español$|Português$|Italiano$|Français$|Deutsch$|Nederlands$|Dansk$|Norsk$|Svenska$)/;
+      const ALLOW = /^([\d\s.,:/·%()+×–—≥-]+(MB|KB|GB|s|min|h)?$|CM 01\/02$|Pricing$|Terms$|Refunds$|Privacy$|.*\.(sav|tct|zip)$|Made with$|by .+$|×$|›$|English$|Español$|Português$|Italiano$|Français$|Deutsch$|Nederlands$|Dansk$|Norsk$|Svenska$)/;
       const out = [];
       const visible = (el) => el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
       // The pieces of a text that are outside every text's marks. depth: how many texts are open where it starts.
@@ -140,13 +141,27 @@ try {
     await p.locator('#account-close').click();
     await p.locator('#help-open').click();
     const help = await english();
+    // The Editor's Scout as a free player: its filters, 3 matches and the invitation.
+    await p.locator('#help-close').click();
+    const scoutSave = await fakeSaveGame(['Aurelio', 'Benedikt', 'Cassiano', 'Dorotheus', 'Eustachio', 'Florentin'].map((first, i) =>
+      ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [1981, 1, 1], club: 0, fill: 6 + i })));
+    await p.evaluate((b) => window.Module.FS.writeFile('/user/Scouting 2001-07-29.sav', new Uint8Array(b)), Array.from(scoutSave));
+    await p.locator('#saves-open').click();
+    await p.locator('#saves .tabs [data-tab="saves"]').click();
+    await p.locator('#saves-list tr:has-text("Scouting 2001-07-29.sav") button[data-edit]').click();
+    await p.waitForSelector('#editor[open] .ed-row');
+    await p.locator('#editor-tabs [data-pane="scout"]').click();
+    await p.waitForSelector('#scout-invite', { timeout: 15000 }).catch(() => {});
+    const scout = await english();
+    const invited = await p.isVisible('#scout-invite');
     const log = await p.evaluate(() => document.getElementById('log').textContent);
-    const left = { startBox, tour, saves, tabs, account, help };
+    const left = { startBox, tour, saves, tabs, account, help, scout };
     const n = Object.values(left).reduce((a, x) => a + x.length, 0);
-    check('the page in a language: no English left in the start box, the bar, the tour, Saved games, Account, Help, the toasts and a refused upload', n === 0,
+    check('the page in a language: no English left in the start box, the bar, the tour, Saved games, Account, Help, the toasts, a refused upload and the Scout', n === 0,
       Object.entries(left).filter(([, x]) => x.length).map(([k, x]) => `${k}: ${x.slice(0, 12).join(' | ')}`).join(' || '));
     check('the toasts and the refusal were seen: saved, the cloud hint, and junk.sav refused in Saved games', toastsSeen >= 2 && /junk\.sav/.test(refusal),
       `${await p.evaluate(() => window.__toasts.join(' | '))} || ${refusal}`);
+    check('the Scout was swept as a free player (its invitation showed)', invited);
     check('the engine log stays English', !/DE:/.test(log));
     await ctx.close();
   }

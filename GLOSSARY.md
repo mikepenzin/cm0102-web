@@ -250,6 +250,18 @@ _Avoid_: season block, save field, header
 
 ### Options and features
 
+**Membership**:
+The paid plan of the browser game: Cloud Saves and the Scout. A member is an account that has it.
+_Avoid_: Cloud Saves (for the plan), subscription, premium, sponsor
+
+**Cloud Saves**:
+The saved games of a member kept in the cloud and the same on every device where the member signs in. One part of Membership.
+_Avoid_: cloud sync, backup
+
+**Scout**:
+The Editor's tab that finds a saved game's players by age, position, potential, ability and attributes. A free player sees the first 3 matches; a member sees them all.
+_Avoid_: search (for the Scout), player finder, Genie Scout
+
 **Settings file**:
 The file settings.txt in the save folder. Each line sets one option, such as `display = classic`. The options screen writes to the same file.
 _Avoid_: config, preferences file, ini

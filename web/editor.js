@@ -308,8 +308,9 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     }
     const r = scout(index, { ...filters, attrs: filters.attrs.filter((a) => a.name) });
     const level = access(), cut = freeCut(r, level), attrName = attributeNames();
-    const rows = cut.rows.map((x) => `<button class="ed-row${current === x.row ? ' on' : ''}" data-row="${x.row}"><b>${esc(playerName(x))}</b>
-      <span>${esc(t('{age} years', { age: x.age }))} · ${esc(x.club || t('No club'))} · ${esc(x.pos)}${Object.entries(x.values).map(([k, v]) => ` · ${esc(attrName[k] ?? k)} ${v}`).join('')}</span><i>${x.ca}/${x.pa}</i></button>`).join('');
+    // The player's name, club and position codes are the save's own (data-raw: the language check leaves them).
+    const rows = cut.rows.map((x) => `<button class="ed-row${current === x.row ? ' on' : ''}" data-row="${x.row}"><b data-raw>${esc(playerName(x))}</b>
+      <span>${esc(t('{age} years', { age: x.age }))} · ${x.club ? `<bdi data-raw>${esc(x.club)}</bdi>` : esc(t('No club'))} · <bdi data-raw>${esc(x.pos)}</bdi>${Object.entries(x.values).map(([k, v]) => ` · ${esc(attrName[k] ?? k)} ${v}`).join('')}</span><i>${x.ca}/${x.pa}</i></button>`).join('');
     let after = '';
     if (!r.total) after = `<p class="small">${esc(t('No player matches these filters.'))}</p>`;
     else if (level === 'free' && cut.held) {

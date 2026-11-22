@@ -19,7 +19,9 @@ const TOKEN = 's'.repeat(24);
 const site = await startDemoSite({ adminToken: TOKEN });
 const { BASE } = site;
 const browser = await chromium.launch();
-const save = await fakeSaveGame();
+// Six players: the Scout of a free player shows 3 and the invitation.
+const save = await fakeSaveGame(['Alessandro', 'Gianluigi', 'Pavel', 'Filippo', 'Edgar', 'Lilian'].map((first, i) =>
+  ({ first, second: ['Del Piero', 'Buffon', 'Nedved', 'Inzaghi', 'Davids', 'Thuram'][i], ca: 150 + i, pa: 190 - i, gk: i === 1 ? 20 : 1, born: [1975 + i, 1, 1], club: 0, fill: 10 + i })));
 const errors = [], cut = [];
 // The labels whose text does not fit, and the ones out of the window (left or right).
 const SEL = '#bar > button, #bar > a, #bar > button span, #bar > a span, #status, .tabs button, dialog[open] .row button, dialog[open] .row a.button, dialog[open] h2, #tour, #tour button, #type-chip';
@@ -82,6 +84,10 @@ async function walk(kind, options) {
   await tap('#saves-list button[data-edit]');
   await p.waitForSelector('#editor[open] .ed-row');
   await shot('editor-save');
+  await tap('#editor-tabs [data-pane="scout"]');
+  await p.waitForSelector('#scout-results .ed-row');
+  await shot('editor-scout');
+  await tap('#editor-tabs [data-pane="players"]');
   await tap('.ed-row');
   await p.waitForSelector('#editor-form [data-f="Pace"]');
   await shot('editor-player');
