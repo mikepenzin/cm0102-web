@@ -5,6 +5,8 @@
 // the game"), and takes it off when it closes (pagehide) or stops on its own (an error box, another tab). A mark that
 // the next visit finds is a sudden stop: the system closed the tab.
 
+import { t } from './i18n.js';
+
 const KEY = 'cm0102-visit';
 const DAY = 86400e3;
 
@@ -39,12 +41,29 @@ export function mountVisitMark({ storage = null, now = () => Date.now(), id = Ma
   };
 }
 
-// The words for the player and the log: when, what step, and what most likely happened.
+// The step of a mark in the page's language: the page's own steps; a stage of the game ("Loading game data") is the
+// game's own text and stays as it is. The mark and the log keep the English.
+function stepWords(step) {
+  switch (step) {
+    case 'starting': return t('starting');
+    case 'downloading the game files': return t('downloading the game files');
+    case 'reading the game files': return t('reading the game files');
+    case 'starting the engine': return t('starting the engine');
+    case 'in the game': return t('in the game');
+    case 'sending saves to the cloud': return t('sending saves to the cloud');
+    default: {
+      const m = /^getting (.+) from the cloud$/.exec(step);
+      return m ? t('getting {name} from the cloud', { name: m[1] }) : step;
+    }
+  }
+}
+
+// The words for the player: when, what step, and what most likely happened, in the page's language.
 export function suddenStopText(last, { device = null, now = Date.now() } = {}) {
   const min = Math.max(1, Math.round((now - Number(last.at)) / 60000));
-  const ago = min < 60 ? `${min} min ago` : `${Math.round(min / 60)} h ago`;
-  const what = `The game stopped suddenly on your last visit (${ago}, while ${last.step}): the browser most likely closed the tab because it used too much memory.`;
+  const ago = min < 60 ? t('{n} min ago', { n: min }) : t('{n} h ago', { n: Math.round(min / 60) });
+  const what = t('The game stopped suddenly on your last visit ({ago}, while {step}): the browser most likely closed the tab because it used too much memory.', { ago, step: stepWords(last.step) });
   return device === 'iPhone'
-    ? `${what} An iPhone gives a tab less memory than the game can need; an iPad or a computer is the surer way to play. Closing other apps and tabs first can help.`
-    : `${what} Closing other tabs and apps first can help.`;
+    ? `${what} ${t('An iPhone gives a tab less memory than the game can need; an iPad or a computer is the surer way to play. Closing other apps and tabs first can help.')}`
+    : `${what} ${t('Closing other tabs and apps first can help.')}`;
 }

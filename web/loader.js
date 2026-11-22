@@ -13,7 +13,7 @@ import { mountEditor } from './editor.js';
 import { mountSetsPanel } from './setspanel.js';
 import { mountTacticsPanel } from './tactics.js';
 import { createSetSync, listDataSets } from './datasets.js';
-import { LEGAL_LINKS, createCloudSync, keepInCloud, mountAccount, plansHtml } from './account.js';
+import { createCloudSync, keepInCloud, legalLinks, mountAccount, plansHtml } from './account.js';
 import { guardKeys, hasTouch, mountKeyboard, onPageKey } from './keyboard.js';
 import { TOUR_STEPS, cloudStepText, mountTour } from './tour.js';
 import { mountLayout } from './layout.js';
@@ -27,11 +27,21 @@ import { watchRelease } from './release.js';
 import { watchProgress } from './progress.js';
 import { createTacticSync } from './tacticsync.js';
 import { reserveSaveRoom } from './room.js';
-import { LANGUAGES, LANG_KEY, language, pickLanguage, setLanguage } from './i18n.js';
+import { LANGUAGES, LANG_KEY, language, onLanguage, pickLanguage, priceText, setLanguage, t, tn } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const mb = (n) => `${(n / 1048576).toFixed(n < 10485760 ? 1 : 0)} MB`;
+// A text that the page both shows and logs or reports: { key: its English with {placeholders}, vars } (a var may be
+// such a text too: an error's), or a plain string (an error's own message, the engine's words). english() gives it for
+// the log, the statistics and Send to the developer; shown() in the page's language, for the player (a function: its
+// text now). An error of the page's own carries key and vars as well (errorMsg).
+const fillIn = (s, vars) => (vars ? s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)) : s);
+const isMsg = (m) => Boolean(m) && typeof m === 'object' && typeof m.key === 'string';
+const varsOf = (vars, f) => (vars ? Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, isMsg(v) ? f(v) : v])) : vars);
+const english = (m) => (isMsg(m) ? fillIn(m.key, varsOf(m.vars, english)) : String(m));
+const shown = (m) => (typeof m === 'function' ? m() : isMsg(m) ? t(m.key, varsOf(m.vars, shown)) : String(m));
+const errorMsg = (e) => (isMsg(e) ? { key: e.key, vars: e.vars } : String(e?.message ?? e));
 const CONNECTIONS = 6;
 const TOUCH = hasTouch();
 
@@ -65,12 +75,35 @@ function log(text) {
   $('log').textContent = lines.join('\n');
 }
 
-function status(text) { $('status').textContent = text; }
+// The bar's status: a text, or text() for one in the page's language, written again when the language changes.
+let statusText = null;
+function status(text) {
+  statusText = typeof text === 'function' ? text : null;
+  $('status').textContent = statusText ? statusText() : text;
+}
 
-function overlay(html, kind = '') {
+// The box over the game: html, or html() for one in the page's language, drawn again when the language changes.
+// on: { id: handler } for the box's buttons and links, by their ids, so that they still work when it is drawn again.
+let overlayNow = null, overlayOn = {};
+function drawOverlay(html, kind) {
   $('overlay').innerHTML = html ? `<div class="box ${kind}">${html}</div>` : '';
   $('overlay').style.display = html ? '' : 'none';
 }
+function overlay(html, kind = '', on = {}) {
+  overlayNow = typeof html === 'function' ? { html, kind } : null;
+  overlayOn = on;
+  drawOverlay(overlayNow ? html() : html, kind);
+}
+$('overlay').addEventListener('click', (e) => {
+  const el = e.target instanceof Element ? e.target.closest('button[id], a[id]') : null;
+  if (el && Object.hasOwn(overlayOn, el.id)) overlayOn[el.id](e);
+});
+// The box while the engine starts.
+const startingBox = () => `<h1>${t('Starting the engine')}</h1><div class="row"><i class="spin"></i>${t('The first start can take a minute.')}</div>`;
+onLanguage(() => {
+  if (statusText) $('status').textContent = statusText();
+  if (overlayNow) drawOverlay(overlayNow.html(), overlayNow.kind);
+});
 
 // For the statistics (stats.js): how many saves, older copies and data sets the user folder holds, and their size.
 function folderState() {
@@ -130,28 +163,29 @@ function userFolderSizes(FS) {
 const OUT_OF_MEMORY = /Array buffer allocation failed|out of memory|Cannot allocate|could not allocate/i;
 let stats = null;                                    // stats.js, once files.json told the server's mode
 let report = null, saveInPlay = () => null;          // Send to the developer (report.js), when the server takes reports
+// title and detail: texts as english() and shown() take them; the statistics and the report get their English.
 function fail(title, detail) {
   visit.end();                                       // the page stopped and says why: not a sudden stop
-  status(title);
-  stats?.report(`${title}: ${detail}`, lines.slice(-60), 'fail');
+  const titleEn = english(title), detailEn = english(detail);
+  status(() => shown(title));
+  stats?.report(`${titleEn}: ${detailEn}`, lines.slice(-60), 'fail');
   const last = lines.slice(-8).join('\n');
   // The memory of a tab is only given back for sure when the tab is closed (a page that loaded again in the same tab
   // once kept the game before it: letEngineGo), so that is the first thing to try.
-  const memory = OUT_OF_MEMORY.test(String(detail)) ? `<p>The browser ran out of memory for the game. <b>Close this tab
-    and open the game in a new one</b>: loading the page again in this same tab does not give its memory back. If it
-    happens again, close the other tabs of this site, or quit the browser and open it again. Your saves stay in this
-    browser.</p>` : '';
-  overlay(`<h1>${esc(title)}</h1><p>${esc(detail)}</p>${memory}${last ? `<pre class="small" style="white-space:pre-wrap;margin:0 0 14px">${esc(last)}</pre>` : ''}
-    <div class="row"><button class="primary" id="fail-again">Start again</button>${report ? '<button id="fail-report">Send to the developer</button>' : ''}<span class="small">Your saves stay in this browser.</span></div>`, 'error');
-  if ($('fail-report')) $('fail-report').onclick = () => report.open({ message: `${title}: ${detail}`, where: 'the error box' });
-  // The way on: the page loads again, after the user folder went to the browser's storage.
-  const again = $('fail-again');
-  if (again) again.onclick = () => {
-    running = false; leaving = true;
-    const go = () => location.reload();
-    storeEverything().then(() => letEngineGo()).then(go, go);
-    setTimeout(go, 15000);                             // a storage that does not answer
-  };
+  const memory = () => (OUT_OF_MEMORY.test(detailEn) ? `<p>${t('The browser ran out of memory for the game.')} ${
+    t('{close}: loading the page again in this same tab does not give its memory back.', { close: `<b>${t('Close this tab and open the game in a new one')}</b>` })} ${
+    t('If it happens again, close the other tabs of this site, or quit the browser and open it again.')} ${t('Your saves stay in this browser.')}</p>` : '');
+  overlay(() => `<h1>${esc(shown(title))}</h1><p>${esc(shown(detail))}</p>${memory()}${last ? `<pre class="small" style="white-space:pre-wrap;margin:0 0 14px">${esc(last)}</pre>` : ''}
+    <div class="row"><button class="primary" id="fail-again">${t('Start again')}</button>${report ? `<button id="fail-report">${t('Send to the developer')}</button>` : ''}<span class="small">${t('Your saves stay in this browser.')}</span></div>`, 'error', {
+    'fail-report': () => report?.open({ message: `${titleEn}: ${detailEn}`, shown: () => `${shown(title)}: ${shown(detail)}`, where: 'the error box' }),
+    // The way on: the page loads again, after the user folder went to the browser's storage.
+    'fail-again': () => {
+      running = false; leaving = true;
+      const go = () => location.reload();
+      storeEverything().then(() => letEngineGo()).then(go, go);
+      setTimeout(go, 15000);                             // a storage that does not answer
+    },
+  });
 }
 
 // The game's own fatal box, the last one before an exit: the runtime logs it (waits.c: "recomp: message box from
@@ -217,7 +251,7 @@ $('right-click').onclick = () => {
   const on = !touch.rightArmed;
   touch.armRight(on);
   setRightButton(on);
-  if (on) toast('Tap the game: that tap is a right click', { ms: 2500 });
+  if (on) toast(t('Tap the game: that tap is a right click'), { ms: 2500 });
 };
 mountBusy($('busy'));
 fitBar($('bar'), $('app'));                            // icons only when the buttons do not fit in one row
@@ -284,14 +318,17 @@ async function startCloud(FS, { replace, onStep }) {
   const jobs = await cloud.run({ replace, onStep, signal: onStep?.signal });
   cloudBehind = jobs === null || jobs.failed.length > 0 || jobs.held?.length > 0;
   const came = jobs?.filter((j) => j.do === 'down' && !jobs.failed.includes(j.name)).length ?? 0;
-  if (jobs === null && !onStep?.signal?.aborted) toast('The cloud was not reached: the saves here are used, and go up later', { kind: 'bad', ms: 7000 });
+  if (jobs === null && !onStep?.signal?.aborted) toast(t('The cloud was not reached: the saves here are used, and go up later'), { kind: 'bad', ms: 7000 });
   else if (jobs?.failed.length) toast(notYet(jobs.failed), { kind: 'bad', ms: 7000 });
-  else if (came) toast(`${came} saved game${came > 1 ? 's' : ''} came from the cloud`);
+  else if (came) toast(tn(came, { one: '{n} saved game came from the cloud', other: '{n} saved games came from the cloud' }));
   return jobs;
 }
 
 // The saves that the cloud did not take this time (the server or its store failed them): they go at the next sync.
-const notYet = (names) => `${names.length === 1 ? `${names[0]} is` : `${names.length} saves are`} not in the cloud yet: the cloud did not take ${names.length === 1 ? 'it' : 'them'} this time. ${names.length === 1 ? 'It goes' : 'They go'} up in a minute.`;
+const notYet = (names) => (names.length === 1
+  ? t('{name} is not in the cloud yet: the cloud did not take it this time. It goes up in a minute.', { name: names[0] })
+  : tn(names.length, { one: '{n} save is not in the cloud yet: the cloud did not take it this time. It goes up in a minute.',
+    other: '{n} saves are not in the cloud yet: the cloud did not take them this time. They go up in a minute.' }));
 
 // After a save: up to the cloud. A sync that failed (no connection) or left a save behind is tried again each minute,
 // and so is one that held a large save back (account.js, BIG_EVERY_MS: at most every 10 minutes). force: the tab is
@@ -301,12 +338,12 @@ function cloudAfterSave(quiet = false, force = false) {
   if (!cloud || cloud.stopped) return;
   cloud.run({ replace: false, force }).then((jobs) => {
     cloudBehind = jobs === null || jobs.failed.length > 0 || jobs.held?.length > 0;
-    if (jobs === null) { if (!quiet) toast('Not in the cloud yet: no connection. It goes up later.', { kind: 'bad', ms: 6000 }); }
+    if (jobs === null) { if (!quiet) toast(t('Not in the cloud yet: no connection. It goes up later.'), { kind: 'bad', ms: 6000 }); }
     else if (jobs.failed.length) { if (!quiet) toast(notYet(jobs.failed), { kind: 'bad', ms: 6000 }); }
-    else if (jobs.some((j) => j.do !== 'down')) toast('Saved to the cloud');
+    else if (jobs.some((j) => j.do !== 'down')) toast(t('Saved to the cloud'));
     else if (jobs.held?.length && !quiet && !heldSaid) {
       heldSaid = true;
-      toast(`${jobs.held[0]} goes to the cloud within 10 minutes: a large save goes up at most every 10 minutes, and when you leave this tab.`, { ms: 9000 });
+      toast(t('{name} goes to the cloud within 10 minutes: a large save goes up at most every 10 minutes, and when you leave this tab.', { name: jobs.held[0] }), { ms: 9000 });
     }
   });
 }
@@ -321,24 +358,24 @@ account.onAccountChange((me) => {
 // The start box tells the plans: free, or Cloud Saves. Signing in leaves the page, which is fine before the game.
 function plansForStart(me) {
   if (!me?.auth) return '';
-  const links = `<p class="small legal">${LEGAL_LINKS}</p>`;
-  if (me.user?.cloud) return `<p class="small">Signed in as ${esc(me.user.email)} · Cloud Saves are on: your saves from other devices come in when the game starts.</p>`;
-  if (me.user) return `<p class="small">Signed in as ${esc(me.user.email)} · Free plan. Cloud Saves (${esc(me.offer.price)}) keep your saves on all your
-    devices: <a href="#" id="go-plans">see Cloud Saves</a>.</p>${links}`;
+  const links = `<p class="small legal">${legalLinks()}</p>`;
+  if (me.user?.cloud) return `<p class="small">${t('Signed in as {email} · Cloud Saves are on: your saves from other devices come in when the game starts.', { email: esc(me.user.email) })}</p>`;
+  if (me.user) return `<p class="small">${t('Signed in as {email} · Free plan. Cloud Saves ({price}) keep your saves on all your devices: {link}.', {
+    email: esc(me.user.email), price: esc(priceText(me.offer.price)), link: `<a href="#" id="go-plans">${t('see Cloud Saves')}</a>` })}</p>${links}`;
   // Signed out: the game is free, and Cloud Saves is a note under it, not a plan to pick.
-  return `<div class="addon"><b>Optional: Cloud Saves</b> · ${esc(me.offer.price)}. Your saves on every computer and iPad,
-    backed up after each save. <a href="/auth/google/start?mode=page" id="go-signin">Sign in with Google</a> to get it, or to
-    bring the cloud saves you have. Playing needs no account.</div>${links}`;
+  return `<div class="addon"><b>${t('Optional: Cloud Saves')}</b> · <span>${t('{price}. Your saves on every computer and iPad, backed up after each save.', { price: esc(priceText(me.offer.price)) })} ${
+    t('{signin} to get it, or to bring the cloud saves you have.', { signin: `<a href="/auth/google/start?mode=page" id="go-signin">${t('Sign in with Google')}</a>` })} ${
+    t('Playing needs no account.')}</span></div>${links}`;
 }
 // The page's footer: "Made with ♥ by <CM_SELLER>" (files.json maker), or without the name.
-const HEART = '<svg viewBox="0 0 24 24" aria-label="love" role="img"><path d="M12 21.2 10.6 20C5.4 15.3 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.8-8.6 11.5L12 21.2Z"/></svg>';
-const madeWith = (maker) => `Made with ${HEART}${maker ? ` by ${esc(maker)}` : ''}`;
+const heart = () => `<svg viewBox="0 0 24 24" aria-label="${t('love')}" role="img"><path d="M12 21.2 10.6 20C5.4 15.3 2 12.3 2 8.5 2 5.4 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2.1C13.1 3.8 14.8 3 16.5 3 19.6 3 22 5.4 22 8.5c0 3.8-3.4 6.8-8.6 11.5L12 21.2Z"/></svg>`;
+const madeWith = (maker) => (maker ? t('Made with {heart} by {maker}', { heart: heart(), maker: esc(maker) }) : t('Made with {heart}', { heart: heart() }));
 // Once in this browser, after its first save: a player without Cloud Saves hears that they exist.
 function cloudHintOnce() {
   const hint = account.promo();
   if (!hint) return;
   try { if (localStorage.getItem('cm-cloud-hint')) return; localStorage.setItem('cm-cloud-hint', '1'); } catch { return; }
-  setTimeout(() => toast(`${hint} See ${account.me?.user ? 'your name' : 'Sign in'}, top right.`, { ms: 9000 }), 2500);
+  setTimeout(() => toast(account.me?.user ? t('{hint} See your name, top right.', { hint }) : t('{hint} See Sign in, top right.', { hint }), { ms: 9000 }), 2500);
 }
 $('help-close').onclick = () => $('help').close();
 // The first-visit tour (tour.js): once in this browser after the game has started, and from Help at any time.
@@ -357,7 +394,7 @@ if (TOUCH) for (const id of ['saves-file', 'sets-file', 'tactics-file']) $(id).r
 const FOLD_KEY = 'cm0102-bar-folded';
 function setBarFolded(on, remember = true) {
   $('app').classList.toggle('bar-folded', on);
-  const label = on ? 'Show the buttons' : 'Hide these buttons';
+  const label = on ? t('Show the buttons') : t('Hide these buttons');
   $('bar-fold').setAttribute('aria-expanded', String(!on));
   $('bar-fold').setAttribute('aria-label', label);
   $('bar-fold').title = label;
@@ -365,10 +402,18 @@ function setBarFolded(on, remember = true) {
 }
 try { if (localStorage.getItem(FOLD_KEY)) setBarFolded(true, false); } catch { /* storage off: open */ }
 $('bar-fold').onclick = () => setBarFolded(!$('app').classList.contains('bar-folded'));
+const fullscreenLabel = (on) => {
+  $('fullscreen').setAttribute('aria-label', on ? t('Leave full screen') : t('Full screen'));
+  $('fullscreen').querySelector('span').textContent = on ? t('Leave full screen') : t('Full screen');
+};
 layout.onFullscreen((on) => {
   $('fullscreen').setAttribute('aria-pressed', String(on));
-  $('fullscreen').setAttribute('aria-label', on ? 'Leave full screen' : 'Full screen');
-  $('fullscreen').querySelector('span').textContent = on ? 'Leave full screen' : 'Full screen';
+  fullscreenLabel(on);
+});
+// The labels the page set, in a language chosen later.
+onLanguage(() => {
+  setBarFolded($('app').classList.contains('bar-folded'), false);
+  fullscreenLabel(layout.isFullscreen());
 });
 
 // ---- The game files in the browser. ----
@@ -432,20 +477,21 @@ async function download(files, cache, onBytes, counts, signal, { lazy = false } 
     // second visit stop on "Cannot read properties of null (reading 'getReader')").
     if (!r.body) {
       if (f.size === 0) return new Uint8Array(0);
-      throw Object.assign(new Error(`${f.path}: no body, where ${f.size} bytes were wanted`), { again: !fromCache });
+      throw Object.assign(new Error(`${f.path}: no body, where ${f.size} bytes were wanted`), { again: !fromCache,
+        key: '{path}: no body, where {size} bytes were wanted', vars: { path: f.path, size: f.size } });
     }
     const buf = new Uint8Array(f.size), reader = r.body.getReader();
     let at = 0;
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
-      if (at + value.length > f.size) throw new Error(`${f.path}: more than ${f.size} bytes`);
+      if (at + value.length > f.size) throw Object.assign(new Error(`${f.path}: more than ${f.size} bytes`), { key: '{path}: more than {size} bytes', vars: { path: f.path, size: f.size } });
       buf.set(value, at);
       at += value.length;
       onBytes(value.length, fromCache);
       got(value.length);
     }
-    if (at !== f.size) throw Object.assign(new Error(`${f.path}: ${at} of ${f.size} bytes`), { again: true });
+    if (at !== f.size) throw Object.assign(new Error(`${f.path}: ${at} of ${f.size} bytes`), { again: true, key: '{path}: {got} of {size} bytes', vars: { path: f.path, got: at, size: f.size } });
     return buf;
   }
   async function one() {
@@ -475,7 +521,10 @@ async function download(files, cache, onBytes, counts, signal, { lazy = false } 
               onBytes(value.length, false);
             }
             await storing;
-            if (got !== f.size) { await cache.delete(url); throw Object.assign(new Error(`${f.path}: ${got} of ${f.size} bytes`), { again: true }); }
+            if (got !== f.size) {
+              await cache.delete(url);
+              throw Object.assign(new Error(`${f.path}: ${got} of ${f.size} bytes`), { again: true, key: '{path}: {got} of {size} bytes', vars: { path: f.path, got, size: f.size } });
+            }
             buf = lazyFile(f);
             break;
           } catch (e) {
@@ -525,7 +574,10 @@ function install(FS, files, gameFile) {
       const { url, size } = data;
       gameFile(full, size, async () => {
         const r = await gameCache?.match(url);
-        if (!r) throw new Error(`the browser's cache no longer has the game file ${path}: load the page again`);
+        if (!r) {
+          throw Object.assign(new Error(`the browser's cache no longer has the game file ${path}: load the page again`),
+            { key: 'the browser\'s cache no longer has the game file {path}: load the page again', vars: { path } });
+        }
         return r.blob();
       });
       lazy++; lazyBytes += size;
@@ -539,7 +591,7 @@ async function bringIn(files) {
   for (const [path, data] of files) {
     if (!isLazy(data)) continue;
     const r = await gameCache?.match(data.url);
-    if (!r) throw new Error(`the browser's cache no longer has the game file ${path}`);
+    if (!r) throw Object.assign(new Error(`the browser's cache no longer has the game file ${path}`), { key: 'the browser\'s cache no longer has the game file {path}', vars: { path } });
     files.set(path, new Uint8Array(await r.arrayBuffer()));
   }
 }
@@ -613,17 +665,20 @@ function storeAll(FS) {
 
 // Little room left in the browser for saves (saves.js, lowOnSpace): the Saved games button gets a mark, and the player
 // is told once a visit, before a save fails for it. Checked at the start and after each save.
-let toldLowSpace = false;
+let toldLowSpace = false, lowSpace = false;
+const lowSpaceTitle = () => { $('saves-open').title = lowSpace ? t('Little room left in this browser for saves') : ''; };
+onLanguage(() => { if (lowSpace) lowSpaceTitle(); });
 function checkSpace() {
   const FS = window.Module?.FS;
   if (!FS) return;
   spaceState(FS).then((sp) => {
     $('saves-open').classList.toggle('low', sp.low);
-    $('saves-open').title = sp.low ? 'Little room left in this browser for saves' : '';
+    lowSpace = sp.low;
+    lowSpaceTitle();
     if (sp.low && !toldLowSpace) {
       toldLowSpace = true;
       log(`page: little room left for saves: ${sp.estimate.quota - sp.estimate.usage} bytes allowed, the largest save has ${sp.biggest}`);
-      toast('Little room is left in this browser for saves. Saved games shows what they take: download the ones to keep, then delete some.', { kind: 'bad', ms: 12000 });
+      toast(t('Little room is left in this browser for saves. Saved games shows what they take: download the ones to keep, then delete some.'), { kind: 'bad', ms: 12000 });
     }
   }).catch(() => {});
 }
@@ -637,13 +692,14 @@ async function vaultRound(options) {
     if (!vaultFailing) return;
     vaultFailing = false;
     log('page: the vault stores again');
-    toast('Your saves are in this browser\'s storage again');
+    toast(t('Your saves are in this browser\'s storage again'));
   }, (e) => {
     log(`page: the vault: ${e?.name ?? 'Error'}: ${e?.message ?? e}`);
     if (vaultFailing) return;
     vaultFailing = true;
-    toast(`A save did not reach this browser's storage${/Quota/i.test(e?.name ?? '') ? ': the disk, or the room the browser gives this site, is full' : ''}. It stays in this tab: keep the tab open and Download the save.`,
-      { kind: 'bad', ms: 15000 });
+    toast(/Quota/i.test(e?.name ?? '')
+      ? t('A save did not reach this browser\'s storage: the disk, or the room the browser gives this site, is full. It stays in this tab: keep the tab open and Download the save.')
+      : t('A save did not reach this browser\'s storage. It stays in this tab: keep the tab open and Download the save.'), { kind: 'bad', ms: 15000 });
   });
 }
 
@@ -669,7 +725,7 @@ function writeFolder(FS) {
       syncAgain = true;
     } else if (err) {
       log(`page: the user folder was not saved: ${err}`);
-      toast('The save did not reach this browser\'s storage', { kind: 'bad', ms: 6000 });
+      toast(t('The save did not reach this browser\'s storage'), { kind: 'bad', ms: 6000 });
     } else reopened = false;
     if (syncAgain) { syncAgain = false; sync(); }
   });
@@ -818,7 +874,7 @@ function runEngine(files, info) {
     rtRestart: () => {
       running = false;
       log('page: Restart Game: the saves go to the browser\'s storage, then the page loads again');
-      overlay('<h1>Restarting…</h1><p>Your saves go to this browser\'s storage first.</p>');
+      overlay(() => `<h1>${t('Restarting…')}</h1><p>${t('Your saves go to this browser\'s storage first.')}</p>`);
       // Not before the saves are stored: a large save on a phone can take longer than the 8 s this once allowed, and
       // the reload then lost it. A minute is the most the page waits for a storage that does not answer.
       let gone = false;
@@ -840,7 +896,7 @@ function runEngine(files, info) {
         log(`page: the engine's reads could not be hooked: the ${lazyOnes} large game files come into memory`);
         M.addRunDependency('game-files');
         bringIn(files).then(() => { install(FS, files); files.clear(); M.removeRunDependency('game-files'); },
-          (e) => fail('A game file did not load', `${e.message ?? e}.`));
+          (e) => fail({ key: 'A game file did not load' }, { key: '{error}.', vars: { error: errorMsg(e) } }));
       } else {
         const { lazy, lazyBytes } = install(FS, files, (...a) => vault.gameFile(...a));
         files.clear();
@@ -867,12 +923,14 @@ function runEngine(files, info) {
         // The saves made on other devices, before the game lists them.
         if ((await account.ready)?.user?.cloud) {
           const abort = new AbortController();
-          overlay(`<h1>Getting your cloud saves</h1><div class="row"><i class="spin"></i><span id="cloud-step">Asking the cloud…</span></div>
-            <p style="margin:14px 0 0"><button id="cloud-skip" hidden>Start without them</button></p>`);
-          status('Getting your cloud saves…');
-          const skip = setTimeout(() => { if ($('cloud-skip')) { $('cloud-skip').hidden = false; $('cloud-skip').onclick = () => abort.abort(); } }, 5000);
-          const onStep = (t, job) => {
-            if ($('cloud-step')) $('cloud-step').textContent = t;
+          let step = null, skipShown = false;            // the cloud's last step (its own words), and the skip button shown
+          overlay(() => `<h1>${t('Getting your cloud saves')}</h1><div class="row"><i class="spin"></i><span id="cloud-step">${step === null ? t('Asking the cloud…') : esc(step)}</span></div>
+            <p style="margin:14px 0 0"><button id="cloud-skip"${skipShown ? '' : ' hidden'}>${t('Start without them')}</button></p>`, '', { 'cloud-skip': () => abort.abort() });
+          status(() => t('Getting your cloud saves…'));
+          const skip = setTimeout(() => { skipShown = true; if ($('cloud-skip')) $('cloud-skip').hidden = false; }, 5000);
+          const onStep = (text, job) => {
+            step = text;
+            if ($('cloud-step')) $('cloud-step').textContent = text;
             // The cloud save that comes now: a tab closed meanwhile leaves it in the cloud at the next start.
             if (job && job.do !== 'up') visit.step(`getting ${job.name} from the cloud`, { cloudFile: job.name });
             else visit.step('sending saves to the cloud');
@@ -881,8 +939,8 @@ function runEngine(files, info) {
           try { await startCloud(FS, { replace: true, onStep }); }
           catch (e) { log(`page: cloud saves: ${e?.stack ?? e}`); }       // the game starts all the same
           clearTimeout(skip);
-          overlay('<h1>Starting the engine</h1><div class="row"><i class="spin"></i>The first start can take a minute.</div>');
-          status('Starting the engine…');
+          overlay(startingBox);
+          status(() => t('Starting the engine…'));
         }
         log(`page: ${userFolderSizes(FS)}`);
         M.removeRunDependency('user-folder');
@@ -914,7 +972,7 @@ function runEngine(files, info) {
         if (vault?.active) vaultRound();
         const now = savesSignature(FS);
         if (now !== lastSaves && now === seen) {
-          if (now.length >= lastSaves.length) { toast('Saved in this browser'); if (!cloud) cloudHintOnce(); }
+          if (now.length >= lastSaves.length) { toast(t('Saved in this browser')); if (!cloud) cloudHintOnce(); }
           checkSpace();
           lastSaves = now;
           sync();
@@ -937,20 +995,21 @@ function runEngine(files, info) {
       // Play (play.js): a save's Play button; with a game in play, through Restart Game's path.
       const player = mountPlay({ module: () => window.Module, log, toast, restart: () => window.Module.rtRestart(), isRunning: () => running });
       mountSavesPanel({ FS, sync, log, report: () => report, cloud: () => cloud, promo: () => (cloud ? null : account.promo()),
-        openPromo: () => { $('saves').close(); account.open(); }, edit: (name) => editor.openSave(name), play: player });
+        openPromo: () => { $('saves').close(); account.open(); }, edit: (name) => editor.openSave(name), play: player,
+        t, tn, onLanguage });
       mountTacticsPanel({ FS, sync, log, cloud: () => tacticSync });
       // A new version on the server (release.js): a button in the bar loads it the way Restart Game does, the saves
       // stored first; with a game in play the page asks first. The page never loads it by itself.
       watchRelease({ current: info?.release, onNew: (release) => {
         log(`page: a new version is out (${release}; this page runs ${info.release})`);
         $('update').hidden = false;
-        toast('A new version of the game is out. Press New version at the top when it suits you: your saves are stored first.', { ms: 10000 });
+        toast(t('A new version of the game is out. Press New version at the top when it suits you: your saves are stored first.'), { ms: 10000 });
       } });
       $('update').onclick = () => {
         if (!running) { leaving = true; location.reload(); return; }
         // An engine without rt_web_in_game (before Play) cannot say: it asks, as for a game in play.
         const inGame = typeof M._rt_web_in_game === 'function' ? M._rt_web_in_game() : true;
-        if (inGame && !confirm('Load the new version now? The game in play closes: what you did since your last save is lost.')) return;
+        if (inGame && !confirm(t('Load the new version now? The game in play closes: what you did since your last save is lost.'))) return;
         M.rtRestart();
       };
       checkSpace();
@@ -999,12 +1058,13 @@ function runEngine(files, info) {
             running = false;
             if (e === undefined || e === null) log(`page: the engine's run ended with ${e} and no error (no stack: the browser gave none)`);
             logStack(e);
-            fail('The game stopped', e === undefined || e === null ? 'the engine ended without an error message. Send to the developer: the log says what it did last.' : String(e));
+            fail({ key: 'The game stopped' }, e === undefined || e === null
+              ? { key: 'the engine ended without an error message. Send to the developer: the log says what it did last.' } : String(e));
           });
         }
         player.resume();                                 // a Play that restarted the game: the save it asked for
       } catch (e) {
-        if (e?.name !== 'ExitStatus' && e?.name !== 'EngineLetGo') { running = false; logStack(e); fail('The game stopped', String(e)); }
+        if (e?.name !== 'ExitStatus' && e?.name !== 'EngineLetGo') { running = false; logStack(e); fail({ key: 'The game stopped' }, String(e)); }
       }
     },
     onExit: (code) => {
@@ -1014,14 +1074,18 @@ function runEngine(files, info) {
       // asks first), where an ordinary write would leave a file of the last moment for later.
       const stored = storeEverything();
       if (code === 0) {
-        status('Saving…');
-        overlay('<h1>The game ended</h1><p>Your saves go to this browser\'s storage…</p>');
-        stored.finally(() => { status('The game ended'); overlay('<h1>The game ended</h1><p>Reload the page to play again. Your saves stay in this browser.</p>'); });
+        status(() => t('Saving…'));
+        overlay(() => `<h1>${t('The game ended')}</h1><p>${t('Your saves go to this browser\'s storage…')}</p>`);
+        stored.finally(() => {
+          status(() => t('The game ended'));
+          overlay(() => `<h1>${t('The game ended')}</h1><p>${t('Reload the page to play again. Your saves stay in this browser.')}</p>`);
+        });
       } else {
         const box = fatalBox();
-        fail(`The game ended with code ${code}`, box
-          ? `The game stopped on an error of its own: "${box.text}" (at ${box.site}). Send to the developer, with the save you loaded, so it can be looked at. Your saves stay in this browser.`
-          : 'Help, Engine log says why. Your saves stay in this browser.');
+        fail({ key: 'The game ended with code {code}', vars: { code } }, box
+          ? { key: 'The game stopped on an error of its own: "{text}" (at {site}). Send to the developer, with the save you loaded, so it can be looked at. Your saves stay in this browser.',
+            vars: { text: box.text, site: box.site } }
+          : { key: 'Help, Engine log says why. Your saves stay in this browser.' });
       }
     },
     // The engine stopped itself (Emscripten's abort: a C abort(), an assert, a runtime check). A bare abort() comes
@@ -1033,12 +1097,12 @@ function runEngine(files, info) {
       const told = what !== undefined && what !== null && String(what) !== '';
       log(`page: the engine stopped itself (abort)${told ? `: ${String(what)}` : ' without a message'}`);
       logStack(what?.stack ? what : new Error('abort'));
-      fail('The game stopped', told ? String(what) : 'the engine stopped itself (abort) without a message. Send to the developer: the log says where.');
+      fail({ key: 'The game stopped' }, told ? String(what) : { key: 'the engine stopped itself (abort) without a message. Send to the developer: the log says where.' });
     },
   };
   const s = document.createElement('script');
   s.src = engineUrl(info.chosen, 'cm0102_recomp.js');
-  s.onerror = () => fail('The engine did not load', `The server did not give ${info.chosen.base}cm0102_recomp.js.`);
+  s.onerror = () => fail({ key: 'The engine did not load' }, { key: 'The server did not give {file}.', vars: { file: `${info.chosen.base}cm0102_recomp.js` } });
   document.body.appendChild(s);
 }
 
@@ -1058,31 +1122,35 @@ function appleMobile() {
   return null;
 }
 
+// Each problem and warning is a text as english() and shown() take them: the log and the statistics get the English.
 function requirements(info) {
   const problems = [], warnings = [];
   if (typeof WebAssembly !== 'object' || typeof WebAssembly.instantiate !== 'function') {
-    problems.push('This browser has no WebAssembly, which the engine is made of.');
+    problems.push({ key: 'This browser has no WebAssembly, which the engine is made of.' });
     return { problems, warnings };
   }
   if (info.chosen.suspend !== 'asyncify' && !hasJspi())
     problems.push(appleMobile()
-      ? `The engine needs JSPI, a WebAssembly feature that this ${appleMobile()} does not have yet. ${appleMobile() === 'iPad' ? 'iPadOS' : 'iOS'} 27 has it, in every browser (Safari and Chrome alike): update in Settings, General, Software Update, then open the game again.`
-      : 'The engine needs JSPI, a WebAssembly feature that this browser lacks, and this server has no engine for other browsers. Chrome 137 or later has it, and Safari 27 (iOS and iPadOS 27, in every browser of an iPhone or iPad).');
+      ? { key: 'The engine needs JSPI, a WebAssembly feature that this {device} does not have yet. {system} 27 has it, in every browser (Safari and Chrome alike): update in Settings, General, Software Update, then open the game again.',
+        vars: { device: appleMobile(), system: appleMobile() === 'iPad' ? 'iPadOS' : 'iOS' } }
+      : { key: 'The engine needs JSPI, a WebAssembly feature that this browser lacks, and this server has no engine for other browsers. Chrome 137 or later has it, and Safari 27 (iOS and iPadOS 27, in every browser of an iPhone or iPad).' });
   try {                                              // the engine's own memory plan, on a memory that is then dropped
     const m = new WebAssembly.Memory({ initial: ENGINE_START_PAGES, maximum: ENGINE_MAX_PAGES });
     m.grow(ENGINE_NEED_PAGES - ENGINE_START_PAGES);
   } catch (e) {
-    problems.push(`This browser does not give a page the ${Math.round(ENGINE_NEED_PAGES * PAGE / 1048576)} MB of memory that the engine needs (${e.message}).`);
+    problems.push({ key: 'This browser does not give a page the {size} MB of memory that the engine needs ({error}).',
+      vars: { size: Math.round(ENGINE_NEED_PAGES * PAGE / 1048576), error: e.message } });
   }
-  if (typeof indexedDB === 'undefined') warnings.push('This browser keeps no data for the page (a private window?): saves are lost when the tab closes.');
+  if (typeof indexedDB === 'undefined') warnings.push({ key: 'This browser keeps no data for the page (a private window?): saves are lost when the tab closes.' });
   return { problems, warnings };
 }
 
-function blocked(problems, note = 'Nothing was downloaded.') {
-  status('This browser cannot run the game');
-  overlay(`<h1>This browser cannot run the game</h1><ul>${problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>
-    <p>${appleMobile() ? `It runs on an ${appleMobile()} with ${appleMobile() === 'iPad' ? 'iPadOS' : 'iOS'} 27 or later, and on a computer in Chrome 137 or later or Safari 27 or later.`
-      : 'It runs in Chrome 137 or later, and in Safari 27 or later: on an iPhone or iPad with iOS or iPadOS 27, in Safari or Chrome.'} ${esc(note)}</p>`, 'error');
+function blocked(problems, note = { key: 'Nothing was downloaded.' }) {
+  status(() => t('This browser cannot run the game'));
+  const device = appleMobile(), system = device === 'iPad' ? 'iPadOS' : 'iOS';
+  overlay(() => `<h1>${t('This browser cannot run the game')}</h1><ul>${problems.map((p) => `<li>${esc(shown(p))}</li>`).join('')}</ul>
+    <p>${device ? t('It runs on an {device} with {system} 27 or later, and on a computer in Chrome 137 or later or Safari 27 or later.', { device, system })
+      : t('It runs in Chrome 137 or later, and in Safari 27 or later: on an iPhone or iPad with iOS or iPadOS 27, in Safari or Chrome.')} ${esc(shown(note))}</p>`, 'error');
 }
 
 // The engine file itself, compiled once while the game files download: a browser that lacks a WebAssembly feature the
@@ -1107,7 +1175,7 @@ function meter(total) {
     const rate = now - t0 > 400 ? (got - g0) / ((now - t0) / 1000) : 0;
     if (!(rate > 0)) return '';                       // none yet, or a try that failed was taken back
     const left = (total - got) / rate;
-    return ` · ${mb(rate)}/s · ${left < 90 ? `about ${Math.max(1, Math.round(left))} s left` : `about ${Math.round(left / 60)} min left`}`;
+    return ` · ${mb(rate)}/s · ${left < 90 ? t('about {n} s left', { n: Math.max(1, Math.round(left)) }) : t('about {n} min left', { n: Math.round(left / 60) })}`;
   };
 }
 
@@ -1152,8 +1220,8 @@ async function stopHere(store) {
   running = false;
   if (!store) handedOver = true;                       // the other tab plays already: not one more write from here
   startAbort?.abort();
-  status('The game moved to another tab');
-  overlay(`<h1>The game moves to another tab</h1><div class="row"><i class="spin"></i>${store ? 'Your saves go to this browser\'s storage first.' : 'The game here stops.'}</div>`);
+  status(() => t('The game moved to another tab'));
+  overlay(() => `<h1>${t('The game moves to another tab')}</h1><div class="row"><i class="spin"></i>${store ? t('Your saves go to this browser\'s storage first.') : t('The game here stops.')}</div>`);
   await within(letEngineGo(), 10000);
   // An engine whose sleep cannot be ended (Asyncify) plays on behind the box: at least its sound stops.
   try { window.Module?.SDL2?.audioContext?.suspend?.(); } catch { /* no sound */ }
@@ -1166,11 +1234,10 @@ async function stopHere(store) {
   turnRelease = null;
   for (const id of ['saves-open', 'editor-open', 'kbd-open', 'right-click']) if ($(id)) $(id).hidden = true;   // they would change nothing stored
   for (const d of document.querySelectorAll('dialog[open]')) d.close();
-  overlay(`<h1>The game moved to another tab</h1><p>${store ? 'It runs in the other tab now, with your saves.'
-    : 'Another tab took it without waiting for this one: what this tab had not put in the browser\'s storage yet is not there.'}
-    You can close this one.</p>
-    <div class="row"><button class="primary" id="turn-back">Play here</button></div>`);
-  $('turn-back').onclick = () => { leaving = true; location.reload(); };
+  overlay(() => `<h1>${t('The game moved to another tab')}</h1><p>${store ? t('It runs in the other tab now, with your saves.')
+    : t('Another tab took it without waiting for this one: what this tab had not put in the browser\'s storage yet is not there.')}
+    ${t('You can close this one.')}</p>
+    <div class="row"><button class="primary" id="turn-back">${t('Play here')}</button></div>`, '', { 'turn-back': () => { leaving = true; location.reload(); } });
 }
 turnChannel?.addEventListener('message', (e) => { if (e.data?.type === 'take' && turnRelease) stopHere(true); });
 
@@ -1191,14 +1258,13 @@ function olderPageBlocks(on) {
   if (turnGone) return;                                // this tab handed over meanwhile: its box says so
   if (on) {
     log('page: an older page of the game, in another tab, keeps the saves\' storage open: waiting until it is closed or loaded again');
-    status('The game is open in another tab');
-    overlay(`<h1>The game is open in another tab</h1><p>An older page of the game runs in another tab or window of this
-      browser. Close that tab or load it again: the game then goes on here by itself. Two at once would delete each other's
-      saves.</p><div class="row"><i class="spin"></i>Waiting for the other tab…</div>`);
+    status(() => t('The game is open in another tab'));
+    overlay(() => `<h1>${t('The game is open in another tab')}</h1><p>${t('An older page of the game runs in another tab or window of this browser.')} ${
+      t('Close that tab or load it again: the game then goes on here by itself.')} ${t('Two at once would delete each other\'s saves.')}</p><div class="row"><i class="spin"></i>${t('Waiting for the other tab…')}</div>`);
   } else {
     log('page: the other tab let the saves\' storage go');
-    status(running ? '' : 'Starting the engine…');
-    overlay(running ? '' : '<h1>Starting the engine</h1><div class="row"><i class="spin"></i>The first start can take a minute.</div>');
+    status(running ? '' : () => t('Starting the engine…'));
+    overlay(running ? '' : startingBox);
   }
 }
 
@@ -1209,28 +1275,30 @@ async function myTurn() {
     if (await takeTurn({ signal: timeoutSignal(1500) })) return true;
   } catch (e) { log(`page: one tab at a time did not work here (${e?.message ?? e}): the game starts`); return true; }
   log('page: the game runs in another tab of this browser');
-  status('The game is open in another tab');
-  overlay(`<h1>The game is open in another tab</h1>
-    <p>CM 01/02 runs in another tab or window of this browser. One may play at a time: two would delete each other's
-    saves from the browser's storage.</p>
-    <p class="small">Play here stops the game in the other tab, after it puts its saves in the browser's storage. What was
-    not saved in the game is lost there, as when that tab closes.</p>
-    <div class="row"><button class="primary" id="turn-take">Play here</button></div>`);
-  await new Promise((r) => { $('turn-take').onclick = r; });
+  await new Promise((r) => {
+    status(() => t('The game is open in another tab'));
+    overlay(() => `<h1>${t('The game is open in another tab')}</h1>
+    <p>${t('CM 01/02 runs in another tab or window of this browser.')} ${t('One may play at a time: two would delete each other\'s saves from the browser\'s storage.')}</p>
+    <p class="small">${t('Play here stops the game in the other tab, after it puts its saves in the browser\'s storage.')} ${
+      t('What was not saved in the game is lost there, as when that tab closes.')}</p>
+    <div class="row"><button class="primary" id="turn-take">${t('Play here')}</button></div>`, '', { 'turn-take': () => r() });
+  });
   for (;;) {
-    status('Stopping the game in the other tab…');
-    overlay('<h1>Stopping the game in the other tab</h1><div class="row"><i class="spin"></i>Its saves go to the browser\'s storage first.</div>');
+    status(() => t('Stopping the game in the other tab…'));
+    overlay(() => `<h1>${t('Stopping the game in the other tab')}</h1><div class="row"><i class="spin"></i>${t('Its saves go to the browser\'s storage first.')}</div>`);
     turnChannel?.postMessage({ type: 'take' });
     let got = false;
     try { got = await takeTurn({ signal: timeoutSignal(TURN_WAIT) }); } catch (e) { log(`page: ${e?.message ?? e}`); }
     if (got) { log('page: the other tab stopped; the game runs here'); return true; }
     log(`page: the other tab did not stop in ${TURN_WAIT / 1000} s`);
-    status('The other tab did not stop');
-    overlay(`<h1>The other tab did not stop</h1><p>It does not answer: the browser may have paused it. Close the other tab
-      or window of this site, then press Try again. Play here anyway starts the game here at once; the other tab then stops
-      when it wakes, without storing what it had not stored yet.</p>
-      <div class="row"><button class="primary" id="turn-again">Try again</button><button id="turn-steal">Play here anyway</button></div>`, 'error');
-    const choice = await new Promise((r) => { $('turn-again').onclick = () => r('again'); $('turn-steal').onclick = () => r('steal'); });
+    const choice = await new Promise((r) => {
+      status(() => t('The other tab did not stop'));
+      overlay(() => `<h1>${t('The other tab did not stop')}</h1><p>${t('It does not answer: the browser may have paused it.')} ${
+        t('Close the other tab or window of this site, then press Try again.')} ${
+        t('Play here anyway starts the game here at once; the other tab then stops when it wakes, without storing what it had not stored yet.')}</p>
+      <div class="row"><button class="primary" id="turn-again">${t('Try again')}</button><button id="turn-steal">${t('Play here anyway')}</button></div>`, 'error',
+      { 'turn-again': () => r('again'), 'turn-steal': () => r('steal') });
+    });
     if (choice === 'steal') {
       log('page: the game runs here; the other tab stops when it wakes');
       if (await takeTurn({ steal: true })) return true;
@@ -1239,26 +1307,31 @@ async function myTurn() {
 }
 
 async function start() {
-  overlay('<div class="row"><i class="spin"></i>Checking the files…</div>');
-  status('Checking the files…');
+  overlay(() => `<div class="row"><i class="spin"></i>${t('Checking the files…')}</div>`);
+  status(() => t('Checking the files…'));
   let info;
   try { info = await (await fetch('/files.json')).json(); }
-  catch (e) { fail('The server does not answer', String(e)); return; }
+  catch (e) { fail({ key: 'The server does not answer' }, String(e)); return; }
   info.chosen = pickEngine(info);
-  if (!info.chosen) { fail('The engine is not built', 'Build it first: web/README.md, step 4.'); return; }
+  if (!info.chosen) { fail({ key: 'The engine is not built' }, { key: 'Build it first: web/README.md, step 4.' }); return; }
   log(`page: engine ${info.chosen.base} (${info.chosen.suspend ?? 'unknown'} build, version ${info.chosen.version})${hasJspi() ? '' : '; this browser has no JSPI'}`);
   if (info.missing.length) {
-    fail(`${info.missing.length} game files are missing or of another size`,
-      `First: ${info.missing.slice(0, 6).map((m) => m.path).join(', ')}. CM_GAME_DIR must hold the clean files (web/README.md, step 3).`);
+    fail({ key: '{n} game files are missing or of another size', vars: { n: info.missing.length } },
+      { key: 'First: {files}. CM_GAME_DIR must hold the clean files (web/README.md, step 3).', vars: { files: info.missing.slice(0, 6).map((m) => m.path).join(', ') } });
     return;
   }
   stats = startStats({ info, log, isRunning: () => running, state: folderState,
     extra: () => ({ engine: `${info.chosen.suspend ?? 'unknown'} ${info.chosen.version}`, vault: Boolean(vault?.active), cloud: Boolean(account.me?.user?.cloud) }) });
   mountStatsChoice(info);
-  $('made').innerHTML = madeWith(info.maker);            // the page's footer
-  // The video guides (CM_YOUTUBE_URL): in the footer and in Help.
+  // The page's footer, with the video guides (CM_YOUTUBE_URL), again in a language chosen later.
+  const footer = () => {
+    $('made').innerHTML = madeWith(info.maker);
+    if (info.youtube) $('made').insertAdjacentHTML('beforeend', ` · <a href="${esc(info.youtube)}" target="_blank" rel="noopener">${t('Video guides')}</a>`);
+  };
+  footer();
+  onLanguage(footer);
+  // The video guides: in the footer and in Help.
   if (info.youtube) {
-    $('made').insertAdjacentHTML('beforeend', ` · <a href="${esc(info.youtube)}" target="_blank" rel="noopener">Video guides</a>`);
     for (const a of document.querySelectorAll('a.youtube')) a.href = info.youtube;
     $('help-videos').hidden = false;
   }
@@ -1287,43 +1360,50 @@ async function start() {
   if (lastStop) {
     log(`page: the last visit stopped without the page closing, while ${lastStop.step} (${lastStop.device ?? 'a computer'}, ${lastStop.engine ?? '?'} engine)`);
     stats.report(`sudden stop: the last visit stopped while ${lastStop.step}`, [], 'sudden stop');
-    let words = suddenStopText(lastStop, { device: appleMobile() });
+    const device = appleMobile(), name = lastStop.cloudFile;
     // A cloud save that came when the tab closed: it stays in the cloud on this device, or each start would close the
     // tab again on it (an iPhone, 18 November 2026: a 446 MB save, "A problem repeatedly occurred").
-    if (lastStop.cloudFile) {
-      keepInCloud(lastStop.cloudFile);
-      log(`page: cloud saves: ${lastStop.cloudFile} stays in the cloud on this device; Account has it ("Get it here")`);
-      words += ` ${lastStop.cloudFile} stays in the cloud on this device for now, so the game can start; Account has it, with "Get it here".`;
+    if (name) {
+      keepInCloud(name);
+      log(`page: cloud saves: ${name} stays in the cloud on this device; Account has it ("Get it here")`);
     }
-    warnings.unshift(words);
+    warnings.unshift(() => (name
+      ? `${suddenStopText(lastStop, { device })} ${t('{name} stays in the cloud on this device for now, so the game can start; Account has it, with "Get it here".', { name })}`
+      : suddenStopText(lastStop, { device })));
   }
-  if (problems.length) { log(`page: blocked: ${problems.join(' ')}`); stats.report(`blocked: ${problems.join(' ')}`, [], 'requirements'); blocked(problems); return; }
+  if (problems.length) {
+    const said = problems.map(english).join(' ');
+    log(`page: blocked: ${said}`); stats.report(`blocked: ${said}`, [], 'requirements'); blocked(problems); return;
+  }
   if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').catch((e) => log(`page: no service worker: ${e}`));
   const cache = await openCache();
   const [have, kept] = await Promise.all([cachedBytes(cache, info.files), keepStorage()]);
   log(`page: browser storage ${kept}; ${mb(have)} of the game files already in this browser`);
   setStorageKept(kept);
-  $('help-storage').textContent = ` ${storageWarning(false)}`;
+  $('help-storage').textContent = ` ${storageWarning(false, t)}`;
+  onLanguage(() => { $('help-storage').textContent = ` ${storageWarning(false, t)}`; });
   const toGet = info.totalBytes - have;
   if (toGet > 0 || warnings.length) {
     // The first visit, or part of the files: one click before a large download.
-    status('Ready');
-    overlay(`<h1>CM 01/02, in your browser</h1>
-      <p>${toGet > 0 ? `${mb(toGet)} of game files download into this browser once${have ? ` (${mb(have)} are here already)` : ''}.`
-        : 'The game files are in this browser already.'} The game then runs in this tab, on your device. Nothing is installed.</p>
-      <p class="small">Your saved games stay in this browser too. Saved games downloads them, one by one or all at once, so you
-      keep copies: a browser may delete a site's data by itself.</p>
-      ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
-      ${TOUCH ? '<p class="small">On a touch screen: tap to click, long press for the right button (keep the finger down to drag with it), two fingers to scroll. Help has the list.</p>' : ''}
-      <div class="row"><button class="primary" id="go">Start the game</button><span class="free-note">Free · no account, no payment</span></div>
-      ${plansForStart(await Promise.race([account.ready, new Promise((r) => setTimeout(r, 1500))]))}`);
-    if ($('go-plans')) $('go-plans').onclick = (e) => { e.preventDefault(); account.open(); };
-    await new Promise((r) => { $('go').onclick = r; });
+    status(() => t('Ready'));
+    const me = await Promise.race([account.ready, new Promise((r) => setTimeout(r, 1500))]);
+    await new Promise((r) => {
+      overlay(() => `<h1>${t('CM 01/02, in your browser')}</h1>
+      <p>${toGet > 0 ? (have ? t('{size} of game files download into this browser once ({here} are here already).', { size: mb(toGet), here: mb(have) })
+        : t('{size} of game files download into this browser once.', { size: mb(toGet) }))
+        : t('The game files are in this browser already.')} ${t('The game then runs in this tab, on your device.')} ${t('Nothing is installed.')}</p>
+      <p class="small">${t('Your saved games stay in this browser too.')} ${
+        t('Saved games downloads them, one by one or all at once, so you keep copies: a browser may delete a site\'s data by itself.')}</p>
+      ${warnings.length ? `<ul>${warnings.map((w) => `<li>${esc(shown(w))}</li>`).join('')}</ul>` : ''}
+      ${TOUCH ? `<p class="small">${t('On a touch screen: tap to click, long press for the right button (keep the finger down to drag with it), two fingers to scroll.')} ${t('Help has the list.')}</p>` : ''}
+      <div class="row"><button class="primary" id="go">${t('Start the game')}</button><span class="free-note">${t('Free · no account, no payment')}</span></div>
+      ${plansForStart(me)}`, '', { go: () => r(), 'go-plans': (e) => { e.preventDefault(); account.open(); } });
+    });
   }
   if (!await myTurn()) return;
   visit.begin({ step: toGet > 0 ? 'downloading the game files' : 'reading the game files', device: appleMobile() ?? undefined, engine: info.chosen.suspend ?? undefined });
-  overlay(`<h1>${toGet > 0 ? 'Loading the game files' : 'Starting'}</h1><div class="bar"><i id="bar-fill"></i></div><div class="small" id="bytes"></div>`);
-  status('Loading the game files…');
+  overlay(() => `<h1>${toGet > 0 ? t('Loading the game files') : t('Starting')}</h1><div class="bar"><i id="bar-fill"></i></div><div class="small" id="bytes"></div>`);
+  status(() => t('Loading the game files…'));
   const t0 = performance.now();
   const counts = { cached: 0, fetched: 0 };
   const abort = new AbortController();
@@ -1341,7 +1421,7 @@ async function start() {
       got += n;
       if (!$('bar-fill')) return;                       // the box shows something else now (a file failed)
       $('bar-fill').style.width = `${(100 * got / info.totalBytes).toFixed(1)}%`;
-      $('bytes').textContent = `${mb(got)} of ${mb(info.totalBytes)}${toGet > 0 ? speed(got) : ''}`;
+      $('bytes').textContent = `${t('{got} of {total}', { got: mb(got), total: mb(info.totalBytes) })}${toGet > 0 ? speed(got) : ''}`;
     }, counts, abort.signal, { lazy: lazyGame });
     await compiled;
   } catch (e) {
@@ -1349,22 +1429,21 @@ async function start() {
     if (turnGone) return;
     if (!compileError) {
       // Not a dropped connection when the browser had no memory for the file: fail() says what to do then.
-      fail('A game file did not load', OUT_OF_MEMORY.test(String(e?.message ?? e)) ? `${e.message ?? e}.`
-        : `${e.message ?? e}. The connection may have dropped. The game files that arrived stay in this `
-          + 'browser: Start again goes on with the rest.');
+      fail({ key: 'A game file did not load' }, OUT_OF_MEMORY.test(String(e?.message ?? e)) ? { key: '{error}.', vars: { error: errorMsg(e) } }
+        : { key: '{error}. The connection may have dropped. The game files that arrived stay in this browser: Start again goes on with the rest.', vars: { error: errorMsg(e) } });
       return;
     }
   }
   if (compileError) {
     log(`page: the engine does not compile here: ${compileError}`);
-    blocked([`This browser cannot compile the engine: ${compileError}`], 'The download of the game files was stopped.');
+    blocked([{ key: 'This browser cannot compile the engine: {error}', vars: { error: compileError } }], { key: 'The download of the game files was stopped.' });
     return;
   }
   log(`page: ${info.files.length} files in ${((performance.now() - t0) / 1000).toFixed(1)} s: ${mb(counts.cached)} from this browser, ${mb(counts.fetched)} downloaded`);
   pruneCache(cache, info.files).catch((e) => log(`page: old game files not removed: ${e}`));
   if (turnGone) return;
-  overlay('<h1>Starting the engine</h1><div class="row"><i class="spin"></i>The first start can take a minute.</div>');
-  status('Starting the engine…');
+  overlay(startingBox);
+  status(() => t('Starting the engine…'));
   visit.step('starting the engine');
   runEngine(files, info);
 }
@@ -1384,5 +1463,5 @@ start().catch((err) => {
     location.reload();
     return;
   }
-  fail('The page did not start', `${err?.message ?? err}. Load the page again; if it stays, send the Engine log from Help.`);
+  fail({ key: 'The page did not start' }, { key: '{error}. Load the page again; if it stays, send the Engine log from Help.', vars: { error: errorMsg(err) } });
 });

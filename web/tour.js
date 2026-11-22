@@ -5,40 +5,51 @@
 // ends. It does not hold the game: a tap on the game still reaches it, and Escape ends the tour while the card has the
 // focus (keyboard.js's guard keeps the card's keys from the game).
 
+import { onLanguage, priceText, t } from './i18n.js';
+
 export const TOUR_KEY = 'cm0102-tour-seen';
 
 // The steps, in order. A step whose button is not shown is left out: Keyboard and Right click show on a touch device
 // only, Full screen where the browser offers it and the page is not full already (not on an iPhone), Sign in where
 // the server has accounts. A text may be a function, read when its step shows (Cloud Saves: cloudStepText).
+// Each step keeps its English title and text; words() gives them in the page's language, read when the step shows
+// (at import the page is English, so the English here is t's own).
+const step = (target, words) => ({ target, ...words(), words });
 export const TOUR_STEPS = [
-  { target: 'saves-open', title: 'Saved games',
-    text: 'Your saves live in this browser. Download keeps a copy on your device; Upload brings one in, also from the desktop game. Databases for a new game are here too.' },
-  { target: 'account-open', title: 'Cloud Saves', text: 'Cloud Saves keep your saves on all your devices.' },
-  { target: 'editor-open', title: 'Editor',
-    text: 'Change the players of a saved game, or make a database of your own for new games.' },
-  { target: 'kbd-open', title: 'Keyboard',
-    text: 'Opens your keyboard to type in the game: a manager\'s name, a search. When the game waits for text, a "Tap to type" sign shows beside the entry too.' },
-  { target: 'right-click', title: 'Right click',
-    text: 'Tap it, then tap the game: that tap is a right click (a player\'s instructions on the tactics screen). A long press on the game does it too.' },
-  { target: 'fullscreen', title: 'Full screen',
-    text: 'The game fills the screen. These buttons go beside it, or into a small tab at the edge (›) when there is no room. The same button leaves full screen.' },
-  { target: 'help-open', title: 'Help',
-    text: 'The gestures, the video guides, and Send to the developer when something goes wrong. "Show the tour" there runs this tour again.' },
+  step('saves-open', () => ({ title: t('Saved games'),
+    text: t('Your saves live in this browser. Download keeps a copy on your device; Upload brings one in, also from the desktop game. Databases for a new game are here too.') })),
+  step('account-open', () => ({ title: t('Cloud Saves'), text: t('Cloud Saves keep your saves on all your devices.') })),
+  step('editor-open', () => ({ title: t('Editor'),
+    text: t('Change the players of a saved game, or make a database of your own for new games.') })),
+  step('kbd-open', () => ({ title: t('Keyboard'),
+    text: t('Opens your keyboard to type in the game: a manager\'s name, a search. When the game waits for text, a "Tap to type" sign shows beside the entry too.') })),
+  step('right-click', () => ({ title: t('Right click'),
+    text: t('Tap it, then tap the game: that tap is a right click (a player\'s instructions on the tactics screen). A long press on the game does it too.') })),
+  step('fullscreen', () => ({ title: t('Full screen'),
+    text: t('The game fills the screen. These buttons go beside it, or into a small tab at the edge (›) when there is no room. The same button leaves full screen.') })),
+  step('help-open', () => ({ title: t('Help'),
+    text: t('The gestures, the video guides, and Send to the developer when something goes wrong. "Show the tour" there runs this tour again.') })),
 ];
 
 // What the Cloud Saves step says, for the account as the page knows it (account.js, /api/me): what Cloud Saves do,
-// and how to turn them on from here, in the words of the Account dialog's own button.
+// and how to turn them on from here, in the words of the Account dialog's own button. price: " ($5 a month)" or none.
 export function cloudStepText(me) {
-  const what = 'Cloud Saves keep your saves on all your devices: each save goes up right after you save it, and your other devices get it when they start.';
-  if (me?.user?.cloud) return `Cloud Saves are on for ${me.user.email}: each save goes up right after you save it, and your other devices get it when they start. This button shows them.`;
+  const what = t('Cloud Saves keep your saves on all your devices: each save goes up right after you save it, and your other devices get it when they start.');
+  if (me?.user?.cloud) return t('Cloud Saves are on for {email}: each save goes up right after you save it, and your other devices get it when they start. This button shows them.', { email: me.user.email });
   const offer = me?.offer;
-  if (offer?.free) return `${what} Sign in here with Google, and they are on, free.`;
-  const price = offer?.price ? ` (${offer.price})` : '';
-  const join = offer?.coffee
-    ? `press "Become a member"${price} and join on Buy Me a Coffee with the same email: they turn on by themselves a moment after`
-    : `press "Get Cloud Saves"${price} and pay: they turn on a moment after`;
-  if (me?.user) return `${what} To turn them on, open this button, ${join}. Until then your saves stay in this browser.`;
-  return `${what} To turn them on, open this button and sign in with Google, then ${join}. Without them your saves stay in this browser.`;
+  if (offer?.free) return `${what} ${t('Sign in here with Google, and they are on, free.')}`;
+  const price = offer?.price ? ` (${priceText(offer.price)})` : '';
+  let how;
+  if (me?.user) {
+    how = offer?.coffee
+      ? t('To turn them on, open this button, press "Become a member"{price} and join on Buy Me a Coffee with the same email: they turn on by themselves a moment after. Until then your saves stay in this browser.', { price })
+      : t('To turn them on, open this button, press "Get Cloud Saves"{price} and pay: they turn on a moment after. Until then your saves stay in this browser.', { price });
+  } else {
+    how = offer?.coffee
+      ? t('To turn them on, open this button and sign in with Google, then press "Become a member"{price} and join on Buy Me a Coffee with the same email: they turn on by themselves a moment after. Without them your saves stay in this browser.', { price })
+      : t('To turn them on, open this button and sign in with Google, then press "Get Cloud Saves"{price} and pay: they turn on a moment after. Without them your saves stay in this browser.', { price });
+  }
+  return `${what} ${how}`;
 }
 
 const GAP = 10;                 // between the card and its button
@@ -74,8 +85,8 @@ export function mountTour({ doc = document, win = window, storage = null, steps 
     card.setAttribute('aria-modal', 'false');
     card.setAttribute('aria-labelledby', 'tour-title');
     card.innerHTML = `<p class="tour-count" id="tour-count"></p><h3 id="tour-title"></h3><p id="tour-text"></p>
-      <div class="row"><button id="tour-skip" class="link">Skip the tour</button><span class="spacer"></span>
-      <button id="tour-back">Back</button><button id="tour-next" class="primary">Next</button></div>`;
+      <div class="row"><button id="tour-skip" class="link"></button><span class="spacer"></span>
+      <button id="tour-back"></button><button id="tour-next" class="primary"></button></div>`;
     doc.body.appendChild(card);
     card.querySelector('#tour-skip').onclick = () => end();
     card.querySelector('#tour-back').onclick = () => go(at - 1);
@@ -94,20 +105,31 @@ export function mountTour({ doc = document, win = window, storage = null, steps 
     card.dataset.side = p.side;
   }
 
+  // The card's words for the step at, in the page's language.
+  function words() {
+    const step = list[at];
+    const w = step.words?.() ?? step;
+    card.querySelector('#tour-count').textContent = t('{at} of {count}', { at: at + 1, count: list.length });
+    card.querySelector('#tour-title').textContent = w.title;
+    card.querySelector('#tour-text').textContent = typeof step.text === 'function' ? step.text() : w.text;
+    card.querySelector('#tour-skip').textContent = t('Skip the tour');
+    card.querySelector('#tour-back').textContent = t('Back');
+    card.querySelector('#tour-back').hidden = at === 0;
+    card.querySelector('#tour-next').textContent = at + 1 < list.length ? t('Next') : t('Done');
+  }
+
   function go(i) {
     at = Math.max(0, Math.min(i, list.length - 1));
-    const step = list[at];
     ring?.classList.remove('tour-target');
-    ring = doc.getElementById(step.target);
+    ring = doc.getElementById(list[at].target);
     ring.classList.add('tour-target');
-    card.querySelector('#tour-count').textContent = `${at + 1} of ${list.length}`;
-    card.querySelector('#tour-title').textContent = step.title;
-    card.querySelector('#tour-text').textContent = typeof step.text === 'function' ? step.text() : step.text;
-    card.querySelector('#tour-back').hidden = at === 0;
-    card.querySelector('#tour-next').textContent = at + 1 < list.length ? 'Next' : 'Done';
+    words();
     place();
     card.querySelector('#tour-next').focus({ preventScroll: true });
   }
+
+  // A language chosen while the card is up: the card in it at once.
+  onLanguage(() => { if (card && list[at]) { words(); place(); } });
 
   // Escape in the card ends the tour.
   const onKey = (e) => {

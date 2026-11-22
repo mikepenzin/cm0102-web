@@ -11,6 +11,8 @@
 // keyboard where it is needed: a "Tap to type" chip at the entry, a tap on the entry itself opens the keyboard, the
 // picture moves so the entry stays above the keyboard (layout.js), and the keyboard closes when the entry is done.
 // The device only opens its keyboard from inside a tap, which is why the page cannot open it by itself.
+import { onLanguage, t } from './i18n.js';
+
 const KEYS = { Enter: 13, Escape: 27, Tab: 9 };
 const MARK = ' ';            // stays in the field, so that Backspace on an "empty" field is still an input to read
 const ROW_REACH = 30;        // rows of the picture around the entry's middle that count as a tap on the entry
@@ -84,13 +86,13 @@ export function mountKeyboard({ log, layout, toast = () => {} }) {
   });
   field.addEventListener('focus', () => {
     reset();
-    label.textContent = 'Hide keyboard';
+    label.textContent = t('Hide keyboard');
     button.setAttribute('aria-pressed', 'true');
     layout.setFieldFocused(true);
     log('page: on-screen keyboard');
   });
   field.addEventListener('blur', () => {
-    label.textContent = 'Keyboard';
+    label.textContent = t('Keyboard');
     button.setAttribute('aria-pressed', 'false');
     forTyping = false;
     layout.setFieldFocused(false);
@@ -100,6 +102,7 @@ export function mountKeyboard({ log, layout, toast = () => {} }) {
   button.addEventListener('click', () => (focused() ? close() : open()));
   chip.addEventListener('click', open);
   button.hidden = !hasTouch();
+  onLanguage(() => { label.textContent = focused() ? t('Hide keyboard') : t('Keyboard'); });
 
   return {
     // The runtime's word on the text entry, a few times a second (loader.js).
@@ -110,7 +113,7 @@ export function mountKeyboard({ log, layout, toast = () => {} }) {
       if (row < 0 && was >= 0 && focused() && forTyping) close();
       if (row >= 0 && was < 0 && hasTouch() && !focused() && !hinted) {
         hinted = true;
-        toast('Tap the text box, or Tap to type, for the keyboard', { ms: 4000 });
+        toast(t('Tap the text box, or Tap to type, for the keyboard'), { ms: 4000 });
       }
     },
     // A tap on the game (touch.js), still inside the touch's handler: on the entry that takes keys, it opens the keyboard.

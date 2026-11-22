@@ -305,6 +305,7 @@
   .plan ul { margin: 0; padding-left: 17px; color: var(--muted); font-size: 13px; }
   .box .plans { margin-top: 16px; }
   .legal { margin: 10px 0 0 !important; }
+  :root[lang="en"] .legal-en { display: none; }   /* the legal pages are in English: said in the other languages */
   /* The page's footer, under the game: "Made with ♥ by …" (CM_SELLER). Not in full screen, and not on a short screen
      (a phone held sideways), where the game takes every pixel. */
   #made { flex: none; display: flex; align-items: center; justify-content: center; gap: 4px; height: 26px; padding: 0 12px;
@@ -495,7 +496,7 @@
         sets you keep, under a random id of this browser? Never your files, your name or your IP address. If the game
         stops on an error, its message goes too.</span></p>
       <div class="row"><button id="consent-yes" data-t>Allow</button><button id="consent-no" data-t>No thanks</button>
-        <a href="/privacy" target="_blank" rel="noopener">Privacy</a></div>
+        <a href="/privacy" target="_blank" rel="noopener">Privacy</a> <span class="legal-en" data-t>(English)</span></div>
       <p class="small" data-t>You can change it any time in Help, Statistics.</p>
     </div>
     <div id="overlay"></div>
@@ -611,7 +612,7 @@
       <h3 data-t>Cloud saves</h3>
       <p class="small"><span data-t>With Cloud Saves, each save goes to the cloud, and the game started on another computer or iPad
       gets it. Sign in with Google (Sign in, in the bar) to get them.</span> <a href="/pricing" target="_blank" rel="noopener">Pricing</a> ·
-      <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
+      <a href="/privacy" target="_blank" rel="noopener">Privacy</a> <span class="legal-en" data-t>(English)</span></p>
     </div>
     <h3 data-t>As an app</h3>
     <p class="small" data-t>Add the page to the home screen (on an iPad: Share, then Add to Home Screen) or install it from the
@@ -621,7 +622,7 @@
       <label class="small check"><input type="checkbox" id="help-stats-on"> <span data-t>Send usage statistics: play time, and how many
         saves and data sets you have. They go with a random id of this browser (or your account when you are signed in),
         never your files, and no IP address is kept. When the game stops on an error, its message and the last lines of the
-        engine log go too.</span> <a href="/privacy" target="_blank" rel="noopener">Privacy</a></label>
+        engine log go too.</span> <a href="/privacy" target="_blank" rel="noopener">Privacy</a> <span class="legal-en" data-t>(English)</span></label>
     </div>
     <details>
       <summary data-t>Engine log</summary>
@@ -643,7 +644,7 @@
     <p class="small"><span data-t>This sends the engine log of this visit, the error, what you write here, your browser's name and system,
     the engine's version, the size of the page and the device's memory, and the saved game you choose here. With the
     statistics allowed, this browser's random id goes too, and when you are signed in, your account. Reports and saves
-    are deleted after 90 days.</span> <a href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
+    are deleted after 90 days.</span> <a href="/privacy" target="_blank" rel="noopener">Privacy</a> <span class="legal-en" data-t>(English)</span></p>
     <p id="report-error" class="small bad" hidden></p>
     <label class="report-field"><span data-t>What happened? (you may leave it empty)</span>
       <textarea id="report-note" rows="3" maxlength="2000" placeholder="For example: I loaded my save and the game stopped." data-t-attr="placeholder"></textarea></label>
