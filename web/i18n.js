@@ -41,6 +41,13 @@ export function t(english, vars) {
   return fill(typeof s === 'string' && s ? s : english, vars);
 }
 
+// The price as the server gives it (CM_PRICE, "$5 a month"): the period in the page's language. A price of another
+// shape shows as it comes (the server's text, English).
+export function priceText(price) {
+  const m = /^(.+?) a month$/.exec(price ?? '');
+  return m ? t('{amount} a month', { amount: m[1] }) : (price ?? '');
+}
+
 // A count with its noun: forms { one, other } in English; the table keeps the language's plural categories under the
 // English one-form ({ one, few, many, other }, as Intl.PluralRules names them). {n} is the count.
 export function tn(count, forms, vars = {}) {

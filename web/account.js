@@ -14,13 +14,16 @@
 import { SAVE_DIR, listSaves, readBlobNow, saveName, storeSaveStream, storedFirst } from './saves.js';
 import { downDirect, upDirect } from './direct.js';
 import { toDisk } from './disk.js';
+import { language, onLanguage, priceText, t } from './i18n.js';
 
 const STATE = `${SAVE_DIR}/.cloud-sync.json`;
 const CHANGE = { 'x-cm': '1' };                   // what the server wants on a change (cloud.mjs)
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const at = (name) => `/api/saves/${encodeURIComponent(name)}`;
-const when = (t) => new Date(t).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+// Dates in the page's language, or the browser's own format when the page is in English.
+const dateLocale = () => (language() === 'en' ? undefined : language());
+const when = (time) => new Date(time).toLocaleString(dateLocale(), { dateStyle: 'medium', timeStyle: 'short' });
 
 // The account as the server sees it: { auth: false } (no accounts on this server), { auth: true, user: null } (signed
 // out), or the user; null when the server could not be asked (no connection).
@@ -157,10 +160,11 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
   // again until it changes (state: tooBig with its size and time; planSync then leaves it). A player's log had a 413
   // that stopped the whole sync, so the saves after it never went up, and the sync, failed as a whole, packed and sent
   // that save again each minute (15 November 2026).
-  function tooBig(name, before, why) {
+  // why: the English, for the log; shown: the same in the page's language (a reason from the server stays as it came).
+  function tooBig(name, before, why, shown = why) {
     const e = state.saves[name];
     if (!(e?.tooBig && e.size === before.size && e.mtime === before.mtime)) {
-      toast(`${name} is too large for Cloud Saves (${why}): it stays in this browser. Download it in Saved games to keep a copy.`, { kind: 'bad', ms: 12000 });
+      toast(t('{name} is too large for Cloud Saves ({why}): it stays in this browser. Download it in Saved games to keep a copy.', { name, why: shown }), { kind: 'bad', ms: 12000 });
       log(`page: cloud saves: ${name} is too large for the cloud (${why}): it stays here`);
     }
     state.saves[name] = { etag: e?.etag ?? null, size: before.size, mtime: before.mtime, tooBig: true };
@@ -174,7 +178,9 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
     if (bytes instanceof Promise) bytes = await bytes;          // a placeholder: from the browser's storage
     const rawSize = bytes.size ?? bytes.length;
     const mb = (n) => `${(n / 1048576).toFixed(0)} MB`;
-    if (limits.raw && rawSize > limits.raw) return tooBig(name, before, `${mb(rawSize)}; the cloud takes ${mb(limits.raw)}`);
+    if (limits.raw && rawSize > limits.raw) {
+      return tooBig(name, before, `${mb(rawSize)}; the cloud takes ${mb(limits.raw)}`, t('{size}; the cloud takes {most}', { size: mb(rawSize), most: mb(limits.raw) }));
+    }
     // The version going up, kept before it goes: if the tab closes after the store took it but before its answer came, the
     // next start knows the cloud's copy for this device's own (planSync), not another device's.
     state.saves[name] = { ...(state.saves[name] ?? {}), sending: { size: rawSize, mtime: before.mtime } };
@@ -185,7 +191,9 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
   }
   async function send(name, base, signal, before, body, rawSize) {
     const mb = (n) => `${(n / 1048576).toFixed(0)} MB`;
-    if (limits.packed && body.size > limits.packed) return tooBig(name, before, `${mb(body.size)} packed; the cloud takes ${mb(limits.packed)}`);
+    if (limits.packed && body.size > limits.packed) {
+      return tooBig(name, before, `${mb(body.size)} packed; the cloud takes ${mb(limits.packed)}`, t('{size} packed; the cloud takes {most}', { size: mb(body.size), most: mb(limits.packed) }));
+    }
     // Straight to the store (direct.js), or through the server when that is off.
     let way = 'through the server';                              // for the log: which way the file went
     const r = await retrying(`${name} up`, async () => {
@@ -240,7 +248,7 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
     const o = await up(other, 'none', signal);
     if (o.conflict) return;                       // that name came up elsewhere meanwhile: the next sync sorts it out
     const mine = await up(name, theirs.etag ?? cloudNow?.etag ?? 'none', signal);
-    if (mine.up) toast(`${name} was also saved on another device. That version is kept as ${other}.`, { ms: 9000 });
+    if (mine.up) toast(t('{name} was also saved on another device. That version is kept as {other}.', { name, other }), { ms: 9000 });
     log(`page: ${name} changed here and elsewhere: the other version is ${other}`);
   }
 
@@ -278,7 +286,8 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
       if (job.do !== 'up' && keptHere[job.name]) { kept.push(job.name); continue; }   // left in the cloud on this device
       busy.add(job.name);
       changed();
-      onStep(`${job.do === 'down' ? 'Getting' : 'Saving'} ${job.name} (${i} of ${plan.jobs.length})`, job);
+      const step = { name: job.name, i, n: plan.jobs.length };
+      onStep(job.do === 'down' ? t('Getting {name} ({i} of {n})', step) : t('Saving {name} ({i} of {n})', step), job);
       try {
         if (job.do === 'down') {
           const got = await down(job.name, job.name, signal);
@@ -357,17 +366,21 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
 // The two plans, side by side: what the page shows a player who has no Cloud Saves (account dialog, start box).
 // The two plans. The free game is the one everybody has (the green border): players read a highlighted plan as the one
 // they must take, and the $5 card looked like the only way in. Cloud Saves is marked an optional add-on.
+// In the page's language (i18n.js), the price as the server gives it.
 export function plansHtml(offer, maxSaves = 30) {
   return `<div class="plans">
-    <div class="plan on"><span class="tag">Included · no account</span><h4>The game</h4><div class="price">Free</div><ul>
-      <li>The whole game, in your browser</li><li>Your saves stay in this browser</li><li>Download and upload saves as files</li></ul></div>
-    <div class="plan pro"><span class="tag">Optional add-on</span><h4>Cloud Saves</h4><div class="price">${esc(offer?.price ?? '')}</div><ul>
-      <li>Your saves on every computer and iPad</li><li>Backed up right after each save</li><li>Up to ${maxSaves} saves in the cloud</li></ul></div>
+    <div class="plan on"><span class="tag">${esc(t('Included · no account'))}</span><h4>${esc(t('The game'))}</h4><div class="price">${esc(t('Free'))}</div><ul>
+      <li>${esc(t('The whole game, in your browser'))}</li><li>${esc(t('Your saves stay in this browser'))}</li><li>${esc(t('Download and upload saves as files'))}</li></ul></div>
+    <div class="plan pro"><span class="tag">${esc(t('Optional add-on'))}</span><h4>${esc(t('Cloud Saves'))}</h4><div class="price">${esc(priceText(offer?.price))}</div><ul>
+      <li>${esc(t('Your saves on every computer and iPad'))}</li><li>${esc(t('Backed up right after each save'))}</li><li>${esc(t('Up to {n} saves in the cloud', { n: maxSaves }))}</li></ul></div>
   </div>`;
 }
+// The site's terms, by their English names (the pages are in English): LEGAL_LINKS as they are, legalLinks() with
+// "(English)" after them in another language.
 export const LEGAL_LINKS = ['pricing', 'terms', 'refunds', 'privacy'].map((p) =>
   `<a href="/${p}" target="_blank" rel="noopener">${p[0].toUpperCase()}${p.slice(1)}</a>`).join(' · ');
-const day = (t) => new Date(t).toLocaleDateString(undefined, { dateStyle: 'medium' });
+export const legalLinks = () => (language() === 'en' ? LEGAL_LINKS : `${LEGAL_LINKS} <span>${esc(t('(English)'))}</span>`);
+const day = (time) => new Date(time).toLocaleDateString(dateLocale(), { dateStyle: 'medium' });
 
 // Paddle.js, loaded when a player buys, not before (no script of Paddle's on the page until then).
 let paddleLoad = null;
@@ -382,7 +395,7 @@ function loadPaddle(cfg, onEvent) {
         resolve(window.Paddle);
       } catch (e) { paddleLoad = null; reject(e); }
     };
-    s.onerror = () => { paddleLoad = null; s.remove(); reject(new Error('the checkout did not load')); };
+    s.onerror = () => { paddleLoad = null; s.remove(); reject(Object.assign(new Error('the checkout did not load'), { key: 'the checkout did not load' })); };
     document.head.appendChild(s);
   });
   return paddleLoad;
@@ -401,44 +414,46 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     const u = me?.user, offer = me?.offer;
     button.hidden = !me?.auth;
     button.classList.toggle('on', Boolean(u?.cloud));
-    button.querySelector('span').textContent = u ? (u.name || u.email).split(/[\s@]/)[0].slice(0, 14) : 'Sign in';
-    button.setAttribute('aria-label', u ? `Account: ${u.email}` : 'Sign in');
+    button.querySelector('span').textContent = u ? (u.name || u.email).split(/[\s@]/)[0].slice(0, 14) : t('Sign in');
+    button.setAttribute('aria-label', u ? t('Account: {email}', { email: u.email }) : t('Sign in'));
     if (!me?.auth) { body.innerHTML = ''; return; }
-    const legal = `<p class="small legal">${LEGAL_LINKS}</p>`;
+    const legal = `<p class="small legal">${legalLinks()}</p>`;
     if (!u) {
-      body.innerHTML = `<p>Play for free, or keep your saved games on all your devices with Cloud Saves.</p>
+      body.innerHTML = `<p>${esc(t('Play for free, or keep your saved games on all your devices with Cloud Saves.'))}</p>
         ${plansHtml(offer, me.maxSaves)}
-        <p class="small">Cloud Saves need a Google account: signing in is how your saves know they are yours, on any device.
-        Signing in alone changes nothing else in the game.</p>
-        <div class="row"><button class="primary" id="account-signin">Sign in with Google</button></div>${legal}`;
+        <p class="small">${esc(t('Cloud Saves need a Google account: signing in is how your saves know they are yours, on any device. Signing in alone changes nothing else in the game.'))}</p>
+        <div class="row"><button class="primary" id="account-signin">${esc(t('Sign in with Google'))}</button></div>${legal}`;
       $('account-signin').onclick = signIn;
       return;
     }
-    const signedIn = `<p>Signed in as <b>${esc(u.email)}</b> · ${u.cloud ? 'Cloud Saves' : 'Free plan'}</p>`;
-    const own = `<div class="row"><button id="account-signout">Sign out</button><button id="account-delete">Delete account…</button>
-      ${u.admin ? '<button id="account-admin">Admin panel</button>' : ''}</div>`;
+    const signedIn = `<p>${u.cloud ? t('Signed in as <b>{email}</b> · Cloud Saves', { email: esc(u.email) }) : t('Signed in as <b>{email}</b> · Free plan', { email: esc(u.email) })}</p>`;
+    const own = `<div class="row"><button id="account-signout">${esc(t('Sign out'))}</button><button id="account-delete">${esc(t('Delete account…'))}</button>
+      ${u.admin ? `<button id="account-admin">${esc(t('Admin panel'))}</button>` : ''}</div>`;
     if (u.cloud) {
       const info = cloud?.info();
       const term = u.cloudFrom === 'subscription' || u.cloudFrom === 'membership'
-        ? (u.cancelAt ? `Canceled: Cloud Saves end on ${esc(day(u.cancelAt))}.` : u.until ? `Renews every month; paid until ${esc(day(u.until))}.` : '')
-        : offer?.free ? '' : 'Given to this account.';
+        ? (u.cancelAt ? esc(t('Canceled: Cloud Saves end on {date}.', { date: day(u.cancelAt) }))
+          : u.until ? esc(t('Renews every month; paid until {date}.', { date: day(u.until) })) : '')
+        : offer?.free ? '' : esc(t('Given to this account.'));
       // Saves left in the cloud on this device (keepInCloud): bringing one here closed the tab last time.
       const keptNames = Object.keys(keptInCloud());
-      const kept = keptNames.length ? `<p class="small">Left in the cloud on this device: the last try to bring ${keptNames.length > 1 ? 'them' : 'it'}
-        here closed the tab, most likely for its memory. The game here runs without ${keptNames.length > 1 ? 'them' : 'it'}.</p>
-        ${keptNames.map((n, i) => `<div class="row"><span class="small">${esc(n)}</span><button data-kept="${i}">Get it here</button></div>`).join('')}` : '';
+      const kept = keptNames.length ? `<p class="small">${esc(keptNames.length > 1
+        ? t('Left in the cloud on this device: the last try to bring them here closed the tab, most likely for its memory. The game here runs without them.')
+        : t('Left in the cloud on this device: the last try to bring it here closed the tab, most likely for its memory. The game here runs without it.'))}</p>
+        ${keptNames.map((n, i) => `<div class="row"><span class="small">${esc(n)}</span><button data-kept="${i}">${esc(t('Get it here'))}</button></div>`).join('')}` : '';
       const member = u.cloudFrom === 'membership' && offer?.url
-        ? `<div class="row"><button id="account-member">Your membership</button>
-          <span class="small">on Buy Me a Coffee: change, pause or cancel it there</span></div>` : '';
-      body.innerHTML = `${signedIn}<p class="small">Cloud Saves are on. Each save you make here goes to the cloud, and when the
-        game starts, this browser gets the saves you made elsewhere.${info?.count != null ? ` ${info.count} of ${info.max} saves are in the cloud.` : ''}</p>
-        <p class="small">${term} ${cloud?.stopped ? 'Cloud saves stopped: sign in again.' : info?.last ? `Last sync: ${esc(when(info.last))}.` : ''}</p>
-        ${u.manage ? '<div class="row"><button id="account-manage">Manage subscription</button><span class="small">cancel, card, invoices</span></div>' : ''}
+        ? `<div class="row"><button id="account-member">${esc(t('Your membership'))}</button>
+          <span class="small">${esc(t('on Buy Me a Coffee: change, pause or cancel it there'))}</span></div>` : '';
+      body.innerHTML = `${signedIn}<p class="small">${esc(info?.count != null
+        ? t('Cloud Saves are on. Each save you make here goes to the cloud, and when the game starts, this browser gets the saves you made elsewhere. {count} of {max} saves are in the cloud.', { count: info.count, max: info.max })
+        : t('Cloud Saves are on. Each save you make here goes to the cloud, and when the game starts, this browser gets the saves you made elsewhere.'))}</p>
+        <p class="small">${term} ${cloud?.stopped ? esc(t('Cloud saves stopped: sign in again.')) : info?.last ? esc(t('Last sync: {when}.', { when: when(info.last) })) : ''}</p>
+        ${u.manage ? `<div class="row"><button id="account-manage">${esc(t('Manage subscription'))}</button><span class="small">${esc(t('cancel, card, invoices'))}</span></div>` : ''}
         ${kept}${member}${own}${legal}`;
       if (u.manage) $('account-manage').onclick = manage;
       for (const b of body.querySelectorAll('button[data-kept]')) b.onclick = () => {
         const name = keptNames[Number(b.dataset.kept)];
-        if (!confirm(`Bring ${name} to this device? The last try closed the tab; if it closes again, the game leaves it in the cloud once more.`)) return;
+        if (!confirm(t('Bring {name} to this device? The last try closed the tab; if it closes again, the game leaves it in the cloud once more.', { name }))) return;
         keepInCloud(name, false);
         log(`page: cloud saves: ${name}: brought here again, as asked`);
         render();
@@ -446,17 +461,15 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       };
       if (member) $('account-member').onclick = () => window.open(offer.url, '_blank', 'noopener');
     } else {
-      body.innerHTML = `${signedIn}<p class="small">Your saves stay in this browser, and Saved games downloads them as files.</p>
+      body.innerHTML = `${signedIn}<p class="small">${esc(t('Your saves stay in this browser, and Saved games downloads them as files.'))}</p>
         ${plansHtml(offer, me.maxSaves)}
         ${u.member && !u.member.on && u.member.level && offer?.coffee
-          ? `<p class="small bad">Your Buy Me a Coffee membership (${esc(u.member.level)}) does not include Cloud Saves: change its level on Buy Me a Coffee.</p>` : ''}
-        ${!buyable() ? '<p class="small">Cloud Saves are not on sale yet.</p>'
-          : offer.coffee ? `<div class="row"><button class="primary" id="account-buy">Become a member · ${esc(offer.price)}</button></div>
-          <p class="small">Cloud Saves come with a Buy Me a Coffee membership. Join with this account's email,
-          <b>${esc(u.email)}</b>: Cloud Saves then turn on by themselves. Renews every month; cancel any time. A full refund
-          within 14 days of any payment. Joined with another email? Send us a report (the Report button) and we will link it.</p>`
-          : `<div class="row"><button class="primary" id="account-buy">Get Cloud Saves · ${esc(offer.price)}</button></div>
-          <p class="small">Renews every month; cancel any time. A full refund within 14 days of any payment. Payment by Paddle.</p>`}
+          ? `<p class="small bad">${esc(t('Your Buy Me a Coffee membership ({level}) does not include Cloud Saves: change its level on Buy Me a Coffee.', { level: u.member.level }))}</p>` : ''}
+        ${!buyable() ? `<p class="small">${esc(t('Cloud Saves are not on sale yet.'))}</p>`
+          : offer.coffee ? `<div class="row"><button class="primary" id="account-buy">${esc(t('Become a member · {price}', { price: priceText(offer.price) }))}</button></div>
+          <p class="small">${t('Cloud Saves come with a Buy Me a Coffee membership. Join with this account\'s email, <b>{email}</b>: Cloud Saves then turn on by themselves. Renews every month; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (the Report button) and we will link it.', { email: esc(u.email) })}</p>`
+          : `<div class="row"><button class="primary" id="account-buy">${esc(t('Get Cloud Saves · {price}', { price: priceText(offer.price) }))}</button></div>
+          <p class="small">${esc(t('Renews every month; cancel any time. A full refund within 14 days of any payment. Payment by Paddle.'))}</p>`}
         ${own}${legal}`;
       if (buyable()) $('account-buy').onclick = buy;
     }
@@ -469,22 +482,22 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
   function signIn() {
     if (!isRunning()) { leave(); location.href = '/auth/google/start?mode=page'; return; }
     const w = isStandalone() ? null : window.open('/auth/google/start?mode=popup', 'cm-sign-in', 'popup,width=500,height=680');
-    if (w) { say('Finish the sign-in in the small window.'); return; }
+    if (w) { say(t('Finish the sign-in in the small window.')); return; }
     // An app on the home screen, or a blocked window: the sign-in leaves the page, so the game must be saved first.
-    body.querySelector('.row').innerHTML = '<button class="primary" id="account-signin-leave">Saved: sign in now</button>';
-    say('Signing in here leaves this page and starts it again. Save your game in the game first.');
+    body.querySelector('.row').innerHTML = `<button class="primary" id="account-signin-leave">${esc(t('Saved: sign in now'))}</button>`;
+    say(t('Signing in here leaves this page and starts it again. Save your game in the game first.'));
     $('account-signin-leave').onclick = () => { leave(); location.href = '/auth/google/start?mode=page'; };
   }
 
   // After the payment: Paddle tells the server (a webhook), the page asks until Cloud Saves are on.
   async function waitForCloud() {
-    toast('Payment done. Turning on Cloud Saves…', { ms: 5000 });
+    toast(t('Payment done. Turning on Cloud Saves…'), { ms: 5000 });
     for (let i = 0; i < 40; i++) {
       await new Promise((r) => setTimeout(r, i < 10 ? 1500 : 3000));
       await refresh();
-      if (me?.user?.cloud) { toast('Cloud Saves are on. Your saves go to the cloud from now on.', { ms: 7000 }); log('page: Cloud Saves on after the payment'); return; }
+      if (me?.user?.cloud) { toast(t('Cloud Saves are on. Your saves go to the cloud from now on.'), { ms: 7000 }); log('page: Cloud Saves on after the payment'); return; }
     }
-    toast('The payment is done. Cloud Saves turn on within a few minutes: reload the page if they do not.', { kind: 'bad', ms: 10000 });
+    toast(t('The payment is done. Cloud Saves turn on within a few minutes: reload the page if they do not.'), { kind: 'bad', ms: 10000 });
   }
 
   // While the player joins on Buy Me a Coffee (another tab): Buy Me a Coffee tells the server, and the page asks every
@@ -498,7 +511,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       await refresh();
       if (me?.user?.cloud) {
         stop();
-        toast('Thank you for joining! Cloud Saves are on: your saves go to the cloud from now on.', { ms: 8000 });
+        toast(t('Thank you for joining! Cloud Saves are on: your saves go to the cloud from now on.'), { ms: 8000 });
         log('page: Cloud Saves on after joining');
       } else if (Date.now() > until) stop();
     };
@@ -513,13 +526,13 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     const offer = me?.offer;
     if (offer?.coffee) {
       window.open(offer.url, '_blank', 'noopener');
-      say(`Join on Buy Me a Coffee with ${me.user.email}. Cloud Saves turn on here a moment after.`);
+      say(t('Join on Buy Me a Coffee with {email}. Cloud Saves turn on here a moment after.', { email: me.user.email }));
       log('page: membership page opened');
       waitForMember();
       return;
     }
     if (!offer?.paddle) { if (offer?.url) window.open(offer.url, '_blank', 'noopener'); return; }
-    say('Opening the checkout…');
+    say(t('Opening the checkout…'));
     try {
       const Paddle = await loadPaddle(offer.paddle, (ev) => {
         if (ev?.name === 'checkout.completed') waitForCloud();
@@ -534,7 +547,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       });
       log('page: checkout opened');
     } catch (e) {
-      say(`The checkout did not open: ${e.message}. Try again in a moment.`, true);
+      say(t('The checkout did not open: {why}. Try again in a moment.', { why: t(e.key ?? e.message, e.vars) }), true);
       log(`page: checkout: ${e.message}`);
     }
   }
@@ -547,23 +560,23 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     if (url && w) { w.location.href = url; return; }
     w?.close();
     if (url) location.href = url;
-    else say(`The subscription page did not open: ${j.error ?? 'no connection'}. paddle.net has it too.`, true);
+    else say(t('The subscription page did not open: {why}. paddle.net has it too.', { why: j.error ?? t('no connection') }), true);
   }
 
   async function signOut() {
     await fetch('/auth/logout', { method: 'POST', headers: CHANGE }).catch(() => {});
     cloud?.stop();
     await refresh();
-    say('Signed out. Your saves stay in this browser.');
+    say(t('Signed out. Your saves stay in this browser.'));
   }
 
   async function deleteAccount() {
-    if (!confirm('Delete your account and every save of it in the cloud? The saves in this browser stay.')) return;
+    if (!confirm(t('Delete your account and every save of it in the cloud? The saves in this browser stay.'))) return;
     const r = await fetch('/api/account', { method: 'DELETE', headers: CHANGE }).catch(() => null);
-    if (!r?.ok) { say((await r?.json().catch(() => null))?.error ?? 'The account was not deleted: try again.', true); return; }
+    if (!r?.ok) { say((await r?.json().catch(() => null))?.error ?? t('The account was not deleted: try again.'), true); return; }
     cloud?.stop();
     await refresh();
-    say('Your account and its cloud saves are deleted. The saves in this browser stay.');
+    say(t('Your account and its cloud saves are deleted. The saves in this browser stay.'));
     log('page: account deleted');
   }
 
@@ -577,14 +590,15 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
   }
 
   const open = () => { say(''); render(); dialog.showModal(); };
+  onLanguage(() => render());                    // the button's label, and the dialog when it is open
   button.onclick = open;
   $('account-close').onclick = () => dialog.close();
   // The small sign-in window tells this page when it is done (cloud.mjs, popupPage).
   try {
     new BroadcastChannel('cm-account').onmessage = async (e) => {
-      if (!e.data?.ok) { say(`Not signed in: ${e.data?.why ?? 'unknown'}`, true); return; }
+      if (!e.data?.ok) { say(t('Not signed in: {why}', { why: e.data?.why ?? t('unknown') }), true); return; }
       await refresh();
-      if (me?.user) toast(`Signed in as ${me.user.email}`);
+      if (me?.user) toast(t('Signed in as {email}', { email: me.user.email }));
     };
   } catch { /* no BroadcastChannel: the dialog's next opening shows the account */ }
   // Back from the sign-in that left the page.
@@ -592,12 +606,14 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
   if (q.has('account')) {
     const ok = q.get('account') === 'signed-in', why = q.get('why');
     history.replaceState(null, '', '/');
-    if (!ok) setTimeout(() => toast(`Not signed in: ${why ?? 'unknown'}`, { kind: 'bad', ms: 8000 }));
+    if (!ok) setTimeout(() => toast(t('Not signed in: {why}', { why: why ?? t('unknown') }), { kind: 'bad', ms: 8000 }));
   }
 
   const ready = refresh();
   if (q.get('account') === 'signed-in') {
-    ready.then((m) => { if (m?.user) toast(`Signed in as ${m.user.email}${m.user.cloud ? '. Cloud Saves are on.' : ''}`, { ms: 6000 }); });
+    ready.then((m) => {
+      if (m?.user) toast(m.user.cloud ? t('Signed in as {email}. Cloud Saves are on.', { email: m.user.email }) : t('Signed in as {email}', { email: m.user.email }), { ms: 6000 });
+    });
   }
   return {
     ready,                                       // resolves to the account, once asked
@@ -606,8 +622,8 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     // A line for a player who could have Cloud Saves and has not (Saved games, after a save), or null.
     promo() {
       if (!me?.auth || me.user?.cloud || me.offer?.free === undefined) return null;
-      return me.offer.free ? 'Sign in with Google to keep your saves on all your devices too, for free.'
-        : `Cloud Saves keep your saves on all your devices too: ${me.offer.price}.`;
+      return me.offer.free ? t('Sign in with Google to keep your saves on all your devices too, for free.')
+        : t('Cloud Saves keep your saves on all your devices too: {price}.', { price: priceText(me.offer.price) });
     },
     setCloud(c) { cloud = c; c?.onChange(() => { if (dialog.open) render(); }); render(); },
     onAccountChange(f) { listeners.add(f); },
