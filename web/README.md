@@ -329,8 +329,10 @@ parked. With that the process stays near 800 MB over 45 loads. An engine whose s
 ## Statistics and the admin panel
 
 The page sends a heartbeat each minute while the game runs (`stats.js`): the seconds played since the last one (the
-tab visible and an input in the last 5 minutes) and how many saves, older copies and data sets the browser keeps,
-with their size. A stop of the game sends an error report with the last lines of the engine log (at most 3 a visit).
+tab visible and an input in the last 5 minutes), how many saves, older copies and data sets the browser keeps,
+with their size, and the browser's language (`navigator.language`, at most 16 characters: the admin page's
+Languages list counts the people of the last 30 days by its first part, `pt-BR` as `pt`, to learn which languages the
+page needs). A stop of the game sends an error report with the last lines of the engine log (at most 3 a visit).
 The game's own fatal errors show a box "Error" with only "v3.9.68 <source>..cpp <line>" and then exit with -1 (419
 sites in the original, each `gui_show_message_box` 0x5e8290 then `exit(-1)` 0x945934). The runtime logs every box of
 the game with its caller, and a fatal one with the return addresses on its stack (`waits.c`), and the page's error box
@@ -744,6 +746,37 @@ step whose button is not shown is left out (Right click on a computer; in full s
 none: the tour then waits for a later visit). The browser keeps `cm0102-tour-seen` in localStorage once the tour has
 ended; a private window keeps nothing and shows it at each visit. `test/tour-check.mjs` runs it on a laptop, a phone
 held upright and one held sideways.
+
+## Languages
+
+The page around the game speaks English and the nine languages of the game: Spanish, Portuguese, Italian, French,
+German, Dutch, Danish, Norwegian and Swedish (`i18n.js`, the tables `i18n-<code>.js`). The game keeps its own
+Language setting; the page does not change it. The language is the one chosen in Help (Language), else the browser's
+first one the page speaks (`pt-BR` is Portuguese, `nb` and `nn` Norwegian), else English; `?lang=de` picks one for a
+link. The choice is kept in localStorage (`cm0102-lang`). A change takes effect at once, with no reload: the open
+dialog, the bar, the tour card and the start box are drawn again, and the game keeps running. Only the chosen table
+is loaded.
+
+The English is the key: `t('Saved {name}', { name })`, `tn(n, { one: '{n} save', other: '{n} saves' })` for a count
+(each language's plural rules, `Intl.PluralRules`), and in `index.html` `data-t` (the text), `data-t-html` (a
+sentence with a link or bold in it) and `data-t-attr="title,aria-label"`. A text missing from a table shows in
+English, so a new feature never breaks a language. The modules the server imports too (`zip.js`, `savedit.js`,
+`dataset.js`, `saves.js`, `upload.js`) never import `i18n.js`: their errors carry `key` and `vars` beside the English
+message, and Saved games gets the page's `t` and `tn` when it is mounted. What stays English: the engine log and the
+report to the developer, the server's own answers (its error texts, library names), save and file names, and the
+legal pages, whose links say "(English)" in the other languages. The price from the server (`CM_PRICE`, "$5 a
+month") shows its period in the page's language when it has that shape (`priceText`).
+
+The tables were translated by machine; Help says so in the other languages and offers Send to the developer for a
+better word. To change a word, edit its entry in `i18n-<code>.js`; to add a text, write it through `t` and add it to
+the nine tables. `I18N_STRICT=1 node --test web/test/i18n.test.js` fails on a text missing from a table, an entry
+whose English is no longer on the page, a wrong `{placeholder}` or a plural without its forms; without
+`I18N_STRICT` it lists the missing ones only. `test/i18n-check.mjs` chooses the language by `?lang=`, by the browser
+and in Help (with a dialog open), and sweeps the start box, the bar, the tour, Saved games, Account, Help, two toasts
+and a refused upload with a stand-in table that marks every text: any English left outside the marks fails.
+`test/screens.mjs <folder> de` takes every screen in one language on a laptop and a phone held upright and sideways,
+and fails when a label, a tab, a dialog button or the tour card is cut or leaves the window. The statistics count
+the people of the last 30 days by their browser's language (Statistics and the admin panel).
 
 ## On an iPad or another touch device
 

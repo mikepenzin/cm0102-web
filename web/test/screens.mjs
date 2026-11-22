@@ -1,7 +1,9 @@
 // Every screen of the page, on a laptop and on a phone, for a review of the look (web/README.md, "Look and feel"):
 // the start box, the bar over the game, Saved games and its three tabs, the editor, the account, Help, Send to the
-// developer, the legal pages and the admin page. The stand-in site (demo-site.mjs).
-// NODE_PATH=$(npm root -g) node web/test/screens.mjs <folder>     → <folder>/<laptop|phone>-NN-<screen>.png
+// developer, the tour, the legal pages and the admin page. The stand-in site (demo-site.mjs). With a language
+// (web/README.md, "Languages"), the page in it; and on every screen of the page, a label, tab, dialog button or the
+// tour card whose text is cut or that leaves the window is listed, and the run fails.
+// NODE_PATH=$(npm root -g) node web/test/screens.mjs <folder> [de]  → <folder>/<laptop|phone|sideways>-NN-<screen>.png
 import { createRequire } from 'node:module';
 import { mkdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -11,13 +13,24 @@ import { startDemoSite } from './demo-site.mjs';
 const require = createRequire(import.meta.url);
 const { chromium, devices } = require('playwright');
 const OUT = resolve(process.argv[2] ?? 'screens');
+const LANG = process.argv[3] ?? '';
 mkdirSync(OUT, { recursive: true });
 const TOKEN = 's'.repeat(24);
 const site = await startDemoSite({ adminToken: TOKEN });
 const { BASE } = site;
 const browser = await chromium.launch();
 const save = await fakeSaveGame();
-const errors = [];
+const errors = [], cut = [];
+// The labels whose text does not fit, and the ones out of the window (left or right).
+const SEL = '#bar > button, #bar > a, #bar > button span, #bar > a span, #status, .tabs button, dialog[open] .row button, dialog[open] .row a.button, dialog[open] h2, #tour, #tour button, #type-chip';
+const notFitting = (sel) => [...document.querySelectorAll(sel)].filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden').flatMap((el) => {
+  const r = el.getBoundingClientRect(), name = `${el.id ? `#${el.id}` : el.tagName.toLowerCase()} "${el.textContent.trim().replace(/\s+/g, ' ').slice(0, 40)}"`;
+  const out = [];
+  // A bar button's box is its icon's when the label is hidden (a phone): its label, the span, is checked for text.
+  if (!el.matches('#bar > button, #bar > a') && el.scrollWidth > el.clientWidth + 1 && !/auto|scroll/.test(getComputedStyle(el).overflowX)) out.push(`${name}: text cut (${el.scrollWidth} > ${el.clientWidth})`);
+  if (r.left < -1 || r.right > innerWidth + 1) out.push(`${name}: out of the window (${Math.round(r.left)}..${Math.round(r.right)} of ${innerWidth})`);
+  return out;
+});
 
 async function walk(kind, options) {
   const ctx = await browser.newContext(options);
@@ -25,13 +38,26 @@ async function walk(kind, options) {
   p.on('pageerror', (e) => errors.push(`${kind}: ${e.message}`));
   p.on('dialog', (d) => d.accept());
   let n = 0;
-  const shot = async (name) => { await p.waitForTimeout(350); await p.screenshot({ path: join(OUT, `${kind}-${String(++n).padStart(2, '0')}-${name}.png`) }); };
+  const shot = async (name, fit = true) => {
+    await p.waitForTimeout(350);
+    await p.screenshot({ path: join(OUT, `${kind}-${String(++n).padStart(2, '0')}-${name}.png`) });
+    if (fit) for (const c of await p.evaluate(notFitting, SEL)) cut.push(`${kind} ${name}: ${c}`);
+  };
   const tap = (sel) => p.locator(sel).first().click();
-  await p.goto(BASE);
+  await p.goto(LANG ? `${BASE}/?lang=${LANG}` : BASE);
   await p.waitForSelector('#go');
   await shot('start');
   await tap('#go');
   await p.waitForFunction(() => window.__fake, null, { timeout: 30000 });
+  if (await p.waitForSelector('#tour', { timeout: 15000 }).catch(() => null)) {
+    await shot('tour');
+    for (let k = 0; k < 8 && await p.isVisible('#tour'); k++) {         // each step's card, the last one shot
+      if (!(await p.locator('#tour-next').isVisible())) break;
+      for (const c of await p.evaluate(notFitting, SEL)) cut.push(`${kind} tour ${k + 1}: ${c}`);
+      await p.locator('#tour-next').click();
+      await p.waitForTimeout(150);
+    }
+  }
   await p.evaluate((bytes) => {
     const FS = window.Module.FS, b = new Uint8Array(bytes);
     FS.writeFile('/user/Juventus 2001-07-29.sav', b);
@@ -79,17 +105,20 @@ async function walk(kind, options) {
   } else await tap('#help-close');
   for (const page of ['pricing', 'privacy', 'terms', 'refunds']) {
     await p.goto(`${BASE}/${page}`);
-    await shot(page);
+    await shot(page, false);
   }
   await p.goto(`${BASE}/admin`);
-  await shot('admin');
+  await shot('admin', false);
   await ctx.close();
 }
 
 try {
   await walk('laptop', { viewport: { width: 1280, height: 800 } });
   await walk('phone', { ...devices['iPhone 13'] });
+  await walk('sideways', { ...devices['iPhone 13 landscape'] });
   console.log(errors.length ? `page errors:\n${errors.join('\n')}` : 'no page errors');
+  console.log(cut.length ? `not fitting (${[...new Set(cut)].length}):\n${[...new Set(cut)].join('\n')}` : 'everything fits');
+  process.exitCode = errors.length || cut.length ? 1 : 0;
 } finally {
   await browser.close();
   await site.close();
