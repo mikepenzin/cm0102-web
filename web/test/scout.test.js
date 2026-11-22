@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SaveGame } from '../savedit.js';
-import { scoutIndex, scout, scoutAccess, keptAccess, freeCut } from '../scout.js';
+import { scoutIndex, scout, scoutAccess, keptAccess, freeCut, inviteKind } from '../scout.js';
 import { fakeSaveGame } from './fakes.mjs';
 
 // A player of the fake save: born on 1 January of the year that gives this age on the save's date (14 July 2001).
@@ -80,4 +80,11 @@ test('scout is fast: a save of 60,000 players indexed and searched within budget
   assert.ok(r.total > 0);
   assert.ok(built < 1500 && searched < 150, `index ${Math.round(built)} ms, search ${Math.round(searched)} ms`);
   console.log(`# scout: 60,000 players indexed in ${Math.round(built)} ms, searched in ${Math.round(searched)} ms`);
+});
+
+test('inviteKind: the Account dialog\'s own button for the account as it is', () => {
+  assert.equal(inviteKind({ auth: true, user: null, offer: { coffee: true } }), 'signin', 'signed out: Sign in');
+  assert.equal(inviteKind({ auth: true, user: { cloud: false }, offer: { coffee: true } }), 'member', 'signed in: Become a member');
+  assert.equal(inviteKind({ auth: true, user: null, offer: { free: true } }), 'free', 'free with an account: Sign in with Google, free');
+  assert.equal(inviteKind(null), 'signin', 'not known yet: Sign in (the dialog says the rest)');
 });

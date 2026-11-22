@@ -41,6 +41,8 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node web/test/page-check.cjs
       - name: Editor check (the save and data set editors)
         run: NODE_PATH="$(npm root -g)" node web/test/editor-check.mjs
+      - name: Scout check (the Editor's Scout tab, free and member)
+        run: NODE_PATH="$(npm root -g)" node web/test/scout-check.mjs
       - name: Cloud check (sign-in, cloud saves, the purchase)
         run: NODE_PATH="$(npm root -g)" node web/test/cloud-check.mjs
       - name: Tour check (the first-visit tour on a laptop and a phone)

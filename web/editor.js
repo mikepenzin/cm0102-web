@@ -9,6 +9,7 @@ import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } fro
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
 import { onLanguage, t, tn } from './i18n.js';
+import { freeCut, scout, scoutIndex } from './scout.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -58,12 +59,20 @@ export function dataSetNameProblem(name, taken) {
 }
 
 // onSetChange(name, 'made' | 'saved' | 'deleted'): a data set changed (the cloud sync of datasets.js follows).
-export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data', isRunning, onSaved = () => {}, onSetChange = () => {} }) {
+// access: 'full' or 'free' for the Scout (scout.js, scoutAccess); inviteKind: its invitation's button ('signin',
+// 'member', 'free'); invite: opens the Account dialog.
+export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data', isRunning, onSaved = () => {}, onSetChange = () => {},
+  access = () => 'full', inviteKind = () => 'signin', invite = () => {} }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
   const home = $('editor-home'), title = $('editor-title'), fileLabel = $('editor-file');
+  const tabs = $('editor-tabs'), scoutBox = $('editor-scout'), filtersBox = $('scout-filters'), found = $('scout-results');
   const DB_DIR = `${dir}/Databases`;
   let model = null, kind = null, name = null, edited = new Set(), current = null, backedUp = false, clubs = null, nations = null;
+  // The Scout of a saved game: the pane shown ('players' or 'scout'), the players read once (scoutIndex), the filters
+  // as typed (kept from one save to the next).
+  let pane = 'players', index = null;
+  const filters = { ageMin: '', ageMax: '', position: '', paMin: '', caMin: '', attrs: [0, 1, 2].map(() => ({ name: '', min: '' })) };
   // text: the message, or a function that gives it (said again in a new language).
   let said = null;
   const say = (text, bad = false) => {
@@ -106,7 +115,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // ---- The home: what can be edited ----
 
   function showHome() {
-    model = null; kind = null; edited = new Set(); current = null;
+    model = null; kind = null; edited = new Set(); current = null; index = null;
     title.textContent = t('Editor');
     fileLabel.textContent = '';
     body.hidden = true;
@@ -170,6 +179,9 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     form.innerHTML = '';
     search.value = '';
     $('editor-add').hidden = kind !== 'set';
+    index = null;
+    tabs.hidden = kind !== 'save';                  // the Scout is a saved game's only
+    setPane('players', false);
     dirty();
   }
 
@@ -246,11 +258,67 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
 
   // ---- The players ----
 
+  // The list of the pane shown: the players (search) or the Scout's matches.
+  const redrawList = () => (pane === 'scout' && model ? runScout() : results());
+
   function results() {
     const found = model.search(search.value, 80);
     list.innerHTML = found.length ? found.map((x) => `<button class="ed-row${edited.has(x.row) ? ' edited' : ''}${current === x.row ? ' on' : ''}" data-row="${x.row}">
         <b>${esc(playerName(x))}</b><span>${esc(x.club || t('No club'))} · ${esc(x.pos)} · ${x.born || ''}</span><i>${x.ca}/${x.pa}</i></button>`).join('')
       : `<p class="small">${esc(t('No player of that name.'))}</p>`;
+  }
+
+  // ---- The Scout (scout.js): a saved game's players by age, position, potential, ability and attributes ----
+
+  // show: draw the pane now (false while a save is still opening).
+  function setPane(which, show = true) {
+    pane = which;
+    for (const b of tabs.querySelectorAll('[data-pane]')) b.setAttribute('aria-selected', String(b.dataset.pane === pane));
+    const scouting = pane === 'scout';
+    dialog.querySelector('.ed-search').hidden = scouting;
+    list.hidden = scouting;
+    scoutBox.hidden = !scouting;
+    if (scouting) { list.innerHTML = ''; drawFilters(); }      // no list of players in the page while the Scout shows
+    else found.innerHTML = '';
+    if (show && model) redrawList();
+  }
+
+  const box = (key, value, max, label) => `<input type="number" inputmode="numeric" min="0" max="${max}" data-k="${key}" value="${esc(value)}" aria-label="${esc(label)}">`;
+  function drawFilters() {
+    const posName = positionNames(), attrName = attributeNames();
+    const attrOptions = (chosen) => `<option value="">${esc(t('An attribute'))}</option>${ATTRIBUTES.map((a) => `<option value="${esc(a.name)}"${a.name === chosen ? ' selected' : ''}>${esc(attrName[a.name] ?? a.name)}</option>`).join('')}`;
+    filtersBox.innerHTML = `<span>${esc(t('Age'))}</span><span class="pair">${box('ageMin', filters.ageMin, 60, t('Age from'))} – ${box('ageMax', filters.ageMax, 60, t('Age to'))}</span>
+      <span>${esc(t('Position'))}</span><span class="pair"><select data-k="position" aria-label="${esc(t('Position'))}"><option value="">${esc(t('Any position'))}</option>
+        ${POSITIONS.map((p, i) => `<option value="${i}"${String(i) === String(filters.position) ? ' selected' : ''}>${esc(posName[p] ?? p)}</option>`).join('')}</select></span>
+      <span>${esc(t('Potential ≥'))}</span><span class="pair">${box('paMin', filters.paMin, 200, t('Lowest potential ability'))}
+        <span>${esc(t('Ability ≥'))}</span>${box('caMin', filters.caMin, 200, t('Lowest current ability'))}</span>
+      ${filters.attrs.map((a, i) => `<span>${i === 0 ? esc(t('Attributes')) : ''}</span><span class="pair"><select data-attr="${i}" aria-label="${esc(t('An attribute'))}">${attrOptions(a.name)}</select>
+        ≥ <input type="number" inputmode="numeric" min="1" max="20" data-min="${i}" value="${esc(a.min)}" aria-label="${esc(t('Lowest value'))}"></span>`).join('')}`;
+  }
+
+  let scoutTimer = 0, building = null;
+  async function runScout() {
+    if (!model || kind !== 'save') return;
+    if (!index) {
+      found.innerHTML = `<p class="small">${esc(t('Reading the players of this save…'))}</p>`;
+      const m = model;
+      building ??= later().then(() => { if (model === m) index = scoutIndex(m); }).finally(() => { building = null; });
+      await building;
+      if (!index || pane !== 'scout') return;
+    }
+    const r = scout(index, { ...filters, attrs: filters.attrs.filter((a) => a.name) });
+    const level = access(), cut = freeCut(r, level), attrName = attributeNames();
+    const rows = cut.rows.map((x) => `<button class="ed-row${current === x.row ? ' on' : ''}" data-row="${x.row}"><b>${esc(playerName(x))}</b>
+      <span>${esc(t('{age} years', { age: x.age }))} · ${esc(x.club || t('No club'))} · ${esc(x.pos)}${Object.entries(x.values).map(([k, v]) => ` · ${esc(attrName[k] ?? k)} ${v}`).join('')}</span><i>${x.ca}/${x.pa}</i></button>`).join('');
+    let after = '';
+    if (!r.total) after = `<p class="small">${esc(t('No player matches these filters.'))}</p>`;
+    else if (level === 'free' && cut.held) {
+      const button = { signin: t('Sign in'), member: t('Become a member'), free: t('Sign in with Google, free') }[inviteKind()] ?? t('Sign in');
+      after = `${'<div class="scout-ghost" aria-hidden="true"></div>'.repeat(Math.min(cut.held, 5))}<div class="scout-held"><p>${esc(tn(cut.held, {
+        one: 'The Scout is part of Membership: {n} more player matches.', other: 'The Scout is part of Membership: {n} more players match.' }))}</p>
+        <button class="primary" id="scout-invite" type="button">${esc(button)}</button></div>`;
+    } else if (cut.held) after = `<p class="small">${esc(tn(cut.held, { one: 'And {n} more: narrow the filters to see them.', other: 'And {n} more: narrow the filters to see them.' }))}</p>`;
+    found.innerHTML = rows + after;
   }
 
   const num = (key, value, min, max, label = key) => `<label><span>${esc(label)}</span>
@@ -297,7 +365,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         <button id="editor-reset" type="button">${esc(row === null ? t('Clear') : t('Undo changes'))}</button></div>`;
     body.classList.add('detail');
     form.scrollTop = 0;
-    form.querySelector('.ed-back').onclick = () => { body.classList.remove('detail'); current = null; results(); };
+    form.querySelector('.ed-back').onclick = () => { body.classList.remove('detail'); current = null; if (pane === 'scout') runScout(); else results(); };
     $('editor-reset').onclick = () => show(row);
     $('editor-apply').onclick = () => apply(row);
     form.oninput = (e) => { const i = e.target.closest('[data-f]'); if (i) i.classList.toggle('changed', i.value !== i.dataset.was); };
@@ -305,7 +373,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       const club = form.querySelector('[data-f="club"]');
       club.onchange = () => { const c = clubByLabel(club.value); if (c && c.nation >= 0) form.querySelector('[data-f="nation"]').value = String(c.nation); };
     }
-    results();
+    redrawList();
   }
 
   function newPlayer() {
@@ -351,6 +419,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       }
       const missed = model.write(row, f);
       edited.add(row);
+      index = null;                                   // the Scout reads the players again
       dirty();
       show(row);
       const m = Object.entries(missed);
@@ -409,7 +478,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       }, { name: file }) + (running ? ` ${t('Load the save in the game to play with the changes.')}` : ''));
       edited = new Set();
       dirty();
-      results();
+      redrawList();
       onSaved(name);
     } catch (e) {
       say(() => t('Nothing was written: {why}', { why: reason(e) }), true);
@@ -422,6 +491,21 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   let timer = 0;
   search.oninput = () => { clearTimeout(timer); timer = setTimeout(() => model && results(), 120); };
   list.onclick = (e) => { const b = e.target.closest('[data-row]'); if (b) show(Number(b.dataset.row)); };
+  tabs.onclick = (e) => { const b = e.target.closest('[data-pane]'); if (b && b.dataset.pane !== pane) setPane(b.dataset.pane); };
+  found.onclick = (e) => {
+    if (e.target.closest('#scout-invite')) { invite(); return; }
+    const b = e.target.closest('[data-row]');
+    if (b) show(Number(b.dataset.row));
+  };
+  // A filter changed: the Scout searches again after a pause in the typing.
+  filtersBox.oninput = (e) => {
+    const el = e.target;
+    if (el.dataset.k) filters[el.dataset.k] = el.value;
+    else if (el.dataset.attr) filters.attrs[Number(el.dataset.attr)].name = el.value;
+    else if (el.dataset.min) filters.attrs[Number(el.dataset.min)].min = el.value;
+    clearTimeout(scoutTimer);
+    scoutTimer = setTimeout(() => runScout(), 250);
+  };
   home.onclick = (e) => {
     const s = e.target.closest('[data-open-save]'), d = e.target.closest('[data-open-set]'), x = e.target.closest('[data-delete-set]');
     if (s) openSave(s.dataset.openSave);
@@ -439,6 +523,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     if (edited.size && !confirm(tn(edited.size, { one: '{n} player changed and not saved. Close without saving?', other: '{n} players changed and not saved. Close without saving?' }))) return;
     dialog.close();
     model = null;
+    index = null;
   };
   dialog.addEventListener('cancel', (e) => { if (edited.size) { e.preventDefault(); $('editor-close').click(); } });
   // A new language: what the open editor shows, rendered again (the typed values of an open player kept).
@@ -458,7 +543,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
           const i = form.querySelector(`[data-f="${CSS.escape(k)}"]`);
           if (i) { i.value = v; i.classList.toggle('changed', v !== i.dataset.was); }
         }
-      } else if (model) results();
+      } else if (model) {
+        if (pane === 'scout') drawFilters();
+        redrawList();
+      }
     }
     if (said) say(...said);
   });

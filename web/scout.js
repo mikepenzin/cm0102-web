@@ -72,3 +72,10 @@ export function freeCut(result, access) {
   const rows = access === 'full' ? result.rows : result.rows.slice(0, FREE_ROWS);
   return { rows, held: result.total - rows.length };
 }
+
+// The invitation's button, the Account dialog's own for the account as it is: 'signin' (signed out, or not known
+// yet), 'member' (signed in, not a member: Become a member), 'free' (free with an account: Sign in with Google, free).
+export function inviteKind(me) {
+  if (me?.offer?.free && !me.user) return 'free';
+  return me?.user ? 'member' : 'signin';
+}

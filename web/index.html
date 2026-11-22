@@ -384,6 +384,24 @@
   .ed-grid label.wide { grid-column: span 2; }
   .ed-grid select.changed { border-color: var(--accent); }
   .ed-search { display: flex; gap: 6px; } .ed-search input { flex: 1; min-width: 0; }
+  /* The Editor's two tabs over the list of a saved game: Players and the Scout (scout.js). */
+  .ed-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+  .ed-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; height: 34px; padding: 0 12px; color: var(--muted); }
+  .ed-tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  @media (pointer: coarse) { .ed-tabs button { height: 44px; } }
+  #editor-scout:not([hidden]) { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }
+  .scout-filters { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center; color: var(--muted); font-size: 13px; }
+  .scout-filters .pair { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .scout-filters input, .scout-filters select { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+    border-radius: var(--r-sm); padding: 4px 6px; min-width: 0; }
+  .scout-filters input { width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+  .scout-filters select { flex: 1; max-width: 100%; }
+  #scout-results { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 4px; }
+  /* A match held back from a free player: a blank shape, no data in it. */
+  .scout-ghost { height: 46px; border: 1px solid var(--line); border-radius: var(--r); opacity: .45;
+    background: linear-gradient(90deg, var(--line) 0 38%, transparent 38% 44%, var(--line) 44% 70%, transparent 70%) 10px 12px / calc(100% - 20px) 8px no-repeat; }
+  .scout-held { margin: 6px 0 0; padding: 10px 12px; border: 1px solid var(--accent); border-radius: var(--r); color: var(--text); }
+  .scout-held p { margin: 0 0 8px; }
   #editor-home { overflow: auto; min-height: 0; }
   #editor-home .row { flex-wrap: wrap; }
   #editor-new-name { min-width: 0; flex: 1 1 12em; }
@@ -402,6 +420,8 @@
     .ed-body { grid-template-columns: 1fr; }
     .ed-body.detail .ed-list { display: none; } .ed-body:not(.detail) .ed-form { display: none; }
     .ed-title .ed-back { display: inline-flex; }
+    /* The Scout on a phone: the filters and the matches scroll as one, so the matches have the height. */
+    #editor-scout:not([hidden]) { overflow: auto; } #scout-results { overflow: visible; }
   }
   .promo .link { color: var(--accent); }
   details summary { cursor: pointer; color: var(--muted); padding: 4px 0; }
@@ -564,9 +584,13 @@
     <p id="editor-note" class="small" role="status"></p>
     <div id="editor-home"></div>
     <div class="ed-body" hidden>
-      <div class="ed-list"><div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" aria-label="Search a player or a club" data-t-attr="placeholder,aria-label" autocomplete="off" spellcheck="false">
+      <div class="ed-list"><div id="editor-tabs" class="ed-tabs" role="tablist" hidden>
+          <button type="button" role="tab" data-pane="players" aria-selected="true" data-t>Players</button>
+          <button type="button" role="tab" data-pane="scout" aria-selected="false" data-t>Scout</button></div>
+        <div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" aria-label="Search a player or a club" data-t-attr="placeholder,aria-label" autocomplete="off" spellcheck="false">
         <button id="editor-add" type="button" hidden data-t>Add a player</button></div>
-        <div id="editor-results"></div></div>
+        <div id="editor-results"></div>
+        <div id="editor-scout" hidden><div id="scout-filters" class="scout-filters"></div><div id="scout-results"></div></div></div>
       <div class="ed-form" id="editor-form" data-t-attr="data-empty" data-empty="Pick a player from the list to change him."></div>
     </div>
     <datalist id="editor-clubs"></datalist>

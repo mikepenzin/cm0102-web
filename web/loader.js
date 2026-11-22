@@ -14,6 +14,7 @@ import { mountSetsPanel } from './setspanel.js';
 import { mountTacticsPanel } from './tactics.js';
 import { createSetSync, listDataSets } from './datasets.js';
 import { createCloudSync, keepInCloud, legalLinks, mountAccount, plansHtml } from './account.js';
+import { inviteKind, keptAccess, scoutAccess } from './scout.js';
 import { guardKeys, hasTouch, mountKeyboard, onPageKey } from './keyboard.js';
 import { TOUR_STEPS, cloudStepText, mountTour } from './tour.js';
 import { mountLayout } from './layout.js';
@@ -294,6 +295,13 @@ $('saves').querySelector('.tabs').addEventListener('click', (e) => { const b = e
 
 const account = mountAccount({ log, toast, isRunning: () => running, isStandalone, leave: () => { leaving = true; } });
 account.ready.then((me) => { $('help-cloud').hidden = !me?.auth; });
+// The Scout (scout.js): whether this browser's account is a member, kept from each answer of /api/me, so a member
+// offline keeps the whole Scout.
+const MEMBER_KEY = 'cm0102-member';
+const keptMember = () => { try { return localStorage.getItem(MEMBER_KEY); } catch { return null; } };
+const keepMember = (me) => { const k = keptAccess(me); if (k) try { localStorage.setItem(MEMBER_KEY, k); } catch { /* not kept */ } };
+account.ready.then(keepMember);
+account.onAccountChange(keepMember);
 let cloud = null, cloudBehind = false, watcher = null, setSync = null, tacticSync = null;
 
 // The sync of the account's saves, when it has cloud saves. replace: the saves of the cloud may replace the ones here
@@ -981,6 +989,7 @@ function runEngine(files, info) {
         seen = now;
       }, 2000);
       const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running,
+        access: () => scoutAccess(account.me, keptMember()), inviteKind: () => inviteKind(account.me), invite: () => account.open(),
         onSetChange: (name, what) => (what === 'deleted' ? setSync?.deleted(name) : setSync?.run()) });
       $('editor-open').hidden = false;
       $('editor-open').onclick = () => editor.open();
