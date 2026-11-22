@@ -859,7 +859,11 @@ What to know about the Asyncify engine:
   random function (0x90cfc0, which a day's processing calls without end) and the steps of the game's sorts: the swap
   of the C library's qsort (0x9454d5) and the two comparators of `PlayerStats::PlayerStats` (0x7bfd50), which a new
   game runs for seconds while it sorts every player's history. It froze the page for 1.4 s and 0.7 s in Chromium;
-  now 0.19 s at most (21 November 2026, `docs/superpowers/specs/2026-11-21-sort-breathe-design.md`).
+  now 0.19 s at most (21 November 2026, `docs/superpowers/specs/2026-11-21-sort-breathe-design.md`). A third hook is
+  the C library's fread and fwrite (0x945bfe, 0x945ce6, every 4th call): "Save Compressed" packs a save with the
+  game's run-length packer zwrite (0x932e10) and unpacks it with zread (0x932c30), which call nothing else the page
+  waits on. A 60 MB career froze the page 2.3 s while it was saved and 1.3 s while it was loaded, and a player saw
+  Chrome's "Page Unresponsive" (22 November 2026); now 0.27 s and 0.16 s at most, the load as long as before.
 - A hidden tab (another window in front, a minimised one): the game goes on. Emscripten's sleep waits with
   setTimeout, and Chrome runs a hidden tab's timers once a second, then after five minutes once a minute, so the
   game's days all but stopped until the player came back (22 November 2026). While the tab is hidden, the page's

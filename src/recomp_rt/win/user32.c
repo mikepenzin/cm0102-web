@@ -1157,6 +1157,28 @@ RT_WRAP(009454d5, sort_swap) { sort_step(); o_009454d5(); }
 RT_WRAP(007c6d90, history_by_club) { sort_step(); o_007c6d90(); }
 RT_WRAP(007c6de0, history_by_staff) { sort_step(); o_007c6de0(); }
 
+void o_00945bfe(void);
+void o_00945ce6(void);
+
+/* The C library's fread (0x945bfe) and fwrite (0x945ce6), docs/research/2026-10-14-import-inventory.md. A save is
+ * packed and unpacked in the page's time with no moment for it: "Save Compressed" (on by default) packs it with
+ * zwrite (0x932e10, a run-length packer that writes each 200,000 bytes, cmp 0x30d40, through fwrite) and unpacks it
+ * with zread (0x932c30, through fread). A 60 MB career froze the page 2.3 s while it was saved (save_game_data
+ * 0x82e430, zadd_matching_files 0x933610) and 1.3 s while it was loaded (load_game_data 0x82a9c0); a larger career on
+ * a slower computer passed the 5 s after which Chrome offers "Page Unresponsive" (22 November 2026). In the browser,
+ * every 4th read or write lets the page have a moment if it had none for 100 ms (rt_web_breathe). Only time passes;
+ * nothing of the game changes. */
+static void file_step(void)
+{
+#ifdef __EMSCRIPTEN__
+    static uint32_t calls;
+    if (!(++calls & 3u)) rt_web_breathe();
+#endif
+}
+
+RT_WRAP(00945bfe, crt_fread) { file_step(); o_00945bfe(); }
+RT_WRAP(00945ce6, crt_fwrite) { file_step(); o_00945ce6(); }
+
 static void print_sleep_count(void) { fprintf(stderr, "recomp: idle sleeps %llu\n", (unsigned long long)sleep_count); }
 
 static void idle_rest(uint32_t widget)
