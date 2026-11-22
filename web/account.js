@@ -468,7 +468,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
           ? `<p class="small bad">${esc(t('Your Buy Me a Coffee membership ({level}) is not a level that gives Membership here: change its level on Buy Me a Coffee.', { level: u.member.level }))}</p>` : ''}
         ${!buyable() ? `<p class="small">${esc(t('Membership is not on sale yet.'))}</p>`
           : offer.coffee ? `<div class="row"><button class="primary" id="account-buy">${esc(t('Become a member · {price}', { price: priceText(offer.price) }))}</button></div>
-          <p class="small">${t('Membership is a Buy Me a Coffee membership. Join with this account\'s email, <b>{email}</b>: Cloud Saves and the Scout then turn on by themselves. Renews every month; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (Help, Send to the developer) and we will link it.', { email: esc(u.email) })}</p>`
+          <p class="small">${t('You become a member on Buy Me a Coffee: join with this account\'s email, <b>{email}</b>, and Cloud Saves and the Scout turn on by themselves. Renews every month; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (Help, Send to the developer) and we will link it.', { email: esc(u.email) })}</p>`
           : `<div class="row"><button class="primary" id="account-buy">${esc(t('Become a member · {price}', { price: priceText(offer.price) }))}</button></div>
           <p class="small">${esc(t('Renews every month; cancel any time. A full refund within 14 days of any payment. Payment by Paddle.'))}</p>`}
         ${own}${legal}`;
@@ -496,7 +496,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     for (let i = 0; i < 40; i++) {
       await new Promise((r) => setTimeout(r, i < 10 ? 1500 : 3000));
       await refresh();
-      if (me?.user?.cloud) { toast(t('You are a member: Cloud Saves are on, and the Scout shows every player.'), { ms: 7000 }); log('page: Cloud Saves on after the payment'); return; }
+      if (me?.user?.cloud) { toast(t('You are a member: Cloud Saves are on, and the Scout shows all its matches.'), { ms: 7000 }); log('page: Cloud Saves on after the payment'); return; }
     }
     toast(t('The payment is done. Your membership turns on within a few minutes: reload the page if it does not.'), { kind: 'bad', ms: 10000 });
   }
@@ -512,7 +512,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       await refresh();
       if (me?.user?.cloud) {
         stop();
-        toast(t('Thank you for joining! You are a member: Cloud Saves are on, and the Scout shows every player.'), { ms: 8000 });
+        toast(t('Thank you for joining! You are a member: Cloud Saves are on, and the Scout shows all its matches.'), { ms: 8000 });
         log('page: Cloud Saves on after joining');
       } else if (Date.now() > until) stop();
     };

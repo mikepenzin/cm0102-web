@@ -9,7 +9,7 @@ import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } fro
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
 import { onLanguage, t, tn } from './i18n.js';
-import { freeCut, scout, scoutIndex } from './scout.js';
+import { freeCut, scout, scoutIndex, scoutUpdate } from './scout.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -60,9 +60,10 @@ export function dataSetNameProblem(name, taken) {
 
 // onSetChange(name, 'made' | 'saved' | 'deleted'): a data set changed (the cloud sync of datasets.js follows).
 // access: 'full' or 'free' for the Scout (scout.js, scoutAccess); inviteKind: its invitation's button ('signin',
-// 'member', 'free'); invite: opens the Account dialog.
+// 'member', 'free', 'none'); invite: opens the Account dialog. onPageKey: keyboard.js's, for the tabs' arrow keys (its
+// guard keeps the page's keys from the elements' own listeners).
 export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data', isRunning, onSaved = () => {}, onSetChange = () => {},
-  access = () => 'full', inviteKind = () => 'signin', invite = () => {} }) {
+  access = () => 'full', inviteKind = () => 'signin', invite = () => {}, onPageKey = null }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
   const home = $('editor-home'), title = $('editor-title'), fileLabel = $('editor-file');
@@ -274,7 +275,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   function setPane(which, show = true) {
     pane = which;
     clearTimeout(timer);                              // a search typed in Players does not fill the list behind the Scout
-    for (const b of tabs.querySelectorAll('[data-pane]')) b.setAttribute('aria-selected', String(b.dataset.pane === pane));
+    for (const b of tabs.querySelectorAll('[data-pane]')) { b.setAttribute('aria-selected', String(b.dataset.pane === pane)); b.tabIndex = b.dataset.pane === pane ? 0 : -1; }
     const scouting = pane === 'scout';
     dialog.querySelector('.ed-search').hidden = scouting;
     list.hidden = scouting;
@@ -315,10 +316,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     let after = '';
     if (!r.total) after = `<p class="small">${esc(t('No player matches these filters.'))}</p>`;
     else if (level === 'free' && cut.held) {
-      const button = { signin: t('Sign in'), member: t('Become a member'), free: t('Sign in with Google, free') }[inviteKind()] ?? t('Sign in');
+      const button = { signin: t('Sign in'), member: t('Become a member'), free: t('Sign in with Google, free') }[inviteKind()];
       after = `${'<div class="scout-ghost" aria-hidden="true"></div>'.repeat(Math.min(cut.held, 5))}<div class="scout-held"><p>${esc(tn(cut.held, {
         one: 'The Scout is part of Membership: {n} more player matches.', other: 'The Scout is part of Membership: {n} more players match.' }))}</p>
-        <button class="primary" id="scout-invite" type="button">${esc(button)}</button></div>`;
+        ${button ? `<button class="primary" id="scout-invite" type="button">${esc(button)}</button>` : ''}</div>`;
     } else if (cut.held) after = `<p class="small">${esc(tn(cut.held, { one: 'And {n} more: narrow the filters to see them.', other: 'And {n} more: narrow the filters to see them.' }))}</p>`;
     found.innerHTML = rows + after;
   }
@@ -421,7 +422,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       }
       const missed = model.write(row, f);
       edited.add(row);
-      index = null;                                   // the Scout reads the players again
+      if (index) scoutUpdate(index, model, row);      // the Scout reads him again, not the whole save
       dirty();
       show(row);
       const m = Object.entries(missed);
@@ -494,6 +495,17 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   search.oninput = () => { clearTimeout(timer); timer = setTimeout(() => model && pane === 'players' && results(), 120); };
   list.onclick = (e) => { const b = e.target.closest('[data-row]'); if (b) show(Number(b.dataset.row)); };
   tabs.onclick = (e) => { const b = e.target.closest('[data-pane]'); if (b && b.dataset.pane !== pane) setPane(b.dataset.pane); };
+  const tabKey = (e) => {
+    if (!(e.target instanceof Node) || !tabs.contains(e.target)) return;
+    const all = [...tabs.querySelectorAll('[data-pane]')], at = all.findIndex((b) => b.dataset.pane === pane);
+    const to = { ArrowRight: at + 1, ArrowLeft: at - 1, Home: 0, End: all.length - 1 }[e.key];
+    if (to === undefined) return;
+    e.preventDefault();
+    const b = all[(to + all.length) % all.length];
+    if (b.dataset.pane !== pane) setPane(b.dataset.pane);
+    b.focus();
+  };
+  if (onPageKey) onPageKey(tabKey); else tabs.addEventListener('keydown', tabKey);
   found.onclick = (e) => {
     if (e.target.closest('#scout-invite')) { invite(); return; }
     const b = e.target.closest('[data-row]');
@@ -539,6 +551,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       title.textContent = kind === 'set' ? t('Edit a data set') : t('Edit a saved game');
       dirty();
       if (model && body.classList.contains('detail')) {
+        if (pane === 'scout') drawFilters();
         const typed = [...form.querySelectorAll('[data-f]')].map((i) => [i.dataset.f, i.value]);
         show(current);
         for (const [k, v] of typed) {

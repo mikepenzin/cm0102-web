@@ -11,18 +11,28 @@ export const SCOUT_LIMIT = 100;                 // the rows a search gives at mo
 export const FREE_ROWS = 3;                     // the rows a free player sees in full
 const RATED = 15;                               // a position counts from this rating (as the Editor's position text)
 
-// Every player of a saved game, read once: what a search filters on, in typed arrays.
+// One player's numbers into the index at i.
+function fill(index, i, f) {
+  index.age[i] = f.age; index.ca[i] = f.ca; index.pa[i] = f.pa;
+  index.pos.set(f.positions.slice(0, 12), i * 12);
+  for (let k = 0; k < A; k++) index.values[i * A + k] = f.attrs[NAMES[k]] ?? 0;
+}
+
+// Every player of a saved game, read once: what a search filters on, in typed arrays. at: staff row -> place.
 export function scoutIndex(game) {
-  const list = game.players(), n = list.length;
-  const age = new Int16Array(n), ca = new Int16Array(n), pa = new Int16Array(n);
-  const pos = new Uint8Array(n * 12), values = new Uint8Array(n * A);
-  list.forEach((p, i) => {
-    const f = game.read(p.row);
-    age[i] = f.age; ca[i] = f.ca; pa[i] = f.pa;
-    pos.set(f.positions.slice(0, 12), i * 12);
-    for (let k = 0; k < A; k++) values[i * A + k] = f.attrs[NAMES[k]] ?? 0;
-  });
-  return { list, age, ca, pa, pos, values };
+  const list = [...game.players()], n = list.length;
+  const index = { list, at: new Map(), age: new Int16Array(n), ca: new Int16Array(n), pa: new Int16Array(n),
+    pos: new Uint8Array(n * 12), values: new Uint8Array(n * A) };
+  list.forEach((p, i) => { index.at.set(p.row, i); fill(index, i, game.read(p.row)); });
+  return index;
+}
+
+// A player changed in the Editor (Apply): only his place in the index read again, not the whole save.
+export function scoutUpdate(index, game, row) {
+  const i = index.at.get(row);
+  if (i === undefined) return;
+  index.list[i] = game.players().find((p) => p.row === row) ?? index.list[i];
+  fill(index, i, game.read(row));
 }
 
 const set = (v) => v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
@@ -73,9 +83,11 @@ export function freeCut(result, access) {
   return { rows, held: result.total - rows.length };
 }
 
-// The invitation's button, the Account dialog's own for the account as it is: 'signin' (signed out, or not known
-// yet), 'member' (signed in, not a member: Become a member), 'free' (free with an account: Sign in with Google, free).
+// The invitation's button, the Account dialog's own for the account as it is: 'signin' (signed out), 'member'
+// (signed in, not a member: Become a member), 'free' (free with an account: Sign in with Google, free), 'none' (the
+// account not known, offline at a first visit: the Account dialog would be empty, so no button).
 export function inviteKind(me) {
-  if (me?.offer?.free && !me.user) return 'free';
-  return me?.user ? 'member' : 'signin';
+  if (!me) return 'none';
+  if (me.offer?.free && !me.user) return 'free';
+  return me.user ? 'member' : 'signin';
 }

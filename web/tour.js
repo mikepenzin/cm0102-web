@@ -35,7 +35,7 @@ export const TOUR_STEPS = [
 // and how to turn them on from here, in the words of the Account dialog's own button. price: " ($5 a month)" or none.
 export function cloudStepText(me) {
   const what = t('Membership holds Cloud Saves, which keep your saves on all your devices (each save goes up right after you save it, and your other devices get it when they start), and the Scout, which finds players in the Editor.');
-  if (me?.user?.cloud) return t('You are a member ({email}): Cloud Saves are on, each save goes up right after you save it and your other devices get it when they start, and the Scout in the Editor shows every player. This button shows your membership.', { email: me.user.email });
+  if (me?.user?.cloud) return t('You are a member ({email}): Cloud Saves are on, each save goes up right after you save it and your other devices get it when they start, and the Scout in the Editor shows all its matches. This button shows your membership.', { email: me.user.email });
   const offer = me?.offer;
   if (offer?.free) return `${what} ${t('Sign in here with Google, and you are a member, free.')}`;
   const price = offer?.price ? ` (${priceText(offer.price)})` : '';

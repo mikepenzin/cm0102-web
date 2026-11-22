@@ -612,12 +612,17 @@ more there), the lowest potential (PA) and ability (CA), and up to three attribu
 the 1–20 scale the game shows (savedit.js's `read`: the game's own ratings, 0x543540). The matches come best first
 (PA, then CA, then name), at most 100; one opens the player's form, and Back on a phone returns to them with the
 filters kept. The players are read once when the tab opens (60,000 in about 200 ms in Node) and a search takes a few
-milliseconds; it runs 250 ms after the last change of a filter. A data set has no Scout.
+milliseconds; it runs 250 ms after the last change of a filter. Apply reads only the changed player again
+(`scoutUpdate`). The two tabs are tabs to the keys too: the arrow keys, Home and End move between them (through
+keyboard.js's `onPageKey`, since its guard keeps the page's keys from the elements' own listeners). A data set has no
+Scout.
 
-The Scout is part of Membership. A member sees every match; a free player the first 3, then blank shapes, the count
+The Scout is part of Membership. A member sees the best 100 matches; a free player the first 3, then blank shapes, the count
 ("The Scout is part of Membership: 44 more players match.") and the Account dialog's own button (Sign in, Become a
-member, or Sign in with Google, free). The held-back players are never put in the page, and the Players list is
-emptied while the Scout shows. A member is whoever `/api/me` names with `user.cloud`; the last answer is kept in
+member, or Sign in with Google, free; none when the account is not known, offline at a first visit, where the
+Account dialog would be empty). The held-back players are never put in the page, and the Players list is
+emptied while the Scout shows. An open Scout follows the account: a player who joins sees every match at once. A
+member is whoever `/api/me` names with `user.cloud`; the last answer is kept in
 localStorage (`cm0102-member`), so a member offline keeps the whole Scout. Where no one could pay (no accounts, or
 nothing to buy, as on a server that gives Cloud Saves to a list of emails) everyone has the whole Scout. The limit is
 the browser's: the save lives there, and the server is not sent saves to scout them.

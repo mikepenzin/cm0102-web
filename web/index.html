@@ -585,12 +585,12 @@
     <div id="editor-home"></div>
     <div class="ed-body" hidden>
       <div class="ed-list"><div id="editor-tabs" class="ed-tabs" role="tablist" hidden>
-          <button type="button" role="tab" data-pane="players" aria-selected="true" data-t>Players</button>
-          <button type="button" role="tab" data-pane="scout" aria-selected="false" data-t>Scout</button></div>
+          <button type="button" role="tab" id="editor-tab-players" data-pane="players" aria-selected="true" aria-controls="editor-results" data-t>Players</button>
+          <button type="button" role="tab" id="editor-tab-scout" data-pane="scout" aria-selected="false" aria-controls="editor-scout" tabindex="-1" data-t>Scout</button></div>
         <div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" aria-label="Search a player or a club" data-t-attr="placeholder,aria-label" autocomplete="off" spellcheck="false">
         <button id="editor-add" type="button" hidden data-t>Add a player</button></div>
-        <div id="editor-results"></div>
-        <div id="editor-scout" hidden><div id="scout-filters" class="scout-filters"></div><div id="scout-results"></div></div></div>
+        <div id="editor-results" role="tabpanel" aria-labelledby="editor-tab-players"></div>
+        <div id="editor-scout" role="tabpanel" aria-labelledby="editor-tab-scout" hidden><div id="scout-filters" class="scout-filters"></div><div id="scout-results"></div></div></div>
       <div class="ed-form" id="editor-form" data-t-attr="data-empty" data-empty="Pick a player from the list to change him."></div>
     </div>
     <datalist id="editor-clubs"></datalist>

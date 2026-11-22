@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SaveGame } from '../savedit.js';
-import { scoutIndex, scout, scoutAccess, keptAccess, freeCut, inviteKind } from '../scout.js';
+import { scoutIndex, scoutUpdate, scout, scoutAccess, keptAccess, freeCut, inviteKind } from '../scout.js';
 import { fakeSaveGame } from './fakes.mjs';
 
 // A player of the fake save: born on 1 January of the year that gives this age on the save's date (14 July 2001).
@@ -86,5 +86,26 @@ test('inviteKind: the Account dialog\'s own button for the account as it is', ()
   assert.equal(inviteKind({ auth: true, user: null, offer: { coffee: true } }), 'signin', 'signed out: Sign in');
   assert.equal(inviteKind({ auth: true, user: { cloud: false }, offer: { coffee: true } }), 'member', 'signed in: Become a member');
   assert.equal(inviteKind({ auth: true, user: null, offer: { free: true } }), 'free', 'free with an account: Sign in with Google, free');
-  assert.equal(inviteKind(null), 'signin', 'not known yet: Sign in (the dialog says the rest)');
+  assert.equal(inviteKind(null), 'none', 'not known (offline at a first visit): no button, the dialog would be empty');
+});
+
+test('scoutUpdate: an edited player is read again into the index, the same as a new index', async () => {
+  const g = await open([P('Ann', 21, 120, 170), P('Bob', 19, 130, 160)]);
+  const ix = scoutIndex(g);
+  const row = g.players().find((x) => x.name === 'Bob Test').row;
+  const f = g.read(row);
+  f.pa = 195; f.attrs.Pace = 20;
+  g.write(row, f);
+  scoutUpdate(ix, g, row);
+  const fresh = scoutIndex(g);
+  const q = { ...NONE, attrs: [{ name: 'Pace', min: 1 }] };
+  assert.deepEqual(scout(ix, q), scout(fresh, q));
+  assert.equal(scout(ix, NONE).rows[0].name, 'Bob Test', 'his new potential puts him first');
+});
+
+test('the page\'s words: the Scout promises no more than the best 100, and Membership is not "a membership"', async () => {
+  const { pageStrings } = await import('./i18n-strings.mjs');
+  const texts = [...pageStrings().keys()];
+  assert.deepEqual(texts.filter((s) => /Scout/.test(s) && /every (player|match)/.test(s)), [], 'the Scout shows the best 100, not every player');
+  assert.deepEqual(texts.filter((s) => /Membership is an? (monthly )?(Buy Me a Coffee )?membership/i.test(s)), [], 'no sentence that says Membership is a membership');
 });

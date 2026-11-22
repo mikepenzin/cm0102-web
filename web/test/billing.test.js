@@ -186,6 +186,7 @@ test('the legal pages: pricing, terms, refunds, privacy, with the seller, the co
     if (page !== 'pricing') assert.match(html, /help@example\.com/, `${page}: the contact`);
     assert.doesNotMatch(html, /paddle/i, `${page}: Paddle is not named (no one bought through it)`);
     assert.match(html, /Membership/, `${page}: the plan is Membership`);
+    assert.doesNotMatch(html, /Membership is an? (monthly )?(Buy Me a Coffee )?membership/i, `${page}: Membership is not "a membership"`);
     if (page === 'pricing' || page === 'terms') assert.match(html, /Cloud Saves[\s\S]*Scout/, `${page}: what Membership holds`);
     if (page === 'pricing' || page === 'terms') {
       assert.doesNotMatch(html, /every (player|one)[^.]*match/, `${page}: the Scout shows at most 100 (scout.js SCOUT_LIMIT): no promise of every match`);

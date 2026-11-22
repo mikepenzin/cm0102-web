@@ -989,7 +989,7 @@ function runEngine(files, info) {
         seen = now;
       }, 2000);
       const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running,
-        access: () => scoutAccess(account.me, keptMember()), inviteKind: () => inviteKind(account.me), invite: () => account.open(),
+        access: () => scoutAccess(account.me, keptMember()), inviteKind: () => inviteKind(account.me), invite: () => account.open(), onPageKey,
         onSetChange: (name, what) => (what === 'deleted' ? setSync?.deleted(name) : setSync?.run()) });
       account.onAccountChange(() => editor.redraw());      // joined or signed out: the open Scout follows
       $('editor-open').hidden = false;

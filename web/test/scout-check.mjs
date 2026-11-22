@@ -46,7 +46,7 @@ const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAI
 
 // Ten players with names found nowhere else, PA 190 down to 181 (the order the Scout shows), Finishing apart.
 const FIRST = ['Aurelio', 'Benedikt', 'Cassiano', 'Dorotheus', 'Eustachio', 'Florentin', 'Gaspard', 'Hilarion', 'Isidoro', 'Jovanni'];
-const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [1981, 1, 1], club: 0, fill: 6 + i }));
+const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i }));
 const saveBytes = await fakeSaveGame(players);
 const g = new SaveGame(saveBytes);
 const finishing = g.players().map((p) => g.read(p.row).attrs.Finishing);
@@ -107,14 +107,58 @@ try {
       && (await p.$$('#scout-results .scout-ghost')).length > 0 && (await p.textContent('#scout-invite')).trim() === 'Become a member', await p.textContent('#scout-results'));
     check('free: no held-back player is anywhere in the page', NAMES.slice(3).every((n) => !html.includes(n.split(' ')[0])), NAMES.slice(3).filter((n) => html.includes(n.split(' ')[0])).join());
     check('the Players list is empty while the Scout shows', (await p.$$('#editor-results .ed-row')).length === 0);
+    check('a player with no club: his row says No club', /Cassiano Scoutson[\s\S]*No club/.test(await p.textContent('#scout-results')));
+    // The tabs by the keys: arrows move between them, as tabs do.
+    await p.focus('#editor-tabs [data-pane="scout"]');
+    await p.keyboard.press('ArrowLeft');
+    const left = await p.evaluate(() => ({ sel: document.querySelector('#editor-tabs [aria-selected="true"]')?.dataset.pane, focus: document.activeElement?.dataset?.pane }));
+    await p.keyboard.press('ArrowRight');
+    const right = await p.evaluate(() => ({ sel: document.querySelector('#editor-tabs [aria-selected="true"]')?.dataset.pane, focus: document.activeElement?.dataset?.pane,
+      panel: document.getElementById(document.activeElement?.getAttribute('aria-controls') ?? '')?.getAttribute('role') }));
+    check('the tabs: arrow keys choose and focus them; a tab names its panel', left.sel === 'players' && left.focus === 'players' && right.sel === 'scout' && right.focus === 'scout' && right.panel === 'tabpanel',
+      JSON.stringify({ left, right }));
+    await p.waitForSelector('#scout-results .ed-row');
+    // A filter typed key by key searches once, after the pause.
+    await p.evaluate(() => { window.__redraws = 0; new MutationObserver(() => { window.__redraws++; }).observe(document.getElementById('scout-results'), { childList: true }); });
+    await p.selectOption('#scout-filters [data-attr="1"]', 'Pace');
+    await p.waitForTimeout(500);
+    await p.evaluate(() => { window.__redraws = 0; });
+    await p.type('#scout-filters [data-min="1"]', '12', { delay: 60 });
+    await p.waitForTimeout(500);
+    const redraws = await p.evaluate(() => window.__redraws);
+    check('a filter typed key by key searches once, after a pause', redraws === 1, `${redraws} redraws`);
+    await p.fill('#scout-filters [data-min="1"]', '');
+    await p.selectOption('#scout-filters [data-attr="1"]', '');
+    await p.waitForTimeout(500);
     await p.selectOption('#scout-filters [data-attr="0"]', 'Finishing');
     await p.fill('#scout-filters [data-min="0"]', String(MIN));
     await p.waitForFunction((n) => new RegExp(`${n} more player`).test(document.getElementById('scout-results').textContent), fifteenPlus - 3, { timeout: 5000 }).catch(() => {});
     await shot(p, 'free-laptop');
+    {
+      const shownNow = await rowNames(p), htmlNow = await pageHtml(p);
+      const out = NAMES.filter((n) => !shownNow.includes(n));
+      check('after a filter: no player but the shown ones is anywhere in the page', out.every((n) => !htmlNow.includes(n.split(' ')[0])), out.filter((n) => htmlNow.includes(n.split(' ')[0])).join());
+    }
     check(`a filter (Finishing ${MIN} or more) narrows the matches to ${fifteenPlus}`, new RegExp(`${fifteenPlus - 3} more player`).test(await p.textContent('#scout-results')), await p.textContent('#scout-results'));
     await p.click('#scout-results .ed-row');
     await p.waitForSelector('#editor-form [data-f="Pace"]');
     check('a result opens the player\'s form', (await p.textContent('#editor-form h3')).includes('Scoutson'));
+    // Apply in the Scout: the player read again in place, not the whole save (no "Reading the players").
+    await p.evaluate(() => { window.__reread = false; new MutationObserver(() => { if (/Reading the players/.test(document.getElementById('scout-results').textContent)) window.__reread = true; })
+      .observe(document.getElementById('scout-results'), { childList: true, subtree: true }); });
+    await p.fill('[data-f="pa"]', '199');
+    await p.click('#editor-apply');
+    await p.waitForTimeout(400);
+    const after = await rowNames(p);
+    check('Apply in the Scout: the matches follow at once, the save not read again', !(await p.evaluate(() => window.__reread)) && after.length > 0,
+      `${after.join()} reread=${await p.evaluate(() => window.__reread)}`);
+    // A language chosen with a player open: the Scout's filters in it too.
+    const ageBefore = await p.textContent('#scout-filters span');
+    await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('de', { keep: false }); });
+    await p.waitForTimeout(300);
+    const ageAfter = await p.evaluate(async () => [document.querySelector('#scout-filters span').textContent, (await import('/i18n.js')).t('Age')]);
+    check('a language chosen with a player open: the Scout\'s filters change too', ageBefore === 'Age' && ageAfter[0] === ageAfter[1] && ageAfter[0] !== 'Age', JSON.stringify(ageAfter));
+    await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('en', { keep: false }); });
     await p.click('#scout-invite');
     check('the invitation opens the Account dialog', await p.isVisible('#account[open]'));
     // The player joins while the Scout is open: the account changes (the sign-in window's message), the Scout shows all.
@@ -180,6 +224,16 @@ try {
     await p.click('#editor-new');
     await p.waitForSelector('#editor .ed-row', { timeout: 30000 });
     check('a data set: no Scout tab', !(await p.isVisible('#editor-tabs')));
+    await ctx.close();
+  }
+  {
+    // A first visit offline: the account not known, nothing kept. 3 matches, the count, and no button (the Account
+    // dialog would be empty).
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await editorOn(ctx, null);
+    await scoutTab(p);
+    check('the account not known, nothing kept: 3 matches, the count, no button', (await rowNames(p)).length === 3
+      && /7 more players match/.test(await p.textContent('#scout-results')) && !(await p.$('#scout-invite')));
     await ctx.close();
   }
   check('no page errors', errors.length === 0, errors.join(' | '));
