@@ -18,7 +18,8 @@ behind an invitation to become a member. Every text in the page's languages, as 
   of the results opens in the Editor's form on the right, as one picked from the list does.
 - The filters: age from–to; a position (a player who rates 15 or more there); minimum potential ability (PA) and
   current ability (CA); up to three attributes, each with a minimum, on the 1–20 scale the game shows.
-- On a saved game (as of its last save) and on a data set (a database for new games: scouting before a career).
+- On a saved game (as of its last save), on a data set (a database for new games), and on the game's own database,
+  read-only, with no copy made: scouting before a career.
 - Members see every match (up to 100, sorted by PA, then CA). Free players see the first 3 in full; below them,
   dimmed placeholder rows, the count ("44 more players match") and the invitation with the Account dialog's own
   button. The hidden players' data is never put into the page.
@@ -63,8 +64,10 @@ behind an invitation to become a member. Every text in the page's languages, as 
 - Membership as the page knows it: `/api/me` (`account.js`, `me.user.cloud`), and the offer (`me.offer`: Buy Me a
   Coffee, Paddle, or free with an account). The server's flag stays `cloud` (a stored field of every account): a
   member is an account with it. No server change is needed for the gate.
-- A server with no accounts (`me.auth` false) or one that sells nothing (no offer) has no one who could pay: the
-  Scout is whole there. With "free with an account" (`offer.free`) the invitation is to sign in.
+- A server with no accounts (`me.auth` false), or one where nothing can be bought (an offer with no Buy Me a Coffee,
+  no Paddle and no link: the Account dialog's "not on sale yet", as on a server that gives Cloud Saves to a list of
+  emails, `CM_CLOUD_USERS`), has no one who could pay: the Scout is whole there (the executor's call). With "free with
+  an account" (`offer.free`) the invitation is to sign in.
 - Translations: English is the key (`t`, `tn`, `data-t`); the shared modules (`savedit.js`, `dataset.js`) carry
   `key`/`vars` on errors and never import `i18n.js`.
 - The legal pages are English and binding: their changed wording (Membership, what it holds) is Max's to read and
@@ -85,6 +88,10 @@ behind an invitation to become a member. Every text in the page's languages, as 
 - **Where:** the Editor, once a saved game or a data set is open: two tabs over the left column, "Players" (the list
   and search as now) and "Scout". On a phone the Scout's filters and results take the column; a result opens the
   form as a picked player does, and Back returns to the results with the filters kept.
+- **The game's own database, read-only** (Max, 22 November 2026): the Editor's home gains "The game's database"
+  (the game's data, `/game/Data`, as a new career uses it), which opens on the Scout with no copy made. Its players
+  can be looked at, not changed: no Save, no new player, the form's fields read-only. Scouting before a 2001/02
+  career needs no 60 MB data set.
 - **Filters:** age from and to (blank: any); position (any, or one of the twelve, counting a rating of 15 or more);
   minimum PA and minimum CA; up to three rows of attribute + minimum (the attributes the Editor shows for that kind
   of file, in its order and its names). A search runs when a filter changes (after a short pause while typing).
@@ -95,7 +102,9 @@ behind an invitation to become a member. Every text in the page's languages, as 
   the count of the rest, and the invitation: "The Scout is part of Membership: {count} more players match." with
   the Account dialog's own button for the account as it is: signed out, "Sign in"; signed in, "Become a member";
   free with an account, "Sign in with Google, free". The button opens the Account dialog. The filters work in full
-  for everyone; only the rows are held back.
+  for everyone; only the rows are held back. While the Scout tab shows, the Players list is emptied from the
+  page (drawn again when its tab is chosen), so the page holds no player the Scout held back (the executor's call;
+  the Players tab shows CA and PA by name, as now, one search at a time).
 - **Members:** whoever `/api/me` says has `user.cloud`; kept in localStorage as the last answer, so an offline member
   keeps the full Scout; a later answer that says no ends it.
 - **Membership, the rename:** the paid plan is "Membership" and its holder "a member" in every page text, the tour,
