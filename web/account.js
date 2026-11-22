@@ -356,7 +356,7 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
 
 // The two plans, side by side: what the page shows a player who has no Cloud Saves (account dialog, start box).
 // The two plans. The free game is the one everybody has (the green border): players read a highlighted plan as the one
-// they must take, and the £5 card looked like the only way in. Cloud Saves is marked an optional add-on.
+// they must take, and the $5 card looked like the only way in. Cloud Saves is marked an optional add-on.
 export function plansHtml(offer, maxSaves = 30) {
   return `<div class="plans">
     <div class="plan on"><span class="tag">Included · no account</span><h4>The game</h4><div class="price">Free</div><ul>

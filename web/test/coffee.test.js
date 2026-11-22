@@ -24,10 +24,10 @@ before(async () => {
   logs = [];
   const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
   const cloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: SESSION, google: google.google,
-    price: '£5 a month', log: (t) => logs.push(t),
+    price: '$5 a month', log: (t) => logs.push(t),
     coffee: { secret: SECRET, url: 'https://buymeacoffee.com/someone/membership', levels: ['squad player', 'club legend'] } });
   server = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv'), cloud,
-    site: { seller: 'A. Seller', contact: 'help@example.com', price: '£5 a month' } });
+    site: { seller: 'A. Seller', contact: 'help@example.com', price: '$5 a month' } });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${server.address().port}`;
 });
@@ -108,7 +108,7 @@ test('the settings: a signing secret and an https membership page, from BMC_MEMB
 
 test('join, cancel at the period end, pause: the webhooks of Buy Me a Coffee turn Cloud Saves on and off by email', async () => {
   const out = await (await fetch(`${base}/api/me`)).json();
-  assert.deepEqual(out.offer, { price: '£5 a month', free: false, url: 'https://buymeacoffee.com/someone/membership', coffee: true, paddle: null });
+  assert.deepEqual(out.offer, { price: '$5 a month', free: false, url: 'https://buymeacoffee.com/someone/membership', coffee: true, paddle: null });
   const b = await signIn({ sub: '7000001', email: 'Fan@Example.com', email_verified: true, name: 'A Fan' });
   assert.equal((await b.me()).user.cloud, false);
   // Refused: no signature, another secret.

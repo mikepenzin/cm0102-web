@@ -533,7 +533,7 @@ try {
   // ---- Sold as a Buy Me a Coffee membership (another server of the same store): join in another tab, the webhook,
   // Cloud Saves turn on in the running game; the account dialog points to the membership. ----
   const coffeeCloud = createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'z'.repeat(40),
-    maxSaves: 10, maxPacked: 2 << 20, google: google.google, log: (t) => logs.push(t), price: '£5 a month', storeTtl: 0,
+    maxSaves: 10, maxPacked: 2 << 20, google: google.google, log: (t) => logs.push(t), price: '$5 a month', storeTtl: 0,
     coffee: { secret: 'bmc_check', url: 'https://buymeacoffee.com/someone/membership', levels: [] } });
   const coffeeServer = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud: coffeeCloud });
   await new Promise((r) => coffeeServer.listen(0, '127.0.0.1', r));
@@ -551,7 +551,7 @@ try {
     await m.waitForFunction(() => window.__fake, null, { timeout: 30000 });
     await m.click('#account-open');
     const offerText = (await m.innerText('#account-body')).replace(/\s+/g, ' ');
-    check('membership: the button, the price and the email to join with', (await m.textContent('#account-buy')) === 'Become a member · £5 a month'
+    check('membership: the button, the price and the email to join with', (await m.textContent('#account-buy')) === 'Become a member · $5 a month'
       && /Join with this account's email, member@example\.com/.test(offerText) && !/Paddle/.test(offerText), offerText.slice(0, 300));
     await shot(m, 'member-offer');
     const [tab] = await Promise.all([mctx.waitForEvent('page'), m.click('#account-buy')]);

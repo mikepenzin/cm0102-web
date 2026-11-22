@@ -40,7 +40,7 @@ export async function startDemoSite({ adminToken } = {}) {
   const coffee = process.env.CM_COFFEE_URL || 'https://buymeacoffee.com';
   const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
   const cloud = createCloud({ s3,
-    clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'v'.repeat(40), google: google.google, price: '£5 a month',
+    clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'v'.repeat(40), google: google.google, price: '$5 a month',
     coffee: { secret: 'video', url: `${coffee.replace(/\/+$/, '')}/membership`, levels: [] }, log: () => {} });
   // The database library, with three databases as the admin page would add them (library.mjs: the index and the zips).
   const library = createLibrary({ s3 });
@@ -55,7 +55,7 @@ export async function startDemoSite({ adminToken } = {}) {
   await s3.put('library/index.json', Buffer.from(JSON.stringify({ entries: libEntries })), { type: 'application/json' });
   const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, library,
     stats: createStats({ store: statsStore(null) }), statsMode: 'optout', adminToken,
-    site: { seller: process.env.CM_SELLER || '', price: '£5 a month', coffee, youtube: process.env.CM_YOUTUBE_URL } });
+    site: { seller: process.env.CM_SELLER || '', price: '$5 a month', coffee, youtube: process.env.CM_YOUTUBE_URL } });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const BASE = `http://127.0.0.1:${server.address().port}`;
   const close = async () => {

@@ -61,7 +61,7 @@ try {
     check(`${name}: each card is on the screen, beside its button, over none of the page's buttons`, steps.every((s) => s.inside && !s.over),
       steps.filter((s) => !s.inside || s.over).map((s) => `${s.title}${s.over ? ' over a button' : ''}${s.inside ? '' : ' off the screen'}`).join(', '));
     check(`${name}: the Cloud Saves step says what they do and how to turn them on, with the site's price`,
-      /all your devices/.test(cloudText) && /sign in with Google, then press "Become a member" \(£5 a month\)/.test(cloudText), cloudText);
+      /all your devices/.test(cloudText) && /sign in with Google, then press "Become a member" \(\$5 a month\)/.test(cloudText), cloudText);
     const after = await p.evaluate(() => ({ card: Boolean(document.getElementById('tour')), ring: document.querySelectorAll('.tour-target').length,
       seen: localStorage.getItem('cm0102-tour-seen'), focus: document.activeElement?.id }));
     check(`${name}: Done ends it, takes the ring off, gives the game the focus and marks it seen`, !after.card && after.ring === 0 && after.seen === '1'

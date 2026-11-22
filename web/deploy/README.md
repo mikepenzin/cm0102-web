@@ -109,9 +109,13 @@ signing secret, the levels that give Cloud Saves, their price, and the seller's 
 refunds, privacy and pricing pages show:
 
 ```bash
-fly secrets set BMC_WEBHOOK_SECRET=<signing secret> BMC_CLOUD_LEVELS="Squad Player,Club Legend" CM_PRICE="£5 a month" \
+fly secrets set BMC_WEBHOOK_SECRET=<signing secret> BMC_CLOUD_LEVELS="Squad Player,Club Legend" CM_PRICE='$5 a month' \
   CM_COFFEE_URL=https://buymeacoffee.com/<your name> CM_SELLER="<your name>" CM_CONTACT=<your email>
 ```
+
+The price in single quotes: in double quotes the shell takes `$5` for a variable and leaves " a month". Players see
+`CM_PRICE` as it is (the start box, Account, the tour, the pricing page); keep it the price of the levels on Buy Me a
+Coffee.
 
 `fly logs` shows `sold as a Buy Me a Coffee membership (levels …)`. The membership page is `CM_COFFEE_URL` +
 `/membership`; `BMC_MEMBERSHIP_URL` sets another. Send test event in Buy Me a Coffee: the log says the signature holds.
