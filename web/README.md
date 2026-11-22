@@ -802,7 +802,11 @@ month") shows its period in the page's language when it has that shape (`priceTe
 
 The tables were translated by machine; Help says so in the other languages and offers Send to the developer for a
 better word. To change a word, edit its entry in `i18n-<code>.js`; to add a text, write it through `t` and add it to
-the nine tables. `node --test web/test/i18n.test.js` (and CI) fails on an entry whose English is no longer on the
+the nine tables: `node web/test/i18n-delta.mjs [out.json]` lists the texts the tables lack and the entries whose English
+left the page, `test/i18n-brief.md` is the brief for a translator (a person or a helper agent), and
+`node web/test/i18n-table-check.mjs <code>` checks one table (missing, stale, placeholders, markup, plural forms). Push
+the English and the tables together: the English alone leaves stale entries, and CI fails (the skill `web-languages`
+has the steps). `node --test web/test/i18n.test.js` (and CI) fails on an entry whose English is no longer on the
 page, a wrong `{placeholder}` and a plural without every form of its language, and lists the texts missing from a
 table; with `I18N_STRICT=1` a missing text fails too. `test/i18n-check.mjs` chooses the language by `?lang=`, by the browser
 and in Help (with a dialog open), and sweeps the start box, the bar, the tour, Saved games, Account, Help, two toasts
@@ -1009,9 +1013,17 @@ What to know about the Asyncify engine:
   `CM_VIDEO_MUSIC` (or `CM_VIDEO_MUSIC_APP`, `CM_VIDEO_MUSIC_EDITOR`) names another file, or `none`. `node
   web/test/videos-music.mjs <folder> [editor|app]` makes the films again from their projects with the music, without a
   new recording. Make them again after the page changes.
-- `NODE_PATH=$(npm root -g) node web/test/screens.mjs <folder>`: every screen of the page on a laptop (1280x800) and a
-  phone (an iPhone 13), for a review of the look: the start, the bar over the game, Saved games and its three tabs, the
-  editor, the account, Help, Send to the developer, the legal pages and the admin page.
+- `NODE_PATH=$(npm root -g) node web/test/screens.mjs <folder> [code]`: every screen of the page on a laptop
+  (1280x800), a phone (an iPhone 13) and a phone held sideways, for a review of the look: the start, the tour, the bar
+  over the game, Saved games and its three tabs, Squad Hub (a save, its Scout, a player, its start), the account, Help,
+  Send to the developer, the legal pages and the admin page. With a language code, the page in it. It fails when a
+  label, a tab, a dialog button or the tour card is cut or leaves the window.
+- `NODE_PATH=$(npm root -g) node web/test/tour-check.mjs`: the first-visit tour on a laptop, a phone upright and
+  sideways: its steps, the cards beside their buttons and over none, Escape, the Membership step's words.
+- `NODE_PATH=$(npm root -g) node web/test/i18n-check.mjs`: the languages: `?lang=`, the browser's, Help's choice with a
+  dialog open, and the sweep (a stand-in table marks every text; any English left outside the marks in the start box,
+  the bar, the tour, Saved games, Account, Help, the toasts, a refused upload and the Scout fails); a server with no
+  library. The skill `web-checks` says which check to run for which change.
 - `NODE_PATH=$(npm root -g) node web/test/editor-check.mjs`: the editors in Chromium, with a small saved game and a small
   data set in the game's formats (`test/fakes.mjs`). The save editor on a computer and a phone: Edit, search, change,
   a change that counts when its field is left, a rating out of reach, the colours, Save shown after a change, Save,
