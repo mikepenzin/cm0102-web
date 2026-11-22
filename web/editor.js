@@ -117,7 +117,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
 
   function showHome() {
     model = null; kind = null; edited = new Set(); current = null; index = null;
-    title.textContent = t('Editor');
+    title.textContent = t('Squad Hub');
     fileLabel.textContent = '';
     body.hidden = true;
     home.hidden = false;
@@ -172,13 +172,14 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
 
   // ---- Opening ----
 
-  function showEditing(label, what) {
+  // A save or a data set open: its own name is the title.
+  function showEditing(label) {
     home.hidden = true;
     $('editor-home-button').hidden = false;
     body.hidden = false;
     body.classList.remove('detail');
-    title.textContent = what;
-    fileLabel.textContent = label;
+    title.textContent = label;
+    fileLabel.textContent = '';
     form.innerHTML = '';
     search.value = '';
     $('editor-add').hidden = kind !== 'set';
@@ -191,7 +192,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   async function openSave(file) {
     kind = 'save'; name = file; edited = new Set(); backedUp = false; current = null;
     if (!dialog.open) dialog.showModal();
-    showEditing(file, t('Edit a saved game'));
+    showEditing(file);
     list.innerHTML = `<p class="small">${esc(t('Opening the saved game…'))}</p>`;
     say(isRunning() ? () => t('Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.') : '');
     await later();
@@ -224,7 +225,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   async function openSet(n) {
     kind = 'set'; name = n; edited = new Set(); current = null; clubs = null; nations = null;
     if (!dialog.open) dialog.showModal();
-    showEditing(n, t('Edit a data set'));
+    showEditing(n);
     list.innerHTML = `<p class="small">${esc(t('Opening the data set…'))}</p>`;
     say('');
     await later();
@@ -599,7 +600,6 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       showHome();
       $('editor-new-name').value = typed;
     } else {
-      title.textContent = kind === 'set' ? t('Edit a data set') : t('Edit a saved game');
       dirty();
       if (model && body.classList.contains('detail')) {
         if (pane === 'scout') drawFilters();

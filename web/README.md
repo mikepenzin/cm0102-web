@@ -578,7 +578,9 @@ the whole sync, so the saves after it never went up, and the failed sync packed 
 
 ## Edit a saved game
 
-Saved games has an **Edit** button by each save. It opens the save editor (`editor.js`, `savedit.js`):
+Saved games has an **Edit** button by each save. It opens the save editor (`editor.js`, `savedit.js`) in **Squad Hub**,
+the page's name for the Editor since it also shows and scouts players (its bar button, its title and Help; once a save
+is open, the title is the save's name and Players and Scout are its tabs):
 
 - Search a player by name or club; the best players come first.
 - Change current and potential ability, date of birth, the twelve position ratings, the 31 attributes the game shows
@@ -611,7 +613,7 @@ game's code addresses: `docs/research/2026-11-10-save-editor.md`.
 
 ## The Scout
 
-A saved game open in the Editor has two tabs over its list: Players (the search, as before) and Scout (`scout.js`,
+A saved game open in Squad Hub (the Editor) has two tabs over its list: Players (the search, as before) and Scout (`scout.js`,
 `editor.js`). The Scout finds the save's players as of its last save by age (from–to), a position (a rating of 15 or
 more there), the lowest potential (PA) and ability (CA), and up to three attributes with the lowest value each, on
 the 1–20 scale the game shows (savedit.js's `read`: the game's own ratings, 0x543540). The matches come best first

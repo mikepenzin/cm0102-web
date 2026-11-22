@@ -52,6 +52,8 @@ async function dataSets(p, label) {
   await p.waitForSelector('#editor[open] #editor-new');
   check(`${label}: the Editor lists the saved games and offers a new data set`, (await p.$$('[data-open-save]')).length === 2);
   check(`${label}: on the Editor's start, no way back to it`, !(await p.isVisible('#editor-home-button')));
+  check(`${label}: its name is Squad Hub, in the bar and as the title`, (await p.textContent('#editor-title')) === 'Squad Hub'
+    && (await p.textContent('#editor-open')).trim() === 'Squad Hub');
   await p.fill('#editor-new-name', 'May 2026');
   await p.click('#editor-new');
   check(`${label}: a name with a month and year is refused`, /season/.test(await p.textContent('#editor-note')));
@@ -178,6 +180,8 @@ try {
     check(`${label}: Saved games has an Edit button for each save`, edits === 2, `${edits}`);
     await p.click('#saves-list tr:has-text("Juventus 2001-07-29.sav") button[data-edit]');
     await p.waitForSelector('#editor[open] .ed-row');
+    check(`${label}: an open save's title is its name`, (await p.textContent('#editor-title')) === 'Juventus 2001-07-29.sav'
+      && (await p.textContent('#editor-home-button')).trim() === '← Squad Hub');
     check(`${label}: Edit opens the save, its players best first`, (await p.$$eval('.ed-row b', (b) => b.map((x) => x.textContent))).join() === 'Gianluigi Buffon,Alessandro Del Piero');
     await p.fill('#editor-search', 'del pie');
     await p.waitForFunction(() => document.querySelectorAll('.ed-row').length === 1);

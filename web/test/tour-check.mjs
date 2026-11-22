@@ -35,10 +35,10 @@ const where = (p) => p.evaluate(() => {
 
 try {
   for (const [name, opts, want] of [
-    ['laptop', { viewport: { width: 1280, height: 800 } }, ['Saved games', 'Membership', 'Editor', 'Full screen', 'Help']],
+    ['laptop', { viewport: { width: 1280, height: 800 } }, ['Saved games', 'Membership', 'Squad Hub', 'Full screen', 'Help']],
     // Chromium offers full screen where an iPhone does not: there the step is left out, as its button is.
-    ['phone upright', { ...devices['iPhone 13'] }, ['Saved games', 'Membership', 'Editor', 'Keyboard', 'Right click', 'Full screen', 'Help']],
-    ['phone sideways', { ...devices['iPhone 14 Pro Max landscape'] }, ['Saved games', 'Membership', 'Editor', 'Keyboard', 'Right click', 'Full screen', 'Help']]]) {
+    ['phone upright', { ...devices['iPhone 13'] }, ['Saved games', 'Membership', 'Squad Hub', 'Keyboard', 'Right click', 'Full screen', 'Help']],
+    ['phone sideways', { ...devices['iPhone 14 Pro Max landscape'] }, ['Saved games', 'Membership', 'Squad Hub', 'Keyboard', 'Right click', 'Full screen', 'Help']]]) {
     const ctx = await browser.newContext(opts);
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
