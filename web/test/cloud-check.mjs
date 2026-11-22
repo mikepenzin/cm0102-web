@@ -552,7 +552,7 @@ try {
     await m.click('#account-open');
     const offerText = (await m.innerText('#account-body')).replace(/\s+/g, ' ');
     check('membership: the button, the price and the email to join with', (await m.textContent('#account-buy')) === 'Become a member · $5 a month'
-      && /Join with this account's email, member@example\.com/.test(offerText) && !/Paddle/.test(offerText), offerText.slice(0, 300));
+      && /become a member on Buy Me a Coffee: join with this account's email, member@example\.com/i.test(offerText) && !/Paddle/.test(offerText), offerText.slice(0, 300));
     await shot(m, 'member-offer');
     const [tab] = await Promise.all([mctx.waitForEvent('page'), m.click('#account-buy')]);
     check('the membership page opens in another tab', tab.url() === 'https://buymeacoffee.com/someone/membership', tab.url());
