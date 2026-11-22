@@ -173,7 +173,6 @@ export default {
   "{name} was not deleted: {why}": "{name} blev ikke slettet: {why}",
   "Edit a saved game": "Rediger et gemt spil",
   "Opening the saved game…": "Åbner det gemte spil…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Hvis dette gemte spil er indlæst i spillet nu, så gem dine ændringer her, og indlæs det igen i spillet. Gemmer du i spillet først, overskriver det dem.",
   "This file cannot be edited: {why}": "Denne fil kan ikke redigeres: {why}",
   "Edit a data set": "Rediger et datasæt",
   "Opening the data set…": "Åbner datasættet…",
@@ -220,7 +219,6 @@ export default {
   "the game does not show these": "spillet viser ikke disse",
   "0 is random": "0 er tilfældig",
   "Add this player": "Tilføj denne spiller",
-  "Apply to {name}": "Anvend på {name}",
   "Clear": "Ryd",
   "Undo changes": "Fortryd ændringer",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "Der er ingen klub, der hedder \"{club}\". Vælg en fra listen, eller lad feltet være tomt for ingen klub.",
@@ -678,4 +676,6 @@ export default {
   "Search a player or a club": "Søg efter en spiller eller en klub",
   "Pick a player from the list to change him.": "Vælg en spiller fra listen for at ændre ham.",
   "For example: I loaded my save and the game stopped.": "For eksempel: Jeg indlæste mit gemte spil, og spillet stoppede.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Indlæst i spillet nu? Gem her, og indlæs det igen i spillet: gemmer du først i spillet, går disse ændringer tabt.",
+  "{name} is as he was.": "{name} er som før.",
 };

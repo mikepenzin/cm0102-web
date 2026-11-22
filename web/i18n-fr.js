@@ -173,7 +173,6 @@ export default {
   "{name} was not deleted: {why}": "{name} n'a pas été supprimé : {why}",
   "Edit a saved game": "Modifier une partie sauvegardée",
   "Opening the saved game…": "Ouverture de la partie sauvegardée…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Si cette sauvegarde est chargée dans le jeu en ce moment, enregistrez vos modifications ici, puis rechargez-la dans le jeu. Sauvegarder d'abord dans le jeu les écraserait.",
   "This file cannot be edited: {why}": "Ce fichier ne peut pas être modifié : {why}",
   "Edit a data set": "Modifier une base de données",
   "Opening the data set…": "Ouverture de la base de données…",
@@ -220,7 +219,6 @@ export default {
   "the game does not show these": "le jeu ne les affiche pas",
   "0 is random": "0 est aléatoire",
   "Add this player": "Ajouter ce joueur",
-  "Apply to {name}": "Appliquer à {name}",
   "Clear": "Effacer",
   "Undo changes": "Annuler les modifications",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "Il n'y a pas de club nommé « {club} ». Choisissez-en un dans la liste, ou laissez vide pour aucun club.",
@@ -678,4 +676,6 @@ export default {
   "Search a player or a club": "Chercher un joueur ou un club",
   "Pick a player from the list to change him.": "Choisissez un joueur dans la liste pour le modifier.",
   "For example: I loaded my save and the game stopped.": "Par exemple : j'ai chargé ma sauvegarde et le jeu s'est arrêté.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Chargée dans le jeu en ce moment ? Enregistrez ici, puis rechargez-la dans le jeu : sauvegarder d'abord dans le jeu annulerait ces modifications.",
+  "{name} is as he was.": "{name} est redevenu comme avant.",
 };

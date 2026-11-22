@@ -157,7 +157,6 @@ export default {
   "{name} was not deleted: {why}": "{name} no se borró: {why}",
   "Edit a saved game": "Editar una partida guardada",
   "Opening the saved game…": "Abriendo la partida guardada…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Si esta partida está cargada ahora en el juego, guarda aquí tus cambios y luego vuelve a cargarla en el juego. Guardar antes en el juego los sobrescribiría.",
   "This file cannot be edited: {why}": "Este archivo no se puede editar: {why}",
   "Edit a data set": "Editar una base de datos",
   "Opening the data set…": "Abriendo la base de datos…",
@@ -187,7 +186,6 @@ export default {
   "the game does not show these": "el juego no los muestra",
   "0 is random": "0 es aleatorio",
   "Add this player": "Añadir este jugador",
-  "Apply to {name}": "Aplicar a {name}",
   "Clear": "Limpiar",
   "Undo changes": "Deshacer cambios",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "No hay ningún club llamado \"{club}\". Elige uno de la lista, o déjalo vacío para ninguno.",
@@ -678,4 +676,6 @@ export default {
   "Players": "Jugadores",
   "Scout": "Ojeador",
   "Membership holds Cloud Saves (each save goes to the cloud, and the game started on another computer or iPad gets it) and the Scout (in the Editor, a saved game's players by age, potential and attributes). Sign in with Google (Sign in, in the bar) to become a member.": "La Membresía incluye Guardado en la nube (cada partida va a la nube, y el juego iniciado en otro ordenador o iPad la recibe) y el Ojeador (en el Editor, los jugadores de una partida guardada por edad, potencial y atributos). Entra con Google (Entrar, en la barra) para hacerte miembro.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "¿Está cargada ahora en el juego? Guarda aquí y luego vuelve a cargarla en el juego: guardar antes en el juego desharía estos cambios.",
+  "{name} is as he was.": "{name} vuelve a estar como estaba.",
 };

@@ -173,7 +173,6 @@ export default {
   "{name} was not deleted: {why}": "{name} is niet verwijderd: {why}",
   "Edit a saved game": "Een savegame bewerken",
   "Opening the saved game…": "De savegame openen…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Als deze save nu in het spel geladen is, sla je wijzigingen dan hier op en laad hem daarna opnieuw in het spel. Eerst in het spel opslaan zou ze overschrijven.",
   "This file cannot be edited: {why}": "Dit bestand kan niet worden bewerkt: {why}",
   "Edit a data set": "Een dataset bewerken",
   "Opening the data set…": "De dataset openen…",
@@ -220,7 +219,6 @@ export default {
   "the game does not show these": "het spel toont deze niet",
   "0 is random": "0 is willekeurig",
   "Add this player": "Deze speler toevoegen",
-  "Apply to {name}": "Toepassen op {name}",
   "Clear": "Leegmaken",
   "Undo changes": "Wijzigingen ongedaan maken",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "Er is geen club met de naam \"{club}\". Kies er een uit de lijst, of laat het leeg voor geen club.",
@@ -678,4 +676,6 @@ export default {
   "Search a player or a club": "Zoek een speler of een club",
   "Pick a player from the list to change him.": "Kies een speler uit de lijst om hem te veranderen.",
   "For example: I loaded my save and the game stopped.": "Bijvoorbeeld: ik laadde mijn save en het spel stopte.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Nu in het spel geladen? Sla hier op en laad hem daarna opnieuw in het spel: eerst in het spel opslaan zou deze wijzigingen ongedaan maken.",
+  "{name} is as he was.": "{name} is weer zoals hij was.",
 };

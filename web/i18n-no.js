@@ -173,7 +173,6 @@ export default {
   "{name} was not deleted: {why}": "{name} ble ikke slettet: {why}",
   "Edit a saved game": "Rediger et lagret spill",
   "Opening the saved game…": "Åpner det lagrede spillet…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Hvis denne lagringen er lastet inn i spillet nå, lagre endringene dine her, og last den så inn igjen i spillet. Lagrer du i spillet først, skrives de over.",
   "This file cannot be edited: {why}": "Denne filen kan ikke redigeres: {why}",
   "Edit a data set": "Rediger et datasett",
   "Opening the data set…": "Åpner datasettet…",
@@ -220,7 +219,6 @@ export default {
   "the game does not show these": "spillet viser ikke disse",
   "0 is random": "0 er tilfeldig",
   "Add this player": "Legg til denne spilleren",
-  "Apply to {name}": "Bruk på {name}",
   "Clear": "Tøm",
   "Undo changes": "Angre endringer",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "Det finnes ingen klubb som heter «{club}». Velg en fra listen, eller la feltet stå tomt for ingen klubb.",
@@ -678,4 +676,6 @@ export default {
   "Search a player or a club": "Søk etter en spiller eller en klubb",
   "Pick a player from the list to change him.": "Velg en spiller fra listen for å endre ham.",
   "For example: I loaded my save and the game stopped.": "For eksempel: Jeg lastet inn lagringen min, og spillet stoppet.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Lastet inn i spillet nå? Lagre her, og last den inn igjen i spillet: lagrer du først i spillet, går disse endringene tapt.",
+  "{name} is as he was.": "{name} er som før.",
 };

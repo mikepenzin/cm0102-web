@@ -173,7 +173,6 @@ export default {
   "{name} was not deleted: {why}": "{name} wurde nicht gelöscht: {why}",
   "Edit a saved game": "Spielstand bearbeiten",
   "Opening the saved game…": "Spielstand wird geöffnet…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Wenn dieser Spielstand gerade im Spiel geladen ist, speichere deine Änderungen hier und lade ihn dann im Spiel neu. Würdest du zuerst im Spiel speichern, würde das sie überschreiben.",
   "This file cannot be edited: {why}": "Diese Datei kann nicht bearbeitet werden: {why}",
   "Edit a data set": "Datenbank bearbeiten",
   "Opening the data set…": "Datenbank wird geöffnet…",
@@ -220,7 +219,6 @@ export default {
   "the game does not show these": "das Spiel zeigt diese nicht an",
   "0 is random": "0 ist zufällig",
   "Add this player": "Diesen Spieler hinzufügen",
-  "Apply to {name}": "Auf {name} anwenden",
   "Clear": "Leeren",
   "Undo changes": "Änderungen verwerfen",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "Es gibt keinen Verein namens „{club}“. Wähle einen aus der Liste oder lass das Feld für keinen Verein leer.",
@@ -678,4 +676,6 @@ export default {
   "Search a player or a club": "Spieler oder Verein suchen",
   "Pick a player from the list to change him.": "Wähle einen Spieler aus der Liste, um ihn zu ändern.",
   "For example: I loaded my save and the game stopped.": "Zum Beispiel: Ich habe meinen Spielstand geladen und das Spiel ist stehen geblieben.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Gerade im Spiel geladen? Speichere hier und lade den Spielstand dann im Spiel neu: Speicherst du zuerst im Spiel, sind diese Änderungen weg.",
+  "{name} is as he was.": "{name} ist wieder wie vorher.",
 };

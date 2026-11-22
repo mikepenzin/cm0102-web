@@ -157,7 +157,6 @@ export default {
   "{name} was not deleted: {why}": "{name} não foi excluído: {why}",
   "Edit a saved game": "Editar um jogo salvo",
   "Opening the saved game…": "Abrindo o jogo salvo…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Se este save estiver aberto no jogo agora, salve suas alterações aqui e depois abra-o de novo no jogo. Salvar primeiro no jogo apagaria as alterações.",
   "This file cannot be edited: {why}": "Este arquivo não pode ser editado: {why}",
   "Edit a data set": "Editar um banco de dados",
   "Opening the data set…": "Abrindo o banco de dados…",
@@ -187,7 +186,6 @@ export default {
   "the game does not show these": "o jogo não mostra estes",
   "0 is random": "0 é aleatório",
   "Add this player": "Adicionar este jogador",
-  "Apply to {name}": "Aplicar a {name}",
   "Clear": "Limpar",
   "Undo changes": "Desfazer alterações",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "Não há nenhum clube chamado \"{club}\". Escolha um da lista ou deixe em branco para nenhum clube.",
@@ -678,4 +676,6 @@ export default {
   "Players": "Jogadores",
   "Scout": "Olheiro",
   "Membership holds Cloud Saves (each save goes to the cloud, and the game started on another computer or iPad gets it) and the Scout (in the Editor, a saved game's players by age, potential and attributes). Sign in with Google (Sign in, in the bar) to become a member.": "O Plano de Membro inclui os Saves na Nuvem (cada save vai para a nuvem, e o jogo iniciado em outro computador ou iPad o recebe) e o Olheiro (no Editor, os jogadores de um jogo salvo por idade, potencial e atributos). Entre com o Google (Entrar, na barra) para se tornar membro.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Aberto no jogo agora? Salve aqui e depois abra-o de novo no jogo: salvar primeiro no jogo desfaria estas alterações.",
+  "{name} is as he was.": "{name} está como antes.",
 };

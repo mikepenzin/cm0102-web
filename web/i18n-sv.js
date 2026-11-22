@@ -173,7 +173,6 @@ export default {
   "{name} was not deleted: {why}": "{name} raderades inte: {why}",
   "Edit a saved game": "Redigera ett sparat spel",
   "Opening the saved game…": "Öppnar det sparade spelet…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Om den här sparfilen är laddad i spelet nu: spara dina ändringar här och ladda den sedan igen i spelet. Att spara i spelet först skulle skriva över dem.",
   "This file cannot be edited: {why}": "Den här filen kan inte redigeras: {why}",
   "Edit a data set": "Redigera ett dataset",
   "Opening the data set…": "Öppnar datasetet…",
@@ -220,7 +219,6 @@ export default {
   "the game does not show these": "spelet visar inte dessa",
   "0 is random": "0 är slumpat",
   "Add this player": "Lägg till spelaren",
-  "Apply to {name}": "Tillämpa på {name}",
   "Clear": "Rensa",
   "Undo changes": "Ångra ändringar",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "Det finns ingen klubb som heter \"{club}\". Välj en i listan, eller lämna fältet tomt för ingen klubb.",
@@ -678,4 +676,6 @@ export default {
   "Search a player or a club": "Sök en spelare eller en klubb",
   "Pick a player from the list to change him.": "Välj en spelare i listan för att ändra honom.",
   "For example: I loaded my save and the game stopped.": "Till exempel: Jag laddade min sparfil och spelet stannade.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Laddad i spelet nu? Spara här och ladda den sedan igen i spelet: sparar du först i spelet går ändringarna förlorade.",
+  "{name} is as he was.": "{name} är som förut.",
 };

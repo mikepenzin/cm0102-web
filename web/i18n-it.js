@@ -157,7 +157,6 @@ export default {
   "{name} was not deleted: {why}": "{name} non è stato eliminato: {why}",
   "Edit a saved game": "Modifica una partita salvata",
   "Opening the saved game…": "Apertura della partita salvata…",
-  "If this save is loaded in the game now, save your changes here, then load it again in the game. Saving in the game first would write over them.": "Se questo salvataggio è caricato ora nel gioco, salva qui le tue modifiche, poi ricaricalo nel gioco. Salvando prima nel gioco le sovrascriveresti.",
   "This file cannot be edited: {why}": "Questo file non si può modificare: {why}",
   "Edit a data set": "Modifica un set di dati",
   "Opening the data set…": "Apertura del set di dati…",
@@ -187,7 +186,6 @@ export default {
   "the game does not show these": "il gioco non li mostra",
   "0 is random": "0 è casuale",
   "Add this player": "Aggiungi questo giocatore",
-  "Apply to {name}": "Applica a {name}",
   "Clear": "Svuota",
   "Undo changes": "Annulla modifiche",
   "There is no club called \"{club}\". Pick one from the list, or leave it empty for no club.": "Non esiste un club chiamato \"{club}\". Scegline uno dalla lista, o lascia vuoto per nessun club.",
@@ -678,4 +676,6 @@ export default {
   "Players": "Giocatori",
   "Scout": "Scout",
   "Membership holds Cloud Saves (each save goes to the cloud, and the game started on another computer or iPad gets it) and the Scout (in the Editor, a saved game's players by age, potential and attributes). Sign in with Google (Sign in, in the bar) to become a member.": "L'Adesione comprende i Salvataggi Cloud (ogni salvataggio va nel cloud e il gioco avviato su un altro computer o iPad lo riceve) e lo Scout (nell'Editor, i giocatori di una partita salvata per età, potenziale e attributi). Accedi con Google (Accedi, nella barra) per diventare membro.",
+  "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Caricato ora nel gioco? Salva qui, poi ricaricalo nel gioco: salvando prima nel gioco annulleresti queste modifiche.",
+  "{name} is as he was.": "{name} è tornato com'era.",
 };
