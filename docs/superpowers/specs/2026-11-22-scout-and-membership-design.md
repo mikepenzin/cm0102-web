@@ -18,8 +18,8 @@ behind an invitation to become a member. Every text in the page's languages, as 
   of the results opens in the Editor's form on the right, as one picked from the list does.
 - The filters: age from–to; a position (a player who rates 15 or more there); minimum potential ability (PA) and
   current ability (CA); up to three attributes, each with a minimum, on the 1–20 scale the game shows.
-- On a saved game (as of its last save), on a data set (a database for new games), and on the game's own database,
-  read-only, with no copy made: scouting before a career.
+- On a saved game only, as of its last save (Max, 22 November 2026): scouting is for a career in play. Not on a data
+  set or the game's own database.
 - Members see every match (up to 100, sorted by PA, then CA). Free players see the first 3 in full; below them,
   dimmed placeholder rows, the count ("44 more players match") and the invitation with the Account dialog's own
   button. The hidden players' data is never put into the page.
@@ -53,13 +53,12 @@ behind an invitation to become a member. Every text in the page's languages, as 
 
 ## Constraints
 
-- The Editor's model: `web/savedit.js` (a saved game) and `web/dataset.js` (a data set) already list every player
+- The Editor's model of a saved game, `web/savedit.js`, already lists every player
   (`players()`: name, club, nation, born, CA, PA, position text) and read one (`read(row)`: all attributes, positions).
   The shown 1–20 value of an attribute in a saved game is what the game's 0x543540 returns (staff, player data,
-  number 1..31), as savedit.js's `shown()` gives it; its header cites the functions. A data set holds attributes
-  as they are, 0 for "random at a new game's start" (dataset.js), and PA below 0 for a random potential.
-- Age: in a saved game staff +0x18 is the age on the game's date (savedit.js, `read`); in a data set it is the year
-  of birth at +0x18 and the date of birth at +0x10: the age at the data's season start (1 July of `model.season`).
+  number 1..31), as savedit.js's `shown()` gives it; its header cites the functions.
+- Age: in a saved game staff +0x18 is the age on the game's date (savedit.js, `read`), rewritten every day of the
+  game (0x53ab90, called at 0x5cc850; docs/research/2026-10-17-season-date-shifts.md).
 - Positions: twelve ratings (GK, SW, D, DM, M, AM, F, WB, and the sides) as the Editor shows them.
 - Membership as the page knows it: `/api/me` (`account.js`, `me.user.cloud`), and the offer (`me.offer`: Buy Me a
   Coffee, Paddle, or free with an account). The server's flag stays `cloud` (a stored field of every account): a
@@ -68,7 +67,7 @@ behind an invitation to become a member. Every text in the page's languages, as 
   no Paddle and no link: the Account dialog's "not on sale yet", as on a server that gives Cloud Saves to a list of
   emails, `CM_CLOUD_USERS`), has no one who could pay: the Scout is whole there (the executor's call). With "free with
   an account" (`offer.free`) the invitation is to sign in.
-- Translations: English is the key (`t`, `tn`, `data-t`); the shared modules (`savedit.js`, `dataset.js`) carry
+- Translations: English is the key (`t`, `tn`, `data-t`); the shared module `savedit.js` carries
   `key`/`vars` on errors and never import `i18n.js`.
 - The legal pages are English and binding: their changed wording (Membership, what it holds) is Max's to read and
   approve before the deploy.
@@ -85,19 +84,15 @@ behind an invitation to become a member. Every text in the page's languages, as 
 
 ## Decided
 
-- **Where:** the Editor, once a saved game or a data set is open: two tabs over the left column, "Players" (the list
+- **Where:** the Editor, once a saved game is open (a data set shows no Scout tab): two tabs over the left
+  column, "Players" (the list
   and search as now) and "Scout". On a phone the Scout's filters and results take the column; a result opens the
   form as a picked player does, and Back returns to the results with the filters kept.
-- **The game's own database, read-only** (Max, 22 November 2026): the Editor's home gains "The game's database"
-  (the game's data, `/game/Data`, as a new career uses it), which opens on the Scout with no copy made. Its players
-  can be looked at, not changed: no Save, no new player, the form's fields read-only. Scouting before a 2001/02
-  career needs no 60 MB data set.
 - **Filters:** age from and to (blank: any); position (any, or one of the twelve, counting a rating of 15 or more);
   minimum PA and minimum CA; up to three rows of attribute + minimum (the attributes the Editor shows for that kind
-  of file, in its order and its names). A search runs when a filter changes (after a short pause while typing).
+  in its order and its names). A search runs when a filter changes (after a short pause while typing).
 - **Results:** sorted by PA, then CA, then name; at most 100, with "and N more" when there are more. Each row: name,
-  age, club (or "No club"), the position text, CA/PA, and the values of the chosen attributes. In a data set a
-  random value shows "?", and a minimum filter leaves that player out.
+  age, club (or "No club"), the position text, CA/PA, and the values of the chosen attributes.
 - **Free players:** the first 3 rows in full. Then up to 5 dimmed placeholder rows made of blank shapes (no data),
   the count of the rest, and the invitation: "The Scout is part of Membership: {count} more players match." with
   the Account dialog's own button for the account as it is: signed out, "Sign in"; signed in, "Become a member";
@@ -126,7 +121,7 @@ behind an invitation to become a member. Every text in the page's languages, as 
 - How the attribute values of every player are read and kept for a search (all at once when the tab opens, or as
   needed), as long as the speed anti-goal holds; measure on the 2011 database.
 - Where the scouting logic lives (a new module, say `web/scout.js`, with no DOM, used by the Editor; testable in
-  Node on fakes.mjs's saves and data sets).
+  Node on fakes.mjs's saved games).
 - The wording of the new texts, in the page's plain style, and of the legal pages' changes, for Max to read.
 - The tests: unit tests of the filters and the free cut (no hidden player's data in what the page renders), the
-  Editor check with the Scout on a save and a data set, the language checks, the screens in every language.
+  Editor check with the Scout on a saved game (and none on a data set), the language checks, the screens in every language.
