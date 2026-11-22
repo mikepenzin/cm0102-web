@@ -147,7 +147,7 @@ test('buy, renew, cancel: the webhooks of Paddle turn Cloud Saves on and off', a
   // Deleting the account while the subscription runs: refused, cancel first.
   r = await a.send('DELETE', '/api/account');
   assert.equal(r.status, 409);
-  assert.match((await r.json()).error, /Cancel your Cloud Saves subscription first/);
+  assert.match((await r.json()).error, /Cancel your membership first/);
 
   // Canceled for the end of the period: on until then.
   await hook(paddleEvent('subscription.updated', { ref: me.user.ref, at: '2026-11-11T12:00:00Z', cancelAt: new Date(Date.now() + 20 * 86400e3).toISOString() }));
@@ -185,6 +185,8 @@ test('the legal pages: pricing, terms, refunds, privacy, with the seller, the co
     assert.doesNotMatch(html, /\{\{/, `${page}: every placeholder is filled`);
     if (page !== 'pricing') assert.match(html, /help@example\.com/, `${page}: the contact`);
     assert.doesNotMatch(html, /paddle/i, `${page}: Paddle is not named (no one bought through it)`);
+    assert.match(html, /Membership/, `${page}: the plan is Membership`);
+    if (page === 'pricing' || page === 'terms') assert.match(html, /Cloud Saves[\s\S]*Scout/, `${page}: what Membership holds`);
     assert.match(html, /<footer class="made">Made with <svg[^>]*aria-label="love"[\s\S]*?<\/svg> by A\. Seller<\/footer>/, `${page}: the footer`);
   }
   assert.match(await (await fetch(`${base}/terms`)).text(), /A\. Seller/);

@@ -18,9 +18,9 @@ const step = (target, words) => ({ target, ...words(), words });
 export const TOUR_STEPS = [
   step('saves-open', () => ({ title: t('Saved games'),
     text: t('Your saves live in this browser. Download keeps a copy on your device; Upload brings one in, also from the desktop game. Databases for a new game are here too.') })),
-  step('account-open', () => ({ title: t('Cloud Saves'), text: t('Cloud Saves keep your saves on all your devices.') })),
+  step('account-open', () => ({ title: t('Membership'), text: t('Membership: Cloud Saves keep your saves on all your devices, and the Scout finds players.') })),
   step('editor-open', () => ({ title: t('Editor'),
-    text: t('Change the players of a saved game, or make a database of your own for new games.') })),
+    text: t('Change the players of a saved game, or make a database of your own for new games. In a saved game, the Scout finds players by age, potential and attributes.') })),
   step('kbd-open', () => ({ title: t('Keyboard'),
     text: t('Opens your keyboard to type in the game: a manager\'s name, a search. When the game waits for text, a "Tap to type" sign shows beside the entry too.') })),
   step('right-click', () => ({ title: t('Right click'),
@@ -31,23 +31,23 @@ export const TOUR_STEPS = [
     text: t('The gestures, the video guides, and Send to the developer when something goes wrong. "Show the tour" there runs this tour again.') })),
 ];
 
-// What the Cloud Saves step says, for the account as the page knows it (account.js, /api/me): what Cloud Saves do,
+// What the Membership step says, for the account as the page knows it (account.js, /api/me): what Membership holds,
 // and how to turn them on from here, in the words of the Account dialog's own button. price: " ($5 a month)" or none.
 export function cloudStepText(me) {
-  const what = t('Cloud Saves keep your saves on all your devices: each save goes up right after you save it, and your other devices get it when they start.');
-  if (me?.user?.cloud) return t('Cloud Saves are on for {email}: each save goes up right after you save it, and your other devices get it when they start. This button shows them.', { email: me.user.email });
+  const what = t('Membership holds Cloud Saves, which keep your saves on all your devices (each save goes up right after you save it, and your other devices get it when they start), and the Scout, which finds players in the Editor.');
+  if (me?.user?.cloud) return t('You are a member ({email}): Cloud Saves are on, each save goes up right after you save it and your other devices get it when they start, and the Scout in the Editor shows every player. This button shows your membership.', { email: me.user.email });
   const offer = me?.offer;
-  if (offer?.free) return `${what} ${t('Sign in here with Google, and they are on, free.')}`;
+  if (offer?.free) return `${what} ${t('Sign in here with Google, and you are a member, free.')}`;
   const price = offer?.price ? ` (${priceText(offer.price)})` : '';
   let how;
   if (me?.user) {
     how = offer?.coffee
-      ? t('To turn them on, open this button, press "Become a member"{price} and join on Buy Me a Coffee with the same email: they turn on by themselves a moment after. Until then your saves stay in this browser.', { price })
-      : t('To turn them on, open this button, press "Get Cloud Saves"{price} and pay: they turn on a moment after. Until then your saves stay in this browser.', { price });
+      ? t('To become a member, open this button, press "Become a member"{price} and join on Buy Me a Coffee with the same email: it turns on by itself a moment after. Until then your saves stay in this browser.', { price })
+      : t('To become a member, open this button, press "Become a member"{price} and pay: it turns on a moment after. Until then your saves stay in this browser.', { price });
   } else {
     how = offer?.coffee
-      ? t('To turn them on, open this button and sign in with Google, then press "Become a member"{price} and join on Buy Me a Coffee with the same email: they turn on by themselves a moment after. Without them your saves stay in this browser.', { price })
-      : t('To turn them on, open this button and sign in with Google, then press "Get Cloud Saves"{price} and pay: they turn on a moment after. Without them your saves stay in this browser.', { price });
+      ? t('To become a member, open this button and sign in with Google, then press "Become a member"{price} and join on Buy Me a Coffee with the same email: it turns on by itself a moment after. Without it your saves stay in this browser.', { price })
+      : t('To become a member, open this button and sign in with Google, then press "Become a member"{price} and pay: it turns on a moment after. Without it your saves stay in this browser.', { price });
   }
   return `${what} ${how}`;
 }

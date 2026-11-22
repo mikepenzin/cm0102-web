@@ -371,8 +371,9 @@ export function plansHtml(offer, maxSaves = 30) {
   return `<div class="plans">
     <div class="plan on"><span class="tag">${esc(t('Included · no account'))}</span><h4>${esc(t('The game'))}</h4><div class="price">${esc(t('Free'))}</div><ul>
       <li>${esc(t('The whole game, in your browser'))}</li><li>${esc(t('Your saves stay in this browser'))}</li><li>${esc(t('Download and upload saves as files'))}</li></ul></div>
-    <div class="plan pro"><span class="tag">${esc(t('Optional add-on'))}</span><h4>${esc(t('Cloud Saves'))}</h4><div class="price">${esc(priceText(offer?.price))}</div><ul>
-      <li>${esc(t('Your saves on every computer and iPad'))}</li><li>${esc(t('Backed up right after each save'))}</li><li>${esc(t('Up to {n} saves in the cloud', { n: maxSaves }))}</li></ul></div>
+    <div class="plan pro"><span class="tag">${esc(t('Optional add-on'))}</span><h4>${esc(t('Membership'))}</h4><div class="price">${esc(priceText(offer?.price))}</div><ul>
+      <li>${esc(t('Cloud Saves: your saves on every computer and iPad, backed up right after each save, up to {n} in the cloud', { n: maxSaves }))}</li>
+      <li>${esc(t('The Scout: find players by age, potential and attributes in your saved games'))}</li></ul></div>
   </div>`;
 }
 // The site's terms, by their English names (the pages are in English): LEGAL_LINKS as they are, legalLinks() with
@@ -401,7 +402,7 @@ function loadPaddle(cfg, onEvent) {
   return paddleLoad;
 }
 
-// The Account button and dialog: the plans, the sign-in, buying and managing Cloud Saves. isRunning: whether a game
+// The Account button and dialog: the plans, the sign-in, buying and managing Membership (Cloud Saves and the Scout). isRunning: whether a game
 // runs (then the sign-in must not leave the page); leave(): the page is about to be left on purpose.
 export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
   const dialog = $('account'), body = $('account-body'), note = $('account-note'), button = $('account-open');
@@ -419,20 +420,20 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     if (!me?.auth) { body.innerHTML = ''; return; }
     const legal = `<p class="small legal">${legalLinks()}</p>`;
     if (!u) {
-      body.innerHTML = `<p>${esc(t('Play for free, or keep your saved games on all your devices with Cloud Saves.'))}</p>
+      body.innerHTML = `<p>${esc(t('Play for free, or become a member: Cloud Saves keep your saved games on all your devices, and the Scout finds players for your career.'))}</p>
         ${plansHtml(offer, me.maxSaves)}
-        <p class="small">${esc(t('Cloud Saves need a Google account: signing in is how your saves know they are yours, on any device. Signing in alone changes nothing else in the game.'))}</p>
+        <p class="small">${esc(t('Membership needs a Google account: signing in is how your saves know they are yours, on any device. Signing in alone changes nothing else in the game.'))}</p>
         <div class="row"><button class="primary" id="account-signin">${esc(t('Sign in with Google'))}</button></div>${legal}`;
       $('account-signin').onclick = signIn;
       return;
     }
-    const signedIn = `<p>${u.cloud ? t('Signed in as <b>{email}</b> · Cloud Saves', { email: esc(u.email) }) : t('Signed in as <b>{email}</b> · Free plan', { email: esc(u.email) })}</p>`;
+    const signedIn = `<p>${u.cloud ? t('Signed in as <b>{email}</b> · Member', { email: esc(u.email) }) : t('Signed in as <b>{email}</b> · Free plan', { email: esc(u.email) })}</p>`;
     const own = `<div class="row"><button id="account-signout">${esc(t('Sign out'))}</button><button id="account-delete">${esc(t('Delete account…'))}</button>
       ${u.admin ? `<button id="account-admin">${esc(t('Admin panel'))}</button>` : ''}</div>`;
     if (u.cloud) {
       const info = cloud?.info();
       const term = u.cloudFrom === 'subscription' || u.cloudFrom === 'membership'
-        ? (u.cancelAt ? esc(t('Canceled: Cloud Saves end on {date}.', { date: day(u.cancelAt) }))
+        ? (u.cancelAt ? esc(t('Canceled: your membership ends on {date}.', { date: day(u.cancelAt) }))
           : u.until ? esc(t('Renews every month; paid until {date}.', { date: day(u.until) })) : '')
         : offer?.free ? '' : esc(t('Given to this account.'));
       // Saves left in the cloud on this device (keepInCloud): bringing one here closed the tab last time.
@@ -464,11 +465,11 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       body.innerHTML = `${signedIn}<p class="small">${esc(t('Your saves stay in this browser, and Saved games downloads them as files.'))}</p>
         ${plansHtml(offer, me.maxSaves)}
         ${u.member && !u.member.on && u.member.level && offer?.coffee
-          ? `<p class="small bad">${esc(t('Your Buy Me a Coffee membership ({level}) does not include Cloud Saves: change its level on Buy Me a Coffee.', { level: u.member.level }))}</p>` : ''}
-        ${!buyable() ? `<p class="small">${esc(t('Cloud Saves are not on sale yet.'))}</p>`
+          ? `<p class="small bad">${esc(t('Your Buy Me a Coffee membership ({level}) is not a level that gives Membership here: change its level on Buy Me a Coffee.', { level: u.member.level }))}</p>` : ''}
+        ${!buyable() ? `<p class="small">${esc(t('Membership is not on sale yet.'))}</p>`
           : offer.coffee ? `<div class="row"><button class="primary" id="account-buy">${esc(t('Become a member · {price}', { price: priceText(offer.price) }))}</button></div>
-          <p class="small">${t('Cloud Saves come with a Buy Me a Coffee membership. Join with this account\'s email, <b>{email}</b>: Cloud Saves then turn on by themselves. Renews every month; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (Help, Send to the developer) and we will link it.', { email: esc(u.email) })}</p>`
-          : `<div class="row"><button class="primary" id="account-buy">${esc(t('Get Cloud Saves · {price}', { price: priceText(offer.price) }))}</button></div>
+          <p class="small">${t('Membership is a Buy Me a Coffee membership. Join with this account\'s email, <b>{email}</b>: Cloud Saves and the Scout then turn on by themselves. Renews every month; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (Help, Send to the developer) and we will link it.', { email: esc(u.email) })}</p>`
+          : `<div class="row"><button class="primary" id="account-buy">${esc(t('Become a member · {price}', { price: priceText(offer.price) }))}</button></div>
           <p class="small">${esc(t('Renews every month; cancel any time. A full refund within 14 days of any payment. Payment by Paddle.'))}</p>`}
         ${own}${legal}`;
       if (buyable()) $('account-buy').onclick = buy;
@@ -491,13 +492,13 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
 
   // After the payment: Paddle tells the server (a webhook), the page asks until Cloud Saves are on.
   async function waitForCloud() {
-    toast(t('Payment done. Turning on Cloud Saves…'), { ms: 5000 });
+    toast(t('Payment done. Turning on your membership…'), { ms: 5000 });
     for (let i = 0; i < 40; i++) {
       await new Promise((r) => setTimeout(r, i < 10 ? 1500 : 3000));
       await refresh();
-      if (me?.user?.cloud) { toast(t('Cloud Saves are on. Your saves go to the cloud from now on.'), { ms: 7000 }); log('page: Cloud Saves on after the payment'); return; }
+      if (me?.user?.cloud) { toast(t('You are a member: Cloud Saves are on, and the Scout shows every player.'), { ms: 7000 }); log('page: Cloud Saves on after the payment'); return; }
     }
-    toast(t('The payment is done. Cloud Saves turn on within a few minutes: reload the page if they do not.'), { kind: 'bad', ms: 10000 });
+    toast(t('The payment is done. Your membership turns on within a few minutes: reload the page if it does not.'), { kind: 'bad', ms: 10000 });
   }
 
   // While the player joins on Buy Me a Coffee (another tab): Buy Me a Coffee tells the server, and the page asks every
@@ -511,7 +512,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       await refresh();
       if (me?.user?.cloud) {
         stop();
-        toast(t('Thank you for joining! Cloud Saves are on: your saves go to the cloud from now on.'), { ms: 8000 });
+        toast(t('Thank you for joining! You are a member: Cloud Saves are on, and the Scout shows every player.'), { ms: 8000 });
         log('page: Cloud Saves on after joining');
       } else if (Date.now() > until) stop();
     };
@@ -526,7 +527,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     const offer = me?.offer;
     if (offer?.coffee) {
       window.open(offer.url, '_blank', 'noopener');
-      say(t('Join on Buy Me a Coffee with {email}. Cloud Saves turn on here a moment after.', { email: me.user.email }));
+      say(t('Join on Buy Me a Coffee with {email}. Your membership turns on here a moment after.', { email: me.user.email }));
       log('page: membership page opened');
       waitForMember();
       return;
@@ -623,7 +624,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     promo() {
       if (!me?.auth || me.user?.cloud || me.offer?.free === undefined) return null;
       return me.offer.free ? t('Sign in with Google to keep your saves on all your devices too, for free.')
-        : t('Cloud Saves keep your saves on all your devices too: {price}.', { price: priceText(me.offer.price) });
+        : t('Membership keeps your saves on all your devices too, and its Scout finds players: {price}.', { price: priceText(me.offer.price) });
     },
     setCloud(c) { cloud = c; c?.onChange(() => { if (dialog.open) render(); }); render(); },
     onAccountChange(f) { listeners.add(f); },

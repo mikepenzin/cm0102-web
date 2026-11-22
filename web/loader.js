@@ -368,10 +368,10 @@ function plansForStart(me) {
   if (!me?.auth) return '';
   const links = `<p class="small legal">${legalLinks()}</p>`;
   if (me.user?.cloud) return `<p class="small">${t('Signed in as {email} · Cloud Saves are on: your saves from other devices come in when the game starts.', { email: esc(me.user.email) })}</p>`;
-  if (me.user) return `<p class="small">${t('Signed in as {email} · Free plan. Cloud Saves ({price}) keep your saves on all your devices: {link}.', {
-    email: esc(me.user.email), price: esc(priceText(me.offer.price)), link: `<a href="#" id="go-plans">${t('see Cloud Saves')}</a>` })}</p>${links}`;
+  if (me.user) return `<p class="small">${t('Signed in as {email} · Free plan. Membership ({price}) keeps your saves on all your devices and finds players with the Scout: {link}.', {
+    email: esc(me.user.email), price: esc(priceText(me.offer.price)), link: `<a href="#" id="go-plans">${t('see Membership')}</a>` })}</p>${links}`;
   // Signed out: the game is free, and Cloud Saves is a note under it, not a plan to pick.
-  return `<div class="addon"><b>${t('Optional: Cloud Saves')}</b> · <span>${t('{price}. Your saves on every computer and iPad, backed up after each save.', { price: esc(priceText(me.offer.price)) })} ${
+  return `<div class="addon"><b>${t('Optional: Membership')}</b> · <span>${t('{price}. Your saves on every computer and iPad, backed up after each save, and the Scout to find players.', { price: esc(priceText(me.offer.price)) })} ${
     t('{signin} to get it, or to bring the cloud saves you have.', { signin: `<a href="/auth/google/start?mode=page" id="go-signin">${t('Sign in with Google')}</a>` })} ${
     t('Playing needs no account.')}</span></div>${links}`;
 }

@@ -89,7 +89,7 @@ try {
   check('the start box offers the sign-in', await a.isVisible('#go-signin'));
   const startBox = (await a.innerText('#overlay')).replace(/\s+/g, ' ');
   check('the start box says the game is free, and Cloud Saves an optional add-on at $5 a month',
-    /Start the game Free · no account, no payment/.test(startBox) && /Optional: Cloud Saves · \$5 a month/.test(startBox) && !(await a.$('#overlay .plans')), startBox.slice(0, 300));
+    /Start the game Free · no account, no payment/.test(startBox) && /Optional: Membership · \$5 a month/.test(startBox) && !(await a.$('#overlay .plans')), startBox.slice(0, 300));
   check('and the links to pricing, terms, refunds and privacy', (await a.$$eval('#overlay .legal a', (as) => as.map((x) => x.getAttribute('href')))).join() === '/pricing,/terms,/refunds,/privacy');
   await shot(a, 'start');
   await Promise.all([a.waitForURL(`${BASE}/`), a.click('#go-signin')]);
@@ -301,7 +301,7 @@ try {
   const mine = await localBytes(c, harbour);                       // this device's own Harbour City, from its stand-in game
   await c.click('#saves-open');
   check('Saved games tells a player without an account about Cloud Saves', await c.isVisible('#saves-promo')
-    && /Cloud Saves keep your saves on all your devices too: \$5 a month/.test(await c.textContent('#saves-promo')));
+    && /Membership keeps your saves on all your devices too, and its Scout finds players: \$5 a month/.test(await c.textContent('#saves-promo')));
   await c.click('#saves-promo button');
   check('and its button opens the plans', await c.isVisible('#account') && await c.isVisible('#account-body .plans'));
   await c.click('#account-close');
@@ -335,8 +335,8 @@ try {
   await d.waitForFunction(() => window.__fake, null, { timeout: 30000 });
   await d.click('#account-open');
   const free = (await d.innerText('#account-body')).replace(/\s+/g, ' ');
-  check('a free account sees its plan, the two plans and the price', /Free plan/.test(free) && /Cloud Saves \$5 a month/.test(free)
-    && (await d.textContent('#account-buy')) === 'Get Cloud Saves · $5 a month', free.slice(0, 200));
+  check('a free account sees its plan, the two plans and the price', /Free plan/.test(free) && /Membership \$5 a month/.test(free) && /The Scout/.test(free)
+    && (await d.textContent('#account-buy')) === 'Become a member · $5 a month', free.slice(0, 200));
   check('and the refund and renewal terms by the button', /cancel any time\. A full refund within 14 days/.test(free));
   await shot(d, 'free');
   await d.click('#account-buy');
@@ -350,14 +350,14 @@ try {
   const raw = JSON.stringify(paddleEvent('subscription.created', { ref: opened.open.customData.account }));
   const hooked = await fetch(`${BASE}/api/paddle/webhook`, { method: 'POST', body: raw, headers: { 'paddle-signature': signPaddle(raw, 'pdl_ntfset_check') } });
   check('the webhook is taken', hooked.status === 200);
-  await waitFor('Cloud Saves on', async () => /Cloud Saves are on\. Your saves go to the cloud/.test(await toasts(d)), 20000);
-  check('the page turns Cloud Saves on by itself', /Payment done/.test(await toasts(d)) && /Cloud Saves are on\. Your saves go to the cloud/.test(await toasts(d)), await toasts(d));
+  await waitFor('Membership on', async () => /You are a member: Cloud Saves are on/.test(await toasts(d)), 20000);
+  check('the page turns Membership on by itself', /Payment done/.test(await toasts(d)) && /You are a member: Cloud Saves are on/.test(await toasts(d)), await toasts(d));
   const paidKey = `saves/5000005/${Buffer.from(harbour).toString('base64url')}.gz`;
   await waitFor('the save to go up', () => s3fake.objects.has(paidKey));
   check('the save of its running game goes up at once', s3fake.objects.has(paidKey));
   await d.click('#account-open');
   const paid = (await d.innerText('#account-body')).replace(/\s+/g, ' ');
-  check('Account: Cloud Saves, renews, paid until, Manage subscription', /· Cloud Saves/.test(paid) && /Renews every month; paid until/.test(paid)
+  check('Account: Cloud Saves, renews, paid until, Manage subscription', /· Member\b/.test(paid) && /Renews every month; paid until/.test(paid)
     && await d.isVisible('#account-manage'), paid.slice(0, 220));
   await shot(d, 'paid');
   await d.click('#account-close');
@@ -386,7 +386,7 @@ try {
   await g.waitForSelector('#go');
   await g.click('#account-open');
   const gift = (await g.innerText('#account-body')).replace(/\s+/g, ' ');
-  check('the player, at the next page load: Cloud Saves are on, given to this account', /· Cloud Saves/.test(gift) && /Given to this account/.test(gift), gift.slice(0, 200));
+  check('the player, at the next page load: Cloud Saves are on, given to this account', /· Member\b/.test(gift) && /Given to this account/.test(gift), gift.slice(0, 200));
   await g.click('#account-close');
   await adm.click('[data-give="g:6000006"]');
   await adm.waitForSelector('[data-give="g:6000006"][data-on="1"]', { timeout: 10000 });
@@ -566,7 +566,7 @@ try {
     check('a member\'s running game: its save goes up', s3fake.objects.has(memberKeyOf));
     if (!(await m.evaluate(() => document.getElementById('account').open))) await m.click('#account-open');
     const memberText = (await m.innerText('#account-body')).replace(/\s+/g, ' ');
-    check('Account of a member: Cloud Saves, renews, Your membership', /· Cloud Saves/.test(memberText) && /Renews every month; paid until/.test(memberText)
+    check('Account of a member: Cloud Saves, renews, Your membership', /· Member\b/.test(memberText) && /Renews every month; paid until/.test(memberText)
       && await m.isVisible('#account-member') && !(await m.isVisible('#account-manage').catch(() => false)), memberText.slice(0, 260));
     await shot(m, 'member');
     await mctx.close();

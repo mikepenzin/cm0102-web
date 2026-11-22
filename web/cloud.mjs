@@ -798,7 +798,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     const record = await account(user.sub, true);
     const p = record?.paddle;
     if (p && ['active', 'trialing', 'past_due'].includes(p.status) && !p.cancelAt) {
-      send(res, 409, { error: 'Cancel your Cloud Saves subscription first (Manage subscription), then delete the account.' });
+      send(res, 409, { error: 'Cancel your membership first (Manage subscription), then delete the account.' });
       return;
     }
     const m = await member(user.email, true).catch(() => null);

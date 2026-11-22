@@ -405,7 +405,7 @@ function renderOverview() {
       ${card('People', num(t.people), `${num(t.accounts)} with an account · ${num(t.anonymous)} anonymous`, '#people')}
       ${card('Active today', num(t.activeToday), `${num(t.active7)} in 7 days · ${num(t.active30)} in 30`)}
       ${card('Hours played', num(Math.round(t.hours)), t.people ? `${(t.hours / t.people).toFixed(1)} h a person` : '')}
-      ${card('Cloud Saves', num(t.cloud), 'people with the plan')}
+      ${card('Members', num(t.cloud), 'people with Membership')}
       ${card('Saves', num(t.saves), `${mb(t.savesBytes)} · ${num(t.older)} older copies (${mb(t.olderBytes)})`)}
       ${card('Data sets', num(t.sets), mb(t.setsBytes))}
       ${card('Error reports', `<span class="${t.reports7 ? 'bad' : ''}">${num(t.reports7)}</span>`, 'in 7 days', '#errors')}
@@ -450,10 +450,10 @@ function renderOverview() {
 
 // ---- People ----
 const SORTS = [['last', 'Last seen'], ['first', 'First seen'], ['seconds', 'Played'], ['sessions', 'Visits'], ['days', 'Days played'], ['saves', 'Saves'],
-  ['sets', 'Data sets'], ['reports', 'Errors'], ['plan', 'Cloud Saves'], ['who', 'Name']];
-const COLS = [['who', 'Who'], ['plan', 'Cloud Saves'], ['last', 'Last seen'], ['seconds', 'Played', 'num'], ['saves', 'Saves', 'num'], ['reports', 'Errors', 'num']];
+  ['sets', 'Data sets'], ['reports', 'Errors'], ['plan', 'Membership'], ['who', 'Name']];
+const COLS = [['who', 'Who'], ['plan', 'Membership'], ['last', 'Last seen'], ['seconds', 'Played', 'num'], ['saves', 'Saves', 'num'], ['reports', 'Errors', 'num']];
 const KINDS = [['all', 'All', () => true], ['account', 'Accounts', (p) => p.kind === 'account'], ['anon', 'Anonymous', (p) => p.kind !== 'account'],
-  ['cloud', 'Cloud Saves', (p) => p.cloud || p.plan?.cloud], ['errors', 'With errors', (p) => p.reports > 0], ['week', 'Seen in 7 days', (p) => p.last >= Date.now() - 7 * DAY_MS]];
+  ['cloud', 'Members', (p) => p.cloud || p.plan?.cloud], ['errors', 'With errors', (p) => p.reports > 0], ['week', 'Seen in 7 days', (p) => p.last >= Date.now() - 7 * DAY_MS]];
 const PAGE = 50;
 let sortKey = 'last', sortDir = -1, filter = '', kind = 'all', showLinked = false, peopleShown = PAGE;
 const expanded = new Set();
@@ -490,7 +490,7 @@ $('people').onclick = (e) => {
   renderPeople();
 };
 
-// The account's plan (the server reads each account record), and the button that gives Cloud Saves or takes back a gift.
+// The account's plan (the server reads each account record), and the button that gives Membership or takes back a gift.
 function planCell(p) {
   if (p.kind !== 'account') return '';
   const pl = p.plan;
@@ -506,7 +506,7 @@ function planCell(p) {
 
 async function give(id, on) {
   const p = data.people.find((x) => x.id === id);
-  if (!confirm(`${on ? 'Give Cloud Saves to' : 'Take back the Cloud Saves given to'} ${p?.email ?? id}? It counts from the player's next page load.`)) return;
+  if (!confirm(`${on ? 'Give Membership to' : 'Take back the Membership given to'} ${p?.email ?? id}? It counts from the player's next page load.`)) return;
   const r = await fetch('/api/admin/cloud', { method: 'POST', credentials: 'same-origin',
     headers: { 'content-type': 'application/json', 'x-cm': '1' }, body: JSON.stringify({ id, on }) });
   const j = await r.json().catch(() => ({}));
