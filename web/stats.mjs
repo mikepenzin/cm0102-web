@@ -196,6 +196,7 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     if (ua) p.browser = browserOf(ua);
     p.engine = text(body.engine, 40);
     p.vault = Boolean(body.vault);
+    if (body.lang) p.lang = text(body.lang, 16);         // the browser's language (navigator.language), as it is
     if (user) {
       p.cloud = Boolean(body.cloud);
       p.devices = [...new Set([...(p.devices ?? []), `a:${anon}`])].slice(-20);
@@ -423,7 +424,16 @@ export function createStats({ store = null, log = (t) => console.log(t), now = (
     const days = Object.entries(data.days).sort(([a], [b]) => (a < b ? -1 : 1)).slice(-90)
       .map(([k, v]) => ({ day: k, ...v, active: k === data.today.day ? todayIds.size : v.active }));
     if (!days.some((d) => d.day === data.today.day)) days.push({ day: data.today.day, active: todayIds.size, seconds: 0, sessions: 0, new: 0, reports: 0, allowed: 0, declined: 0 });
+    // The people of the last 30 days by their browser's language: its first part (pt-BR and pt-PT are pt), most first.
+    const byLang = new Map();
+    for (const p of persons) {
+      if (!(p.last >= t - 30 * 86400000)) continue;
+      const lang = p.lang ? String(p.lang).toLowerCase().split(/[-_]/)[0] : '?';
+      byLang.set(lang, (byLang.get(lang) ?? 0) + 1);
+    }
+    const languages = [...byLang].map(([lang, people]) => ({ lang, people })).sort((a, b) => b.people - a.people || (a.lang < b.lang ? -1 : 1));
     return {
+      languages,
       at: new Date(t).toISOString(),
       totals: {
         people: persons.length, accounts: persons.filter((p) => p.kind === 'account').length, anonymous: persons.filter((p) => p.kind === 'anon').length,

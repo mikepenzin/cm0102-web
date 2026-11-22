@@ -334,3 +334,21 @@ test('a sent save through the server goes by way of a file on disk: one larger t
     rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+test('the browser\'s language: kept with the person, counted by its first part over the last 30 days', async () => {
+  let t = Date.parse('2026-11-22T10:00:00Z');
+  const s = createStats({ now: () => t });
+  const id = (n) => `11111111-2222-4333-8444-5555555555${String(n).padStart(2, '0')}`;
+  await s.beat({ anon: id(1), session: 'x', seconds: 1, lang: 'de' }, null);
+  t -= 40 * 86400000;
+  await s.beat({ anon: id(2), session: 'x', seconds: 1, lang: 'fr-FR' }, null);       // 40 days ago: not counted
+  t += 40 * 86400000;
+  await s.beat({ anon: id(3), session: 'x', seconds: 1, lang: 'pt-BR' }, null);
+  await s.beat({ anon: id(4), session: 'x', seconds: 1, lang: 'pt-PT' }, null);
+  await s.beat({ anon: id(5), session: 'x', seconds: 1 }, null);
+  await s.beat({ anon: id(6), session: 'x', seconds: 1, lang: 'x'.repeat(40) }, null);
+  assert.equal(s.data.people[`a:${id(6)}`].lang, 'x'.repeat(16));
+  assert.equal(s.data.people[`a:${id(3)}`].lang, 'pt-BR');
+  const { languages } = await s.summary();
+  assert.deepEqual(languages, [{ lang: 'pt', people: 2 }, { lang: '?', people: 1 }, { lang: 'de', people: 1 }, { lang: 'xxxxxxxxxxxxxxxx', people: 1 }]);
+});

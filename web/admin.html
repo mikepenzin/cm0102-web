@@ -411,6 +411,10 @@ function renderOverview() {
       ${card('Error reports', `<span class="${t.reports7 ? 'bad' : ''}">${num(t.reports7)}</span>`, 'in 7 days', '#errors')}
       ${card('Said yes to statistics', answers ? `${Math.round(100 * t.allowed30 / answers)}%` : '–', `${num(t.allowed30)} yes · ${num(t.declined30)} no, in 30 days`)}
     </div>
+    <div class="panel"><h2>Languages</h2>${(data.languages ?? []).length ? `<p class="small" style="margin:0">${(data.languages ?? []).map((l) =>
+      `<b>${esc(l.lang === '?' ? 'not told' : l.lang)}</b> ${num(l.people)}`).join(' · ')}</p>
+      <p class="small muted" style="margin:8px 0 0">People of the last 30 days by their browser's language (pt-BR and pt-PT count as pt); only those who allowed statistics.</p>`
+      : '<p class="small muted" style="margin:0">No browser languages yet: the page sends them from its next version.</p>'}</div>
     <div class="panel"><h2>Days <span class="spacer"></span><span class="seg" role="group" aria-label="How many days">${[7, 30, 90].map((n) =>
       `<button data-range="${n}" aria-pressed="${range === n}">${n} days</button>`).join('')}</span></h2>
       <div class="charts">${METRICS.map(chartHtml).join('')}</div>
