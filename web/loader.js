@@ -18,7 +18,7 @@ import { guardKeys, hasTouch, mountKeyboard, onPageKey } from './keyboard.js';
 import { TOUR_STEPS, cloudStepText, mountTour } from './tour.js';
 import { mountLayout } from './layout.js';
 import { mountMacRightButton, mountTouch } from './touch.js';
-import { fitBar, guardLeave, isFullAlready, isStandalone, keepAwake, mountBusy, toast } from './ui.js';
+import { fitBar, guardLeave, isFullAlready, isStandalone, keepAwake, mountBusy, toast, workerTimer } from './ui.js';
 import { mountVisitMark, suddenStopText } from './lastvisit.js';
 import { storageCopiesFiles, sweepDisk } from './disk.js';
 import { mountReport, watchSaveInPlay } from './report.js';
@@ -742,6 +742,10 @@ function watchSuspending() {
   try { WebAssembly.Suspending = Suspending; } catch { return () => {}; }
   return () => { try { WebAssembly.Suspending = Real; } catch { /* stays wrapped: harmless */ } };
 }
+// The engine's sleeps while the tab is hidden (ui.js, workerTimer): a hidden tab's timers are slowed to once a second, then
+// once a minute, and the game's days stopped while the player was in another window.
+const hiddenSleep = workerTimer();
+
 // The imports of the engine (instantiateWasm): its sleep becomes one the page can end.
 function stoppableSleep(imports, unwatch) {
   const Real = Object.getPrototypeOf(imports?.env?.emscripten_sleep ?? {})?.constructor;
@@ -752,7 +756,8 @@ function stoppableSleep(imports, unwatch) {
     if (engine.letGo) { reject(new EngineLetGo()); return; }
     const wake = () => reject(new EngineLetGo());
     engine.wake = wake;
-    sleep(ms).then((v) => { if (engine.wake === wake) engine.wake = null; resolve(v); }, reject);
+    const slept = (document.hidden && hiddenSleep(ms)) || sleep(ms);
+    slept.then((v) => { if (engine.wake === wake) engine.wake = null; resolve(v); }, reject);
   }));
   engine.stoppable = true;
   return true;

@@ -860,6 +860,13 @@ What to know about the Asyncify engine:
   of the C library's qsort (0x9454d5) and the two comparators of `PlayerStats::PlayerStats` (0x7bfd50), which a new
   game runs for seconds while it sorts every player's history. It froze the page for 1.4 s and 0.7 s in Chromium;
   now 0.19 s at most (21 November 2026, `docs/superpowers/specs/2026-11-21-sort-breathe-design.md`).
+- A hidden tab (another window in front, a minimised one): the game goes on. Emscripten's sleep waits with
+  setTimeout, and Chrome runs a hidden tab's timers once a second, then after five minutes once a minute, so the
+  game's days all but stopped until the player came back (22 November 2026). While the tab is hidden, the page's
+  wrapper of the engine's sleep (`loader.js`, stoppableSleep) waits through a small dedicated worker's timer instead
+  (`ui.js`, workerTimer), which the browser does not slow so; in view, the engine's own sleep runs. A run of the real
+  engine with the tab hidden throughout (a new game and a holiday) took its usual time, and the game was the same
+  (`-seed 7`). JSPI engine only; Safari on an iPhone or iPad stops a hidden tab whatever its timers do.
 - Files: the page puts the game files into Emscripten's file system before `main` starts; the runtime's POSIX host
   (`host/posix.c`) reads them as on Linux. The page keeps the game files in the browser's cache storage, each under
   its version (its SHA-256 in the manifest), so a later start downloads nothing. With a JSPI engine, the files larger

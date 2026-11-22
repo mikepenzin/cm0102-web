@@ -84,3 +84,26 @@ export function isStandalone() {
   return matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches ||
     navigator.standalone === true;
 }
+
+// The engine's sleeps while the tab is hidden. The game hands the page time through emscripten_sleep: a sleep of 0 ms
+// at least every 12 ms of its work (host/web.c, rt_web_yield) and every 100 ms of a day's processing (rt_web_breathe),
+// one of 1 ms while it waits for the player. Emscripten waits with setTimeout, and Chrome runs a hidden tab's timers
+// once a second, and after five minutes once a minute (its intensive throttling of timer chains): a player who moved to
+// another window found the game's days stopped until he came back (22 November 2026). A dedicated worker's timers are
+// not slowed so, and its message wakes the page at once: while the tab is hidden, the page sleeps through it. The
+// worker is made at the first hidden sleep; in view the engine's own sleep runs, as before.
+export function workerTimer(makeWorker = () => new Worker(URL.createObjectURL(new Blob(
+  ['onmessage = (e) => setTimeout(() => postMessage(e.data.id), e.data.ms);'], { type: 'text/javascript' })))) {
+  let worker = null, next = 0;
+  const waiting = new Map();
+  return (ms) => {
+    if (worker === null) {
+      try {
+        worker = makeWorker();
+        worker.onmessage = (e) => { const done = waiting.get(e.data); waiting.delete(e.data); done?.(); };
+      } catch { worker = false; }                     // no worker here: the engine's own sleep
+    }
+    if (!worker) return null;
+    return new Promise((resolve) => { const id = ++next; waiting.set(id, resolve); worker.postMessage({ id, ms: Math.max(0, ms | 0) }); });
+  };
+}
