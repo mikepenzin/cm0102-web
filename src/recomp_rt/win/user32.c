@@ -1157,6 +1157,21 @@ RT_WRAP(009454d5, sort_swap) { sort_step(); o_009454d5(); }
 RT_WRAP(007c6d90, history_by_club) { sort_step(); o_007c6d90(); }
 RT_WRAP(007c6de0, history_by_staff) { sort_step(); o_007c6de0(); }
 
+void o_00945333(void);
+void o_004cf5a0(void);
+void o_00600a50(void);
+
+/* The AI's transfer work of a day. With a 60 MB career a day's processing held the page up to 1.1 s at a time (a
+ * holiday in Chromium, 22 November 2026): CONTRACT_MANAGER::daily_update (0x4c7ac0) and the Shortlist_Manager filling
+ * every club's shortlist (fill_shortlist_slot 0x83f3a0, try_add_player_to_club_shortlist 0x842e10), which call the
+ * random function too seldom for its moment, and sort with comparators of their own. Each of these counts as a step
+ * too (sort_step, the same counter and the same 100 ms): qsort itself (0x945333, any comparator; 322 call sites),
+ * CONTRACT_MANAGER::get_contract (0x4cf5a0, a person's contract record from the table at 0xae2d0c; 622 call sites)
+ * and human_manager_is_human_club (0x600a50; 420 call sites). Only time passes; nothing of the game changes. */
+RT_WRAP(00945333, crt_qsort) { sort_step(); o_00945333(); }
+RT_WRAP(004cf5a0, get_contract) { sort_step(); o_004cf5a0(); }
+RT_WRAP(00600a50, is_human_club) { sort_step(); o_00600a50(); }
+
 void o_00945bfe(void);
 void o_00945ce6(void);
 

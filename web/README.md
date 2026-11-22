@@ -864,6 +864,11 @@ What to know about the Asyncify engine:
   game's run-length packer zwrite (0x932e10) and unpacks it with zread (0x932c30), which call nothing else the page
   waits on. A 60 MB career froze the page 2.3 s while it was saved and 1.3 s while it was loaded, and a player saw
   Chrome's "Page Unresponsive" (22 November 2026); now 0.27 s and 0.16 s at most, the load as long as before.
+  The AI's transfer work of a day (CONTRACT_MANAGER::daily_update 0x4c7ac0, the Shortlist_Manager filling every
+  club's shortlist) also called the random function too seldom: a holiday of the same career had 10 to 21 tasks over
+  0.3 s a minute, up to 1.3 s. Three more hooks count as sort steps: qsort itself (0x945333, any comparator),
+  CONTRACT_MANAGER::get_contract (0x4cf5a0) and human_manager_is_human_club (0x600a50). The same holiday: none over
+  0.3 s, the days as fast; a new game: none over 0.3 s.
 - A hidden tab (another window in front, a minimised one): the game goes on. Emscripten's sleep waits with
   setTimeout, and Chrome runs a hidden tab's timers once a second, then after five minutes once a minute, so the
   game's days all but stopped until the player came back (22 November 2026). While the tab is hidden, the page's
