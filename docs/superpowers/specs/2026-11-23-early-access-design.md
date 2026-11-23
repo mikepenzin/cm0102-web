@@ -66,7 +66,8 @@ Give is the way.
 
 The admin page's Give (People, an account's row) gives **Membership** or **Club Legend**. A Club Legend gift also
 gives Membership (the level includes everything in Squad Player). Take back removes either. The account's row shows
-which.
+which. Club Legend is offered on any account that is not one yet, a member included (today Give hides on an account
+that has Membership); the gift is kept where gifts are kept now (`grants/<sub>.json`), with its level.
 
 ### What is in early access
 
@@ -78,15 +79,22 @@ Two kinds of things, one rule:
 2. **A feature of the page.** Features are named in one list in the code, **`web/features.js`**: `{ key, name }` per
    feature, the name in English for the admin page. Building a new feature adds its line there (web/README.md and
    CLAUDE.md say so). The server keeps each feature's date in the store (`early/features.json`, `{ <key>: ISO date }`).
-   A key the server sees for the first time gets **14 days from then**, written at once, so no feature waits for the
+   A key the server sees for the first time gets **14 days from then**, written at once (not when reading the store
+failed: then the feature counts as open until the next read), so no feature waits for the
    developer to remember it. Features already out (Squad Hub, the Scout, Cloud Saves) are not in the list.
 
 A thing is **early** while its date is in the future. After it, early access has no effect at all.
 
+**A date is a calendar day** (`YYYY-MM-DD`), and the thing opens at the start of that day, 00:00 UTC, so "everyone from
+7 December" is true everywhere from the morning of the 7th (in the UK, at midnight). The store holds the day; the
+admin's field is a date field; Open now writes today; the first-seen default is today + 14 days. The page shows the
+day in the player's language. (My call.)
+
 ### The server
 
 - One module for the rule (who is a Club Legend, whether a date is still early, the feature dates in the store).
-- `/api/me`, for every caller, signed in or not, says `early: { legend: <bool>, features: { <key>: <date> } }`, with
+- `/api/me`, for every caller, signed in or not (and in server.mjs's answer for a server without accounts: no one is
+  a Club Legend there, so early things are locked to all until their date), says `early: { legend: <bool>, features: { <key>: <date> } }`, with
   only the features still early.
 - `/api/library` lists every database as today, with `early: <date>` on those still early, and `locked: true` on
   those the caller may not get yet.
@@ -133,7 +141,8 @@ New texts (English here; all ten languages): "Early access", "Club Legends have 
 "Become a Club Legend", and the 403 message. The date is shown in the player's language.
 
 The pricing page lists what each level gives; whether it should say early access for Club Legend, and in what words,
-is for Max to approve before deploy, like the other legal and pricing pages.
+is for Max to approve before deploy, like the other legal and pricing pages. Only that change waits: it goes in its own
+commit, so the rest can be deployed without it. (My call.)
 
 ## Left to the builder
 
