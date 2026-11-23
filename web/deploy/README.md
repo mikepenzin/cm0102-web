@@ -105,7 +105,7 @@ With a key of your own Tigris account instead of `fly storage create`, add `AWS_
 
 To sell Cloud Saves as a Buy Me a Coffee membership (`web/README.md`, "Payments"), make the webhook in Buy Me a Coffee
 (Integrations, Webhooks: `https://<your-app>.fly.dev/api/coffee/webhook`, the four `membership.*` events), then add its
-signing secret, the levels (lowest first), the price of the Squad Player level, and the seller's name and contact,
+signing secret, the levels (lowest first), the monthly price of the Squad Player level, and the seller's name and contact,
 which the terms, refunds, privacy and pricing pages show:
 
 ```bash
@@ -114,8 +114,8 @@ fly secrets set BMC_WEBHOOK_SECRET=<signing secret> CM_LEVELS="Supporter,Squad P
 ```
 
 The price in single quotes: in double quotes the shell takes `$5` for a variable and leaves " a month". Players see
-`CM_PRICE` as it is (the start box, Account, the tour, the pricing page); keep it the price of the Squad Player level
-on Buy Me a Coffee, which the pricing page says it is. No page names the price of another level.
+`CM_PRICE` as it is (the start box, Account, the tour, the pricing page); keep it the monthly price of the Squad Player
+level on Buy Me a Coffee, which the pricing page says it is. No page names the price of another level.
 
 `fly logs` shows `sold as a Buy Me a Coffee membership (levels …)`. The membership page is `CM_COFFEE_URL` +
 `/membership`; `BMC_MEMBERSHIP_URL` sets another. Send test event in Buy Me a Coffee: the log says the signature holds.

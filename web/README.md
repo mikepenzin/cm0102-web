@@ -489,7 +489,7 @@ Your membership button (Buy Me a Coffee: change, pause, cancel); a member of a l
 An account of an older Paddle subscription keeps Manage subscription (Paddle's portal). After the first save in a browser, a
 player without Cloud Saves gets one message about them.
 
-**Payments (Buy Me a Coffee).** Cloud Saves are sold as a monthly membership on Buy Me a Coffee. Its webhook
+**Payments (Buy Me a Coffee).** Cloud Saves are sold as a membership on Buy Me a Coffee, paid by the month or by the year. Its webhook
 (`/api/coffee/webhook`, signed: `x-signature-sha256` is the hex HMAC-SHA256 of the body with the webhook's signing
 secret, `billing.mjs`) names the supporter's email; the server keeps the membership by that email
 (`members/<sha256 of the email>.json`: the email, the membership's id, level, state and the end of its period; no
@@ -500,8 +500,8 @@ one canceled for the period's end until then, a paused or canceled one none. Its
 event of the dashboard (`live_mode` false) is only logged. A player who joined with another email: give Cloud Saves on
 the admin page. An account with a running membership cannot be deleted until it is canceled. In Buy Me a Coffee:
 
-1. Memberships: turn them on and make the levels (for example Supporter, Squad Player, Club Legend); the price of the
-   Squad Player level goes in `CM_PRICE`.
+1. Memberships: turn them on and make the levels (for example Supporter, Squad Player, Club Legend); the monthly price
+   of the Squad Player level goes in `CM_PRICE`.
 2. Integrations, Webhooks: a webhook `https://<your-app>.fly.dev/api/coffee/webhook` with the events
    `membership.started`, `membership.updated`, `membership.cancelled` and `membership.paused`. Keep its signing secret.
    Send test event: `fly logs` shows `Buy Me a Coffee test event …: the signature holds`.
@@ -550,7 +550,7 @@ deleted until the subscription is canceled. In Paddle (start in the sandbox, `sa
 | `CM_PUBLIC_URL` | the site's address, `https://<your-app>.fly.dev` (default: the address the browser used) |
 | `CM_CLOUD_USERS` | emails with cloud saves, comma-separated |
 | `CM_CLOUD_FOR` | `everyone`: every signed-in account has cloud saves |
-| `CM_PRICE` | the price of the Squad Player level on Buy Me a Coffee, which the page and the pricing page name (default `$5 a month`). No page names another level's price, and the terms name no amount: each level's price is its own there |
+| `CM_PRICE` | the monthly price of the Squad Player level on Buy Me a Coffee, which the page and the pricing page name (default `$5 a month`). No page names another level's price, and the terms name no amount: each level's price is its own there |
 | `PADDLE_CLIENT_TOKEN`, `PADDLE_PRICE_ID`, `PADDLE_WEBHOOK_SECRET` | Paddle's checkout: the client-side token, the price id (more than one, comma-separated, are all taken; the first is sold), the notification destination's secret |
 | `PADDLE_ENV` | `sandbox` for Paddle's sandbox; unset for real payments |
 | `PADDLE_API_KEY` | for Manage subscription; without it the button leads to paddle.net |

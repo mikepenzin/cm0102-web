@@ -438,7 +438,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       const info = cloud?.info();
       const term = u.cloudFrom === 'subscription' || u.cloudFrom === 'membership'
         ? (u.cancelAt ? esc(t('Canceled: your membership ends on {date}.', { date: day(u.cancelAt) }))
-          : u.until ? esc(t('Renews every month; paid until {date}.', { date: day(u.until) })) : '')
+          : u.until ? esc(t('Renews by itself; paid until {date}.', { date: day(u.until) })) : '')
         : offer?.free ? '' : esc(t('Given to this account.'));
       // Saves left in the cloud on this device (keepInCloud): bringing one here closed the tab last time.
       const keptNames = Object.keys(keptInCloud());
@@ -472,7 +472,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
           ? `<p class="small bad">${esc(t('Your Buy Me a Coffee membership ({level}) is not a level that gives Membership here: change its level on Buy Me a Coffee.', { level: u.member.level }))}</p>` : ''}
         ${!buyable() ? `<p class="small">${esc(t('Membership is not on sale yet.'))}</p>`
           : offer.coffee ? `<div class="row"><button class="primary" id="account-buy">${esc(t('Become a member · {price}', { price: priceText(offer.price) }))}</button></div>
-          <p class="small">${t('You become a member on Buy Me a Coffee: join with this account\'s email, <b>{email}</b>, and Cloud Saves and the Scout turn on by themselves. Renews every month; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (Help, Send to the developer) and we will link it.', { email: esc(u.email) })}</p>`
+          <p class="small">${t('You become a member on Buy Me a Coffee: join with this account\'s email, <b>{email}</b>, and Cloud Saves and the Scout turn on by themselves. Renews every month or year; cancel any time. A full refund within 14 days of any payment. Joined with another email? Send us a report (Help, Send to the developer) and we will link it.', { email: esc(u.email) })}</p>`
           : `<div class="row"><button class="primary" id="account-buy">${esc(t('Become a member · {price}', { price: priceText(offer.price) }))}</button></div>
           <p class="small">${esc(t('Renews every month; cancel any time. A full refund within 14 days of any payment. Payment by Paddle.'))}</p>`}
         ${own}${legal}`;
