@@ -87,6 +87,18 @@ test('what a membership gives: active runs to the period end and three days; can
     new Date(end * 1000 + 3 * DAY).toISOString());
 });
 
+// The levels are sold by the month and by the year. The server reads the end of the paid period, never the kind of
+// period (duration_type; 'year' here is a stand-in: only 'month' has been seen in a real notification).
+test('a membership paid for a year: on to the end of that year and three days; canceled, to its end', () => {
+  const now = Date.parse('2026-11-23T12:00:00Z'), end = Math.floor(now / 1000) + 365 * 86400;
+  const year = { ...coffeeEvent('membership.started', { end }).data, duration_type: 'year', amount: 50 };
+  assert.deepEqual(membershipOf(year, now), { on: true, until: new Date(end * 1000 + 3 * DAY).toISOString(), cancelAt: null });
+  assert.equal(membershipOf(year, now + 300 * DAY).on, true, 'ten months in: still on');
+  const canceled = { ...year, status: 'canceled', canceled: 'true', cancel_at_period_end: 'true' };
+  assert.deepEqual(membershipOf(canceled, now + 200 * DAY), { on: true, until: new Date(end * 1000).toISOString(), cancelAt: new Date(end * 1000).toISOString() });
+  assert.equal(membershipOf(canceled, now + 366 * DAY).on, false, 'after the year');
+});
+
 test('a membership record: written from an event, an older event of the same membership changes nothing', () => {
   const now = Date.parse('2026-11-17T12:00:00Z'), t = Math.floor(now / 1000);
   const first = applyMembership(null, coffeeEvent('membership.started', { created: t }), now);

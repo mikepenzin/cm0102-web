@@ -357,7 +357,7 @@ try {
   check('the save of its running game goes up at once', s3fake.objects.has(paidKey));
   await d.click('#account-open');
   const paid = (await d.innerText('#account-body')).replace(/\s+/g, ' ');
-  check('Account: Cloud Saves, renews, paid until, Manage subscription', /· Member\b/.test(paid) && /Renews every month; paid until/.test(paid)
+  check('Account: Cloud Saves, renews, paid until, Manage subscription', /· Member\b/.test(paid) && /Renews by itself; paid until/.test(paid)
     && await d.isVisible('#account-manage'), paid.slice(0, 220));
   await shot(d, 'paid');
   await d.click('#account-close');
@@ -566,7 +566,7 @@ try {
     check('a member\'s running game: its save goes up', s3fake.objects.has(memberKeyOf));
     if (!(await m.evaluate(() => document.getElementById('account').open))) await m.click('#account-open');
     const memberText = (await m.innerText('#account-body')).replace(/\s+/g, ' ');
-    check('Account of a member: Cloud Saves, renews, Your membership', /· Member\b/.test(memberText) && /Renews every month; paid until/.test(memberText)
+    check('Account of a member: Cloud Saves, renews, Your membership', /· Member\b/.test(memberText) && /Renews by itself; paid until/.test(memberText)
       && await m.isVisible('#account-member') && !(await m.isVisible('#account-manage').catch(() => false)), memberText.slice(0, 260));
     await shot(m, 'member');
     await mctx.close();

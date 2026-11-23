@@ -206,12 +206,18 @@ test('the legal pages and the levels: the price is the level\'s own, and the ter
   const terms = await text('terms'), pricing = await text('pricing');
   assert.doesNotMatch(terms, /[$€£]\s?\d|\d\s?(dollars|euros|pounds)/i, 'the terms name no amount');
   assert.match(terms, /at the Squad Player or the Club Legend level, at the price of that level \(<a href="\/pricing">Pricing<\/a>\), paid in advance/);
-  assert.match(pricing, /Each level has its own price: the Squad Player level is \$5 a month, the Club Legend level costs more, and Buy Me a Coffee shows every level's price before you join\./);
   assert.deepEqual(pricing.match(/[^.>]*\$5 a month[^.<]*/g).map((s) => s.trim()),
-    ['From $5 a month', 'Each level has its own price: the Squad Player level is $5 a month, the Club Legend level costs more, and Buy Me a Coffee shows every level\'s price before you join'],
-    'the price: "From" on the Membership card, and as the Squad Player level\'s');
+    ['From $5 a month', 'Each level has a monthly and a yearly price: the Squad Player level is $5 a month when paid monthly, the Club Legend level costs more, and Buy Me a Coffee shows every level\'s prices before you join'],
+    'the price: "From" on the Membership card, and as the Squad Player level\'s when paid monthly');
   assert.deepEqual(pricing.match(/<h3>[^<]*<\/h3>/g), ['<h3>The game</h3>', '<h3>Membership</h3>'], 'two cards');
-  assert.match(pricing, /<li>Paid levels on Buy Me a Coffee, each with its benefits: Squad Player is Membership, Club Legend adds early access<\/li>/, 'the Membership card names the levels');
+  assert.match(pricing, /<li>Paid levels on Buy Me a Coffee, monthly or yearly, each with its benefits: Squad Player is Membership, Club Legend adds early access<\/li>/, 'the Membership card names the levels');
+  // A level is paid monthly or yearly on Buy Me a Coffee: no sentence says monthly alone.
+  assert.match(terms, /a monthly or yearly membership on Buy Me a Coffee [^.]*, renewing every month or year until you cancel\./);
+  assert.match(pricing, /Buy Me a Coffee<\/a>, monthly or yearly, and it takes the payment\./);
+  assert.match(pricing, /The membership renews every month or year until you cancel\. [^.]*: Membership then runs to the end of the period you paid for \(a pause ends it at once\)\./);
+  for (const [page, html] of [['terms', terms], ['pricing', pricing]]) {
+    assert.doesNotMatch(html, /every month(?! or year)|a monthly membership|, monthly, |end of the month/, `${page}: monthly alone`);
+  }
   assert.match(terms, /The Club Legend level adds early access: [^.]* come to Club Legends first, usually 14 days before everyone else\. We do not promise how many there will be, or when\./);
   assert.match(pricing, /new features of the site come to Club Legends first, usually 14 days before everyone else\. After that, what is free is free for everyone, and what is part of Membership is for every member\./);
 });
