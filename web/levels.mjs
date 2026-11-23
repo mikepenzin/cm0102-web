@@ -13,7 +13,10 @@ export const rank = (level) => Math.max(0, LEVELS.indexOf(level));
 export const atLeast = (level, min) => rank(level) >= rank(min);
 export const higher = (a, b) => (rank(b) > rank(a) ? b : a);
 
-const list = (v) => String(v ?? '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean);
+// A level name as words only: Buy Me a Coffee sends a level's name with its emoji ("🏆 Club Legend"), so letters and
+// digits count, any other mark is a space, and case does not matter.
+export const levelKey = (v) => String(v ?? '').normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+const list = (v) => String(v ?? '').split(',').map(levelKey).filter(Boolean);
 
 // { names, legacyCloud }: CM_LEVELS (or the default), or, when only BMC_CLOUD_LEVELS is set, its list.
 export function levelsFromEnv(env = process.env) {
@@ -24,7 +27,7 @@ export function levelsFromEnv(env = process.env) {
 
 // The site level of a paid membership ({ level, levelId }), and whether its name is one the settings know.
 export function paidLevel(member, cfg) {
-  const name = String(member?.level ?? '').trim().toLowerCase(), id = member?.levelId == null ? '' : String(member.levelId);
+  const name = levelKey(member?.level), id = member?.levelId == null ? '' : String(member.levelId);
   const has = (xs) => xs.includes(name) || (id !== '' && xs.includes(id));
   if (!cfg?.names) {
     const cloud = cfg?.legacyCloud ?? [];

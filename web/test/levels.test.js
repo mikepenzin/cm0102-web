@@ -34,3 +34,12 @@ test('paidLevel: by name or id, lowest to highest; an unknown name is a Supporte
   assert.deepEqual(paidLevel({ level: 'Squad Player' }, legacy), { level: 'squad', known: true });
   assert.deepEqual(paidLevel({ level: 'Anything' }, { names: null, legacyCloud: [] }), { level: 'squad', known: true });
 });
+
+test('a level name as Buy Me a Coffee sends it, with an emoji: the letters count, not the symbols', () => {
+  const cfg = levelsFromEnv({});
+  assert.deepEqual(paidLevel({ level: '🏆 Club Legend', levelId: 352068 }, cfg), { level: 'legend', known: true });
+  assert.deepEqual(paidLevel({ level: '⚽ Squad Player' }, cfg), { level: 'squad', known: true });
+  assert.deepEqual(paidLevel({ level: '☕️ Supporter!' }, cfg), { level: 'supporter', known: true });
+  assert.deepEqual(paidLevel({ level: 'Squad Player' }, levelsFromEnv({ CM_LEVELS: '☕ Supporter, ⚽ Squad Player, 🏆 Club Legend' })), { level: 'squad', known: true });
+  assert.deepEqual(paidLevel({ level: '🏆 Club Legend' }, levelsFromEnv({ BMC_CLOUD_LEVELS: 'Squad Player,Club Legend' })), { level: 'squad', known: true }, 'the older setting too');
+});

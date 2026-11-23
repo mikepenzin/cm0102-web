@@ -232,3 +232,10 @@ test('BMC_CLOUD_LEVELS alone still works: its levels are Squad Player, the other
   assert.equal((await old.planOf({ sub: '8000701', email: 'legend@example.com' }, true)).level, 'supporter');
   assert.equal((await old.planOf({ sub: '8000702', email: 'squad@example.com' }, true)).level, 'squad');
 });
+
+test('a level name with its emoji, as Buy Me a Coffee sends it ("🏆 Club Legend"): a Club Legend', async () => {
+  await hook(coffeeEvent('membership.started', { email: 'trophy@example.com', id: 1144565, level: '🏆 Club Legend', levelId: 352068 }));
+  const b = await signIn({ sub: '8100001', email: 'trophy@example.com', email_verified: true, name: 'Trophy' });
+  const me = (await b.me()).user;
+  assert.deepEqual([me.level, me.cloud], ['legend', true]);
+});
