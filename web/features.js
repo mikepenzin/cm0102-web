@@ -1,0 +1,5 @@
+// The page's features in early access (web/README.md, "Levels and early access"): a new feature adds its line here
+// when it is built, { key, name } (key: a-z, 0-9 and -, the name in English for the admin page), and gates its entry
+// point with early.js (earlyState, lockedHtml). The server (early.mjs) gives a key it sees for the first time 14 days
+// of Club Legends only; the admin page's Early access tab changes the day. Features already out are not listed.
+export const FEATURES = [];

@@ -131,7 +131,7 @@ ${ok ? 'setTimeout(() => window.close(), 300);' : ''}</script>`;
 // price: how the page names the price ("$5 a month").
 export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicUrl = null, cloudFor = 'listed', cloudUsers = [],
   upgradeUrl = null, maxSaves = 30, maxSets = 5, maxPacked = MAX_GZ, maxRaw = MAX_RAW, google = GOOGLE, paddle = null, coffee = null, price = '$5 a month', log = (t) => console.log(t),
-  onAccountDeleted = () => {}, uploadBudget = 160 << 20, isAdmin = () => false, direct: directWanted = true, origins = ['*'],
+  onAccountDeleted = () => {}, uploadBudget = 160 << 20, isAdmin = () => false, early = null, direct: directWanted = true, origins = ['*'],
   storeTtl = 10 * 60e3, linkStores = [], recheck = [60e3, 5 * 60e3, 30 * 60e3] }) {
   const seal = sealer(sessionSecret);
   // A save may be maxPacked bytes, compressed (MAX_GZ unless a test sets less); the saves list tells the page, so a save
@@ -459,12 +459,14 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     finishSignIn(res, mode, true);
   }
 
+  // What is in early access now (early.mjs), and whether this account has it: a Club Legend.
+  const earlyFor = async (level) => ({ legend: level === 'legend', features: await early?.early().catch(() => ({})) ?? {} });
   async function me(req, res) {
     const user = sessionOf(req);
-    if (!user) { send(res, 200, { auth: true, user: null, offer: offer(), maxSaves }); return; }
+    if (!user) { send(res, 200, { auth: true, user: null, offer: offer(), maxSaves, early: await earlyFor('free') }); return; }
     const p = await planOf(user, true);              // fresh: a gift or a payment shows at the page's next load
     setCookie(res, SESSION, seal.seal('s', user, SESSION_DAYS * 86400), { maxAge: SESSION_DAYS * 86400, secure: secure(req) });
-    send(res, 200, { auth: true, offer: offer(), maxSaves, user: {
+    send(res, 200, { auth: true, offer: offer(), maxSaves, early: await earlyFor(p.level), user: {
       email: user.email, name: user.name, picture: user.picture, level: p.level, cloud: p.cloud, cloudFrom: p.from,
       until: p.from === 'subscription' || p.from === 'membership' ? p.paid.until : null,
       cancelAt: p.from === 'subscription' || p.from === 'membership' ? p.paid.cancelAt ?? null : null,
@@ -987,7 +989,7 @@ export function corsOrigins(env = process.env) {
 
 // The cloud of the environment, or null and the settings that are missing.
 // isAdmin(email): whether the account may open the admin page (server.mjs: CM_ADMIN_EMAILS).
-export function cloudFromEnv(env = process.env, log, { onAccountDeleted, isAdmin } = {}) {
+export function cloudFromEnv(env = process.env, log, { onAccountDeleted, isAdmin, early = null } = {}) {
   const missing = [];
   for (const k of ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'CM_SESSION_SECRET', 'AWS_ENDPOINT_URL_S3', 'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY', 'BUCKET_NAME']) if (!env[k]) missing.push(k);
@@ -999,7 +1001,7 @@ export function cloudFromEnv(env = process.env, log, { onAccountDeleted, isAdmin
     cloudFor: env.CM_CLOUD_FOR === 'everyone' ? 'everyone' : 'listed', cloudUsers: (env.CM_CLOUD_USERS ?? '').split(','),
     upgradeUrl: env.CM_UPGRADE_URL || null, maxSaves: Number(env.CM_CLOUD_MAX_SAVES) || 30, maxSets: Number(env.CM_CLOUD_MAX_SETS) || 5, log,
     maxPacked: (Number(env.CM_CLOUD_MAX_PACKED_MB) || MAX_GZ >> 20) << 20, maxRaw: (Number(env.CM_CLOUD_MAX_RAW_MB) || MAX_RAW >> 20) << 20,
-    price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env), coffee: coffeeFromEnv(env), onAccountDeleted, isAdmin,
+    price: env.CM_PRICE || '$5 a month', paddle: paddleFromEnv(env), coffee: coffeeFromEnv(env), onAccountDeleted, isAdmin, early,
     uploadBudget: (Number(env.CM_UPLOAD_BUDGET_MB) || 160) << 20,
     // Direct to the store (createCloud, "direct"): off with CM_DIRECT=off; on without setting the rules with CM_DIRECT=on
     // (they were set in the store's console). The bucket's CORS rules let in the site's own addresses: CM_PUBLIC_URL

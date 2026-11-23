@@ -103,7 +103,7 @@ test('without its settings the server has no accounts, and says so to the page',
   const plain = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv') });
   await new Promise((r) => plain.listen(0, '127.0.0.1', r));
   const at = `http://127.0.0.1:${plain.address().port}`;
-  assert.deepEqual(await (await fetch(`${at}/api/me`)).json(), { auth: false });
+  assert.deepEqual(await (await fetch(`${at}/api/me`)).json(), { auth: false, early: { legend: false, features: {} } });
   assert.equal((await fetch(`${at}/api/saves`)).status, 404);
   assert.equal((await fetch(`${at}/auth/google/start`, { redirect: 'manual' })).status, 404);
   plain.close();
@@ -111,7 +111,7 @@ test('without its settings the server has no accounts, and says so to the page',
 
 test('sign in with Google: the account, the session cookie, and a free plan', async () => {
   const b = browser();
-  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3 });
+  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3, early: { legend: false, features: {} } });
   google.user = { sub: '1000001', email: 'player@example.com', email_verified: true, name: 'A Player' };
   const back = await b.signIn();
   assert.equal(back.status, 303);
@@ -132,7 +132,7 @@ test('sign in with Google: the account, the session cookie, and a free plan', as
   assert.equal((await b.send('PUT', '/api/saves/a.sav', gzipSync(fakeSaveBytes()))).status, 403);
   // Signing out.
   assert.equal((await b.send('POST', '/auth/logout')).status, 204);
-  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3 });
+  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3, early: { legend: false, features: {} } });
 });
 
 test('the sign-in refuses a wrong state, a cancel, an unverified email and a token for another app', async () => {
@@ -248,7 +248,7 @@ test('cloud saves: store, list, fetch, conflicts, limits and checks', async () =
   // Delete the account: its saves, its record and the session go.
   assert.equal((await b.send('DELETE', '/api/account')).status, 204);
   assert.equal([...s3fake.objects.keys()].some((k) => k.includes('2000002')), false);
-  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3 });
+  assert.deepEqual(await (await b.get('/api/me')).json(), { auth: true, user: null, offer: { price: '$5 a month', free: false, url: 'https://example.com/support', paddle: null }, maxSaves: 3, early: { legend: false, features: {} } });
 });
 
 test('tactics in the cloud: one record per account, changed only from its last version, its files checked', async () => {
