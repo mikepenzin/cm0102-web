@@ -347,7 +347,9 @@ for it. The server (`stats.mjs`) keeps one object in the bucket (`stats/stats.js
 the server stops) and the reports as files (`reports/<day>/…`, deleted after 90 days); people idle for 400 days go.
 Each write reads the object again and adds what its machine counted since (`mergeStats`), so two machines both count.
 
-`/admin` has four tabs (the address's `#overview`, `#people`, `#errors`, `#library` opens one). Overview: what to look
+`/admin` has five tabs (the address's `#overview`, `#people`, `#members`, `#errors`, `#library` opens one). Members:
+every Buy Me a Coffee membership the webhook told the server of, signed in or not (`members/`), and the last
+notification with what came of it (`coffee/last.json`, no email). Overview: what to look
 at (reports sent by players, reports in the last 24 hours, a message that comes again, databases with no picture), the
 totals (people, accounts and anonymous, active today, in 7 and 30 days, hours played, saves, older copies, data sets,
 errors) and four charts of the last 7, 30 or 90 days (people active a day, hours played, new people, error reports),

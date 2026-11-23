@@ -8,11 +8,12 @@ import { join } from 'node:path';
 import { applyMembership, checkCoffeeSignature, memberKey, membershipOf } from '../billing.mjs';
 import { coffeeFromEnv, createCloud } from '../cloud.mjs';
 import { createS3 } from '../s3.mjs';
+import { createStats } from '../stats.mjs';
 import { createApp } from '../server.mjs';
 import { coffeeEvent, fakeGoogle, fakeS3, signCoffee } from './fakes.mjs';
 
 const SECRET = 'bmc_signing_secret_test';
-const DAY = 86400e3, SESSION = 's'.repeat(40);
+const DAY = 86400e3, SESSION = 's'.repeat(40), ADMIN = 'an-admin-token-of-16-chars';
 let tmp, s3fake, google, base, server, logs;
 
 before(async () => {
@@ -27,6 +28,7 @@ before(async () => {
     price: '$5 a month', log: (t) => logs.push(t),
     coffee: { secret: SECRET, url: 'https://buymeacoffee.com/someone/membership', levels: ['squad player', 'club legend'] } });
   server = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv'), cloud,
+    stats: createStats(), adminToken: ADMIN,
     site: { seller: 'A. Seller', contact: 'help@example.com', price: '$5 a month' } });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${server.address().port}`;
@@ -157,4 +159,31 @@ test('a level that gives no Cloud Saves, and a member who signs in after joining
   await hook(coffeeEvent('membership.cancelled', { email: 'early@example.com', id: 610, status: 'canceled', created: Math.floor(Date.now() / 1000) + 5 }));
   assert.equal((await early.send('DELETE', '/api/account')).status, 204);
   assert.ok(!s3fake.objects.has(memberKey('early@example.com')));
+});
+
+test('the admin page: every membership the server was told of, and the last notification of Buy Me a Coffee', async () => {
+  const members = async (headers = { authorization: `Bearer ${ADMIN}` }) => fetch(`${base}/api/admin/members`, { headers });
+  assert.equal((await members({})).status, 401, 'only for an admin');
+  const t = Math.floor(Date.now() / 1000);
+  await hook(coffeeEvent('membership.started', { email: 'New@Example.com', id: 630, created: t, end: t + 30 * 86400 }));
+  let got = await (await members()).json();
+  assert.equal(got.on, true);
+  assert.deepEqual(got.levels, ['squad player', 'club legend']);
+  const fresh = got.members.find((m) => m.email === 'new@example.com');
+  assert.deepEqual([fresh.level, fresh.status, fresh.cloud, fresh.levelGives], ['Squad Player', 'active', true, true]);
+  assert.equal(fresh.until, new Date((t + 30 * 86400) * 1000 + 3 * DAY).toISOString());
+  const small = got.members.find((m) => m.email === 'small@example.com');
+  assert.deepEqual([small.level, small.cloud, small.levelGives], ['Supporter', false, false], 'a level that gives no Membership');
+  assert.equal(got.members[0].email, 'new@example.com', 'the newest first');
+  assert.deepEqual([got.last.type, got.last.result], ['membership.started', 'Membership on']);
+  // A one-off coffee: not a membership, and the page says so; a refused one says why.
+  await hook({ ...coffeeEvent('donation.created'), data: { supporter_email: 'once@example.com' } });
+  got = await (await members()).json();
+  assert.equal(got.last.type, 'donation.created');
+  assert.match(got.last.result, /not a membership/);
+  assert.ok(!got.members.some((m) => m.email === 'once@example.com'));
+  await hook(coffeeEvent('membership.started'), { secret: 'other' });
+  got = await (await members()).json();
+  assert.match(got.last.result, /refused.*does not match/);
+  assert.doesNotMatch(JSON.stringify(got.last), /@/, 'no email in the last notification');
 });

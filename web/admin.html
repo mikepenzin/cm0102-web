@@ -42,7 +42,7 @@
 
   main { padding: 18px 20px 48px; max-width: 1280px; margin: 0 auto; }
   .view { display: none; }
-  body[data-tab="overview"] #view-overview, body[data-tab="people"] #view-people, body[data-tab="errors"] #view-errors, body[data-tab="library"] #view-library { display: block; }
+  body[data-tab="overview"] #view-overview, body[data-tab="people"] #view-people, body[data-tab="errors"] #view-errors, body[data-tab="library"] #view-library, body[data-tab="members"] #view-members { display: block; }
   body.gated .view, body.gated nav.tabs { display: none; }
   .msg { padding: 48px 0; text-align: center; color: var(--muted); }
   #oops { display: none; margin-bottom: 14px; padding: 8px 12px; border-radius: 8px; background: var(--warn-dim); color: var(--warn); font-size: 13px; }
@@ -214,6 +214,7 @@
   <nav class="tabs" aria-label="Parts of the admin page">
     <a href="#overview" data-tab="overview">Overview</a>
     <a href="#people" data-tab="people">People<span class="count" id="n-people"></span></a>
+    <a href="#members" data-tab="members">Members<span class="count" id="n-members"></span></a>
     <a href="#errors" data-tab="errors">Error<span class="long"> report</span>s<span class="count" id="n-errors"></span></a>
     <a href="#library" data-tab="library">Library<span class="count" id="n-library"></span></a>
   </nav>
@@ -256,6 +257,7 @@
     </div>
   </div>
 
+  <div class="view" id="view-members"><p class="msg">Loading…</p></div>
   <div class="view" id="view-library"><div id="library" hidden></div><p class="msg" id="library-none" hidden></p></div>
 </main>
 
@@ -285,10 +287,10 @@ const ago = (t) => {
   return m < 1 ? 'just now' : m < 60 ? `${Math.round(m)} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
 };
 const DAY_MS = 86400000;
-let data = null, library = null;
+let data = null, library = null, coffee = null;
 
 // ---- Tabs: the address's #part picks one, so a link or a reload opens the same part. ----
-const TABS = ['overview', 'people', 'errors', 'library'];
+const TABS = ['overview', 'people', 'members', 'errors', 'library'];
 function showTab() {
   const tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
   document.body.dataset.tab = tab;
@@ -326,6 +328,7 @@ function renderAll() {
   renderOverview();
   renderPeople();
   renderErrors();
+  if (coffee) renderMembers();
 }
 
 // ---- Overview ----
@@ -864,10 +867,45 @@ function put(url, body, headers, onPart, same) {
   });
 }
 
-$('refresh').onclick = () => { load(); loadLibrary(); };
+// ---- Buy Me a Coffee members (cloud.mjs, memberships): every membership its webhook told the server of, whether or not
+// the member has signed in here, and the last notification, so a missing member can be traced. ----
+async function loadMembers() {
+  const r = await fetch('/api/admin/members', { credentials: 'same-origin' }).catch(() => null);
+  if (!r || !r.ok) { if (r?.status !== 401 && r?.status !== 403) $('view-members').innerHTML = '<p class="msg bad">The members did not load.</p>'; return; }
+  coffee = await r.json();
+  renderMembers();
+}
+function renderMembers() {
+  const c = coffee;
+  $('n-members').textContent = c.members.filter((m) => m.cloud).length || '';
+  if (!c.on) {
+    $('view-members').innerHTML = '<p class="msg">Buy Me a Coffee memberships are not set up on this server: BMC_WEBHOOK_SECRET and CM_COFFEE_URL (web/deploy/README.md).</p>';
+    return;
+  }
+  // An account seen here with the member's email: only accounts that allowed the statistics are in People.
+  const seen = new Map((data?.people ?? []).filter((p) => p.kind === 'account' && p.email).map((p) => [String(p.email).toLowerCase(), p]));
+  const state = (m) => m.cloud ? `<span class="good">on</span>${m.cancelAt ? ` · ends ${esc(day(m.cancelAt))}` : m.until ? ` · to ${esc(day(m.until))}` : ''}`
+    : !m.levelGives ? '<span class="warn">off: this level gives no Membership</span>' : '<span class="muted">off (ended)</span>';
+  const last = c.last
+    ? `<b style="font-weight:500">${esc(c.last.type ?? 'a notification')}</b> · ${esc(ago(c.last.at))} · <span class="${/^refused/.test(c.last.result) ? 'bad' : 'muted'}">${esc(c.last.result)}</span>`
+    : '<span class="warn">None yet.</span> Buy Me a Coffee has sent nothing here: in Buy Me a Coffee, Integrations, Webhooks, the address is this site + /api/coffee/webhook with the membership events, and Send test event shows here.';
+  $('view-members').innerHTML = `<div class="panel"><h2>Last notification from Buy Me a Coffee</h2><p class="small" style="margin:0">${last}</p>
+    <p class="small muted" style="margin:8px 0 0">Levels that give Membership: ${c.levels.length ? c.levels.map(esc).join(', ') : 'every level'} (BMC_CLOUD_LEVELS).
+      A member gets it once they sign in here with Google using the same email as on Buy Me a Coffee. A one-off coffee is not a membership and is not listed.</p></div>
+    <div class="panel"><h2>Memberships <span class="count">${c.members.length}</span></h2>
+    ${c.members.length ? `<table class="stack"><thead><tr><th>Email</th><th>Level</th><th>Status</th><th>Membership</th><th>Signed in here</th><th>Last change</th></tr></thead><tbody>
+      ${c.members.map((m) => { const p = seen.get(String(m.email).toLowerCase());
+        return `<tr><td><b style="font-weight:500">${esc(m.email)}</b></td><td data-label="Level">${esc(m.level ?? '–')}</td><td data-label="Status">${esc(m.status ?? '–')}</td>
+        <td data-label="Membership">${state(m)}</td><td data-label="Signed in here">${p ? `yes · ${esc(ago(p.last))}` : '<span class="muted" title="Not in People: not signed in yet, another Google email, or the statistics are off for them">not seen</span>'}</td>
+        <td class="small muted" data-label="Last change">${esc(m.event ?? '')} · ${esc(day(m.at))}</td></tr>`; }).join('')}
+    </tbody></table>` : '<p class="empty">No membership yet.</p>'}</div>`;
+}
+
+$('refresh').onclick = () => { load(); loadLibrary(); loadMembers(); };
 load();
 loadLibrary();
-setInterval(load, 60000);
+loadMembers();
+setInterval(() => { load(); loadMembers(); }, 60000);
 </script>
 </body>
 </html>

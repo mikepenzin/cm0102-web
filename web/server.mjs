@@ -247,6 +247,11 @@ async function statsRoute(req, res, url, { stats, cloud, admins, adminToken, lib
     json(res, 200, sum);
     return;
   }
+  if (path === '/api/admin/members' && req.method === 'GET') {
+    // The Buy Me a Coffee memberships the server was told of (cloud.mjs, memberships).
+    json(res, 200, cloud?.memberships ? await cloud.memberships() : { on: false, levels: [], members: [], last: null });
+    return;
+  }
   if (path === '/api/admin/cloud' && req.method === 'POST') {
     // Gives Cloud Saves to an account, or takes them back: { id: "g:<google id>", on }. Only from the admin page.
     const from = req.headers.origin;

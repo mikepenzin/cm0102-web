@@ -29,6 +29,7 @@ import { MAX_TACTIC, pruneRemoved, validTactic } from './tacticsync.js';
 
 const SESSION = 'cm_session', OAUTH = 'cm_oauth';
 const SESSION_DAYS = 30;
+const LAST_COFFEE = 'coffee/last.json';     // the last notification of Buy Me a Coffee, for the admin page
 // What one save may be, compressed and as it is. Long careers make large saves (a player's was 446 MB, 15 November
 // 2026), where 64 MB and 256 MB once were the limits, set when the server held each upload in memory. The server now
 // streams a save through its disk (spool.mjs), and a page with direct uploads sends it straight to the store. Fly
@@ -485,25 +486,60 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
 
   // A notification of Buy Me a Coffee (billing.mjs). Membership events write the member record of the supporter's email;
   // the others (coffees, extras) are taken and left. A test event of the dashboard (live_mode false) is only logged.
+  // The last notification (its type and what came of it, no email) is kept for the admin page: coffee/last.json.
+  const noteLast = (type, result) => s3.put(LAST_COFFEE, Buffer.from(JSON.stringify({ at: new Date().toISOString(), type: type || null, result })),
+    { type: 'application/json' }).catch((err) => log(`cloud: the last Buy Me a Coffee notification not kept: ${err.message}`));
   async function coffeeWebhook(req, res) {
     if (!coffee) { req.resume(); send(res, 404, { error: 'no memberships here' }); return; }
     const raw = await readBody(req, 1 << 20);
     const why = checkCoffeeSignature(req.headers['x-signature-sha256'], raw, coffee.secret);
-    if (why) { log(`cloud: Buy Me a Coffee notification refused: ${why}`); send(res, 401, { error: why }); return; }
+    if (why) {
+      log(`cloud: Buy Me a Coffee notification refused: ${why}`);
+      await noteLast(null, `refused: ${why} (BMC_WEBHOOK_SECRET is not the webhook's signing secret)`);
+      send(res, 401, { error: why }); return;
+    }
     let event;
     try { event = JSON.parse(raw.toString()); } catch { send(res, 400, { error: 'not JSON' }); return; }
     const type = String(event?.type ?? '');
-    if (event?.live_mode === false) { log(`cloud: Buy Me a Coffee test event ${type}: the signature holds`); send(res, 200, { test: true }); return; }
-    if (!type.startsWith('membership.') || !event.data?.id) { send(res, 200, { ignored: type }); return; }
+    if (event?.live_mode === false) {
+      log(`cloud: Buy Me a Coffee test event ${type}: the signature holds`);
+      await noteLast(type, 'a test event: the signature holds');
+      send(res, 200, { test: true }); return;
+    }
+    if (!type.startsWith('membership.') || !event.data?.id) {
+      await noteLast(type, 'not a membership (a one-off coffee or an extra): nothing to do');
+      send(res, 200, { ignored: type }); return;
+    }
     const email = normalEmail(event.data.supporter_email);
-    if (!email) { log(`cloud: Buy Me a Coffee ${type} ${event.data.id}: no supporter email`); send(res, 200, { ignored: 'no email' }); return; }
+    if (!email) {
+      log(`cloud: Buy Me a Coffee ${type} ${event.data.id}: no supporter email`);
+      await noteLast(type, 'no supporter email in it: nothing to do');
+      send(res, 200, { ignored: 'no email' }); return;
+    }
     const had = await member(email, true);
     const next = applyMembership(had, event);
-    if (!next) { send(res, 200, { ignored: 'older than the last event' }); return; }
+    if (!next) { await noteLast(type, 'older than the last event of that membership: nothing to do'); send(res, 200, { ignored: 'older than the last event' }); return; }
     await s3.put(memberKey(email), Buffer.from(JSON.stringify(next)), { type: 'application/json' });
     members.set(email, { member: next, at: Date.now() });
     log(`cloud: membership ${next.id} (${next.level ?? 'no level'}): ${type}, ${next.status}, Cloud Saves ${memberOn(next) ? `on until ${next.until}` : 'off'}`);
+    await noteLast(type, memberOn(next) ? 'Membership on' : levelGives(next) ? 'Membership off' : `Membership off: the level ${next.level ?? next.levelId ?? '?'} is not in BMC_CLOUD_LEVELS`);
     send(res, 200, { ok: true });
+  }
+
+  // The admin page (server.mjs): every membership the server was told of, newest first, and the last notification.
+  async function memberships() {
+    if (!coffee) return { on: false, levels: [], members: [], last: null };
+    const keys = (await s3.list('members/')).filter((o) => o.key.endsWith('.json')).map((o) => o.key);
+    const list = [];
+    for (let i = 0; i < keys.length; i += 8) {                     // 8 records at a time
+      list.push(...await Promise.all(keys.slice(i, i + 8).map(async (k) => {
+        try { const b = await s3.getBuffer(k); return b ? JSON.parse(b.toString()) : null; } catch { return null; }
+      })));
+    }
+    const last = await s3.getBuffer(LAST_COFFEE).then((b) => (b ? JSON.parse(b.toString()) : null)).catch(() => null);
+    return { on: true, levels: coffee.levels, last,
+      members: list.filter(Boolean).map((m) => ({ email: m.email, level: m.level, status: m.status, cloud: memberOn(m), levelGives: levelGives(m),
+        until: m.until, cancelAt: m.cancelAt, event: m.event, at: m.at })).sort((a, b) => String(b.at).localeCompare(String(a.at))) };
   }
 
   async function billingPortal(res, user) {
@@ -888,6 +924,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     presign: (method, key, opts) => links.presign(method, key, opts),
     planOfSub,
     give,
+    memberships,
     async handle(req, res, url) {
       try {
         await handle(req, res, url);

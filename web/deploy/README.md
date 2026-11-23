@@ -120,6 +120,11 @@ Coffee.
 `fly logs` shows `sold as a Buy Me a Coffee membership (levels …)`. The membership page is `CM_COFFEE_URL` +
 `/membership`; `BMC_MEMBERSHIP_URL` sets another. Send test event in Buy Me a Coffee: the log says the signature holds.
 
+The admin page's **Members** tab lists every membership the webhook told the server of (email, level, whether it
+gives Membership, whether that email has signed in here) and the last notification with what came of it. A supporter
+missing there sent no membership event: a one-off coffee is not a membership, or the webhook is not set up. One listed
+but "not seen" has Membership waiting until they sign in with Google using that same email.
+
 Paddle, the first way (subscriptions bought through it keep working while its settings stay):
 
 ```bash
