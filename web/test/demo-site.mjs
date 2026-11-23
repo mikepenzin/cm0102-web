@@ -12,12 +12,14 @@ import { createS3 } from '../s3.mjs';
 import { levelsFromEnv } from '../levels.mjs';
 import { createStats, statsStore } from '../stats.mjs';
 import { createLibrary } from '../library.mjs';
+import { createEarly } from '../early.mjs';
 import { writeZip } from '../zip.js';
 import { fakeDataSet, fakeGoogle, fakeS3 } from './fakes.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-export async function startDemoSite({ adminToken, withLibrary = true } = {}) {   // withLibrary false: a server with no library
+// features: the page's features in early access (features.js), for the early check.
+export async function startDemoSite({ adminToken, withLibrary = true, features = [] } = {}) {   // withLibrary false: a server with no library
   // The site, as the checks make it: the game's own database as a small data set, the stand-in engine.
   const tmp = mkdtempSync(join(tmpdir(), 'cm0102-videos-'));
   const game = join(tmp, 'game'), build = join(tmp, 'build-web');
@@ -40,11 +42,12 @@ export async function startDemoSite({ adminToken, withLibrary = true } = {}) {  
   const s3fake = await fakeS3(), google = await fakeGoogle();
   const coffee = process.env.CM_COFFEE_URL || 'https://buymeacoffee.com';
   const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
-  const cloud = createCloud({ s3,
+  const early = createEarly({ s3, features });
+  const cloud = createCloud({ s3, early,
     clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'v'.repeat(40), google: google.google, price: '$5 a month',
     coffee: { secret: 'video', url: `${coffee.replace(/\/+$/, '')}/membership`, levels: levelsFromEnv({}) }, log: () => {} });
   // The database library, with three databases as the admin page would add them (library.mjs: the index and the zips).
-  const library = createLibrary({ s3 });
+  const library = createLibrary({ s3, levelOf: async (req) => { const u = cloud.userOf(req); return u ? (await cloud.planOf(u)).level : 'free'; } });
   const libEntries = [];
   for (const [i, [name, season, note]] of [['2024/25 squads', 2024, 'Example: a database of the 2024/25 season'],
     ['2018/19 squads', 2018, 'Example: a database of the 2018/19 season'], ['2011/12 squads', 2011, 'Example: a database of the 2011/12 season']].entries()) {
@@ -55,7 +58,7 @@ export async function startDemoSite({ adminToken, withLibrary = true } = {}) {  
   }
   await s3.put('library/index.json', Buffer.from(JSON.stringify({ entries: libEntries })), { type: 'application/json' });
   const server = createApp({ gameDir: game, buildDir: build, manifestPath: join(tmp, 'manifest.tsv'), cloud, library: withLibrary ? library : null,
-    stats: createStats({ store: statsStore(null) }), statsMode: 'optout', adminToken,
+    stats: createStats({ store: statsStore(null) }), statsMode: 'optout', adminToken, early,
     site: { seller: process.env.CM_SELLER || '', price: '$5 a month', coffee, youtube: process.env.CM_YOUTUBE_URL } });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const BASE = `http://127.0.0.1:${server.address().port}`;

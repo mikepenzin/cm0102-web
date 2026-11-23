@@ -42,7 +42,7 @@
 
   main { padding: 18px 20px 48px; max-width: 1280px; margin: 0 auto; }
   .view { display: none; }
-  body[data-tab="overview"] #view-overview, body[data-tab="people"] #view-people, body[data-tab="errors"] #view-errors, body[data-tab="library"] #view-library, body[data-tab="members"] #view-members { display: block; }
+  body[data-tab="overview"] #view-overview, body[data-tab="people"] #view-people, body[data-tab="errors"] #view-errors, body[data-tab="library"] #view-library, body[data-tab="members"] #view-members, body[data-tab="early"] #view-early { display: block; }
   body.gated .view, body.gated nav.tabs { display: none; }
   .msg { padding: 48px 0; text-align: center; color: var(--muted); }
   #oops { display: none; margin-bottom: 14px; padding: 8px 12px; border-radius: 8px; background: var(--warn-dim); color: var(--warn); font-size: 13px; }
@@ -114,6 +114,10 @@
   .tag.warn { border-color: var(--warn); color: var(--warn); }
   .plan { white-space: nowrap; }
   .plan .give { margin-left: 8px; }
+  .plan .lv { display: block; }
+  .plan .lv + .lv { margin-top: 2px; }
+  .early-day { width: 150px; }
+  #view-early .opened td { color: var(--muted); }
   td.more { width: 36px; text-align: right; color: var(--muted); }
   tr.open td.more { color: var(--text); }
   .chev { display: inline-block; transition: transform 150ms; } tr.open .chev { transform: rotate(180deg); }
@@ -217,6 +221,7 @@
     <a href="#members" data-tab="members">Members<span class="count" id="n-members"></span></a>
     <a href="#errors" data-tab="errors">Error<span class="long"> report</span>s<span class="count" id="n-errors"></span></a>
     <a href="#library" data-tab="library">Library<span class="count" id="n-library"></span></a>
+    <a href="#early" data-tab="early">Early access<span class="count" id="n-early"></span></a>
   </nav>
 </header>
 <main>
@@ -258,6 +263,7 @@
   </div>
 
   <div class="view" id="view-members"><p class="msg">Loading…</p></div>
+  <div class="view" id="view-early"><p class="msg">Loading…</p></div>
   <div class="view" id="view-library"><div id="library" hidden></div><p class="msg" id="library-none" hidden></p></div>
 </main>
 
@@ -290,7 +296,7 @@ const DAY_MS = 86400000;
 let data = null, library = null, coffee = null;
 
 // ---- Tabs: the address's #part picks one, so a link or a reload opens the same part. ----
-const TABS = ['overview', 'people', 'members', 'errors', 'library'];
+const TABS = ['overview', 'people', 'members', 'errors', 'library', 'early'];
 function showTab() {
   const tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
   document.body.dataset.tab = tab;
@@ -408,7 +414,12 @@ function renderOverview() {
       ${card('People', num(t.people), `${num(t.accounts)} with an account · ${num(t.anonymous)} anonymous`, '#people')}
       ${card('Active today', num(t.activeToday), `${num(t.active7)} in 7 days · ${num(t.active30)} in 30`)}
       ${card('Hours played', num(Math.round(t.hours)), t.people ? `${(t.hours / t.people).toFixed(1)} h a person` : '')}
-      ${card('Members', num(t.cloud), 'people with Membership')}
+      ${card('Members', num(data.accountsOn ? (data.people ?? []).filter((p) => rankOf(levelOf(p)) >= rankOf('squad')).length : t.cloud), (() => {
+        const n = (l) => (data.people ?? []).filter((p) => levelOf(p) === l).length;
+        const parts = [['legend', 'Club Legend', 'Club Legends'], ['squad', 'Squad Player', 'Squad Players'], ['supporter', 'Supporter', 'Supporters']]
+          .map(([l, one, many]) => [n(l), one, many]).filter(([c]) => c).map(([c, one, many]) => `${num(c)} ${c === 1 ? one : many}`);
+        return parts.length ? parts.join(' · ') : 'people with Membership';
+      })())}
       ${card('Saves', num(t.saves), `${mb(t.savesBytes)} · ${num(t.older)} older copies (${mb(t.olderBytes)})`)}
       ${card('Data sets', num(t.sets), mb(t.setsBytes))}
       ${card('Error reports', `<span class="${t.reports7 ? 'bad' : ''}">${num(t.reports7)}</span>`, 'in 7 days', '#errors')}
@@ -455,13 +466,19 @@ function renderOverview() {
 const SORTS = [['last', 'Last seen'], ['first', 'First seen'], ['seconds', 'Played'], ['sessions', 'Visits'], ['days', 'Days played'], ['saves', 'Saves'],
   ['sets', 'Data sets'], ['reports', 'Errors'], ['plan', 'Membership'], ['who', 'Name']];
 const COLS = [['who', 'Who'], ['plan', 'Membership'], ['last', 'Last seen'], ['seconds', 'Played', 'num'], ['saves', 'Saves', 'num'], ['reports', 'Errors', 'num']];
+// The levels of an account (levels.mjs), lowest first.
+const LEVELS = ['free', 'supporter', 'squad', 'legend'];
+const LEVEL_NAME = { free: 'Free', supporter: 'Supporter', squad: 'Squad Player', legend: 'Club Legend' };
+const rankOf = (level) => Math.max(0, LEVELS.indexOf(level));
+const levelOf = (p) => (p.kind === 'account' ? p.plan?.level ?? (p.cloud ? 'squad' : 'free') : null);
 const KINDS = [['all', 'All', () => true], ['account', 'Accounts', (p) => p.kind === 'account'], ['anon', 'Anonymous', (p) => p.kind !== 'account'],
-  ['cloud', 'Members', (p) => p.cloud || p.plan?.cloud], ['errors', 'With errors', (p) => p.reports > 0], ['week', 'Seen in 7 days', (p) => p.last >= Date.now() - 7 * DAY_MS]];
+  ...LEVELS.map((l) => [l, LEVEL_NAME[l], (p) => levelOf(p) === l]),
+  ['errors', 'With errors', (p) => p.reports > 0], ['week', 'Seen in 7 days', (p) => p.last >= Date.now() - 7 * DAY_MS]];
 const PAGE = 50;
 let sortKey = 'last', sortDir = -1, filter = '', kind = 'all', showLinked = false, peopleShown = PAGE;
 const expanded = new Set();
 const keyOf = (p, k) => (k === 'who' ? (p.email || p.id).toLowerCase() : k === 'saves' || k === 'older' || k === 'sets' ? p[k]?.n ?? 0
-  : k === 'plan' ? (p.plan?.cloud ? (p.plan.from === 'subscription' || p.plan.from === 'membership' ? 3 : 2) : p.kind === 'account' ? 1 : 0) : p[k] ?? '');
+  : k === 'plan' ? (p.kind === 'account' ? 1 + 2 * rankOf(levelOf(p)) + (p.plan?.paidLevel ? 1 : 0) : 0) : p[k] ?? '');
 
 $('sort').innerHTML = SORTS.map(([k, label]) => `<option value="${k}">${label}</option>`).join('');
 $('filter').oninput = (e) => { filter = e.target.value; peopleShown = PAGE; renderPeople(); };
@@ -480,7 +497,9 @@ $('people-head').onclick = (e) => {
 $('people-more').onclick = (e) => { const b = e.target.closest('[data-more]'); if (b) { peopleShown = b.dataset.more === 'all' ? Infinity : peopleShown + PAGE; renderPeople(); } };
 $('people').onclick = (e) => {
   const give_ = e.target.closest('[data-give]');
-  if (give_) { e.stopPropagation(); give(give_.dataset.give, give_.dataset.on === '1'); return; }
+  if (give_) { e.stopPropagation(); give(give_.dataset.give, give_.dataset.giveLevel); return; }
+  const back = e.target.closest('[data-take-back]');
+  if (back) { e.stopPropagation(); give(back.dataset.takeBack, null); return; }
   const errs = e.target.closest('[data-their-errors]');
   if (errs) { showErrorsOf(errs.dataset.theirErrors); return; }
   const cp = e.target.closest('[data-copy-id]');
@@ -493,25 +512,31 @@ $('people').onclick = (e) => {
   renderPeople();
 };
 
-// The account's plan (the server reads each account record), and the button that gives Membership or takes back a gift.
+// The account's level (the server reads each account record; cloud.mjs planOfSub): where it comes from (paid, a gift,
+// an admin, the server's list), and the buttons that give Squad Player or Club Legend, or take a gift back.
 function planCell(p) {
   if (p.kind !== 'account') return '';
   const pl = p.plan;
   if (!data.accountsOn) return '<span class="muted small">no accounts</span>';
   if (!pl) return '<span class="muted small">no record</span>';
-  const what = pl.from === 'subscription' ? `paid${pl.until ? ` · to ${esc(day(pl.until))}` : ''}`
-    : pl.from === 'membership' ? `member${pl.level ? ` (${esc(pl.level)})` : ''}${pl.until ? ` · to ${esc(day(pl.until))}` : ''}`
-    : pl.given ? `given by an admin${pl.givenAt ? ` · ${esc(day(pl.givenAt))}` : ''}` : pl.cloud ? 'given (server list)' : 'free';
-  const button = pl.given ? `<button class="give small" data-give="${esc(p.id)}" data-on="0">Take back</button>`
-    : pl.cloud ? '' : `<button class="give small primary" data-give="${esc(p.id)}" data-on="1">Give</button>`;
-  return `<span class="${pl.cloud ? 'good' : 'muted'}">${what}</span>${button}`;
+  const tone = (l) => (rankOf(l) >= rankOf('squad') ? 'good' : 'muted');
+  const lines = [];
+  if (pl.paidLevel) lines.push([pl.paidLevel, `${LEVEL_NAME[pl.paidLevel]} · paid${pl.cancelAt ? ` · ends ${esc(day(pl.cancelAt))}` : pl.until ? ` · to ${esc(day(pl.until))}` : ''}${pl.known === false ? ` <span class="warn small">(${esc(pl.bmcLevel ?? 'its level')}: not in CM_LEVELS)</span>` : ''}`]);
+  if (pl.givenLevel) lines.push([pl.givenLevel, `${LEVEL_NAME[pl.givenLevel]} · gift${pl.givenAt ? ` · ${esc(day(pl.givenAt))}` : ''}`]);
+  if (pl.admin) lines.push(['legend', 'Club Legend · admin']);
+  if (!lines.length) lines.push([pl.level, pl.cloud ? `${LEVEL_NAME[pl.level]} · server list` : LEVEL_NAME[pl.level] ?? 'Free']);
+  lines.sort((x, y) => rankOf(y[0]) - rankOf(x[0]));
+  const buttons = [pl.givenLevel ? `<button class="give small" data-take-back="${esc(p.id)}">Take back</button>` : '',
+    ...['squad', 'legend'].filter((l) => rankOf(l) > rankOf(pl.level)).map((l) =>
+      `<button class="give small primary" data-give="${esc(p.id)}" data-give-level="${l}">Give ${LEVEL_NAME[l]}</button>`)].join('');
+  return `${lines.map(([l, text]) => `<span class="lv ${tone(l)}">${text}</span>`).join('')}${buttons}`;
 }
 
-async function give(id, on) {
+async function give(id, level) {
   const p = data.people.find((x) => x.id === id);
-  if (!confirm(`${on ? 'Give Membership to' : 'Take back the Membership given to'} ${p?.email ?? id}? It counts from the player's next page load.`)) return;
+  if (!confirm(`${level ? `Give ${LEVEL_NAME[level]} to` : 'Take back the gift of'} ${p?.email ?? id}? It counts from the player's next page load.`)) return;
   const r = await fetch('/api/admin/cloud', { method: 'POST', credentials: 'same-origin',
-    headers: { 'content-type': 'application/json', 'x-cm': '1' }, body: JSON.stringify({ id, on }) });
+    headers: { 'content-type': 'application/json', 'x-cm': '1' }, body: JSON.stringify({ id, level }) });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) { alert(`Not changed: ${j.error ?? `the server answered ${r.status}`}`); return; }
   if (p) { p.plan = j.plan; p.cloud = j.plan.cloud; }
@@ -766,6 +791,7 @@ async function loadLibrary() {
   $('library-none').hidden = true;
   $('n-library').textContent = library.length || '';
   renderLibrary();
+  renderEarly();
   if (data) renderOverview();
 }
 function renderLibrary() {
@@ -778,6 +804,7 @@ function renderLibrary() {
       ${editing ? '' : '<input type="file" id="lib-file" accept=".zip,application/zip" aria-label="The zip">'}
       <input id="lib-name" placeholder="Name, as players see it" maxlength="60" aria-label="Name">
       <label class="small muted" style="display:flex;gap:6px;align-items:center">Season <select id="lib-season">${seasons.join('')}</select></label>
+      <label class="small muted" style="display:flex;gap:6px;align-items:center" title="Club Legends get it first; empty: everyone at once">Club Legends only until <input type="date" id="lib-early" class="early-day"></label>
       <div class="wide"><input id="lib-note" placeholder="A note: who made it, what it holds" maxlength="500" aria-label="Note">
         <button id="lib-add" class="primary">${editing ? 'Save changes' : 'Add to the library'}</button>${editing ? '<button id="lib-cancel">Cancel</button>' : ''}</div>
     </div>
@@ -791,8 +818,9 @@ function renderLibrary() {
         <td class="small muted" data-label="Added">${esc(day(e.added))}</td><td class="lib-actions"><button class="small" data-lib-edit="${esc(e.id)}">Edit</button> <button class="small" data-lib-remove="${esc(e.id)}">Remove</button></td></tr>`).join('')}
     </tbody></table>` : '<p class="empty">Nothing in the library yet.</p>'}</div>`;
   const say = (t, bad = false) => { $('lib-msg').textContent = t; $('lib-msg').className = `small ${bad ? 'bad' : 'muted'}`; };
-  if (editing) { $('lib-name').value = editing.name; $('lib-season').value = String(editing.season); $('lib-note').value = editing.note; }
-  else $('lib-file').onchange = () => { const f = $('lib-file').files[0]; if (f && !$('lib-name').value) $('lib-name').value = f.name.replace(/\.zip$/i, '').slice(0, 60); };
+  if (editing) { $('lib-name').value = editing.name; $('lib-season').value = String(editing.season); $('lib-note').value = editing.note; $('lib-early').value = editing.early ?? ''; }
+  else $('lib-early').value = addDaysUTC(todayUTC(), 14);
+  if (!editing) $('lib-file').onchange = () => { const f = $('lib-file').files[0]; if (f && !$('lib-name').value) $('lib-name').value = f.name.replace(/\.zip$/i, '').slice(0, 60); };
   if ($('lib-cancel')) $('lib-cancel').onclick = () => { editing = null; renderLibrary(); };
   // The title cards of the databases added before the pictures (library.mjs, POST /api/admin/library/cards).
   if ($('lib-cards')) $('lib-cards').onclick = async () => {
@@ -810,7 +838,7 @@ function renderLibrary() {
     say(`Pictures made for ${made}; ${none} have no picture in their zip.`);
   };
   $('lib-add').onclick = async () => {
-    const fields = { name: $('lib-name').value.trim(), season: Number($('lib-season').value), note: $('lib-note').value.trim() };
+    const fields = { name: $('lib-name').value.trim(), season: Number($('lib-season').value), note: $('lib-note').value.trim(), early: $('lib-early').value || null };
     $('lib-add').disabled = true;
     try {
       if (editing) {
@@ -849,7 +877,7 @@ function renderLibrary() {
       const e = library.find((x) => x.id === b.dataset.libRemove);
       if (!e || !confirm(`Take ${e.name} out of the library? Players who got it keep their copy.`)) return;
       const r = await fetch(`/api/admin/library/${e.id}`, { method: 'DELETE', credentials: 'same-origin', headers: { 'x-cm': '1' } });
-      if (r.ok) await loadLibrary(); else alert(`Not removed: HTTP ${r.status}`);
+      if (r.ok) { await loadLibrary(); loadEarly(); } else alert(`Not removed: HTTP ${r.status}`);
     };
   });
 }
@@ -885,25 +913,70 @@ function renderMembers() {
   // An account seen here with the member's email: only accounts that allowed the statistics are in People.
   const seen = new Map((data?.people ?? []).filter((p) => p.kind === 'account' && p.email).map((p) => [String(p.email).toLowerCase(), p]));
   const state = (m) => m.cloud ? `<span class="good">on</span>${m.cancelAt ? ` · ends ${esc(day(m.cancelAt))}` : m.until ? ` · to ${esc(day(m.until))}` : ''}`
-    : !m.levelGives ? '<span class="warn">off: this level gives no Membership</span>' : '<span class="muted">off (ended)</span>';
+    : m.status === 'active' && !m.levelGives ? '<span class="muted">none at this level</span>' : '<span class="muted">off (ended)</span>';
+  const siteLevel = (m) => m.known === false ? `<span class="warn">not in CM_LEVELS: counted as Supporter</span>` : esc(LEVEL_NAME[m.siteLevel] ?? m.siteLevel ?? '–');
   const last = c.last
     ? `<b style="font-weight:500">${esc(c.last.type ?? 'a notification')}</b> · ${esc(ago(c.last.at))} · <span class="${/^refused/.test(c.last.result) ? 'bad' : 'muted'}">${esc(c.last.result)}</span>`
     : '<span class="warn">None yet.</span> Buy Me a Coffee has sent nothing here: in Buy Me a Coffee, Integrations, Webhooks, the address is this site + /api/coffee/webhook with the membership events, and Send test event shows here.';
   $('view-members').innerHTML = `<div class="panel"><h2>Last notification from Buy Me a Coffee</h2><p class="small" style="margin:0">${last}</p>
-    <p class="small muted" style="margin:8px 0 0">Levels that give Membership: ${c.levels.length ? c.levels.map(esc).join(', ') : 'every level'} (BMC_CLOUD_LEVELS).
+    <p class="small muted" style="margin:8px 0 0">${c.levels?.names ? `Buy Me a Coffee levels, lowest first (CM_LEVELS): ${c.levels.names.map((n, i) => `${esc(n)} = ${['Supporter', 'Squad Player', 'Club Legend'][Math.min(i, 2)]}`).join(', ')}. Squad Player and up have Membership; Club Legends early access too.`
+      : `Levels that give Membership: ${c.levels?.legacyCloud?.length ? c.levels.legacyCloud.map(esc).join(', ') : 'every level'} (BMC_CLOUD_LEVELS; CM_LEVELS replaces it and names Club Legend).`}
       A member gets it once they sign in here with Google using the same email as on Buy Me a Coffee. A one-off coffee is not a membership and is not listed.</p></div>
     <div class="panel"><h2>Memberships <span class="count">${c.members.length}</span></h2>
-    ${c.members.length ? `<table class="stack"><thead><tr><th>Email</th><th>Level</th><th>Status</th><th>Membership</th><th>Signed in here</th><th>Last change</th></tr></thead><tbody>
+    ${c.members.length ? `<table class="stack"><thead><tr><th>Email</th><th>Level</th><th>Counts as</th><th>Status</th><th>Membership</th><th>Signed in here</th><th>Last change</th></tr></thead><tbody>
       ${c.members.map((m) => { const p = seen.get(String(m.email).toLowerCase());
-        return `<tr><td><b style="font-weight:500">${esc(m.email)}</b></td><td data-label="Level">${esc(m.level ?? '–')}</td><td data-label="Status">${esc(m.status ?? '–')}</td>
+        return `<tr><td><b style="font-weight:500">${esc(m.email)}</b></td><td data-label="Level">${esc(m.level ?? '–')}</td><td data-label="Counts as">${siteLevel(m)}</td><td data-label="Status">${esc(m.status ?? '–')}</td>
         <td data-label="Membership">${state(m)}</td><td data-label="Signed in here">${p ? `yes · ${esc(ago(p.last))}` : '<span class="muted" title="Not in People: not signed in yet, another Google email, or the statistics are off for them">not seen</span>'}</td>
         <td class="small muted" data-label="Last change">${esc(m.event ?? '')} · ${esc(day(m.at))}</td></tr>`; }).join('')}
     </tbody></table>` : '<p class="empty">No membership yet.</p>'}</div>`;
 }
 
-$('refresh').onclick = () => { load(); loadLibrary(); loadMembers(); };
+// ---- Early access (early.mjs): each feature of features.js and each library database with a day, before which only
+// Club Legends have it. A day opens at 00:00 UTC; Open now writes today (a feature) or clears it (a database). ----
+const todayUTC = () => new Date().toISOString().slice(0, 10);
+const addDaysUTC = (d, n) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86400e3).toISOString().slice(0, 10);
+let earlyData = null;
+async function loadEarly() {
+  const r = await fetch('/api/admin/early', { credentials: 'same-origin' }).catch(() => null);
+  earlyData = r?.ok ? await r.json() : { features: [], today: todayUTC(), none: r?.status === 404 };
+  renderEarly();
+}
+function renderEarly() {
+  if (!earlyData) return;
+  const today = earlyData.today ?? todayUTC();
+  const rows = [...earlyData.features.map((f) => ({ id: `f:${f.key}`, kind: 'Feature', name: f.name, day: f.day })),
+    ...(library ?? []).filter((e) => e.early).map((e) => ({ id: `db:${e.id}`, kind: 'Database', name: e.name, day: e.early }))];
+  const still = rows.filter((x) => x.day && x.day > today), opened = rows.filter((x) => !(x.day && x.day > today));
+  $('n-early').textContent = still.length || '';
+  const row = (x, open) => `<tr data-early-row="${esc(x.id)}"${open ? ' class="opened"' : ''}><td><b style="font-weight:500">${esc(x.name)}</b></td><td data-label="Kind">${x.kind}</td>
+    <td data-label="${open ? 'Opened' : 'Club Legends only until'}">${open ? esc(x.day ?? '–') : `<input type="date" class="early-day" value="${esc(x.day)}" min="${esc(addDaysUTC(today, 1))}"> <button class="small" data-save-day>Save</button>`}</td>
+    <td>${open ? '' : '<button class="small primary" data-open-now>Open now</button>'}</td></tr>`;
+  const table = (list, open) => `<table class="stack"${open ? ' data-open-list' : ''}><thead><tr><th>Name</th><th>Kind</th><th>${open ? 'Opened' : 'Club Legends only until'}</th><th></th></tr></thead><tbody>${list.map((x) => row(x, open)).join('')}</tbody></table>`;
+  $('view-early').innerHTML = `<div class="panel"><h2>In early access <span class="count">${still.length}</span></h2>
+    <p class="small muted" style="margin:0 0 10px">Club Legends have these now; everyone else sees them with the day they open (00:00 UTC). A new feature
+      (web/features.js) gets 14 days by itself; a new database gets the day set in the library form.${earlyData.none ? ' <span class="warn">Early access needs the bucket.</span>' : ''}</p>
+    ${still.length ? table(still, false) : '<p class="empty">Nothing in early access now.</p>'}</div>
+    ${opened.length ? `<div class="panel"><h2>Open to everyone</h2>${table(opened, true)}</div>` : ''}`;
+  const setDay = async (id, value) => {
+    const [kind, key] = [id.slice(0, id.indexOf(':')), id.slice(id.indexOf(':') + 1)];
+    const r = kind === 'f'
+      ? await fetch('/api/admin/early', { method: 'PUT', credentials: 'same-origin', headers: CHANGE, body: JSON.stringify({ key, day: value }) })
+      : await fetch(`/api/admin/library/${key}`, { method: 'PATCH', credentials: 'same-origin', headers: CHANGE, body: JSON.stringify({ early: value ?? todayUTC() }) });
+    if (!r.ok) { alert(`Not changed: ${(await r.json().catch(() => ({}))).error ?? `HTTP ${r.status}`}`); return; }
+    if (kind === 'db') await loadLibrary();
+    await loadEarly();
+  };
+  $('view-early').querySelectorAll('[data-early-row]').forEach((tr) => {
+    const id = tr.dataset.earlyRow;
+    const save = tr.querySelector('[data-save-day]'), now = tr.querySelector('[data-open-now]');
+    if (save) save.onclick = () => { const v = tr.querySelector('input').value; if (v) setDay(id, v); };
+    if (now) now.onclick = () => { if (confirm(`Open ${tr.querySelector('b').textContent} to everyone now?`)) setDay(id, null); };
+  });
+}
+
+$('refresh').onclick = () => { load(); loadLibrary().then(loadEarly); loadMembers(); };
 load();
-loadLibrary();
+loadLibrary().then(loadEarly);
 loadMembers();
 setInterval(() => { load(); loadMembers(); }, 60000);
 </script>

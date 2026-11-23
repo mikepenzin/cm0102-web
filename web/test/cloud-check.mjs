@@ -372,15 +372,15 @@ try {
   await waitFor('the account', async () => (await g.textContent('#account-open span')) === 'Gift');
   await g.waitForTimeout(4000);                                       // its first heartbeat: the admin page lists it
   const adm = await a.context().newPage();
-  adm.on('dialog', (dlg) => dlg.accept());                           // "Give Cloud Saves to …?"
+  adm.on('dialog', (dlg) => dlg.accept());                           // "Give Squad Player to …?"
   await adm.goto(`${BASE}/admin#people`);
-  await adm.waitForSelector('[data-give="g:6000006"]', { timeout: 15000 });
+  await adm.waitForSelector('[data-give="g:6000006"][data-give-level="squad"]', { timeout: 15000 });
   const row = () => adm.locator('#people tr', { hasText: 'gift@example.com' }).innerText();
-  check('the admin page: a free account has a Give button, the admin\'s own (server list) none',
-    /free/.test(await row()) && (await adm.locator('#people tr', { hasText: 'player@example.com' }).first().innerText()).includes('given (server list)'), (await row()).replace(/\s+/g, ' '));
-  await adm.click('[data-give="g:6000006"]');
-  await adm.waitForSelector('[data-give="g:6000006"][data-on="0"]', { timeout: 10000 });
-  check('Give: the row says given by an admin, with Take back', /given by an admin/.test(await row()), (await row()).replace(/\s+/g, ' '));
+  check('the admin page: a free account has the Give buttons, the admin\'s own says Club Legend · admin',
+    /Free/.test(await row()) && (await adm.locator('#people tr', { hasText: 'player@example.com' }).first().innerText()).includes('Club Legend · admin'), (await row()).replace(/\s+/g, ' '));
+  await adm.click('[data-give="g:6000006"][data-give-level="squad"]');
+  await adm.waitForSelector('[data-take-back="g:6000006"]', { timeout: 10000 });
+  check('Give: the row says Squad Player · gift, with Take back', /Squad Player · gift/.test(await row()), (await row()).replace(/\s+/g, ' '));
   await shot(adm, 'admin-given');
   await g.reload();
   await g.waitForSelector('#go');
@@ -388,8 +388,8 @@ try {
   const gift = (await g.innerText('#account-body')).replace(/\s+/g, ' ');
   check('the player, at the next page load: Cloud Saves are on, given to this account', /· Member\b/.test(gift) && /Given to this account/.test(gift), gift.slice(0, 200));
   await g.click('#account-close');
-  await adm.click('[data-give="g:6000006"]');
-  await adm.waitForSelector('[data-give="g:6000006"][data-on="1"]', { timeout: 10000 });
+  await adm.click('[data-take-back="g:6000006"]');
+  await adm.waitForSelector('[data-give="g:6000006"][data-give-level="squad"]', { timeout: 10000 });
   await g.reload();
   await g.waitForSelector('#go');
   await g.click('#account-open');
@@ -671,6 +671,7 @@ try {
     const named = await adminPage.inputValue('#lib-name');
     await adminPage.selectOption('#lib-season', '2011');
     await adminPage.fill('#lib-note', 'Squads of December 2011');
+    await adminPage.fill('#lib-early', '');                          // for everyone at once (early-check covers the day)
     await adminPage.click('#lib-add');
     await waitFor('the library entry', async () => /Update 2011/.test(await adminPage.textContent('#library table').catch(() => '')), 20000);
     const adminRow = (await adminPage.textContent('#library table').catch(() => '')).replace(/\s+/g, ' ');
