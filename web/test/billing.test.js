@@ -210,6 +210,9 @@ test('the legal pages and the levels: the price is the level\'s own, and the ter
   assert.deepEqual(pricing.match(/[^.>]*\$5 a month[^.<]*/g).map((s) => s.trim()),
     ['$5 a month', 'Each level has its own price: the Squad Player level is $5 a month, the Club Legend level costs more, and Buy Me a Coffee shows every level\'s price before you join'],
     'the price: on the Membership card, and as the Squad Player level\'s');
+  assert.deepEqual(pricing.match(/<h3>[^<]*<\/h3> <div class="price[^"]*">[^<]*<\/div>/g).map((s) => s.replace(/<[^>]*>/g, '|')),
+    ['|The game| |Free|', '|Membership| |$5 a month|', '|Club Legend| |Price on Buy Me a Coffee|'], 'the three cards: the Club Legend one names no amount');
+  assert.match(pricing, /<li>Everything in Membership<\/li> <li>Early access: [^<]*usually 14 days before everyone else<\/li>/, 'what the Club Legend card holds');
   assert.match(terms, /The Club Legend level adds early access: [^.]* come to Club Legends first, usually 14 days before everyone else\. We do not promise how many there will be, or when\./);
   assert.match(pricing, /new features of the site come to Club Legends first, usually 14 days before everyone else\. After that, what is free is free for everyone, and what is part of Membership is for every member\./);
 });
