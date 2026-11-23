@@ -239,3 +239,18 @@ test('a level name with its emoji, as Buy Me a Coffee sends it ("🏆 Club Legen
   const me = (await b.me()).user;
   assert.deepEqual([me.level, me.cloud], ['legend', true]);
 });
+
+test('a real membership.started of Buy Me a Coffee (23 November 2026; name and email replaced): a Club Legend', async () => {
+  const t = Math.floor(Date.now() / 1000);
+  const event = { data: { id: 1144566, amount: 10, object: 'membership', paused: 'false', psp_id: 'sub_test', status: 'active', canceled: 'false',
+    currency: 'USD', paused_at: null, paused_by: null, started_at: t - 10, canceled_at: null, note_hidden: true, unpaused_at: null, paused_until: null,
+    support_note: null, supporter_id: 1, duration_type: 'month', supporter_name: 'A Supporter', supporter_email: 'real.payload@example.com',
+    current_period_end: t + 30 * 86400, supporter_feedback: null, membership_level_id: 352068, supporter_name_type: 'default',
+    cancel_at_period_end: 'false', current_period_start: t - 5, membership_level_name: '🏆 Club Legend' },
+  type: 'membership.started', attempt: 1, created: t, event_id: 775639, live_mode: true };
+  assert.equal((await hook(event)).status, 200);
+  const b = await signIn({ sub: '8100002', email: 'real.payload@example.com', email_verified: true, name: 'A Supporter' });
+  const me = (await b.me()).user;
+  assert.deepEqual([me.level, me.cloud, me.cloudFrom], ['legend', true, 'membership']);
+  assert.equal(me.until, new Date((t + 30 * 86400) * 1000 + 3 * DAY).toISOString(), 'to the period end and three days');
+});
