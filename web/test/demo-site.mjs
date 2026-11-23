@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { createApp } from '../server.mjs';
 import { createCloud } from '../cloud.mjs';
 import { createS3 } from '../s3.mjs';
+import { levelsFromEnv } from '../levels.mjs';
 import { createStats, statsStore } from '../stats.mjs';
 import { createLibrary } from '../library.mjs';
 import { writeZip } from '../zip.js';
@@ -41,7 +42,7 @@ export async function startDemoSite({ adminToken, withLibrary = true } = {}) {  
   const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
   const cloud = createCloud({ s3,
     clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'v'.repeat(40), google: google.google, price: '$5 a month',
-    coffee: { secret: 'video', url: `${coffee.replace(/\/+$/, '')}/membership`, levels: [] }, log: () => {} });
+    coffee: { secret: 'video', url: `${coffee.replace(/\/+$/, '')}/membership`, levels: levelsFromEnv({}) }, log: () => {} });
   // The database library, with three databases as the admin page would add them (library.mjs: the index and the zips).
   const library = createLibrary({ s3 });
   const libEntries = [];

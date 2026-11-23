@@ -303,7 +303,8 @@ test('a plan of "cloud" in the account record gives cloud saves', async () => {
   assert.equal((await (await c.get('/api/me')).json()).user.cloud, false, 'a plan that ended');
 
   // An admin gives Cloud Saves (the admin page): a file of its own, grants/<id>.json; the record stays as it was.
-  assert.deepEqual(await cloudApi.planOfSub('3000004'), { cloud: false, from: null, given: false, givenAt: null, until: null, level: null });
+  assert.deepEqual(await cloudApi.planOfSub('3000004'), { level: 'free', cloud: false, from: null, given: false, givenLevel: null, givenAt: null, until: null,
+    cancelAt: null, paidLevel: null, paidFrom: null, known: true, bmcLevel: null, admin: false });
   const given = await cloudApi.give('3000004', true, 'boss@example.com');
   assert.deepEqual([given.cloud, given.from, given.given], [true, 'given', true]);
   let me = (await (await c.get('/api/me')).json()).user;
@@ -609,4 +610,17 @@ test('saves through the server go to its disk, two of the largest at once: a thi
   } finally {
     two.close();
   }
+});
+
+test('levels: an admin is a Club Legend, a gift kept before levels is Squad Player, CM_CLOUD_FOR=everyone is Squad Player', async () => {
+  const s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
+  const make = (extra) => createCloud({ s3, clientId: google.clientId, clientSecret: google.clientSecret, sessionSecret: 'x'.repeat(40), google: google.google, log: () => {}, ...extra });
+  const c = make({ isAdmin: (e) => e === 'boss@example.com' });
+  assert.deepEqual(((p) => [p.level, p.cloud])(await c.planOf({ sub: '9100001', email: 'Boss@Example.com' }, true)), ['legend', true]);
+  await s3.put('grants/9100002.json', Buffer.from(JSON.stringify({ sub: '9100002', by: 'x', at: '2026-01-01T00:00:00Z' })), { type: 'application/json' });
+  assert.equal((await c.planOf({ sub: '9100002', email: 'old@example.com' }, true)).level, 'squad');
+  assert.equal((await c.planOf({ sub: '9100003', email: 'nobody@example.com' }, true)).level, 'free');
+  assert.equal((await make({ cloudFor: 'everyone' }).planOf({ sub: '9100003', email: 'nobody@example.com' }, true)).level, 'squad');
+  assert.equal((await c.planOf({ sub: '9100004', email: 'listed@example.com' }, true)).level, 'free');
+  assert.equal((await make({ cloudUsers: ['Listed@Example.com'] }).planOf({ sub: '9100004', email: 'listed@example.com' }, true)).level, 'squad');
 });

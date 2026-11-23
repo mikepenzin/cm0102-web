@@ -35,7 +35,7 @@ const SEASON_TABLES = ['rules.tsv', 'names.tsv', 'clubs.tsv', 'club_records.tsv'
 export const PAGE_FILES = ['index.html', 'loader.js', 'layout.js', 'touch.js', 'keyboard.js', 'saves.js', 'ui.js', 'account.js', 'savedit.js', 'dataset.js', 'datasets.js', 'zip.js', 'editor.js', 'setspanel.js', 'tactics.js', 'report.js', 'play.js', 'release.js', 'progress.js', 'tacticsync.js', 'room.js', 'upload.js', 'lastvisit.js', 'tour.js', 'scout.js', 'i18n.js', 'i18n-es.js', 'i18n-pt.js', 'i18n-it.js', 'i18n-fr.js', 'i18n-de.js', 'i18n-nl.js', 'i18n-da.js', 'i18n-no.js', 'i18n-sv.js', 'disk.js', 'vault.js', 'stats.js', 'engine.js', 'direct.js', 'sw.js',
   'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'privacy.html', 'terms.html', 'refunds.html', 'pricing.html'];
 // The server's own files; it also imports saves.js, savedit.js, dataset.js and zip.js of the page (PAGE_FILES).
-export const SERVER_FILES = ['server.mjs', 'cloud.mjs', 'library.mjs', 'rgn.mjs', 'auth.mjs', 'billing.mjs', 's3.mjs', 'stats.mjs', 'notify.mjs', 'spool.mjs', 'admin.html', 'package.json'];
+export const SERVER_FILES = ['server.mjs', 'cloud.mjs', 'levels.mjs', 'library.mjs', 'rgn.mjs', 'auth.mjs', 'billing.mjs', 's3.mjs', 'stats.mjs', 'notify.mjs', 'spool.mjs', 'admin.html', 'package.json'];
 const PAGES = Object.fromEntries([['/', 'index.html'], ...['privacy', 'terms', 'refunds', 'pricing'].map((p) => [`/${p}`, `${p}.html`]),
   ...PAGE_FILES.map((f) => [`/${f}`, f])]);
 // The pages of the site's terms: the seller, the contact and the price come from the settings (CM_SELLER, CM_CONTACT,
@@ -253,14 +253,16 @@ async function statsRoute(req, res, url, { stats, cloud, admins, adminToken, lib
     return;
   }
   if (path === '/api/admin/cloud' && req.method === 'POST') {
-    // Gives Cloud Saves to an account, or takes them back: { id: "g:<google id>", on }. Only from the admin page.
+    // Gives an account a level (Squad Player or Club Legend), or takes the gift back. Only from the admin page.
     const from = req.headers.origin;
     if (req.headers['x-cm'] !== '1' || (from && new URL(from).host !== req.headers.host)) { req.resume(); json(res, 403, { error: 'not from this site' }); return; }
     const body = await readJson(req, 4 << 10);
     const sub = /^g:([0-9A-Za-z_-]{1,64})$/.exec(String(body.id ?? ''))?.[1];
-    if (!sub || typeof body.on !== 'boolean') { json(res, 400, { error: 'id (g:…) and on (true or false)' }); return; }
+    // { id, level: 'squad' | 'legend' | null }; the first version's { id, on } is Squad Player or none.
+    const level = 'level' in body ? body.level : typeof body.on === 'boolean' ? (body.on ? 'squad' : null) : undefined;
+    if (!sub || ![null, 'squad', 'legend'].includes(level)) { json(res, 400, { error: 'id (g:…) and level (squad, legend or null)' }); return; }
     if (!cloud?.give) { json(res, 404, { error: 'accounts are not set up on this server' }); return; }
-    const plan = await cloud.give(sub, body.on, user?.email ?? 'the admin token');
+    const plan = await cloud.give(sub, level, user?.email ?? 'the admin token');
     json(res, plan ? 200 : 404, plan ? { id: body.id, plan } : { error: 'no such account: it signs in once first' });
     return;
   }
@@ -452,7 +454,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const someSet = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'CM_SESSION_SECRET', 'BUCKET_NAME'].some((k) => process.env[k]);
   const paddle = paddleFromEnv(process.env), coffee = coffeeFromEnv(process.env);
   console.log(cloud ? `accounts and cloud saves: on${process.env.CM_CLOUD_FOR === 'everyone' ? ', for every account'
-    : coffee ? `, sold as a Buy Me a Coffee membership (${coffee.levels.length ? `levels ${coffee.levels.join(', ')}` : 'every level'})${paddle ? '; Paddle keeps its subscriptions' : ''}`
+    : coffee ? `, sold as a Buy Me a Coffee membership (${coffee.levels.names ? `levels ${coffee.levels.names.join(' < ')}: Supporter < Squad Player < Club Legend, CM_LEVELS` : `levels that give Cloud Saves: ${coffee.levels.legacyCloud.join(', ') || 'every level'} (BMC_CLOUD_LEVELS: CM_LEVELS replaces it, web/deploy/README.md)`})${paddle ? '; Paddle keeps its subscriptions' : ''}`
     : paddle ? `, sold with Paddle (${paddle.env})` : ', no payments (BMC_WEBHOOK_SECRET and CM_COFFEE_URL, web/deploy/README.md)'}`
     : `accounts and cloud saves: off${someSet ? `, missing ${missing.join(', ')}` : ''} (web/README.md, "Cloud saves")`);
   const port = Number(process.env.PORT ?? 8080), host = process.env.HOST ?? '127.0.0.1';

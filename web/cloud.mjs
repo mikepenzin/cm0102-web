@@ -5,12 +5,13 @@
 // Who has cloud saves: CM_CLOUD_FOR=everyone gives them to every signed-in account; else the emails in CM_CLOUD_USERS
 // (comma-separated) and the accounts whose record says plan "cloud" until planUntil (accounts/<id>.json in the store:
 // set by a Paddle subscription, billing.mjs, or by hand), the emails with a running Buy Me a Coffee membership
-// (members/..., billing.mjs) and the accounts an admin gave them to have them. Everyone else keeps saves in the browser
-// only.
+// (members/..., billing.mjs) and the accounts an admin gave them to have them: each account's level (planOf, levels.mjs)
+// is Squad Player or higher. Everyone else keeps saves in the browser only.
 //
 // The store holds:
 //   accounts/<google id>.json            { sub, email, name, created, seen, plan, planUntil }
-//   grants/<google id>.json              { sub, email, by, at }: Cloud Saves an admin gave (the admin page)
+//   grants/<google id>.json              { sub, email, by, at, level }: a level an admin gave (the admin page): squad or
+//                                        legend; one kept before levels (no level) is squad
 //   members/<sha256 of the email>.json   { email, on, until, cancelAt, id, status, level, levelId, eventAt, event, at }:
 //                                        the Buy Me a Coffee membership of an email, written by its webhook
 //   saves/<google id>/<name, base64url>.gz the save, gzip-compressed by the page; metadata raw-size and saved (ms)
@@ -22,6 +23,7 @@ import { GOOGLE, SignInError, googleFinish, googleStart, readCookies, sealer, se
 import { PADDLE_API, accountRef, applyMembership, applySubscription, checkCoffeeSignature, checkPaddleSignature, memberKey, normalEmail,
   openAccountRef, portalUrl } from './billing.mjs';
 import { S3Error, s3FromEnv } from './s3.mjs';
+import { atLeast, higher, levelsFromEnv, paidLevel, rank } from './levels.mjs';
 import { SAVE_HEADER, checkSave } from './saves.js';
 import { DATA_SET_FILES } from './dataset.js';
 import { zipEntries } from './zip.js';
@@ -29,7 +31,8 @@ import { MAX_TACTIC, pruneRemoved, validTactic } from './tacticsync.js';
 
 const SESSION = 'cm_session', OAUTH = 'cm_oauth';
 const SESSION_DAYS = 30;
-const LAST_COFFEE = 'coffee/last.json';     // the last notification of Buy Me a Coffee, for the admin page
+const LAST_COFFEE = 'coffee/last.json';
+const LEVEL_NAMES = { free: 'Free', supporter: 'Supporter', squad: 'Squad Player', legend: 'Club Legend' };     // the last notification of Buy Me a Coffee, for the admin page
 // What one save may be, compressed and as it is. Long careers make large saves (a player's was 446 MB, 15 November
 // 2026), where 64 MB and 256 MB once were the limits, set when the server held each upload in memory. The server now
 // streams a save through its disk (spool.mjs), and a page with direct uploads sends it straight to the store. Fly
@@ -332,41 +335,55 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     members.set(e, { member: m, at: Date.now() });
     return m;
   }
-  // Whether a membership gives Cloud Saves now: running, and of a level that gives them (BMC_CLOUD_LEVELS).
-  const levelGives = (m) => !coffee.levels.length
-    || coffee.levels.includes(String(m.levelId)) || coffee.levels.includes(String(m.level ?? '').trim().toLowerCase());
-  const memberOn = (m) => Boolean(m?.on && levelGives(m) && (!m.until || Date.parse(m.until) > Date.now()));
+  // A Buy Me a Coffee membership: whether it runs now, its site level (levels.mjs, CM_LEVELS), and whether it gives
+  // Membership (Squad Player and up).
+  const running = (m) => Boolean(m?.on && (!m.until || Date.parse(m.until) > Date.now()));
+  const memberLevel = (m) => (coffee ? paidLevel(m, coffee.levels) : { level: 'supporter', known: false });
+  const levelGives = (m) => atLeast(memberLevel(m).level, 'squad');
+  const memberOn = (m) => running(m) && levelGives(m);
 
-  // { cloud, from: 'subscription' | 'membership' | 'given' | null, record, grant, member }. fresh: read the store, not
-  // the minute's copy.
+  // An account's level (levels.mjs): the highest of what it pays (a Paddle subscription: squad; a Buy Me a Coffee
+  // membership: its level), what an admin gave (grants/), the server's lists (CM_CLOUD_FOR, CM_CLOUD_USERS, a plan set
+  // by hand in the record: squad) and being an admin (legend). { level, cloud, from, paid, gift, record, grant,
+  // member }: from is 'subscription' | 'membership' while a paid level gives Membership, else 'given' while the level
+  // does, else null. fresh: read the store, not the minute's copy.
   async function planOf(user, fresh = false) {
-    let a = null, g = null;
+    let a = null, g = null, m = null;
     try { a = await account(user.sub, fresh); } catch (err) { log(`cloud: account ${user.sub} not read: ${err.message}`); }
-    if (cloudFor === 'everyone' || users.has(user.email)) return { cloud: true, from: 'given', record: a, grant: null };
-    const on = a?.plan === 'cloud' && (!a.planUntil || Date.parse(a.planUntil) > Date.now());
-    if (on) return { cloud: true, from: a.paddle ? 'subscription' : 'given', record: a, grant: null };
-    let m = null;
+    const email = String(user.email ?? '').trim().toLowerCase();
+    const subOn = a?.plan === 'cloud' && (!a.planUntil || Date.parse(a.planUntil) > Date.now());
+    let paid = subOn && a.paddle ? { level: 'squad', known: true, from: 'subscription', until: a.planUntil ?? null, cancelAt: a.paddle?.cancelAt ?? null } : null;
     try { m = await member(user.email, fresh); } catch (err) { log(`cloud: membership of ${user.sub} not read: ${err.message}`); }
-    if (memberOn(m)) return { cloud: true, from: 'membership', record: a, grant: null, member: m };
+    if (running(m)) {
+      const pl = memberLevel(m);
+      if (!paid || rank(pl.level) > rank(paid.level)) paid = { level: pl.level, known: pl.known, from: 'membership', until: m.until, cancelAt: m.cancelAt };
+    }
     try { g = await grant(user.sub, fresh); } catch (err) { log(`cloud: grant ${user.sub} not read: ${err.message}`); }
-    if (g || a?.given) return { cloud: true, from: 'given', record: a, grant: g ?? a.given, member: m };   // an admin gave it
-    return { cloud: false, from: null, record: a, grant: null, member: m };
+    const kept = g ?? a?.given ?? null;                               // an admin's gift (a.given: the first version's)
+    const gift = kept ? { level: kept.level === 'legend' ? 'legend' : 'squad', by: kept.by ?? null, at: kept.at ?? null } : null;
+    const listed = cloudFor === 'everyone' || users.has(email) || (subOn && !a.paddle) ? 'squad' : 'free';
+    const admin = isAdmin(email) ? 'legend' : 'free';
+    const level = [paid?.level ?? 'free', gift?.level ?? 'free', listed, admin].reduce(higher, 'free');
+    const cloud = atLeast(level, 'squad');
+    const from = !cloud ? null : paid && atLeast(paid.level, 'squad') ? paid.from : 'given';
+    return { level, cloud, from, paid, gift, record: a, grant: kept, member: m };
   }
 
-  // The admin page (server.mjs): an account's plan, read fresh, and Cloud Saves that an admin gives or takes back.
+  // The admin page (server.mjs): an account's level, read fresh, and the level an admin gives or takes back.
   async function planOfSub(sub, fresh = true) {
     const a = await account(sub, fresh);
     if (!a) return null;
     const p = await planOf({ sub, email: a.email }, fresh);
-    return { cloud: p.cloud, from: p.from, given: Boolean(p.grant), givenAt: p.grant?.at ?? null,
-      until: p.from === 'subscription' ? a.planUntil ?? null : p.from === 'membership' ? p.member.until : null,
-      level: p.member?.level ?? null };
+    return { level: p.level, cloud: p.cloud, from: p.from, given: Boolean(p.gift), givenLevel: p.gift?.level ?? null, givenAt: p.gift?.at ?? null,
+      until: p.paid?.until ?? null, cancelAt: p.paid?.cancelAt ?? null, paidLevel: p.paid?.level ?? null, paidFrom: p.paid?.from ?? null,
+      known: p.paid?.known ?? true, bmcLevel: p.member?.level ?? null, admin: Boolean(isAdmin(String(a.email ?? '').toLowerCase())) };
   }
-  async function give(sub, on, by) {
+  // level: 'squad' or 'legend' gives that level, null takes the gift back.
+  async function give(sub, level, by) {
     const a = await account(sub, true);
     if (!a) return null;
-    if (on) {
-      const g = { sub, email: a.email ?? null, by: String(by ?? 'admin').slice(0, 200), at: new Date().toISOString() };
+    if (level) {
+      const g = { sub, email: a.email ?? null, by: String(by ?? 'admin').slice(0, 200), at: new Date().toISOString(), level };
       await s3.put(grantKey(sub), Buffer.from(JSON.stringify(g)), { type: 'application/json' });
       grants.set(sub, { grant: g, at: Date.now() });
     } else {
@@ -378,7 +395,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
         accounts.set(sub, { account: rest, at: Date.now() });
       }
     }
-    log(`cloud: account ${sub}: Cloud Saves ${on ? 'given' : 'taken back'} by an admin`);
+    log(`cloud: account ${sub}: ${level ? `${level} given` : 'the gift taken back'} by an admin`);
     return planOfSub(sub);
   }
   const hasCloud = async (user) => (await planOf(user)).cloud;
@@ -448,12 +465,12 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     const p = await planOf(user, true);              // fresh: a gift or a payment shows at the page's next load
     setCookie(res, SESSION, seal.seal('s', user, SESSION_DAYS * 86400), { maxAge: SESSION_DAYS * 86400, secure: secure(req) });
     send(res, 200, { auth: true, offer: offer(), maxSaves, user: {
-      email: user.email, name: user.name, picture: user.picture, cloud: p.cloud, cloudFrom: p.from,
-      until: p.from === 'subscription' ? p.record.planUntil : p.from === 'membership' ? p.member.until : null,
-      cancelAt: p.from === 'subscription' ? p.record.paddle?.cancelAt ?? null : p.from === 'membership' ? p.member.cancelAt : null,
+      email: user.email, name: user.name, picture: user.picture, level: p.level, cloud: p.cloud, cloudFrom: p.from,
+      until: p.from === 'subscription' || p.from === 'membership' ? p.paid.until : null,
+      cancelAt: p.from === 'subscription' || p.from === 'membership' ? p.paid.cancelAt ?? null : null,
       manage: Boolean(p.record?.paddle?.customerId), ref: paddle ? accountRef(user.sub, sessionSecret) : null,
       // A membership of a level that gives no Cloud Saves, or one that ended: the page says which.
-      member: p.member ? { level: p.member.level, on: memberOn(p.member), until: p.member.until } : null,
+      member: p.member ? { level: p.member.level, on: memberOn(p.member), until: p.member.until, siteLevel: memberLevel(p.member).level } : null,
       admin: Boolean(isAdmin(String(user.email ?? '').toLowerCase())),   // the page shows the Admin panel button
     } });
   }
@@ -521,14 +538,17 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     if (!next) { await noteLast(type, 'older than the last event of that membership: nothing to do'); send(res, 200, { ignored: 'older than the last event' }); return; }
     await s3.put(memberKey(email), Buffer.from(JSON.stringify(next)), { type: 'application/json' });
     members.set(email, { member: next, at: Date.now() });
-    log(`cloud: membership ${next.id} (${next.level ?? 'no level'}): ${type}, ${next.status}, Cloud Saves ${memberOn(next) ? `on until ${next.until}` : 'off'}`);
-    await noteLast(type, memberOn(next) ? 'Membership on' : levelGives(next) ? 'Membership off' : `Membership off: the level ${next.level ?? next.levelId ?? '?'} is not in BMC_CLOUD_LEVELS`);
+    const pl = memberLevel(next), label = LEVEL_NAMES[pl.level];
+    if (!pl.known) log(`cloud: membership ${next.id}: the level ${next.level ?? next.levelId ?? '?'} is not in CM_LEVELS: counted as Supporter`);
+    log(`cloud: membership ${next.id} (${next.level ?? 'no level'}: ${label}): ${type}, ${next.status}, Cloud Saves ${memberOn(next) ? `on until ${next.until}` : 'off'}`);
+    await noteLast(type, !pl.known ? `the level ${next.level ?? next.levelId ?? '?'} is not in CM_LEVELS: counted as Supporter${running(next) ? '' : ', and it has ended'}`
+      : !running(next) ? 'Membership off' : memberOn(next) ? `Membership on (${label})` : `${label}: no Membership at this level`);
     send(res, 200, { ok: true });
   }
 
   // The admin page (server.mjs): every membership the server was told of, newest first, and the last notification.
   async function memberships() {
-    if (!coffee) return { on: false, levels: [], members: [], last: null };
+    if (!coffee) return { on: false, levels: null, members: [], last: null };
     const keys = (await s3.list('members/')).filter((o) => o.key.endsWith('.json')).map((o) => o.key);
     const list = [];
     for (let i = 0; i < keys.length; i += 8) {                     // 8 records at a time
@@ -538,7 +558,8 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     }
     const last = await s3.getBuffer(LAST_COFFEE).then((b) => (b ? JSON.parse(b.toString()) : null)).catch(() => null);
     return { on: true, levels: coffee.levels, last,
-      members: list.filter(Boolean).map((m) => ({ email: m.email, level: m.level, status: m.status, cloud: memberOn(m), levelGives: levelGives(m),
+      members: list.filter(Boolean).map((m) => ({ email: m.email, level: m.level, siteLevel: memberLevel(m).level, known: memberLevel(m).known,
+        status: m.status, cloud: memberOn(m), levelGives: levelGives(m),
         until: m.until, cancelAt: m.cancelAt, event: m.event, at: m.at })).sort((a, b) => String(b.at).localeCompare(String(a.at))) };
   }
 
@@ -922,6 +943,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     linkName: () => linkName,
     // A link of the store at that address (a sent report's save, stats.mjs).
     presign: (method, key, opts) => links.presign(method, key, opts),
+    planOf,
     planOfSub,
     give,
     memberships,
@@ -999,12 +1021,12 @@ export function paddleFromEnv(env = process.env) {
 }
 
 // Buy Me a Coffee's settings, or null (no membership on sale): BMC_WEBHOOK_SECRET, the webhook's signing secret, and
-// the membership page, BMC_MEMBERSHIP_URL or else CM_COFFEE_URL's /membership. BMC_CLOUD_LEVELS (comma separated):
-// the names or ids of the levels that give Cloud Saves; none named, every level gives them.
+// the membership page, BMC_MEMBERSHIP_URL or else CM_COFFEE_URL's /membership. CM_LEVELS (comma separated): the
+// level names or ids, lowest to highest, that are Supporter, Squad Player and Club Legend (levels.mjs); the older
+// BMC_CLOUD_LEVELS alone still works.
 export function coffeeFromEnv(env = process.env) {
   const page = (env.CM_COFFEE_URL ?? '').trim().replace(/\/+$/, '');
   const url = (env.BMC_MEMBERSHIP_URL ?? '').trim() || (page ? `${page}/membership` : '');
   if (!env.BMC_WEBHOOK_SECRET || !/^https:\/\//.test(url)) return null;
-  return { secret: env.BMC_WEBHOOK_SECRET, url,
-    levels: (env.BMC_CLOUD_LEVELS ?? '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean) };
+  return { secret: env.BMC_WEBHOOK_SECRET, url, levels: levelsFromEnv(env) };
 }

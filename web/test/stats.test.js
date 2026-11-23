@@ -144,7 +144,7 @@ test('the routes: a beat only from the page, the admin data only for an admin', 
   const plans = { 2: { cloud: false, from: null, given: false, until: null } };
   const cloud = { userOf: signedIn, handle: (req, res) => { res.writeHead(404); res.end(); },
     planOfSub: async (sub) => plans[sub] ?? null,
-    give: async (sub, on, by) => { if (!plans[sub]) return null; plans[sub] = { cloud: on, from: on ? 'given' : null, given: on, until: null, by }; return plans[sub]; } };
+    give: async (sub, level, by) => { if (!plans[sub]) return null; plans[sub] = { cloud: Boolean(level), from: level ? 'given' : null, given: Boolean(level), until: null, by, level }; return plans[sub]; } };
   const server = createApp({ gameDir, buildDir, manifestPath, stats, cloud, admins: ['Boss@example.com'], adminToken: 'a-token-of-16-chars-or-more' });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -183,7 +183,10 @@ test('the routes: a beat only from the page, the admin data only for an admin', 
     assert.equal((await give({ cookie: 'admin', 'x-cm': '1' }, { id: 'g:404', on: true })).status, 404);
     const given = await give({ cookie: 'admin', 'x-cm': '1' }, { id: 'g:2', on: true });
     assert.equal(given.status, 200);
-    assert.deepEqual((await given.json()).plan, { cloud: true, from: 'given', given: true, until: null, by: 'boss@example.com' });
+    assert.deepEqual((await given.json()).plan, { cloud: true, from: 'given', given: true, until: null, by: 'boss@example.com', level: 'squad' }, 'on true: Squad Player');
+    assert.equal((await (await give({ cookie: 'admin', 'x-cm': '1' }, { id: 'g:2', level: 'legend' })).json()).plan.level, 'legend');
+    assert.equal((await give({ cookie: 'admin', 'x-cm': '1' }, { id: 'g:2', level: 'supporter' })).status, 400, 'only Squad Player or Club Legend');
+    assert.equal((await give({ cookie: 'admin', 'x-cm': '1' }, { id: 'g:2' })).status, 400);
     assert.equal((await give({ authorization: 'Bearer a-token-of-16-chars-or-more', 'x-cm': '1' }, { id: 'g:2', on: false })).status, 200, 'the token too');
     assert.equal(plans[2].by, 'the admin token');
     assert.equal((await fetch(`${base}/api/admin/stats`, { headers: { authorization: 'Bearer wrong' } })).status, 403);
