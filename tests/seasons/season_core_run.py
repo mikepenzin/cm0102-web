@@ -31,6 +31,8 @@ folder seasons/), when the build has them. Then also:
                 names (club_comp.dat) and its season part the database names, which the load matches by name
                 (0x60efd0, season_change_rename of slice 16);
     reload      the load gives the names again.
+Abbreviations (0.6.1 item 2): the base-off save keeps the data's PRM, D1, D2 and D3 for the English divisions;
+the season save (a year of 2004 or later) and the reload save have PL, CH, L1 and L2, as Select Team shows them.
     rename      a new base game (2001/02, changing_rules = off) with the test variable
                 RECOMP_SEASON_CHANGE_TEST=rename (the record "UEFA Cup" becomes "Test Cup" at the new game, as a
                 name of slice 15 would): its save has the season part, version 2, with the name in the data.
@@ -56,11 +58,31 @@ sys.path.insert(0, os.path.join(HERE, "..", "smoke"))
 sys.path.insert(0, os.path.join(HERE, "..", "fixtures"))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "tools", "save"))
 import custom_database_run as cdr  # noqa: E402
+import rules_report_check as rrc  # noqa: E402
 import fixtures  # noqa: E402
 import savfile  # noqa: E402
 import smoke_run  # noqa: E402
 
 PART = "bosman_season.dat"
+# 0.6.1 item 2: the abbreviation of the English divisions in a season game (record +0x53), which Select Team
+# shows; the 3.9.68 data gives PRM, D1, D2 and D3.
+ENGLISH = {"Premier League": "PL", "Football League Championship": "CH", "Football League One": "L1",
+           "Football League Two": "L2"}
+
+
+def abbreviations(comps):
+    """{long name: abbreviation} of the records of a club_comp.dat member (0x6b bytes a record)."""
+    out = {}
+    for i in range(0, len(comps) - 0x6a, 0x6b):
+        name = comps[i + 4:i + 56].split(b"\0")[0].decode("cp1252", "replace")
+        out[name] = comps[i + 0x53:i + 0x57].split(b"\0")[0].decode("cp1252", "replace")
+    return out
+
+
+def english_abbreviations(path):
+    """The English divisions of a season save whose abbreviation is not the season's: [(name, abbreviation)]."""
+    got = abbreviations(savfile.Sav(path).read_member("club_comp.dat"))
+    return [(n, got.get(n)) for n, a in ENGLISH.items() if got.get(n) != a]
 NEWS = "0x7881e0"
 DEFAULT_DB = os.path.join(fixtures.DEFAULT_DIR, "databases", "September 2010 ODB")
 MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -105,7 +127,7 @@ def replace_part(src, dst, data):
     blob = bytearray(open(src, "rb").read())
     sav = savfile.Sav(src)
     m = sav.member(PART)
-    if m.offset != max(x.offset for x in sav.members):
+    if m.offset != max(x.offset for x in sav.real_members()):
         raise ValueError("the season part is not the last part")
     raw = savfile.encode(data) if sav.compressed else data
     struct.pack_into("<i", blob, 12 + m.index * savfile.ENTRY_SIZE + 4, len(data))
@@ -143,7 +165,8 @@ def play(program, game, work, name, options, steps, days, env_extra=None, databa
     user, home, shots = (os.path.join(run, d) for d in ("user", "home", "shots"))
     for d in (user, home, shots):
         os.makedirs(d)
-    if database:
+    if database:                               # never the base data in place of the database
+        database = rrc.database_folder(database)
         cdr.copy_data(database, os.path.join(user, "Databases", os.path.basename(database)))
         options = dict(options, database="folder:" + os.path.basename(database))
     if save:
@@ -169,6 +192,8 @@ def play(program, game, work, name, options, steps, days, env_extra=None, databa
     path = os.path.join(user, smoke_run.SAVE_NAME)
     with open(os.path.join(run, "stderr.txt"), "w") as f:
         f.write(r.stderr)
+    if database:
+        rrc.no_fallback(os.path.join(run, "stderr.txt"), database)
     return (path if r.returncode == 0 and os.path.exists(path) else None), r.stderr, time.time() - start
 
 
@@ -231,6 +256,13 @@ def main(argv):
                 fail(f"base-off: the save has the season part {part}")
             else:
                 print("ok    base-off: the save has no season part")
+            got = abbreviations(savfile.Sav(results["base-off"][0]).read_member("club_comp.dat"))
+            base = [got.get(n) for n in ("English Premier Division", "English First Division",
+                                         "English Second Division", "English Third Division")]
+            if base != ["PRM", "D1", "D2", "D3"]:
+                fail(f"base-off: the English divisions have the abbreviations {base}, not the data's")
+            else:
+                print("ok    base-off: the English divisions keep PRM, D1, D2 and D3")
             blog = results["base-off"][1]
             if tables and ("recomp: names of" in blog or "recomp: club moves of" in blog):
                 fail("base-off: the base game got names or club moves")
@@ -271,6 +303,12 @@ def main(argv):
                 else:
                     print(f"ok    season: {m.group(1)} names and the club moves of {year}; the save holds the "
                           "season names and its part the database names")
+                if year >= 2004:
+                    wrong = english_abbreviations(path)
+                    if wrong:
+                        fail(f"season: the English divisions keep other abbreviations (Select Team): {wrong}")
+                    else:
+                        print("ok    season: the English divisions have the abbreviations PL, CH, L1 and L2")
             opath = results.get("season-off", (None,))[0]
             if opath and not part_is(read_part(opath), year, 0):
                 fail(f"season-off: the season part is {read_part(opath)}, not one with {year} and changing rules off")
@@ -340,6 +378,8 @@ def main(argv):
                     fail(f"{name}: the runtime did not read the year from the part")
                 if tables and name == "reload" and "recomp: names of" not in rlog:
                     fail("reload: the load did not give the names again")
+                if tables and name == "reload" and year >= 2004 and english_abbreviations(rpath):
+                    fail(f"reload: the new save has the abbreviations {english_abbreviations(rpath)}")
                 part = read_part(rpath)
                 if not part_is(part, *part_want):
                     fail(f"{name}: the season part of the new save is {part}, not one with {part_want}")

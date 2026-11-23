@@ -1,7 +1,7 @@
 /* Season databases in the download (0.6.0 slice 14; spec docs/specs/2026-10-16-seasons-0.6.0-spec.md,
  * "Seasons and databases").
  *
- * The download holds the 24 season databases of docs/research/2026-10-16-season-database-table.md as zips,
+ * The download holds the 25 season databases of docs/research/2026-10-16-season-database-table.md as zips,
  * Seasons/<name>.zip in the game folder (win_game_dir). A season database is "unpacked" when the save folder
  * holds it in Databases/<name> (dbfolders.h). The first pick of a season unpacks its zip once.
  *
@@ -9,10 +9,10 @@
  * "October 2003". The same table is in the code (seasons_table.c, made by tools/seasons/make_db_table.py),
  * so the game recognises a database by its content (Q264, Q271) and never by its folder name.
  *
- * Seasons are numbered by their start year: 2001 is the season 2001/02, 2025 is 2025/26.
+ * Seasons are numbered by their start year: 2001 is the season 2001/02, 2026 is 2026/27.
  *
  * For the Choose Season screen (slice 13) the calls are:
- *   seasons_db_scan(&list)           everything the screen shows: 25 seasons, their status, their versions
+ *   seasons_db_scan(&list)           everything the screen shows: 26 seasons, their status, their versions
  *   seasons_db_prepare(year, &r)     starts a season: unpacks its zip once and returns the folder name
  *   seasons_db_identify(folder)      the known database of one folder, or NULL for a Custom database
  * The folder name that prepare returns goes in the option as database = folder:<name>. Every call runs on
@@ -26,7 +26,7 @@
 #include "dbfolders.h"
 
 #define SEASONS_FIRST 2001          /* the first season, 2001/02 */
-#define SEASONS_COUNT 25            /* 2001/02 to 2025/26 */
+#define SEASONS_COUNT 26            /* 2001/02 to 2026/27 */
 #define SEASONS_EXTRA_MAX 8         /* the most known extra versions listed for one season */
 
 /* What a known database is. */
@@ -42,14 +42,14 @@ typedef enum {
 typedef struct {
     const char *name;               /* the neutral name, e.g. "October 2003" */
     const char *style;              /* "n/a", "ODB" or "SIM" */
-    int season;                     /* start year of the data season (2001 to 2025), 0 for none */
+    int season;                     /* start year of the data season (2001 to 2026), 0 for none */
     SeasonsRole role;
     uint64_t club_size, staff_size; /* sizes of club.dat and staff.dat */
     const char *club_sha256, *staff_sha256;   /* lower case hex */
 } SeasonKnownDb;
 
 extern const SeasonKnownDb seasons_known_dbs[];     /* seasons_table.c */
-extern const int seasons_known_count;               /* 52 */
+extern const int seasons_known_count;               /* 55 */
 
 /* The three decades of the Choose Season screen (layout C, Q346): a season belongs to the decade of the year
  * it starts in. The names and the colours belong to the screen; the names are in one table (seasons_db.c). */
@@ -79,7 +79,7 @@ typedef struct {
 } SeasonsExtra;
 
 typedef struct {
-    int start_year;                 /* 2001 to 2025 */
+    int start_year;                 /* 2001 to 2026 */
     char label[16];                 /* "2003/04" */
     SeasonsDecade decade;
     const char *database;           /* the name of the season's database: "October 2003", "3.9.68" for the

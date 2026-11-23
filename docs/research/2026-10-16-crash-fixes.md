@@ -44,7 +44,7 @@ Each site reads, writes or calls through a pointer that can be NULL. Each functi
 | Creativity | 0x6eda39 in 0x6ec010 | For CA >= 125 (`cmp cx,0x7d` at 0x6eda35) and intrinsic creativity > 10, `jge 0x6eda66` skips the store to [esp+0x28], so the value left from before (inference: reflexes) is used. | `jge 0x6eda57`: use the raw intrinsic value. | **Rule change.** It changes every top player's creativity in every match. |
 | Marking and position clamp | 0x6ef644 and 0x6ef692 in 0x6eecb0 | Two values (bytes +0x110, +0x111) come from a float with only a floor of 2.0 ([0x9689a8]), then `ftol` to a byte. Large values wrap to small ones. | Clamp before the byte store (100 or 75). | **Rule change** for every value above the clamp, wrapped or not. |
 | Cash wrap | 0x5986e3 in 0x5986b0 | Club cash in a signed int wraps above 2,147 million. | If cash <= -1,500,000,000 (signed), set it to 2,000,000,000. | Rule change, but it fires only above 2.1 billion. |
-| Argentina points | 0x409d7e in 0x4093f0 | Average points, Argentine second division. | `jle` becomes `jmp`: the search loop never runs. | **Rule change on every game** with Argentina active. Not a guard. |
+| Argentina points | 0x409d7e in 0x409c20 (not 0x4093f0, see 2026-11-13-crash-hunt-132.md) | Average points, Argentine second division. | `jle` becomes `jmp`: the search loop never runs. | **Rule change on every game** with Argentina active. Not a guard. |
 
 ### 1c. Player search
 

@@ -2,9 +2,12 @@
  *
  * The names table: Seasons/names.tsv of the download (tools/seasons/make_names.py makes it from the name column
  * of the rules table). One row per season, source file of a class and object number: the long name and the
- * short name that the game shows. The database files stay unchanged: the names go into the competition
- * records in memory (club_comp.dat and nation_comp.dat records, 0x6b bytes: long name at +4, 52 bytes; short
- * name at +56, 27 bytes; docs/research/2026-10-13-database-inventory.md).
+ * short name that the game shows, and for a league the abbreviation (format 2, 0.6.1 item 2). The database files
+ * stay unchanged: the names go into the competition records in memory (club_comp.dat and nation_comp.dat
+ * records, 0x6b bytes: long name at +4, 52 bytes; short name at +56, 27 bytes; abbreviation at +0x53, 4 bytes,
+ * which Select Team shows for the division of a club; docs/research/2026-10-13-database-inventory.md). A row
+ * whose long name is the data's leaves the data's abbreviation. A load of a save of 0.6.0 (season names with
+ * the data's abbreviations) fits the abbreviations of its records to their names.
  *
  * When the names go in:
  * - a new game: at the end of build_comp_object_table 0x8386f0 (called at 0x829640 in create_game 0x828110,

@@ -1,0 +1,3 @@
+# The commit of the original (github.com/maxevans60/cm0102-bosman-edition, main) whose game code this fork carries,
+# with the browser's changes on top (skill bosman-update). The next update applies the original's changes from here.
+21e631c3a8e26c69f93a2e41505947e062658a05 Release 0.7.3 (2026-11-20)

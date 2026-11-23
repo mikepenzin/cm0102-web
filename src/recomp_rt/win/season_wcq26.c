@@ -20,14 +20,18 @@
  * qualify, the best
  *   runner-up goes to the tournament (real: 9 groups of 6 and a play-off of 4 runners-up, left out).
  * - AFC: the original's rounds; the two final groups of 5 give 4 direct places each, their fifths play the
- *   original's play-off (stage 11), its winner to the tournament; no tie with Europe (stage 12).
- * - OFC: the final's winner qualifies, its loser goes to the tournament.
+ *   original's play-off (stage 11), its winner to the tournament; no tie with Europe (stage 12). With hosts
+ *   8 less its hosts, group A the odd one; the row after them plays stage 11.
+ * - OFC: the final's winner qualifies, its loser goes to the tournament. With a host the winner goes to the
+ *   tournament.
  * - The tournament: Oceania stages 2 (semi-finals) and 3 (finals), single matches on 26 and 31 March. */
 #include "win.h"
 #include "season.h"
 #include "season_intl.h"
 #include "season_nl.h"
 #include "season_wcq26.h"
+#include "season_ofc_first.h"
+#include "season_concacaf26.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -139,7 +143,8 @@ int season_wcq26(uint32_t self)
     int y = year_of(self) + 2;
     if (y < 2026) return 0;
     const SeasonIntlEdition *e = season_intl_rule_edition("world_cup", y);
-    return e && e->teams == 48;
+    /* A campaign that a save of 0.6.1 or older made in the original's shape keeps it (0.6.2 slice 4b, item 58). */
+    return e && e->teams == 48 && !season_intl_old_shape(self);
 }
 
 static int is(uint32_t self, uint32_t vtable) { return readable(self) && rd32(g_mem, self) == vtable; }
@@ -176,7 +181,7 @@ static const char *team_name(uint32_t club)
     return readable(nation) ? win_str(nation + 4u) : "none";
 }
 
-/* ---- The 2030 shape (O265, O259 A11) ---- */
+/* ---- The places with hosts (O265, O259 A11; 0.6.2 decision A) ---- */
 
 /* A World Cup with more than three hosts (2030: Morocco, Portugal, Spain, Argentina, Paraguay, Uruguay). The
  * sections take their hosts through find_hosts 0x5fa730, which gives two (pair 1 of the host row: 0x91630c,
@@ -184,12 +189,17 @@ static const char *team_name(uint32_t club)
  * December 2025 to 2030 run: 47 qualified and 1 filled). Decision O265: each confederation keeps its 2026 total
  * with its hosts counted in it: UEFA 14 + 2 hosts (12 group winners, 2 paths), CONMEBOL 3 + 3 hosts + 1 to the
  * tournament, CAF 8 + Morocco (8 groups), CONCACAF 6 + 2 to the tournament, AFC 8 + 1, OFC 1 + 1, the tournament
- * 2: 48 in all. Every site below takes all the hosts from season_intl_host_ids. */
-static int shape30(uint32_t self)
+ * 2: 48 in all. Every site below takes all the hosts from season_intl_host_ids.
+ * The editions after the table (0.6.2 decision A, fault 32) keep 48 teams and the same rule: each confederation's
+ * 2026 total (UEFA 16, CONMEBOL 6, CONCACAF 6, CAF 9, AFC 8, OFC 1) less its hosts in that edition
+ * (season_wcq26_places; the AFC and OFC from 0.6.2 slice 5, open item 59: Saudi Arabia 2034). 2026 (three
+ * CONCACAF hosts) and 2030 give the shapes above; an edition with no host gives UEFA 12 + 4 paths, CONMEBOL 6,
+ * CONCACAF 6 and CAF 9 groups: 48 with the AFC 8, the OFC 1 and the tournament 2. */
+static int hosts_in(uint32_t self, uint32_t continent_key);
+
+static int conf_hosts(uint32_t self, uint32_t continent_key)
 {
-    if (!season_wcq26(self)) return 0;
-    int ids[6];
-    return season_intl_host_ids(rd32(g_mem, KEY_WORLD_CUP), year_of(self) + 2, ids) > 3;
+    return season_wcq26(self) ? hosts_in(self, continent_key) : 0;
 }
 
 /* The hosts of the campaign's World Cup whose continent is the key continent (a global as 0x9cfa1c), as nation
@@ -204,6 +214,12 @@ static int hosts_on(uint32_t self, uint32_t continent_key, uint32_t *out, int ma
     return k;
 }
 
+static int hosts_in(uint32_t self, uint32_t continent_key)
+{
+    uint32_t hosts[6];
+    return hosts_on(self, continent_key, hosts, 6);
+}
+
 /* 1 when the nation id is a host of the campaign's World Cup. */
 static int host_id(uint32_t self, int id)
 {
@@ -212,6 +228,41 @@ static int host_id(uint32_t self, int id)
         if (ids[i] == id) return 1;
     return 0;
 }
+
+#define CONTINENT_ASIA 0x9cfa0cu
+#define CONTINENT_OCEANIA 0x9cfa18u
+
+/* The continent key of each confederation (WCQ_UEFA to WCQ_OFC), as the sections compare them (Europe 0x919ee3,
+ * South America 0x920eea, North America 0x91630c, Africa 0x9108aa, Asia 0x914041, Oceania 0x91fb62). */
+static const uint32_t conf_continent[WCQ_CONFS] = {0x9cfa10u, 0x9cfa1cu, 0x9cfa14u, 0x9cfa08u, CONTINENT_ASIA,
+                                                   CONTINENT_OCEANIA};
+static const char *const conf_name[WCQ_CONFS] = {"UEFA", "CONMEBOL", "CONCACAF", "CAF", "AFC", "OFC"};
+
+/* The direct places of confederation `conf` (hosts not counted) in the campaign's World Cup, from the hosts of
+ * every confederation (season_wcq26_places: the AFC loses a place to a second OFC host). The test log names each
+ * new count of a campaign with the game date, so a run shows that a section reads its hosts after their draw
+ * (the rows after the table are drawn 5 years before the finals, each section reads them from its campaign's
+ * start, 4 years before). */
+static int places_of(uint32_t self, int conf, int *hosts_out)
+{
+    int h[WCQ_CONFS], direct[WCQ_CONFS];
+    for (int c = 0; c < WCQ_CONFS; c++) h[c] = conf_hosts(self, conf_continent[c]);
+    season_wcq26_places(h, direct);
+    if (hosts_out) *hosts_out = h[conf];
+    static int seen_year[WCQ_CONFS], seen[WCQ_CONFS];
+    int y = year_of(self) + 2;
+    if (logging() && (seen_year[conf] != y || seen[conf] != h[conf] + 1)) {
+        seen_year[conf] = y;
+        seen[conf] = h[conf] + 1;
+        fprintf(stderr, "recomp: season intl: wc qualifying %d: %s reads %d hosts on day %d of %d: %d direct places, "
+                        "%d with its hosts\n", y, conf_name[conf], h[conf], (int16_t)rd16(g_mem, GAME_DATE),
+                (int16_t)rd16(g_mem, GAME_DATE + 2), direct[conf], direct[conf] + h[conf]);
+    }
+    return direct[conf];
+}
+
+/* The direct places of CONCACAF for the 2026 shape (season_concacaf26.c, item 214). */
+int season_wcq26_concacaf_places(uint32_t self) { return places_of(self, WCQ_CONCACAF, NULL); }
 
 /* ---- South America ---- */
 
@@ -224,18 +275,19 @@ uint32_t rt_wcq26_south_america_direct(uint32_t self, uint32_t original)
 
 #define SA_EXEMPT 0xeeu                 /* byte: the hosts and holder of South America (count_exempt_nations) */
 #define CONTINENT_SOUTH_AMERICA 0x9cfa1cu
+#define CONTINENT_NORTH_AMERICA 0x9cfa14u
 
 void o_00920d10(void);
 void o_00920eb0(void);
 
 /* count_exempt_nations 0x920d10, thiscall (): the South American hosts and holder into +0xee, from find_hosts
- * (two). In the 2030 shape every South American host counts, so set_up_rules 0x921040 gives 6 - 3 = 3 direct
- * places (0x92109a, 0x9210a2) and the play-off place to the 4th (0x9210e9). */
+ * (two). In the gate every South American host counts (2030: three), so set_up_rules 0x921040 gives 6 - 3 = 3
+ * direct places (0x92109a, 0x9210a2) and the play-off place to the 4th (0x9210e9). */
 RT_WRAP(00920d10, wcq26_conmebol_exempt)
 {
     uint32_t self = cpu.ecx;
     o_00920d10();
-    if (rt_unwinding || !shape30(self)) return;
+    if (rt_unwinding || !conf_hosts(self, CONTINENT_SOUTH_AMERICA)) return;
     uint32_t hosts[6];
     int n = hosts_on(self, CONTINENT_SOUTH_AMERICA, hosts, 6);
     if (n > 0) {
@@ -247,12 +299,12 @@ RT_WRAP(00920d10, wcq26_conmebol_exempt)
 }
 
 /* build_team_slots 0x920eb0, thiscall (): the table of 10 - +0xee South American nations, leaving out the two
- * hosts of find_hosts (0x920eea). In the 2030 shape the other South American hosts are left out too: their
+ * hosts of find_hosts (0x920eea). In the gate every South American host is left out (2030: the third too): their
  * continent pointer is cleared while the original runs, so its continent test passes them over. */
 RT_WRAP(00920eb0, wcq26_conmebol_slots)
 {
     uint32_t self = cpu.ecx, hosts[6], saved[6];
-    int n = shape30(self) ? hosts_on(self, CONTINENT_SOUTH_AMERICA, hosts, 6) : 0;
+    int n = season_wcq26(self) ? hosts_on(self, CONTINENT_SOUTH_AMERICA, hosts, 6) : 0;
     for (int k = 0; k < n; k++) {
         saved[k] = rd32(g_mem, hosts[k] + 0x71u);
         wr32(g_mem, hosts[k] + 0x71u, 0);
@@ -285,12 +337,14 @@ uint32_t rt_wcq26_concacaf_exempt(uint32_t self, uint32_t holder)
 }
 
 /* 0x91785c `sub al, cl` in the final group 0x917830 (this in esi): the direct places 3 - exempt +0xba. In the
- * gate the hosts qualify as hosts, so the final group keeps 3. Gives the count that is taken off. */
+ * gate the hosts qualify as hosts and CONCACAF keeps 6 places with its hosts: 6 - hosts direct places of the
+ * final group of 6 (2026, three hosts: 3; 2030 and an edition with no host: all six, 3 - 0xfd = 6 in a byte).
+ * Gives the count that is taken off. */
 uint32_t rt_wcq26_concacaf_hosts(uint32_t self, uint32_t exempt)
 {
-    /* The 2030 shape: no CONCACAF host, 6 direct places, so all six of the final group (3 - 0xfd = 6 in a byte). */
-    if (shape30(self)) return 0xfdu;
-    return season_wcq26(self) ? 0u : exempt;
+    if (!season_wcq26(self)) return exempt;
+    int h = conf_hosts(self, CONTINENT_NORTH_AMERICA);
+    return (uint32_t)(uint8_t)((h > 6 ? 6 : h) - 3);
 }
 
 /* ---- Africa ---- */
@@ -298,15 +352,19 @@ uint32_t rt_wcq26_concacaf_hosts(uint32_t self, uint32_t exempt)
 /* The first round takes 2 x (pool - 45) of the weakest: its winners and the others make 45, 9 groups of 5 (in the
  * 2030 shape 2 x (pool - 40) and 8 groups). A
  * pool below 47 keeps the original's shape (no first round would remain). */
-static int africa_groups(uint32_t self) { return shape30(self) ? 8 : 9; }     /* O265: 8 places in 2030 */
+static int africa_groups(uint32_t self)       /* O265: 9 places less the African hosts (8 in 2030) */
+{
+    return places_of(self, WCQ_CAF, NULL);
+}
 
 static int africa_on(uint32_t self)
 {
     if (!season_wcq26(self)) return 0;
     int pool = (int)rd32(g_mem, self + 0xb6u);
-    if (pool >= 5 * africa_groups(self) + 2 && pool <= 52) return 1;
-    /* The pool builder takes at most 52 (0x910896; every season database from October 2021 holds 54 African
-     * nations, so the pool is 52), and below 47 no first round is left: the original's shape and its 5 places
+    if (pool >= 5 * africa_groups(self) + 2 && pool <= 10 * africa_groups(self)) return 1;
+    /* The pool holds every African nation less the hosts (item 199, season_caf_pool.c; the original's builder
+     * stopped at 52, 0x910896). A first round can take at most twice the group places, and below 47 no first
+     * round is left: the original's shape and its 5 places
      * stay, and the fill gives the World Cup's open places (Q388). Logged once a campaign (review 2). */
     static int logged;
     if (logging() && logged != year_of(self)) {
@@ -340,17 +398,33 @@ void rt_wcq26_africa_format(uint32_t self)
 
 /* ---- Asia ---- */
 
-/* 0x91377f (final groups 0x913740, this in esi): the direct places of each final group, 2 in the original. */
-uint32_t rt_wcq26_asia_direct(uint32_t self, uint32_t original)
+/* The AFC places (8 less its hosts, season_wcq26_places) go to its two final groups of 5, group A (stage 9) the
+ * odd one: no host 4 and 4, Saudi Arabia (2034) 4 and 3. The final groups 0x913740 (this in esi) pass one array
+ * of four status counts at [esp + 0x10] to both League ctors 0x68b100 (0x91389d, 0x913a5b), which copy it to
+ * +0xbe (0x68b1b5..0x68b1cc): 1 direct place, 2 in the original with no host (0x91377f). 0x91377f writes the
+ * count of group A; 0x9139c0, after group A is made (0x9138d4) and before group B (0x913a8e), the count of
+ * group B. */
+static uint32_t asia_group_places(uint32_t self, int g)
 {
-    return season_wcq26(self) ? 4u : original;
+    return (uint32_t)season_wcq26_asia_group(places_of(self, WCQ_AFC, NULL), g);
 }
 
-/* 0x913bce, 0x913bda (play-off 0x913b60, this in esi): the row of each final group that plays stage 11, 2 (the
- * third) in the original, 4 (the fifth) in the gate. */
-uint32_t rt_wcq26_asia_playoff_row(uint32_t self, uint32_t original)
+uint32_t rt_wcq26_asia_direct(uint32_t self, uint32_t original)
 {
-    return season_wcq26(self) ? 4u : original;
+    return season_wcq26(self) ? asia_group_places(self, 0) : original;
+}
+
+uint32_t rt_wcq26_asia_direct_b(uint32_t self, uint32_t current)
+{
+    return season_wcq26(self) ? asia_group_places(self, 1) : current;
+}
+
+/* 0x913bce (group A, stage 9 at +0x24), 0x913bda (group B, stage 10 at +0x28) in the play-off 0x913b60 (this in
+ * esi): the row of each final group that plays stage 11, 2 (the third) in the original. In the gate the row after
+ * the group's direct places (the fifth with 4 places). */
+uint32_t rt_wcq26_asia_playoff_row(uint32_t self, int g, uint32_t original)
+{
+    return season_wcq26(self) ? asia_group_places(self, g) : original;
 }
 
 /* 0x911cf6 (ctor) and after each pool (slice 27's A1 site 0x9141ea): the stage count, 13 in the original
@@ -366,6 +440,73 @@ void rt_wcq26_asia_format(uint32_t self)
     if (!season_wcq26(self)) return;
     wr32(g_mem, self + F_STAGE_COUNT, 12u);
     if (rd8(g_mem, self + 0xeeu)) wr8(g_mem, self + 0xeeu, 0);     /* the shape of no host, as slice 27's A1 */
+}
+
+/* ---- The AFC and OFC pools: every host out ---- */
+
+/* The pool builders of Asia 0x913f60 and Oceania 0x91fa80 (thiscall (), from the ctor and start_new_season) count
+ * into +0xee the hosts of find_hosts (two, pair 1 of the host row: 0x914013, 0x91fb34) of their continent
+ * (0x91404b, 0x91fb6c) and the holder (0x9140ac, 0x91fbcd), make the pool 44 (Asia) or 10 (Oceania) less +0xee
+ * (0x9140b2, 0x91fbd3), and take nations of their continent in nation order, less those two hosts and the holder
+ * (0x91417d..0x91418b, 0x91fcb2..0x91fcc0). In the gate every host of the continent is out, as the CONMEBOL wrap
+ * does: their continent pointer is cleared while the original runs, so neither the host count nor the pool takes
+ * them, and the sites 0x9140b2 and 0x91fbd3 add them to the count. The pool builders return 0 when they find fewer
+ * nations than the pool (0x9141ab, 0x91fce0), which the callers do not read (0x91e06c, 0x91eff6): logged. */
+static int pool_hosts;                  /* the hosts the running pool builder leaves out */
+
+static void pool_build(uint32_t self, uint32_t continent_key, int conf, void (*original)(void))
+{
+    uint32_t hosts[6], saved[6];
+    int n = season_wcq26(self) ? hosts_on(self, continent_key, hosts, 6) : 0;
+    if (n) places_of(self, conf, NULL);                     /* the test log of the read */
+    for (int k = 0; k < n; k++) {
+        saved[k] = rd32(g_mem, hosts[k] + 0x71u);
+        wr32(g_mem, hosts[k] + 0x71u, 0);
+    }
+    pool_hosts = n;
+    cpu.ecx = self;
+    original();
+    pool_hosts = 0;
+    for (int k = 0; k < n; k++) wr32(g_mem, hosts[k] + 0x71u, saved[k]);
+    if (rt_unwinding || !n) return;
+    if (cpu.eax == 0)
+        fprintf(stderr, "recomp: season intl: wc qualifying %d: the %s pool found fewer nations than %d\n",
+                year_of(self) + 2, conf_name[conf], (int)rd32(g_mem, self + 0xf3u));
+    else if (logging())
+        fprintf(stderr, "recomp: season intl: wc qualifying %d: %s pool of %d, %d hosts out\n", year_of(self) + 2,
+                conf_name[conf], (int)rd32(g_mem, self + 0xf3u), n);
+}
+
+void o_00913f60(void);
+void o_0091fa80(void);
+
+RT_WRAP(00913f60, wcq26_asia_pool)
+{
+    pool_build(cpu.ecx, CONTINENT_ASIA, WCQ_AFC, o_00913f60);
+}
+
+RT_WRAP(0091fa80, wcq26_oceania_pool)
+{
+    uint32_t self = cpu.ecx;
+    pool_build(self, CONTINENT_OCEANIA, WCQ_OFC, o_0091fa80);
+    if (rt_unwinding) return;
+    uint32_t eax = cpu.eax;
+    season_ofc_first_pool(self);            /* item 198: every Oceania nation (season_ofc_first.c) */
+    if (!rt_unwinding) cpu.eax = eax;
+}
+
+/* 0x9140b2 (Asia) and 0x91fbd3 (Oceania), this in esi: the count that the pool size takes off, +0xee. In the
+ * gate the hosts that pool_build left out are added. Oceania keeps at most one of them in the count: its second
+ * group has 4 teams for a count of 1 and 5 for any other (0x91f1c3..0x91f1d8) and the first always 5
+ * (0x91ec0e), so a pool of 9 or 10. Two Oceania hosts (no host row names one) then need 9 others in the data. */
+uint32_t rt_wcq26_pool_exempt(uint32_t self, uint32_t exempt)
+{
+    int n = pool_hosts;
+    if (!n || !season_wcq26(self)) return exempt;
+    if (is(self, VT_OCEANIA) && (int)exempt + n > 1) n = (int)exempt >= 1 ? 0 : 1;
+    uint32_t count = (exempt + (uint32_t)n) & 0xffu;
+    wr8(g_mem, self + 0xeeu, count);
+    return count;
 }
 
 /* ---- Oceania: the stage count of the tournament ---- */
@@ -452,9 +593,10 @@ static int superseded(uint32_t nations, int count, const char *name)
 void o_00919e30(void);
 
 /* The European nations of a campaign's pool, in nation order (out may be NULL to count): every European nation
- * whose national team names it, less Russia, less an old record that a later one replaces, less the hosts of the
- * World Cup of the campaign. It reads only the nation, club and host tables, which a load restores in full, so the
- * group sizes of the draw and of a loaded game agree (europe_group_size): the pool size +0xf2 is not in the save
+ * whose national team names it, less Russia from the 2026 cycle (it played the qualifying groups of 2022), less an
+ * old record that a later one replaces, less the hosts of the World Cup of the campaign. It reads only the
+ * nation, club and host tables, which a load restores in full, so the group sizes of the draw and of a loaded game
+ * agree (europe_group_size): the pool size +0xf2 is not in the save
  * (League::load 0x687b10 succeeds at a load, and the ctor then skips build_entry_pool, 0x918328..0x918339), so
  * the group builders 0x9190db and 0x919722 of a loaded game read 0 there. log: 1 for the lines of the pool. */
 static int europe_nations(uint32_t self, uint32_t *out, int max, int log)
@@ -466,7 +608,7 @@ static int europe_nations(uint32_t self, uint32_t *out, int max, int log)
     for (int id = 0; id < count && n < max; id++) {
         uint32_t nation = nations + (uint32_t)id * NATION_SIZE, c = rd32(g_mem, nation + 0x71u);
         if (!readable(c) || rd32(g_mem, c) != rd32(g_mem, 0x9cfa10u)) continue;
-        if (!strcmp(win_str(nation + 4u), "Russia")) {
+        if (!strcmp(win_str(nation + 4u), "Russia") && season_wcq26(self)) {
             russia = 1;
             continue;
         }
@@ -488,7 +630,8 @@ static int europe_nations(uint32_t self, uint32_t *out, int max, int log)
     }
     if (log)
         fprintf(stderr, "recomp: season intl: wc qualifying %d: Europe pool of %d nations (%s, %d hosts out)\n",
-                year_of(self) + 2, n, russia ? "Russia out" : "no Russia in the data", n_hosts);
+                year_of(self) + 2, n,
+                russia ? "Russia out" : season_wcq26(self) ? "no Russia in the data" : "Russia in", n_hosts);
     return n;
 }
 
@@ -512,29 +655,120 @@ void season_wcq26_log_pool(uint32_t self, const char *what)
             (int16_t)rd16(g_mem, self + F_YEAR), n, kosovo ? "in" : "out", len ? odd : " no odd nation");
 }
 
+/* The campaigns of 2006 to 2022 (open item 57 of 0.6.2). build_entry_pool 0x919e30 takes at most 50 less the
+ * exempt nations (above), and get_group_size 0x918dd0 gives groups of 5, with one or two exempt nations groups of
+ * 6 at the stages 2, 4 and 6, or 2, 4 and 7 (0x918de9..0x918e13). A 2001 game on 0.6.0 played the 2006
+ * qualifying with 49 nations, without Liechtenstein, and the 2010 one with 50, without Serbia (the forum save of
+ * 2041 and long game seed 5; real: 51 and 53 entrants). In a season game the pool of these campaigns is every
+ * European nation (europe_nations, Russia in), sorted by the original's compare, in the original's group count
+ * (+0xff, set by build_entry_pool from the exempt count: 10 groups with no exempt nation, 9 with one or two, 8
+ * with three, 0x91a0c2..0x91a114). The exempt nations are the European hosts, as a season game has no holder
+ * (rt_intl_wc_holder). Each group then holds 5 or 6 (wide_size): the grid of the draw 0x918ec0 holds 6 a group
+ * (0x918ef1) and every group stage of the template 0x9185c0 has 10 rounds (0x91860e), which a group of 5 or 6
+ * plays. A pool above 6 a group keeps its best by reputation. A data with fewer than 5 a group keeps the
+ * original's pool and sizes. */
+#define WIDE_FIRST 2006
+#define WIDE_LAST 2022
+#define WIDE_ROOM 6                     /* nations a group: the grid's row (0x918ef1) */
+
+static int europe_wide(uint32_t self)
+{
+    if (!is(self, VT_EUROPE) || !season_intl_on() || season_wcq26(self)) return 0;
+    int y = year_of(self) + 2;
+    return y >= WIDE_FIRST && y <= WIDE_LAST;
+}
+
+static int wide_groups(uint32_t self) { return (int8_t)rd8(g_mem, self + EU_LAST_GROUP) + 2; }
+
+/* 1 when the groups of a 2006 to 2022 campaign take the sizes of wide_size: its pool holds 5 to 6 a group. The
+ * draw 0x91a5db and the group builders 0x91a5e2 and 0x9196d0 run in one call (0x91a5db..0x91a6f9), before the pool
+ * size +0xf2 goes to 0 (0x91a73d). The save writes the pool and its size (0x91b109..0x91b154) and the load reads
+ * them back (0x91ad13..0x91adb8), so a load before the draw keeps the wide pool and its sizes. */
+static int wide_sized(uint32_t self)
+{
+    int groups = wide_groups(self), n = (int)rd32(g_mem, self + EU_POOL_SIZE);
+    return europe_wide(self) && groups >= 1 && groups <= 10 && n >= 5 * groups && n <= WIDE_ROOM * groups;
+}
+
+/* The size of group g (0 = A) of a wide campaign: the last (pool - 5 * groups) groups of 6, the others of 5. */
+static int wide_size(uint32_t self, int g)
+{
+    int groups = wide_groups(self), six = (int)rd32(g_mem, self + EU_POOL_SIZE) - 5 * groups;
+    return g >= groups - six ? 6 : 5;
+}
+
+#define NATIONS_MAX 128                 /* europe_nations of any data (55 European nations in 2025) */
+
+/* The pool +0xee of a campaign made again: its European nations (europe_nations), sorted by the original's compare
+ * (0x91a0b0), the best `room` of them; the pool size +0xf2 the count. The original's pool block is freed. Returns
+ * the count, or -1 when no pool was made. */
+static int pool_again(uint32_t self, int room, int log)
+{
+    uint32_t teams[NATIONS_MAX];
+    int n = europe_nations(self, teams, NATIONS_MAX, log);
+    if (rt_unwinding) return -1;
+    uint32_t pool = game_malloc(4u * (uint32_t)(n > POOL_MAX ? n : POOL_MAX));
+    if (rt_unwinding || !pool) return -1;
+    for (int k = 0; k < n; k++) wr32(g_mem, pool + 4u * (uint32_t)k, teams[k]);
+    uint32_t qa[4] = {pool, (uint32_t)n, 4, CLUB_COMPARE};
+    call_cdecl(GAME_QSORT, 4, qa);
+    if (rt_unwinding) return -1;
+    if (n > room) {
+        if (log)
+            fprintf(stderr, "recomp: season intl: wc qualifying %d: Europe keeps the best %d of %d nations\n",
+                    year_of(self) + 2, room, n);
+        n = room;
+    }
+    game_free(rd32(g_mem, self + EU_POOL));
+    if (rt_unwinding) return -1;
+    wr32(g_mem, self + EU_POOL, pool);
+    wr32(g_mem, self + EU_POOL_SIZE, (uint32_t)n);
+    return n;
+}
+
+static void wide_pool(uint32_t self)
+{
+    int groups = wide_groups(self), have = (int)rd32(g_mem, self + EU_POOL_SIZE);
+    if (groups < 1 || groups > 10) return;
+    int n = europe_nations(self, NULL, NATIONS_MAX, 0);
+    if (rt_unwinding || n <= have || n < 5 * groups) return;
+    n = pool_again(self, WIDE_ROOM * groups, logging());
+    if (n >= 0 && logging())
+        fprintf(stderr, "recomp: season intl: wc qualifying %d: Europe pool of %d nations (the original's %d) in "
+                        "%d groups\n", year_of(self) + 2, n, have, groups);
+}
+
+/* The return address of build_entry_pool's call in the ctor 0x918200 (0x918339); start_new_season calls it at
+ * 0x9194cf. */
+#define POOL_CTOR_RET 0x0091833eu
+
+/* 1 when the wide pool waits for start_new_season: a ctor's campaign whose World Cup before it lies after the game
+ * year (a 2001 game makes the 2006 campaign at the new game, and start_new_season 0x9194cf makes its pool again
+ * after the 2002 World Cup, before the draw). So a new game of 2001 keeps the original's memory to that point. */
+static int wide_waits(uint32_t self, uint32_t ret)
+{
+    return ret == POOL_CTOR_RET && year_of(self) > (int16_t)rd16(g_mem, GAME_DATE + 2u) + 2;
+}
+
 RT_WRAP(00919e30, wcq26_europe_pool)
 {
-    uint32_t self = cpu.ecx;
+    uint32_t self = cpu.ecx, ret = rd32(g_mem, cpu.esp);
     o_00919e30();
     if (!rt_unwinding && !europe_on(self) && is(self, VT_EUROPE)) {
         uint32_t eax = cpu.eax;
         season_wcq26_log_pool(self, "wc qualifying (original)");
         cpu.eax = eax;
     }
+    /* A pool of 2006 to 2022 when the original made one: it returns 0 and sets no group count when it finds too
+     * few nations (0x91a08c). */
+    if (!rt_unwinding && europe_wide(self)) {
+        uint32_t eax = cpu.eax;
+        if (eax == 1u && !wide_waits(self, ret)) wide_pool(self);
+        if (!rt_unwinding) cpu.eax = eax;
+        return;
+    }
     if (rt_unwinding || !europe_on(self)) return;
-    uint32_t teams[POOL_MAX];
-    int n = europe_nations(self, teams, POOL_MAX, logging());
-    if (rt_unwinding) return;
-    uint32_t pool = game_malloc(4u * POOL_MAX);
-    if (rt_unwinding || !pool) return;
-    for (int k = 0; k < n; k++) wr32(g_mem, pool + 4u * (uint32_t)k, teams[k]);
-    uint32_t qa[4] = {pool, (uint32_t)n, 4, CLUB_COMPARE};
-    call_cdecl(GAME_QSORT, 4, qa);
-    if (rt_unwinding) return;
-    game_free(rd32(g_mem, self + EU_POOL));
-    if (rt_unwinding) return;
-    wr32(g_mem, self + EU_POOL, pool);
-    wr32(g_mem, self + EU_POOL_SIZE, (uint32_t)n);
+    if (pool_again(self, POOL_MAX, logging()) < 0) return;
     wr8(g_mem, self + EU_EXEMPT, 0);
     wr8(g_mem, self + EU_LAST_GROUP, EU_GROUPS - 2);
     wr8(g_mem, self + EU_RUNNERS_UP, EU_GROUPS - 1);
@@ -583,15 +817,19 @@ static int europe_group_size(uint32_t self, int g)
 void o_00918dd0(void);
 
 /* get_group_size, thiscall (stage as a byte), ret 4 (0x918ea8): 5 for every group with no exempt nation
- * (0x918e9e). */
+ * (0x918e9e). A wide campaign of 2006 to 2022 takes wide_size. */
 RT_WRAP(00918dd0, wcq26_europe_group_size)
 {
     uint32_t self = cpu.ecx;
+    int stage = (int8_t)rd8(g_mem, cpu.esp + 4u);
+    if (wide_sized(self)) {
+        rt_ret_stdcall((uint32_t)wide_size(self, stage + 1), 1);
+        return;
+    }
     if (!europe_shape(self)) {
         o_00918dd0();
         return;
     }
-    int stage = (int8_t)rd8(g_mem, cpu.esp + 4u);
     rt_ret_stdcall((uint32_t)europe_group_size(self, stage + 1), 1);
 }
 
@@ -665,8 +903,11 @@ static const SeasonNlDate europe_sf = {26, 3, 2}, europe_final = {31, 3, 2};
 /* The template of wc_europe_league (slot 15, 0x9185c0), from slice 28's wrap (season_nl_wc.c) at its entry
  * state. Gives 1 when it completed the call. A group stage: 10 rounds for a group of 5, 6 for a group of 4 (a
  * league of n plays n + n % 2 - 1 rounds a leg, twice); the play-off: two single-match rounds of 16 and 8. */
-/* The paths of a campaign: 4 (UEFA 16 places), 2 in the 2030 shape (14 places and its two hosts, O265). */
-static int europe_paths(uint32_t self) { return shape30(self) ? 2 : EU_PATHS; }
+/* The paths of a campaign: 4 (UEFA 16 places) less the European hosts (2030: 14 places and its two hosts, O265). */
+static int europe_paths(uint32_t self)
+{
+    return places_of(self, WCQ_UEFA, NULL) - EU_GROUPS;     /* a host row names at most two European hosts */
+}
 
 int season_wcq26_europe_template(void)
 {
@@ -988,8 +1229,9 @@ static int cup_status(uint32_t cup, uint32_t team)
 /* The six of the tournament, best first by nation reputation (the real seeding used the FIFA ranking of
  * November 2025: decision Q565): the first two are the seeds. The sections keep their tables until their
  * start_new_season of 25 July, so the finals take the same six again (no state of this file goes into a save). */
-/* The 2030 shape (O265): CONCACAF's two places in the tournament go to the two best thirds of its semi-final groups
- * (stages 3 to 5, 0x917320), by points, then goal difference, as the original's tables sort (0x6827d0). */
+/* CONCACAF with no host (2030, O265, and after the table): its two places in the tournament go to the two best
+ * thirds of its semi-final groups (stages 3 to 5, 0x917320), by points, then goal difference, as the original's
+ * tables sort (0x6827d0). */
 static void concacaf_thirds(uint32_t out[2])
 {
     uint32_t cc = comp_of(KEY_CONCACAF), z[1] = {0}, team[3] = {0, 0, 0};
@@ -1027,20 +1269,37 @@ static int tournament_six(uint32_t self, uint32_t six[6])
             real += six[k] != 0;
         }
     if (real == 6) return 1;
-    static const uint32_t continent[6] = {0x9cfa18u, 0x9cfa1cu, 0x9cfa14u, 0x9cfa14u, 0x9cfa08u, 0x9cfa0cu};
-    static const int direct[6] = {1, 6, 6, 6, 9, 8};    /* CONCACAF: 3 places and the 3 hosts */
-    static const char *const conf[6] = {"OFC", "CONMEBOL", "CONCACAF", "CONCACAF", "CAF", "AFC"};
+    static const int of[6] = {WCQ_OFC, WCQ_CONMEBOL, WCQ_CONCACAF, WCQ_CONCACAF, WCQ_CAF, WCQ_AFC};
+    /* strongest_free passes over the nations of a confederation that its direct places and its hosts take
+     * (2026: CONCACAF 3 places and its 3 hosts). */
+    int direct[6];
+    for (int k = 0; k < 6; k++) {
+        int h = 0;
+        direct[k] = places_of(self, of[k], &h) + h;
+    }
     uint32_t t[6];
-    t[0] = cup_row(stage_of(self, 1), 0);                                    /* the OFC final's loser */
+    /* The OFC final's loser; with an OFC host the OFC has no direct place and its winner plays (open item 59). */
+    t[0] = cup_row(stage_of(self, 1), places_of(self, WCQ_OFC, NULL) ? 0 : 1);
     t[1] = table_status(comp_of(KEY_SOUTH_AMERICA), 0);                      /* CONMEBOL 7th */
     t[2] = table_status(stage_of(comp_of(KEY_CONCACAF), 6), 0);              /* CONCACAF 4th and 5th */
     t[3] = table_status(stage_of(comp_of(KEY_CONCACAF), 6), 1);
-    if (shape30(self)) concacaf_thirds(t + 2);         /* the 2030 shape: all six of the final group qualify */
+    /* CONCACAF with no host (2030, after the table): all six of the final group qualify, its two places go to
+     * the best thirds of the semi-final groups. With one host the sixth and the best third. */
+    int cc_hosts = conf_hosts(self, CONTINENT_NORTH_AMERICA);
+    if (season_cc26_tournament(comp_of(KEY_CONCACAF), t + 2)) {
+        /* item 214: the 2026 shape, the best two after the direct places of the third round */
+    } else if (cc_hosts == 0) {
+        concacaf_thirds(t + 2);
+    } else if (cc_hosts == 1) {
+        uint32_t thirds[2];
+        concacaf_thirds(thirds);
+        t[3] = thirds[0];
+    }
     if (rt_unwinding) return 0;
     t[4] = africa_runner_up();
     if (rt_unwinding) return 0;
     t[5] = cup_row(stage_of(comp_of(KEY_ASIA), 11), 1);                      /* the AFC play-off winner */
-    if (logging()) {                                    /* test log: the CONCACAF final group and its statuses */
+    if (logging() && !season_cc26_on(comp_of(KEY_CONCACAF))) {  /* test log: the CONCACAF final group, statuses */
         uint32_t fg = stage_of(comp_of(KEY_CONCACAF), 6), rows = readable(fg) ? rd32(g_mem, fg + F_TABLE) : 0;
         int n = readable(fg) ? (int16_t)rd16(g_mem, fg + F_TEAMS) : 0;
         fprintf(stderr, "recomp: season intl: wc play-off %d: CONCACAF final group of %d:", year_of(self) + 2, n);
@@ -1051,11 +1310,11 @@ static int tournament_six(uint32_t self, uint32_t six[6])
     }
     for (int k = 0; k < 6; k++)
         if (!t[k]) {
-            t[k] = strongest_free(continent[k], direct[k], t, 6);
+            t[k] = strongest_free(conf_continent[of[k]], direct[k], t, 6);
             if (rt_unwinding) return 0;
             if (logging())
                 fprintf(stderr, "recomp: season intl: wc play-off %d: %s team not known, %s plays\n", year_of(self) + 2,
-                        conf[k], team_name(t[k]));
+                        conf_name[of[k]], team_name(t[k]));
         }
     int order[6] = {0, 1, 2, 3, 4, 5};
     for (int i = 0; i < 6; i++)
@@ -1134,6 +1393,10 @@ RT_WRAP(0091f0d0, wcq26_oceania_advance)
 {
     uint32_t self = cpu.ecx;
     int now = readable(self) ? (int)rd32(g_mem, self + F_STAGE) : -1;
+    if (season_ofc_first_waiting(self)) {                       /* item 198: the preliminary ties in slot 0 */
+        rt_ret_stdcall(0, 0);
+        return;
+    }
     if (!oceania_on(self) || (now != 1 && now != 2)) {
         if (season_intl_oceania_wait(self)) {                  /* O259 A16: a CONCACAF partner not decided */
             rt_ret_stdcall(0, 0);
@@ -1166,6 +1429,7 @@ RT_WRAP(0091e2e0, wcq26_oceania_template)
     int st = (int8_t)rd8(g_mem, sp + 4u);
     if (!oceania_on(self) || (st != 2 && st != 3)) {
         o_0091e2e0();
+        if (!rt_unwinding) season_intl_oceania_tie_dates(self, st, cpu.eax);
         return;
     }
     uint32_t out_rounds = rd32(g_mem, sp + 8u), out_code = rd32(g_mem, sp + 0xcu), out_league = rd32(g_mem, sp + 0x10u);
@@ -1186,12 +1450,13 @@ void o_0091e840(void);
  * ...), ret 0x18. Stage 1 status 1 gives a record only (0x91e8b2..0x91e8d6); stage 2 status 1 adds the team to
  * the World Cup (0x91e937, add_qualified_team 0x92e740). In the gate the OFC final's winner qualifies (stage 1
  * as 2), a semi-final winner of the tournament gets a record only (stage 2 as 1) and a final winner qualifies
- * (stage 3 as 2). */
+ * (stage 3 as 2). With an OFC host the OFC has no direct place (open item 59): the final's winner keeps its
+ * record of stage 1 and plays the tournament (tournament_six). */
 RT_WRAP(0091e840, wcq26_oceania_status)
 {
     if (oceania_on(cpu.ecx)) {
         int st = (int8_t)rd8(g_mem, cpu.esp + 0xcu);
-        int to = st == 1 ? 2 : st == 2 ? 1 : st == 3 ? 2 : st;
+        int to = st == 1 ? (places_of(cpu.ecx, WCQ_OFC, NULL) ? 2 : 1) : st == 2 ? 1 : st == 3 ? 2 : st;
         if (to != st) wr8(g_mem, cpu.esp + 0xcu, (uint32_t)to);
         if (logging() && rd8(g_mem, cpu.esp + 8u) == 1u && to == 2)
             fprintf(stderr, "recomp: season intl: wc qualifying %d: %s qualifies (Oceania stage %d)\n",

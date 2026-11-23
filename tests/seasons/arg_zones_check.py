@@ -50,7 +50,7 @@ def main(argv):
             table[(int(r["season"]), int(r["club_id"]))] = r["club"]
     i32 = lambda r, o: struct.unpack_from("<i", r, o)[0]  # noqa: E731
     fails, used = [], set()
-    for year in range(2001, 2026):
+    for year in range(2001, 2027):
         if year in missing:
             print(f"note  {year}: no database, not checked")
             continue

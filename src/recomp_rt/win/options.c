@@ -45,8 +45,8 @@ static const OptionDef defs[OPT_COUNT] = {
         "save_backups = on keeps the last three copies of each save in the folder backups next to the saves."},
     [OPT_CONDITION_COLOURS] = {"condition_colours", KIND_SWITCH, "on", NULL,
         "condition_colours = on colours condition percentages and morale words: red, amber or green."},
-    [OPT_DATABASE] = {"database", KIND_ENUM, "3.9.68", "3.9.68|3.9.60|3.9.65",
-        "database = the data set of a new game: 3.9.68 (2002/03), 3.9.60 (2001/02), 3.9.65 (2001/02, December update) or folder:<name> for a folder in Databases."},
+    [OPT_DATABASE] = {"database", KIND_ENUM, "3.9.60", "3.9.68|3.9.60|3.9.65",
+        "database = the data set of a new game: 3.9.60 (2001/02, original data), 3.9.65 (2001/02, December 2001 update), 3.9.68 (2001/02 with the summer 2002 transfers) or folder:<name> for a folder in Databases. A click on the chosen 2001/02 tile of Choose Season changes the first three."},
     [OPT_SQUAD_VIEWS] = {"squad_views", KIND_SWITCH, "on", NULL,
         "squad_views = on adds Team views (best XI, squad depth, compare players) to the Assistant drop-down of a squad screen, and the polygon to the comparison of two chosen players."},
     [OPT_ATTRIBUTE_GROUPS] = {"attribute_groups", KIND_SWITCH, "on", NULL,
@@ -59,8 +59,17 @@ static const OptionDef defs[OPT_COUNT] = {
         "changing_rules = on lets the rules of each league and cup change each July as a new game moves through the seasons. Each game keeps the value it started with."},
     /* 0.6.0 slice 13: the Choose Season screen writes it together with database. */
     [OPT_SEASON] = {"season", KIND_ENUM, "2001/02",
-        "2001/02|2002/03|2003/04|2004/05|2005/06|2006/07|2007/08|2008/09|2009/10|2010/11|2011/12|2012/13|2013/14|2014/15|2015/16|2016/17|2017/18|2018/19|2019/20|2020/21|2021/22|2022/23|2023/24|2024/25|2025/26",
-        "season = the season of a new game, 2001/02 to 2025/26. The Choose Season screen sets it together with database."},
+        "2001/02|2002/03|2003/04|2004/05|2005/06|2006/07|2007/08|2008/09|2009/10|2010/11|2011/12|2012/13|2013/14|2014/15|2015/16|2016/17|2017/18|2018/19|2019/20|2020/21|2021/22|2022/23|2023/24|2024/25|2025/26|2026/27",
+        "season = the season of a new game, 2001/02 to 2026/27. The Choose Season screen sets it together with database."},
+    /* 0.7.0 slice 4: read at each lobby request (net_lobby.c). */
+    [OPT_ONLINE_PLAY] = {"online_play", KIND_SWITCH, "on", NULL,
+        "online_play = on shows online games in the game list and puts a network game that you host in the online list. off shows LAN games only and never contacts the online service."},
+    /* 0.7.0 slice 6 (Q38): the Network tab of the Options box sets it; the join check reads it (net_lobby.c). */
+    [OPT_GAME_PASSWORD] = {"game_password", KIND_TEXT, "", NULL,
+        "game_password = the password that a human manager types to join a network game that you host. Empty: no password."},
+    /* 0.7.3 slice 13 (issue 140): read at each new number (squad_numbers.c). */
+    [OPT_SQUAD_NUMBERS_99] = {"squad_numbers_99", KIND_SWITCH, "off", NULL,
+        "squad_numbers_99 = on lets a new game keep database squad numbers from 51 to 99, and gives a signing a number up to 99 when 1 to 50 are taken. off gives no new number above 50. In a network game the host's setting applies."},
 };
 
 #define TEXT_MAX 1100

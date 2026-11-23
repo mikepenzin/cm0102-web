@@ -34,7 +34,8 @@ The checks (each run):
       name at the end of X have the new name at the end of X+1 in the rules report (1 June: the international entries change as late as 15 and
       28 August, after the start report of 1 August), and every other competition keeps its name
     - on: the news log lists exactly one sentence "<old name> is now called <new name>." for each of them,
-      for season X+1, and the news item of X+1 is sent once (no news item when no name changes)
+      for season X+1, and the news item of X+1 is sent once, in parts 1, 2, ... when its text is long (no news
+      item when no name changes)
     - off: the report names at the end of X+1 are the names at the end of X, and the log has no change after
       the start season (the hooks of the start season run with any changing rules, "(start season)" in the log)
 A run takes about 6 to 8 minutes. --jobs (default 3) runs that many at the same time. --reuse checks the
@@ -175,7 +176,8 @@ def check_december(program, game, keep):
     late = [t for t in tests if "starts its 2011 season" in t and t.endswith("of 2010.")]
     if not late:
         fails.append("december: no competition started its 2011 season in November or December 2010")
-    sent = [tuple(int(g) for g in m.groups()) for m in (SENT.search(x) for x in log) if m]
+    sent = [(int(m.group(1)), int(m.group(3)), int(m.group(4))) for m in (SENT.search(x) for x in log) if m
+            and m.group(2) == "1"]
     points = [tuple(int(g) for g in m.groups()) for m in (POINT.search(x) for x in log) if m]
     hooks = [tuple(int(g) for g in m.groups()) for m in (HOOK.search(x) for x in log) if m]
     if [s for s in sent if s[2] == 2010]:
@@ -190,7 +192,7 @@ def check_december(program, game, keep):
           f"{len(fails)} problems ({work})")
     return fails
 NEWS = re.compile(r"recomp: season change: news (\d{4})/\d\d: (.*)$")
-SENT = re.compile(r"recomp: season change: news item for (\d{4})/\d\d sent on day (\d+) of (\d+)$")
+SENT = re.compile(r"recomp: season change: news item for (\d{4})/\d\d part (\d+) sent on day (\d+) of (\d+)$")
 SHOWN = re.compile(r"recomp: season change: news shown for (\d{4})/\d\d, dated day (\d+) of (\d+): (.*)$")
 POINT = re.compile(r"recomp: season change: season point of (\d{4})/\d\d on day (\d+) of (\d+)(?: \(start season\))?$")
 HOOK = re.compile(r"recomp: season change: test: season hook (\d{4}) on day (\d+) of (\d+)$")
@@ -250,8 +252,14 @@ def check_run(name, program, game, keep, reuse=False):
         return [f"{name}: the report has no end of {year} and {year + 1} (ends {sorted(ends)}): the run stopped ({work})"]
     log = open(os.path.join(work, "stderr.txt"), encoding="latin-1").read().split("\n")
     news = [(int(m.group(1)), m.group(2)) for m in (NEWS.search(x) for x in log) if m]
-    sent_at = [tuple(int(g) for g in m.groups()) for m in (SENT.search(x) for x in log) if m]
+    parts = [(int(m.group(1)), int(m.group(2))) for m in (SENT.search(x) for x in log) if m]
+    sent_at = [(int(m.group(1)), int(m.group(3)), int(m.group(4))) for m in (SENT.search(x) for x in log) if m
+               and m.group(2) == "1"]
     sent = [x[0] for x in sent_at]
+    for season in set(sent):
+        got_parts = [p for s, p in parts if s == season]
+        if got_parts != list(range(1, len(got_parts) + 1)):
+            fails.append(f"{name}: the parts of the item of {season} were sent as {got_parts}")
     for season, day, y in sent_at:
         if y != season or not 151 <= day <= 273:
             fails.append(f"{name}: the item of {season} was sent on day {day} of {y}, not at its season point")

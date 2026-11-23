@@ -1,0 +1,24 @@
+# Nation names and confederations by year (future testing, slice 2 of the 0.6.2 spec). Input of history_check.py.
+# rename: from season `season`, a live record named `nation` (continent set) is a fault; the name is `to`. The rows
+# match season_intl_renames (src/recomp_rt/win/season_intl_rules.c), checked by history_check_test.py.
+# confed: from `season` (the date in `from`, MM-DD of that year), the nation is in the confederation `to`.
+# A change is due in a save from the date `from` of its season (a rename at the season point, at the latest on
+# 1 September), with changing rules on. With changing rules off only the changes up to the start year are due.
+kind	season	from	nation	to	source
+rename	2002	09-01	Yugoslavia	Serbia and Montenegro	int-world-13
+rename	2006	09-01	Serbia and Montenegro	Serbia	int-world-61
+rename	2011	09-01	Netherlands Antilles	Curaçao	int-world-325
+rename	2016	09-01	Czech Republic	Czechia	int-world-181
+rename	2017	09-01	Swaziland	Eswatini	int-world-193
+rename	2018	09-01	FYR of Macedonia	North Macedonia	int-world-205
+rename	2022	09-01	Turkey	Türkiye	int-world-253
+confed	2002	09-01	Kazakhstan	UEFA	UEFA member from April 2002 (UEFA Congress, Stockholm, 25 April 2002)
+confed	2006	02-01	Australia	AFC	int-world-49, AFC member from 1 January 2006 (season_intl.c AUSTRALIA_TO_ASIA); due from 1 February, as the move waits for the first league table update day from 1 January (intl_entry)
+confed	2016	09-01	Kosovo	UEFA	UEFA Congress of 3 May 2016 (season_intl_uefa_from)
+confed	1991	09-01	Martinique	CONCACAF	CONCACAF associate member from 1991, full member from 2013, not in FIFA (season_intl_concacaf_from, open item 141); the databases from October 2016 hold it with no continent
+confed	1964	09-01	Guadeloupe	CONCACAF	CONCACAF associate member from 1964, full member from 2013, not in FIFA (season_intl_concacaf_from, open item 141)
+confed	2001	09-01	French Guiana	CONCACAF	CONCACAF associate member before 2001, full member from 2013, not in FIFA (season_intl_concacaf_from, open item 141)
+confed	2002	09-01	Saint-Martin	CONCACAF	CONCACAF associate member from 21 April 2002, full member from 2013, not in FIFA (season_intl_concacaf_from, open item 141)
+confed	2002	09-01	Sint Maarten	CONCACAF	CONCACAF associate member from 21 April 2002, full member from 2013, not in FIFA (season_intl_concacaf_from, open item 141)
+confed	2013	09-01	Bonaire	CONCACAF	CONCACAF associate member from April 2013, full member from 10 June 2014, not in FIFA (season_intl_concacaf_from, open item 141)
+confed	2005	09-01	Timor	AFC	AFC member from 2005 (the-afc.com; FIFA member from 12 September 2005); the 3.9.68 data holds it with no continent (season_intl_afc_from, item 200)

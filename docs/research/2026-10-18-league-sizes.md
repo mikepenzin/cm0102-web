@@ -125,8 +125,9 @@ These rows of the table have more clubs than the class holds. The division keeps
 | nor_prm | 14 | 2008 to 2027 seasons | 16 | table 0x7925eb, D 26 at 0x791813 |
 | por_second | 18 | 2012/13 to 2017/18 | 24 | table 0x7d152d, D 34 at 0x7d0c7a |
 | rus_first | 18 | 2002/03 to 2021/22 | 22 | table 0x7ea6cc, D 36 at 0x7ea25a, stack array of 18 at 0x7ea77d |
-| swe_prm | 14 | 2007 to 2027 seasons | 16 | table 0x89043b, D 26 at 0x88feea |
 | tur_first | 18 | 2020/21 to 2024/25 | 21 | D 34 at 0x8fd25a |
+
+Held since 0.7.2 (GitHub issue 106): swe_prm (the Allsvenskan, 16 from the real 2008 season). tools/recomp/league_sizes.py GROWN gives it a cap of 16: create_table 0x890430 allocates the rows of the count (push 0x33a at 0x89043b becomes rt_league_table_bytes), and the wrap of create_schedule 0x88feb0 (season_sizes.c) adds 4 rounds to its 26 dates (D at 0x88feea) as the 3. Liga does. Test: tests/seasons/swe_prm_run.py.
 
 Also not held, for other reasons:
 

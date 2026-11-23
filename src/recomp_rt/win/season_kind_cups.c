@@ -79,9 +79,7 @@ static int apply_row(uint32_t table, int n, const SeasonCupRow *row)
 /* The season whose format a cup takes (module comment). */
 static int cup_season(uint32_t cup)
 {
-    if (!season_changing_rules()) return season_start_year();
-    int y = (int16_t)rd16(g_mem, cup + CUP_YEAR);
-    return y >= SEASON_FIRST_YEAR && y <= SEASON_LAST_YEAR ? y : season_start_year();
+    return season_rule_year((int16_t)rd16(g_mem, cup + CUP_YEAR));
 }
 
 /* After create_round_table of a cup: self is the cup, stage and count_ptr are its first two arguments, the table

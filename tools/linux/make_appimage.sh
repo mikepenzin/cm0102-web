@@ -13,6 +13,9 @@
 #   --out    output folder. Default: build/linux in the repo.
 #   --smoke  also run tests/smoke/smoke_run.py in the container (classic mode, SDL dummy drivers)
 #            against the reference pictures in this folder.
+#
+# LINUX_BUILD_VOLUME names the Docker volume of the build folder (default cm0102-linux-build), so that two
+# checkouts can build at the same time.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -46,7 +49,7 @@ MANIFEST="$(cd "$(dirname "$MANIFEST")" && pwd)/$(basename "$MANIFEST")"
 mkdir -p "$OUT"; OUT="$(cd "$OUT" && pwd)"
 VERSION="$(sed -n 's/^project([^)]*VERSION \([0-9][0-9.]*\).*/\1/p' "$REPO/CMakeLists.txt" | head -n 1)"
 
-MOUNTS=(-v "$REPO:/src:ro" -v "$GAME:/game:ro" -v "$OUT:/out" -v "$MANIFEST:/manifest.tsv:ro" -v cm0102-linux-build:/build)
+MOUNTS=(-v "$REPO:/src:ro" -v "$GAME:/game:ro" -v "$OUT:/out" -v "$MANIFEST:/manifest.tsv:ro" -v "${LINUX_BUILD_VOLUME:-cm0102-linux-build}:/build")
 [ -n "$SMOKE" ] && MOUNTS+=(-v "$(cd "$SMOKE" && pwd):/smoke-ref:ro")
 docker run --rm --platform linux/amd64 "${MOUNTS[@]}" -e VERSION="$VERSION" -e SMOKE="${SMOKE:+1}" \
     ubuntu:22.04 bash /src/tools/linux/in_container.sh

@@ -75,8 +75,10 @@ static void check_defaults(void)
     CHECK(options_bool(OPT_FOREIGN_COLOURS) == 1);
     CHECK(options_bool(OPT_FULL_PLAYER_SEARCH) == 0);
     CHECK(options_bool(OPT_CHANGING_RULES) == 1);
-    CHECK(options_enum(OPT_DATABASE) == DATABASE_3968);
-    CHECK(!strcmp(options_string(OPT_DATABASE), "3.9.68"));
+    CHECK(options_bool(OPT_ONLINE_PLAY) == 1);
+    CHECK(options_bool(OPT_SQUAD_NUMBERS_99) == 0);
+    CHECK(options_enum(OPT_DATABASE) == DATABASE_3960);
+    CHECK(!strcmp(options_string(OPT_DATABASE), "3.9.60"));   /* item 11 of 0.6.1: the original data */
     CHECK(options_enum(OPT_SEASON) == 0 && !strcmp(options_string(OPT_SEASON), "2001/02"));
 }
 
@@ -105,8 +107,12 @@ int main(void)
     CHECK(strstr(get(), "full_player_search = on makes the player search list every player") != NULL);
     CHECK(strstr(get(), "\nchanging_rules = on\n") != NULL);
     CHECK(strstr(get(), "changing_rules = on lets the rules of each league and cup change each July") != NULL);
+    CHECK(strstr(get(), "\nonline_play = on\n") != NULL);
+    CHECK(strstr(get(), "\nsquad_numbers_99 = off\n") != NULL);
+    CHECK(strstr(get(), "squad_numbers_99 = on lets a new game keep database squad numbers") != NULL);
+    CHECK(strstr(get(), "online_play = on shows online games in the game list") != NULL);
     CHECK(strstr(get(), "\nseason = 2001/02\n") != NULL);
-    CHECK(strstr(get(), "season = the season of a new game, 2001/02 to 2025/26.") != NULL);
+    CHECK(strstr(get(), "season = the season of a new game, 2001/02 to 2026/27.") != NULL);
     static char first[16384];
     snprintf(first, sizeof first, "%s", get());
     options_load(path);                         /* a second start changes nothing */
@@ -181,6 +187,17 @@ int main(void)
     options_load(path);
     CHECK(options_bool(OPT_FULL_PLAYER_SEARCH) == 0);
 
+    /* 5b2. online_play (0.7.0 slice 4): on by default, off when the file says so. */
+    put("online_play = off\n");
+    options_load(path);
+    CHECK(options_bool(OPT_ONLINE_PLAY) == 0);
+
+    /* 5b3. game_password (0.7.0 slice 6): empty by default, the text of the file when it has one. */
+    CHECK(options_string(OPT_GAME_PASSWORD)[0] == 0);
+    put("game_password = Sunday 7\n");
+    options_load(path);
+    CHECK(!strcmp(options_string(OPT_GAME_PASSWORD), "Sunday 7"));
+
     /* 5c. changing_rules (0.6.0 slice 11): on by default, off when the file says so. A bad word keeps on. */
     put("changing_rules = off\n");
     options_load(path);
@@ -189,7 +206,7 @@ int main(void)
     options_load(path);
     CHECK(options_bool(OPT_CHANGING_RULES) == 1);
 
-    /* 5d. season (0.6.0 slice 13): the 25 seasons; a bad word keeps 2001/02. The Choose Season screen writes it. */
+    /* 5d. season (0.6.0 slice 13): the 26 seasons; a bad word keeps 2001/02. The Choose Season screen writes it. */
     put("season = 2010/11\n");
     options_load(path);
     CHECK(options_enum(OPT_SEASON) == 9 && !strcmp(options_string(OPT_SEASON), "2010/11"));
@@ -197,6 +214,9 @@ int main(void)
     options_load(path);
     CHECK(options_enum(OPT_SEASON) == 24);
     put("season = 2026/27\n");
+    options_load(path);
+    CHECK(options_enum(OPT_SEASON) == 25);
+    put("season = 2027/28\n");
     options_load(path);
     CHECK(options_enum(OPT_SEASON) == 0);
     put("season = 2010\n");
@@ -220,7 +240,7 @@ int main(void)
     CHECK(options_enum(OPT_DATABASE) == DATABASE_3960);
     put("database = 3.9.99\n");
     options_load(path);
-    CHECK(options_enum(OPT_DATABASE) == DATABASE_3968);
+    CHECK(options_enum(OPT_DATABASE) == DATABASE_3960);
     const char *before = "# my notes\nDatabase = 3.9.65\r\nsound = off\n";
     put(before);
     options_load(path);
@@ -246,7 +266,7 @@ int main(void)
     CHECK(options_enum(OPT_DATABASE) == DATABASE_CUSTOM && !strcmp(options_string(OPT_DATABASE), "folder:Zo\xc3\xab Update"));
     put("database = folder:\n");
     options_load(path);
-    CHECK(options_enum(OPT_DATABASE) == DATABASE_3968);
+    CHECK(options_enum(OPT_DATABASE) == DATABASE_3960);
     put("# x\ndatabase = 3.9.60\r\nsound = off\n");
     options_load(path);
     CHECK(options_set_enum(OPT_DATABASE, "folder:Upper Case") == 1);
@@ -324,7 +344,7 @@ int main(void)
         } else if (!strcmp(options_name(oid), "database")) {
             CHECK(options_set(oid, "folder:Mixed Case") == 1 && options_enum(oid) == DATABASE_CUSTOM);
         } else if (!strcmp(options_name(oid), "season")) {
-            CHECK(options_set(oid, "2025/26") == 1 && options_enum(oid) == 24);
+            CHECK(options_set(oid, "2026/27") == 1 && options_enum(oid) == 25);
         } else {
             CHECK(options_set(oid, "off") == 1 && options_bool(oid) == 0);
         }

@@ -14,9 +14,12 @@
 #include "host.h"
 #include "options.h"
 #include "cp1252.h"
+#include "display_scale.h"
 
+#include <SDL.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -47,10 +50,7 @@ void win_read_settings(void)
  * negative values keep their meaning ("none" or "from the owner"). */
 static uint32_t scale(uint32_t v, uint32_t screen, uint32_t classic, int far_edge)
 {
-    int32_t x = (int32_t)v;
-    if (screen == classic || x <= 0) return v;
-    if (far_edge) return (uint32_t)((int64_t)(x + 1) * screen / classic - 1);
-    return (uint32_t)((int64_t)x * screen / classic);
+    return ds_screen(v, screen, classic, far_edge);      /* display_scale.c, with its inverse (item 212) */
 }
 
 /* Scales the rectangle x1, y1, x2, y2 in the four stack arguments from argument `first`. */
@@ -116,6 +116,7 @@ static int from_comp_text(void)
 /* Widget create, thiscall: (flags, x1, y1, x2, y2, column, row, ...). */
 RT_WRAP(0055f990, widget_create)
 {
+    if (rd32(g_mem, cpu.esp) == 0x49d217u) screen_sweep_menu_item(rt_arg(13));   /* the item's text, pushed at 0x49d1e1 */
     columns_widget_before();
     foreign_widget_before();    /* the tactics screen's names (foreign.c) */
     int holiday = holiday_widget_before();
@@ -324,12 +325,60 @@ EMSCRIPTEN_KEEPALIVE int rt_web_progress(void)
 }
 #endif
 
+/* RECOMP_PROGRESS_LOG: a line on stderr at each new progress text, with the time since the program
+ * started, the calls of the box for the text before, and the time spent inside the box for them. Only
+ * the log changes (docs/research/2026-10-29-new-game-speed.md). */
+static int progress_log = -1;
+static char progress_text[64];
+static uint64_t progress_calls, progress_in_box, progress_since;
+
+static void progress_log_line(uint32_t text, uint32_t step, uint32_t total)
+{
+    char now[64] = "";
+    if (text) snprintf(now, sizeof now, "%s", (const char *)(g_mem + text));
+    uint64_t t = SDL_GetTicks64();
+    if (strcmp(now, progress_text) || !step) {
+        if (progress_text[0])
+            fprintf(stderr, "recomp: progress done \"%s\" %llu ms, %llu calls, %llu ms in the box\n", progress_text,
+                    (unsigned long long)(t - progress_since), (unsigned long long)progress_calls,
+                    (unsigned long long)progress_in_box);
+        fprintf(stderr, "recomp: progress at %llu ms \"%s\" %d of %d\n", (unsigned long long)t, now,
+                (int32_t)step, (int32_t)total);
+        snprintf(progress_text, sizeof progress_text, "%s", now);
+        progress_calls = progress_in_box = 0;
+        progress_since = t;
+    }
+    progress_calls++;
+}
+
+void progress_log_end(void)
+{
+    if (progress_log <= 0 || !progress_text[0]) return;
+    progress_log_line(0, 0, 0);
+    progress_text[0] = 0;
+}
+
+static void progress_box_draw(uint32_t text, uint32_t step, uint32_t total);
+
 RT_REPLACE(005e76f0, progress_box)
 {
     uint32_t text = rt_arg(0), step = rt_arg(1), total = rt_arg(2);
     progress_note(text);
     stage_step = (int32_t)step;
     stage_total = (int32_t)total;
+    if (progress_log < 0) progress_log = getenv("RECOMP_PROGRESS_LOG") != NULL;
+    if (progress_log) {
+        progress_log_line(text, step, total);
+        uint64_t t = SDL_GetTicks64();
+        progress_box_draw(text, step, total);
+        progress_in_box += SDL_GetTicks64() - t;
+        return;
+    }
+    progress_box_draw(text, step, total);
+}
+
+static void progress_box_draw(uint32_t text, uint32_t step, uint32_t total)
+{
     if (rd32(g_mem, 0xaebe0cu)) { rt_ret_cdecl(0); return; }        /* the display is off */
     rt_callback(0x68d520u, 0, NULL);                                /* the message pump */
     if (!text) { rt_ret_cdecl(0); return; }

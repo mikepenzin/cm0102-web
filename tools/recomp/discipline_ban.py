@@ -17,7 +17,8 @@ The load. The save 0x555dd0 writes every rule set of the 43 that exists (0x555f2
 (0x6699d0 at 0x55deac, je 0x55def0 at 0x55deb6). A season game with changing rules on from 2005/06 or before with
 Australia selected makes the body, and Australia moves to Asia on 1 January 2006 (season_intl.c). A later load left
 the body out and read the rest of discipline.dat out of step: a nation index of 1 entry for 16 world bans, the box
-at the next release, then a double free. rt_discipline_oceania_body makes the load take the body in that game.
+at the next release, then a double free. rt_discipline_oceania_body makes the load take the body in that game. The Oceania entry's creator has the same test
+(oceania_entry.py).
 
 The held ban (ruling_body..cpp 661). RulingBody::find_or_add_discipline_entry 0x7e82e0 (this in esi, the staff id
 in ebx) looks for the player's ban slot of this body (Discipline::get_slot_value 0x55cae0 at 0x7e8301). With none

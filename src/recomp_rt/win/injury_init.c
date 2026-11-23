@@ -23,6 +23,7 @@
  * clears. Only a season game has the fix: the base game keeps the code of the original. */
 #include "win.h"
 #include "season_names.h"
+#include "tier_a.h"
 
 #include <stdio.h>
 
@@ -48,9 +49,14 @@ RT_WRAP(0062cf70, injury_init_records)
 }
 
 /* Injury::add_injury 0x62d250, thiscall, 8 arguments (ret 0x20 at 0x62dc8f). The staff is the third argument
- * (0x62d25a). */
+ * (0x62d25a). The Tier A switch (tier_a.c) gives no new injury after the game is made: it returns -1 as
+ * 0x62dc82 does. No caller reads eax (0x62bc8e, 0x62c28f, 0x62e69d, 0x62eb73, 0x7a44c9, 0x7a44ff, 0x7e5f32). */
 RT_WRAP(0062d250, injury_add_injury)
 {
+    if (tier_a_in_play()) {
+        rt_ret_stdcall(0xffffffffu, 8);
+        return;
+    }
     if (!in_init) {
         o_0062d250();
         return;

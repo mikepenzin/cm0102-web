@@ -43,9 +43,18 @@ int season_cups_calendar(const char *file)
     return atoi(r->real_season) == r->season + 1;
 }
 
+/* The row of an edition: a calendar-year cup (its first row holds the year after its season) row Y - 1, any other
+ * cup row Y. An Irish cup while the calendar move is on takes the row of its real season (season_rules_row_of, gap row
+ * 2 of 0.7.2: its rows from 2003/04 hold calendar years). */
+static const SeasonRule *edition_row(const char *file, int edition)
+{
+    if (season_rules_moved(file)) return season_rules_row_of(file, edition);
+    return row_of(file, edition - season_cups_calendar(file));
+}
+
 int season_cups_held(const char *file, int edition)
 {
-    const SeasonRule *r = row_of(file, edition - season_cups_calendar(file));
+    const SeasonRule *r = edition_row(file, edition);
     if (!r) return -1;
     return r->clubs != SEASON_RULE_NOT_HELD && strcmp(r->format, "not_held") != 0;
 }

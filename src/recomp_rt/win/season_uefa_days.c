@@ -26,27 +26,6 @@ static void add_days(int *y, int *m, int *d, int n)        /* m 1 to 12 */
     season_from_day_of_year(*y, doy, m, d);
 }
 
-/* Days from 1 January 1970 (month 1 to 12), and back (H. Hinnant's civil calendar algorithms, as
- * season_uefa_ko_lookup.c). */
-static long abs_day(int y, int m, int d)
-{
-    y -= m <= 2;
-    long era = (y >= 0 ? y : y - 399) / 400;
-    long yoe = y - era * 400, doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
-    return era * 146097 + yoe * 365 + yoe / 4 - yoe / 100 + doy - 719468;
-}
-
-static void from_abs_day(long z, int *y, int *m, int *d)
-{
-    z += 719468;
-    long era = (z >= 0 ? z : z - 146096) / 146097, doe = z - era * 146097;
-    long yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365, doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    long mp = (5 * doy + 2) / 153;
-    *d = (int)(doy - (153 * mp + 2) / 5 + 1);
-    *m = (int)(mp < 10 ? mp + 3 : mp - 9);
-    *y = (int)(yoe + era * 400 + (*m <= 2));
-}
-
 void season_weekday_date(int y, int m, int d, int wd, int *oy, int *om, int *od)
 {
     int mm = m + 1, k = ((weekday_of(y, mm, d) - wd) % 7 + 7) % 7;
@@ -57,20 +36,45 @@ void season_weekday_date(int y, int m, int d, int wd, int *oy, int *om, int *od)
 
 int season_fifa_meets(int y, int m, int d)
 {
-    int doy = season_day_of_year(y, m, d), prev = -100, next = 1000;
+    int doy = season_day_of_year(y, m, d), prev = -100, next = 1000, days[SEASON_FIFA_YEAR_MAX];
     for (int dy = -1; dy <= 1; dy++) {      /* the FIFA days of the year and those beside it, as days of year y */
         int yy = y + dy, base = dy < 0 ? -days_in(yy) : dy > 0 ? days_in(y) : 0;
-        for (int mm = 1; mm <= 12; mm++)
-            for (int want = 1; want <= 31; want++) {
-                int f = season_fifa_day(yy, mm, want);
-                if (!f) break;
-                int fd = base + season_day_of_year(yy, mm, f);
-                if (fd - doy >= -1 && fd - doy <= 1) return 1;
-                if (fd < doy && fd > prev) prev = fd;
-                if (fd > doy && fd < next) next = fd;
-            }
+        int n = season_fifa_year_days(yy, days, SEASON_FIFA_YEAR_MAX);
+        for (int i = 0; i < n; i++) {
+            int fd = base + days[i];
+            if (fd - doy >= -1 && fd - doy <= 1) return 1;
+            if (fd < doy && fd > prev) prev = fd;
+            if (fd > doy && fd < next) next = fd;
+        }
     }
     return next - prev <= 6;
+}
+
+/* The first leg on weekday 3 (Thursday) nearest day d of month m (1 to 12) of season, a week later while a leg
+ * meets a FIFA day (at most 4 weeks). */
+static void two_legs(int season, int m0, int d0, int *y, int *m, int *d)
+{
+    int mm;
+    season_weekday_date(season, m0 - 1, d0, 3, y, &mm, d);
+    *m = mm + 1;
+    long z = season_abs_day(*y, *m, *d);
+    for (int week = 0; week < 4; week++) {
+        int y2, m2, d2;
+        season_from_abs_day(z + 14, &y2, &m2, &d2);
+        if (!season_fifa_meets(*y, *m, *d) && !season_fifa_meets(y2, m2, d2)) return;
+        z += 7;
+        season_from_abs_day(z, y, m, d);
+    }
+}
+
+void season_uefa_cup_q2_day(int season, int *y, int *m, int *d) { two_legs(season, 8, 10, y, m, d); }
+
+void season_uefa_cup_r1_day(int season, int *y, int *m, int *d) { two_legs(season, 9, 14, y, m, d); }
+
+void season_uefa_cup_r1_draw(int season, int *y, int *m, int *d)
+{
+    season_uefa_cup_q2_day(season, y, m, d);
+    season_from_abs_day(season_abs_day(*y, *m, *d) + 15, y, m, d);
 }
 
 /* ---- The league phase (2024/25 on) ----
@@ -108,8 +112,8 @@ static const SeasonLeagueDay ECL_DAYS[3][6] = {
 /* The day of a date k years on (season_uefa_ko_lookup.c, carry). */
 static long carry(int y, int m, int d, int k)
 {
-    long z = abs_day(y, m, d) + 364L * k;
-    while (z - abs_day(y + k, m, d) < -3) z += 7;
+    long z = season_abs_day(y, m, d) + 364L * k;
+    while (z - season_abs_day(y + k, m, d) < -3) z += 7;
     return z;
 }
 
@@ -129,12 +133,12 @@ const SeasonLeagueDay *season_uefa_league_days(char comp, int season, int *weekd
         int y = LAST_PUBLISHED + base[i].year_off, m = base[i].month + 1, d = base[i].day;
         long z = carry(y, m, d, 1);
         if (season > LAST_PUBLISHED + 1) {
-            from_abs_day(z, &y, &m, &d);
+            season_from_abs_day(z, &y, &m, &d);
             z = carry(y, m, d, season - LAST_PUBLISHED - 1);
         }
         if (i && z < prev + 7) z = prev + 7;            /* the matchdays a week apart at least */
-        from_abs_day(z, &y, &m, &d);
-        while (season_fifa_meets(y, m, d)) z += 7, from_abs_day(z, &y, &m, &d);
+        season_from_abs_day(z, &y, &m, &d);
+        while (season_fifa_meets(y, m, d)) z += 7, season_from_abs_day(z, &y, &m, &d);
         later[c][i].day = d, later[c][i].month = m - 1, later[c][i].year_off = y - season;
         prev = z;
     }
@@ -212,4 +216,20 @@ const SeasonLeagueDay *season_uefa_group_days(int season, int days)
     for (size_t r = 0; r < sizeof EL_REAL / sizeof EL_REAL[0]; r++)
         if (EL_REAL[r].season == season) return EL_REAL[r].thu;
     return GROUP_DATES_6;
+}
+
+/* The real 2025 Club World Cup began on 14 June, four days after the June window's last day of 10 June (FIFA Club
+ * World Cup 2025, en.wikipedia.org "2025 FIFA Club World Cup", read 9 November 2026). The game moves each later
+ * edition's 14 June to its year, while the June FIFA days of the table and of the years after it (season_fifa_day)
+ * fall up to 14 June. A national qualifier then meets the edition's first round, or a tie that add_fixture 0x5aa680
+ * moves a few days to either side, and add_fixture moves the qualifier off its FIFA day as the weaker fixture
+ * (0x5aaa25, again at 0x5aaa38). */
+int season_cwc_after_window(int y, int first)
+{
+    int june = season_day_of_year(y, 6, 1), july = season_day_of_year(y, 7, 1);
+    if (first < june || first >= july) return first;
+    int doys[SEASON_FIFA_YEAR_MAX], n = season_fifa_year_days(y, doys, SEASON_FIFA_YEAR_MAX), end = -1;
+    for (int i = 0; i < n; i++)
+        if (doys[i] >= june && doys[i] < july && doys[i] > end) end = doys[i];
+    return end >= 0 && first < end + SEASON_CWC_AFTER_WINDOW ? end + SEASON_CWC_AFTER_WINDOW : first;
 }

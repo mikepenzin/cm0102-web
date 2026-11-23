@@ -7,7 +7,9 @@ Usage:
 
 --write writes docs/research/rules-0.6.0/databases-date-shifts.tsv (one row per known database: the decided
 shifts, then the measures), databases-date-shifts-last-rows.tsv (the competitions whose 2001 history row
-moves) and databases-date-shifts-careers.tsv (one bit per staff row: the careers that keep their years).
+moves), databases-date-shifts-careers.tsv (one bit per staff row: the careers that keep their years) and
+databases-date-shifts-nation-comps.tsv (the nation competitions whose rows need another shift than the other
+nation rows of their database).
 Without it the tool prints the rows. tools/seasons/make_dates_table.py makes the C table from them. The
 decisions and the evidence: docs/research/2026-10-17-season-date-shifts.md.
 
@@ -23,6 +25,13 @@ measures it from the data, by field, against the 3.9.68 data (the base game, who
   later, by club name and year (a measure only). The careers move with the birth shift; careers_kept lists the
   careers whose rows match the 3.9.68 rows of the same person better without the shift.
 - comp_history: club and nation competition history (+0x08), by competition, year and the first club.
+- nation_history: the nation competition history alone (nation_comp_history.dat), the same way (0.6.2 slice 7,
+  open items 20 and 39). The Update Team databases keep the nation rows at another offset than the club rows
+  in many databases from 2010/11 on: October 2023 keeps the World Cup of 2018 at 1996, two years earlier than
+  its club rows, and October 2014 one year later. April 2011 SIM and March 2012 SIM keep the real years.
+  A nation competition whose own best shift (at least NATION_COMP_MIN rows, NATION_COMP_SHARE of them) is
+  another than the shift of its database gets a row of its own (World Cup and Euros of April 2015, April 2016
+  and October 2015).
 - staff_comp_history: the award history (+0x08), by award, year and the winner's names.
 - comp_history and last rows: when the best shift of the competition history is 0, the last champions sit in
   the 2001 row; updated_last_rows names the competitions whose 2001 row moves.
@@ -47,6 +56,7 @@ SIGS = os.path.join(RULES, "databases-signatures.tsv")
 OUT = os.path.join(RULES, "databases-date-shifts.tsv")
 OUT_LAST = os.path.join(RULES, "databases-date-shifts-last-rows.tsv")
 OUT_KEEP = os.path.join(RULES, "databases-date-shifts-careers.tsv")
+OUT_NATION = os.path.join(RULES, "databases-date-shifts-nation-comps.tsv")
 
 SIZES = {0: 0x245, 1: 0x245, 2: 0x3a, 3: 0xc6, 4: 0x122, 5: 0x4e, 6: 0x9d, 7: 0x2b, 9: 0x44, 10: 0x46,
          11: 0x65, 12: 0x6b, 13: 0x3c, 14: 0x3c, 15: 0x3c, 16: 0x6b, 17: 0x11, 18: 0x3a, 19: 0x1a, 20: 0x1a,
@@ -59,6 +69,8 @@ CHECKS = (("club", "English Premier Division"), ("club", "European Champions Cup
           ("club", "Italian Serie A"), ("club", "Spanish First Division"), ("nation", "FIFA World Cup"),
           ("nation", "European Football Championship"))
 OFFICIAL = ("official version", "official base")
+NATION_COMP_MIN = 3    # matched rows that a shift of one nation competition needs
+NATION_COMP_SHARE = 0.6   # renamed nations (West Germany, Soviet Union) do not match: about 70 % of the rows do
 KEEP_MIN = 1000       # fewer kept careers than this are not listed: they all shift with the birth shift
 
 
@@ -261,6 +273,17 @@ def measure(ref, d):
                 alld |= {(y, (name, w)) for y, w in rows}
     res["comp_history"] = best_shift(allr, alld)
     res["ref_club"], res["ref_nation"] = rc, rn
+    # The nation rows alone, and each nation competition alone.
+    names = {v[0]: v[1] for v in rn.values()}
+    nr, nd, res["nation_comps"] = set(), set(), {}
+    for cid, (name, rows) in res["nation"].items():
+        if name in names:
+            r = {(y, (name, w)) for y, w in names[name]}
+            dd = {(y, (name, w)) for y, w in rows}
+            nr |= r
+            nd |= dd
+            res["nation_comps"][cid] = (name, best_shift(r, dd))
+    res["nation_history"] = best_shift(nr, nd)
 
     ra, da = award_rows(ref), award_rows(d)
     alla, alld = set(), set()
@@ -300,7 +323,7 @@ def decide(sig, m):
     season = int(sig["data_season"][:4])
     if sig["role"] in OFFICIAL:
         return dict(birth=0, joined=0, contract=0, officials=0, staff_history=0, comp_history=0, last_rows=0,
-                    staff_comp_history=0, careers_kept=0), []
+                    staff_comp_history=0, careers_kept=0, nation_history=0), [], []
     contract = season - FIRST
     v = dict(birth=m["birth"][0] or 0, contract=contract, officials=m["officials"][0] or 0,
              staff_comp_history=0)
@@ -316,7 +339,16 @@ def decide(sig, m):
     if v["comp_history"] == 0 and contract > 0:
         last = updated_last_rows(m)
     v["last_rows"] = contract if last else 0
-    return v, last
+    # The nation rows: their own shift where the competition history moves at all (the databases from 2010/11),
+    # and a row for each nation competition whose own shift is another.
+    n = m["nation_history"]
+    v["nation_history"] = n[0] if v["comp_history"] and n[0] is not None else v["comp_history"]
+    comps = []
+    if v["comp_history"]:
+        for cid, (name, (s, k, share)) in sorted(m["nation_comps"].items()):
+            if s is not None and s != v["nation_history"] and k >= NATION_COMP_MIN and share >= NATION_COMP_SHARE:
+                comps.append((cid, s, name))
+    return v, last, comps
 
 
 def signatures():
@@ -348,11 +380,12 @@ def fmt(x):
 
 
 DECIDED = ["birth", "joined", "contract", "officials", "staff_history", "careers_kept", "comp_history",
-           "last_rows", "staff_comp_history"]
-MEASURED = ["birth", "joined", "officials", "staff_history", "comp_history", "staff_comp_history"]
+           "last_rows", "staff_comp_history", "nation_history"]
+MEASURED = ["birth", "joined", "officials", "staff_history", "comp_history", "staff_comp_history",
+            "nation_history"]
 
 
-def last_champions(m, v, last):
+def last_champions(m, v, last, nation):
     """The last row of the CHECKS competitions after the shift: 'name year winner'."""
     out = []
     for kind, name in CHECKS:
@@ -363,7 +396,8 @@ def last_champions(m, v, last):
 
             def moved(year):
                 if v["comp_history"]:
-                    return year + v["comp_history"]
+                    return year + next((s for c, s, x in nation if c == cid), v["nation_history"]) \
+                        if kind == "nation" else year + v["comp_history"]
                 return year + v["last_rows"] if (year == LAST_ROW and cid in last) else year
             y, w = max((moved(a), b) for a, b in rows)
             out.append(f"{name} {y} {w}")
@@ -394,13 +428,15 @@ def main(argv):
     cols += ["contract_years", "last_champions"]
     lines, last_lines = ["\t".join(cols)], ["database\tcompetition_ids"]
     keep_lines = ["database\tstaff_rows\tkept_bitmap"]
+    nation_lines = ["database\tcompetition_id\tshift\tcompetition"]
     for r, p in found:
         m = measure(ref, Data(p))
-        v, last = decide(r, m)
+        v, last, nation = decide(r, m)
         row = [r["database"], r["data_season"], r["role"]] + ["%d" % v[k] for k in DECIDED]
         for k in MEASURED:
             row += fmt(m[k])
-        row += [" ".join(map(str, m["contract_years"])), last_champions(m, v, last)]
+        row += [" ".join(map(str, m["contract_years"])), last_champions(m, v, last, nation)]
+        nation_lines += [f"{r['database']}\t{cid}\t{s}\t{name}" for cid, s, name in nation]
         lines.append("\t".join(row))
         if v["careers_kept"]:
             bits = bytearray((m["staff_count"] + 7) // 8)
@@ -421,7 +457,9 @@ def main(argv):
             f.write("\n".join(last_lines) + "\n")
         with open(OUT_KEEP, "w", encoding="utf-8") as f:
             f.write("\n".join(keep_lines) + "\n")
-        print(f"wrote {OUT}, {OUT_LAST} and {OUT_KEEP}")
+        with open(OUT_NATION, "w", encoding="utf-8") as f:
+            f.write("\n".join(nation_lines) + "\n")
+        print(f"wrote {OUT}, {OUT_LAST}, {OUT_KEEP} and {OUT_NATION}")
     return 0
 
 

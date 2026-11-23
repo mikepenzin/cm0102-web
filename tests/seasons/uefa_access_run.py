@@ -21,6 +21,19 @@ season's rules). The runs:
     2013    Autumn 2013: the Super Cup of 2013 at the row's stadium in Prague (the log line of
             season_uefa_super_cup.c, written when the game is made); the run ends after 600 s (the World Cup box
             of a moved season, world_cup.cpp 1438, slice 27, stops a 2013 start in December)
+    2005    September 2005 with no euro.cfg, as the shipped season databases are (0.6.2 open item 100): the
+            game saves 50 days after the start (August 2005); Leeds United, fourth of England in the game's own
+            Data/euro.cfg (the 2001/02 entrants) and in the second tier in 2005/06, is no Champions League entrant
+            (the history checker's entrants)
+    2005own September 2005 with its own euro.cfg: England's Champions League entrants are the first four of the
+            file (Chelsea, Arsenal, Manchester United, Liverpool: the original's format of 2005/06 gives England
+            four places; without the file Newcastle United, third in the database's last table, takes one)
+    2025tur December 2025, Select All (0.6.2 open item 222, GitHub issue 94): the game saves 50 days after the start
+            (September 2025). Turkey's entrants follow its euro.cfg block "*Turkey" though the season game names the nation
+            T\u00fcrkiye: Galatasaray and Fenerbah\u00e7e in the Champions League, Samsunspor and Be\u015fikta\u015f in the Europa
+            League (Galatasaray won the cup as well, so from 2015/16 the cup place goes to the best league club with
+            no place, not to the cup runner-up Trabzonspor), Ba\u015fak\u015fehir in the Conference League (the real places
+            of 2025/26: https://en.wikipedia.org/wiki/2024%E2%80%9325_S%C3%BCper_Lig)
     repeat  September 2009, twice: the saves 60 days after the start (September 2009, after the qualifying
             rounds) are equal byte for byte; each run ends after 600 s (the same World Cup box in December 2009)
 The checks of the season runs: the jump ends with code 0 and shows no message box of the game; the log of
@@ -114,9 +127,7 @@ def run_load(program, game, work, season=2010, database="September 2010 ODB", da
     os.makedirs(user, exist_ok=True)
     shutil.copyfile(first, os.path.join(user, "uefa.sav"))
     shutil.copytree(os.path.join(work, "user", "Databases"), os.path.join(user, "Databases"))
-    fixtures.write_settings(user, "classic", [])
-    with open(os.path.join(user, "settings.txt"), "a") as f:
-        f.write(f"database = folder:{os.path.basename(db)}\nfaster_days = on\n")
+    fixtures.write_settings(user, "classic", [("database", f"folder:{os.path.basename(db)}"), ("faster_days", "on")])
     report = os.path.join(again, "report.tsv")
     # The loaded game goes on with its holiday at once and ends when the season jump ends: no wait for the first
     # news (its 120 s limit is shorter than the jump on a loaded machine).
@@ -180,6 +191,73 @@ LABELS_2009 = [("european_cup", 220, "Play-off Round"), ("uefa_cup", 220, "Play-
                ("uefa_cup", 270, "Third Qualifying Round")]
 LABELS_2018 = LABELS_2009 + [("european_cup", 240, "Preliminary Round"), ("european_cup", 230, "Preliminary Round Final"),
                              ("uefa_cup", 240, "Preliminary Round")]
+def run_2005(program, game, work, own=False):
+    """Open item 100: a season database with no euro.cfg of its own does not take the 2001/02 euro.cfg of the
+    game's Data (UefaSeeding::collect_european_clubs 0x904040, apply_euro_cfg_order 0x9059e0 at 0x9041ec). own:
+    the database keeps its euro.cfg, and the game takes its entrants."""
+    import smoke_run
+    db = os.path.join(work, "db", "September 2005")
+    shutil.copytree(os.path.join(DB, "September 2005 Helvete"), db,
+                    ignore=lambda d, names: [] if own else [n for n in names if n.lower() == "euro.cfg"])
+    code, _ = rrc.run(program, game, 2005, 2005, db, ["England"], [], work, 7200, None,
+                      {"RECOMP_SAVE_AFTER_DAYS": "50"})
+    save = os.path.join(work, "user", smoke_run.SAVE_NAME)
+    if code != 0 or not os.path.exists(save):
+        return [f"2005: no save after 50 days (code {code}, {work})"]
+    checker = os.path.join(HERE, "future", "history_check.py")
+    import subprocess
+    subprocess.run([sys.executable, "-I", checker, save, "--out", work, "--label", "c2005"], capture_output=True)
+    entrants = os.path.join(work, "c2005.entrants.tsv")
+    if not os.path.exists(entrants):
+        return [f"2005: the history checker wrote no entrants ({work})"]
+    with open(entrants, encoding="utf-8") as f:
+        rows = [line.rstrip("\n").split("\t") for line in f][1:]
+    cl = [r for r in rows if len(r) > 7 and re.search(r"Champions (League|Cup)", r[1]) and r[7] == "England"]
+    fails = [] if cl else [f"2005: no English Champions League entrant in the save ({work})"]
+    if any(r[6] == "Leeds United" for r in cl):
+        fails.append("2005: Leeds United is a Champions League entrant (the 2001/02 euro.cfg of the game's Data)")
+    want = {"Chelsea", "Arsenal", "Manchester United", "Liverpool"}
+    if own and {r[6] for r in cl} != want:
+        fails.append(f"2005own: England's entrants {sorted({r[6] for r in cl})}, not those of euro.cfg {sorted(want)}")
+    return fails
+
+
+def run_2025(program, game, work):
+    """Open item 222: the euro.cfg block of a renamed nation (Turkey, T\u00fcrkiye from 2022) and the cup place of a cup
+    winner with a league place (from 2015/16 the best league club with no place)."""
+    import smoke_run
+    # Select All: with England alone the Turkish league is not loaded, and the seeding takes other Turkish clubs.
+    code, _ = rrc.run(program, game, 2025, 2025, os.path.join(DB, "December 2025"), ["all"], [], work, 7200, None,
+                      {"RECOMP_SAVE_AFTER_DAYS": "50"})
+    save = os.path.join(work, "user", smoke_run.SAVE_NAME)
+    if code != 0 or not os.path.exists(save):
+        return [f"2025tur: no save after 50 days (code {code}, {work})"]
+    checker = os.path.join(HERE, "future", "history_check.py")
+    import subprocess
+    subprocess.run([sys.executable, "-I", checker, save, "--out", work, "--label", "c2025"], capture_output=True)
+    entrants = os.path.join(work, "c2025.entrants.tsv")
+    if not os.path.exists(entrants):
+        return [f"2025tur: the history checker wrote no entrants ({work})"]
+    with open(entrants, encoding="utf-8") as f:
+        rows = [line.rstrip("\n").split("\t") for line in f][1:]
+    # The editions of 2025/26: their first match day is in the summer of 2025 (column first).
+    tur = [r for r in rows if len(r) > 7 and r[7] in ("T\u00fcrkiye", "Turkey") and r[3] >= "2025-06"]
+    got = {cup: {r[6] for r in tur if re.search(pat, r[1])}
+           for cup, pat in (("CL", r"Champions League"), ("EL", r"Europa League"), ("ECL", r"Conference League"))}
+    want = {"CL": {"Galatasaray SK", "Fenerbah\u00e7e SK"}, "EL": {"Samsunspor", "Besiktas JK"}, "ECL": {"Basaksehir FK"}}
+    fails = []
+    for cup in ("CL", "EL"):
+        if not want[cup] <= got[cup]:
+            fails.append(f"2025tur: Turkey's {cup} entrants {sorted(got[cup])}, want {sorted(want[cup])}")
+    if "Sivasspor" in got["CL"] | got["EL"] | got["ECL"]:
+        fails.append("2025tur: Sivasspor has a European place (it was not in the top five of 2024/25)")
+    if "Trabzonspor" in got["CL"] | got["EL"]:
+        fails.append("2025tur: Trabzonspor, the cup runner-up, has a Champions League or Europa League place")
+    if not want["ECL"] <= got["ECL"]:
+        fails.append(f"2025tur: Turkey's ECL entrants {sorted(got['ECL'])}, want {sorted(want['ECL'])}")
+    return fails
+
+
 RUNS = {
     "2010": run_season("2010", 2010, "September 2010 ODB", 76, LABELS_2009, None, "250 260 270 220"),
     "2018": run_season("2018", 2018, "October 2018", 79, LABELS_2018, 4, "240 230 250 260 270 220"),
@@ -187,6 +265,9 @@ RUNS = {
     "load2018": load_run(2018, "October 2018", 10, "load2018"),
     "2013": run_2013,
     "repeat": run_repeat,
+    "2005": run_2005,
+    "2005own": lambda program, game, work: run_2005(program, game, work, own=True),
+    "2025tur": run_2025,
 }
 
 

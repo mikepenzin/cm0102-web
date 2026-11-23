@@ -334,6 +334,7 @@ static void log_fixture_years(const char *when)
  * or any fixture while a constructor runs with SEASON_CUPS_NEVER, gives a line "fixture added", which
  * tests/seasons/cup_breaks_run.py does not allow. The call runs the original through fixture_season_end.c (O288). */
 void season_playoffs_fixture_log(uint32_t f);
+void season_split_add_fixture(void);    /* item 288: a section match never on the day of the split */
 void o_005aa680(void);
 RT_WRAP(005aa680, cup_breaks_add_fixture)
 {
@@ -349,7 +350,24 @@ RT_WRAP(005aa680, cup_breaks_add_fixture)
                     rd32(g_mem, cpu.esp),
                     never_obj ? " in a constructor that waits for ever" : "");
     }
+    season_split_add_fixture();
+    if (rt_unwinding) return;
     fixture_season_end_add_fixture();
+}
+
+/* Cup::create_tie_fixtures 0x51cb90, thiscall (round, tie or -1, defer) ret 0xc: the snap reads the round record
+ * of the legs it stores (item 207, season_fifa_tie_begin). It does not call itself, but a nested call keeps the
+ * outer cup and round. */
+void season_fifa_tie_begin(uint32_t cup, int round, uint32_t *saved_cup, int *saved_round);
+void season_fifa_tie_end(uint32_t cup, int round);
+void o_0051cb90(void);
+RT_WRAP(0051cb90, cup_create_tie_fixtures)
+{
+    uint32_t outer_cup;
+    int outer_round;
+    season_fifa_tie_begin(cpu.ecx, (int16_t)rt_arg(0), &outer_cup, &outer_round);
+    o_0051cb90();
+    season_fifa_tie_end(outer_cup, outer_round);
 }
 
 static void breaks_new_game(int start_year)

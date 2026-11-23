@@ -10,11 +10,25 @@
 2015	bench	ita_ser_a (Serie A), row ita-240: game 9, table 12 (12)
 2015	bench	new_suruga_bank (Suruga Bank Championship), row club-world-527: game 7, table 9 (9)
 2015	bench	world_club_champ (FIFA Club World Cup), row club-world-268: game 7, table 12 (12)
+2015	club_list	Argentine Premier Division: 20 of 30 listed clubs that the database holds (30 listed), 0 other clubs, 20 in all; not in it: Arsenal de Sarandí, Atlético Rafaela, Atlético Tucumán, Colón de Santa Fé, Defensa y Justicia, Godoy Cruz Antonio Tomba, Huracán, Olimpo de Bahía Blanca, Patronato de Paraná, Quilmes; others: -
+2015	club_list	Argentine Second Division: 22 of 22 listed clubs that the database holds (22 listed), 3 other clubs, 25 in all; not in it: -; others: Arsenal de Sarandí, Atlético Tucumán, Colón de Santa Fé
+2015	club_list	Brazilian National Third Division: 20 of 20 listed clubs that the database holds (20 listed), 36 other clubs, 56 in all; not in it: -; others: AER Auritânia Foz do Iguaçu, Associação Atlética Anapolina, Associação Atlética Aparecidense, Associação Atlética Caldense, Associação Atlética Coruripe, Bangu Atlético Clube, Campinense Clube, Central Sport Club, Clube Atlético Metropolitano, Clube Recreativo e Atlético Catalano, Colo-Colo de Futebol e Regatas, Duque de Caxias Futebol Clube, EC Internacional , Esporte Clube Comercial, Esporte Clube Cruzeiro, Esporte Clube Novo Hamburgo, Esporte Clube XV de Novembro, Estanciano Esporte Clube, Goianésia Esporte Clube, Grêmio Osasco Audax, Guarani de Juazeiro, Ituano Futebol Clube, Mirassol Futebol Clube, Moto Club de São Luís, Nacional Futebol Clube (AM), Náutico Futebol Clube, Operário Futebol Club Ltda., Paulista Futebol Clube, Serrano Sport Club, Sociedade Esportiva do Gama, Sociedade Imperatriz de Desportos, Treze Futebol Clube, União Recreativa dos Trabalhadores, Veranópolis Esporte Clube Recreativo e Cultural, Vilhena Esporte Clube, Villa Nova Atlético Clube
+2015	club_list	Croatian First Division: 10 of 10 listed clubs that the database holds (10 listed), 6 other clubs, 16 in all; not in it: -; others: NK Grobnican Cavle, NK Junak Sinj, NK Pomorac Kostrena, NK Solin, NK Val Kastel Stari, NK Zelina
+2015	club_list	Croatian Second Division North: 11 of 11 listed clubs that the database holds (12 listed), 5 other clubs, 16 in all; not in it: -; others: NK HASK Zagreb, NK Mladost Zdralovi, NK Mosor Zrnovnica, NK Primorac 1929 Stobrec, NK Slavonija Pozega
+2015	club_list	Danish First Division: 12 of 12 listed clubs that the database holds (12 listed), 4 other clubs, 16 in all; not in it: -; others: Akademisk Boldklub, BK Frem af 1886, BK Marienlyst, Brønshøj BK
+2015	club_list	Danish Second Division: 16 of 24 listed clubs that the database holds (24 listed), 0 other clubs, 16 in all; not in it: AB Tårnby, Aarhus Fremad, Akademisk Boldklub, BK Frem af 1886, BK Marienlyst, Brønshøj BK, Dalum IF, Middelfart G&BK; others: -
+2015	club_list	Greek National A Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: APO Levadiakos, Panionios GSS; others: -
+2015	club_list	Greek National B Division: 14 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 14 in all; not in it: AO Acharnaikos, Anagennisi Karditsas, GS Panegialios, Kallithea; others: -
+2015	club_list	Italian Serie A: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Bologna, Frosinone; others: -
+2015	club_list	Italian Serie B: 20 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 20 in all; not in it: Como, Salernitana; others: -
+2015	club_list	Japanese J-League 1: 16 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 16 in all; not in it: Avispa Fukuoka, Júbilo Iwata; others: -
+2015	club_list	Japanese J-League 2: 12 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 12 in all; not in it: Ehime FC, FC Gifu, Kamatamare Sanuki, Mito HollyHock, Renofa Yamaguchi, Roasso Kumamoto, ThespaKusatsu Gunma, Tokushima Vortis, Tokyo Verdy 1969, Yokohama FC; others: -
+2015	club_list	Northern Irish League First Division: 10 of 14 listed clubs that the database holds (14 listed), 0 other clubs, 10 in all; not in it: Annagh United, Donegal Celtic, Lisburn Distillery, Loughgall; others: -
+2015	club_list	Northern Irish League Premier Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Carrick Rangers, Warrenpoint Town; others: -
+2015	club_list	Norwegian Premier Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: SK Brann, Sogndal IL; others: -
 2015	clubs	arg_prm (Primera División), row arg-usa-15: game 20, table 30 (30)
 2015	clubs	arg_second (Primera B Nacional), row arg-usa-42: game 25, table 22 (22)
 2015	clubs	asia_club_champ (AFC Champions League), row club-world-279: game 16, table 32 (32)
-2015	clubs	bel_first (Belgian Pro League), row hol-bel-190: game 18, table 16 (16)
-2015	clubs	bel_second (Belgian Second Division), row hol-bel-191: game 18, table 17 (17)
 2015	clubs	bel_third (Belgian Third Division), row hol-bel-192: game 16, table 37 (37 (A 18, B 19))
 2015	clubs	bra_cup (Copa do Brasil), row bra-150: game 71, table 86 (86)
 2015	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-96: game 7, table 20 (20)
@@ -28,16 +42,13 @@
 2015	clubs	conmebol_liber (Copa Libertadores), row club-world-270: game 4, table 38 (38)
 2015	clubs	cro_a1 (Prva HNL), row gre-pol-cro-339: game 16, table 10 (10)
 2015	clubs	cro_a2a (Druga HNL), row gre-pol-cro-366: game 16, table 12 (12)
-2015	clubs	den_first (Danish 1st Division), row den-swe-87: game 16, table 12 (12)
 2015	clubs	den_second (Danish 2nd Divisions), row den-swe-88: game 16, table 24 (24)
 2015	clubs	euro_champ (UEFA European Championship), row int-continental-155: game 0, table 24 (24)
 2015	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-156: game 0, table 53 (53)
-2015	clubs	fra_third (Championnat National), row fra-130: game 20, table 18 (18)
 2015	clubs	goldcup (Copa América Centenario), row int-continental-165: game 0, table 16 (16)
 2015	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-15: game 4, table 34 (34)
 2015	clubs	gre_prm (Super League Greece), row gre-pol-cro-42: game 14, table 16 (16)
 2015	clubs	gre_second (Football League), row gre-pol-cro-69: game 14, table 18 (18)
-2015	clubs	hol_first (Eerste Divisie), row hol-bel-185: game 18, table 19 (19)
 2015	clubs	ita_c1_super (Supercoppa di Lega Pro), row ita-254: game 2, table 3 (3)
 2015	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-252: game 3, table 53 (53)
 2015	clubs	ita_cup (Coppa Italia), row ita-251: game 4, table 78 (78)
@@ -57,14 +68,13 @@
 2015	clubs	nor_prm (Tippeligaen), row nor-fin-142: game 14, table 16 (16)
 2015	clubs	oceania_nations (OFC Nations Cup), row int-continental-164: game 0, table 8 (8)
 2015	clubs	uefa_cup (UEFA Europa League), row uefa-117: game 158, table 191 (191 (158 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
-2015	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-174: game 50, table 54 (54 entrants)
+2015	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-174: game 48, table 54 (54 entrants)
 2015	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-175: game 0, table 40 (40)
 2015	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-173: game 24, table 12 (12)
 2015	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-176: game 5, table 11 (11 entrants)
 2015	clubs	world_club_champ (FIFA Club World Cup), row club-world-268: game 0, table 7 (7)
 2015	down	arg_prm (Primera División), row arg-usa-15: game 0 (+0 play-off places), table 1 (1 (worst average over four seasons))
 2015	down	arg_second (Primera B Nacional), row arg-usa-42: game 0 (+0 play-off places), table 1 (1)
-2015	down	bel_first (Belgian Pro League), row hol-bel-190: game 2 (+0 play-off places), table 1 (1 (16th); 15th has no play-off)
 2015	down	bel_second (Belgian Second Division), row hol-bel-191: game 2 (+1 play-off places), table 8 (8 to the First Amateur Division (reform); places 3 to 9 to First Division B)
 2015	down	bel_third (Belgian Third Division), row hol-bel-192: game 2 (+1 play-off places), table text (last of each group to the Second Amateur Division; 7th and below stay at tier 4 )
 2015	down	bra_nat_third (Campeonato Brasileiro Série C), row bra-96: game 2 (+0 play-off places), table 4 (4)
@@ -72,7 +82,6 @@
 2015	down	cro_a2b (Druga HNL South), row gre-pol-cro-393: game 2 (+0 play-off places), table na (n/a)
 2015	down	den_first (Danish 1st Division), row den-swe-87: game 3 (+0 play-off places), table 1 (1)
 2015	down	den_second (Danish 2nd Divisions), row den-swe-88: game 4 (+0 play-off places), table 2 (2)
-2015	down	eng_third (Football League Two), row eng-171: game 1 (+0 play-off places), table 2 (2)
 2015	down	ger_second (2. Bundesliga), row ger-184: game 4 (+0 play-off places), table 2 (2)
 2015	down	gre_second (Football League), row gre-pol-cro-69: game 2 (+0 play-off places), table 4 (4 (bottom four))
 2015	down	ita_ser_b (Serie B), row ita-241: game 4 (+0 play-off places), table 3 (3 direct + play-out 4th-last v 5th-last (two legs; not held if gap over 4 points)
@@ -82,6 +91,14 @@
 2015	down	jap_j1 (J1 League), row aus-jap-kor-204: game 2 (+0 play-off places), table 3 (3)
 2015	down	jap_j2 (J2 League), row aus-jap-kor-231: game 0 (+0 play-off places), table 1 (1; 21st v J3 runner-up in a promotion/relegation series)
 2015	down	nir_first (NIFL Championship 1), row wal-nir-irl-361: game 0 (+0 play-off places), table 3 (3 (pos 12,13,14))
+2015	meetings	bra_nat_first (Campeonato Brasileiro Série A), row bra-42: game 1, table 2
+2015	meetings	bra_nat_second (Campeonato Brasileiro Série B), row bra-69: game 1, table 2
+2015	meetings	cro_a1 (Prva HNL), row gre-pol-cro-339: game 2, table 4
+2015	meetings	cro_a2a (Druga HNL), row gre-pol-cro-366: game 2, table 3
+2015	meetings	den_first (Danish 1st Division), row den-swe-87: game 2, table 3
+2015	meetings	jap_j2 (J2 League), row aus-jap-kor-231: game 4, table 2
+2015	meetings	nir_first (NIFL Championship 1), row wal-nir-irl-361: game 4, table 2
+2015	meetings	nir_prm (NIFL Premiership), row wal-nir-irl-360: game 4, table 3
 2015	no_row	friendly (Friendly): no table row
 2015	no_row	record_utils ('B' International): no table row
 2015	no_row	record_utils (Reserve): no table row
@@ -121,6 +138,20 @@
 2015	playoffs	ita_ser_b (Serie B), row ita-241: game 0 up and 0 down play-off places, table 6 and 0 ('3rd to 8th, but only clubs within 14 points of the 3rd take part (2 to 6 clubs);')
 2015	playoffs	jap_j2 (J2 League), row aus-jap-kor-231: game 0 up and 0 down play-off places, table 4 and 0 ('3rd to 6th: single-match semi-finals and final at the higher-placed club; a draw')
 2015	playoffs	nor_first (OBOS-ligaen), row nor-fin-143: game 1 up and 0 down play-off places, table 4 and 0 ('3rd-6th single-leg knockout; winner v Tippeligaen 14th, two legs')
+2015	rounds	arg_second (Primera B Nacional), row arg-usa-42: game 25, table 21 (1 meetings, zones -, extra 0)
+2015	rounds	bra_nat_first (Campeonato Brasileiro Série A), row bra-42: game 19, table 38 (2 meetings, zones -, extra 0)
+2015	rounds	bra_nat_second (Campeonato Brasileiro Série B), row bra-69: game 19, table 38 (2 meetings, zones -, extra 0)
+2015	rounds	cro_a1 (Prva HNL), row gre-pol-cro-339: game 30, table 36 (4 meetings, zones -, extra 0)
+2015	rounds	cro_a2a (Druga HNL), row gre-pol-cro-366: game 30, table 33 (3 meetings, zones -, extra 0)
+2015	rounds	den_first (Danish 1st Division), row den-swe-87: game 30, table 33 (3 meetings, zones -, extra 0)
+2015	rounds	gre_prm (Super League Greece), row gre-pol-cro-42: game 26, table 30 (2 meetings, zones -, extra 0)
+2015	rounds	gre_second (Football League), row gre-pol-cro-69: game 26, table 34 (2 meetings, zones -, extra 0)
+2015	rounds	ita_ser_a (Serie A), row ita-240: game 34, table 38 (2 meetings, zones -, extra 0)
+2015	rounds	ita_ser_b (Serie B), row ita-241: game 38, table 42 (2 meetings, zones -, extra 0)
+2015	rounds	jap_j2 (J2 League), row aus-jap-kor-231: game 44, table 42 (2 meetings, zones -, extra 0)
+2015	rounds	nir_first (NIFL Championship 1), row wal-nir-irl-361: game 36, table 26 (2 meetings, zones -, extra 0)
+2015	rounds	nir_prm (NIFL Premiership), row wal-nir-irl-360: game 36, table 33 (3 meetings, zones -, extra 0)
+2015	rounds	nor_prm (Tippeligaen), row nor-fin-142: game 26, table 30 (2 meetings, zones -, extra 0)
 2015	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-527: game 3, table 6 (6)
 2015	up	aus_nsl (A-League), row aus-jap-kor-38: game 6 (+0 play-off places), table na (n/a)
 2015	up	bel_third (Belgian Third Division), row hol-bel-192: game 1 (+0 play-off places), table 2 (2 per group (top two) plus play-off winners (reform))

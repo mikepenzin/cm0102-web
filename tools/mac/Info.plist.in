@@ -14,6 +14,14 @@
     <key>LSApplicationCategoryType</key><string>public.app-category.sports-games</string>
     <key>LSMinimumSystemVersion</key><string>11.0</string>
     <key>NSHighResolutionCapable</key><true/>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key><string>io.github.maxevans60.cm0102-bosman-edition.invite</string>
+            <key>CFBundleURLSchemes</key><array><string>cm0102</string></array>
+            <key>CFBundleTypeRole</key><string>Viewer</string>
+        </dict>
+    </array>
     <key>NSHumanReadableCopyright</key><string>An unofficial fan project, not affiliated with Sports Interactive, SEGA, Eidos or Square Enix.</string>
 </dict>
 </plist>

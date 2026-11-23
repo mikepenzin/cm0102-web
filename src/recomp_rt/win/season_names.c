@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FORMAT 1
+#define FORMAT 2                    /* 0.6.1 item 2: the abbreviation column; format 1 (0.6.0) still loads */
 #define MAX_ROWS 100000
 #define MAX_BYTES (16u << 20)
 #define LONG_AT 4u                  /* record +4: long name, 52 bytes */
@@ -20,6 +20,8 @@
 #define NAME_LIMIT 50u              /* the longest long name: the limit of slice 16 (season_change_rename) */
 #define SHORT_AT 56u                /* record +56: short name, 27 bytes */
 #define SHORT_SIZE 27u
+#define ABBR_AT 0x53u               /* record +0x53: abbreviation, 4 bytes ("PRM"): Select Team shows it */
+#define ABBR_SIZE 4u
 #define COMP_TABLE 0xadadfcu        /* g_comp_object_table: Comp ** */
 #define COMP_SLOTS 0xadadf8u        /* its slot count, s32 */
 #define ENTRIES 0xb63d60u           /* the 35 league table entries, 0x48 bytes each: +0xc count, +0x10 array */
@@ -30,11 +32,13 @@
 typedef struct {
     int season, n;
     const char *file, *long_name, *short_name;
+    const char *abbr;               /* "" for a row that is not a league, and in a table of format 1 */
 } NameRow;
 
 static char *text;
 static NameRow *rows;
 static int nrows;
+static int last_season;            /* the latest season of a row (0 with no table) */
 
 static int fail(const char *path, int line, const char *why)
 {
@@ -44,6 +48,7 @@ static int fail(const char *path, int line, const char *why)
     text = NULL;
     rows = NULL;
     nrows = 0;
+    last_season = 0;
     return 0;
 }
 
@@ -89,6 +94,7 @@ int season_names_load(const char *path)
     text = NULL;
     rows = NULL;
     nrows = 0;
+    last_season = 0;
     FILE *f = host_fopen(path, "rb");
     if (!f) return 0;
     fseek(f, 0, SEEK_END);
@@ -103,13 +109,15 @@ int season_names_load(const char *path)
     text[size] = 0;
     char *line = text, *next = end_line(line);
     int want = -1, version = 0, lineno = 1;
-    if (!next || sscanf(line, "#bosman-names\t%d\t%d", &version, &want) != 2 || version != FORMAT || want < 0 ||
-        want > MAX_ROWS)
-        return fail(path, 1, "not a names table of format 1");
+    if (!next || sscanf(line, "#bosman-names\t%d\t%d", &version, &want) != 2 || version < 1 || version > FORMAT ||
+        want < 0 || want > MAX_ROWS)
+        return fail(path, 1, "not a names table of format 1 or 2");
+    int columns = version == 1 ? 5 : 6;
     line = next + 1;
     lineno = 2;
     next = end_line(line);
-    if (!next || strcmp(line, "season\tfile\tn\tlong\tshort")) return fail(path, 2, "the columns are not those of format 1");
+    if (!next || strcmp(line, version == 1 ? "season\tfile\tn\tlong\tshort" : "season\tfile\tn\tlong\tshort\tabbr"))
+        return fail(path, 2, "the columns are not those of its format");
     rows = calloc((size_t)want + 1, sizeof *rows);
     if (!rows) return fail(path, 0, "no memory");
     for (line = next + 1; *line; line = next + 1) {
@@ -117,20 +125,23 @@ int season_names_load(const char *path)
         next = end_line(line);
         if (!next) return fail(path, lineno, "the last line has no end");
         if (nrows == want) return fail(path, lineno, "more rows than line 1 says");
-        char *c[5];
-        if (!split(line, c, 5)) return fail(path, lineno, "a wrong number of columns");
+        char *c[6];
+        if (!split(line, c, columns)) return fail(path, lineno, "a wrong number of columns");
         NameRow *r = &rows[nrows];
         r->season = number(c[0], SEASON_RULE_FIRST, SEASON_RULE_LAST);
         r->file = c[1];
         r->n = number(c[2], 0, 999);
         r->long_name = c[3];
         r->short_name = c[4];
+        r->abbr = columns == 6 ? c[5] : "";
         if (r->season < 0 || r->n < 0 || !*r->file || !*r->long_name || !*r->short_name ||
-            strlen(r->long_name) > NAME_LIMIT || strlen(r->short_name) >= SHORT_SIZE)
+            strlen(r->long_name) > NAME_LIMIT || strlen(r->short_name) >= SHORT_SIZE || strlen(r->abbr) >= ABBR_SIZE)
             return fail(path, lineno, "a bad season, number or name");
         nrows++;
     }
     if (nrows != want) return fail(path, lineno, "fewer rows than line 1 says");
+    for (int i = 0; i < nrows; i++)
+        if (rows[i].season > last_season) last_season = rows[i].season;
     return nrows;
 }
 
@@ -158,9 +169,18 @@ int season_names_init(const char *game_dir)
     return n;
 }
 
-const char *season_names_get_nth(const char *comp_file, int season, int n, const char **short_name)
+static const NameRow *row_of(const char *comp_file, int season, int n)
 {
     const NameRow *exact = NULL, *last = NULL;
+    /* After the last season of the table each file keeps the names of its last season with a name (the after-table
+     * rule; Argentina's last names are of 2025/26). A new game after 2027/28 (a date jump) took the database's 2001
+     * names, such as "English Premier Division" for the Premier League. Up to the last season nothing changes. */
+    if (season > last_season) {
+        int named = 0;
+        for (int i = 0; i < nrows; i++)
+            if (rows[i].season > named && !strcmp(rows[i].file, comp_file)) named = rows[i].season;
+        season = named;
+    }
     for (int i = 0; i < nrows; i++) {
         const NameRow *r = &rows[i];
         if (r->season != season || strcmp(r->file, comp_file)) continue;
@@ -169,9 +189,14 @@ const char *season_names_get_nth(const char *comp_file, int season, int n, const
     }
     /* A gap in the numbers (a row with no shown name) gives no name. An object after the last row takes the
      * name of the last row. */
-    const NameRow *best = exact ? exact : last && n > last->n ? last : NULL;
-    if (short_name) *short_name = best ? best->short_name : NULL;
-    return best ? best->long_name : NULL;
+    return exact ? exact : last && n > last->n ? last : NULL;
+}
+
+const char *season_names_get_nth(const char *comp_file, int season, int n, const char **short_name)
+{
+    const NameRow *r = row_of(comp_file, season, n);
+    if (short_name) *short_name = r ? r->short_name : NULL;
+    return r ? r->long_name : NULL;
 }
 
 static const char *current_name_of(const char *comp_file, int n);
@@ -259,16 +284,29 @@ static void put_name(uint32_t at, uint32_t size, const char *name)
     memcpy(g_mem + at, name, strnlen(name, size - 1));
 }
 
-/* The one place that renames a record: the long name through season_change_rename (slice 16), which keeps
- * the name in the data for the key match at a load (0x60efd0) and writes the season part. The short name is
- * not matched at a load, so it goes in directly. */
-static int rename_record(uint32_t rec, const char *long_name, const char *short_name)
+/* 1 when the abbreviation of a league row goes into a record that has (or now gets) the row's long name
+ * (0.6.1 item 2). A row of a name that the data already gives (a 2001/02 game with changing rules on, or a
+ * division that keeps its name) leaves the data's abbreviation ("Russian First Division" keeps "RD1"), unless
+ * the record has none (a record that the season code adds). A cup row has no abbreviation. */
+static int abbr_wanted(uint32_t rec, const NameRow *r)
 {
-    int changed = strncmp(win_str(rec + LONG_AT), long_name, LONG_SIZE) ||
-                  strncmp(win_str(rec + SHORT_AT), short_name, SHORT_SIZE);
+    if (!*r->abbr || !strncmp(win_str(rec + ABBR_AT), r->abbr, ABBR_SIZE)) return 0;
+    const char *data = season_change_data_name(rec);
+    return !*win_str(rec + ABBR_AT) || !data || strncmp(data, r->long_name, LONG_SIZE);
+}
+
+/* The one place that renames a record: the long name through season_change_rename (slice 16), which keeps
+ * the name in the data for the key match at a load (0x60efd0) and writes the season part. The short name and
+ * the abbreviation are not matched at a load, so they go in directly. */
+static int rename_record(uint32_t rec, const NameRow *r)
+{
+    int abbr = abbr_wanted(rec, r);
+    int changed = strncmp(win_str(rec + LONG_AT), r->long_name, LONG_SIZE) ||
+                  strncmp(win_str(rec + SHORT_AT), r->short_name, SHORT_SIZE) || abbr;
     if (!changed) return 0;
-    if (strncmp(win_str(rec + LONG_AT), long_name, LONG_SIZE)) season_change_rename(rec, long_name);
-    put_name(rec + SHORT_AT, SHORT_SIZE, short_name);
+    if (strncmp(win_str(rec + LONG_AT), r->long_name, LONG_SIZE)) season_change_rename(rec, r->long_name);
+    put_name(rec + SHORT_AT, SHORT_SIZE, r->short_name);
+    if (abbr) put_name(rec + ABBR_AT, ABBR_SIZE, r->abbr);
     return 1;
 }
 
@@ -305,14 +343,14 @@ static int object_place(uint32_t obj, const char **file, int *n)
 
 int season_names_rename_object(uint32_t obj, int season, char *old, size_t room)
 {
-    const char *file = NULL, *short_name = NULL;
+    const char *file = NULL;
     int n = 0;
     uint32_t rec = rd32(g_mem, obj + 4);
     if (!season_game_changes() || !readable(rec) || !object_place(obj, &file, &n)) return 0;
-    const char *long_name = season_names_get_nth(file, season, n, &short_name);
-    if (!long_name) return 0;
+    const NameRow *r = row_of(file, season, n);
+    if (!r) return 0;
     if (old && room) snprintf(old, room, "%.*s", (int)LONG_SIZE - 1, win_str(rec + LONG_AT));
-    return rename_record(rec, long_name, short_name);
+    return rename_record(rec, r);
 }
 
 int season_names_apply(int season)
@@ -331,12 +369,37 @@ int season_names_apply(int season)
         for (s = 0; s < nseen && strcmp(seen[s].file, file); s++) {}
         if (s < nseen) k = seen[s].count++;
         else if (nseen < 512) seen[nseen].file = file, seen[nseen++].count = 1;
-        const char *short_name = NULL;
-        const char *long_name = season_names_get_nth(file, season, k, &short_name);
-        if (long_name) changed += rename_record(rec, long_name, short_name);
+        const NameRow *r = row_of(file, season, k);
+        if (r) changed += rename_record(rec, r);
     }
     fprintf(stderr, "recomp: names of %d/%02d: %d competition records renamed\n", season, (season + 1) % 100,
             changed);
+    return changed;
+}
+
+/* A load of a save whose records hold season names: the abbreviations of a save of 0.6.0 are still those of
+ * the data ("PRM" next to "Premier League"). Each record whose long name is the name of its row of the season
+ * gets the row's abbreviation (abbr_wanted); no other byte changes, and a save of 0.6.1 on has them already. */
+static int fit_abbreviations(int season)
+{
+    static uint32_t objs[MAX_OBJECTS];
+    int n = season_comp_objects(objs, MAX_OBJECTS), changed = 0;
+    struct { const char *file; int count; } seen[512];
+    int nseen = 0;
+    for (int i = 0; i < n; i++) {
+        uint32_t obj = objs[i], rec = rd32(g_mem, obj + 4);
+        const char *file = names_file(obj);
+        if (!file || !readable(rec)) continue;
+        int k = 0, s;
+        for (s = 0; s < nseen && strcmp(seen[s].file, file); s++) {}
+        if (s < nseen) k = seen[s].count++;
+        else if (nseen < 512) seen[nseen].file = file, seen[nseen++].count = 1;
+        const NameRow *r = row_of(file, season, k);
+        if (r && !strncmp(win_str(rec + LONG_AT), r->long_name, LONG_SIZE) && abbr_wanted(rec, r)) {
+            put_name(rec + ABBR_AT, ABBR_SIZE, r->abbr);
+            changed++;
+        }
+    }
     return changed;
 }
 
@@ -367,8 +430,9 @@ RT_WRAP(008386f0, build_comp_table)
     if (rt_unwinding) return;
     if (!season_game_changes()) return;
     if (load && season_change_renames()) {
-        fprintf(stderr, "recomp: names of the save: %d competition records keep the names of the season part\n",
-                season_change_renames());
+        int fit = fit_abbreviations(season_changing_rules() ? season_of_date() : season_start_year());
+        fprintf(stderr, "recomp: names of the save: %d competition records keep the names of the season part, "
+                "%d abbreviations fitted\n", season_change_renames(), fit);
         return;
     }
     /* A part with news fields (version 2 on: its season point is above 0) and no renames: no name has changed

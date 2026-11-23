@@ -120,31 +120,87 @@ void season_from_day_of_year(int y, int doy, int *m, int *d)
     *d = doy + 1;
 }
 
+/* H. Hinnant's civil calendar algorithms (season_uefa_days.h). */
+long season_abs_day(int y, int m, int d)
+{
+    y -= m <= 2;
+    long era = (y >= 0 ? y : y - 399) / 400;
+    long yoe = y - era * 400, doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+    return era * 146097 + yoe * 365 + yoe / 4 - yoe / 100 + doy - 719468;
+}
+
+void season_from_abs_day(long z, int *y, int *m, int *d)
+{
+    z += 719468;
+    long era = (z >= 0 ? z : z - 146096) / 146097, doe = z - era * 146097;
+    long yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365, doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    long mp = (5 * doy + 2) / 153;
+    *d = (int)(doy - (153 * mp + 2) / 5 + 1);
+    *m = (int)(mp < 10 ? mp + 3 : mp - 9);
+    *y = (int)(yoe + era * 400 + (*m <= 2));
+}
+
+/* The FIFA days of one year, in table order. Up to the last year of the table, its rows of that year. After it,
+ * the last year's days, 364 days a year later, plus 7 for each time the drift passes 3 days: the drift is the
+ * days of the years from the last year to the year less 364 a year. A day that the shift takes into another
+ * year is not a day of the year. (0.6.2 slice 14, fault 16: the steps were one year at a time and one month and
+ * day at a time; the days are the same, ctest season_fifa_days compares them with those steps to 2300.) */
+typedef struct {
+    int filled, year, n;
+    signed char month[SEASON_FIFA_YEAR_MAX], day[SEASON_FIFA_YEAR_MAX];
+} FifaYear;
+
+static int table_last(void)
+{
+    static int last;
+    if (!last)
+        for (int i = 0; i < season_fifa_day_count; i++)
+            if (season_fifa_days[i].year > last) last = season_fifa_days[i].year;
+    return last;
+}
+
+static const FifaYear *fifa_year(int y)
+{
+    static FifaYear cache[4];
+    static int next;
+    for (int c = 0; c < 4; c++)
+        if (cache[c].filled && cache[c].year == y) return &cache[c];
+    FifaYear *f = &cache[next];
+    next = (next + 1) & 3;
+    f->filled = 1, f->year = y, f->n = 0;
+    int last = table_last();
+    if (y <= last) {
+        for (int i = 0; i < season_fifa_day_count && f->n < SEASON_FIFA_YEAR_MAX; i++)
+            if (season_fifa_days[i].year == y)
+                f->month[f->n] = (signed char)season_fifa_days[i].month, f->day[f->n++] = (signed char)season_fifa_days[i].day;
+        return f;
+    }
+    long shift = 364L * (y - last), drift = season_abs_day(y, 1, 1) - season_abs_day(last, 1, 1) - 364L * (y - last);
+    if (drift > 3) shift += 7 * ((drift + 3) / 7);
+    long jan1 = season_abs_day(last, 1, 1);
+    for (int i = 0; i < season_fifa_day_count && f->n < SEASON_FIFA_YEAR_MAX; i++) {
+        const FifaDay *r = &season_fifa_days[i];
+        if (r->year != last) continue;
+        int yy, mm, dd;
+        season_from_abs_day(jan1 + season_day_of_year(last, r->month, r->day) + shift, &yy, &mm, &dd);
+        if (yy == y) f->month[f->n] = (signed char)mm, f->day[f->n++] = (signed char)dd;
+    }
+    return f;
+}
+
 int season_fifa_day(int y, int m, int want)
 {
-    int last = 0;
-    for (int i = 0; i < season_fifa_day_count; i++)
-        if (season_fifa_days[i].year > last) last = season_fifa_days[i].year;
+    const FifaYear *f = fifa_year(y);
     int best = 0;
-    if (y <= last) {
-        for (int i = 0; i < season_fifa_day_count; i++) {
-            const FifaDay *f = &season_fifa_days[i];
-            if (f->year == y && f->month == m && (!best || abs(f->day - want) < abs(best - want))) best = f->day;
-        }
-        return best;
-    }
-    /* After the list: the last year's days, 364 days a year later (plus 7 when the drift passes 3 days). */
-    int shift = 364 * (y - last), drift = 0;
-    for (int k = last; k < y; k++) drift += days_in(k) - 364;
-    while (drift > 3) shift += 7, drift -= 7;
-    for (int i = 0; i < season_fifa_day_count; i++) {
-        const FifaDay *f = &season_fifa_days[i];
-        if (f->year != last) continue;
-        int doy = season_day_of_year(last, f->month, f->day) + shift, yy = last;
-        while (doy >= days_in(yy)) doy -= days_in(yy), yy++;
-        int mm, dd;
-        season_from_day_of_year(yy, doy, &mm, &dd);
-        if (yy == y && mm == m && (!best || abs(dd - want) < abs(best - want))) best = dd;
-    }
+    for (int i = 0; i < f->n; i++)
+        if (f->month[i] == m && (!best || abs(f->day[i] - want) < abs(best - want))) best = f->day[i];
     return best;
+}
+
+int season_fifa_year_days(int y, int doys[], int max)
+{
+    const FifaYear *f = fifa_year(y);
+    int n = 0;
+    for (int i = 0; i < f->n && n < max; i++) doys[n++] = season_day_of_year(y, f->month[i], f->day[i]);
+    return n;
 }

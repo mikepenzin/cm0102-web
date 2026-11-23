@@ -28,6 +28,17 @@ typedef struct {
     SeasonLeagueMatch match[SEASON_LEAGUE_MAX_DAYS][SEASON_LEAGUE_DAY_MATCHES];
 } SeasonLeagueDraw;
 
+/* The league phase order with changing rules on (decision L8 of the 0.7.3 spec): reputation, highest first. Clubs of
+ * equal reputation keep the order they come in, which is the game's seed order (0x586f60). order[i] is the index of
+ * the club at place i. */
+void season_league_by_reputation(const int *reputation, int order[SEASON_LEAGUE_CLUBS]);
+
+/* The pots of 36 clubs in seed order. A pot with too many clubs of one nation has no draw under the nation rules
+ * (the limit of each nation: pot_limit in season_uefa_league_draw.c). Each surplus club changes places with the
+ * nearest club of another nation in the nearest pot that can take it. order[i] is the seed index of the club at
+ * place i; with no surplus, order[i] is i. */
+void season_league_pots(int days, const int *nation, int order[SEASON_LEAGUE_CLUBS]);
+
 /* Draws the league phase of 36 clubs in seed order. nation[i] is the nation of club i (any number, equal for one
  * nation). days 8 or 6. Returns 1 and fills out, or 0 when no draw is found (or rnd stops: it returns < 0). */
 int season_league_draw(int days, const int *nation, SeasonLeagueRandom rnd, void *ctx, SeasonLeagueDraw *out);

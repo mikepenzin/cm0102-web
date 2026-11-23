@@ -30,6 +30,7 @@
 #include "season.h"
 #include "season_change.h"
 #include "season_comps.h"
+#include "season_intl.h"
 #include "season_nl.h"
 #include "season_wcq26.h"
 
@@ -47,6 +48,8 @@
 #define QUAL_SET_UP_RULES 0x0057e8f0u   /* thiscall (), returns 1: rules, draw date, template (slot 35) */
 #define QUAL_START 0x0057eb20u          /* start_new_season, thiscall () */
 #define QUAL_UPDATE 0x0057fd60u         /* update_for_date, thiscall (today, full), ret 8 */
+#define LEAGUE_FATE_TEXT 0x0048c6d0u    /* Comp::build_fate_news_text, slot 18 of the League, ret 0x28 */
+#define GROUP_NEWS 0x004b4590u          /* comp_util_write_group_qualify_news, cdecl, 6 arguments */
 
 #define GAME_NEW 0x00944cf1u            /* operator new, cdecl (size) */
 #define GAME_MALLOC 0x00944e46u         /* malloc, cdecl (size) */
@@ -78,6 +81,15 @@
 #define CLUB_SIZE 0x245u
 #define CLUB_NATION 0x53u
 #define GAME_YEAR 0xae2c92u
+#define EURO_QUAL_KEY 0x9cf784u          /* key id of "European Championship Qualifying" (0x606e24) */
+#define COMP_RECORDS 0xae23d0u          /* comp records, 0x6b bytes */
+#define COMP_RECORD_COUNT 0xae2378u     /* s32: club, nation and friendly records (new-comp-records doc 1.3) */
+#define COMP_RECORD_SIZE 0x6bu
+#define REC_SHORT 0x38u
+#define REC_SHORT_ROOM 0x1bu
+#define REC_CONTINENT 0x59u
+#define REC_COLOURS_END 0x69u           /* +0x59 continent, +0x5d nation, +0x61 and +0x65 colours */
+#define REC_NATION 0x5du
 
 /* Object fields (class doc 2 and 3). */
 #define F_RECORD 0x4u
@@ -315,8 +327,33 @@ static const SeasonNlEdition *table_edition(const NlConf *c, int year)
     return NULL;
 }
 
+/* The last edition of the table, or NULL. */
+static const SeasonNlEdition *last_edition(const NlConf *c)
+{
+    const SeasonNlEdition *last = NULL;
+    for (int i = 0; i < season_nl_edition_count; i++)
+        if (!strcmp(season_nl_editions[i].confed, c->confed)) last = &season_nl_editions[i];
+    return last;
+}
+
+/* 1 when a World Cup is played in year y: the table's World Cup years (season_intl_table.c, the year the class
+ * holds is the finals year), then its last step (decision A). Reads only the table, so it changes no state. */
+static int wc_year(int y)
+{
+    int last = 0, prev = 0;
+    for (int i = 0; i < season_intl_edition_count; i++) {
+        const SeasonIntlEdition *e = &season_intl_editions[i];
+        if (strcmp(e->file, "world_cup")) continue;
+        if (e->year == y) return 1;
+        prev = last, last = e->year;
+    }
+    int step = last - prev;
+    return last && prev && step > 0 && y > last && (y - last) % step == 0;
+}
+
 /* The edition of a year in this game. With changing rules on, the table's edition; after the table's last
- * edition the last one again every two years (Q248: the rules stay). With changing rules off, the edition of
+ * edition the last one again: every two years for UEFA (Q248: the rules stay), in the years that the CONCACAF World
+ * Cup qualifying leaves free for CONCACAF (item 209, season_nl_held_after). With changing rules off, the edition of
  * the start season, again every two years (Q232). NULL for a year with no edition. */
 static const SeasonNlEdition *edition(NlConf *c, int year)
 {
@@ -329,22 +366,64 @@ static const SeasonNlEdition *edition(NlConf *c, int year)
                 base = &season_nl_editions[i];
     } else {
         base = season_nl_first(c->confed, season_start_year());
+        if (!base) base = last_edition(c);      /* open item 61: a start after the table takes its last row (Q248) */
         if (base && base->year == year) return base;
         if (base && base->year > year) base = NULL;
     }
-    if (!base || (year - base->year) % 2) return NULL;
+    if (!base) return NULL;
+    /* After the table with changing rules on, an edition of the item 209 year rule; a held object of a year on
+     * the old two-year step (a save of round AG or before) plays its edition out (held_year below moves a
+     * waiting one). */
+    if (season_changing_rules() ? !season_nl_held_after(c->confed, base->year, year, wc_year) && (year - base->year) % 2
+                                : (year - base->year) % 2)
+        return NULL;
     c->repeat = *base;
     c->repeat.season = base->season + (year - base->year);
     c->repeat.year = year;
+    /* Item 209: the draw of an edition after the table is far enough ahead of its first window that the friendlies
+     * of that window are arranged around it (season_nl_draw_of). The 2026-27 draw (23 July) lay 9 weeks before
+     * its first matchday: copied to the 2027 and 2031 editions, the friendlies of the North American rows of
+     * 7 September and 9 October (0x5ca4f0, offset 1) came first, and 35 matches of the 2031 league phase in a
+     * replay (run-logs/0.6.2-s209/rep-fix) moved off the FIFA days. */
+    const SeasonNlEdition *d = season_changing_rules() && year > base->year ? season_nl_draw_of(c->confed, year,
+                                                                                                  wc_year) : NULL;
+    if (d) c->repeat.draw = d->draw;
     return &c->repeat;
+}
+
+/* Item 209: 1 for a year that holds an edition of this game (edition() also takes a year of the old step, for
+ * an edition that a save already plays). */
+static int held_year(const NlConf *c, int year)
+{
+    const SeasonNlEdition *last = last_edition(c);
+    if (!season_changing_rules() || !last || year <= last->year) return 1;
+    return season_nl_held_after(c->confed, last->year, year, wc_year);
+}
+
+/* The first edition of a new game for season s: the table's first edition from s on, else (open item 61: a start
+ * after the table, for example a date jump to 2098) the first edition of `edition` whose league phase starts in
+ * season s or later. Up to 0.6.1 such a game had no Nations League: season_nl_first gives NULL after the table. */
+static const SeasonNlEdition *first_edition(NlConf *c, int s)
+{
+    const SeasonNlEdition *e = season_nl_first(c->confed, s);
+    if (e) return e;
+    for (int y = s - 2; y <= s + 4; y++) {
+        e = held_year(c, y) ? edition(c, y) : NULL;
+        if (e && e->season >= s) return e;
+    }
+    return NULL;
 }
 
 static int next_year(const NlConf *c, int year)
 {
-    if (season_changing_rules())
+    if (season_changing_rules()) {
         for (int i = 0; i < season_nl_edition_count; i++)
             if (!strcmp(season_nl_editions[i].confed, c->confed) && season_nl_editions[i].year > year)
                 return season_nl_editions[i].year;
+        const SeasonNlEdition *last = last_edition(c);
+        int y = last ? season_nl_next_after(c->confed, last->year, year, wc_year) : 0;
+        if (y) return y;
+    }
     return year + 2;
 }
 
@@ -624,24 +703,32 @@ static int entrants(uint32_t self, const SeasonNlEdition *e, Entrant *out)
     int n = old ? read_results(self, &from, rows) : 0;
     if (rt_unwinding) return 0;
     if (n < 4) return real_entrants(e, out);
+    /* A nation of the real leagues that did not play the edition before (a nation new in the data, or one that
+     * a load of an older save gives a continent: Martinique and Guadeloupe in a 0.6 save of 2035). It joins the
+     * rows with no place (pos 0), so the fill puts it where room is left (season_nl_next_leagues). Open item 183:
+     * it was added to its real league after the fill, which gave League A 17 nations in four groups; the group of
+     * five had more rounds than the six match dates (round_template), its later rounds had day 0 and the edition
+     * never ended. */
+    Entrant real[NL_MAX_NATIONS];
+    int m = real_entrants(e, real), played = n;
+    for (int j = 0; j < m && n < NL_MAX_NATIONS; j++) {
+        int have = 0;
+        for (int i = 0; i < played; i++) have |= rows[i].nation == real[j].nation;
+        if (!have) rows[n++] = (SeasonNlRow){real[j].nation, real[j].league, 0, 0, 0, 0, 0, 0, 0};
+    }
     int next[NL_MAX_NATIONS], k = 0;
     if (!season_nl_next_leagues(&from, e, rows, n, next)) return real_entrants(e, out);
     for (int i = 0; i < n; i++) {
         if (left_out(e, rows[i].nation) || !season_nl_nation_can_play(rows[i].nation)) continue;
         out[k++] = (Entrant){rows[i].nation, next[i], 0, 0};
-        if (logging() && next[i] != rows[i].league)
+        if (logging() && rows[i].pos <= 0)
+            fprintf(stderr, "recomp: season nl: %s: %s joins in league %c (its table league %c)\n", label(e),
+                    win_str(nation_at(rows[i].nation) + NATION_NAME), 'A' + next[i], 'A' + rows[i].league);
+        else if (logging() && next[i] != rows[i].league)
             fprintf(stderr, strcmp(e->confed, "UEFA") ? "recomp: season nl: %s: %s moves from league %c to %c\n"
                                                       : "recomp: season nl: %s%s goes from league %c to %c\n",
                     strcmp(e->confed, "UEFA") ? e->confed : "", win_str(nation_at(rows[i].nation) + NATION_NAME),
                     'A' + rows[i].league, 'A' + next[i]);
-    }
-    /* A nation of the real leagues that did not play the edition before (a nation new in the data). */
-    Entrant real[NL_MAX_NATIONS];
-    int m = real_entrants(e, real);
-    for (int j = 0; j < m && k < NL_MAX_NATIONS; j++) {
-        int have = 0;
-        for (int i = 0; i < k; i++) have |= out[i].nation == real[j].nation;
-        if (!have) out[k++] = (Entrant){real[j].nation, real[j].league, 0, 0};
     }
     return k;
 }
@@ -837,8 +924,39 @@ static void update_for_date(void)
     NlConf *conf = conf_of(self);
     if (conf && readable(today)) {
         int year = year_of(self);
-        const SeasonNlEdition *e = edition(conf, year);
         int day = (int16_t)rd16(g_mem, today), ty = (int16_t)rd16(g_mem, today + 2u);
+        uint32_t held0 = stage_at(self, 0);
+        if (!held_year(conf, year) && !(rd32(g_mem, self + F_DRAWN) && readable(held0) && year_of(held0) == year)) {
+            /* Item 209: an object of a save that waits for a draw in a year with no edition now (2028 or 2032 for
+             * CONCACAF) moves to the year after its last edition (stage one keeps that edition's year) that
+             * holds one: after 2030-31 the 2031 edition, whose draw day becomes tomorrow if it has passed. */
+            const SeasonNlEdition *last = last_edition(conf);
+            int played = rd32(g_mem, self + F_DRAWN) && readable(held0) ? year_of(held0) : 0;
+            int next = next_year(conf, last && played >= last->year && played < year ? played : year - 1);
+            const SeasonNlEdition *n = edition(conf, next);
+            /* Not an edition whose first matchday has passed (a save from September 2031 waits for 2034). */
+            int found = 0;
+            for (int k = 0; k < 8 && n && !rt_unwinding; k++) {
+                int my = next + n->md[0].year, md = season_nl_day_of_year(n->md[0].day, n->md[0].month, my);
+                if (my > ty || (my == ty && md > day)) {
+                    found = 1;
+                    break;
+                }
+                next = next_year(conf, next);
+                n = edition(conf, next);
+            }
+            if (rt_unwinding) return;
+            if (found) {
+                wr16(g_mem, self + F_YEAR, (uint32_t)next);
+                set_draw_day(self, n);
+                if (logging())
+                    fprintf(stderr, "recomp: season nl: the %s %d edition is not held; the next is %d, draw day %d of %d\n",
+                            conf->confed, year, next, (int16_t)rd16(g_mem, self + F_DRAW_DAY),
+                            next + (int16_t)rd16(g_mem, self + F_DRAW_YEAR));
+                year = next;
+            }
+        }
+        const SeasonNlEdition *e = edition(conf, year);
         int dday = (int16_t)rd16(g_mem, self + F_DRAW_DAY), dy = year + (int16_t)rd16(g_mem, self + F_DRAW_YEAR);
         if (e && full && day == dday && ty == dy) {
             SeasonNlEdition cur = *e;
@@ -996,6 +1114,28 @@ static void history(void)
     rt_ret_stdcall(0, 0);
 }
 
+/* vtable +0x48, build_fate_news_text, thiscall (10 arguments), ret 0x28. Slot 18 takes the League base 0x48c6d0, which
+ * knows the fates 0, 1, 2, 3 and 5 and writes "ERROR: No league fate yet" for any other (0x48ca7d). The League's
+ * announce_team_status 0x686670 posts the item of a group (type 12, 0x686720) with fates 6, 7 and 0xfe and no fixture.
+ * These go to comp_util_write_group_qualify_news 0x4b4590 (team, group name code, competition record, fate, full,
+ * text), which the class's own slot 0x57d700 calls for fates 7 and 0xfe (0x57d73b). */
+static void fate_text(void)
+{
+    uint32_t self = cpu.ecx, args[10];
+    int fate = (int8_t)rt_arg(1);
+    for (int i = 0; i < 10; i++) args[i] = rt_arg(i);
+    if (!args[4] && (fate == 6 || fate == 7 || fate == -2)) {
+        static int logged;
+        uint32_t group[6] = {args[0], args[3] & 0xffffu, rd32(g_mem, self + 4u), (uint32_t)fate, args[8], args[9]};
+        if (!logged++) fprintf(stderr, "recomp: nations league: group news of fate %d, code %u\n", fate, group[1]);
+        call_cdecl(GROUP_NEWS, 6, group);
+    } else {
+        call_this(LEAGUE_FATE_TEXT, self, 10, args);
+    }
+    if (rt_unwinding) return;
+    rt_ret_stdcall(0, 10);
+}
+
 static uint32_t build_vtable(const SeasonCompDef *d)
 {
     uint32_t v = season_comps_vtable(d, QUAL_VTABLE, VTABLE_SLOTS);
@@ -1010,6 +1150,7 @@ static uint32_t build_vtable(const SeasonCompDef *d)
     season_comps_set_slot(v, 10, "nl_advance_stage", advance_stage);
     season_comps_set_slot(v, 12, "nl_history", history);
     season_comps_set_slot(v, 15, "nl_round_template", round_template);
+    season_comps_set_slot(v, 18, "nl_fate_text", fate_text);
     return v;
 }
 
@@ -1023,11 +1164,59 @@ static uint32_t build_vtable(const SeasonCompDef *d)
 static int in_ctor;
 int season_nl_in_ctor(void) { return in_ctor; }
 
+/* 0.6.2 slice 8, open items 4 and 21: the record "Asian Cup Qualifying" keeps its short name "Asian Cup Quals"
+ * (+0x38, the name of the history screen) and its continent Asia (+0x59) after the rename of its long name, so the
+ * history screen showed European winners of the "Asian Cup Quals". The record takes the short name of the
+ * competition and the continent and colours (+0x59, +0x61, +0x65) of the record "European Championship
+ * Qualifying" (key id 0x9cf784: its name check at 0x606e24 names EUROPEAN_CHAMPIONSHIP_QUALIFYING, 0x9d7a68). The
+ * copy holds whatever the fields hold, ids before the id pass or pointers after it, as the two records are in the
+ * same state. The nation (+0x5d, -2 for both) and the level (+0x69: 12; the officials code compares it at 0x79d447)
+ * stay. The type of its fixtures does not change: 0x48dd70 asks the list 0x669ae0 before 0x669470, and the wrap
+ * nl_international below holds the Nations League. The game's decisions do change, as intended: the match day
+ * code plays the matches of a continental competition on the full engine when its continent (+0x59) holds a
+ * loaded nation (0x6b66b6..0x6b66ce mark the continents, 0x6b6919..0x6b692d test the record's), so on continent
+ * Asia the Nations League of a European game had quick results, and now it plays as the Euro qualifying does.
+ * Other readers of +0x59 (inference from a search, not each read): the human interest flags 0x6b634b, the entrant
+ * test 0x48dba5 and the key nation entry 0x669597. The make function runs at the first edition and at every load,
+ * so a save of 0.6.0 or 0.6.1 gets the record at load, and its next save keeps it (the record is in
+ * nation_comp.dat of the save). Only the Nations League uses the record (nations doc 5.5), so no other
+ * competition changes. */
+
+static void nl_record_to_europe(const SeasonCompDef *d, uint32_t rec, int loading)
+{
+    uint32_t base = rd32(g_mem, COMP_RECORDS), key = rd32(g_mem, EURO_QUAL_KEY);
+    uint32_t count = rd32(g_mem, COMP_RECORD_COUNT);
+    if (!readable(rec) || !readable(base) || key >= count || count > 100000u) return;
+    uint32_t euro = base + key * COMP_RECORD_SIZE;
+    if (euro == rec) return;
+    int changed = memcmp(g_mem + rec + REC_SHORT, d->comp, strlen(d->comp) + 1) != 0;
+    for (uint32_t f = REC_CONTINENT; f < REC_COLOURS_END; f += 4) {
+        if (f == REC_NATION) continue;
+        if (rd32(g_mem, rec + f) != rd32(g_mem, euro + f)) changed = 1;
+        wr32(g_mem, rec + f, rd32(g_mem, euro + f));
+    }
+    memset(g_mem + rec + REC_SHORT, 0, REC_SHORT_ROOM);
+    snprintf((char *)g_mem + rec + REC_SHORT, REC_SHORT_ROOM, "%s", d->comp);
+    if (changed)
+        fprintf(stderr, "recomp: season nl: record %d takes the short name %s and the continent of record %d%s\n",
+                (int)rd32(g_mem, rec), d->comp, (int)rd32(g_mem, euro), loading ? " (repaired at load)" : "");
+}
+
+/* A history row of the Nations League written before its first edition (the lists of season_history.c, issue 145):
+ * the record takes the short name, continent and colours of the Nations League at once, as nl_make does at the first
+ * edition. Without it the history screen and the record show a European winner under the free Asian record. */
+void season_nl_history_record(uint32_t rec)
+{
+    if (rec && rec == season_comps_record(season_nl_comp.record)) nl_record_to_europe(&season_nl_comp, rec, 0);
+}
+
 static uint32_t nl_make(const SeasonCompDef *d, uint32_t rec, int year, int loading)
 {
     NlConf *c = conf_of_def(d);
-    const SeasonNlEdition *e = loading || !c ? NULL : season_nl_first(c->confed, year);
-    if (!c || (!loading && !e)) return 0;
+    const SeasonNlEdition *first = loading || !c ? NULL : first_edition(c, year);
+    if (!c || (!loading && !first)) return 0;
+    SeasonNlEdition copy = first ? *first : (SeasonNlEdition){0};
+    const SeasonNlEdition *e = first ? &copy : NULL;    /* first can be c->repeat, which edition() writes again */
     uint32_t v = build_vtable(d);
     uint32_t na[1] = {QUAL_SIZE};
     uint32_t obj = v ? call_cdecl(GAME_NEW, 1, na) : 0;
@@ -1038,6 +1227,7 @@ static uint32_t nl_make(const SeasonCompDef *d, uint32_t rec, int year, int load
     in_ctor = 0;
     if (rt_unwinding || !readable(obj)) return 0;
     wr32(g_mem, obj, v);
+    if (c == &confs[0]) nl_record_to_europe(d, rec, loading);  /* the CONCACAF def has its own record (`like`) */
     if (loading) {
         if (held_groups(obj) >= 2) set_stage_bytes(obj, held_groups(obj));
         return obj;
@@ -1053,14 +1243,31 @@ static uint32_t nl_make(const SeasonCompDef *d, uint32_t rec, int year, int load
     return obj;
 }
 
-const SeasonCompDef season_nl_comp = {"UEFA Nations League", "new_uefa_nations_league", RECORD_NAME, ENTRY, nl_make};
+/* Open item 61: the rule of a season for the comps module (season_comps.h, `held`). The rules table ends with a
+ * row "not_held" for 2027 (no edition known after 2026-27), and after the last row its rule stays (Q248), so a
+ * game that started from 2027 on got no Nations League: the module made no object and, for CONCACAF, no
+ * record. After the last table edition the last cycle continues (decision A): for UEFA an edition's league phase
+ * is in every second season and its finals in the season after, so every season holds one; CONCACAF has seasons
+ * with none (item 209), where the object waits for its next draw. A game that started
+ * earlier keeps its object and is not changed (the module makes an object once). Inside the table: the table. */
+static int nl_held(const SeasonCompDef *d, int s)
+{
+    NlConf *c = conf_of_def(d);
+    const SeasonNlEdition *last = c ? last_edition(c) : NULL;
+    if (last && s > last->season) return 1;
+    return season_comps_held(d->comp, s);
+}
+
+const SeasonCompDef season_nl_comp = {"UEFA Nations League", "new_uefa_nations_league", RECORD_NAME, ENTRY, nl_make,
+                                      NULL, NULL, 0, 0, nl_held};
 
 /* Part b (Q368): the CONCACAF Nations League on a new record (season_comps.h, `like`): the continent, nation and
  * colour ids of the CONCACAF World Cup qualifying record. Level 14 (inference: below the qualifying of a finals,
  * which the officials code compares at 0x79d447; the World Cup has 20). */
 const SeasonCompDef season_nl_concacaf_comp = {"CONCACAF Nations League", "new_concacaf_nations_league",
                                                "CONCACAF Nations League", ENTRY, nl_make,
-                                               "World Cup CONCACAF Qualifying Section", "CONCACAF Nations League", 14};
+                                               "World Cup CONCACAF Qualifying Section", "CONCACAF Nations League", 14,
+                                               0, nl_held};
 
 /* ---- Wraps of the class's direct calls (class doc 2) ---- */
 
@@ -1147,9 +1354,9 @@ uint32_t rt_nl_group_stages(uint32_t self, uint32_t original)
 
 int season_nl_international(uint32_t rec)
 {
+    if (!rec) return 0;
     for (int i = 0; i < CONFS; i++) {
-        uint32_t o = season_comps_object(confs[i].def);
-        if (o && rec == rd32(g_mem, o + F_RECORD)) return 1;
+        if (rec == season_comps_record_of(confs[i].def)) return 1;     /* also at a load (open item 91) */
     }
     return season_gold_cup_record(rec);
 }

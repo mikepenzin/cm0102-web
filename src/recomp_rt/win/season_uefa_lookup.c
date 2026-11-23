@@ -124,6 +124,11 @@ const char *season_uefa_access_rule(int season, char comp)
     return NULL;
 }
 
+int season_uefa_cl_cap(int season)
+{
+    return season >= 2024 ? 7 : season >= 2015 ? 5 : 4;
+}
+
 static int league_cup_row(int season, char comp, const char *name)
 {
     int s = access_season(season);
@@ -282,4 +287,48 @@ void season_uefa_new_clubs(const SeasonUefa *r, char comp, int *out)
         for (int j = code + 1; j < hi && !below; j++) below = season_uefa_code_clubs(r, comp, j);
         out[code] = size ? size - below / 2 - season_uefa_dropped(r, code) : 0;
     }
+}
+
+static int same_venue(const SeasonUefa *a, const SeasonUefa *b)
+{
+    return a->sc_stadium && b->sc_stadium && a->sc_city && b->sc_city && !strcmp(a->sc_stadium, b->sc_stadium) &&
+           !strcmp(a->sc_city, b->sc_city);
+}
+
+/* Q28. After the last table row the venue of each year is drawn from the venues of the table (the past finals),
+ * never the venue of the year before: from the venue of year Y - 1, a step of 1 to n - 1 places along the list
+ * of the n venues. The step is a fixed mix of the year, so the draw takes no game random number and a loaded game
+ * gets the same venue again. */
+int season_uefa_super_cup_venue(int year, const char **stadium, const char **city)
+{
+    const SeasonUefa *r = season_uefa_row(year);
+    if (!r || !r->sc_stadium || !r->sc_city) return 0;
+    const SeasonUefa *last = &season_uefa_rows[season_uefa_row_count - 1];
+    if (season_changing_rules() && r == last && year > last->season) {
+        const SeasonUefa *venues[64];
+        int n = 0, k = -1;
+        for (int i = 0; i < season_uefa_row_count && n < 64; i++) {
+            int seen = !season_uefa_rows[i].sc_stadium || !season_uefa_rows[i].sc_city;
+            for (int j = 0; j < n && !seen; j++) seen = same_venue(venues[j], &season_uefa_rows[i]);
+            if (!seen) venues[n++] = &season_uefa_rows[i];
+        }
+        for (int j = 0; j < n && k < 0; j++)
+            if (same_venue(venues[j], last)) k = j;
+        if (n > 1 && k >= 0) {
+            for (int y = last->season + 1; y <= year; y++) {
+                uint32_t h = (uint32_t)y * 2654435761u;
+                h ^= h >> 15;
+                k = (k + 1 + (int)(h % (uint32_t)(n - 1))) % n;
+            }
+            r = venues[k];
+        }
+    }
+    *stadium = r->sc_stadium;
+    *city = r->sc_city;
+    return 1;
+}
+
+int season_uefa_cup_outcome(int stage, int outcome)
+{
+    return stage < 0 && outcome == 1 ? 0 : outcome;
 }

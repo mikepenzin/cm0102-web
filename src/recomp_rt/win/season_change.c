@@ -27,6 +27,7 @@
 #include "season_comps.h"
 #include "season.h"
 #include "season_change.h"
+#include "news_text.h"
 #include "season_divisions.h"
 #include "season_comps.h"
 #include "season_cups.h"
@@ -34,6 +35,7 @@
 #include "season_rules.h"
 #include "season_intl.h"
 #include "season_uefa_league.h"
+#include "caps_wide.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -56,6 +58,7 @@ void season_comps_reset(void);                         /* slice 26: season_comps
 extern const SeasonRuleKind season_kind_playoffs;      /* slice 19: season_playoffs.c */
 extern const SeasonRuleKind season_kind_intl;
 extern const SeasonRuleKind season_kind_ita_serie_c;  /* slice 20b: season_divisions_ita.c */
+extern const SeasonRuleKind season_kind_calendar;     /* gap row 2 of 0.7.2: season_calendar_game.c */
 static const SeasonRuleKind season_kind_test;
 static const SeasonRuleKind *const season_rule_kinds[] = {
     &season_kind_comps,                 /* slice 26: new competitions (season_comps.h), first */
@@ -73,6 +76,7 @@ static const SeasonRuleKind *const season_rule_kinds[] = {
     &season_kind_playoffs,              /* slice 19: promotion play-offs of leagues with none (after sizes) */
     &season_kind_intl,                  /* slice 27: international competitions (season_intl.c) */
     &season_kind_divisions,             /* slice 20: new divisions (season_divisions.c) */
+    &season_kind_calendar,              /* gap row 2 of 0.7.2: the Irish calendar move (season_calendar.h) */
     &season_kind_test,                  /* test only: RECOMP_SEASON_CHANGE_TEST=1 (below) */
 };
 #define KIND_COUNT ((int)(sizeof season_rule_kinds / sizeof season_rule_kinds[0]))
@@ -200,6 +204,17 @@ int season_change_entry_comps(int entry, uint32_t *out, int max)
     for (int32_t k = 0; readable(arr) && k < count && k < 256; k++)
         n = add_unique(out, n, max, rd32(g_mem, arr + 4u * (uint32_t)k));
     return n;
+}
+
+int season_change_start_day(uint32_t comp)
+{
+    uint32_t objs[256];
+    for (int e = 0; comp && e < ENTRY_COUNT; e++) {
+        int n = season_change_entry_comps(e, objs, 256);
+        for (int i = 0; i < n; i++)
+            if (objs[i] == comp) return (int16_t)rd16(g_mem, entry_at(e) + ENTRY_DAY);
+    }
+    return -1;
 }
 
 int season_change_comps(uint32_t *out, int max)
@@ -363,12 +378,11 @@ void season_change_rename(uint32_t rec, const char *name)
             renames = p;
             rename_room = room;
         }
-        /* The save part copies the whole field (season_change_part_write): the bytes after the name are 0, not
-         * what the host heap held there (docs/research/2026-11-11-season-part-unset-bytes.md). */
-        SeasonRename *r = &renames[rename_count];
-        memset(r, 0, sizeof *r);
-        r->index = index;
-        snprintf(r->original, NAME_ROOM, "%.*s", NAME_ROOM - 1, win_str(rec + NAME_AT));
+        /* Open item 152: the whole row is cleared first. The save writes all NAME_ROOM bytes of the name, and
+         * the bytes after its end came from the realloc block, so two runs of the same game gave other bytes. */
+        memset(&renames[rename_count], 0, sizeof renames[rename_count]);
+        renames[rename_count].index = index;
+        snprintf(renames[rename_count].original, NAME_ROOM, "%.*s", NAME_ROOM - 1, win_str(rec + NAME_AT));
         rename_count++;
     } else if (!record_index(rec, &index)) {
         return;                                 /* not a competition record: a load could not match it */
@@ -428,16 +442,37 @@ void season_change_reset(void)
     season_uefa_league_reset();         /* load sweep: the league phase list of a stage being made */
     season_friendly_dates_reset();      /* row A18: the Friendly object of the last game */
     season_point = 0;
+    season_intl_marks_reset();                  /* 0.6.2 slice 4b: no qualifying campaign in the original's shape */
     creating = 0;                               /* also when a longjmp left create_game */
 }
 
+/* Version 3 (0.6.2 slice 12) when the game has caps above 255, version 4 (item 66) when it has goals above 255
+ * (caps_wide.c): the row A18 list then always has its count, so the readers of 0.6.0 and 0.6.1 take the list and
+ * leave the caps and goals after it (season_friendly_part_read of
+ * those versions reads the entries that the count gives and ignores the bytes after them). Else version 2 or 1, as
+ * before. */
+/* Version 5 (0.6.2 slice 4b) when qualifying campaigns keep the original's shape (season_intl_old_shape): the row
+ * A18 list with its count, the caps and the goals fields (counts 0 when empty), then the marks field
+ * (season_intl.h). */
+#define PART_FORM_MARKS 5
+static int part_marks(void) { return season_intl_marks_size() != 0; }
+static int part_caps(void) { return caps_wide_form() != 0 || part_marks(); }
+static uint32_t caps_size(void) { return part_marks() ? caps_wide_part_size_all() : caps_wide_part_size(); }
+
 uint32_t season_change_part_size(void)
 {
-    uint32_t pending = season_friendly_part_size();
-    if (!news_count && !rename_count && season_point <= season_start_year() && !pending) return 0;
-    uint32_t n = 4 + 4 + (uint32_t)rename_count * (4 + NAME_ROOM) + 4 + pending;
+    uint32_t pending = season_friendly_part_size(), caps = caps_size() + season_intl_marks_size();
+    if (!news_count && !rename_count && season_point <= season_start_year() && !pending && !caps) return 0;
+    if (caps && !pending) pending = 4;          /* the count 0 of an empty list */
+    uint32_t n = 4 + 4 + (uint32_t)rename_count * (4 + NAME_ROOM) + 4 + pending + caps;
     for (int i = 0; i < news_count; i++) n += 12 + news[i].len;
     return n;
+}
+
+int season_change_part_form(void)
+{
+    if (part_marks()) return PART_FORM_MARKS;
+    return part_caps() ? caps_wide_form() : season_change_part_size() ? 2 : 1;
 }
 
 static void put32(uint8_t *p, uint32_t v) { memcpy(p, &v, 4); }
@@ -462,19 +497,33 @@ void season_change_part_write(uint8_t *out)
         at += 4 + NAME_ROOM;
     }
     put32(out + at, (uint32_t)season_point);
-    season_friendly_part_write(out + at + 4);   /* row A18: the qualifiers that wait for the first running season */
+    at += 4;
+    uint32_t pending = season_friendly_part_size();
+    season_friendly_part_write(out + at);       /* row A18: the qualifiers that wait for the first running season */
+    if (!part_caps()) return;
+    if (!pending) {
+        put32(out + at, 0);
+        pending = 4;
+    }
+    if (!part_marks()) {
+        caps_wide_part_write(out + at + pending);   /* version 3 or 4 */
+        return;
+    }
+    caps_wide_part_write_all(out + at + pending);
+    season_intl_marks_write(out + at + pending + caps_wide_part_size_all());
 }
 
-int season_change_part_read(const uint8_t *in, uint32_t n)
+int season_change_part_read(const uint8_t *in, uint32_t n, uint32_t form)
 {
     season_change_reset();
+    caps_wide_reset();
     if (n < 4) return 0;
     uint32_t count = get32(in), at = 4;
-    if (count > 200u) return 0;
+    if (count > (n - 4) / 12) return 0;            /* 12 bytes a season at least: no limit of seasons (0.6.2 fault 31) */
     for (uint32_t i = 0; i < count; i++) {
         if (n - at < 12) return 0;
         uint32_t season = get32(in + at), posted = get32(in + at + 4), len = get32(in + at + 8);
-        if (season < SEASON_FIRST_YEAR || season > SEASON_LAST_YEAR + 1 || posted > 1 || len > TEXT_ROOM ||
+        if (season > SEASON_YEAR_MAX || !season_year_ok((int)season) || posted > 1 || len > TEXT_ROOM ||
             n - at - 12 < len || news_of((int)season))
             return 0;
         SeasonNews *s = news_new((int)season);
@@ -501,25 +550,102 @@ int season_change_part_read(const uint8_t *in, uint32_t n)
     }
     for (uint32_t i = 0; i < names; i++) {
         renames[i].index = get32(in + at);
-        /* The name up to its 0, the rest 0: a save of an older build has host bytes after the name, and the next
-         * save would carry them on. */
-        memset(renames[i].original, 0, NAME_ROOM);
-        snprintf(renames[i].original, NAME_ROOM, "%.*s", NAME_ROOM - 1, (const char *)in + at + 4);
+        memcpy(renames[i].original, in + at + 4, NAME_ROOM);
+        renames[i].original[NAME_ROOM - 1] = 0;
+        /* Open item 152: a save made before the fix holds unset bytes after the name: the next save writes zeros. */
+        size_t end = strlen(renames[i].original);
+        memset(renames[i].original + end, 0, NAME_ROOM - end);
         at += 4 + NAME_ROOM;
     }
     rename_count = (int)names;
     if (n - at < 4) return 0;
     uint32_t point = get32(in + at);
-    if (point && (point < SEASON_FIRST_YEAR || point > SEASON_LAST_YEAR + 1)) return 0;
+    if (point && (point > SEASON_YEAR_MAX || !season_year_ok((int)point))) return 0;
     season_point = (int)point;
     at += 4;
-    return season_friendly_part_read(in + at, n - at);   /* row A18; nothing more in a save before it */
+    if (form < 3) return season_friendly_part_read(in + at, n - at);   /* row A18; nothing more in a save before it */
+    /* Version 3 and later: the row A18 list with its count and whole entries, then the caps (and goals) above 255. */
+    if (n - at < 4) return 0;
+    uint32_t pending = get32(in + at);
+    if (pending > (n - at - 4) / SEASON_FRIENDLY_ENTRY) return 0;
+    uint32_t list = 4 + pending * SEASON_FRIENDLY_ENTRY;
+    if (!season_friendly_part_read(in + at, list)) return 0;
+    if (!caps_wide_part_read(in + at + list, n - at - list, form)) {   /* the caps, and from version 4 the goals */
+        season_change_reset();
+        return 0;
+    }
+    if (form < PART_FORM_MARKS) return 1;
+    /* Version 5: the marks after the caps and goals fields (u32 count, then 8 bytes an entry each). */
+    uint32_t c = at + list, left = n - c;
+    for (int f = 0; f < 2; f++) {
+        if (left < 4 || get32(in + c) > (left - 4) / 8) {
+            season_change_reset();
+            return 0;
+        }
+        uint32_t size = 4 + 8 * get32(in + c);
+        c += size;
+        left -= size;
+    }
+    if (!season_intl_marks_read(in + c, left)) {
+        season_change_reset();
+        return 0;
+    }
+    return 1;
 }
 
 /* ---- The news item ---- */
 
-/* One news item for season to every human manager. The text stays in the list: write_text reads it. */
+/* The news screen draws the body of an item with Text::draw_wrapped 0x4aeaf0 (call at 0x78901a: x 0x78 to 0x302,
+ * font 3). It wraps into a global array of 50 lines of 501 bytes at 0xadae1c (0x4aec26) and never checks the line
+ * count (the index [ebp-0x1b0] goes up at 0x4aeff5). Each '\n' ends a line (0x4aec7c). A longer body wrote line 51
+ * over 0xae0ff6..0xae11ea: the ConmebolSeeding pointer at 0xae1000, so the Libertadores seeding of the next
+ * January marked 1 club and the game stopped at conmebol_liber.cpp 663 (open item 69: the 2020/21 news of a 2013
+ * start, 27 September 2020). So the news of a season goes in parts, one item each, of at most PART_LINES lines with
+ * the heading. The lines of a sentence come from its length, at LINE_CHARS characters a line. That is about half
+ * of what a line of the 651-pixel box (0x302 - 0x78 + 1) holds in font 3, so the room covers the word that wraps
+ * to the next line and a larger Fonts setting (inference: the widths were not measured per character). The
+ * count calls no game code, so the send at the season change uses no game memory (Q152), and write_text splits
+ * the text in the same way at any later load. */
+#define PART_LINES 40                   /* of the 50 that the line array holds */
+#define HEAD_LINES 2                    /* "These changes come in with ...:" and the empty line after it */
+#define LINE_CHARS 40
+#define MAX_PARTS 32
+
+static int sentence_lines(uint32_t n) { return 1 + (int)(n / LINE_CHARS); }
+
+/* The parts of a season's text: the offset of the first sentence of each part. Returns the count, 1 or more. */
+static int news_parts(const SeasonNews *s, uint32_t *start)
+{
+    int parts = 1, lines = HEAD_LINES;
+    start[0] = 0;
+    if (!s || !s->len) return 1;
+    for (uint32_t at = 0; at < s->len;) {
+        const char *nl = memchr(s->text + at, '\n', s->len - at);
+        uint32_t n = nl ? (uint32_t)(nl - (s->text + at)) : s->len - at;
+        int k = sentence_lines(n);
+        if (lines + k > PART_LINES && lines > HEAD_LINES && parts < MAX_PARTS) {
+            start[parts++] = at;
+            lines = HEAD_LINES;
+        }
+        lines += k;
+        at += n + 1;
+    }
+    return parts;
+}
+
+/* One news item for each part of the season's news to every human manager. The part goes in slot 2 of the item,
+ * at +13: set_slot 0x785790 stores slot k at +5 + 4k (0x7857ac). The text stays in the list: write_text reads it
+ * and splits it again in the same way. */
+static void news_send_part(int season, int part);
+
 static void news_send(int season)
+{
+    uint32_t start[MAX_PARTS];
+    int parts = news_parts(news_of(season), start);
+    for (int k = 0; k < parts && !rt_unwinding; k++) news_send_part(season, k);
+}
+
+static void news_send_part(int season, int part)
 {
     static uint32_t item;
     if (!item) item = win_static_alloc(NEWS_ITEM_ROOM);
@@ -533,11 +659,14 @@ static void news_send(int season)
     if (rt_unwinding) return;
     call_this(NEWS_SET_SLOT, item, 2, s1);
     if (rt_unwinding) return;
+    uint32_t s2[2] = {2, (uint32_t)part};
+    call_this(NEWS_SET_SLOT, item, 2, s2);
+    if (rt_unwinding) return;
     uint32_t b[1] = {item};
     call_this(NEWS_SEND_ALL, store, 1, b);
     if (logging() && !rt_unwinding)
-        fprintf(stderr, "recomp: season change: news item for %d/%02d sent on day %d of %d\n", season,
-                (season + 1) % 100, game_day(), game_year());
+        fprintf(stderr, "recomp: season change: news item for %d/%02d part %d sent on day %d of %d\n", season,
+                (season + 1) % 100, part + 1, game_day(), game_year());
 }
 
 static int our_item(uint32_t item)
@@ -564,20 +693,32 @@ RT_WRAP(0077bc80, news_write_text)
 {
     uint32_t item = cpu.ecx, text = rt_arg(1);
     if (!our_item(item) || !readable(text)) {
+        uint32_t full_text = rt_arg(2);
         o_0077bc80();
+        if (!rt_unwinding) news_text_written(item, text, full_text);
         return;
     }
     int season = (int)rd32(g_mem, item + 9), full = rt_arg(2) != 0;
-    char head[160];
+    char head[160], of[40] = "";
     const SeasonNews *s = news_of(season);
-    const char *body = s && s->len ? s->text : "The rules of the new season are in force.";
+    uint32_t start[MAX_PARTS];
+    int parts = news_parts(s, start), part = (int)rd32(g_mem, item + 13);
+    if (part < 0 || part >= parts) part = 0;   /* an item of an older version: slot 2 is 0 (0x77bbe0 clears it) */
+    char body[TEXT_ROOM + 1] = "The rules of the new season are in force.";
+    if (s && s->len) {
+        uint32_t end = part + 1 < parts ? start[part + 1] - 1 : s->len;
+        memcpy(body, s->text + start[part], end - start[part]);
+        body[end - start[part]] = 0;
+    }
+    if (parts > 1) snprintf(of, sizeof of, " (part %d of %d)", part + 1, parts);
     call_this(TEXT_CLEAR, text, 0, NULL);
     if (rt_unwinding) return;
     if (!full) {
-        snprintf(head, sizeof head, "New rules for the %d/%02d season", season, (season + 1) % 100);
+        snprintf(head, sizeof head, "New rules for the %d/%02d season%s", season, (season + 1) % 100, of);
         text_put(text, head);
     } else {
-        snprintf(head, sizeof head, "These changes come in with the %d/%02d season:\n\n", season, (season + 1) % 100);
+        snprintf(head, sizeof head, "These changes come in with the %d/%02d season%s:\n\n", season, (season + 1) % 100,
+                 of);
         text_put(text, head);
         if (!rt_unwinding) text_put(text, body);
     }
@@ -673,8 +814,21 @@ static int entry_for(uint32_t comp)
     return -1;
 }
 
+static uint32_t held[8];
+
+void season_change_hold(uint32_t comp, int on)
+{
+    for (int i = 0; i < 8; i++)
+        if (on ? !held[i] : held[i] == comp) {
+            held[i] = on ? comp : 0;
+            return;
+        }
+}
+
 int season_change_start(uint32_t comp, int after)
 {
+    for (int i = 0; comp && i < 8; i++)
+        if (held[i] == comp) return !after;
     if (!in_pass) return 0;
     if (!after) {
         int e = depth > 0 ? stack[depth - 1] : entry_for(comp);
@@ -750,6 +904,7 @@ static void update_pass(void);
 /* game_season_update_pass, cdecl (): at the end of every day. Slice 19: an entry's change waits for its play-off
  * (season_playoffs.c). */
 void season_friendly_dates_day(void);   /* season_friendly_dates.c: row A18, the friendly table of a running season */
+void season_new_cups_day(void);         /* season_new_cups.c: the late start of the All-Ireland cup */
 
 RT_WRAP(005d5ae0, season_update_pass)
 {
@@ -758,6 +913,48 @@ RT_WRAP(005d5ae0, season_update_pass)
     int held = season_playoffs_hold();
     update_pass();
     season_playoffs_release(held);
+    if (rt_unwinding) return;
+    season_new_cups_day();
+}
+
+int season_change_late_start(uint32_t comp)
+{
+    if (!readable(comp) || in_pass) return 0;
+    uint32_t vt = rd32(g_mem, comp), rec = rd32(g_mem, comp + 4);
+    if (!readable(vt) || !readable(rec)) return 0;
+    /* 0x5d5cc6..0x5d5ce0: a complete competition (vtable +0xc returns al) for which +0x2c returns 0 */
+    int complete = (int)(call_this(rd32(g_mem, vt + 0xcu), comp, 0, NULL) & 0xffu);
+    if (rt_unwinding || !complete) return 0;
+    uint32_t busy = call_this(rd32(g_mem, vt + 0x2cu), comp, 0, NULL);
+    if (rt_unwinding || busy) return 0;
+    int day = game_day(), season = game_year() + (day >= LATE_DAY ? 1 : 0);
+    int with_hooks = kinds_on() && season_hooks_due(season);
+    if (with_hooks) {
+        pass_season = season;
+        pass_start = season == season_start_year();
+        started_count = 0;
+        depth = 0;
+        in_pass = 1;
+    }
+    /* 0x5d5ce6..0x5d5d15: the attendances of a league division (comp_util_is_league_division 0x4b0700 with the
+     * record id, then game_update_league_attendances 0x5d6280 for the competition and each one of its +0x20 chain) */
+    uint32_t id = rd32(g_mem, rec);
+    if (call_cdecl(0x004b0700u, 1, &id) && !rt_unwinding) {
+        uint32_t obj = comp;
+        for (int i = 0; readable(obj) && i < 64 && !rt_unwinding; i++) {
+            call_cdecl(0x005d6280u, 1, &obj);
+            int32_t next = (int32_t)rd32(g_mem, obj + 0x20u);
+            if (next == -1) break;
+            obj = rd32(g_mem, rd32(g_mem, COMP_TABLE) + 4u * (uint32_t)next);
+        }
+    }
+    /* 0x5d5d17..0x5d5d1c: start_new_season (vtable +8, the wrap of season_starts.c runs the hooks), then 0x5d5d1f..
+     * 0x5d5d29: Discipline::start_new_season_for_comp 0x556210 (thiscall [0xae28f0], the record) */
+    if (!rt_unwinding) call_this(rd32(g_mem, vt + 8u), comp, 0, NULL);
+    if (!rt_unwinding) call_this(0x00556210u, rd32(g_mem, 0xae28f0u), 1, &rec);
+    in_pass = 0;
+    pass_start = 0;
+    return !rt_unwinding;
 }
 
 static void update_pass(void)
@@ -776,8 +973,7 @@ static void update_pass(void)
      * (game_run_to_start_date 0x5cc850, called from create_game at 0x829fd9) and on the update days of the
      * start year after the start date (25 July, 15 August). A later season: only with changing rules on. */
     int start = season == season_start_year();
-    if (!any || season < season_start_year() || season > SEASON_LAST_YEAR || (!start && !season_changing_rules()) ||
-        (start && season == SEASON_FIRST_YEAR)) {
+    if (!any || !season_hooks_due(season)) {
         o_005d5ae0();
         return;
     }

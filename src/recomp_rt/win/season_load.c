@@ -14,6 +14,7 @@
 #include "season.h"
 #include "season_load.h"
 #include "season_divisions.h"
+#include "season_split.h"
 #include "../rt_host.h"
 
 #include <stdlib.h>
@@ -54,4 +55,5 @@ RT_WRAP(00687b10, league_load)
     if (!rt_unwinding && cpu.eax) season_load_clear_stages(obj);
     if (!rt_unwinding && cpu.eax) season_divisions_loaded(obj);    /* the 3. Liga stage slot */
     if (!rt_unwinding && cpu.eax) season_club_world_loaded(obj);   /* the table of a Form K parent */
+    if (!rt_unwinding && cpu.eax) season_split_loaded(obj);        /* the table order after a split (slice 7) */
 }

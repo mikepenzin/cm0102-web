@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 /* The limits of a row. tools/seasons/make_rules.py has the same, so a bad table stops the build. */
-#define SEASON_RULE_FIRST 2001       /* seasons: start years 2001 to 2099 */
+#define SEASON_RULE_FIRST 2001       /* the seasons of a table row: 2001 to 2099 (after the last row the rule stays) */
 #define SEASON_RULE_LAST 2099
 #define SEASON_RULE_MAX_COUNT 100000 /* the largest count */
 
@@ -63,6 +63,31 @@ const SeasonRule *season_rules_row(int i);           /* NULL out of range */
 
 /* The n-th row (from 0) of a season whose comp_file holds file (one of the ";" names), or NULL. */
 const SeasonRule *season_rules_find(int season, const char *file, int n);
+/* The same by a scan of every row, for the test of the index that season_rules_find uses. */
+const SeasonRule *season_rules_find_scan(int season, const char *file, int n);
+
+/* The first year of an ended competition: an object that the table never holds again waits with year 2999 (NEVER
+ * of season_comps.c, IDLE_YEAR of season_divisions_ita.c), or with 2998 (the Greek group of season_divisions.c
+ * waits with the year before its next edition, 2999 when none comes). */
+#define SEASON_RULE_ENDED 2998
+/* The latest season at or before season that has a row of file, or 0 when none has or season is the year of an
+ * ended competition (SEASON_RULE_ENDED or later). The after-table rule (Q248): after the last row of the file that
+ * row stays, with no lookback limit, so the league, play-off, size and nation rules go on (0.6.2 faults 8 and 9). */
+int season_rules_last_season(int season, const char *file);
+
+/* The Irish calendar move of 2003 (gap row 2 of 0.7.2, season_calendar.h). From 2003/04 the rows of the League of
+ * Ireland and of its FAI, League, Leinster and President's Cups hold calendar years ("2004" in row 2003/04), and while
+ * the move is on in a game their edition Y (also the season S of the February change of Y) plays the row that holds
+ * the real season Y. The game sets the switch at each new game and load (season_calendar_game.c); off it the rows of
+ * a season stand, as before. */
+void season_rules_set_moved(int on);
+/* 1 for a file of the move (ire_*) while the move is on. */
+int season_rules_moved(const char *file);
+/* The one mapping of a season or edition to its row, for every reader of the rules table that a file of the move can
+ * reach (tests/seasons/rules_readers_check.py lists them): for a file of the move while it is on, row Y when its real
+ * season begins with Y, else a row of Y - 1 (any of its rows) whose real season does, else as below; for any other
+ * file, the row of season Y or the last before it (Q248). NULL when none. */
+const SeasonRule *season_rules_row_of(const char *file, int year);
 
 /* The competition classes of the original (comp_classes.c of the build, tools/seasons/make_comp_classes.py). */
 typedef enum { SEASON_KIND_COMP, SEASON_KIND_LEAGUE, SEASON_KIND_CUP } SeasonCompKind;

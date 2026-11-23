@@ -1,0 +1,16 @@
+# Access rules of the competitions whose entrants come by a fixed route (future testing, slice 2 of the 0.6.2 spec).
+# Input of history_check.py. The finals classes take their team count and hosts from the table of the season code
+# (src/recomp_rt/win/season_intl_table.c); after its last row a class keeps the count of that row (decision A).
+# comp: a key of competitions.tsv or history_names.tsv. from, to: the edition years (to: a year or none).
+# teams: the count of entrants. routes: ";" between the entrants, each the winner of a competition key, in the
+# edition before the match or the one of its year (a super cup in August follows a final in May). holder: the
+# winner of the edition before is an entrant.
+comp	from	to	teams	routes	source
+uefa_super_cup	1973	none	2	winner:uefa_cl;winner:uefa_el	UEFA Super Cup: the Champions League and Europa League (UEFA Cup) winners
+recopa	2004	none	2	winner:libertadores;winner:sudamericana	Recopa Sudamericana from 2004: the Libertadores and Sudamericana winners
+suruga_bank	2008	2019	2	winner:j_league_cup;winner:sudamericana	Suruga Bank: the J.League Cup and Copa Sudamericana winners (open item 5, Q7)
+world_club_cup	1960	2004	2	winner:uefa_cl;winner:libertadores	Intercontinental Cup: the European and South American champions
+finalissima	2022	none	2	winner:euro_champ;winner:goldcup	Finalissima: the European champion and the Copa America winner
+fifa_intercontinental	2024	none		winner:uefa_cl;winner:libertadores;winner:asia_club_champ;winner:concacaf_champions;winner:oceania_club_champ;winner:caf_champions	FIFA Intercontinental Cup from 2024: the six continental champions
+uefa_cl	2006	none		holder	the title holder enters the Champions League (UEFA, from 2005/06)
+libertadores	2001	none		holder	the title holder enters the Copa Libertadores

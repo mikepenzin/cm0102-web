@@ -159,6 +159,9 @@ class FunctionWriter:
         for a in GUARDS:
             if a in f.insns:   # the exits of the crash guards
                 need_label |= {int(x, 16) for x in re.findall(r"L_([0-9a-f]+)", GUARDS[a][2])}
+        for a in INSNS:
+            if a in f.insns:   # a replaced instruction can jump to any instruction of its function
+                need_label |= {int(x, 16) for x in re.findall(r"L_([0-9a-f]+)", INSNS[a][1])} & set(f.insns)
         for i, a in enumerate(addrs):
             nxt = a + f.insns[a].size
             if (addrs[i + 1] if i + 1 < len(addrs) else None) != nxt:

@@ -43,6 +43,24 @@ const char *groups_hidden_name(int cell)
     }
 }
 
+/* The positions text 0x53ee50 adds a position when its rating is at least a threshold. The threshold starts at
+ * 15 (0x53ef62). The goalkeeper (+0x0f) comes first (0x53ef9e). The others that add text are the sweeper
+ * (+0x10, 0x53f0b0), the defender (+0x11, 0x53f1c2), the defensive midfielder (+0x12, 0x53f2d4), the midfielder
+ * (+0x13, alone or with the attacking midfielder, 0x53f3af and 0x53f496) and the attacker (+0x15, 0x53f5a8).
+ * The attacking midfielder alone adds no text. When the goalkeeper rating is below the threshold (0x53f7b1),
+ * the text is empty and the threshold is 10 or more, the threshold goes down by 1 and the text is made again
+ * (0x53f7b9..0x53f7da). So the text starts with the goalkeeper when his rating is 15 or more, or when it is
+ * 10 or more and no other position of the text has a higher rating. */
+int groups_is_keeper(const signed char ratings[GROUP_RATINGS])
+{
+    int keeper = ratings[0];
+    if (keeper >= 15) return 1;
+    if (keeper < 10) return 0;
+    for (int i = 1; i < GROUP_RATINGS; i++)
+        if (i != 5 && ratings[i] > keeper) return 0;
+    return 1;
+}
+
 void groups_layout(int keeper, GroupLayout *out)
 {
     memset(out, 0, sizeof *out);

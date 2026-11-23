@@ -2,6 +2,11 @@
 # tests/seasons/rules_report_check.py --update-expected. Columns: season, kind, text.
 2005	bench	world_club_champ (FIFA Club World Championship), row club-world-78: game 7, table 12 (12)
 2005	bench	world_cup (FIFA World Cup), row int-world-50: game 7, table 12 (12)
+2005	club_list	American Major League: 9 of 9 listed clubs that the database holds (12 listed), 3 other clubs, 12 in all; not in it: -; others: Miami Fusion FC, San Jose Earthquakes, Tampa Bay Mutiny
+2005	club_list	Korean League: 10 of 14 listed clubs that the database holds (14 listed), 0 other clubs, 10 in all; not in it: Daegu FC, Gyeongnam FC, Incheon United, Sangmoo; others: -
+2005	club_list	Polish Second Division: 17 of 18 listed clubs that the database holds (18 listed), 1 other clubs, 18 in all; not in it: Zawisza Bydgoszcz; others: Blekitni Stargard Szczecinski
+2005	club_list	Russian First Division: 18 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 18 in all; not in it: Angusht Nazran, FK Orel, Lada Togliatti, Spartak Nizhny Novgorod; others: -
+2005	club_list	Turkish 2. Division Category A: 18 of 18 listed clubs that the database holds (18 listed), 2 other clubs, 20 in all; not in it: -; others: Adanaspor A.S., Aydinspor
 2005	clubs	african_nations (Africa Cup of Nations), row int-continental-51: game 0, table 16 (16)
 2005	clubs	asia_club_champ (AFC Champions League), row club-world-89: game 16, table 25 (25)
 2005	clubs	european_cup (UEFA Champions League), row uefa-34: game 55, table 74 (74 (32 in the group stage))
@@ -10,14 +15,12 @@
 2005	clubs	kor_league (K League), row aus-jap-kor-329: game 10, table 14 (14)
 2005	clubs	pol_first (I liga), row gre-pol-cro-194: game 8, table 16 (16)
 2005	clubs	por_cup (Taça de Portugal), row por-42: game 164, table 228 (228)
-2005	clubs	rus_first (Russian First Division), row rus-tur-32: game 18, table 22 (22)
 2005	clubs	spa_cup (Copa del Rey), row spa-39: game 83, table 81 (81)
-2005	clubs	tur_second (Lig A), row rus-tur-194: game 20, table 18 (18)
 2005	clubs	tur_second_b (Lig B), row rus-tur-221: game 10, table 51 (51)
 2005	clubs	uefa_cup (UEFA Cup), row uefa-37: game 145, table 144 (144 in all, with the 24 Champions League clubs (the page labels it qualifying; i)
 2005	clubs	usa_mls (Major League Soccer), row arg-usa-221: game 4, table 12 (12)
 2005	clubs	usa_open_cup (Lamar Hunt U.S. Open Cup), row arg-usa-275: game 32, table 42 (42)
-2005	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-54: game 50, table 30 (30)
+2005	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-54: game 44, table 30 (30)
 2005	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-55: game 4, table 8 (8)
 2005	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-53: game 24, table 6 (6)
 2005	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-51: game 0, table 51 (51 entrants)
@@ -26,7 +29,6 @@
 2005	clubs	wel_prm_cup (FAW Premier Cup), row wal-nir-irl-109: game 4, table 16 (16)
 2005	clubs	world_club_champ (FIFA Club World Championship), row club-world-78: game 0, table 6 (6)
 2005	clubs	world_cup (FIFA World Cup), row int-world-50: game 0, table 32 (32)
-2005	down	eng_third (Football League Two), row eng-71: game 1 (+0 play-off places), table 2 (2)
 2005	down	pol_first (I liga), row gre-pol-cro-194: game 0 (+0 play-off places), table 2 (2 (15th-16th))
 2005	down	pol_second (II liga), row gre-pol-cro-248: game 4 (+0 play-off places), table 3 (3 (16th-18th))
 2005	down	por_second (Liga de Honra), row por-38: game 3 (+0 play-off places), table 6 (6 (13th to 18th; league cut to 16))
@@ -36,17 +38,13 @@
 2005	down	swe_first (Superettan), row den-swe-189: game 3 (+0 play-off places), table 2 (2)
 2005	down	tur_second_b (Lig B), row rus-tur-221: game 0 (+0 play-off places), table 10 (10 (bottom two of each of five classification groups))
 2005	down	wel_first (Welsh Premier League), row wal-nir-irl-104: game 0 (+0 play-off places), table 2 (2 (pos 17,18))
+2005	meetings	kor_league (K League), row aus-jap-kor-329: game 3, table 2
 2005	no_row	friendly (Friendly): no table row
 2005	no_row	record_utils ('B' International): no table row
 2005	no_row	record_utils (Reserve): no table row
 2005	no_row	record_utils (Under 21 International): no table row
 2005	no_row	spa_lower (Spanish Lower Division): no table row
 2005	not_held	euro_champ_qual (UEFA European Championship qualifying), row int-continental-46: the game holds 2006, the table says not held
-2005	not_held	ire_leinster_cup (Leinster Senior Cup), row wal-nir-irl-121: the game holds 2005, the table says not held
-2005	not_held	ire_pres_cup (President's Cup), row wal-nir-irl-123: the game holds 2005, the table says not held
-2005	not_held	ire_super_cup (FAI Super Cup), row wal-nir-irl-124: the game holds 2005, the table says not held
-2005	not_held	pol_lge_cup (Polish League Cup), row gre-pol-cro-221: the game holds 2005, the table says not held
-2005	not_held	pol_super (Polish Super Cup), row gre-pol-cro-275: the game holds 2005, the table says not held
 2005	not_in_game	arg-usa-356 usa_rules 'United States' (United States)
 2005	not_in_game	aus-jap-kor-302 korea_rules 'n/a' (South Korea)
 2005	not_in_game	club-world-80 conmebol_liber 'Copa Libertadores' (CONMEBOL)
@@ -57,7 +55,6 @@
 2005	not_in_game	eng-72 eng_conf 'Conference National' (England)
 2005	not_in_game	int-continental-49 new '2005 CONCACAF Gold Cup' (CONCACAF)
 2005	not_in_game	por-39 por_second_b 'Segunda Divisão' (Portugal)
-2005	not_in_game	rus-tur-86 new 'Russian Super Cup' (Russia)
 2005	not_in_game	spa-33 spain_rules 'n/a' (Spain)
 2005	not_in_game	spa-36 spa_second_b 'Segunda División B' (Spain)
 2005	not_in_game	uefa-33 uefa_seeding 'UEFA access list and seeding' (UEFA)
@@ -68,6 +65,7 @@
 2005	playoffs	sco_third (Scottish Third Division), row sco-37: game 0 up and 0 down play-off places, table 3 and 0 ('2nd to 4th play off with Second Division 9th for a Second Division place (two-le')
 2005	playoffs	swe_first (Superettan), row den-swe-189: game 1 up and 0 down play-off places, table 1 and 2 ('3rd plays the Allsvenskan 12th; 13th and 14th play the Division 1 runners-up.')
 2005	playoffs	tur_second_b (Lig B), row rus-tur-221: game 2 up and 0 down play-off places, table 0 and 0 ('see format')
+2005	rounds	pol_first (I liga), row gre-pol-cro-194: game 14, table 30 (2 meetings, zones -, extra 0)
 2005	up	pol_first (I liga), row gre-pol-cro-194: game 4 (+0 play-off places), table na (n/a)
 2005	up	sco_second (Scottish Second Division), row sco-36: game 2 (+0 play-off places), table 1 (1)
 2005	up	sco_third (Scottish Third Division), row sco-37: game 2 (+0 play-off places), table 1 (1)

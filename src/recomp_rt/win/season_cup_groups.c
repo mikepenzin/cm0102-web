@@ -36,11 +36,14 @@
 #include "season.h"
 #include "season_change.h"
 #include "season_cups.h"
+#include "season_pol_first.h"
+#include "season_intl.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define GAME_DATE 0xae2c90u             /* s16 day of the year (0 = 1 January), s16 year */
 #define CUP_STAGES 0xcu                 /* Comp ** */
 #define CUP_STAGE_COUNT 0x2cu           /* s32 */
 #define CUP_STAGE_NOW 0x30u             /* s32 */
@@ -130,9 +133,7 @@ static int season_game(void)
 
 static int cup_season(uint32_t cup)
 {
-    if (!season_changing_rules()) return season_start_year();
-    int y = (int16_t)rd16(g_mem, cup + CUP_YEAR);
-    return y >= SEASON_FIRST_YEAR && y <= SEASON_LAST_YEAR ? y : season_start_year();
+    return season_rule_year((int16_t)rd16(g_mem, cup + CUP_YEAR));
 }
 
 /* Test only: RECOMP_CUP_GROUPS_TEST=1 gives the League Cup the test format (season_cups_more.c). */
@@ -379,6 +380,18 @@ static void groups_failed(uint32_t cup, const SeasonCupGroups *g, int group, int
 
 static void draw_groups(uint32_t cup, const SeasonCupGroups *g)
 {
+    /* Item 145: a new cup (the All-Ireland cup) picks its clubs again on the day of the draw, as real life did. At the
+     * season change the module makes it in the entry of the Republic of Ireland (20), before the Northern Irish
+     * Premier Division records its final places: NirPrm::start_new_season 0x78ee30 calls the chain 0x689c20 (vtable
+     * +0xb0), whose League::record_final_positions 0x68aa30 writes club +0x5b and +0x5f (0x68aa5d), in a later
+     * entry. So the pick of the season change saw the Irish League of the season before, with no last division. */
+    const char *file = season_change_file(cup);
+    if (file && !strncmp(file, "new_", 4)) {
+        Cpu saved = cpu;
+        season_new_cups_teams(cup, file);
+        if (rt_unwinding) return;
+        cpu = saved;
+    }
     uint32_t list = rd32(g_mem, cup + CUP_TEAM_LIST);
     int count = (int16_t)rd16(g_mem, cup + CUP_TEAMS);
     int from = g->base_rounds > 0 ? base_slots(cup, (int16_t)rd16(g_mem, cup + CUP_ROUND_COUNT)) : 0;
@@ -399,6 +412,21 @@ static void draw_groups(uint32_t cup, const SeasonCupGroups *g)
         return;
     }
     sort_by_strength(clubs, n);
+    /* Item 145: pots of one division after the other (the All-Ireland cup of 2005/06 to 2007/08: two clubs of each
+     * league in each group). The clubs keep their order of strength within their division; the division of the
+     * strongest club comes first. */
+    if (g->nation_pots) {
+        uint32_t sorted[MAX_CLUBS];
+        int m = 0;
+        for (int i = 0; i < n; i++) {
+            uint32_t div = rd32(g_mem, clubs[i] + CLUB_DIVISION);
+            int seen = 0;
+            for (int j = 0; j < i && !seen; j++) seen = rd32(g_mem, clubs[j] + CLUB_DIVISION) == div;
+            for (int j = i; !seen && j < n; j++)
+                if (rd32(g_mem, clubs[j] + CLUB_DIVISION) == div) sorted[m++] = clubs[j];
+        }
+        memcpy(clubs, sorted, sizeof clubs[0] * (size_t)n);
+    }
     /* Pots of `groups` clubs: one club of each pot a group, the place in the group by chance. */
     uint32_t members[MAX_GROUPS][10];
     int filled[MAX_GROUPS] = {0};
@@ -430,6 +458,15 @@ static void draw_groups(uint32_t cup, const SeasonCupGroups *g)
             return;
         }
         for (int k = 0; k < filled[x]; k++) wr32(g_mem, mem + 4u * (uint32_t)k, members[x][k]);
+        /* Item 145: the clubs of each group, for the run checks. */
+        char names[400];
+        size_t at = 0;
+        names[0] = 0;
+        for (int k = 0; k < filled[x] && at + 60 < sizeof names; k++)
+            at += (size_t)snprintf(names + at, sizeof names - at, "%s%.50s", k ? ", " : "",
+                                   win_str(members[x][k] + 4));
+        fprintf(stderr, "recomp: cup groups: %s %u/%02u group %d: %s\n", format_file(cup), year, (year + 1) % 100,
+                x + 1, names);
         uint32_t saved_esp = cpu.esp;
         cpu.esp -= 16;
         uint32_t order = cpu.esp, places = cpu.esp + 8;
@@ -670,11 +707,26 @@ static void draw_knockout(uint32_t cup, const SeasonCupGroups *g)
             (year + 1) % 100, ko);
 }
 
+/* Item 145: 1 before the day of the group draw of a format that gives one (draw[0] > 0): the cup waits, and
+ * Cup::update_for_date calls slot 10 again the next day (0x51f8f5..0x51f904). */
+static int before_draw(uint32_t cup, const SeasonCupGroups *g)
+{
+    if (g->draw[0] <= 0) return 0;
+    static const int before[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+    int year = (int16_t)rd16(g_mem, cup + CUP_YEAR) + g->draw[2];
+    int m = g->draw[1] < 0 ? 0 : g->draw[1] > 11 ? 11 : g->draw[1];
+    int leap = m > 1 && year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);   /* the game counts 29 February */
+    int draw = year * 400 + before[m] + leap + g->draw[0] - 1;
+    int today = (int16_t)rd16(g_mem, GAME_DATE + 2) * 400 + (int16_t)rd16(g_mem, GAME_DATE);
+    return today < draw;
+}
+
 int season_cup_groups_advance(uint32_t cup)
 {
     const SeasonCupGroups *g = layout(cup);
     if (!g) return 0;
     int32_t now = (int32_t)rd32(g_mem, cup + CUP_STAGE_NOW);
+    if (now == -1 && before_draw(cup, g)) return 1;
     Cpu saved = cpu;
     if (now == -1) draw_groups(cup, g);
     else if (now == g->groups - 1) draw_knockout(cup, g);
@@ -791,6 +843,8 @@ RT_WRAP(0056c010, groups_auto_rank)
  * the knockout stage's. */
 RT_WRAP(00595160, groups_stage_honours)
 {
+    if (season_intl_ofc_honours(cpu.ecx)) return;   /* the OFC Nations Cup of one group (season_intl_ofc.c) */
+    if (season_pol_first_honours(cpu.ecx)) return;  /* the Ekstraklasa in one table (season_pol_first.c) */
     uint32_t self = cpu.ecx, ko = season_cup_groups_ko(self);
     if (!ko) {
         o_00595160();

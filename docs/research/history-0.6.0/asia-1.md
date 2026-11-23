@@ -42,7 +42,7 @@ Other 3.9.68 points:
 
 ## Points of doubt
 
-1. **Chinese First Division A 2003.** Shanghai Shenhua won the title at the time. The title was revoked in February 2013 for match fixing, and current lists say "not awarded". The row gives Shanghai Shenhua, as every database of the period would show, and the note says so. If the game must follow current records, change the row to `not held` with no winner.
+1. **Chinese First Division A 2003.** Shanghai Shenhua won the title at the time. The title was revoked in February 2013 for match fixing, and current lists say "not awarded". The row gives Shanghai Shenhua, as every database of the period would show, and the note says so. If the game must follow current records, change the row to `not held` with no winner. **Decided 3 November 2026 (0.6.2 item 108, Max: do what real life does):** the row follows today's official record (see docs/research/2026-10-17-competition-history-fill.md, Q355).
 2. **J-League 1 2002 and 2003.** One club won both stages, so no championship final took place. The runner-up comes from the overall table (Yokohama F. Marinos in 2002, Júbilo Iwata in 2003). The 3.9.68 row for 1996 (a single-stage season) has no runner-up. For these two years I give the table runner-up all the same.
 3. **Korean League Cup 2004 and 2005.** These were round robins. The runner-up is second in the table, not a losing finalist.
 4. **Korean League Cup 2003** is `not held`. The RSSSF 2003 page says "No league cups this year", and the Wikipedia list has no 2003 edition.

@@ -25,10 +25,11 @@ void season_divisions_loaded(uint32_t obj);
 /* Club moves at a new game (season_clubs.c). The count of a database division in a season, or -1 for the
  * class count of season_clubs.c (0 empties the division: its clubs go to no division, Q290). */
 int season_divisions_class_size(const char *division, int season);
-/* Test switch RECOMP_TEST_EXTRA=spain,portugal (names: germany, italy, spain, portugal; the nation ids at 0x9cf314, 0x9cf360, 0x9cf488 and 0x9cf434): sets the extra
- * division flag (nation +0x11c bit 0x04) of those nations at a new game, before the club moves and the
- * competitions. The Select League(s) screen shows the box only for the first 16 rows, so the rules report runs of
- * Spain and Portugal use this. A test switch only: the player sets the flag on the screen. */
+/* Test switch RECOMP_TEST_EXTRA=spain,portugal (names: germany, italy, spain, portugal, sweden; the nation ids at 0x9cf314, 0x9cf360, 0x9cf488, 0x9cf434 and
+ * 0x9cf4a8): at the start of create_game 0x828110 it does what the click on the extra division box of the Select
+ * League(s) screen does (id 0x38): a nation that is not selected becomes selected, then its extra division flag
+ * (nation +0x11c bit 0x04) goes on (item 226). The rules report runs of Spain and Portugal use this. A test switch
+ * only: the player sets the flag on the screen. */
 void season_divisions_test_extra(void);
 /* 1 for the name of a record that the module adds (a division with no club in the database). */
 int season_divisions_new_record(const char *division);

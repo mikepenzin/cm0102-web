@@ -46,6 +46,9 @@ The checks (each run):
       knockout of that many clubs (the log line of season_kind_club_world.c); with changing rules off, the club
       count of the start season
     - part 26c: a season with 32 clubs in the table plays the groups of Form G (log line "club world groups")
+    - open item 125: the edition takes the host of its row ("; host Japan"): its host place comes from that nation,
+      or the log says that the nation has fewer than 6 clubs. In 2007 and 2008-dec (December 2008, after Gamba
+      Osaka's AFC final) the AFC winner is a club of the host, so the host place is the AFC runner-up (HOST_PLACE)
     - part 26c (Q401): the knockout's first match and final are on the days of the table's format text (December,
       or February for 2020/21 to 2022/23), and when the run reaches the final, places 1 to 3 (Form G: 1 and 2) are
       written on the final's day or at most 7 days later
@@ -81,6 +84,7 @@ RUNS = {
     "2007": (2007, "November 2007", 2008, "off", NATIONS),
     "2024-on": (2024, "October 2024", 2025, "on", NATIONS),
     "2007-load": (2007, "November 2007", 2007, "off", ["England"]),
+    "2008-dec": (2008, "December 2008", 2008, "off", NATIONS),      # host place to the AFC runner-up (item 125)
     # Gaps and their returns, and more starts (the review of 2026-10-18).
     "2019-on": (2019, "October 2019", 2020, "on", NATIONS),         # Oceania into its gap of 2020/21 in the game
     "2020-on": (2020, "November 2020", 2021, "on", NATIONS),        # Oceania waits from the new game, back in 2021
@@ -188,6 +192,7 @@ def check(name, report, log, rules_on):
             # Part 26c (Q401): the knockout plays on the real dates of the table, the first match to the final.
             if want and row:
                 failed += check_dates(name, s, row, text, last)
+                failed += check_host(name, s, row, text)
     if rules_on:
         sentences = re.findall(r"The (.+?) (is played again from the \d{4}/\d\d season|is no longer played|is not "
                                r"played in the \d{4}/\d\d season)\.", text)
@@ -247,9 +252,41 @@ def check_dates(name, s, row, text, last):
     return fails
 
 
-def load_and_play(program, game, save, out, days, timeout=1200):
+# Open item 125: the knockouts whose AFC winner was a club of the host, so the host place went to the AFC
+# runner-up (club-world.tsv rows club-world-116 and 135). (run, edition): the runner-up. Not 2007-load: with
+# England alone no Asian nation is selected, so the AFC pick is a random club (0x6699d0). Not 2022 (Wydad
+# Casablanca, Al Ahly, row club-world-401): the game has no African club competition, so the CAF pick is always a
+# random club of the top reputations (pick_entrant 0x92ae60 has no African record, 0x92aeb4..0x92aee5).
+HOST_PLACE = {("2007", 2007): "Sepahan", ("2008-dec", 2008): "Adelaide United"}
+
+
+def check_host(name, s, row, text):
+    """Open item 125: the edition takes the host of its row's format text ("; host Saudi Arabia"): the log line of
+    the host place, or the line that the host has fewer than 6 clubs (the drawn host stays)."""
+    m = re.search(r"; host ([^;(]+)", row["format_text"] or "")
+    if not m:
+        return []
+    host = m.group(1).strip()
+    ok = re.search(rf"club world {s}: (host {re.escape(host)}, host place .+|the host {re.escape(host)} has \d+ "
+                   rf"clubs, so the drawn host stays)", text)
+    print(f"  {'ok  ' if ok else 'FAIL'}  {name}: Club World Championship {s}: host {host}: "
+          f"{ok.group(1) if ok else 'no log line'}")
+    if not ok:
+        return [f"{name}: Club World Championship {s}: no host line for {host}"]
+    want = HOST_PLACE.get((name, s))
+    if want:
+        got = re.search(rf"club world {s}: host {re.escape(host)}, host place {want}\b.* \(runner-up: the winner ",
+                        text)
+        print(f"  {'ok  ' if got else 'FAIL'}  {name}: Club World Championship {s}: host place {want} (runner-up)")
+        if not got:
+            return [f"{name}: Club World Championship {s}: the host place is not the runner-up {want}"]
+    return []
+
+
+def load_and_play(program, game, save, out, days, timeout=1200, table=None):
     """Loads save, lets the game go on with its holiday (a loaded game keeps it) and saves `days` game days after
     the load (RECOMP_SAVE_AFTER_DAYS ends the program). timeout: seconds (the quit step comes 300 s before it).
+    table: the rules table of the load, else the build's (rules_report_check.rules_table).
     Returns the result and the path of the new save, or None."""
     sys.path.insert(0, os.path.join(HERE, "..", "fixtures"))
     import fixtures
@@ -259,7 +296,7 @@ def load_and_play(program, game, save, out, days, timeout=1200):
     os.replace(save, os.path.join(user, os.path.basename(save)))
     fixtures.write_settings(user, "classic", [])
     steps = fixtures.LOAD_STEPS[:-1] + [f"{(timeout - 300) * 1000} quit"]
-    table = rrc.rules_table(program, game)
+    table = table or rrc.rules_table(program, game)
     r, _ = fixtures.run(program, game, "classic", user, smoke_run.scaled_steps("classic", out, steps),
                         {"RECOMP_SAVE_AFTER_DAYS": str(days), "RECOMP_RULES_TABLE": table}, timeout)
     with open(os.path.join(out, "stderr.txt"), "w") as f:

@@ -124,6 +124,50 @@ _Avoid_: input field, edit box, text field
 A test that runs one function of the original in an emulator, runs the same function of the hand port, and compares the results.
 _Avoid_: emulation test, golden test
 
+**Tier A run**:
+A test run to a far year that plays only the competitions: calendar, draws, entrants, league tables, season changes, history, finances, retirements, new players and contracts. Results come at once from club and nation reputation. It skips the transfer market, background matches, new injuries and AI manager moves. A full AI club lets its weakest players over 21 go, because Tier A has no sales, and an AI club of a played league with fewer than 15 players runs its own market, because Tier A has no signings. The Tier A switch `RECOMP_TIER_A=1` turns it on.
+_Avoid_: fast mode, fast-forward mode, competition-only run
+
+**Tier B run**:
+A test run to a far year with the full game world, to check player pools, managers, money, save size and speed over many decades.
+_Avoid_: world run, full run
+
+**Date jump**:
+A test start of a new game in a far year (2098, 2198 or 2298), with every date of the database moved to that year.
+_Avoid_: time jump, far start
+
+**Run set**:
+The list of test games in `run_set.tsv`, in three sets: the release set, the background soak and the quick games that test the script.
+_Avoid_: matrix, test grid
+
+**Release set**:
+The fixed games of the run set that a release must pass, from 0.7.1 on. Ten games on the Mac finish it in about 12 hours.
+_Avoid_: release run set, gate set
+
+**Spine soak**:
+A full-world game of the release set from one of eight starts, played to its World Cup and Euro end point. Together the eight play every season from 2001/02 to 2029/30 once.
+_Avoid_: era soak, long soak
+
+**Tile row**:
+A full-world game of the release set for one start season tile, with Select All and every extra division, played through the first season change to 1 September.
+_Avoid_: short soak, start check
+
+**Background soak**:
+The run set games that play only while the Mac is idle and hold no release: Tier A to 2300 and the full world from 2025 to 2100.
+_Avoid_: nightly run, long run
+
+**Extra division**:
+A lower division that the player adds on the Select League(s) screen: the English Conference, the German Regionalliga, Serie C2, the Spanish Segunda B, the Portuguese Second Division B or the Swedish Second Division. Select All sets none of them.
+_Avoid_: sub league, optional league, lower league
+
+**Checkpoint save**:
+A save that a Tier A or Tier B run keeps at a set year, so a later test can start there.
+_Avoid_: snapshot, milestone save
+
+**History checker**:
+The test tool that reads a save and checks the history rows and entrants of every competition against the expected rules.
+_Avoid_: history audit, save checker
+
 ### Data
 
 **Nation table**:
@@ -139,7 +183,7 @@ A nation that the original finds by name after the load, such as England for the
 _Avoid_: main nation
 
 **Data set**:
-The season's data that a new game loads: the 2001/02 data of the free release (3.9.60), the 2001/02 December update of the official 3.9.65 patch (3.9.65) or the 2002/03 data of the official patch (3.9.68, the default). The option `database` names it. A download holds 3.9.60 and 3.9.65 in the folders Data-3.9.60 and Data-3.9.65 of the game folder.
+The season's data that a new game loads: the 2001/02 data of the free release (3.9.60, the default since 0.6.1), the 2001/02 December update of the official 3.9.65 patch (3.9.65) or the data of the official patch, which holds the summer 2002 transfers (3.9.68, the data of the base game). The option `database` names it. Each click on the chosen 2001/02 tile of the Choose Season screen moves to the next data set, and Start writes it into the option. A download holds 3.9.60 and 3.9.65 in the folders Data-3.9.60 and Data-3.9.65 of the game folder.
 _Avoid_: database version, data pack, DB
 
 **Progress bar**:
@@ -153,11 +197,11 @@ One football year from July to June, such as 2010/11, that a new game can start 
 _Avoid_: year (for the whole season), edition
 
 **Season game**:
-A game whose start season is not 2001/02, or whose changing rules are on. Only a season game gets the season names, club moves and other season changes. The base game (2001/02 with changing rules off) keeps the original's data.
+A game whose start season is not 2001/02, or whose changing rules are on. Only a season game gets the season names, club moves and other season changes. The base game (2001/02 with changing rules off) keeps the original's data, except the history rows of editions after its start (0.6.2, Q48).
 _Avoid_: modern game, new-season game
 
 **Choose Season screen**:
-The screen from the start screen with one tile per season under era headings. The player picks the season, and so its database, there, and sets changing rules for the new game. Each season has one database (Q417).
+The screen from the start screen with one tile per season under era headings. The player picks the season, and so its database, there, and sets changing rules for the new game. Each season has one database (Q417), except 2001/02, whose tile has the three data sets (0.6.1).
 _Avoid_: season picker, year select
 
 **Season button**:
@@ -196,6 +240,14 @@ _Avoid_: period, generation
 The rules and league structures of one season: club counts, promotion and play-off places, cup formats, substitutes, foreign player rules, transfer windows and names.
 _Avoid_: restructure, year patch
 
+**Rule option**:
+An option that changes how the game plays, for example no foreign player limits. It is off by default, is set for each new game and stays fixed for the whole game. It is never a season rule.
+_Avoid_: rule (alone), cheat, patch
+
+**Rules tab**:
+The third tab of the Options box, beside Graphics and Game, with one row per rule option. It sets the default for a new game. The Rules button of Setup Game opens it for that game.
+_Avoid_: rules screen, settings
+
 **Rules table**:
 The researched season rules of every league and competition, one row per season, each fact with its source.
 _Avoid_: fact sheet
@@ -208,6 +260,14 @@ _Avoid_: dump, season log
 A test run that plays from season to season with no match engine, the original's quick results only, and writes the rules report.
 _Avoid_: fast forward, simulation run
 
+**After-table rule**:
+What a competition or league does in a season after the last row of its rules table: it continues on its last cycle with its last rules, with no end year.
+_Avoid_: fall-back, default rule
+
+**Idle year**:
+A year that a competition with no next edition was set to wait for (2200). Since 0.6.2 no competition uses it.
+_Avoid_: never year, sentinel year
+
 **Season change**:
 The day on which a competition starts its next season: the update day of its league table entry, mostly 20 or 21 June, in January or February for calendar-year leagues. With changing rules on, the competition takes the rules of the new season then, and the player gets the news item of that season's changes.
 _Avoid_: July step (in docs for players), rollover, new year
@@ -215,6 +275,30 @@ _Avoid_: July step (in docs for players), rollover, new year
 **Rule kind**:
 One kind of season rule that the season change applies, such as competition names, with its own function in the list of `season_change.c`. Each build slice adds its kinds there.
 _Avoid_: rule handler, plugin
+
+**League size row**:
+The row of the rules table that gives a league its club count, meetings, halves, zones, splits and periods for one season. In a season game the shared engine builds the table and the fixture dates from it (0.7.2). The base game keeps the class's counts.
+_Avoid_: league class count (that is the original's count), league format
+
+**Size step**:
+The change at a season change that brings a division to the club count of its new row. It moves the extra or missing clubs by the real promotion and relegation places of the rows. It runs only with changing rules on (0.7.3).
+_Avoid_: resize, league expansion
+
+**Closed league**:
+A league with no division below it, such as MLS or the A-League. At a season change it loses its folded clubs and takes its new clubs by the closed league table, only with changing rules on (0.7.3).
+_Avoid_: franchise league, expansion league
+
+**Cross play-off**:
+A tie between a club of an upper division and a club of the division below it, for one place in the upper division, such as J1's 16th against J2's 3rd or the Portuguese tie of the Primeira Liga and the Segunda Liga.
+_Avoid_: promotion/relegation play-off (that can be a play-off inside one division), barrage
+
+**Play-off over four**:
+A relegation play-off whose winner meets the winner of a play-off of four clubs of the division below, such as in Norway, Ireland, J1 and J2, and Ligue 2 and Ligue 3 (0.7.3).
+_Avoid_: five-club play-off (in docs for players), ladder
+
+**League phase pot**:
+One of the groups of clubs that the league phase draw of a UEFA competition takes its opponents from, from 2024/25. The pots follow club reputation, highest first (0.7.3).
+_Avoid_: seeding band, coefficient pot
 
 **Bench**:
 The named substitutes of a match. The rules table column `bench` holds the count. The match engine holds at most 9.
@@ -247,6 +331,10 @@ _Avoid_: start season (for the number), base year
 **Season part**:
 The part `bosman_season.dat` of a saved game that holds its start year and changing rules. A save has it only when the start year is not 2001 or changing rules is on.
 _Avoid_: season block, save field, header
+
+**Merged part**:
+A part of a saved game that holds all temporary files of one type, such as every `fixtures_<year>.tmp`. Its name is the type with `.parts` at the end, such as `fixtures_#.tmp.parts`. A type with one file stays a part of its own.
+_Avoid_: pack, bundle, archive part
 
 ### Options and features
 
@@ -321,6 +409,68 @@ _Avoid_: secret attribute, intrinsic (for the whole set)
 **Printout**:
 The text lines that the original makes from a print button, on the squad and competition screens. The PDF choice of Print To writes it to a PDF in the `Prints` folder.
 _Avoid_: report, export, screenshot
+
+### Network play
+
+**Network game**:
+A game that several human managers play together, each on their own computer. One computer hosts it, and the others join it over a LAN, a VPN or online (0.7.0, #45).
+_Avoid_: multiplayer game, online game (for the game itself), session
+
+**Host**:
+The computer that runs a network game. Only the host runs the match engine and keeps the save. The other computers show the screens that the host sends.
+_Avoid_: server (for the host's computer)
+
+**Human manager**:
+A person who takes part in a network game and controls one club.
+_Avoid_: player, client, user (inside a network game)
+
+**Game list**:
+The original's Select Network Game screen. It lists each open network game on the LAN and online, with Join.
+_Avoid_: lobby (for the screen), server list, browser
+
+**Lobby**:
+The Bosman Edition server that keeps the list of open online games. A host tells the lobby about its game, and the game list asks the lobby for it.
+_Avoid_: matchmaker, master server
+
+**Relay**:
+The Bosman Edition server that passes traffic between a host and its human managers. No router setting is needed. It keeps no game data.
+_Avoid_: proxy, tunnel, TURN
+
+**Invite link**:
+A web link to one network game. It opens a page with a button that starts Bosman Edition and joins that game.
+_Avoid_: join code, deep link
+
+**Game code**:
+The 8 characters that name one online network game in the lobby, for example K7M2Q9RT. The invite link holds it, and the relay uses it.
+_Avoid_: join code, room code
+
+**Always-on game**:
+A network game that a host leaves open for a long time, so that human managers can join and leave when they want. It moves forward only when a human manager clicks Continue.
+_Avoid_: persistent league, server game
+
+**Away**:
+The state of a human manager who left a network game. Their club is on holiday as in the original. They can take it back with their manager password.
+_Avoid_: offline, AFK, dropped
+
+**Game password**:
+The optional password of a network game. The host sets it on the Network tab of the Bosman Edition Options box, and a human manager types it in the password box to join. It is not the manager password, which protects one club.
+_Avoid_: server password, join code
+
+**Kick**:
+The host removes a human manager from a network game, from the list on the Network tab. Their club goes on holiday, as when they leave.
+_Avoid_: ban, boot, remove (for this action)
+
+**Online play**:
+The option that lets the game list show online games and lets a host put its game in the lobby. It is on by default. When it is off, the game shows LAN games only.
+_Avoid_: internet mode, online mode
+
+**Connection test**:
+A check on the Network tab of the Bosman Edition Options box that the lobby and relay can be reached. It says that online play works, or it says what is wrong.
+_Avoid_: network check, diagnostics
+
+**Ping**:
+The time in ms for a message to go from the host to a human manager's game and back. The Network tab shows it for each human manager online, and the game list row shows the highest one of the game.
+_Avoid_: latency, lag
 
 ### Research maps
 

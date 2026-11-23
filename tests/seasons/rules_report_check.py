@@ -10,7 +10,8 @@ Usage:
     python3 tests/seasons/rules_report_check.py --run <cm0102_recomp> <game folder> [--year y] [--last y]
         [--database <folder>] [--nations england|all|all,-<name>,...|<name,name,...>]
         [--extra conference,regional,c2,spain,portugal]
-        [--keep <folder>] [--timeout s] [--start-only] [--update-expected] [--changing-rules on|off]
+        [--databases <folder>] [--own-dbs <folder>] [--keep <folder>] [--timeout s] [--start-only]
+        [--update-expected] [--changing-rules on|off]
         plays the season jump, then compares its report
 
     python3 tests/seasons/rules_report_check.py --league-advance <report> [<report> ...]
@@ -29,9 +30,13 @@ RECOMP_SEASON_JUMP=<last> turns the match engine off, so the original's quick re
 in the real day loop. RECOMP_RULES_REPORT writes the competitions at the start of each season (the first day,
 then 1 August) and at its end (1 June of the next year) (src/recomp_rt/win/season_report.c). The run ends after
 the end report of the last season. --year starts the game in that season (RECOMP_START_SEASON) with the
-database folder. --nations picks the leagues on the Select League(s) screen: england (the default
-selection), all (Select All), all,-france (Select All, then France out), or names of the first 16 rows
-(Argentina to Norway). --extra adds the lower
+database folder. Without --database a start year plays the database that its expected files were written on
+(docs/research/2026-10-21-expected-files-060.md; 0.6.2 open item 129): the folder of --databases (default
+/Users/max/Projects/cm0102/test-fixtures/databases) whose name starts with SEASON_DATABASES[year], or for 2004 and
+2006 our own database (Summer 2004.zip, Summer 2006.zip in --own-dbs, default /Users/max/Projects/cm0102/own-dbs),
+unpacked for the run and deleted after it. 2001 and 2002 play the base data (3.9.68). --nations picks the leagues on
+the Select League(s) screen: england (the default selection), all (Select All), all,-france (Select All, then
+France out), or names of the first 16 rows (Argentina to Norway). --extra adds the lower
 divisions of the screen: the English Conference, the German regional divisions and Serie C2. --changing-rules on
 plays the jump with changing rules on (slice 22; the default is off, the start season's rules). --keep keeps the
 report and the log there.
@@ -47,6 +52,10 @@ The checks that fail the test (exit code 1):
       tests/seasons/rules_report_expected/<start year>-<nations>.tsv: one line per difference (season, kind,
       text). A slice that brings a rule removes its lines with --update-expected; a difference that has gone
       is listed, and does not fail the check.
+    - (--run, changing rules on, which logs the news with RECOMP_SEASON_CHANGE_LOG=1) no competition gets both
+      "The X is played for the first time." and "The X is played again ..." in one season, and the cups of
+      NEWS_KIND get their sentence (the Conference Cup of 2004/05 and the Setanta Sports Cup of 2009/10 again, the
+      Superfinalen of 2009 and the Setanta Cup of 2004/05 for the first time) (0.6.2 items 135 and 145)
 
 The differences, by kind:
     clubs, subs_used, bench     the game's value at the start and at the end differ from the count of the row
@@ -74,6 +83,11 @@ The differences, by kind:
                                 database. The line names each club, so another fill is a new difference
     division_clubs              (slice 18) a league of the size table whose division holds another number of clubs
                                 at a season start than its table has rows
+    meetings                    (0.7.2 slice 1) a division's meetings of each pair (+0x3c, the rounds column of a
+                                league line) differ from the encoded row's meetings (tools/seasons/encode_leagues.py)
+    rounds                      (0.7.2 slice 1) the rounds of a division's table, meetings x (n' - 1) with n' the
+                                game's count rounded up to even, differ from the encoded row's rounds (the row's
+                                meetings and count). Only rows of one table with no derby or inter-zone rounds
     format                      the stages of the Champions League at the end of a season (the uefa line of the
                                 report, slice 22): the second group stage and the first knockout round differ
                                 from the "Rounds (clubs):" list of the row ("Groups 2 16, KO 8" or "KO 16")
@@ -87,11 +101,14 @@ object of the same file (the Regionalliga groups).
 """
 import collections
 import os
+import re
 import struct
 import subprocess
 import sys
+import shutil
 import tempfile
 import time
+import zipfile
 
 
 # Friendly competitions: made by chance, not in the rules table.
@@ -115,8 +132,24 @@ LEAGUE_INTS = ["matches", "up", "playoff_up", "playoff_down", "down", "above", "
 RECORD = 0x6b
 NATION_ROWS = ["Argentina", "Australia", "Belgium", "Brazil", "Croatia", "Denmark", "England", "Finland", "France",
                "Germany", "Greece", "Holland", "Italy", "Japan", "Northern Ireland", "Norway"]
+# The 11 nations below Norway in the list of the base data (3.9.68), Poland to Wales: the list holds 27 rows and shows
+# 16. A click on one of these comes after SCROLL clicks on the list's down arrow (768 517), enough to bring the list to
+# its end, so the last row is Wales and the rows show the last 16 nations. The first version counted 10 clicks and a
+# list of 26 (it lacked Wales): the list stops at 11 clicks, so every click selected the next nation, Portugal gave
+# the Republic of Ireland (open item 231). tests/seasons/nation_click_run.py reads the nation that a click selects
+# from the start report, for each nation on each data set.
+NATION_ROWS_BELOW = ["Poland", "Portugal", "Republic of Ireland", "Russia", "Scotland", "South Korea", "Spain", "Sweden",
+                     "Turkey", "United States", "Wales"]
+VISIBLE = 16
+DOWN_ARROW, SCROLL = "768 517", 14
+
+
+def below_y(nation):
+    """The y of a nation of NATION_ROWS_BELOW on the list scrolled to its end (the last VISIBLE rows show)."""
+    rows = NATION_ROWS + NATION_ROWS_BELOW
+    return 188 + 22 * (rows.index(nation) - (len(rows) - VISIBLE))
 EXTRA = {"conference": 320, "regional": 385, "c2": 451}     # y of the row; the extra division is at x 675
-ENV_EXTRA = {"spain", "portugal"}                           # slice 20: set by RECOMP_TEST_EXTRA, not by a click
+ENV_EXTRA = {"spain", "portugal", "sweden"}                 # slice 20: set by RECOMP_TEST_EXTRA, not by a click
 
 
 UEFA_LINES = []          # the uefa lines of the last report that read_report read (slice 22)
@@ -218,6 +251,11 @@ def row_files(r):
 
 _LEAGUE_PLAYOFFS = {}
 
+# Files whose table holds both halves of a row of halves (0.7.2 league sizes, slice 14): it plays twice the meetings of
+# the row's halves. Also tests/seasons/league_size_run.py HALVES_IN_TABLE.
+# The Argentine second division plays rows 2002 to 2006 as one table of both halves (season_sizes_arg_second.c form_of).
+HALVES_IN_TABLE = {"jap_j1", "kor_league", "arg_second"}
+
 
 def league_playoffs():
     """{row id: encoded league row} of tools/seasons/encode_leagues.py (slice 19)."""
@@ -228,6 +266,36 @@ def league_playoffs():
         _LEAGUE_PLAYOFFS.update((e["id"], e) for e in rows)
     return _LEAGUE_PLAYOFFS
 
+
+
+# Open item 259: the pairs whose play-off is played between the two divisions (the lower class's stage, season_sizes.c
+# PLAYOFF_PAIRS) and whose places set_places sets. Their rows count only the direct places. Northern Ireland is a
+# fixed exchange. The places of Ireland are an open item of their own, so neither is here.
+CROSS_PLAYOFF = {"nor_prm", "nor_first", "swe_prm", "swe_first"}
+
+
+def two_winners_first(r):
+    """0.6.2 open item 63: 1 for a row whose 4 play-off places, just below its direct places, are two ties whose
+    winners both go up (Série B from 2025: up 2, places 3 to 6), else 0. Gap row 56 (0.7.2): the game plays the two
+    ties (src/recomp_rt/win/season_sizes_bra.c): +0xbe the row's up and +0xbf 4. A game loaded in a season of two
+    meetings has no stage array, so its next season sends both winners' places up directly (Q247,
+    season_playoffs_winners_up in src/recomp_rt/win/season_playoff_winners.c): +0xbe the row's up and 2, +0xbf 0."""
+    e = league_playoffs().get(r["id"])
+    if (e is None or "the two winners go up" not in (r["playoffs_text"] or "") or not isinstance(r["up"], int) or
+            encode_leagues.count(e["po_up"]) != 4):
+        return 0
+    first = e["po_up"].split("-")[0]
+    return 1 if first.isdigit() and int(first) == r["up"] + 1 else 0
+
+
+def finalists_up(r):
+    """Gap row 57 and open item 249 (0.7.2): 1 for a row whose play-off of its top 8 sends its two finalists up and
+    has no direct place (Série B 2002 to 2005: up 2, play-off places 1 to 8), else 0. The game plays it with +0xbe 0
+    and +0xbf 8, and both finalists go up (season_playoffs_finalists_up, src/recomp_rt/win/season_sizes_bra.c)."""
+    e = league_playoffs().get(r["id"])
+    if e is None or r["up"] != 2 or encode_leagues.count(e["po_up"]) != 8:
+        return 0
+    return 1 if e["po_up"].split("-")[0] == "1" else 0
 
 
 NOT_PLAYED = "not played in the game"
@@ -372,11 +440,43 @@ def differences(seasons, comps, rows):
                 game = "/".join(str(v) for v in values)
                 out.add((season, key, f"{label}: game {game}, table {r[key]} ({r[key + '_text'][:80]})"))
         if c["kind"] == "league" and isinstance(r["tier"], int):     # a division, not a group tournament
+            # The places of the row's edition. A calendar-year row (real season "2007" for 2006/07) is the edition of
+            # the end line: at the start of 2006/07 the Allsvenskan object still plays 2006 (year 2006), at its end
+            # 2007 (season_sizes_edition, season_sizes.c, reads the rows in the same way).
+            real = str(r.get("real_season", ""))
+            c = next((x for x in both if real.isdigit() and x["year"] == int(real)), c)
+            # Item 286: edition Y of the Argentine second division plays row Y (season_league.c edition_is_year), the
+            # real season that ends in it ("2016" for row 2015). Its object moves on after the start line (14 July),
+            # so that line of season Y still holds edition Y - 1 and the end line holds edition Y, with row Y's places.
+            # The Primera moves on in the same way (season_league.c edition_is_year): a running game's start line of 2021
+            # holds edition 2020, so its places and rounds are those of row 2020.
+            if c["file"] in CALENDAR_START_FILES:
+                c = next((x for x in both if x["year"] == r["season"]), c)
+                both = [x for x in both if x["year"] == r["season"]] or both
             for key, extra in (("up", "playoff_up"), ("down", "playoff_down")):
                 want = r[key]
-                if want == "na" and c[key] == 0:
+                # A top division (no division above, -1) sends nobody up: the class's up places of the Série A (4 in
+                # 2001/02) or the MLS (1) only mark rows.
+                if want == "na" and (c[key] == 0 or (key == "up" and c.get("above") == -1)):
+                    continue
+                # Open item 281: a row of any league with no number from the research (the Druga HNL of 2008/09, 2009/10
+                # and 2012/13 among them) gives the game's places nothing to differ from.
+                if want == "unknown":
                     continue
                 accept = {c[key], c[key] + (1 if c[extra] else 0), c[key] + c[extra]}
+                # Open item 259: the play-off of these pairs is between the two divisions, so no club surely moves
+                # through it and the row counts the direct places only (nor_prm 2005 "13th-14th (2)" and the 12th
+                # in the play-off). season_sizes.c set_places reads them in the same way.
+                if c["file"] in CROSS_PLAYOFF:
+                    accept = {c[key]}
+                # 0.6.2 open item 63: two ties whose winners both go up, 4 places just below the direct places (Série B
+                # from 2025). The game plays them (gap row 56), or with no stage array sends both winners' places up
+                # directly (Q247, season_playoffs_winners_up): the row's places and 2. Gap row 57: the two finalists
+                # of the top 8 go up, no direct place.
+                if key == "up" and two_winners_first(r):
+                    accept = {c[key]} if c[extra] == 4 else {c[key] - 2}
+                if key == "up" and finalists_up(r) and c[extra] == 8:
+                    accept = {c[key] + 2}
                 if not isinstance(want, int) or want not in accept:
                     out.add((season, key, f"{label}: game {c[key]} (+{c[extra]} play-off places), "
                                           f"table {want} ({r[key + '_text'][:80]})"))
@@ -386,9 +486,37 @@ def differences(seasons, comps, rows):
                 want = (encode_leagues.count(e["po_up"]), encode_leagues.count(e["po_down"]))
                 game = (c["playoff_up"], c["playoff_down"])
                 same = game == want if e["po_status"] == "ok" else bool(sum(game)) == bool(sum(want))
+                # Item 291: rows 2002 and 2003 of the second division name the promoción in their text, and the encoded
+                # row holds no places for it: the game plays it with the two clubs after the direct places.
+                if c["file"] == "arg_second" and game == (2, 0) and "promoci" in r["playoffs_text"].lower():
+                    same = True
+                if two_winners_first(r) and game[0] != 4:   # open item 63: no stage, the places go up directly
+                    same = game == (0, want[1])
                 if not same:
                     out.add((season, "playoffs", f"{label}: game {game[0]} up and {game[1]} down play-off places, "
                                                  f"table {want[0]} and {want[1]} ({r['playoffs_text'][:80]!r})"))
+            # 0.7.2 league sizes, slice 1: the meetings of each pair (+0x3c, the report's rounds column of a league)
+            # and the rounds of the table, meetings x (n' - 1) with n' the game's count rounded up to even, against
+            # the encoded row (meetings; rounds = meetings x (n' - 1) + extra of the row's count).
+            # A row of halves gives the meetings of each half; the table of J1 and of the K League holds both halves
+            # (0.7.2 slice 14, src/recomp_rt/win/season_sizes_asia.c), so it plays twice them.
+            if e is not None and isinstance(e["meetings"], int):
+                meet = sorted({x["rounds"] for x in both if x["rounds"] > 0})
+                # The second division's row of 25 clubs (2001/02) keeps the class: an Apertura of one meeting.
+                table_meet = e["meetings"] * (2 if e["halves"] == 1 and c["file"] in HALVES_IN_TABLE and
+                                              not (c["file"] == "arg_second" and r["clubs"] == 25) else 1)
+                if meet and meet != [table_meet]:
+                    out.add((season, "meetings", f"{label}: game {'/'.join(map(str, meet))}, table "
+                                                 f"{table_meet}"))
+            # Rounds only for one table with no derby round: the game's object of a season of halves or zones
+            # holds other counts.
+            if e is not None and isinstance(e["rounds"], int) and e["zones"] == "-" and not e["extra"] \
+                    and not e["halves"]:
+                made = sorted({x["rounds"] * (x["clubs"] + x["clubs"] % 2 - 1) for x in both
+                               if x["rounds"] > 0 and x["clubs"] > 1})
+                if made and made != [e["rounds"]]:
+                    out.add((season, "rounds", f"{label}: game {'/'.join(map(str, made))}, table {e['rounds']} "
+                                               f"({e['meetings']} meetings, zones {e['zones']}, extra {e['extra']})"))
         shown = make_names.shown_name(r["name"])
         if shown and c["name"] not in (r["name"], shown):
             out.add((season, "name", f"{label}: game {c['name']!r}, table {r['name']!r}"))
@@ -499,14 +627,16 @@ def club_differences(seasons, comps, clubs, data_dir, rows=()):
     for n in held:
         plain_to[make_clubs.plain_name(n)].add(n)
     lists = collections.OrderedDict()
-    records = club_record_names(season)             # slice 15b: the new club records of the start season
+    # Slice 15b: the new club records of the start season. Its own name: cf6e4633 gave it the name of the
+    # division records above, so no division had a record and no club_list line came (0.6.2 open item 142).
+    new_records = club_record_names(season)
     for s, division, club_id, club, _ in make_clubs.build()[0]:
         if s != season:
             continue
         if names.get(club_id) == club or club in held:
             name = club
-        elif club_id == -1 and (division, club) in records:
-            name = records[(division, club)]
+        elif club_id == -1 and (division, club) in new_records:
+            name = new_records[(division, club)]
         else:                               # the plain form, when one club of the database has it (season_clubs.c)
             name = make_clubs.plain_match(club, plain_to.get(make_clubs.plain_name(club), set()))
         lists.setdefault(new_division_alias(division, season, rows), []).append(name)
@@ -635,7 +765,36 @@ def write_expected(name, diffs, seasons):
     print(f"expected differences written: {expected_path(name)}")
 
 
-def check(report, game=None, last=None, expected=None, update=False, data_dir=None, start_only=False):
+def first_and_again(log):
+    """0.6.2 item 135: the competitions with both news sentences in one season, the first edition of the new
+    competitions module (season_comps.c) and the return after a gap (season_new_cups.c), as the Conference Cup of
+    2004/05 had. A list of failure texts."""
+    said = collections.defaultdict(set)
+    for m in re.finditer(r"season change: news (\d{4}/\d\d): The (.+?) is played (for the first time|again)", log):
+        said[(m.group(1), m.group(2))].add(m.group(3))
+    fails = [f"{s}: the {name} is played for the first time and again" for (s, name), kinds in sorted(said.items())
+             if len(kinds) > 1]
+    # The lead's ruling on Max's rule of real life (5 November 2026): a cup with real editions before says
+    # "played again", one held for the first time ever says "for the first time". Checked when the run logs the
+    # cup's sentence: a run without the nation or the season has none. A run that must have it checks that itself
+    # (uefa_formats_run "change": the Conference Cup).
+    for (s, name), want in NEWS_KIND.items():
+        got = said.get((s, name))
+        if got and got != {want}:
+            fails.append(f"{s}: the {name} is played {'/'.join(sorted(got))}, not {want}")
+    return fails
+
+
+# 0.6.2 item 135: the sentence of a new competition's first season in the game. The Conference League Cup ran
+# from 1979/80 to 2000/01 and came back in 2004/05; the Superfinalen of 2009 was the first official edition.
+# Item 145: the All-Ireland cup starts with its first real edition, the Setanta Cup of 2005 (row 2004/05), and
+# comes back in 2009/10 after the season with no edition.
+NEWS_KIND = {("2004/05", "Conference Cup"): "again", ("2009/10", "Superfinalen"): "for the first time",
+             ("2004/05", "Setanta Cup"): "for the first time", ("2009/10", "Setanta Sports Cup"): "again"}
+
+
+def check(report, game=None, last=None, expected=None, update=False, data_dir=None, start_only=False,
+          names=True):
     """Prints the checks and the differences. Returns the failure texts."""
     clubs = []
     seasons, comps = read_report(report, clubs)
@@ -653,7 +812,9 @@ def check(report, game=None, last=None, expected=None, update=False, data_dir=No
     unknown = sorted({c["vtable"] for c in comps if c["file"] == "?"})
     if unknown:
         failed.append(f"competitions with an unknown class: {', '.join(unknown)}")
-    if game and start == 2001:
+    if game and start == 2001 and names:
+        # Changing rules on gives the real names from the first season (season_names.c), so only a run with
+        # changing rules off checks the names of the data (0.7.2 league sizes slice 18).
         names = record_names(game)
         for c in comps:
             if c["season"] != 2001:
@@ -713,18 +874,20 @@ def league_steps(nations, extra):
     steps = smoke_run.without_intro_click([s for s in smoke_run.STEPS if "dump" not in s and "quit" not in s])
     if nations == ["England"] and not [e for e in extra if e in EXTRA]:
         return steps
-    points = []                                                     # a step's time counts from the last wait
+    points, below = [], []                                          # a step's time counts from the last wait
+    clicks = nations[1:] if nations[0] == "all" else [n for n in nations if n != "England"]
     if nations[0] == "all":
-        points.append("592 155")                                    # Select All
-        for n in nations[1:]:                                       # then a click takes a nation out again
+        points.append("592 155")                                    # Select All, then a click takes a nation out
+    for n in clicks:
+        if n in NATION_ROWS_BELOW:
+            below.append(f"390 {below_y(n)}")
+        else:
             points.append(f"390 {188 + 22 * NATION_ROWS.index(n)}")
-    else:
-        for n in nations:
-            if n != "England":
-                points.append(f"390 {188 + 22 * NATION_ROWS.index(n)}")
     for e in extra:
         if e in EXTRA:
-            points.append(f"675 {EXTRA[e]}")
+            points.append(f"675 {EXTRA[e]}")                        # the extra rows lie in the first view
+    if below:
+        points += [DOWN_ARROW] * SCROLL + below
     picks = [f"{2000 + 1500 * i} click {p}" for i, p in enumerate(points)]
     many = nations != ["England"]
     out = []
@@ -766,7 +929,7 @@ def run(program, game, last, year, database, nations, extra, keep, timeout, opti
     user, home, shots = (os.path.join(work, d) for d in ("user", "home", "shots"))
     for d in (user, home, shots):
         os.makedirs(d)
-    options = {"display": "classic", "changing_rules": "off", "faster_days": "on"}
+    options = {"display": "classic", "changing_rules": "off", "faster_days": "on", "database": "3.9.68"}
     options.update(options_more or {})
     env_extra = dict(env_more or {})
     # Slice 20: Spain and Portugal sit below the 16 rows of the Select League(s) screen, so their extra division
@@ -776,7 +939,8 @@ def run(program, game, last, year, database, nations, extra, keep, timeout, opti
         env_extra["RECOMP_TEST_EXTRA"] = ",".join(test_extra)
     if year:
         env_extra["RECOMP_START_SEASON"] = str(year)
-    if database:
+    if database:                               # a run with a database never falls back to the base data
+        database = database_folder(database)
         cdr.copy_data(database, os.path.join(user, "Databases", os.path.basename(database)))
         options["database"] = "folder:" + os.path.basename(database)
     with open(os.path.join(user, "settings.txt"), "w") as f:
@@ -814,7 +978,92 @@ def run(program, game, last, year, database, nations, extra, keep, timeout, opti
             except subprocess.TimeoutExpired:
                 code = "timeout"
     print(f"run: code {code} after {time.time() - start:.0f} s, log {os.path.join(work, 'stderr.txt')}")
+    if database:
+        no_fallback(log_path, database)
     return code, report
+
+
+DATABASES = "/Users/max/Projects/cm0102/test-fixtures/databases"
+# The start of the name of each start year's season database folder (gate_run.py plays the same folders).
+SEASON_DATABASES = {2003: "October 2003", 2005: "September 2005", 2007: "November 2007", 2008: "September 2008",
+                    2009: "September 2009", 2010: "September 2010", 2011: "September 2011", 2012: "September 2012",
+                    2013: "Autumn 2013", 2014: "October 2014", 2015: "October 2015", 2016: "October 2016",
+                    2017: "October 2017", 2018: "October 2018", 2019: "October 2019", 2020: "November 2020",
+                    2021: "October 2021", 2022: "October 2022", 2023: "October 2023", 2024: "October 2024",
+                    2025: "December 2025", 2026: "October 2026"}
+# Our own season databases, zips in OWN_DBS (gate_run.py --own-dbs).
+OWN_DBS = "/Users/max/Projects/cm0102/own-dbs"
+OWN_DATABASES = {2002: "Summer 2002", 2004: "Summer 2004", 2006: "Summer 2006"}
+# The start years whose expected files were written on the base data (3.9.68), not on a season database: 2001, and
+# 2002, written before Summer 2002 was made (docs/research/2026-10-21-expected-files-060.md). gate_run.py plays
+# Summer 2002 for 2002; it has no expected file.
+BASE_DATA_YEARS = (2001, 2002)
+
+
+def data_folder(path):
+    """The folder of index.dat: the folder itself, or its one subfolder that holds it (the October 2026 zip unpacks
+    to "October 2026/October 2026 Data Update")."""
+    if os.path.isfile(os.path.join(path, "index.dat")):
+        return path
+    subs = [os.path.join(path, n) for n in sorted(os.listdir(path))
+            if os.path.isfile(os.path.join(path, n, "index.dat"))]
+    return subs[0] if len(subs) == 1 else path
+
+
+def database_folder(path):
+    """The folder of index.dat in the database folder path (data_folder). Stops when path is no folder or neither
+    it nor one subfolder holds index.dat, so a run never plays the base data in place of a database."""
+    if not os.path.isdir(path):
+        raise SystemExit(f"no database folder {path}")
+    folder = data_folder(path)
+    if not os.path.isfile(os.path.join(folder, "index.dat")):
+        raise SystemExit(f"no index.dat in {path} or in one subfolder of it")
+    return folder
+
+
+def no_fallback(log_path, database):
+    """Stops when the game's log says it read its own Data in place of the database folder (files.c: "no usable
+    folder")."""
+    if os.path.isfile(log_path):
+        with open(log_path, encoding="latin-1") as f:
+            if "no usable folder" in f.read():
+                raise SystemExit(f"the game did not read {database} and fell back to its own Data (log {log_path})")
+
+
+def season_database(year, databases=DATABASES):
+    """The season database folder of a year of SEASON_DATABASES in databases; stops when there is none."""
+    names = sorted(n for n in os.listdir(databases) if n.startswith(SEASON_DATABASES[year])) \
+        if os.path.isdir(databases) else []
+    if not names:
+        raise SystemExit(f"rules_report_check.py: no database folder for {SEASON_DATABASES[year]} in {databases}")
+    return data_folder(os.path.join(databases, names[0]))
+
+
+def own_database(year, own, unpack_to):
+    """Our own database of a year of OWN_DATABASES, unpacked from its zip in own into unpack_to (as gate_run.py
+    database() does); stops when there is no zip."""
+    path = os.path.join(own, OWN_DATABASES[year] + ".zip")
+    if not os.path.isfile(path):
+        raise SystemExit(f"rules_report_check.py: no {OWN_DATABASES[year]}.zip in {own}")
+    with zipfile.ZipFile(path) as z:
+        z.extractall(unpack_to)
+    return data_folder(os.path.join(unpack_to, OWN_DATABASES[year]))
+
+
+def run_database(argv, year, unpack_to):
+    """The database folder of a --run (None: the base data). An explicit --database stays. Without it a start year
+    plays the database of its expected files: with the base data a 2007 start compared the 2001 clubs with the
+    November 2007 file (Brazilian state championships of 12, 5 and 5 clubs, batch P rr2007-a, open item 129). An own
+    database is unpacked into unpack_to, which the caller deletes after the run."""
+    if "--database" in argv:
+        return os.path.abspath(arg(argv, "--database"))
+    if not year or year in BASE_DATA_YEARS:
+        return None
+    if year in OWN_DATABASES:
+        return own_database(year, os.path.abspath(arg(argv, "--own-dbs", OWN_DBS)), unpack_to)
+    if year not in SEASON_DATABASES:
+        raise SystemExit(f"rules_report_check.py: no database for {year}; give --database")
+    return season_database(year, os.path.abspath(arg(argv, "--databases", DATABASES)))
 
 
 def arg(argv, name, default=None):
@@ -840,10 +1089,11 @@ def main(argv):
         program, game = os.path.abspath(argv[2]), os.path.abspath(argv[3])
         year = int(arg(argv, "--year", 0)) or None
         last = int(arg(argv, "--last", 2027))
-        database = os.path.abspath(arg(argv, "--database")) if "--database" in argv else None
         nations = arg(argv, "--nations", "england")
         words = [x.strip().lower().replace("_", " ") for x in nations.split(",")]
-        names = [next(n for n in NATION_ROWS if n.lower() == w.lstrip("-")) for w in words if w != "all"]
+        # A nation below the first view (Turkey) is a word too: the clicks take NATION_ROWS_BELOW.
+        names = [next(n for n in NATION_ROWS + NATION_ROWS_BELOW if n.lower() == w.lstrip("-"))
+                 for w in words if w != "all"]
         nations = (["all"] + names) if words[0] == "all" else names
         if nations[0] != "all" and "England" not in nations:
             nations = ["England"] + nations                      # Arsenal: England stays selected
@@ -857,17 +1107,29 @@ def main(argv):
         if rules not in ("on", "off"):
             print("--changing-rules takes on or off")
             return 2
-        code, report = run(program, game, last, year, database, nations, extra, keep, timeout,
-                           options_more={"changing_rules": rules}, start_only=start_only)
-        failed = [] if code == 0 else [f"the run ended with code {code}"]
         name = ("changing-" if rules == "on" else "") + f"{year or 2001}-{nations[0].lower()}" + "".join(
             f"{'-no' if nations[0] == 'all' else '-'}{n.lower().replace(' ', '_')}" for n in nations[1:]) + \
             "".join(f"-{e}" for e in extra) + ("-start" if start_only else "")
-        if os.path.exists(report):
-            failed += check(report, game if not database else None, last, name, update,
-                            data_dir=database or os.path.join(game, "Data"), start_only=start_only)
-        else:
-            failed.append("the run wrote no report")
+        unpacked = tempfile.mkdtemp(prefix="cm0102-rules-report-db-")     # an own database, deleted after the run
+        try:
+            database = run_database(argv, year, unpacked)
+            print(f"database: {database or 'the base data (3.9.68)'}")
+            code, report = run(program, game, last, year, database, nations, extra, keep, timeout,
+                               options_more={"changing_rules": rules}, start_only=start_only,
+                               env_more={"RECOMP_SEASON_CHANGE_LOG": "1"} if rules == "on" else None)
+            failed = [] if code == 0 else [f"the run ended with code {code}"]
+            log = os.path.join(os.path.dirname(report), "stderr.txt")
+            if os.path.exists(log):
+                with open(log, encoding="latin-1") as f:
+                    failed += first_and_again(f.read())
+            if os.path.exists(report):
+                failed += check(report, game if not database else None, last, name, update,
+                                data_dir=database or os.path.join(game, "Data"), start_only=start_only,
+                                names=rules == "off")
+            else:
+                failed.append("the run wrote no report")
+        finally:
+            shutil.rmtree(unpacked, ignore_errors=True)
     for text in failed:
         print("FAIL  " + text)
     print("PASS" if not failed else f"FAILED: {len(failed)}")

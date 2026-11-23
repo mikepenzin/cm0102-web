@@ -71,6 +71,10 @@ The rename in `files.c` (MoveFileA) happens only with the bit, so a hook there w
 
 The order keeps the file whole: if a write stops before step 5, the file is the old save without the part. These steps do not change the game's memory, heap or stack.
 
+**Since 0.6.1 (item 10) the part goes in before the delete and the rename.** In 0.6.0 the wrap added the part after the original returned, so after the old save was deleted (0x82f5e3) and the temporary file had its name (0x82f684). A program that stopped in that step (on Linux the 4-byte overrun of items 4 and 10 made glibc stop it in `free()`) left only a save of renamed records without its part, and its load stopped at the box "index.cpp 5809". The player's autosave of July 2002 is such a file: 154 parts, the last part `fifa_transfer_rules.zip` ends at the last byte, no row of the part. Now the runtime also wraps `save_fifa_transfer_rules` 0x8395b0 (one caller, 0x82f5b0). Its argument is the archive, whose start is the name of its file (the name that the rename at 0x82f684 moves). After that last part is written, the wrap adds the season part to that file with the steps above: with the bit it is `temp_save_file.sav`, before the old save is deleted; without the bit it is the save itself. The wrap of 0x82e430 then adds the part only when this did not happen. A program that stops while the part goes in now leaves the old save whole. `tests/seasons/save_crash_run.py` proves it with the test switch `RECOMP_TEST_PART_CRASH`, which stops the program in `add_part`.
+
+A save of renamed records without its part (a file that 0.6.0 left) is refused at the load before the original runs, with the box "This save is incomplete. Load an earlier save." The check (`season_load_check.c`) reads `club_comp.dat` and `nation_comp.dat` and counts the competition key ids that `set_key_ids` 0x601a40 would report (`cmp [id], edi` at 0x6043ac..0x60ba80, the `report` column of `key_ids_table.c`) with no record of their names. It acts only when the names are English: a save keeps the language of its names as the last 4 bytes of `index.dat` (0x531488, read at 0x52894b), and in another language `set_key_ids` matches the names of `eng.lng`.
+
 When a step fails, the file stays a whole save without the part, which would load as a 2001/02 game. The wrap then shows a message box of the game (0x5e8290, texts in runtime memory) with plain words ("The game could not write its season ... Do not use this save ...") and returns 0, the result of a failed save. The box is the only change to the game in this case.
 
 ### 3.2 The reader
@@ -79,7 +83,7 @@ The runtime wraps `load_game_data` 0x82a9c0. Before the original runs, it reads 
 
 - A file that is not a container (a bad header, rows that cannot be read) has no part for the runtime: the original's load then reports the file itself.
 - A part of any version from 1 on is read when its length is at least 16 and not larger than its size. A later version keeps the first four fields (section 4), so this version reads the year and changing rules of a later save.
-- A part is damaged when: its size is below 16 or above 1 MiB (a limit that only stops a damaged row from asking for gigabytes; version 1 has 16 bytes), its bytes end early or do not decode, its version is 0, its length is below 16 or larger than its size, the year is outside 2001 to 2099, or changing rules is not 0 or 1.
+- A part is damaged when: its size is below 16 or above 64 MiB (1 MiB up to 0.6.1; a limit that only stops a damaged row from asking for gigabytes; version 1 has 16 bytes), its bytes end early or do not decode, its version is 0, its length is below 16 or larger than its size, the year is outside 2001 to 32767 (2001 to 2099 up to 0.6.1; 0.6.2 has no year limit, 32767 is the largest year of the game date), or changing rules is not 0 or 1.
 - A damaged part stops the load before the original runs. The wrap shows a message box of the game: "This saved game cannot be loaded. Its season data is damaged, or it comes from a newer version of the Bosman Edition." Then it returns 0. The original's callers treat 0 as a failed load: the load list call at 0x81c53a shows its own box "Setup..cpp 1044" (from 0x81c668) and the game ends, as for any failed load in the original. A test run showed both boxes and the end (code 255).
 - A load that fails in the original sets the values of a new game again.
 
@@ -97,7 +101,7 @@ Little endian, 16 bytes, stored in the container like any part.
 |---|---|---|
 | +0 | 4 | format version: 1 |
 | +4 | 4 | length of the part in bytes: 16 |
-| +8 | 4 | start year, 2001 to 2099 |
+| +8 | 4 | start year, 2001 to 32767 (a new game starts by 2099, a date jump by 2300) |
 | +12 | 4 | changing rules: 0 off, 1 on |
 
 Rules for later slices:

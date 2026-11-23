@@ -1,39 +1,38 @@
 # Differences between the rules report and the rules table that the check accepts. Made by
 # tests/seasons/rules_report_check.py --update-expected. Columns: season, kind, text.
+2002	club_list	American Major League: 10 of 10 listed clubs that the database holds (10 listed), 2 other clubs, 12 in all; not in it: -; others: Miami Fusion FC, Tampa Bay Mutiny
+2002	club_list	Irish First Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Dundalk F.C., Monaghan United; others: -
+2002	club_list	Irish Premier Division: 10 of 10 listed clubs that the database holds (10 listed), 2 other clubs, 12 in all; not in it: -; others: Dundalk F.C., Monaghan United
+2002	club_list	Korean League: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Daegu FC, Sangmoo; others: -
+2002	club_list	Russian First Division: 18 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 18 in all; not in it: Metallurg-Zapsib Novokuznetsk, Sokol Saratov, Svetotekhnika Saransk, Uralmash Yekaterinburg; others: -
+2002	club_list	Turkish 2. Division Category A: 18 of 18 listed clubs that the database holds (18 listed), 2 other clubs, 20 in all; not in it: -; others: Aydinspor, Batman Petrolspor
 2002	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-13: game 5, table 50 (50)
 2002	clubs	european_cup (UEFA Champions League), row uefa-10: game 55, table 72 (72 (32 in the group stage))
 2002	clubs	fifa_confed (FIFA Confederations Cup), row int-world-22: game 0, table 8 (8)
 2002	clubs	ire_first (League of Ireland First Division), row wal-nir-irl-42: game 10, table 12 (12)
 2002	clubs	ire_prm (League of Ireland Premier Division), row wal-nir-irl-41: game 12, table 10 (10)
 2002	clubs	kor_league (K League), row aus-jap-kor-326: game 10, table 12 (12)
-2002	clubs	oceania_nations (OFC Nations Cup), row int-continental-21: game 0, table 8 (8)
+2002	clubs	oceania_nations (OFC Nations Cup), row int-continental-21: game 4, table 8 (8)
 2002	clubs	pol_first (I liga), row gre-pol-cro-191: game 8, table 16 (16)
 2002	clubs	por_cup (Taça de Portugal), row por-15: game 164, table 226 (226)
-2002	clubs	rus_first (Russian First Division), row rus-tur-29: game 18, table 22 (22)
 2002	clubs	spa_cup (Copa del Rey), row spa-15: game 83, table 81 (81)
-2002	clubs	tur_second (Second League Category A), row rus-tur-191: game 20, table 18 (18)
 2002	clubs	tur_second_b (Second League Category B), row rus-tur-218: game 10, table 52 (52)
 2002	clubs	usa_mls (Major League Soccer), row arg-usa-218: game 4, table 10 (10)
 2002	clubs	usa_open_cup (Lamar Hunt U.S. Open Cup), row arg-usa-272: game 32, table 34 (34)
 2002	clubs	wel_prm_cup (FAW Premier Cup), row wal-nir-irl-34: game 4, table 12 (12)
-2002	down	eng_third (Football League Third Division), row eng-41: game 1 (+0 play-off places), table 2 (2)
 2002	down	pol_first (I liga), row gre-pol-cro-191: game 0 (+0 play-off places), table 3 (3 (14th-16th))
 2002	down	pol_second (II liga), row gre-pol-cro-245: game 4 (+0 play-off places), table 6 (6 (13th-18th))
 2002	down	rus_first (Russian First Division), row rus-tur-29: game 3 (+0 play-off places), table 5 (5)
-2002	down	tur_second_b (Second League Category B), row rus-tur-218: game 0 (+0 play-off places), table 6 (6 (the last two of each group: 17th and 18th of Group A, 16th and 17th of Groups B and C))
+2002	down	tur_second_b (Second League Category B), row rus-tur-218: game 0 (+0 play-off places), table 6 (6 (the last two of each group: 17th and 18th of Group A, 16th and 17th of Groups)
 2002	down	wel_first (Welsh Premier League), row wal-nir-irl-29: game 0 (+0 play-off places), table 2 (2 (pos 17,18))
+2002	meetings	kor_league (K League), row aus-jap-kor-326: game 3, table 4
 2002	no_row	friendly (Friendly): no table row
 2002	no_row	record_utils ('B' International): no table row
 2002	no_row	record_utils (Reserve): no table row
 2002	no_row	record_utils (Under 21 International): no table row
 2002	no_row	spa_lower (Spanish Lower Division): no table row
-2002	not_held	ire_leinster_cup (Leinster Senior Cup), row wal-nir-irl-46: the game holds 2002, the table says not held
-2002	not_held	ire_lge_cup (League of Ireland Cup), row wal-nir-irl-45: the game holds 2002, the table says not held
-2002	not_held	ire_super_cup (FAI Super Cup), row wal-nir-irl-49: the game holds 2002, the table says not held
 2002	not_held	kor_league_cup (Korean League Cup), row aus-jap-kor-434: the game holds 2002, the table says not held
 2002	not_held	kor_super_cup (K League Super Cup), row aus-jap-kor-380: the game holds 2002, the table says not held
-2002	not_held	pol_lge_cup (Polish League Cup), row gre-pol-cro-218: the game holds 2002, the table says not held
-2002	not_held	pol_super (Polish Super Cup), row gre-pol-cro-272: the game holds 2002, the table says not held
 2002	not_in_game	arg-usa-353 usa_rules 'United States' (United States)
 2002	not_in_game	aus-jap-kor-299 korea_rules 'n/a' (South Korea)
 2002	not_in_game	club-world-23 conmebol_liber 'Copa Libertadores' (CONMEBOL)
@@ -42,14 +41,15 @@
 2002	not_in_game	eng-307 eng_fa_trophy 'FA Trophy' (England)
 2002	not_in_game	eng-42 eng_conf 'Football Conference' (England)
 2002	not_in_game	por-12 por_second_b 'Segunda Divisão B' (Portugal)
-2002	not_in_game	rus-tur-110 new 'Russian Premier League Cup' (Russia)
-2002	not_in_game	rus-tur-83 new 'Russian Super Cup' (Russia)
 2002	not_in_game	spa-12 spa_second_b 'Segunda División B' (Spain)
 2002	not_in_game	spa-9 spain_rules 'n/a' (Spain)
 2002	not_in_game	uefa-9 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2002	playoffs	ire_first (League of Ireland First Division), row wal-nir-irl-42: game 1 up and 0 down play-off places, table 3 and 0 ('pos 2,3,4: promotion/relegation play-off')
 2002	playoffs	pol_first (I liga), row gre-pol-cro-191: game 0 up and 0 down play-off places, table 0 and 2 ('12th-13th: relegation play-offs')
 2002	playoffs	tur_second_b (Second League Category B), row rus-tur-218: game 2 up and 0 down play-off places, table 0 and 0 ('none')
+2002	rounds	ire_prm (League of Ireland Premier Division), row wal-nir-irl-41: game 33, table 27 (3 meetings, zones -, extra 0)
+2002	rounds	kor_league (K League), row aus-jap-kor-326: game 27, table 44 (4 meetings, zones -, extra 0)
+2002	rounds	pol_first (I liga), row gre-pol-cro-191: game 14, table 30 (2 meetings, zones -, extra 0)
 2002	up	pol_first (I liga), row gre-pol-cro-191: game 4 (+0 play-off places), table na (n/a)
 2002	up	pol_second (II liga), row gre-pol-cro-245: game 2 (+2 play-off places), table 1 (1 (1st))
 2002	up	tur_second_b (Second League Category B), row rus-tur-218: game 0 (+2 play-off places), table 3 (3)

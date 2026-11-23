@@ -99,13 +99,51 @@ RT_WRAP(006b7f20, match_subs_test)
  * The line names a shootout that leaves such an entry. It only reads. */
 void o_006be520(void);
 
+/* Item 188: a human side's slot whose tactics taker is -1 takes the best player left, as an AI side's slot does.
+ * The tactics hold -1 for a slot when the taker chooser (0x8a9370, from tactics_screen_open 0x899a50, which the
+ * match screen opens) finds fewer than 11 players on the pitch (0x8aa9d0 wants +0x19 >= 0) and stores it with
+ * 0x898150 (0x8a9497). 0x6be520 copies it as it is (0x6be663). The shootout step then takes match player -1 of the
+ * side (0x6be931..0x6be96a): for side 0 the object at engine +0x45d8 inside the grid, whose engine pointer
+ * (+0x19e = +0x4776) no code writes, and for side 1 match player 19 of side 0. The fill below is the original's AI
+ * path (0x6be67e..0x6be6d4): CM3_MATCH_ENGINE 0x6ceb90, thiscall (side, 5, taken marks), returns a pointer to the
+ * slot or 0, and with 0 the side's marks are cleared and the slot is filled again. */
+#define PICK_TAKER 0x6ceb90u
+
+static void fill_missing_takers(uint32_t engine)
+{
+    for (uint32_t side = 0; side < 2; side++)
+        for (uint32_t k = 0; k < 11; k++) {
+            if ((int8_t)g_mem[engine + 0x1af + side * 11 + k] != -1) continue;
+            uint32_t marks = engine + 0x8edau, pick = 0;
+            for (int tries = 0; tries < 2 && !pick; tries++) {
+                Cpu saved = cpu;
+                uint32_t a[3] = {side, 5, marks};
+                cpu.ecx = engine;
+                pick = rt_callback(PICK_TAKER, 3, a);
+                cpu = saved;
+                if (!pick) memset(g_mem + marks + side * 20, 0, 20);
+            }
+            if (!pick) continue;
+            int8_t slot = (int8_t)g_mem[pick];
+            g_mem[engine + 0x1af + side * 11 + k] = (uint8_t)slot;
+            g_mem[marks + side * 20 + (uint32_t)(int)slot] = 1;
+        }
+}
+
 RT_WRAP(006be520, shootout_order_log)
 {
     static int on = -1;
     if (on < 0) on = getenv("RECOMP_CLUB_LOG") != NULL;
     uint32_t engine = cpu.ecx;
     o_006be520();
-    if (!on || rt_unwinding) return;
+    if (rt_unwinding) return;
+    if (getenv("RECOMP_TEST_TAKER_GAP")) {      /* test switch: slot 10 of each side as a chooser with 10 players */
+        g_mem[engine + 0x1af + 10] = 0xff;
+        g_mem[engine + 0x1af + 21] = 0xff;
+        fprintf(stderr, "recomp: match grid: taker gap test, engine %08x\n", engine);
+    }
+    fill_missing_takers(engine);
+    if (!on) return;
     uint32_t fixture = rd32(g_mem, engine + 0x4792);
     char comp[52], home[52], away[52];
     name_at(readable(fixture) ? rd32(g_mem, fixture + 0x14) : 0, comp);

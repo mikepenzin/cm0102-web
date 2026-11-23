@@ -30,6 +30,9 @@ The structured values (the same words in the TSV and in the C table):
                              fixture (the number of an existing slot of the restriction record, +5 non-EU, +2
                              foreign). sign_*: players of that kind a club may hold when it signs another
                              (the rules object's caps +0x14 and +0x13 of TRANSFER_RULES).
+                             squad_non_eu N with squad_foreign none changes the kind of a game rule of
+                             foreign players to non-EU in every competition of the nation (Croatia from
+                             2013/14, season_nation_squad_record).
     permit         keep, or brexit (players of the EU/EEA need a permit as non-EU players: UK nations, from 1
                    January 2021, or from the start of the season when the season starts after that date)
 
@@ -216,7 +219,15 @@ def parse_foreign(nation, season, text):
     if nation == "Holland" and low.startswith("no limit on foreign players"):
         return "ok", f("none", "none"), "", permit
     if nation == "Portugal" and re.match(r"no (quota for non-eu|nationality quota)", low):
-        return "ok", f("none", "none"), "", permit
+        # From 2006/07 the Liga and the Liga de Honra have no foreign player status: no limit at a signing and none
+        # on the match sheet (issue 121). sign_non_eu lifts the original's own limit of 0x7d3ef0 and 0x7d4040 for
+        # those two divisions. sign_foreign stays "keep": the base cap +0x13 is a signed byte in TRANSFER_RULES::
+        # can_make_offer 0x8e8800 (0x8e89a3..0x8e89ad, jg), so 255 would refuse every offer for a foreign player.
+        return "ok", f("none", "none", "none"), "", permit
+    if nation == "Portugal" and low.startswith("liga: at most 6 non-eu players registered and at most 4"):
+        # 2001/02 to 2005/06: the original's limits, 6 at a signing in the first division (0x7d3f35) and 4 on the
+        # match sheet (0x7d43c0).
+        return "keep", f(), "", permit
     if nation == "Poland" and low.startswith("ekstraklasa: no limit on non-eu"):
         return "ok", f("none", "none"), "", permit
     if nation == "Poland" and re.search(r"max \d non-eu players on the pitch", low):
@@ -335,14 +346,15 @@ def parse_foreign(nation, season, text):
         m = re.match(r"no quota on foreigners, but max (\d) may be fielded", low)
         if m:
             return "ok", f("keep", int(m.group(1))), "", permit
-        m = re.match(r"hnl and cup(?: final stages)?: (\d) foreign players per team$|hnl and cup(?: final stages)?: "
-                     r"(\d) foreign players per team;", low)
-        if m and "from 18 october 2016" not in low:
-            return "ok", f("keep", int(m.group(1) or m.group(2))), "", permit
         if "from 18 october 2016" in low:
             return "gap", f(), "mid_season", permit
-        if re.match(r"hnl: \d non-eu", low):
-            return "gap", f(), "kind", permit
+        # From 2013/14 the HNS counts only players not of the EU or EEA (Glasnik 28/2013, issue 135). The game's
+        # rule is a foreign limit (0x518620); a non-EU number with no foreign limit moves it to the non-EU slot
+        # (season_nation_squad_record).
+        m = re.match(r"hnl(?: and cup(?: final stages)?)?: (\d) (foreign|non-eu) players per (?:team|match)", low)
+        if m:
+            eu_free = m.group(2) == "non-eu" or "eu/eea nationals and croatian dual nationals not counted" in low
+            return "ok", (f(int(m.group(1)), "none") if eu_free else f("keep", int(m.group(1)))), "", permit
     if nation == "Greece":
         m = re.match(r"super league: (\d) non-eu players; beta ethniki", low)
         if m:

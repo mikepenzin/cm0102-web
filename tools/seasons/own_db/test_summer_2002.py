@@ -15,6 +15,7 @@ Checks (spec docs/specs/2026-10-24-summer-2002-db-spec.md, Testing):
 - Q38, Q39 (check_structure): the 20 data files, every 3.9.68 competition row with its name, every division
   with its 3.9.68 club count, and at least the 2001 class count (season_clubs.c CLASS_SIZE) in each class
   division, so the original makes every table at load;
+- the real UEFA season coefficients of 1996/97 to 2001/02 in the nation table (coeffs.py --check);
 - known facts: Celestini at Olympique Marseille, Fiorentina is Florentia Viola, Rooney at Everton with current
   ability 135, Ronaldo (the "Ronaldo" of the highest current ability, born 1976) at Real Madrid C.F.;
 - two builds with different PYTHONHASHSEED values (python3 -P -s, as -I ignores the seed) give the same files as
@@ -37,6 +38,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "xbox0203"))
 import cmdb  # noqa: E402
 import cmdb1  # noqa: E402
+import coeffs  # noqa: E402
 import duplicates  # noqa: E402
 import build_2002  # noqa: E402
 from build_2002 import FREE_ROWS  # noqa: E402
@@ -334,6 +336,9 @@ def main(argv):
     bad = check_changes(F, changes, work) + check_untouched(F, T, changes, work) + check_facts(F)
     bad += check_structure(F, T, out)
     bad += check_groups(F, T)
+    with contextlib.redirect_stdout(io.StringIO()) as log:
+        if coeffs.main([out, str(build_2002.FIRST_SEASON), "--check"]):
+            bad.append(("coeffs.py --check", log.getvalue().strip()))
     bad += [("more rows than 3.9.68", t) for t, e in F.idx.items() if e["count"] > T.idx[t]["count"]]
     with contextlib.redirect_stdout(io.StringIO()) as log:
         if duplicates.check(out, os.path.join(changes, "kept-pairs.tsv")):

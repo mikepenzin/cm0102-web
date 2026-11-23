@@ -106,7 +106,7 @@ The four MOVE sites that read the history need the history files of the database
 
 | Address | Function | Test | Decision | Reason |
 |---|---|---|---|---|
-| 0x9041ec | `UefaSeeding::collect_european_clubs` | +0x439 == 2001 | MOVE | Reads euro.cfg in the first season. The September 2010 ODB has its own euro.cfg with the 2010/11 entrants |
+| 0x9041ec | `UefaSeeding::collect_european_clubs` | +0x439 == 2001 | MOVE | Reads euro.cfg in the first season. The September 2010 ODB has its own euro.cfg with the 2010/11 entrants. From 0.6.2 (open item 100) only a euro.cfg of the start season: the database's own file, or the game's Data file in a 2001/02 start (rt_euro_cfg_year) |
 | 0x903b6f | `UefaSeeding::roll_coefficients` | game year == 2001 | MOVE | The first season keeps the coefficients of nation.dat as they are |
 | 0x9038af | `UefaSeeding::pick_english_intertoto_club` | game year == 2001 | MOVE | No volunteer list in the first season |
 | 0x9059b2 | `uefa_check_registration_deadlines` | game year == 2001 | MOVE | The 1 February deadline of the run-up belongs to a season the game does not play |

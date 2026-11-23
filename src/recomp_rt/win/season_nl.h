@@ -93,12 +93,51 @@ const SeasonNlEdition *season_nl_first(const char *confed, int s);
 /* The edition after e, or NULL. */
 const SeasonNlEdition *season_nl_after(const SeasonNlEdition *e);
 
+/* 0.6.2 item 209: the years of the editions after the table's last edition (year `last`) with changing rules on.
+ * UEFA: every second year from `last` (Q248). CONCACAF: a year whose autumn the confederation's World Cup
+ * qualifying leaves free, as in the 2023-26 cycle (league phases September to November 2023 and 2024, qualifying
+ * from March 2024). The game's CONCACAF section holds the campaign year W - 2 for the World Cup of year W
+ * (0x914a91) and plays from March of W - 2 to November of W - 1 (preliminary ties in spring, the semi-final groups
+ * in September to November of W - 2, the final group in W - 1), so an edition starts in W - 4 and W - 3 only.
+ * wc(y): 1 when a World Cup is played in year y. season_nl_held_after gives 1 for a year that holds an edition;
+ * season_nl_next_after the first such year after `year` (0 for none within 8 years). */
+int season_nl_held_after(const char *confed, int last, int year, int (*wc)(int));
+int season_nl_next_after(const char *confed, int last, int year, int (*wc)(int));
+
+/* Item 209: the table edition whose draw day an edition of `year` after the table takes (season_nl.c edition).
+ * Friendly::update_international_friendlies 0x5cbb00 arranges friendlies 12 weeks ahead, and
+ * arrange_international_friendlies 0x5cbdf0 skips a nation only for fixtures already stored within 4 days of the
+ * date, so a league phase drawn less than 12 weeks before its first matchday meets friendlies that were made first.
+ * The real CONCACAF draws lie 16 to 23 weeks before the first matchday (27 March 2019, 16 May 2023, 6 May 2024),
+ * except in a World Cup year (23 July 2026: the finals were in North America). So for CONCACAF the draw of the
+ * latest table edition of the same kind of year (wc(year) the same); for UEFA, and when no such edition exists,
+ * the last edition (NULL when the confederation has none). A World Cup year keeps 23 July: the North American rows
+ * of the friendly date table for that year (0x5ca4f0, offset 0) are 25 August, 18 November and 15 December, so no
+ * friendly row falls in the September and October windows, and the November row is arranged in late August,
+ * after the draw (docs/research/2026-10-18-national-team-comps.md, section 7.1). */
+const SeasonNlEdition *season_nl_draw_of(const char *confed, int year, int (*wc)(int));
+
+/* Item 215: 1 when a friendly of confederation `confed` on day d.m.y would meet a league-phase matchday (within
+ * NL_FRIENDLY_NEAR days, the guard of arrange_international_friendlies 0x5cbdf0) of a table edition that is drawn
+ * on or after the day the friendly is arranged (NL_FRIENDLY_AHEAD days before it, 0x5cbb00). The game holds one
+ * edition at a time (season_nl.c next_edition), so it draws an edition no earlier than the day after the final of
+ * the edition before. Real life drew the 2023-24 edition on 16 May 2023, before the 2022-23 finals of 15 and
+ * 18 June 2023, and the September to November 2023 windows were the confederation's. In the game the draw came on
+ * 19 June 2023, the friendlies of 5 September 2023 were made on 13 June, and 11 matches of the first matchday
+ * (7 September) moved off the FIFA days. The table gives 1 also near the June 2022 matchdays of CONCACAF 2022-23
+ * (draw 4 April 2022) and the September 2026 ones of 2026-27 (draw 23 July 2026), but the North American rows of
+ * the friendly date table (0x5ca4f0) hold no day there, so only the 2023 row changes. */
+#define NL_FRIENDLY_AHEAD 84
+#define NL_FRIENDLY_NEAR 4
+int season_nl_late_window(const char *confed, int y, int m, int d);
+
 /* The result of one nation in one edition. The rules rank and move these rows; the nation is the game's id. */
 typedef struct {
     int nation;                 /* the game's nation id (or a test id) */
     int league;                 /* 0 = A */
     int group;                  /* 1 to 4 */
-    int pos;                    /* final place in the group, 1 = winner */
+    int pos;                    /* final place in the group, 1 = winner; 0 = a nation new to the competition
+                                 * (league: its league in the table), which season_nl_next_leagues places last */
     int played, points, gd, gf;
     int qualified;              /* 1: qualified for the finals of the cycle by the qualifying groups */
 } SeasonNlRow;
@@ -108,11 +147,16 @@ typedef struct {
  * results against the fourth of a group of four are not left out: inference, see the doc). */
 void season_nl_rank(SeasonNlRow *rows, int n);
 
+/* season_nl.c: the record of the UEFA Nations League takes its identity when a history row lands on it. */
+void season_nl_history_record(uint32_t rec);
+
 /* The leagues of the next edition. rows: the edition's results in any order (sorted on return). Writes the
  * league of each row of the sorted rows into next[]. The group winners go up and the last go down as the
  * edition says, then the leagues are filled to the sizes of `to` from the overall ranking: a league with room
  * takes the best of the leagues below it, a full league passes its lowest down, and the last league takes all
- * that are left (Russia in a game where it still plays). Returns 0 for bad arguments, else the row count. */
+ * that are left (Russia in a game where it still plays). A row of pos 0 (a nation new to the competition) comes
+ * after the nations of its league, so it takes room that is left there or goes down to the first league with
+ * room (open item 183). Returns 0 for bad arguments, else the row count. */
 int season_nl_next_leagues(const SeasonNlEdition *from, const SeasonNlEdition *to, SeasonNlRow *rows, int n,
                            int *next);
 
@@ -165,6 +209,9 @@ void season_nl_path_round(uint32_t rec, int round, SeasonNlDate d, int campaign,
 int season_gold_cup_of(uint32_t self);           /* 1 for the Gold Cup object (by its record) in a season game */
 int season_gold_cup_teams(uint32_t self);        /* its teams in the edition it holds (12 or 16), else 0 */
 int season_gold_cup_date_shift(uint32_t self, int *shift);   /* 1 for the Gold Cup: *shift in days */
+/* 1 when the game has a Gold Cup object (or makes it now) and day doy of year y lies in its days
+ * (season_intl_gold_busy). */
+int season_gold_cup_busy(int y, int doy);
 uint32_t season_gold_cup_entrants(uint32_t self);            /* the entrants into +0xee; 1, or 0 */
 int season_gold_cup_record(uint32_t rec);
 int season_finalissima_object(uint32_t obj);     /* 1 for the Finalissima object in a season game */

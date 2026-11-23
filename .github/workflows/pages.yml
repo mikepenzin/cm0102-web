@@ -43,6 +43,11 @@ jobs:
           gh release download "$tag" --repo "${{ github.repository }}" --pattern site-assets.zip --dir "$RUNNER_TEMP"
           mkdir -p site/assets
           unzip -o -q "$RUNNER_TEMP/site-assets.zip" -d site/assets
+          # Videos of the game and their poster pictures (screens of the original, so not in git) are separate .mp4
+          # and .png files on a release. They come from the 10 newest releases, so an older link keeps working.
+          for t in $(gh api "repos/${{ github.repository }}/releases?per_page=10" --jq '.[] | select(.draft | not) | .tag_name'); do
+            gh release download "$t" --repo "${{ github.repository }}" --pattern '*.mp4' --pattern '*.png' --dir site/assets --skip-existing 2>/dev/null || true
+          done
           echo "ready=true" >> "$GITHUB_OUTPUT"
       - if: steps.pictures.outputs.ready == 'true'
         uses: actions/configure-pages@v5

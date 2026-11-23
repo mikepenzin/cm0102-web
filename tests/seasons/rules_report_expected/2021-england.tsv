@@ -7,13 +7,12 @@
 2021	bench	uefa_cup (UEFA Europa League), row uefa-165: game 7/9, table 12 (12)
 2021	bench	world_club_champ (FIFA Club World Cup), row club-world-382: game 7/9, table 12 (12)
 2021	clubs	new_concacaf_nations_league (2022-23 CONCACAF Nations League), row int-continental-226: game 2, table 41 (41)
-2021	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-246: game 50, table 40 (40, then 10)
+2021	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-246: game 48, table 40 (40, then 10)
 2021	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-247: game 4, table 12 (12)
 2021	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-245: game 24, table 8 (8)
 2021	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-243: game 0, table 55 (55 entrants)
 2021	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-248: game 5, table 8 (8 in groups (Tonga withdrew); Cook Islands and Vanuatu withdrew because of COVID)
 2021	clubs	world_club_champ (FIFA Club World Cup), row club-world-382: game 0, table 7 (7)
-2021	down	eng_third (EFL League Two), row eng-231: game 1 (+0 play-off places), table 2 (2)
 2021	idle	new_concacaf_gold_cup (2021 CONCACAF Gold Cup), row int-continental-225: the game waits for 2023, the table holds it
 2021	idle	olympics (Football at the Summer Olympics), row int-world-251: the game waits for 2024, the table holds it
 2021	name	new_uefa_nations_league (2020-21 Finals; 2022-23 UEFA Nations League (start), row int-continental-223: game '2020-21 Finals; 2022-23 UEFA Nations League (start', table '2020-21 Finals; 2022-23 UEFA Nations League (start)'
@@ -38,12 +37,11 @@
 2022	clubs	european_cup (UEFA Champions League), row uefa-170: game 80, table 78 (78 (32 in the group stage))
 2022	clubs	new_concacaf_gold_cup (2021 CONCACAF Gold Cup), row int-continental-236: game 0/4, table 16 (16)
 2022	clubs	new_concacaf_nations_league (2022-23 CONCACAF Nations League), row int-continental-237: game 2, table 41 (41)
-2022	clubs	new_conference_league (UEFA Europa Conference League), row uefa-174: game 139/181, table 177 (177 (134 entered + 43 from the Champions League and Europa League); 32 in the gr)
+2022	clubs	new_conference_league (UEFA Europa Conference League), row uefa-174: game 155/181, table 177 (177 (134 entered + 43 from the Champions League and Europa League); 32 in the gr)
 2022	clubs	new_uefa_nations_league (2020-21 Finals; 2022-23 UEFA Nations League (start), row int-continental-234: game 4, table 55 (55 entered, 54 played)
-2022	clubs	uefa_cup (UEFA Europa League), row uefa-173: game 21/58, table 57 (57 (21 entered + 36 from the Champions League); 32 in the group stage (+8 Champi)
+2022	clubs	uefa_cup (UEFA Europa League), row uefa-173: game 34/58, table 57 (57 (21 entered + 36 from the Champions League); 32 in the group stage (+8 Champi)
 2022	clubs	world_club_champ (FIFA Club World Cup), row club-world-401: game 0, table 7 (7)
 2022	clubs	world_cup (FIFA World Cup), row int-world-254: game 4, table 32 (32)
-2022	down	eng_third (EFL League Two), row eng-241: game 1 (+0 play-off places), table 2 (2)
 2022	name	new_concacaf_gold_cup (2021 CONCACAF Gold Cup), row int-continental-236: game '2021 CONCACAF Gold Cup', table '2023 CONCACAF Gold Cup'
 2022	name	new_finalissima (2022 Finalissima), row int-continental-235: game '2022 Finalissima', table 'Finalissima'
 2022	name	new_uefa_nations_league (2020-21 Finals; 2022-23 UEFA Nations League (start), row int-continental-234: game '2020-21 Finals; 2022-23 UEFA Nations League (start', table '2022-23 UEFA Nations League'

@@ -182,7 +182,6 @@ static uint32_t strongest(uint32_t continent, const uint32_t *teams, int n)
 extern const SeasonCompDef season_gold_cup_comp, season_finalissima_comp;
 
 static uint32_t making_rec;             /* the record of an object whose ctor runs now (not yet in its entry) */
-static SeasonNlGoldCup repeat;
 
 static uint32_t gold_record(void)
 {
@@ -197,29 +196,51 @@ int season_gold_cup_of(uint32_t self)
     return rec && rd32(g_mem, self + F_RECORD) == rec;
 }
 
-/* The Gold Cup of a year in this game. With changing rules on, the table's edition; after the table's last
- * edition the last one again every two years (Q248). With changing rules off, the first edition from the start
- * season on, again every two years (Q232). NULL for a year with no edition. */
+/* Q32 (0.6.2 slice 5): the nations that hosted the Gold Cup in the table, each once in the order of their first
+ * edition (the United States, Canada, Costa Rica, Jamaica), those that `alive` passes (NULL: all). The host of
+ * rotation step k (from 0), and the count in *n. */
+static const char *gold_rotation(int k, int (*alive)(const char *), int *n)
+{
+    static char names[16][64];
+    int m = 0;
+    for (int i = 0; i < season_nl_gold_cup_count && m < 16; i++)
+        for (const char *p = season_nl_gold_cups[i].hosts; *p && m < 16;) {
+            size_t len = strcspn(p, ";");
+            char one[64];
+            snprintf(one, sizeof one, "%.*s", (int)len, p);
+            int seen = 0;
+            for (int j = 0; j < m && !seen; j++) seen = !strcmp(names[j], one);
+            if (!seen && (!alive || alive(one))) snprintf(names[m++], sizeof names[0], "%s", one);
+            p += len;
+            if (*p == ';') p++;
+        }
+    *n = m;
+    return m && k >= 0 ? names[k % m] : NULL;
+}
+
+static int host_alive(const char *name);
+
+/* The Gold Cup of a year in this game (season_intl_gold_edition, moved there for open item 55): with changing rules
+ * on, the table's edition; after the table's last edition the last one again every two years (Q248), its host the
+ * next of the rotation (Q32). With changing rules off, the first edition from the start season on, again every two
+ * years (Q232). NULL for a year with no edition. */
 static const SeasonNlGoldCup *gold_edition(int year)
 {
-    const SeasonNlGoldCup *base = NULL;
-    if (season_changing_rules()) {
-        for (int i = 0; i < season_nl_gold_cup_count; i++) {
-            if (season_nl_gold_cups[i].year == year) return &season_nl_gold_cups[i];
-            if (season_nl_gold_cups[i].year < year) base = &season_nl_gold_cups[i];
-        }
-    } else {
-        for (int i = 0; i < season_nl_gold_cup_count && !base; i++)
-            if (season_nl_gold_cups[i].year > season_start_year()) base = &season_nl_gold_cups[i];
-        if (!base && season_nl_gold_cup_count) base = &season_nl_gold_cups[season_nl_gold_cup_count - 1];
-        if (base && base->year == year) return base;
-        if (base && base->year > year) base = NULL;
-    }
-    if (!base || (year - base->year) % 2) return NULL;
-    repeat = *base;
-    repeat.year = year;
+    static SeasonNlGoldCup repeat;
+    const SeasonNlGoldCup *g = season_intl_gold_edition(year);
+    if (!g || !season_changing_rules() || (g >= season_nl_gold_cups && g < season_nl_gold_cups + season_nl_gold_cup_count))
+        return g;
+    int base = 0;
+    for (int i = 0; i < season_nl_gold_cup_count; i++)
+        if (season_nl_gold_cups[i].year < year) base = season_nl_gold_cups[i].year;
+    repeat = *g;
+    int n;
+    const char *host = gold_rotation((year - base) / 2 - 1, host_alive, &n);
+    if (host) repeat.hosts = host;
     return &repeat;
 }
+
+int season_gold_cup_busy(int y, int doy) { return season_comps_on() && gold_record() && season_intl_gold_busy(y, doy); }
 
 /* The first Gold Cup after season s's start (in the year s + 1 or later), 0 with none. */
 static int gold_first_after(int s)
@@ -335,7 +356,16 @@ static int nation_by_name(const char *name)
  * (+0x5d, 0x85c709). The Gold Cup record has no host row, so it gets one per edition from its first edition: the
  * first two hosts of the table (the United States in every edition; Canada, Costa Rica as the second), choice
  * fixed, no move, as slice 27 writes the rows of the Copa America (season_intl.c row_write). The rows are in the
- * save with the rest of the host table. */
+ * save with the rest of the host table. After the table (0.6.2 slice 5, open item 12; up to 0.6.1 the rows stopped
+ * at 2031): one row for each host of the rotation (Q32), each moving on by all of them, as the original's
+ * daily_update moves a row on 1 January once past (0x5faafa), so a row holds for every later edition. A load
+ * adds the rows that a save of 0.6.1 or before lacks. Changing rules off keeps the rows of 0.6.1 (to 2031). */
+static int host_alive(const char *name)
+{
+    int id = nation_by_name(name);
+    return id >= 0 && readable(rd32(g_mem, nation_at(id) + 0x71u));
+}
+
 static void gold_host_rows(uint32_t rec, int from)
 {
     uint32_t hc = rd32(g_mem, HOSTS), key = rd32(g_mem, rec);
@@ -343,28 +373,46 @@ static void gold_host_rows(uint32_t rec, int from)
     uint32_t rows = rd32(g_mem, hc);
     int count = (int16_t)rd16(g_mem, hc + 4u);
     if (!readable(rows) || count <= 0 || count > 1000) return;
-    int years[40], n = 0;
-    for (int y = from; y <= 2031 && n < 40; y++) {
-        if (!gold_edition(y)) continue;
+    struct { int year, cycle; const char *hosts; char rot[64]; } plan[40];
+    int n = 0, last = season_nl_gold_cup_count ? season_nl_gold_cups[season_nl_gold_cup_count - 1].year : 0;
+    int rn = 0;
+    if (season_changing_rules()) {
+        for (int y = from; y <= last && n < 40; y++)
+            if (gold_edition(y)) plan[n].year = y, plan[n].cycle = 0, plan[n++].hosts = gold_edition(y)->hosts;
+        gold_rotation(0, host_alive, &rn);
+        for (int k = 0; k < rn && n < 40; k++) {
+            int y = last + 2 * (k + 1);
+            while (y < from) y += 2 * rn;
+            snprintf(plan[n].rot, sizeof plan[n].rot, "%s", gold_rotation(k, host_alive, &rn));
+            plan[n].hosts = plan[n].rot;
+            plan[n].year = y, plan[n++].cycle = 2 * rn <= 127 ? 2 * rn : 0;
+        }
+    } else {                                    /* as up to 0.6.1: changing rules off keeps the start's rules */
+        for (int y = from; y <= 2031 && n < 40; y++)
+            if (gold_edition(y)) plan[n].year = y, plan[n].cycle = 0, plan[n++].hosts = gold_edition(y)->hosts;
+    }
+    int years[40], m0 = 0;
+    for (int k = 0; k < n; k++) {
         int have = 0;
         for (int i = 0; i < count; i++)
             have |= rd32(g_mem, rows + (uint32_t)i * ROW_SIZE) == key &&
-                    (int16_t)rd16(g_mem, rows + (uint32_t)i * ROW_SIZE + ROW_YEAR) == y;
-        if (!have) years[n++] = y;
+                    (int16_t)rd16(g_mem, rows + (uint32_t)i * ROW_SIZE + ROW_YEAR) == plan[k].year;
+        if (!have) years[m0++] = k;
     }
-    if (!n) return;
-    uint32_t now = game_malloc((uint32_t)(count + n) * ROW_SIZE);
+    if (!m0) return;
+    uint32_t now = game_malloc((uint32_t)(count + m0) * ROW_SIZE);
     if (rt_unwinding || !now) return;
     memcpy(g_mem + now, g_mem + rows, (size_t)count * ROW_SIZE);
     uint32_t fa[1] = {rows};
     call_cdecl(GAME_FREE, 1, fa);
     if (rt_unwinding) return;
-    for (int k = 0; k < n; k++) {
-        const SeasonNlGoldCup *g = gold_edition(years[k]);
+    for (int k = 0; k < m0; k++) {
+        int y = plan[years[k]].year;
+        const SeasonNlGoldCup *g = gold_edition(y);
         uint32_t row = now + (uint32_t)(count + k) * ROW_SIZE;
         int ids[2] = {-1, -1}, m = 0;
         char host[64];
-        for (const char *p = g ? g->hosts : ""; *p && m < 2;) {
+        for (const char *p = plan[years[k]].hosts; p && *p && m < 2;) {
             size_t len = strcspn(p, ";");
             snprintf(host, sizeof host, "%.*s", (int)len, p);
             int id = nation_by_name(host);
@@ -373,16 +421,16 @@ static void gold_host_rows(uint32_t rec, int from)
             if (*p == ';') p++;
         }
         wr32(g_mem, row, key);
-        wr16(g_mem, row + ROW_YEAR, (uint32_t)years[k]);
+        wr16(g_mem, row + ROW_YEAR, (uint32_t)y);
         for (int j = 0; j < 6; j++) wr32(g_mem, row + ROW_PAIRS + 4u * (uint32_t)j, 0xffffffffu);
         wr32(g_mem, row + ROW_PAIRS, (uint32_t)ids[0]);
         wr32(g_mem, row + ROW_PAIRS + 4u, (uint32_t)ids[1]);
         wr8(g_mem, row + ROW_CHOICE, CHOICE_FIXED);
-        wr16(g_mem, row + ROW_DAY, (uint32_t)day_of_year(g ? g->start.day : 1, g ? g->start.month : 7, years[k]));
-        wr8(g_mem, row + ROW_CYCLE, 0);
+        wr16(g_mem, row + ROW_DAY, (uint32_t)day_of_year(g ? g->start.day : 1, g ? g->start.month : 7, y));
+        wr8(g_mem, row + ROW_CYCLE, (uint8_t)plan[years[k]].cycle);
     }
     wr32(g_mem, hc, now);
-    wr16(g_mem, hc + 4u, (uint32_t)(count + n));
+    wr16(g_mem, hc + 4u, (uint32_t)(count + m0));
 }
 
 /* Test log: the hosts that find_hosts gives the Gold Cup of the object's year, and their stadiums. */
@@ -422,7 +470,7 @@ static uint32_t gold_make(const SeasonCompDef *d, uint32_t rec, int year, int lo
     making_rec = 0;
     if (rt_unwinding || !readable(obj)) return 0;
     wr32(g_mem, obj, v);
-    if (!loading) gold_host_rows(rec, y);
+    gold_host_rows(rec, y);                     /* a load adds only the rows that the save lacks */
     if (rt_unwinding) return 0;
     if (logging()) {
         const SeasonNlGoldCup *g = gold_edition(year_of(obj));
@@ -473,9 +521,8 @@ static int is_finalissima(uint32_t self)
 int season_gold_cup_record(uint32_t rec)
 {
     if (!rec) return 0;
-    uint32_t g = season_comps_object(&season_gold_cup_comp), f = season_comps_object(&season_finalissima_comp);
-    return (g && rd32(g_mem, g + F_RECORD) == rec) || (f && rd32(g_mem, f + F_RECORD) == rec) ||
-           (making_rec && making_rec == rec);
+    uint32_t g = season_comps_record_of(&season_gold_cup_comp), f = season_comps_record_of(&season_finalissima_comp);
+    return g == rec || f == rec || making_rec == rec;
 }
 
 /* The winner (place 0) of the latest edition of the competition of a key id (0x57a58e..0x57a5a8), else the

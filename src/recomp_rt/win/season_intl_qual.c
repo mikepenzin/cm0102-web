@@ -62,6 +62,10 @@
 #include "win.h"
 #include "season_intl.h"
 #include "season_wcq26.h"
+#include "season_uefa_days.h"
+#include "season_conmebol_days.h"
+#include "season_concacaf26.h"
+#include "season.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,6 +75,7 @@
 #define KEY_CONCACAF 0x9cf770u
 #define KEY_ASIA 0x9cf774u
 #define KEY_SOUTH_AMERICA 0x9cf778u
+#define GAME_DATE 0xae2c90u             /* s16 day of the year, s16 year */
 #define STAGES 0xcu                     /* stage array of a competition, count at +0x2c */
 #define STAGE_COUNT 0x2cu
 #define TEAM_COUNT 0x3eu                /* word: teams of a League table or a Cup round */
@@ -506,6 +511,78 @@ static void end_by_october(uint32_t self, uint32_t tpl, int rounds, const char *
 void o_00920590(void);
 void o_00914de0(void);
 
+static int conmebol_busy(long z)
+{
+    int y, m, d;
+    season_from_abs_day(z, &y, &m, &d);
+    return season_intl_finals_busy(SEASON_CONF_SOUTH_AMERICA, y, season_day_of_year(y, m, d));
+}
+
+static int by_round_day(const void *a, const void *b)
+{
+    long x = ((const long *)a)[0], y = ((const long *)b)[0];
+    return x < y ? -1 : x > y;
+}
+
+/* Open item 163: the rounds of the South American section on the FIFA windows of the real cycle
+ * (season_conmebol_days.c says why). A season game, every cycle from 2006, made in a running season: the start
+ * season of a 2001 start keeps the original's international calendar (O405), so there end_by_october acts and the
+ * fixtures move at the first running day (season_friendly_dates.c, route M), as before. The template's rounds take
+ * the new days in the order of their own days; season_conmebol_round_fields gives the fields of each round record
+ * (league_round_set_date 0x68a160), and the make day moves before the first round (season_conmebol_make_day).
+ * Returns 1 when it placed them. */
+static int conmebol_windows(uint32_t self, uint32_t tpl, int rounds)
+{
+    if (!season_intl_on() || !readable(self) || !readable(tpl) || rounds <= 0 || rounds > 64 ||
+        season_friendly_keeps_original_now())
+        return 0;
+    int base = (int16_t)rd16(g_mem, self + 0x40u), y = base + 2;
+    if (y < FIRST_YEAR) return 0;
+    int ty = (int16_t)rd16(g_mem, GAME_DATE + 2), tm, td;
+    season_from_day_of_year(ty, (int16_t)rd16(g_mem, GAME_DATE), &tm, &td);
+    long days[64], order[64][2];
+    if (season_conmebol_days(y, rounds, season_abs_day(ty, tm, td) + 2, conmebol_busy, days) != rounds) {
+        if (logging())
+            fprintf(stderr, "recomp: season intl: wc qualifying %d: CONMEBOL keeps the template (too few FIFA days "
+                            "for %d rounds)\n", y, rounds);
+        return 0;
+    }
+    for (int r = 0; r < rounds; r++) {
+        uint32_t rec = tpl + (uint32_t)r * 0x41u;
+        order[r][0] = day_number(base + (int16_t)rd16(g_mem, rec + 2u), (int16_t)rd16(g_mem, rec)) * 64 + r;
+        order[r][1] = r;
+    }
+    qsort(order, (size_t)rounds, sizeof order[0], by_round_day);
+    for (int k = 0; k < rounds; k++) {
+        uint32_t rec = tpl + (uint32_t)order[k][1] * 0x41u;
+        int doy, year_off, flag;
+        season_conmebol_round_fields(days[k], base, &doy, &year_off, &flag);
+        wr16(g_mem, rec, (uint16_t)doy);
+        wr16(g_mem, rec + 2u, (uint16_t)year_off);
+        wr8(g_mem, rec + 4u, (uint8_t)flag);
+    }
+    /* The make day (+0xb6 day, +0xb8 year offset, set just before this call at 0x921118 and 0x921133; +0x45 is 1
+     * once made, 0x9212ee): before the first round, so the real rounds of the year before the campaign year keep
+     * their days (season_conmebol_make_day). */
+    long today = season_abs_day(ty, tm, td);
+    long made = day_number(base + (int16_t)rd16(g_mem, self + 0xb8u), (int16_t)rd16(g_mem, self + 0xb6u));
+    if (!rd32(g_mem, self + 0x45u) && made > today) {
+        long mk = season_conmebol_make_day(days[0], made, today);
+        int doy, year_off, flag;
+        season_conmebol_round_fields(mk, base, &doy, &year_off, &flag);
+        wr16(g_mem, self + 0xb6u, (uint16_t)doy);
+        wr16(g_mem, self + 0xb8u, (uint16_t)year_off);
+    }
+    if (logging()) {
+        int y0, m0, d0, y1, m1, d1;
+        season_from_abs_day(days[0], &y0, &m0, &d0);
+        season_from_abs_day(days[rounds - 1], &y1, &m1, &d1);
+        fprintf(stderr, "recomp: season intl: wc qualifying %d: CONMEBOL plays its %d rounds on FIFA days, "
+                        "%04d-%02d-%02d to %04d-%02d-%02d\n", y, rounds, y0, m0, d0, y1, m1, d1);
+    }
+    return 1;
+}
+
 /* WcSouthAmericanLeague::create_schedule, thiscall (stage, short *round_count, short *, int *) ret 0x10, returns
  * the template. */
 RT_WRAP(00920590, wcq_conmebol_schedule)
@@ -514,17 +591,25 @@ RT_WRAP(00920590, wcq_conmebol_schedule)
     o_00920590();
     if (rt_unwinding || !readable(count)) return;
     uint32_t eax = cpu.eax;
-    end_by_october(self, eax, (int16_t)rd16(g_mem, count), "CONMEBOL");
+    if (!conmebol_windows(self, eax, (int16_t)rd16(g_mem, count)))
+        end_by_october(self, eax, (int16_t)rd16(g_mem, count), "CONMEBOL");
     cpu.eax = eax;
 }
 
 /* WcConcacafCup::create_round_table, thiscall (stage, short *round_count, short *, int *) ret 0x10: the final
- * group, stage 6. */
+ * group, stage 6; the first round of the 2026 shape for stage -1 (season_concacaf26.c). */
 RT_WRAP(00914de0, wcq_concacaf_rounds)
 {
     uint32_t self = cpu.ecx, stage = rt_arg(0) & 0xffu, count = rt_arg(1);
     o_00914de0();
-    if (rt_unwinding || stage != 6u || !readable(count)) return;
+    if (rt_unwinding) return;
+    if (stage == 0xffu) {                                /* item 214: the first round of the 2026 shape */
+        uint32_t eax = cpu.eax;
+        season_cc26_round_table(self, -1, eax, count);
+        if (!rt_unwinding) cpu.eax = eax;
+        return;
+    }
+    if (stage != 6u || !readable(count)) return;
     uint32_t eax = cpu.eax;
     end_by_october(self, eax, (int16_t)rd16(g_mem, count), "the CONCACAF final group");
     cpu.eax = eax;
@@ -559,4 +644,84 @@ int season_intl_oceania_wait(uint32_t self)
         }
     }
     return 0;
+}
+
+/* The dates of the inter-confederation ties, cycles 2006 to 2018 (gate-2007 leg02 of run 8 on cf2e8fa5). The
+ * original's templates put them in the year before the World Cup (year offset 1 from +0x40):
+ * - Oceania stage 2 (0x91e2e0, vtable 0x970d78 +0x3c): drawn on 23 November (0x91e7c9..0x91e7cd, Cup round draw
+ *   date 0x521e60), two legs (+0x21 = 2) 7 days apart (+0x22 = 7) from 2 December (0x91e7d2..0x91e7e8, 0x521eb0).
+ *   In 2009 those are days 326, 335 and 342, and the World Cup draw is on day 346: a second leg moved by 4 days or
+ *   more ends after the draw, the slot net (A10) fills its place and the winner finds the finals full (A11).
+ * - Asia stage 12 (0x911f00, vtable 0x970b70 +0x3c): drawn on 27 October (0x91247e..0x91248d), two legs 4 days
+ *   apart (0x9124b9, 0x9124e3) from 11 November (0x912492..0x9124a4).
+ * The real ties (the Wikipedia pages "<year> FIFA World Cup qualification (inter-confederation play-offs)", read
+ * 29 October 2026) played in November, weeks before the World Cup draw of December. So each tie takes its real
+ * leg dates, drawn 7 days before its first leg. A tie built on or after that draw day (the AFC tie of 2010,
+ * whose first leg was on 10 October 2009, or a section that ends late) takes the earliest dates: drawn tomorrow,
+ * legs 7 and 4 days later (logged), unless the template's first leg comes earlier.
+ * 2022 keeps the templates (the real ties were single matches in June 2022, after the draw of April 2022; head
+ * comment). 2026 and later play the tournament of season_wcq26.c. Round record (0x68 bytes, as Cup::draw_round
+ * 0x51c410 reads it): draw day of the year s16 +0 and year offset s8 +2, first leg s16 +3 and offset s8 +5, the
+ * days between the legs +0x22. */
+static const struct { int year, afc[4], other[4]; } tie_dates[] = {   /* day, month of each leg, in year - 1 */
+    {2006, {12, 11, 16, 11}, {12, 11, 16, 11}},     /* Trinidad and Tobago v Bahrain; Uruguay v Australia */
+    {2010, {10, 10, 14, 11}, {14, 11, 18, 11}},     /* Bahrain v New Zealand; Costa Rica v Uruguay */
+    {2014, {13, 11, 20, 11}, {13, 11, 20, 11}},     /* Jordan v Uruguay; Mexico v New Zealand */
+    {2018, {10, 11, 15, 11}, {11, 11, 15, 11}},     /* Honduras v Australia; New Zealand v Peru */
+};
+
+static void tie_dates_of(uint32_t self, uint32_t rec, int afc)
+{
+    int y = wc_year(self), k = -1;
+    for (int i = 0; i < (int)(sizeof tie_dates / sizeof tie_dates[0]); i++)
+        if (tie_dates[i].year == y) k = i;
+    if (k < 0 || !readable(rec) || rd8(g_mem, rec + 0x21u) != 2u) return;
+    const int *t = afc ? tie_dates[k].afc : tie_dates[k].other;
+    int base = (int16_t)rd16(g_mem, self + 0x40u), year = y - 1;
+    int leg1 = season_day_of_year(year, t[1], t[0]), gap = season_day_of_year(year, t[3], t[2]) - leg1;
+    int draw = leg1 - 7, draw_year = year, leg_year = year;
+    int today = (int16_t)rd16(g_mem, 0xae2c90u), today_year = (int16_t)rd16(g_mem, 0xae2c92u);
+    const char *which = afc ? "AFC tie" : "other tie";
+    if (today_year > year || (today_year == year && draw <= today)) {
+        /* Built on or after its real draw day: the earliest dates, the draw tomorrow and the legs 7 and 4 days
+         * later, unless the template's own first leg is earlier (World Cup chain session review, 29 October). */
+        draw = today + 1, draw_year = today_year, leg1 = today + 8, leg_year = today_year, gap = 4;
+        if (draw >= days_of_year(draw_year)) draw -= days_of_year(draw_year), draw_year++;
+        if (leg1 >= days_of_year(leg_year)) leg1 -= days_of_year(leg_year), leg_year++;
+        int tmpl_year = (int8_t)rd8(g_mem, rec + 5u) + base, tmpl_leg = (int16_t)rd16(g_mem, rec + 3u);
+        if (tmpl_year < leg_year || (tmpl_year == leg_year && tmpl_leg <= leg1)) {
+            if (logging())
+                fprintf(stderr, "recomp: season intl: wc play-off %d: the %s keeps the template's dates (built on "
+                                "day %d of %d, the template's first leg is earlier)\n", y, which, today, today_year);
+            return;
+        }
+        if (logging())
+            fprintf(stderr, "recomp: season intl: wc play-off %d: the %s was built on day %d of %d, on or after its "
+                            "real draw day: the earliest dates\n", y, which, today, today_year);
+    }
+    wr16(g_mem, rec, (uint16_t)draw);
+    wr8(g_mem, rec + 2u, (uint8_t)(draw_year - base));
+    wr16(g_mem, rec + 3u, (uint16_t)leg1);
+    wr8(g_mem, rec + 5u, (uint8_t)(leg_year - base));
+    wr8(g_mem, rec + 0x22u, (uint8_t)gap);
+    if (logging())
+        fprintf(stderr, "recomp: season intl: wc play-off %d: the %s is drawn on day %d of %d and plays on days %d and "
+                        "%d of %d\n", y, which, draw, draw_year, leg1, leg1 + gap, leg_year);
+}
+
+void season_intl_oceania_tie_dates(uint32_t self, int stage, uint32_t rec)
+{
+    if (stage == 2) tie_dates_of(self, rec, 0);
+}
+
+void o_00911f00(void);
+
+/* The Asian template (vtable +0x3c, thiscall (stage as a byte, short *, short *, int *), ret 0x10): stage 12 is
+ * the AFC tie (above). */
+RT_WRAP(00911f00, wcq_asia_template)
+{
+    uint32_t self = cpu.ecx;
+    int st = (int8_t)rd8(g_mem, cpu.esp + 4u);
+    o_00911f00();
+    if (!rt_unwinding && st == 12) tie_dates_of(self, cpu.eax, 1);
 }

@@ -9,12 +9,11 @@
 2014	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-145: game 6, table 53 (53)
 2014	clubs	goldcup (Copa América), row int-continental-154: game 0/4, table 12 (12)
 2014	clubs	ita_c1_super (Supercoppa di Lega Pro), row ita-237: game 2, table 3 (3)
-2014	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-235: game 5, table 59 (59)
+2014	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-235: game 3, table 59 (59)
 2014	clubs	ita_cup (Coppa Italia), row ita-234: game 4, table 78 (78)
 2014	clubs	ita_ser_a (Serie A), row ita-223: game 18, table 20 (20)
 2014	clubs	ita_ser_b (Serie B), row ita-224: game 20, table 22 (22)
 2014	clubs	world_club_champ (FIFA Club World Cup), row club-world-249: game 0, table 7 (7)
-2014	down	eng_third (Football League Two), row eng-161: game 1 (+0 play-off places), table 2 (2)
 2014	down	ita_ser_b (Serie B), row ita-224: game 4 (+0 play-off places), table 3 (3 direct + play-out 4th-last v 5th-last (two legs; not held if gap over 4 points)
 2014	down	ita_ser_c1a (Lega Pro girone A), row ita-230: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 16th-19th, two legs)
 2014	down	ita_ser_c1b (Lega Pro girone B), row ita-231: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 16th-19th, two legs)
@@ -22,8 +21,6 @@
 2014	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-163: the game waits for 2016, the table holds it
 2014	idle	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-161: the game waits for 2016, the table holds it
 2014	no_row	friendly (Friendly): no table row
-2014	no_row	ita_ser_c2b (Italian Serie C2/B): no table row
-2014	no_row	ita_ser_c2c (Italian Serie C2/C): no table row
 2014	no_row	record_utils ('B' International): no table row
 2014	no_row	record_utils (Reserve): no table row
 2014	no_row	record_utils (Under 21 International): no table row
@@ -31,6 +28,8 @@
 2014	not_in_game	eng-379 eng_fa_trophy 'FA Trophy' (England)
 2014	not_in_game	uefa-105 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2014	playoffs	ita_ser_b (Serie B), row ita-224: game 0 up and 0 down play-off places, table 6 and 0 ('3rd to 8th, but only clubs within 14 points of the 3rd take part (2 to 6 clubs);')
+2014	rounds	ita_ser_a (Serie A), row ita-223: game 34, table 38 (2 meetings, zones -, extra 0)
+2014	rounds	ita_ser_b (Serie B), row ita-224: game 38, table 42 (2 meetings, zones -, extra 0)
 2015	bench	ita_ser_a (Serie A), row ita-240: game 9, table 12 (12)
 2015	bench	new_suruga_bank (Suruga Bank Championship), row club-world-527: game 7, table 9 (9)
 2015	bench	world_club_champ (FIFA Club World Cup), row club-world-268: game 7/9, table 12 (12)
@@ -39,29 +38,26 @@
 2015	clubs	european_cup (UEFA Champions League), row uefa-114: game 77, table 78 (78 (32 in the group stage))
 2015	clubs	goldcup (Copa América), row int-continental-165: game 0/4, table 16 (16)
 2015	clubs	ita_c1_super (Supercoppa di Lega Pro), row ita-254: game 2, table 3 (3)
-2015	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-252: game 5, table 53 (53)
+2015	clubs	ita_c_cup (Coppa Italia Lega Pro), row ita-252: game 3, table 53 (53)
 2015	clubs	ita_cup (Coppa Italia), row ita-251: game 4, table 78 (78)
 2015	clubs	ita_ser_a (Serie A), row ita-240: game 18, table 20 (20)
 2015	clubs	ita_ser_b (Serie B), row ita-241: game 20, table 22 (22)
 2015	clubs	ita_ser_c1a (Lega Pro girone A), row ita-247: game 20, table 18 (18)
 2015	clubs	ita_ser_c1b (Lega Pro girone B), row ita-248: game 20, table 18 (18)
 2015	clubs	ita_ser_c2a (Lega Pro girone C), row ita-249: game 20, table 18 (18)
-2015	clubs	oceania_nations (OFC Nations Cup), row int-continental-164: game 0/3, table 8 (8)
-2015	clubs	uefa_cup (UEFA Europa League), row uefa-117: game 162/195, table 191 (191 (158 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
-2015	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-174: game 50, table 54 (54 entrants)
+2015	clubs	oceania_nations (OFC Nations Cup), row int-continental-164: game 0/4, table 8 (8)
+2015	clubs	uefa_cup (UEFA Europa League), row uefa-117: game 161/194, table 191 (191 (158 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
+2015	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-174: game 44, table 54 (54 entrants)
 2015	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-175: game 0, table 40 (40)
 2015	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-173: game 24, table 12 (12)
 2015	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-176: game 5, table 11 (11 entrants)
 2015	clubs	world_club_champ (FIFA Club World Cup), row club-world-268: game 0, table 7 (7)
-2015	down	eng_third (Football League Two), row eng-171: game 1 (+0 play-off places), table 2 (2)
 2015	down	ita_ser_b (Serie B), row ita-241: game 4 (+0 play-off places), table 3 (3 direct + play-out 4th-last v 5th-last (two legs; not held if gap over 4 points)
 2015	down	ita_ser_c1a (Lega Pro girone A), row ita-247: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 14th-17th, two legs)
 2015	down	ita_ser_c1b (Lega Pro girone B), row ita-248: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 14th-17th, two legs)
 2015	down	ita_ser_c2a (Lega Pro girone C), row ita-249: game 1 (+4 play-off places), table 3 (3: last direct + play-outs 14th-17th, two legs)
 2015	name	goldcup (Copa América), row int-continental-165: game 'Copa América', table 'Copa América Centenario'
 2015	no_row	friendly (Friendly): no table row
-2015	no_row	ita_ser_c2b (Italian Serie C2/B): no table row
-2015	no_row	ita_ser_c2c (Italian Serie C2/C): no table row
 2015	no_row	record_utils ('B' International): no table row
 2015	no_row	record_utils (Reserve): no table row
 2015	no_row	record_utils (Under 21 International): no table row
@@ -73,4 +69,9 @@
 2015	not_in_game	eng-385 eng_fa_trophy 'FA Trophy' (England)
 2015	not_in_game	uefa-113 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2015	playoffs	ita_ser_b (Serie B), row ita-241: game 0 up and 0 down play-off places, table 6 and 0 ('3rd to 8th, but only clubs within 14 points of the 3rd take part (2 to 6 clubs);')
+2015	rounds	ita_ser_a (Serie A), row ita-240: game 34, table 38 (2 meetings, zones -, extra 0)
+2015	rounds	ita_ser_b (Serie B), row ita-241: game 38, table 42 (2 meetings, zones -, extra 0)
+2015	rounds	ita_ser_c1a (Lega Pro girone A), row ita-247: game 38, table 34 (2 meetings, zones -, extra 0)
+2015	rounds	ita_ser_c1b (Lega Pro girone B), row ita-248: game 38, table 34 (2 meetings, zones -, extra 0)
+2015	rounds	ita_ser_c2a (Lega Pro girone C), row ita-249: game 38, table 34 (2 meetings, zones -, extra 0)
 2015	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-527: game 7, table 6 (6)

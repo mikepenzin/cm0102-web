@@ -1,0 +1,77 @@
+action	database	start_year	competition	label	part	result	first	first_nation	second	second_nation	third	third_nation	host	host_nation	sources
+clear	October 2016	2016	German Cup	2015											https://en.wikipedia.org/wiki/List_of_DFB-Pokal_finals
+add	October 2016	2016	German Cup	2015		add	VfL Wolfsburg	Germany	Borussia Dortmund	Germany					https://en.wikipedia.org/wiki/List_of_DFB-Pokal_finals
+add	October 2016	2016	German Cup	2016		add	FC Bayern München	Germany	Borussia Dortmund	Germany					https://en.wikipedia.org/wiki/List_of_DFB-Pokal_finals
+clear	October 2016	2016	Italian Serie C1/A	2016											https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2016	2016	Italian Serie C1/A	2016		add	Cittadella	Italy	Pordenone	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+clear	October 2016	2016	Italian Serie C1/B	2015											https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+add	October 2016	2016	Italian Serie C1/B	2015		add	Ascoli Picchio	Italy							https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+clear	October 2016	2016	Italian Serie C1/B	2016											https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2016	2016	Italian Serie C1/B	2016		add	Società Polisportiva Ars et Labor	Italy	Pisa	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2016	2016	Italian Serie C2/A	2015		add	Salernitana	Italy	Benevento	Italy					https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+add	October 2016	2016	Italian Serie C2/A	2016		add	Benevento	Italy	Foggia	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+clear	September 2012	2012	English Isthmian League Premier Division	2011											https://en.wikipedia.org/wiki/Isthmian_League
+add	September 2012	2012	English Isthmian League Premier Division	2011		add	Sutton United	England							https://en.wikipedia.org/wiki/Isthmian_League
+add	September 2012	2012	English Isthmian League Premier Division	2012		add	Billericay Town	England							https://en.wikipedia.org/wiki/Isthmian_League
+clear	September 2010 ODB	2010	Brazilian Pernambuco State Championship	2009											https://pt.wikipedia.org/wiki/Campeonato_Pernambucano_de_Futebol_Masculino
+add	September 2010 ODB	2010	Brazilian Pernambuco State Championship	2009		add	Sport Club do Recife	Brazil	Clube Náutico Capibaribe	Brazil					https://pt.wikipedia.org/wiki/Campeonato_Pernambucano_de_Futebol_Masculino
+clear	September 2010 ODB	2010	Brazilian Paraná State Championship	2009											https://pt.wikipedia.org/wiki/Campeonato_Paranaense_de_Futebol_de_2009
+add	September 2010 ODB	2010	Brazilian Paraná State Championship	2009		add	Clube Atlético Paranaense	Brazil							https://pt.wikipedia.org/wiki/Campeonato_Paranaense_de_Futebol_de_2009
+clear	October 2015	2015	Italian Serie C1/B	2015											https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+add	October 2015	2015	Italian Serie C1/B	2015		add	Ascoli Picchio	Italy							https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+add	October 2015	2015	Italian Serie C2/A	2015		add	Salernitana	Italy	Benevento	Italy					https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+clear	October 2018	2018	Italian Serie C1/B	2015											https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+add	October 2018	2018	Italian Serie C1/B	2015		add	Ascoli Calcio	Italy							https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+add	October 2018	2018	Italian Serie C2/A	2015		add	US Salernitana 1919	Italy	Benevento Calcio	Italy					https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+clear	October 2018	2018	Italian Serie C1/A	2016											https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2018	2018	Italian Serie C1/A	2016		add	AS Cittadella	Italy	Pordenone Calcio	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+clear	October 2018	2018	Italian Serie C1/B	2016											https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2018	2018	Italian Serie C1/B	2016		add	SPAL 2013	Italy	AC Pisa 1909	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2018	2018	Italian Serie C2/A	2016		add	Benevento Calcio	Italy	Foggia Calcio	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+clear	October 2018	2018	Italian Serie C1/A	2017											https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2018	2018	Italian Serie C1/A	2017		add	US Cremonese	Italy	US Alessandria 1912	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+clear	October 2018	2018	Italian Serie C1/B	2017											https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2018	2018	Italian Serie C1/B	2017		add	Venezia FC	Italy	Parma Calcio 1913	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2018	2018	Italian Serie C2/A	2017		add	Foggia Calcio	Italy	US Lecce	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+clear	October 2017	2017	Italian Serie C1/B	2015											https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+add	October 2017	2017	Italian Serie C1/B	2015		add	Ascoli Picchio	Italy							https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+add	October 2017	2017	Italian Serie C2/A	2015		add	Salernitana	Italy	Benevento	Italy					https://en.wikipedia.org/wiki/2014%E2%80%9315_Lega_Pro
+clear	October 2017	2017	Italian Serie C1/A	2016											https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2017	2017	Italian Serie C1/A	2016		add	Cittadella	Italy	Pordenone	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+clear	October 2017	2017	Italian Serie C1/B	2016											https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2017	2017	Italian Serie C1/B	2016		add	Società Polisportiva Ars et Labor	Italy	Pisa	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2017	2017	Italian Serie C2/A	2016		add	Benevento	Italy	Foggia	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+clear	October 2017	2017	Italian Serie C1/A	2017											https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2017	2017	Italian Serie C1/A	2017		add	Cremonese	Italy	Alessandria	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+clear	October 2017	2017	Italian Serie C1/B	2017											https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2017	2017	Italian Serie C1/B	2017		add	Venezia	Italy	Parma	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2017	2017	Italian Serie C2/A	2017		add	Foggia	Italy	Lecce	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+clear	October 2017	2017	Olympic Games	2012											https://en.wikipedia.org/wiki/Football_at_the_2016_Summer_Olympics_%E2%80%93_Men%27s_tournament ; https://en.wikipedia.org/wiki/Football_at_the_2012_Summer_Olympics_%E2%80%93_Men%27s_tournament
+add	October 2017	2017	Olympic Games	2012		add	Mexico		Brazil						https://en.wikipedia.org/wiki/Football_at_the_2016_Summer_Olympics_%E2%80%93_Men%27s_tournament ; https://en.wikipedia.org/wiki/Football_at_the_2012_Summer_Olympics_%E2%80%93_Men%27s_tournament
+add	October 2017	2017	Olympic Games	2016		add	Brazil		Germany		Nigeria				https://en.wikipedia.org/wiki/Football_at_the_2016_Summer_Olympics_%E2%80%93_Men%27s_tournament ; https://en.wikipedia.org/wiki/Football_at_the_2012_Summer_Olympics_%E2%80%93_Men%27s_tournament
+clear	October 2019	2019	Italian Serie C1/A	2016											https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2019	2019	Italian Serie C1/A	2016		add	AS Cittadella	Italy	Pordenone Calcio	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+clear	October 2019	2019	Italian Serie C1/B	2016											https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2019	2019	Italian Serie C1/B	2016		add	SPAL	Italy	AC Pisa 1909	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+add	October 2019	2019	Italian Serie C2/A	2016		add	Benevento Calcio	Italy	Foggia Calcio	Italy					https://en.wikipedia.org/wiki/2015%E2%80%9316_Lega_Pro
+clear	October 2019	2019	Italian Serie C1/A	2017											https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2019	2019	Italian Serie C1/A	2017		add	US Cremonese	Italy	US Alessandria Calcio 1912	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+clear	October 2019	2019	Italian Serie C1/B	2017											https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2019	2019	Italian Serie C1/B	2017		add	Venezia FC	Italy	Parma Calcio 1913	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+add	October 2019	2019	Italian Serie C2/A	2017		add	Foggia Calcio	Italy	US Lecce	Italy					https://en.wikipedia.org/wiki/2016%E2%80%9317_Lega_Pro
+clear	October 2019	2019	Italian Serie C1/B	2019											https://it.wikipedia.org/wiki/Serie_C_2018-2019
+add	October 2019	2019	Italian Serie C1/B	2019		add	Pordenone Calcio	Italy	US Triestina	Italy					https://it.wikipedia.org/wiki/Serie_C_2018-2019
+add	October 2019	2019	Italian Serie C2/A	2019		add	SS Juve Stabia	Italy	Trapani Calcio	Italy					https://it.wikipedia.org/wiki/Serie_C_2018-2019
+add	October 2019	2019	Italian C1 Super Cup	2018		add	Calcio Padova	Italy	AS Livorno	Italy					https://it.wikipedia.org/wiki/Supercoppa_di_Serie_C_2018 ; https://it.wikipedia.org/wiki/Supercoppa_di_Serie_C_2019
+add	October 2019	2019	Italian C1 Super Cup	2019		add	Pordenone Calcio	Italy	Virtus Entella	Italy					https://it.wikipedia.org/wiki/Supercoppa_di_Serie_C_2018 ; https://it.wikipedia.org/wiki/Supercoppa_di_Serie_C_2019
+clear	October 2019	2019	Danish Cup	2018											https://en.wikipedia.org/wiki/2017%E2%80%9318_Danish_Cup ; https://en.wikipedia.org/wiki/2018%E2%80%9319_Danish_Cup
+add	October 2019	2019	Danish Cup	2018		add	Bröndby IF	Denmark	Silkeborg IF	Denmark					https://en.wikipedia.org/wiki/2017%E2%80%9318_Danish_Cup ; https://en.wikipedia.org/wiki/2018%E2%80%9319_Danish_Cup
+add	October 2019	2019	Danish Cup	2019		add	FC Midtjylland	Denmark	Bröndby IF	Denmark					https://en.wikipedia.org/wiki/2017%E2%80%9318_Danish_Cup ; https://en.wikipedia.org/wiki/2018%E2%80%9319_Danish_Cup
+clear	November 2020	2020	Australian National Soccer League	2019											https://en.wikipedia.org/wiki/A-League_Men_Grand_Final
+add	November 2020	2020	Australian National Soccer League	2019		add	Sydney FC	Australia	Perth Glory	Australia					https://en.wikipedia.org/wiki/A-League_Men_Grand_Final
+clear	October 2022	2022	Brazilian São Paulo State Championship	2021											https://en.wikipedia.org/wiki/2021_Campeonato_Paulista
+add	October 2022	2022	Brazilian São Paulo State Championship	2021		add	São Paulo Futebol Clube	Brazil	Sociedade Esportiva Palmeiras	Brazil					https://en.wikipedia.org/wiki/2021_Campeonato_Paulista
+clear	October 2022	2022	Brazilian Bahia State Championship	2019											https://en.wikipedia.org/wiki/Campeonato_Baiano
+add	October 2022	2022	Brazilian Bahia State Championship	2019		add	Esporte Clube Bahia	Brazil	AD Bahia de Feira (BA)	Brazil					https://en.wikipedia.org/wiki/Campeonato_Baiano
+clear	October 2022	2022	Brazilian Bahia State Championship	2021											https://en.wikipedia.org/wiki/Campeonato_Baiano
+add	October 2022	2022	Brazilian Bahia State Championship	2021		add	Alagoinhas Atlético Clube (BA)	Brazil	AD Bahia de Feira (BA)	Brazil					https://en.wikipedia.org/wiki/Campeonato_Baiano

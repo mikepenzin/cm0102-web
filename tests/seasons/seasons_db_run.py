@@ -14,10 +14,16 @@ unpacks Summer 2002, and a copy of the 3.9.68 data in Databases is no version of
 
 The run makes two season zips with tools/release/make_season_zips.py (October 2003 and September 2012) in a
 new folder, and checks:
-  1. the zips equal a second run (same bytes), and hold only the 20 data files in the folder "<name>"
+  1. the zips equal a second run (same bytes), and hold only the 20 data files, the source's euro.cfg (0.6.2
+     open item 100: the first season's European entrants) and its player_setup.cfg (open item 229: the loans) in
+     the folder "<name>"
   2. scan: the two seasons are "in the download", the others have the status the table gives
   3. prepare unpacks one zip into Databases/<name>, the folder equals the signature (identify)
   4. a second prepare uses the unpacked copy: nothing is unpacked, no file changes
+  4b. an old-style folder without euro.cfg (a 0.6.0 or 0.6.1 unpack) gets it from the zip at prepare; a folder
+      with its own euro.cfg keeps it (0.6.2 open item 100, 0.7.0)
+  4c. a folder without player_setup.cfg (an unpack of 0.6.0 to 0.7.1) gets it from the zip at prepare; a folder
+      with its own keeps it (open item 229, 0.7.2)
   5. a folder under another name counts (recognition by content), and an edited folder is Custom
   6. an edited folder with the name of the season is not replaced: the new copy gets "<name> (2)"
   7. a damaged zip leaves no folder that looks whole and no temporary folder, and a retry works
@@ -42,6 +48,7 @@ FILES = ["city.dat", "club.dat", "club_comp.dat", "club_comp_history.dat", "colo
          "continent.dat", "first_names.dat", "index.dat", "nat_club.dat", "nation.dat", "nation_comp.dat",
          "nation_comp_history.dat", "officials.dat", "second_names.dat", "stadium.dat", "staff.dat",
          "staff_comp.dat", "staff_comp_history.dat", "staff_history.dat"]
+OPTIONAL = ["euro.cfg", "player_setup.cfg"]
 STATUS = {"OFFICIAL": 0, "UNPACKED": 1, "IN_DOWNLOAD": 2, "NO_DATABASE": 3, "MISSING": 4}
 PREPARE = {"OK": 0, "OFFICIAL": 1, "NO_DATABASE": 2, "NO_ZIP": 3, "FAILED": 4}
 
@@ -117,7 +124,8 @@ def main(argv):
             check(os.path.exists(a) and sha(a) == sha(b), f"{n}.zip is the same on a second run")
             with zipfile.ZipFile(a) as z:
                 names = sorted(z.namelist())
-            check(names == sorted(f"{n}/{f}" for f in FILES), f"{n}.zip holds the 20 data files in the folder {n}")
+            check(names == sorted(f"{n}/{f}" for f in FILES + OPTIONAL),
+                  f"{n}.zip holds the 20 data files, euro.cfg and player_setup.cfg in the folder {n}")
 
         # The tool stops on a zip that does not match the signatures table, and leaves no zip.
         src_zip = os.path.join(out1, "October 2003.zip")
@@ -143,7 +151,7 @@ def main(argv):
             shutil.copy(os.path.join(out1, n + ".zip"), os.path.join(game, "Seasons", n + ".zip"))
 
         rows, custom = scan(tool, game, save)
-        check(len(rows) == 25 and rows["2001/02"][0] == STATUS["OFFICIAL"], "scan: 25 seasons, 2001/02 official")
+        check(len(rows) == 26 and rows["2001/02"][0] == STATUS["OFFICIAL"], "scan: 26 seasons, 2001/02 official")
         check(rows["2002/03"][0] == STATUS["MISSING"], "scan: 2002/03 (Summer 2002) has no zip in this game folder")
         check(rows["2003/04"][0] == STATUS["IN_DOWNLOAD"] and rows["2012/13"][0] == STATUS["IN_DOWNLOAD"],
               "scan: the two zips show as in the download")
@@ -155,7 +163,8 @@ def main(argv):
         status, name, unpacked, err = prepare(tool, game, save, 2003)
         folder = os.path.join(save, "Databases", "October 2003")
         check(status == PREPARE["OK"] and name == "October 2003" and unpacked == 1, f"prepare 2003: unpacked once ({status} {name!r} {err})")
-        check(sorted(os.listdir(folder)) == sorted(FILES), "the unpacked folder holds the 20 data files and nothing else")
+        check(sorted(os.listdir(folder)) == sorted(FILES + OPTIONAL),
+              "the unpacked folder holds the 20 data files, euro.cfg and player_setup.cfg, and nothing else")
         # Keep club.dat and staff.dat "changed a moment ago" for the cache check below, also on a slow machine: a time a
         # little ahead of now is never 2 seconds older than the hash (under load the hash can start 2 seconds after
         # the unpack, and the cache then keeps the folder, as it should).
@@ -182,6 +191,92 @@ def main(argv):
         check(tree_state(folder) == before, "prepare 2003 again: no file changed")
         rows, custom = scan(tool, game, save)
         check(rows["2003/04"][0] == STATUS["UNPACKED"], "scan: 2003/04 shows as unpacked")
+
+        # 4b. A folder that a player unpacked from a 0.6.0 or 0.6.1 zip has no euro.cfg (0.6.2 open item 100, 0.7.0).
+        # prepare copies euro.cfg from the zip into it, only when the file is missing, and changes nothing else.
+        zip_cfg = zipfile.ZipFile(os.path.join(game, "Seasons", "October 2003.zip")).read("October 2003/euro.cfg")
+        cfg = os.path.join(folder, "euro.cfg")
+        os.unlink(cfg)
+        others = {k: v for k, v in tree_state(folder).items()}
+        status, name, unpacked, err = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and unpacked == 0 and name == "October 2003",
+              f"prepare 2003 on an old-style folder (no euro.cfg): the folder is used, nothing unpacked ({status} {name!r} {err})")
+        check(os.path.exists(cfg) and open(cfg, "rb").read() == zip_cfg, "the old-style folder gets euro.cfg from the zip")
+        check(tree_state(folder) == {**others, "euro.cfg": tree_state(folder).get("euro.cfg")},
+              "no other file of the old-style folder changed, and no temporary file is left in it")
+        own_cfg = b"my own euro.cfg\r\n"
+        with open(cfg, "wb") as f:
+            f.write(own_cfg)
+        before = tree_state(folder)
+        status, name, unpacked, err = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and open(cfg, "rb").read() == own_cfg and tree_state(folder) == before,
+              "a folder with its own euro.cfg keeps it: no overwrite, no file changed")
+        # A file of another letter case counts as there (the game's path lookup ignores case).
+        os.rename(cfg, os.path.join(folder, "Euro.CFG"))
+        status, _, _, _ = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and sorted(os.listdir(folder)) == sorted(FILES + ["Euro.CFG", "player_setup.cfg"]),
+              "a folder with Euro.CFG gets no second euro.cfg")
+        os.unlink(os.path.join(folder, "Euro.CFG"))
+        # A zip with no euro.cfg (a 0.6.0 or 0.6.1 zip, or a damaged one): the folder is used as it is.
+        zpath = os.path.join(game, "Seasons", "October 2003.zip")
+        keep_zip = os.path.join(work, "keep-October-2003.zip")
+        shutil.move(zpath, keep_zip)
+        with zipfile.ZipFile(keep_zip) as zin, zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zout:
+            for info in zin.infolist():
+                if not info.filename.endswith("/euro.cfg"):
+                    zout.writestr(info, zin.read(info))
+        status, _, unpacked, _ = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and unpacked == 0 and sorted(os.listdir(folder)) == sorted(FILES + ["player_setup.cfg"]),
+              "a zip without euro.cfg adds nothing to the old-style folder")
+        with open(zpath, "wb") as f:
+            f.write(open(keep_zip, "rb").read()[:5000])
+        status, _, unpacked, _ = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and unpacked == 0 and sorted(os.listdir(folder)) == sorted(FILES + ["player_setup.cfg"]),
+              "a cut zip adds nothing and leaves no temporary file in the old-style folder")
+        shutil.move(keep_zip, zpath)
+        status, _, _, _ = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and open(cfg, "rb").read() == zip_cfg and
+              sorted(os.listdir(folder)) == sorted(FILES + OPTIONAL), "with the good zip back the folder gets euro.cfg")
+
+        # A euro.cfg.*.tmp that an earlier stop left (an hour old) goes at the next prepare; a fresh one stays.
+        old_part = os.path.join(folder, "euro.cfg.123-456.tmp")
+        new_part = os.path.join(folder, "euro.cfg.789-012.tmp")
+        for part in (old_part, new_part):
+            with open(part, "wb") as f:
+                f.write(b"half")
+        long_ago = time.time() - 7200
+        os.utime(old_part, (long_ago, long_ago))
+        status, _, _, _ = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and not os.path.exists(old_part) and os.path.exists(new_part),
+              "prepare removes a stale euro.cfg.*.tmp and keeps a fresh one")
+        os.unlink(new_part)
+
+        # 4c. A folder unpacked by 0.6.0 to 0.7.1 has no player_setup.cfg (open item 229, 0.7.2): prepare copies it
+        # from the zip, only when it is missing, and changes nothing else. A stale part of it goes, as for euro.cfg.
+        zip_ps = zipfile.ZipFile(zpath).read("October 2003/player_setup.cfg")
+        ps = os.path.join(folder, "player_setup.cfg")
+        os.unlink(ps)
+        old_part = os.path.join(folder, "player_setup.cfg.123-456.tmp")
+        with open(old_part, "wb") as f:
+            f.write(b"half")
+        os.utime(old_part, (long_ago, long_ago))
+        others = dict(tree_state(folder))
+        others.pop("player_setup.cfg.123-456.tmp", None)
+        status, name, unpacked, err = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and unpacked == 0 and name == "October 2003",
+              f"prepare 2003 on a folder without player_setup.cfg: the folder is used, nothing unpacked ({status} {name!r} {err})")
+        check(os.path.exists(ps) and open(ps, "rb").read() == zip_ps, "the folder gets player_setup.cfg from the zip")
+        check(tree_state(folder) == {**others, "player_setup.cfg": tree_state(folder).get("player_setup.cfg")},
+              "no other file changed, the stale player_setup.cfg part is gone and no temporary file is left")
+        own_ps = b'"LOAN" "my" "" "own" "a" "b" 1 6 2001 15 6 2002\r\n'
+        with open(ps, "wb") as f:
+            f.write(own_ps)
+        before = tree_state(folder)
+        status, _, _, _ = prepare(tool, game, save, 2003)
+        check(status == PREPARE["OK"] and open(ps, "rb").read() == own_ps and tree_state(folder) == before,
+              "a folder with its own player_setup.cfg keeps it: no overwrite, no file changed")
+        with open(ps, "wb") as f:
+            f.write(zip_ps)
 
         # The recognition cache: a file counts only when it is 2 seconds older than the last change, so age it.
         cache = os.path.join(save, "Databases", ".identify-cache")
@@ -287,8 +382,9 @@ def main(argv):
               "a retry with the good zip works, removes the stale temporary folder and the empty parent")
         out, _ = run(tool, "identify", os.path.join(save, "Databases", "September 2012"))
         check(out == "September 2012", "the retry gives September 2012")
-        check(prepare(tool, game, save, 2001)[0] == PREPARE["OFFICIAL"] and prepare(tool, game, save, 2026)[0] == PREPARE["NO_DATABASE"],
-              "prepare 2001 is official, prepare 2026 has no database")
+        # 2027: no database (October 2026 is the season database of 2026/27, seasons_table.c)
+        check(prepare(tool, game, save, 2001)[0] == PREPARE["OFFICIAL"] and prepare(tool, game, save, 2027)[0] == PREPARE["NO_DATABASE"],
+              "prepare 2001 is official, prepare 2027 has no database")
         os.unlink(os.path.join(game, "Seasons", "October 2003.zip"))
         status, name, unpacked, err = prepare(tool, game, save, 2003)
         check(status == PREPARE["OK"] and unpacked == 0, "an unpacked season starts without its zip")

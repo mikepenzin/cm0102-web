@@ -29,10 +29,10 @@ PATCHES = {
     0x55F58D: (599, H1), 0x55F592: (799, W1), 0x55F5EB: (599, H1), 0x55F5F0: (799, W1),
     # Widget drag 0x561210: clamped to the screen.
     0x5612A0: (799, W1), 0x5612A8: (799, W1), 0x5612C9: (599, H1), 0x5612D1: (599, H1),
-    # Display init calls 0x5e2620(800, 600, ...): start-up, the two settings changes, the network path.
+    # Display init calls 0x5e2620(800, 600, ...): start-up and the two settings changes. The network path's
+    # calls (0x8aeed3..0x8aef00) are in the address lookup 0x8aee20, which net.c replaces (0.7.0 slice 2).
     0x5D79ED: (600, H), 0x5D79F2: (800, W),
     0x5D8645: (600, H), 0x5D864A: (800, W), 0x5D8685: (600, H), 0x5D868A: (800, W),
-    0x8AEED3: (600, H), 0x8AEED8: (800, W), 0x8AEEFB: (600, H), 0x8AEF00: (800, W),
     # Outline draw 0x5e7840: the span list starts at x 800, and the lock covers the whole screen.
     0x5E78BA: (800, W), 0x5E78E2: (800, W), 0x5E78EA: (600, H),
     # Error box 0x5e8290: centred in a screen 800 wide. Its y values follow in BOX_Y.
@@ -113,6 +113,12 @@ from uefa import PATCHES as UEFA_PATCHES  # noqa: E402
 assert not set(UEFA_PATCHES) & set(PATCHES)
 PATCHES.update(UEFA_PATCHES)
 
+# The game list of 50 games (0.7.0 slice 4a) in the same way.
+from game_list import PATCHES as GAME_LIST_PATCHES  # noqa: E402
+
+assert not set(GAME_LIST_PATCHES) & set(PATCHES)
+PATCHES.update(GAME_LIST_PATCHES)
+
 # Not a screen size: a fix for an endless loop (0.4.0 slice 12, custom data sets). euro.cfg is read by 0x9059e0
 # (docs/research/2026-10-16-update-team-databases.md). When a line of it is not a "*" header (after a header
 # that names an unknown nation, or a file that does not match the database), the original tests the same line
@@ -133,11 +139,12 @@ INSNS[0x905A4C] = ("jne 0x905c21",
 # no region object (je 0x7afe6b at 0x7afc8d), another region (jne 0x7afe6b at 0x7afc9d), and all four tests
 # false (je 0x7afcf3 at 0x7afcdf, where ebx stays 0). Accept = go to 0x7afcee (ebx = 1). The screen keeps the
 # count of the list in 16 bits, so rt_full_player_search(ebp) is 0 once the list (count at ebp+0x1f6) holds
-# 32767 players. The option is read at run time (playersearch.c).
-_FPS = "if (%s) { if (rt_full_player_search(ebp)) goto L_7afcee; goto L_7afe6b; }"
+# 32767 players. The option is read at run time (playersearch.c). esi is the player under test: the extra players
+# are marked, so that the search does not run their daily fitness update (playersearch.c, 0.6.1).
+_FPS = "if (%s) { if (rt_full_player_search(ebp, esi)) goto L_7afcee; goto L_7afe6b; }"
 INSNS[0x7AFC8D] = ("je 0x7afe6b", _FPS % "cc_e(F)")
 INSNS[0x7AFC9D] = ("jne 0x7afe6b", _FPS % "!cc_e(F)")
-INSNS[0x7AFCDF] = ("je 0x7afcf3", "if (cc_e(F)) { if (rt_full_player_search(ebp)) ebx = 1; goto L_7afcf3; }")
+INSNS[0x7AFCDF] = ("je 0x7afcf3", "if (cc_e(F)) { if (rt_full_player_search(ebp, esi)) ebx = 1; goto L_7afcf3; }")
 # The limit (forum report of 2026-10-21, playersearch.c). The screen counts the players it shows in 16 bits, and
 # known players and scout lists still join after the extra ones stop, so a full list went above 32767 and the
 # screen said "1 player found (N filtered out)". The builder's reset of the list (0x7afbb3) resets the record of
@@ -162,6 +169,12 @@ assert not set(SIZE_INSNS) & (set(INSNS) | set(PATCHES)) and not set(SIZE_PATCHE
 INSNS.update(SIZE_INSNS)
 PATCHES.update(SIZE_PATCHES)
 
+# Italy at its real league sizes (0.7.2 slice 9): the fixed counts of the Italian classes (league_sizes_ita.py).
+from league_sizes_ita import INSNS as ITA_SIZE_INSNS  # noqa: E402
+
+assert not set(ITA_SIZE_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(ITA_SIZE_INSNS)
+
 # New divisions (0.6.0 slice 20): the club count of the 3. Liga in the German Regional object (new_divisions.py).
 from new_divisions import INSNS as DIVISION_INSNS, PATCHES as DIVISION_PATCHES  # noqa: E402
 
@@ -176,6 +189,23 @@ assert not set(TUR_INSNS) & (set(INSNS) | set(PATCHES)) and not set(TUR_PATCHES)
 INSNS.update(TUR_INSNS)
 PATCHES.update(TUR_PATCHES)
 
+# The constants of the Argentine Primera that follow its count (0.7.2 league sizes, slice 15; arg_prm.py).
+from arg_prm import PATCHES as ARG_PATCHES  # noqa: E402
+
+assert not set(ARG_PATCHES) & (set(PATCHES) | set(INSNS))
+PATCHES.update(ARG_PATCHES)
+# The Ekstraklasa in one table (pol_first.py, GitHub issue 92): the club slot counts of PolFirst.
+from pol_first import PATCHES as POL_PATCHES  # noqa: E402
+
+assert not set(POL_PATCHES) & (set(PATCHES) | set(INSNS))
+PATCHES.update(POL_PATCHES)
+
+# The fixed 25th club of the Argentine second division (0.7.2 league sizes, slice 16; arg_second.py).
+from arg_second import PATCHES as ARG_SECOND_PATCHES  # noqa: E402
+
+assert not set(ARG_SECOND_PATCHES) & (set(PATCHES) | set(INSNS))
+PATCHES.update(ARG_SECOND_PATCHES)
+
 # A fix for the error box league_stage.cpp 533 of a league load (league_load.py): a row array of 0 bytes.
 from league_load import INSNS as LOAD_INSNS  # noqa: E402
 
@@ -187,9 +217,66 @@ from discipline_ban import INSNS as BAN_INSNS  # noqa: E402
 
 assert not set(BAN_INSNS) & (set(INSNS) | set(PATCHES))
 INSNS.update(BAN_INSNS)
+# Squad numbers 1 to 99 (squad_numbers.py, GitHub issue 140).
+from squad_numbers import INSNS as SQUAD_NUMBER_INSNS  # noqa: E402
+
+assert not set(SQUAD_NUMBER_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(SQUAD_NUMBER_INSNS)
+# The OFC Champions League at a load after Australia's move to Asia (oceania_entry.py).
+from oceania_entry import INSNS as OCEANIA_INSNS  # noqa: E402
+
+assert not set(OCEANIA_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(OCEANIA_INSNS)
 
 # Saves above 2 GB (0.6.0): unsigned file positions in ftell and the seek of a save part (save_size.py).
 from save_size import INSNS as SAVE_SIZE_INSNS  # noqa: E402
 
 assert not set(SAVE_SIZE_INSNS) & (set(INSNS) | set(PATCHES))
 INSNS.update(SAVE_SIZE_INSNS)
+
+# Faults of the original that long games reach (0.6.2 slice 11, original_faults.py): national managers, money above
+# 2,147,483,647, the human manager's age, Olympic squads (open item 102), the Australian NSL stages (open item 128),
+# the holiday settings for offers (open item 132) and the senior call-ups of players abroad (open item 143).
+from original_faults import INSNS as ORIGINAL_FAULT_INSNS  # noqa: E402
+
+assert not set(ORIGINAL_FAULT_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(ORIGINAL_FAULT_INSNS)
+
+# Reads of the original that depend on where memory lies (0.6.2 open item 138b, layout_reads.py): the captain's scale,
+# the match players' unset fields, a local of the daily staff update, the simulated fixtures' flags, the database
+# loans' morale, the place masks of a national squad, the new officials' ids, the missed-training records, the new
+# slots of the contract table, a new contract, the training schedules and the fitness incident records.
+from layout_reads import INSNS as LAYOUT_INSNS  # noqa: E402
+
+assert not set(LAYOUT_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(LAYOUT_INSNS)
+
+# International caps above 255 (0.6.2 slice 12) in the same way.
+from caps_wide import INSNS as CAPS_INSNS  # noqa: E402
+
+assert not set(CAPS_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(CAPS_INSNS)
+
+# A weather postponement keeps the match day's place in its fixture list (0.6.2 item 84) in the same way.
+from match_day import INSNS as MATCH_DAY_INSNS  # noqa: E402
+
+assert not set(MATCH_DAY_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(MATCH_DAY_INSNS)
+
+# The test switch RECOMP_TEST_MARKET_WEEKLY (open item 193) in the same way.
+from market_weekly import INSNS as MARKET_WEEKLY_INSNS  # noqa: E402
+
+assert not set(MARKET_WEEKLY_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(MARKET_WEEKLY_INSNS)
+
+# Network screens in widescreen mode: classic coordinates on the network (0.7.0 item 212).
+from net_scale import INSNS as NET_SCALE_INSNS  # noqa: E402
+
+assert not set(NET_SCALE_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(NET_SCALE_INSNS)
+
+# The dates of a season database's player_setup.cfg in a season game (open item 229).
+from player_setup import INSNS as PLAYER_SETUP_INSNS  # noqa: E402
+
+assert not set(PLAYER_SETUP_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(PLAYER_SETUP_INSNS)

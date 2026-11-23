@@ -21,6 +21,7 @@ import sys
 
 STRICMP = 0x951C50
 INIT = (0x601A4A, 0x60386C)                 # the code of FUN_00601a40 that sets the key ids to -1
+REPORT = (0x6043AC, 0x60BA80)               # its checks: a key id that stays -1 gives the box index.cpp 5809
 
 # (C name, start, end, what the name is): the name chains of FUN_00601a40, in its order.
 CHAINS = [
@@ -149,9 +150,21 @@ def key_globals(exe):
     return sorted(found)
 
 
+def reported_globals(exe):
+    """The globals that FUN_00601a40 checks after the chains (0x6043ac..0x60ba80): "cmp dword ptr [g], edi"
+    with edi -1 (0x6043a9), then the error box of index.cpp 5809 when g is still -1 (0.6.1 item 10)."""
+    found = set()
+    for address, text in disassemble(exe, *REPORT):
+        m = re.fullmatch(r"cmp dword ptr \[(0x[0-9a-f]+)\], edi", text)
+        if m:
+            found.add(int(m.group(1), 16))
+    return found
+
+
 def main(exe):
     image = Image(exe)
     reset = key_globals(exe)
+    report = reported_globals(exe)
     chains = [(symbol, read_chain(exe, image, start, end), what) for symbol, start, end, what in CHAINS]
     globals_ = sorted(set(reset) | {g for _, entries, _ in chains for _, stores, _ in entries for g in stores})
     slot = {g: i for i, g in enumerate(globals_)}
@@ -167,12 +180,12 @@ def main(exe):
     print(" */")
     print('#include "key_index.h"')
     print()
-    print(f"/* {len(globals_)} globals: the address, the value in the file, and 1 when FUN_00601a40")
-    print("   sets it to -1 first. */")
+    print(f"/* {len(globals_)} globals: the address, the value in the file, 1 when FUN_00601a40")
+    print("   sets it to -1 first, and 1 when it shows the box index.cpp 5809 for it at -1. */")
     print("const key_id_global_t g_key_id_globals[KEY_ID_COUNT] = {")
     for g in globals_:
         value = struct.unpack("<i", image.value(g))[0]
-        print(f"    {{{g:#x}, {value}, {int(g in reset)}}},")
+        print(f"    {{{g:#x}, {value}, {int(g in reset)}, {int(g in report)}}},")
     print("};")
     print()
     total = 0

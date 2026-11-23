@@ -32,6 +32,29 @@ int season_nation_state(const char *nation, int season, SeasonNationState *out)
     return found;
 }
 
+static void set_slots(uint8_t *rec, int first, int v)
+{
+    if (v == SEASON_NATION_KEEP) return;
+    for (int s = first; s < first + 3; s++)
+        if (rec[s] != 0xff) rec[s] = (uint8_t)v;
+}
+
+int season_nation_squad_record(uint8_t rec[6], const SeasonNationState *st, int top)
+{
+    uint8_t before[6];
+    memcpy(before, rec, 6);
+    if (st->squad_foreign == SEASON_NATION_NONE && st->squad_non_eu != SEASON_NATION_KEEP &&
+        st->squad_non_eu != SEASON_NATION_NONE && rec[3] == 0xff && rec[4] == 0xff && rec[5] == 0xff)
+        for (int s = 0; s < 3; s++)
+            if (rec[s] != 0xff) {
+                rec[s + 3] = rec[s];
+                rec[s] = 0xff;
+            }
+    if (top || st->squad_non_eu == SEASON_NATION_NONE) set_slots(rec, 3, st->squad_non_eu);
+    if (top || st->squad_foreign == SEASON_NATION_NONE) set_slots(rec, 0, st->squad_foreign);
+    return memcmp(before, rec, 6) != 0;
+}
+
 static int uk_nation(const char *n)
 {
     return n && (!strcmp(n, "England") || !strcmp(n, "Scotland") || !strcmp(n, "Wales") || !strcmp(n, "Northern Ireland"));
@@ -47,4 +70,9 @@ int season_brexit_blocks(const char *club_nation, int season, int year, int rule
         return 0;
     season_nation_state(club_nation, season, &st);
     return st.brexit;
+}
+
+int season_nation_row_season(const char *nation, int season, int moved)
+{
+    return moved && nation && !strcmp(nation, "Republic of Ireland") && season >= 2003 ? season - 1 : season;
 }

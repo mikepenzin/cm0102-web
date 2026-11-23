@@ -81,6 +81,15 @@ def unpack(path):
     return folder
 
 
+def data_folder(path):
+    """The folder of index.dat: the folder itself, or its one subfolder that holds it (the October 2026 zip unpacks
+    to "October 2026/October 2026 Data Update")."""
+    if os.path.isfile(os.path.join(path, "index.dat")):
+        return path
+    subs = [os.path.join(path, n) for n in sorted(os.listdir(path)) if os.path.isfile(os.path.join(path, n, "index.dat"))]
+    return subs[0] if len(subs) == 1 else path
+
+
 def database_folders(root, own=OWN_DB):
     """{season: folder} of the season databases, and the base: the folders are found by the first words of
     their names, as in make_clubs.py."""
@@ -91,7 +100,7 @@ def database_folders(root, own=OWN_DB):
                 continue
             hits = sorted(d for d in os.listdir(root) if d == r["database"] or d.startswith(r["database"] + " "))
             if hits:
-                out[int(r["data_season"][:4])] = os.path.join(root, hits[0])
+                out[int(r["data_season"][:4])] = data_folder(os.path.join(root, hits[0]))
                 continue
             unpacked = unpack(os.path.join(own, r["database"] + ".zip"))
             if unpacked:

@@ -30,10 +30,14 @@
  * year, from the row of that season or the one before, so the two editions of 2016/17 come from the dates. The
  * Intercontinental Cup and ACL Two play one edition a season. A year with no edition: the before hook sets +0x40
  * to the year of the next edition - 1 (start_new_season adds 1, 0x92be3e), or skips for a cup that never returns
- * (season_comps.h, the shared rule). Never in the base game (season_comps_on). */
+ * (season_comps.h, the shared rule). After the last edition of the table, a cup whose last row is not "not held"
+ * plays every year in the format and on the days of that edition (0.6.2 slice 9a, season_club_editions.h). Never in
+ * the base game (season_comps_on). */
 #include "win.h"
 #include "season.h"
 #include "season_change.h"
+#include "season_club_editions.h"
+#include "season_liber_guest.h"
 #include "season_comps.h"
 #include "season_rules.h"
 
@@ -173,97 +177,12 @@ static uint32_t record_of_key(uint32_t key)
     return id >= 0 && base ? base + (uint32_t)id * RECORD_SIZE : 0;
 }
 
-/* ---- Dates of the table's text ---- */
+/* ---- The edition of a year (season_club_editions.c: the table, and the after-table rule of slice 9a) ---- */
 
-static const char *const month_names[12] = {"January", "February", "March", "April", "May", "June", "July",
-                                            "August", "September", "October", "November", "December"};
+#define is_leap season_club_is_leap
+#define day_of_year season_club_day_of_year
 
-static int is_leap(int y) { return y % 4 == 0 && (y % 100 != 0 || y % 400 == 0); }
-
-/* Day of the year from 0, with the month starts of Date.cpp (0x9b8448, 0x9b8460). */
-static int day_of_year(int day, int month, int year)
-{
-    static const short start[12] = {-1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333};
-    return start[month - 1] + day + (month > 2 && is_leap(year));
-}
-
-typedef struct { int day, month, year; } Day;
-
-static int day_key(Day d) { return d.year * 400 + d.month * 32 + d.day; }
-
-/* The dates of a text part: each "<day>" with its own month, or followed by "and", "-" or an en dash and another
- * day; a missing month or year comes from the next date that has one. Returns the first and last date, 0 when
- * none. Numbers of other meaning (club counts, "2007 J.League Cup") have no month after them and are not days. */
-static int text_dates(const char *t, size_t len, int default_year, Day *first, Day *last)
-{
-    Day d[32];
-    int n = 0, joined[32] = {0};
-    const char *end = t + len;
-    for (const char *p = t; p < end && n < 32; p++) {
-        if (*p < '0' || *p > '9' || (p > t && ((p[-1] >= '0' && p[-1] <= '9') || p[-1] == '-' || p[-1] == '.')))
-            continue;
-        const char *q = p;
-        int v = 0, digits = 0;
-        while (q < end && *q >= '0' && *q <= '9') v = v * 10 + (*q++ - '0'), digits++;
-        if (digits > 2 || v < 1 || v > 31) { p = q - 1; continue; }
-        Day x = {v, 0, 0};
-        if (q < end && *q == ' ')
-            for (int m = 0; m < 12; m++) {
-                size_t ml = strlen(month_names[m]);
-                if ((size_t)(end - q - 1) >= ml && !strncmp(q + 1, month_names[m], ml)) { x.month = m + 1; q += 1 + ml; break; }
-            }
-        if (x.month && q + 5 <= end && q[0] == ' ' && q[1] >= '1' && q[1] <= '2' && q[2] >= '0' && q[2] <= '9' &&
-            q[3] >= '0' && q[3] <= '9' && q[4] >= '0' && q[4] <= '9') {
-            x.year = (q[1] - '0') * 1000 + (q[2] - '0') * 100 + (q[3] - '0') * 10 + (q[4] - '0');
-            q += 5;
-        }
-        /* A connector to another day: " and ", " - ", " – " (UTF-8 en dash). */
-        const char *r = q;
-        while (r < end && *r == ' ') r++;
-        int link = 0;
-        if (r + 3 <= end && !strncmp(r, "and", 3)) link = 3;
-        else if (r < end && *r == '-') link = 1;
-        else if (r + 3 <= end && (unsigned char)r[0] == 0xe2 && (unsigned char)r[1] == 0x80 && (unsigned char)r[2] == 0x93)
-            link = 3;
-        int linked = 0;
-        if (link) {
-            const char *s = r + link;
-            while (s < end && *s == ' ') s++;
-            linked = s < end && *s >= '0' && *s <= '9';
-        }
-        if (!x.month && !linked) { p = q - 1; continue; }
-        joined[n] = linked;
-        d[n++] = x;
-        p = q - 1;
-    }
-    /* A day with no month must be joined to the next day (the one that gives the month). */
-    for (int i = n - 2; i >= 0; i--) {
-        if (!d[i].month && joined[i]) d[i].month = d[i + 1].month;
-        if (!d[i].year && d[i].month) d[i].year = d[i + 1].year;
-    }
-    int k = 0;
-    for (int i = 0; i < n; i++)
-        if (d[i].month) {
-            if (!d[i].year) d[i].year = default_year;
-            d[k++] = d[i];
-        }
-    if (!k) return 0;
-    *first = *last = d[0];
-    for (int i = 1; i < k; i++) {
-        if (day_key(d[i]) < day_key(*first)) *first = d[i];
-        if (day_key(d[i]) > day_key(*last)) *last = d[i];
-    }
-    return 1;
-}
-
-/* ---- The edition of a year ---- */
-
-typedef struct {
-    int first, last;                    /* days of the year of `year` (last may be a later year: see last_year) */
-    int year, last_year;                /* the calendar years of the first and the last date */
-    int clubs;                          /* the club count of the part */
-    int legs, final_legs;               /* 1 or 2 */
-} Edition;
+typedef SeasonClubEdition Edition;
 
 static const SeasonRule *row_of(const char *comp, int s)
 {
@@ -276,91 +195,17 @@ static const SeasonRule *row_of(const char *comp, int s)
     return best;
 }
 
-/* Part `i` of a text split by `sep`: start and length, 0 when there is no such part. */
-static int part_of(const char *t, const char *sep, int i, const char **start, size_t *len)
-{
-    const char *p = t;
-    for (int k = 0; k < i; k++) {
-        p = strstr(p, sep);
-        if (!p) return 0;
-        p += strlen(sep);
-    }
-    const char *e = strstr(p, sep);
-    *start = p;
-    *len = e ? (size_t)(e - p) : strlen(p);
-    return 1;
-}
-
-static int has(const char *t, size_t len, const char *word)
-{
-    char buf[1024];
-    snprintf(buf, sizeof buf, "%.*s", (int)(len < sizeof buf - 1 ? len : sizeof buf - 1), t);
-    return strstr(buf, word) != NULL;
-}
-
-/* The edition of row r, part i: 1 when its dates are known. */
-static int edition_of_part(const ClubCup *k, const SeasonRule *r, int i, int default_year, Edition *e)
-{
-    const char *t, *c;
-    size_t len, clen;
-    if (!r->format_text || !part_of(r->format_text, "||", i, &t, &len)) return 0;
-    if (k->skip_first_clause) {
-        const char *semi = memchr(t, ';', len);
-        if (semi) { len -= (size_t)(semi + 1 - t); t = semi + 1; }
-    }
-    Day a, b;
-    if (!text_dates(t, len, default_year, &a, &b)) return 0;
-    /* A late edition (the Sudamericana of 2020, final 23 January 2021) plays at the normal time (Q277): its final on
-     * 20 December, so the edition ends before the entry's update day of 10 January and its season start runs. */
-    if (k->calendar && b.year > a.year) b = (Day){20, 12, a.year};
-    e->year = a.year;
-    e->last_year = b.year;
-    e->first = day_of_year(a.day, a.month, a.year);
-    e->last = day_of_year(b.day, b.month, b.year);
-    e->clubs = r->clubs > 0 ? r->clubs : 0;
-    if (r->clubs_text && part_of(r->clubs_text, ";", i, &c, &clen)) e->clubs = atoi(c);   /* "47; 44+10" */
-    e->legs = has(t, len, "two-legged") || has(t, len, "two legs") ? 2 : 1;
-    e->final_legs = e->legs == 2 && !has(t, len, "single-match final") ? 2 : 1;
-    return e->clubs >= 2;
-}
-
-/* The edition of year y (a calendar year or a season), with the rules of y: 1 when held and its dates known. */
-static int edition_now(const ClubCup *k, int y, Edition *e)
-{
-    if (!k->calendar) {
-        const SeasonRule *r = row_of(k->def->comp, y);
-        if (!r || r->clubs == SEASON_RULE_NOT_HELD || !strcmp(r->format, "not_held")) return 0;
-        return edition_of_part(k, r, 0, y, e);
-    }
-    for (int s = y; s >= y - 1; s--) {
-        const SeasonRule *r = row_of(k->def->comp, s);
-        if (!r || r->season != s || r->clubs == SEASON_RULE_NOT_HELD || !strcmp(r->format, "not_held")) continue;
-        for (int i = 0; i < 4; i++)
-            if (edition_of_part(k, r, i, y, e) && e->year == y) return 1;
-    }
-    return 0;
-}
+static SeasonClubCup rule_of(const ClubCup *k) { return (SeasonClubCup){k->def->comp, k->calendar, k->skip_first_clause}; }
 
 /* The edition of year y in the game: with changing rules off the start season's edition, moved to year y (Q232). */
 static int edition(const ClubCup *k, int y, Edition *e)
 {
-    if (season_changing_rules()) return edition_now(k, y, e);
+    SeasonClubCup r = rule_of(k);
+    if (season_changing_rules()) return season_club_edition(&r, y, e);
     int s = season_start_year();
     for (int base = s; base <= s + 1; base++)
-        if (edition_now(k, base, e)) {
-            int shift = y - base;
-            int f = e->first, l = e->last;
-            /* The same day and month in the moved years. */
-            Day a = {0}, b = {0};
-            for (int m = 12; m >= 1; m--)
-                if (!a.month && f >= day_of_year(1, m, e->year)) a = (Day){f - day_of_year(1, m, e->year) + 1, m, e->year};
-            for (int m = 12; m >= 1; m--)
-                if (!b.month && l >= day_of_year(1, m, e->last_year))
-                    b = (Day){l - day_of_year(1, m, e->last_year) + 1, m, e->last_year};
-            e->year += shift;
-            e->last_year += shift;
-            e->first = day_of_year(a.day, a.month, e->year);
-            e->last = day_of_year(b.day, b.month, e->last_year);
+        if (season_club_edition(&r, base, e)) {
+            season_club_edition_move(e, y - base);
             return 1;
         }
     return 0;
@@ -381,53 +226,7 @@ static uint32_t original_table(uint32_t obj)
     return rt_unwinding ? 0 : t;
 }
 
-typedef struct { int id, teams, ties, fresh, first, legs, match; } Round;
-
-static int plan_knockout(const Edition *e, int n, Round *r);
-
-/* The rounds of an edition of n clubs: a knockout with the byes in the first round, or the stepladder. Returns the
- * count. match: the day of the first leg, a day of the year of e->year (it may pass 365). */
-static int plan_rounds(const ClubCup *k, const Edition *e, int n, Round *r)
-{
-    int count = 0;
-    int last = e->last + (e->last_year > e->year ? 365 + is_leap(e->year) : 0);
-    if (!strcmp(k->def->comp, "fifa_intercontinental_cup") && n == 6) {
-        /* Club list: OFC, AFC, CAF, CONMEBOL, CONCACAF, UEFA (pick_intercontinental). The play-off of OFC and AFC,
-         * then the African-Asian-Pacific Cup and the Derby of the Americas with CAF, CONMEBOL and CONCACAF new
-         * (the play-off winner takes the empty slot), the Challenger Cup, the final with UEFA new. */
-        int span = last - e->first;
-        r[count++] = (Round){0x14, 2, 1, 2, 0, 1, e->first};
-        r[count++] = (Round){0x78, 4, 2, 3, 2, 1, e->first + span / 3};
-        r[count++] = (Round){0x82, 2, 1, 0, 0, 1, e->first + 2 * span / 3};
-        r[count++] = (Round){0x96, 2, 1, 1, 5, 1, last};
-        return count;
-    }
-    return plan_knockout(e, n, r);
-}
-
-/* A knockout of n clubs with the byes in the first round: the rounds and their days (see plan_rounds). */
-static int plan_knockout(const Edition *e, int n, Round *r)
-{
-    int count = 0;
-    int last = e->last + (e->last_year > e->year ? 365 + is_leap(e->year) : 0);
-    int p = 1;
-    while (p * 2 <= n) p *= 2;
-    int teams = p;
-    if (n > p) r[count++] = (Round){0x14, 2 * (n - p), n - p, 2 * (n - p), 0, e->legs, 0};
-    for (; teams >= 2; teams /= 2) {
-        int fresh = count == 0 ? teams : (n > p && count == 1 ? 2 * p - n : 0);
-        int first = count == 1 && n > p ? 2 * (n - p) : 0;
-        int id = teams == 2 ? 0x96 : teams == 4 ? 0x82 : teams == 8 ? 0x78 : 0x14;
-        r[count++] = (Round){id, teams, teams / 2, fresh, first, teams == 2 ? e->final_legs : e->legs, 0};
-    }
-    /* Days: the final (its first leg) on the last day, or 7 days before for two legs; the rounds before it from
-     * the first day, evenly. */
-    int final_day = last - (r[count - 1].legs == 2 ? 7 : 0);
-    for (int i = 0; i < count; i++)
-        r[i].match = count == 1 ? e->first : i == count - 1 ? final_day : e->first + i * (final_day - e->first) / (count - 1);
-    if (count == 1 && r[0].legs == 2 && last > e->first) r[0].match = e->first;
-    return count;
-}
+typedef SeasonClubRound Round;
 
 /* The round table of the edition for an object with n clubs (the picker ran first), from the original's round as
  * the template. Returns it (the game's heap) and the round count, or 0. */
@@ -437,13 +236,12 @@ static uint32_t round_table(const ClubCup *k, uint32_t obj, int *rounds)
     Edition e;
     if (!edition(k, year, &e) || n < 2) return 0;
     Round r[8];
-    int count = plan_rounds(k, &e, n, r);
+    int count = season_club_plan_rounds(k->def->comp, &e, n, r);
     uint32_t tmpl = original_table(obj);
     if (!tmpl) return 0;
     uint32_t table = game_new((uint32_t)count * ROUND_SIZE);
     if (!table) { game_free(tmpl); return 0; }
     int base = year;                                            /* the year offsets count from +0x40 */
-    int first_two = r[0].legs == 2 && count == 1 && e.last > e.first ? e.last - e.first : 7;
     for (int i = 0; i < count; i++) {
         uint32_t t = table + (uint32_t)i * ROUND_SIZE;
         memcpy(g_mem + t, g_mem + tmpl, ROUND_SIZE);
@@ -469,7 +267,7 @@ static uint32_t round_table(const ClubCup *k, uint32_t obj, int *rounds)
             wr16(g_mem, t + 0x0d, 4);
             wr16(g_mem, t + 0x0f, 1);
             g_mem[t + 0x21] = 2;
-            g_mem[t + 0x22] = (uint8_t)(count == 1 ? first_two : 7);
+            g_mem[t + 0x22] = (uint8_t)season_club_second_leg(&e, &r[i], count);
         } else {
             wr16(g_mem, t + 0x0d, 3);                           /* extra time, penalties (0x92b857..0x92b886) */
             g_mem[t + 0x21] = 1;
@@ -485,10 +283,9 @@ static uint32_t round_table(const ClubCup *k, uint32_t obj, int *rounds)
 
 /* ---- Clubs ---- */
 
-/* The club at `place` (0 winner, 1 runner-up) of the latest history row of record rec written in year y or
- * before, or 0. The latest row up to y gives the reigning champion of a competition whose edition of year y ends
- * after the pick (the CONCACAF Champions Cup plays from 28 September, after the Intercontinental Cup's pick). */
-static uint32_t history_club(uint32_t rec, int y, int place)
+/* The club at `place` (0 winner, 1 runner-up) of the latest history row of record rec with a year from lo to y, or
+ * 0 (the last one when the year is held twice, open item 17). */
+static uint32_t history_club(uint32_t rec, int lo, int y, int place)
 {
     uint32_t rows = rd32(g_mem, HISTORY), best = 0;
     int32_t count = (int32_t)rd32(g_mem, HISTORY_COUNT);
@@ -496,7 +293,7 @@ static uint32_t history_club(uint32_t rec, int y, int place)
     for (int32_t i = 0; rec && rows && i < count; i++) {
         uint32_t row = rows + (uint32_t)i * HISTORY_ROW;
         int year = (int16_t)rd16(g_mem, row + 8);
-        if (rd32(g_mem, row + 4) != rec || year > y || year < best_year) continue;
+        if (rd32(g_mem, row + 4) != rec || year > y || year < lo || year < best_year) continue;
         best = rd32(g_mem, row + 0xa + 4u * (uint32_t)place);
         best_year = year;
     }
@@ -510,47 +307,113 @@ static int listed(const uint32_t *out, int n, uint32_t club)
     return 0;
 }
 
-static int add_winner(uint32_t *out, int n, uint32_t rec, int y, uint32_t obj, uint32_t continent)
+/* A club drawn as WorldClubChamp::pick_entrant 0x92ae60 draws one for a competition that does not run: the clubs of
+ * the continent of reputation 5000 or more, the floor 1500 lower each pass until 6 or more (0x92afb1..0x92b033, at
+ * most 2000), then comp_util_sort_and_shuffle_top_clubs 0x4afbd0 (list, count, min(count, 4)): sorted by
+ * reputation (0x4b07d0), random swaps among the top three times that (utils_random 0x90cfc0). The first club not
+ * yet picked (0x92b065..0x92b093). 0 when there is none. The original has no nation filter: `nation` (not 0) is
+ * ours, so that a national cup's place goes to a club of its nation. */
+static uint32_t drawn_club(uint32_t continent_key, uint32_t nation, const uint32_t *out, int n)
 {
-    (void)obj;
-    uint32_t c = history_club(rec, y, 0);
-    if (!c || listed(out, n, c)) c = history_club(rec, y, 1);
+    uint32_t clubs = rd32(g_mem, CLUBS), want = rd32(g_mem, continent_key);
+    int32_t count = (int32_t)rd32(g_mem, CLUB_TABLE_COUNT) - 2 * (int32_t)rd32(g_mem, 0xae2350u);
+    uint32_t list = game_new(2000u * 4u);
+    if (!list) return 0;
+    int found = 0;
+    for (int floor = 5000; floor > -2000 && found < 6; floor -= 1500) {
+        found = 0;
+        for (int32_t i = 0; clubs && i < count && found < 2000; i++) {
+            uint32_t c = clubs + (uint32_t)i * CLUB_ROW, nat = rd32(g_mem, c + 0x53);
+            uint32_t cont = nat ? rd32(g_mem, nat + 0x71) : 0;
+            if (!cont || rd32(g_mem, cont) != want || (nation && nat != nation)) continue;
+            if ((int16_t)rd16(g_mem, c + 0x80) >= floor) wr32(g_mem, list + 4u * (uint32_t)found++, c);
+        }
+    }
+    uint32_t club = 0;
+    if (found) {
+        uint32_t a[3] = {list, (uint32_t)found, (uint32_t)(found < 4 ? found : 4)};
+        call_cdecl(0x4afbd0u, 3, a);
+        for (int i = 0; !rt_unwinding && i < found && !club; i++) {
+            uint32_t c = rd32(g_mem, list + 4u * (uint32_t)i);
+            if (!listed(out, n, c)) club = c;
+        }
+    }
+    if (rt_unwinding) return 0;
+    game_free(list);
+    return club;
+}
+
+/* The winner (else the runner-up) of record rec in the latest year from lo to y; when rec has no row in those years
+ * (the competition does not run: its nation or continent is not selected) a drawn club of the nation of rec, else
+ * of the continent. Faults 5, 22 and 50: the latest row up to y, with no lower year, gave the data's last winners
+ * (the Copa CONMEBOL of 1999, an old J.League Cup, the Libertadores of 2002) every year. */
+static int add_winner_of_year(uint32_t *out, int n, uint32_t rec, int lo, int y, uint32_t continent, const char *cup,
+                              int edition)
+{
+    uint32_t c = history_club(rec, lo, y, 0), guest = 0;
+    int liber = rec && rec == record_of_key(KEY_LIBERTADORES);
+    if (liber && season_liber_guest(c)) guest = c, c = 0;      /* item 219: season_liber_guest.c */
+    if (!c || listed(out, n, c)) c = history_club(rec, lo, y, 1);
+    if (liber && season_liber_guest(c)) c = 0;
+    uint32_t nation = rec ? rd32(g_mem, rec + 0x5d) : 0;
+    if (!c || listed(out, n, c)) c = nation ? drawn_club(continent, nation, out, n) : 0;
+    if (rt_unwinding) return n;
+    if (!c || listed(out, n, c)) c = drawn_club(continent, 0, out, n);
+    if (rt_unwinding) return n;
     if (!c || listed(out, n, c)) c = season_comps_top_club(continent, out, n);
     if (c && !listed(out, n, c)) out[n++] = c;
+    if (guest) season_liber_guest_log(cup, edition, guest, n && out[n - 1] == c ? c : 0);
     return n;
 }
 
+/* The Libertadores and the Copa Sudamericana winners of the year before: the Recopa of February Y has the winners of
+ * the finals of Y - 1 (2025: Botafogo and Racing Club, the finals of November 2024). */
 static int pick_recopa(const ClubCup *k, uint32_t obj, int year, uint32_t *out, int n)
 {
     (void)k;
+    (void)obj;
     int m = 0;
-    m = add_winner(out, m, record_of_key(KEY_LIBERTADORES), year - 1, obj, CONT_SOUTH_AMERICA);
-    if (m < n) m = add_winner(out, m, season_comps_record(cups[0].def->record), year - 1, obj, CONT_SOUTH_AMERICA);
+    m = add_winner_of_year(out, m, record_of_key(KEY_LIBERTADORES), year - 1, year - 1, CONT_SOUTH_AMERICA,
+                           "Recopa Sudamericana", year);
+    if (rt_unwinding) return m;
+    if (m < n)
+        m = add_winner_of_year(out, m, season_comps_record(cups[0].def->record), year - 1, year - 1,
+                               CONT_SOUTH_AMERICA, "Recopa Sudamericana", year);
     return m;
 }
 
+/* The J.League Cup and the Copa Sudamericana winners of the year before: the edition of August Y has the winners
+ * of the finals of autumn Y - 1 (2008: Gamba Osaka, the J.League Cup of November 2007, and Arsenal de Sarandi, the
+ * Sudamericana of December 2007). */
 static int pick_suruga(const ClubCup *k, uint32_t obj, int year, uint32_t *out, int n)
 {
     (void)k;
+    (void)obj;
     int m = 0;
-    m = add_winner(out, m, record_of_key(KEY_JAPAN_CUP), year - 1, obj, CONT_ASIA);
-    if (m < n) m = add_winner(out, m, season_comps_record(cups[0].def->record), year - 1, obj, CONT_SOUTH_AMERICA);
+    m = add_winner_of_year(out, m, record_of_key(KEY_JAPAN_CUP), year - 1, year - 1, CONT_ASIA, "Suruga Bank", year);
+    if (rt_unwinding) return m;
+    if (m < n) m = add_winner_of_year(out, m, season_comps_record(cups[0].def->record), year - 1, year - 1,
+                                                CONT_SOUTH_AMERICA, "Suruga Bank", year);
     return m;
 }
 
-/* OFC, AFC, CAF, CONMEBOL, CONCACAF, UEFA: the club list order of plan_rounds. The winners of the edition's year
- * (the original has no African club competition: a club of Africa's top reputations). */
+/* OFC, AFC, CAF, CONMEBOL, CONCACAF, UEFA: the club list order of plan_rounds. The champions of the edition's season
+ * Y: the winner of Y, or the reigning winner of Y - 1 when the edition of Y ends after the pick (the Libertadores
+ * final of November, the CONCACAF Champions Cup of the original's weeks from 28 September). The original has no
+ * African club competition: a club drawn from Africa's top reputations, as for a competition that does not run. */
 static int pick_intercontinental(const ClubCup *k, uint32_t obj, int year, uint32_t *out, int n)
 {
     (void)k;
+    (void)obj;
     static const struct { uint32_t key, continent; } from[6] = {
         {KEY_OCEANIA, CONT_OCEANIA}, {KEY_ASIA, CONT_ASIA}, {0, CONT_AFRICA},
         {KEY_LIBERTADORES, CONT_SOUTH_AMERICA}, {KEY_CONCACAF, CONT_NORTH_AMERICA}, {KEY_CHAMPIONS_LEAGUE, CONT_EUROPE}};
     int m = 0;
     for (int i = 0; i < 6 && m < n; i++) {
         int before = m;
-        m = add_winner(out, m, from[i].key ? record_of_key(from[i].key) : 0, year, obj, from[i].continent);
-        if (m == before) return m;                             /* keep the order: stop at a gap */
+        m = add_winner_of_year(out, m, from[i].key ? record_of_key(from[i].key) : 0, year - 1, year, from[i].continent,
+                              "FIFA Intercontinental Cup", year);
+        if (rt_unwinding || m == before) return m;             /* keep the order: stop at a gap */
     }
     return m;
 }
@@ -639,11 +502,36 @@ static int fill_clubs(const ClubCup *k, uint32_t obj, int again)
 void o_0092b8b0(void);
 void o_0092b770(void);
 
+/* Item 219 (season_liber_guest.c): in the original's Intercontinental Cup ([0xadadfc] entry [0x9cf6e4]),
+ * pick_qualifiers puts place 0 of the latest Libertadores row into place 1 of the club list (0x92bba4, 0x92bc8f).
+ * When that club is a guest, place 1 of the row takes it if it is a CONMEBOL club and not the UEFA side, else the
+ * South American club of the highest reputation. */
+static void liber_guest_qualifier(uint32_t obj)
+{
+    uint32_t objects = rd32(g_mem, 0xadadfcu);
+    int32_t id = (int32_t)rd32(g_mem, 0x9cf6e4u);
+    if (!season_liber_rule_on() || !objects || id < 0 || rd32(g_mem, objects + 4u * (uint32_t)id) != obj) return;
+    uint32_t list = rd32(g_mem, obj + CLUB_LIST_AT), rec = record_of_key(KEY_LIBERTADORES);
+    if (!list || (int16_t)rd16(g_mem, obj + CLUB_COUNT_AT) < 2 || (int16_t)rd16(g_mem, obj + YEAR_AT) >= NEVER)
+        return;                                                 /* no edition: the cup waits (season_kind_club_world.c) */
+    uint32_t guest = rd32(g_mem, list + 6u), uefa = rd32(g_mem, list);
+    if (!season_liber_guest(guest) || guest != season_liber_latest(rec, 0)) return;
+    uint32_t c = season_liber_latest(rec, 1);
+    if (!season_liber_conmebol(c) || c == uefa) c = season_comps_top_club(CONT_SOUTH_AMERICA, &uefa, 1);
+    if (c) wr32(g_mem, list + 6u, c);
+    season_liber_guest_log("Intercontinental Cup", (int16_t)rd16(g_mem, obj + YEAR_AT), guest, c);
+}
+
 /* World_Club_Cup::pick_clubs (this), returns >= 0 on success (0x92b543). */
 RT_WRAP(0092b8b0, world_club_cup_pick)
 {
     const ClubCup *k = cup_of_object(cpu.ecx);
-    if (!k) { o_0092b8b0(); return; }
+    if (!k) {
+        uint32_t obj = cpu.ecx;
+        o_0092b8b0();
+        if (!rt_unwinding) liber_guest_qualifier(obj);
+        return;
+    }
     uint32_t obj = cpu.ecx;
     int ok = fill_clubs(k, obj, 0);
     if (rt_unwinding) return;
@@ -740,7 +628,8 @@ static int is_key(uint32_t id, uint32_t key) { return id == rd32(g_mem, key); }
  * (the season of its first match, Q276); with changing rules off the start season's row (Q232). */
 static const SeasonRule *libertadores_row(int y)
 {
-    return row_of("libertadores", season_changing_rules() ? y - 1 : season_start_year());
+    /* The latest row with a "places:" text (every table row has one; after the table the last row's, slice 9a). */
+    return season_club_places_row("libertadores", season_changing_rules() ? y - 1 : season_start_year());
 }
 
 /* Before the original: byte +8 of each seeding row (read at 0x4c66b7) from the row's places ("ARG 6+1, BRA 7+1":
@@ -818,8 +707,8 @@ RT_WRAP(004c6430, assign_libertadores_places)
     uint32_t rec = season_comps_record(k->def->record);
     if (!rec || !edition(k, y, &e)) return;
     Cpu saved = cpu;
-    const SeasonRule *r = NULL;
-    for (int s = y; s >= y - 1 && !r; s--) r = row_of(k->def->comp, s);
+    /* The latest row with a "places:" text: the row of year y in the table, after it the last row's (slice 9a). */
+    const SeasonRule *r = season_club_places_row(k->def->comp, season_changing_rules() ? y : season_start_year());
     int arg = r ? row_places(r->format_text, "ARG") : -1, bra = r ? row_places(r->format_text, "BRA") : -1;
     int rows = (int8_t)g_mem[seeding + 0x6e], others = 0;
     for (int i = 0; i < rows && i < 11; i++) {
@@ -972,7 +861,7 @@ RT_WRAP(004c0f00, con_champ_rounds)
     /* The knockout of n clubs (one leg a round): plan_rounds gives teams, ties and byes. */
     Edition e = {0, 60, 0, 0, n, 1, 1};
     Round r[8];
-    int count = plan_knockout(&e, n, r);
+    int count = season_club_plan_knockout(&e, n, r);
     uint32_t table = game_new((uint32_t)count * ROUND_SIZE);
     if (rt_unwinding || !table) return;
     int first = (int16_t)rd16(g_mem, tmpl + 0x03), draw0 = (int16_t)rd16(g_mem, tmpl + 0x00);
@@ -1087,6 +976,54 @@ RT_WRAP(0040b950, asia_club_champ_entrants)
             added[2]);
 }
 
+/* ---- The OFC Champions League without Australian clubs (open item 48, slice 9a) ----
+ *
+ * OceaniaClubChamp::select_qualified_clubs 0x798220 (thiscall, returns 1 at 0x79861b / 0x79863d) fills 8 entrants at
+ * +0xee (count 8 at +0xf2, 0x798233): the newest champion of the Australian league (history key 0x9cf89c through
+ * 0x4afd80 at 0x7982ea, no continent test) in slot 0 or 4 (0x798480..0x7984b2), and clubs of Oceania by the nation's
+ * continent (0x798324..0x798338). The 2006 edition (row 2005/06) is picked on its start date in August 2005
+ * (update_for_date 0x797b40 calls it at 0x797c11), before Australia moves to the AFC on 1 January 2006
+ * (season_intl.c), and the champion's place stays after the move. The table gives "places: AUS 0" from 2005/06:
+ * after the original, each Australian entrant gives its place to the Oceania club of another nation with the
+ * highest reputation that is not an entrant. With changing rules off the start season's row (Q232). */
+
+#define OFC_ENTRANTS 0xeeu              /* Club *[8] */
+#define OFC_ENTRANT_COUNT 8
+
+void o_00798220(void);
+
+RT_WRAP(00798220, oceania_club_champ_entrants)
+{
+    uint32_t obj = cpu.ecx;
+    o_00798220();
+    if (rt_unwinding || !season_comps_on()) return;
+    uint32_t list = rd32(g_mem, obj + OFC_ENTRANTS), australia = nation_of_key(KEY_AUSTRALIA);
+    int year = (int16_t)rd16(g_mem, obj + YEAR_AT);
+    const SeasonRule *r = season_club_places_row("oceania_champions", season_changing_rules() ? year : season_start_year());
+    if (!list || !australia || !r || row_places(r->format_text, "AUS") != 0) return;
+    uint32_t picked[OFC_ENTRANT_COUNT], clubs = rd32(g_mem, CLUBS), oceania = rd32(g_mem, CONT_OCEANIA);
+    int32_t count = (int32_t)rd32(g_mem, CLUB_TABLE_COUNT) - 2 * (int32_t)rd32(g_mem, 0xae2350u);
+    for (int i = 0; i < OFC_ENTRANT_COUNT; i++) picked[i] = rd32(g_mem, list + 4u * (uint32_t)i);
+    int replaced = 0;
+    for (int i = 0; i < OFC_ENTRANT_COUNT; i++) {
+        if (!picked[i] || rd32(g_mem, picked[i] + 0x53) != australia) continue;
+        uint32_t best = 0;
+        int best_rep = -100000;
+        for (int32_t j = 0; clubs && j < count; j++) {           /* the walk of season_comps_top_club */
+            uint32_t c = clubs + (uint32_t)j * CLUB_ROW, nation = rd32(g_mem, c + 0x53);
+            uint32_t cont = nation ? rd32(g_mem, nation + 0x71) : 0;
+            int rep = (int16_t)rd16(g_mem, c + 0x80);
+            if (!cont || rd32(g_mem, cont) != oceania || nation == australia || rep <= best_rep) continue;
+            if (!listed(picked, OFC_ENTRANT_COUNT, c)) best = c, best_rep = rep;
+        }
+        if (!best) continue;                                    /* no other Oceania club: the place stays */
+        picked[i] = best;
+        wr32(g_mem, list + 4u * (uint32_t)i, best);
+        replaced++;
+    }
+    if (replaced) fprintf(stderr, "recomp: oceania champions %d: %d Australian clubs replaced (places: AUS 0)\n", year, replaced);
+}
+
 /* ---- Years with no edition (the shared rule of season_comps.h) ---- */
 
 static void cups_before(const SeasonChange *c)
@@ -1113,12 +1050,19 @@ static void cups_before(const SeasonChange *c)
         if (club && g_mem[list + 6u * (uint32_t)i + 5] == 1)
             fprintf(stderr, "recomp: club cup %s %d: winner %.50s\n", k->def->file, next - 1, win_str(club + 4));
     }
+    /* The next edition from the year after: after the table every year for a cup that continues (Q2), none ever for
+     * one that ended (the Suruga Bank Championship, Q7). Up to 0.6.1 the search stopped at 2101 (fault 7). With
+     * changing rules off the start season's edition plays every year, or none ever (Q232). Never an edition of a
+     * year before the game year: the update day of each entry lies in the year of the edition that starts
+     * (10 January, 20 June, 28 August), so in a game this changes nothing; a save of 0.6.0 or 0.6.1 whose cup
+     * stopped after 2027 starts again with the edition of the game year. */
     Edition e;
-    int y = next;
-    while (y < SEASON_RULE_LAST + 2 && !edition(k, y, &e)) y++;
-    if (y >= SEASON_RULE_LAST + 2) {
+    SeasonClubCup r = rule_of(k);
+    int now = (int16_t)rd16(g_mem, GAME_DAY + 2), from = next < now ? now : next;
+    int y = season_changing_rules() ? season_club_next_edition(&r, from) : edition(k, from, &e) ? from : 0;
+    if (!y) {
         season_change_skip();                                   /* it never comes back */
-        fprintf(stderr, "recomp: club cup %s: no edition after %d\n", k->def->file, next - 1);
+        fprintf(stderr, "recomp: club cup %s: no edition after %d\n", k->def->file, from - 1);
         return;
     }
     if (y != next) {

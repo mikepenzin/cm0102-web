@@ -3,13 +3,23 @@
 2007	bench	fra_cup (Coupe de France), row fra-61: game 3, table 7 (7)
 2007	bench	fra_lge_cup (Coupe de la Ligue), row fra-62: game 3, table 7 (7)
 2007	bench	world_club_champ (FIFA Club World Cup), row club-world-116: game 7, table 12 (12)
+2007	club_list	Argentine Second Division: 20 of 20 listed clubs that the database holds (20 listed), 5 other clubs, 25 in all; not in it: -; others: All Boys, Deportivo Morón, Estudiantes de Buenos Aires, Los Andes, Racing de Córdoba
+2007	club_list	Brazilian National Third Division: 52 of 52 listed clubs that the database holds (63 listed), 4 other clubs, 56 in all; not in it: -; others: Americano Futebol Clube (RJ), América Futebol Clube, Associação Desportiva Comercial Bandeirante, Sertãozinho Futebol Clube
+2007	club_list	Croatian First Division: 12 of 12 listed clubs that the database holds (12 listed), 4 other clubs, 16 in all; not in it: -; others: NK Bjelovar, NK Graficar Vodovod, NK Koprivnica, NK Metalac
+2007	club_list	Danish Second Division: 16 of 25 listed clubs that the database holds (32 listed), 0 other clubs, 16 in all; not in it: Amager Boldklub af 1970, Boldklubben af 1908, Greve Idrætsforening, Skovlunde Idrætsforening, Stenløse Boldklub, Vanløse Idræts Forening, Varde Idrætsforening, Vedbæk Boldklub, Værløse Boldklub; others: -
+2007	club_list	Greek National A Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: Asteras Tripolis, Levadiakos; others: -
+2007	club_list	Greek National B Division: 14 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 14 in all; not in it: Agios Dimitrios, Agrotikos Asteras, Chaidari, Ethnikos Piraeus; others: -
+2007	club_list	Italian Serie A: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Livorno, Reggina; others: -
+2007	club_list	Italian Serie B: 20 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 20 in all; not in it: Avellino, Cesena; others: -
+2007	club_list	Japanese J-League 1: 16 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 16 in all; not in it: Consadole Sapporo, Tokyo Verdy 1969; others: -
+2007	club_list	Japanese J-League 2: 12 of 15 listed clubs that the database holds (15 listed), 0 other clubs, 12 in all; not in it: Gifu, NTT Kumamoto FC, Tokushima Vortis; others: -
+2007	club_list	Northern Irish League First Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Lurgan Celtic, Portstewart; others: -
+2007	club_list	Northern Irish League Premier Division: 10 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 10 in all; not in it: Armagh City, Crusaders, Donegal Celtic, Glenavon, Institute, Larne; others: -
 2007	clubs	african_nations (Africa Cup of Nations), row int-continental-73: game 0, table 16 (16)
 2007	clubs	arg_second (Primera B Nacional), row arg-usa-34: game 25, table 20 (20)
 2007	clubs	asia_club_champ (AFC Champions League), row club-world-127: game 16, table 29 (29)
 2007	clubs	asia_nations (AFC Asian Cup), row int-continental-75: game 4, table 16 (16)
-2007	clubs	bel_second (Belgian Second Division), row hol-bel-87: game 18, table 19 (19)
 2007	clubs	bel_third (Belgian Third Division), row hol-bel-88: game 16, table 31 (31 (A 16, B 15))
-2007	clubs	bra_champ_cup (Copa dos Campeões), row bra-196: game 3, table 0 (0)
 2007	clubs	bra_cup (Copa do Brasil), row bra-142: game 71, table 64 (64)
 2007	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-88: game 7, table 63 (63)
 2007	clubs	bra_reg_bahia (Campeonato Baiano), row bra-439: game 10, table 12 (12)
@@ -29,11 +39,9 @@
 2007	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-68: game 0, table 50 (50)
 2007	clubs	european_cup (UEFA Champions League), row uefa-50: game 55, table 76 (76 (32 in the group stage))
 2007	clubs	fin_first (Ykkönen), row nor-fin-68: game 10, table 14 (14)
-2007	clubs	fin_prm (Veikkausliiga), row nor-fin-67: game 12, table 14 (14)
 2007	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-7: game 4, table 69 (69)
 2007	clubs	gre_prm (Super League Greece), row gre-pol-cro-34: game 14, table 16 (16)
 2007	clubs	gre_second (Beta Ethniki), row gre-pol-cro-61: game 14, table 18 (18)
-2007	clubs	hol_first (Eerste Divisie), row hol-bel-81: game 18, table 20 (20)
 2007	clubs	intertoto_cup (UEFA Intertoto Cup), row uefa-55: game 60, table 50 (50)
 2007	clubs	ita_c_cup (Coppa Italia Serie C), row ita-116: game 5, table 110 (110)
 2007	clubs	ita_cup (Coppa Italia), row ita-115: game 4, table 42 (42)
@@ -49,7 +57,7 @@
 2007	clubs	nir_prm (Irish Premier League), row wal-nir-irl-160: game 10, table 16 (16)
 2007	clubs	oceania_nations (OFC Nations Cup), row int-continental-76: game 0, table 4 (4)
 2007	clubs	uefa_cup (UEFA Cup), row uefa-53: game 153, table 80 (80 in the first round; total not stated on the page)
-2007	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-78: game 50, table 53 (53 entrants)
+2007	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-78: game 42, table 53 (53 entrants)
 2007	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-79: game 0, table 43 (43 entrants)
 2007	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-77: game 24, table 35 (35 entrants)
 2007	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-80: game 5, table 11 (11 entrants)
@@ -60,7 +68,6 @@
 2007	down	cro_a1 (Prva HNL), row gre-pol-cro-331: game 2 (+0 play-off places), table 1 (1 (12th))
 2007	down	cro_a2a (Druga HNL), row gre-pol-cro-358: game 2 (+0 play-off places), table 4 (4 (13th-16th))
 2007	down	cro_a2b (Druga HNL South), row gre-pol-cro-385: game 2 (+0 play-off places), table na (n/a)
-2007	down	eng_third (Football League Two), row eng-91: game 1 (+0 play-off places), table 2 (2)
 2007	down	gre_prm (Super League Greece), row gre-pol-cro-34: game 2 (+0 play-off places), table 3 (3 (14th-16th))
 2007	down	gre_second (Beta Ethniki), row gre-pol-cro-61: game 2 (+0 play-off places), table 3 (3 (16th-18th))
 2007	down	ita_ser_b (Serie B), row ita-105: game 4 (+0 play-off places), table 3 (3 direct + play-out 4th-last v 5th-last (two legs; not held if gap over 4 points)
@@ -68,13 +75,19 @@
 2007	down	ita_ser_c1b (Serie C1 girone B), row ita-107: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers)
 2007	down	nir_first (Irish First Division), row wal-nir-irl-161: game 0 (+0 play-off places), table 3 (3 (pos 10,11,12))
 2007	down	nor_first (Adeccoligaen), row nor-fin-63: game 4 (+0 play-off places), table 2 (15th-16th (2))
+2007	meetings	arg_second (Primera B Nacional), row arg-usa-34: game 1, table 2
+2007	meetings	bra_nat_first (Campeonato Brasileiro Série A), row bra-34: game 1, table 2
+2007	meetings	bra_nat_second (Campeonato Brasileiro Série B), row bra-61: game 1, table 2
+2007	meetings	cro_a1 (Prva HNL), row gre-pol-cro-331: game 2, table 3
+2007	meetings	fin_first (Ykkönen), row nor-fin-68: game 3, table 2
+2007	meetings	jap_j2 (J.League Division 2), row aus-jap-kor-223: game 4, table 3
+2007	meetings	nir_first (Irish First Division), row wal-nir-irl-161: game 4, table 2
+2007	meetings	nir_prm (Irish Premier League), row wal-nir-irl-160: game 4, table 2
 2007	no_row	friendly (Friendly): no table row
 2007	no_row	record_utils ('B' International): no table row
 2007	no_row	record_utils (Reserve): no table row
 2007	no_row	record_utils (Under 21 International): no table row
-2007	not_held	bra_champ_cup (Copa dos Campeões), row bra-196: the game holds 2007, the table says not held
 2007	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-385: the game holds 2007, the table says not held
-2007	not_held	nir_charity (Charity Shield), row wal-nir-irl-165: the game holds 2007, the table says not held
 2007	not_held	olympics (Football at the Summer Olympics), row int-world-83: the game holds 2008, the table says not held
 2007	not_held	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-75: the game holds 2008, the table says not held
 2007	not_in_game	arg-usa-196 argentina_rules 'Argentina' (Argentina)
@@ -86,7 +99,6 @@
 2007	not_in_game	bra-7 brazil_rules 'Brazil' (Brazil)
 2007	not_in_game	bra-979 new 'Campeonato Brasiliense' (Brazil)
 2007	not_in_game	eng-337 eng_fa_trophy 'FA Trophy' (England)
-2007	not_in_game	eng-339 new 'Conference League Cup (Setanta Shield)' (England)
 2007	not_in_game	eng-92 eng_conf 'Conference Premier' (England)
 2007	not_in_game	fra-59 fra_cfa 'CFA' (France)
 2007	not_in_game	fra-60 fra_lower 'CFA 2' (France)
@@ -101,7 +113,7 @@
 2007	not_in_game	uefa-49 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2007	playoffs	arg_prm (Primera División), row arg-usa-7: game 0 up and 0 down play-off places, table 0 and 2 ('17th and 18th of the average table play two-leg promotion/relegation ties (promo')
 2007	playoffs	arg_second (Primera B Nacional), row arg-usa-34: game 0 up and 0 down play-off places, table 2 and 0 ('3rd and 4th play two-leg promoción v Primera 17th and 18th of the average table;')
-2007	playoffs	bel_second (Belgian Second Division), row hol-bel-87: game 0 up and 1 down play-off places, table 0 and 0 ('final round: runner-up and three period winners (four clubs), double round robin')
+2007	playoffs	bel_second (Belgian Second Division), row hol-bel-87: game 0 up and 1 down play-off places, table 4 and 0 ('2nd to 5th: final round (four clubs, double round robin), winner in the top flig')
 2007	playoffs	bel_third (Belgian Third Division), row hol-bel-88: game 0 up and 1 down play-off places, table 0 and 0 ('third division play-off: three period winners per group plus the second division')
 2007	playoffs	cro_a1 (Prva HNL), row gre-pol-cro-331: game 0 up and 0 down play-off places, table 0 and 1 ('11th: relegation play-off v second tier runner-up')
 2007	playoffs	cro_a2a (Druga HNL), row gre-pol-cro-358: game 0 up and 0 down play-off places, table 1 and 0 ('2nd: promotion play-off v HNL 11th')
@@ -114,6 +126,19 @@
 2007	playoffs	jap_j2 (J.League Division 2), row aus-jap-kor-223: game 0 up and 0 down play-off places, table 1 and 0 ('3rd v J1 16th in a two-legged promotion/relegation series')
 2007	playoffs	nir_first (Irish First Division), row wal-nir-irl-161: game 1 up and 0 down play-off places, table 0 and 0 ('none')
 2007	playoffs	nir_prm (Irish Premier League), row wal-nir-irl-160: game 0 up and 1 down play-off places, table 0 and 0 ('none')
+2007	rounds	arg_second (Primera B Nacional), row arg-usa-34: game 25, table 38 (2 meetings, zones -, extra 0)
+2007	rounds	bra_nat_first (Campeonato Brasileiro Série A), row bra-34: game 19, table 38 (2 meetings, zones -, extra 0)
+2007	rounds	bra_nat_second (Campeonato Brasileiro Série B), row bra-61: game 19, table 38 (2 meetings, zones -, extra 0)
+2007	rounds	cro_a1 (Prva HNL), row gre-pol-cro-331: game 30, table 33 (3 meetings, zones -, extra 0)
+2007	rounds	fin_first (Ykkönen), row nor-fin-68: game 27, table 26 (2 meetings, zones -, extra 0)
+2007	rounds	gre_prm (Super League Greece), row gre-pol-cro-34: game 26, table 30 (2 meetings, zones -, extra 0)
+2007	rounds	gre_second (Beta Ethniki), row gre-pol-cro-61: game 26, table 34 (2 meetings, zones -, extra 0)
+2007	rounds	ita_ser_a (Serie A), row ita-104: game 34, table 38 (2 meetings, zones -, extra 0)
+2007	rounds	ita_ser_b (Serie B), row ita-105: game 38, table 42 (2 meetings, zones -, extra 0)
+2007	rounds	jap_j1 (J.League Division 1), row aus-jap-kor-196: game 30, table 34 (2 meetings, zones -, extra 0)
+2007	rounds	jap_j2 (J.League Division 2), row aus-jap-kor-223: game 44, table 45 (3 meetings, zones -, extra 0)
+2007	rounds	nir_first (Irish First Division), row wal-nir-irl-161: game 36, table 22 (2 meetings, zones -, extra 0)
+2007	rounds	nir_prm (Irish Premier League), row wal-nir-irl-160: game 36, table 30 (2 meetings, zones -, extra 0)
 2007	up	arg_second (Primera B Nacional), row arg-usa-34: game 1 (+0 play-off places), table 2 (2 (champion and runner-up))
 2007	up	aus_nsl (A-League), row aus-jap-kor-30: game 6 (+0 play-off places), table na (n/a)
 2007	up	bel_third (Belgian Third Division), row hol-bel-88: game 1 (+0 play-off places), table 2 (2 (group champions))

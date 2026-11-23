@@ -1,18 +1,376 @@
 database	nation	name	rows
-3.9.68		Skonto Riga	1
-3.9.68	Finland	Kokkolan Palloveikot	1
-3.9.68	Hong Kong	unknown	2
-3.9.68	India	unknown	2
-3.9.68	Japan	Seiryo High School	1
-3.9.68	Sweden	Harmångers IF	1
-3.9.68	Sweden	LSW IF	1
-Summer 2002		Skonto Riga	1
-Summer 2002	Finland	Kokkolan Palloveikot	1
-Summer 2002	Hong Kong	unknown	2
-Summer 2002	India	unknown	2
-Summer 2002	Japan	Seiryo High School	1
-Summer 2002	Sweden	Harmångers IF	1
-Summer 2002	Sweden	LSW IF	1
+3.9.60		AS Magenta	1
+3.9.60		Adelaide United	1
+3.9.60		Auckland City	1
+3.9.60		Heartland	1
+3.9.60		Skonto Riga	1
+3.9.60		Sydney FC	1
+3.9.60		Tigres UANL	1
+3.9.60		Waitakere United	1
+3.9.60	Australia	Adelaide United	2
+3.9.60	Australia	Central Coast Mariners	2
+3.9.60	Australia	Melbourne Victory	3
+3.9.60	Australia	Newcastle United Jets	1
+3.9.60	Australia	Sydney FC	2
+3.9.60	Austria	FC Wacker Tirol	1
+3.9.60	Austria	SV Feldkirchen	1
+3.9.60	Austria	SV Horn	2
+3.9.60	Belgium	FC Bleid	2
+3.9.60	Belgium	FC Hedera Millen	2
+3.9.60	Belgium	FC ZD Oud-Heverlee Leuven	2
+3.9.60	Belgium	FCV Dender EH	2
+3.9.60	Belgium	K Racing Mol-Wezel	1
+3.9.60	Belgium	KESK Leopoldsburg	1
+3.9.60	Belgium	KFC Brussels	1
+3.9.60	Belgium	KV Red Star Waasland	1
+3.9.60	Belgium	KV Woluwe-Zaventem	1
+3.9.60	Belgium	KVSK United Overpelt-Lommel	3
+3.9.60	Belgium	RCS Verviers	1
+3.9.60	Belgium	RFC Turkania Faymonville	1
+3.9.60	Belgium	RRC Hamoir	1
+3.9.60	Belgium	SC Wielsbeke	1
+3.9.60	Belgium	VG Oostende	1
+3.9.60	Belgium	VV Coxyde	1
+3.9.60	Belgium	White Star Woluwe FC	1
+3.9.60	Brazil	ADAP Galo Maringá FC	1
+3.9.60	Brazil	Atlético Clube Paranavaí	2
+3.9.60	Brazil	Clube Atlético Hermann Aichinger	2
+3.9.60	Brazil	J. Malucelli Futebol	1
+3.9.60	Brazil	Paulista Futebol Clube	2
+3.9.60	Brazil	Sport Club Ulbra	1
+3.9.60	China PR	Beijing Hongdeng	1
+3.9.60	China PR	Dalian Sande	1
+3.9.60	China PR	Guangdong Xiongying	1
+3.9.60	China PR	Nanchang Bayi Hengyuan	1
+3.9.60	China PR	Shanghai Jiucheng	1
+3.9.60	China PR	Yanbian Century	1
+3.9.60	Denmark	Lyngby Boldklub af 1921	1
+3.9.60	Denmark	SønderjyskElitesport	2
+3.9.60	England	AFC Telford United	2
+3.9.60	England	AFC Wimbledon	1
+3.9.60	England	Ebbsfleet United	1
+3.9.60	England	Milton Keynes Dons	2
+3.9.60	Finland	AC Oulu	2
+3.9.60	Finland	AC Vantaan Allianssi	2
+3.9.60	Finland	Kokkolan Palloveikot	2
+3.9.60	Greece	Asteras Tripolis	1
+3.9.60	Greece	Ergotelis	1
+3.9.60	Greece	Thrasivoulos	1
+3.9.60	Italy	Figline Valdarno	1
+3.9.60	Italy	Gallipoli Calcio SRL	3
+3.9.60	Italy	Pergocrema	1
+3.9.60	Italy	Pescina Valle del Giovenco	1
+3.9.60	Italy	Real Marcianise	1
+3.9.60	Japan	Funabashi Municipal High School	1
+3.9.60	Japan	JEF United Ichihara Chiba	1
+3.9.60	Japan	Kansai University	1
+3.9.60	Japan	Nagoya Grampus	1
+3.9.60	Japan	Seiryo High School	1
+3.9.60	Japan	Shizuoka Gakuen High School	1
+3.9.60	Luxembourg	FC CeBra 01	1
+3.9.60	Northern Ireland	Donegal Celtic	2
+3.9.60	Norway	FK Tønsberg	3
+3.9.60	Norway	Hønefoss BK	1
+3.9.60	Norway	Sparta Sarpsborg	2
+3.9.60	Portugal	Clube Desportivo de Mafra	3
+3.9.60	Republic of Ireland	Carrick United	1
+3.9.60	Republic of Ireland	Passage	1
+3.9.60	Republic of Ireland	Wexford Youths F.C.	1
+3.9.60	Russia	Amur Blagoveschensk	2
+3.9.60	Russia	FK MVD Russia	1
+3.9.60	Russia	FK Moscow	1
+3.9.60	Russia	FK Rostov	1
+3.9.60	Russia	Gelios-Lukoil Tchelyabinsk	4
+3.9.60	Russia	Metallurg-Kuzbass Novokuznetsk	1
+3.9.60	Russia	Mordovia Saransk	1
+3.9.60	Russia	Sheksna Cherepovets	2
+3.9.60	Russia	Spartak-MGK	1
+3.9.60	Russia	Ural Yekaterinburg	2
+3.9.60	Russia	Volga Nizhniy Novgorod	2
+3.9.60	Scotland	Airdrie United	4
+3.9.60	South Africa	Santos (RSA)	3
+3.9.60	South Korea	FC Seoul	1
+3.9.60	South Korea	Incheon United	1
+3.9.60	South Korea	Jeonbuk Hyundai Motors	1
+3.9.60	South Korea	Seongnam Ilhwa Chunma	3
+3.9.60	Spain	Lorca Deportiva	1
+3.9.60	Sweden	BK Wolfram	1
+3.9.60	Sweden	Brynäs IF FK	1
+3.9.60	Sweden	FC Trollhättan	3
+3.9.60	Sweden	Gröndals IK	1
+3.9.60	Sweden	Hammarby TFF	1
+3.9.60	Sweden	Harmångers IF	1
+3.9.60	Sweden	Kungsörs BK	1
+3.9.60	Sweden	LSW IF	1
+3.9.60	Sweden	Ramlösa Södra FF	1
+3.9.60	Sweden	VMA IK	1
+3.9.60	Sweden	Väsby United	1
+3.9.60	United States	Atlanta United FC	1
+3.9.60	United States	Minnesota United FC	1
+3.9.60	United States	NY/NJ Metrostars	1
+3.9.60	United States	Puerto Rico Islanders	1
+3.9.60	United States	Real Salt Lake	1
+3.9.60	Yugoslavia	Borac Auto Cacak	3
+3.9.60	Yugoslavia	FK Kom Zlatica Podgorica	2
+3.9.65		AS Magenta	1
+3.9.65		Adelaide United	1
+3.9.65		Auckland City	1
+3.9.65		Heartland	1
+3.9.65		Skonto Riga	1
+3.9.65		Sydney FC	1
+3.9.65		Tigres UANL	1
+3.9.65		Waitakere United	1
+3.9.65	Australia	Adelaide United	2
+3.9.65	Australia	Central Coast Mariners	2
+3.9.65	Australia	Melbourne Victory	3
+3.9.65	Australia	Newcastle United Jets	1
+3.9.65	Australia	Sydney FC	2
+3.9.65	Austria	FC Wacker Tirol	1
+3.9.65	Austria	SV Feldkirchen	1
+3.9.65	Austria	SV Horn	2
+3.9.65	Belgium	FC Bleid	2
+3.9.65	Belgium	FC Hedera Millen	2
+3.9.65	Belgium	FC ZD Oud-Heverlee Leuven	2
+3.9.65	Belgium	FCV Dender EH	2
+3.9.65	Belgium	K Racing Mol-Wezel	1
+3.9.65	Belgium	KESK Leopoldsburg	1
+3.9.65	Belgium	KFC Brussels	1
+3.9.65	Belgium	KV Red Star Waasland	1
+3.9.65	Belgium	KV Woluwe-Zaventem	1
+3.9.65	Belgium	KVSK United Overpelt-Lommel	3
+3.9.65	Belgium	RCS Verviers	1
+3.9.65	Belgium	RFC Turkania Faymonville	1
+3.9.65	Belgium	RRC Hamoir	1
+3.9.65	Belgium	SC Wielsbeke	1
+3.9.65	Belgium	VG Oostende	1
+3.9.65	Belgium	VV Coxyde	1
+3.9.65	Belgium	White Star Woluwe FC	1
+3.9.65	Brazil	ADAP Galo Maringá FC	1
+3.9.65	Brazil	Atlético Clube Paranavaí	2
+3.9.65	Brazil	Clube Atlético Hermann Aichinger	2
+3.9.65	Brazil	J. Malucelli Futebol	1
+3.9.65	Brazil	Paulista Futebol Clube	2
+3.9.65	Brazil	Sport Club Ulbra	1
+3.9.65	China PR	Beijing Hongdeng	1
+3.9.65	China PR	Dalian Sande	1
+3.9.65	China PR	Guangdong Xiongying	1
+3.9.65	China PR	Nanchang Bayi Hengyuan	1
+3.9.65	China PR	Shanghai Jiucheng	1
+3.9.65	Denmark	Lyngby Boldklub af 1921	1
+3.9.65	Denmark	SønderjyskElitesport	2
+3.9.65	England	AFC Telford United	2
+3.9.65	England	AFC Wimbledon	1
+3.9.65	England	Ebbsfleet United	1
+3.9.65	England	Milton Keynes Dons	2
+3.9.65	Finland	AC Oulu	2
+3.9.65	Finland	AC Vantaan Allianssi	2
+3.9.65	Finland	FC Espoo	1
+3.9.65	Finland	Forssan Jalkapalloklubi	1
+3.9.65	Finland	Klubi-04 Helsinki	1
+3.9.65	Finland	Kokkolan Palloveikot	4
+3.9.65	Greece	Asteras Tripolis	1
+3.9.65	Greece	Ergotelis	1
+3.9.65	Greece	Thrasivoulos	1
+3.9.65	Hong Kong	Hong Kong 08	2
+3.9.65	Hong Kong	Wofoo Tai Po	2
+3.9.65	Hong Kong	Yau Tsim Mong	1
+3.9.65	Hong Kong	unknown	5
+3.9.65	India	Controllerate of Inspection Electronics	1
+3.9.65	India	Haywards 2000-Holy Family	1
+3.9.65	India	unknown	6
+3.9.65	Italy	Figline Valdarno	1
+3.9.65	Italy	Gallipoli Calcio SRL	3
+3.9.65	Italy	Pergocrema	1
+3.9.65	Italy	Pescina Valle del Giovenco	1
+3.9.65	Italy	Real Marcianise	1
+3.9.65	Japan	Funabashi Municipal High School	1
+3.9.65	Japan	JEF United Ichihara Chiba	1
+3.9.65	Japan	Kansai University	1
+3.9.65	Japan	Nagoya Grampus	1
+3.9.65	Japan	Seiryo High School	1
+3.9.65	Japan	Shizuoka Gakuen High School	1
+3.9.65	Luxembourg	FC CeBra 01	1
+3.9.65	Norway	Hønefoss BK	1
+3.9.65	Norway	Sparta Sarpsborg	2
+3.9.65	Portugal	Clube Desportivo de Mafra	3
+3.9.65	Republic of Ireland	Carrick United	1
+3.9.65	Republic of Ireland	Passage	1
+3.9.65	Republic of Ireland	Wexford Youths F.C.	1
+3.9.65	Russia	Amur Blagoveschensk	2
+3.9.65	Russia	FK MVD Russia	1
+3.9.65	Russia	FK Moscow	1
+3.9.65	Russia	FK Rostov	1
+3.9.65	Russia	Gelios-Lukoil Tchelyabinsk	4
+3.9.65	Russia	Metallurg-Kuzbass Novokuznetsk	1
+3.9.65	Russia	Mordovia Saransk	1
+3.9.65	Russia	Sheksna Cherepovets	2
+3.9.65	Russia	Spartak-MGK	1
+3.9.65	Russia	Ural Yekaterinburg	2
+3.9.65	Russia	Volga Nizhniy Novgorod	2
+3.9.65	Scotland	Airdrie United	4
+3.9.65	Singapore	Katong FC	1
+3.9.65	Singapore	SAFSA	1
+3.9.65	Singapore	Sinchi FC	2
+3.9.65	Singapore	Singapore Cricket Club	1
+3.9.65	Singapore	Tampines Rovers Sports Club	2
+3.9.65	Singapore	Tessensohn Khalsa Rovers	1
+3.9.65	South Korea	FC Seoul	1
+3.9.65	South Korea	Incheon United	1
+3.9.65	South Korea	Jeonbuk Hyundai Motors	1
+3.9.65	South Korea	Seongnam Ilhwa Chunma	3
+3.9.65	Spain	Lorca Deportiva	1
+3.9.65	Sweden	BK Wolfram	1
+3.9.65	Sweden	Brynäs IF FK	1
+3.9.65	Sweden	Dalkurd FF	1
+3.9.65	Sweden	Ersboda SK	1
+3.9.65	Sweden	Gröndals IK	2
+3.9.65	Sweden	Hammarby TFF	1
+3.9.65	Sweden	Harmångers IF	2
+3.9.65	Sweden	Kubikenborgs IF	2
+3.9.65	Sweden	Kungsörs BK	1
+3.9.65	Sweden	LSW IF	1
+3.9.65	Sweden	Ramlösa Södra FF	1
+3.9.65	Sweden	Syrianska IF Kerburan	2
+3.9.65	Sweden	VMA IK	1
+3.9.65	Sweden	Väsby United	1
+3.9.65	Thailand	Provincial Electricity Authority	1
+3.9.65	United States	Atlanta United FC	1
+3.9.65	United States	Minnesota United FC	1
+3.9.65	United States	NY/NJ Metrostars	1
+3.9.65	United States	Puerto Rico Islanders	1
+3.9.65	United States	Real Salt Lake	1
+3.9.65	Yugoslavia	FK Kom Zlatica Podgorica	2
+3.9.68		Adelaide United	1
+3.9.68		Auckland City	1
+3.9.68		Heartland	1
+3.9.68		Skonto Riga	2
+3.9.68		Sydney FC	1
+3.9.68		Waitakere United	1
+3.9.68	Australia	Adelaide United	2
+3.9.68	Australia	Central Coast Mariners	2
+3.9.68	Australia	GHFA Spirit FC	1
+3.9.68	Australia	Melbourne Victory	3
+3.9.68	Australia	Newcastle United Jets	1
+3.9.68	Australia	PCYC Parramatta	2
+3.9.68	Australia	Palm Beach Sharks	1
+3.9.68	Australia	Sydney Crescent Star	1
+3.9.68	Australia	Sydney FC	2
+3.9.68	Austria	FC Wacker Tirol	1
+3.9.68	Austria	SV Feldkirchen	1
+3.9.68	Austria	SV Horn	2
+3.9.68	Belgium	FC ZD Oud-Heverlee Leuven	2
+3.9.68	Belgium	FCV Dender EH	2
+3.9.68	Belgium	KESK Leopoldsburg	1
+3.9.68	Belgium	KFC Brussels	1
+3.9.68	Belgium	KV Woluwe-Zaventem	1
+3.9.68	Belgium	KVSK United Overpelt-Lommel	3
+3.9.68	Belgium	RCS Verviers	1
+3.9.68	Belgium	RRC Hamoir	1
+3.9.68	Brazil	ADAP Galo Maringá FC	1
+3.9.68	Brazil	ADESG	2
+3.9.68	Brazil	Associação Atlética Coruripe	4
+3.9.68	Brazil	Atlético Clube Juventus	3
+3.9.68	Brazil	Atlético Clube Paranavaí	2
+3.9.68	Brazil	Clube Atlético Hermann Aichinger	2
+3.9.68	Brazil	Grêmio Coariense	2
+3.9.68	Brazil	Holanda Esporte Clube	1
+3.9.68	Brazil	J. Malucelli Futebol	1
+3.9.68	Brazil	Paulista Futebol Clube	2
+3.9.68	Brazil	Sport Club Ulbra	1
+3.9.68	China PR	Beijing Hongdeng	1
+3.9.68	China PR	Nanchang Bayi Hengyuan	1
+3.9.68	China PR	Shanghai Jiucheng	1
+3.9.68	Croatia	Dugopolje	2
+3.9.68	Croatia	Hrvace	1
+3.9.68	Croatia	NK Medimurje	1
+3.9.68	Croatia	NK Suhopolje	1
+3.9.68	Croatia	NK Trogir	1
+3.9.68	Croatia	NK Vinogradar	1
+3.9.68	Croatia	Naftas Ivanic Grad	1
+3.9.68	Croatia	Polet Pribislavec	1
+3.9.68	Croatia	Rudes Zagreb	2
+3.9.68	Croatia	Zagora Unesic	1
+3.9.68	Denmark	Brabrand IF	2
+3.9.68	Denmark	Brøndby IF II	1
+3.9.68	Denmark	Esbjerg fB II	1
+3.9.68	Denmark	FC Fyn	1
+3.9.68	Denmark	FC Roskilde	1
+3.9.68	Denmark	Football Club Vestsjælland	1
+3.9.68	Denmark	Lolland-Falster Alliancen	1
+3.9.68	Denmark	Lyngby Boldklub af 1921	1
+3.9.68	Denmark	Odense BK II	1
+3.9.68	Denmark	SønderjyskElitesport	2
+3.9.68	England	AFC Telford United	2
+3.9.68	England	Ebbsfleet United	1
+3.9.68	England	Milton Keynes Dons	2
+3.9.68	Finland	AC Oulu	2
+3.9.68	Finland	Klubi-04 Helsinki	1
+3.9.68	Finland	Kokkolan Palloveikot	5
+3.9.68	Greece	Asteras Tripolis	1
+3.9.68	Hong Kong	Hong Kong 08	2
+3.9.68	Hong Kong	Wofoo Tai Po	2
+3.9.68	Hong Kong	Yau Tsim Mong	1
+3.9.68	Hong Kong	unknown	7
+3.9.68	India	Controllerate of Inspection Electronics	1
+3.9.68	India	Haywards 2000-Holy Family	1
+3.9.68	India	unknown	8
+3.9.68	Indonesia	Persiwa Wamena	1
+3.9.68	Italy	Figline Valdarno	1
+3.9.68	Italy	Gallipoli Calcio SRL	3
+3.9.68	Italy	Pergocrema	1
+3.9.68	Italy	Pescina Valle del Giovenco	1
+3.9.68	Italy	Real Marcianise	1
+3.9.68	Japan	JEF United Ichihara Chiba	1
+3.9.68	Japan	Kansai University	1
+3.9.68	Japan	Nagoya Grampus	1
+3.9.68	Japan	Seiryo High School	2
+3.9.68	Luxembourg	FC CeBra 01	1
+3.9.68	Mexico	Académicos de Atlas	1
+3.9.68	Mexico	Cachorros UdeG	1
+3.9.68	Mexico	Club Dorados de Culiacn	1
+3.9.68	Mexico	Delfines de Coatzacoalcos B	1
+3.9.68	Mexico	Lobos BUAP	1
+3.9.68	Mexico	Pegaso Anáhuac	1
+3.9.68	Norway	Hønefoss BK	1
+3.9.68	Norway	Sparta Sarpsborg	2
+3.9.68	Republic of Ireland	Carrick United	1
+3.9.68	Republic of Ireland	Passage	1
+3.9.68	Republic of Ireland	Wexford Youths F.C.	1
+3.9.68	Russia	Amur Blagoveschensk	2
+3.9.68	Russia	FK MVD Russia	1
+3.9.68	Russia	FK Moscow	1
+3.9.68	Russia	FK Rostov	1
+3.9.68	Russia	Metallurg-Kuzbass Novokuznetsk	1
+3.9.68	Russia	Mordovia Saransk	1
+3.9.68	Russia	Sheksna Cherepovets	2
+3.9.68	Russia	Spartak-MGK	1
+3.9.68	Russia	Ural Yekaterinburg	2
+3.9.68	Russia	Volga Nizhniy Novgorod	2
+3.9.68	Singapore	Katong FC	1
+3.9.68	Singapore	SAFSA	1
+3.9.68	Singapore	Sinchi FC	2
+3.9.68	South Korea	FC Seoul	1
+3.9.68	South Korea	Incheon United	1
+3.9.68	South Korea	Jeonbuk Hyundai Motors	1
+3.9.68	South Korea	Seongnam Ilhwa Chunma	3
+3.9.68	Spain	Lorca Deportiva	1
+3.9.68	Sweden	Dalkurd FF	1
+3.9.68	Sweden	Ersboda SK	1
+3.9.68	Sweden	Gröndals IK	2
+3.9.68	Sweden	Hammarby TFF	1
+3.9.68	Sweden	Harmångers IF	3
+3.9.68	Sweden	Kubikenborgs IF	2
+3.9.68	Sweden	LSW IF	2
+3.9.68	Sweden	Ramlösa Södra FF	1
+3.9.68	Sweden	Syrianska IF Kerburan	2
+3.9.68	Sweden	VMA IK	1
+3.9.68	Sweden	Väsby United	1
+3.9.68	Thailand	Provincial Electricity Authority	1
+3.9.68	United States	Atlanta United FC	1
+3.9.68	United States	Minnesota United FC	1
+3.9.68	United States	NY/NJ Metrostars	1
+3.9.68	United States	Puerto Rico Islanders	1
+3.9.68	United States	Real Salt Lake	1
 April 2010 SIM		Heartland	1
 April 2010 SIM	Australia	PCYC Parramatta	2
 April 2010 SIM	Australia	Sydney Crescent Star	1
@@ -400,6 +758,13 @@ September 2009	France	Lusitanos de Saint-Maur	1
 September 2009	Greece	Chalkidona	1
 September 2009	Scotland	Airdrieonians	2
 September 2009	Sweden	Dalkurd FF	1
+Summer 2002		Skonto Riga	1
+Summer 2002	Finland	Kokkolan Palloveikot	1
+Summer 2002	Hong Kong	unknown	2
+Summer 2002	India	unknown	2
+Summer 2002	Japan	Seiryo High School	1
+Summer 2002	Sweden	Harmångers IF	1
+Summer 2002	Sweden	LSW IF	1
 Summer 2004		Skonto Riga	1
 Summer 2004	Australia	Sydney Crescent Star	1
 Summer 2004	Austria	BSV Bad Bleiberg	1

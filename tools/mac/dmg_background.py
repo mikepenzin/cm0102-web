@@ -4,8 +4,9 @@ area below where the app and the Applications folder sit, with an arrow between 
 Usage:
     python tools/mac/dmg_background.py <out.tiff> [--logo <logo.png>] [--edition "Bosman Edition"]
 
-The logo is the classic CM 01/02 logo cut from the 2001 manual (the site's logo.png). It is not in git,
-so the release passes it in. Without it the band shows only the edition name. Writes one TIFF with a
+The logo is the Bosman Edition logo (the site's logo.png, made by tools/logo/make_bosman_logo.py), which
+already has BOSMAN EDITION in its art. It is not in git, so the release passes it in. With it the band shows
+the logo alone. Without it the band shows only the edition name. Writes one TIFF with a
 1x and a 2x picture (tiffutil), so the window is sharp on Retina screens. Needs Pillow.
 
 Layout, in window points (640 x 400): the band is the top 170 points. The icons sit at (170, 255) and
@@ -59,22 +60,23 @@ def draw(scale, logo_path, edition):
         row += 1
     d.rectangle([0, band, w, h], fill=LIGHT)   # cut the net off at the band's edge
 
-    top = 12 * scale
     if logo_path:
+        # The logo art has BOSMAN EDITION in its own lettering (tools/logo), so the band shows the logo
+        # alone, centred in the band. A drawn line under it would show the name twice (0.6.1 item 1).
         logo = Image.open(logo_path).convert("RGBA")
         lw = 250 * scale
         logo = logo.resize((lw, round(logo.height * lw / logo.width)), Image.LANCZOS)
-        im.paste(logo, ((w - lw) // 2, top), logo)
-        top += logo.height + 6 * scale
-    ef = font(FONT_CANDIDATES, 22 * scale)
-    words = edition.upper().rsplit(" ", 1)          # "BOSMAN" in white, "EDITION" in gold, as on the site
-    parts = [(words[0] + " ", (255, 255, 255))] + ([(words[1], GOLD)] if len(words) > 1 else [])
-    tw = sum(d.textlength(t, font=ef) for t, _ in parts)
-    tx, ty = (w - tw) / 2, min(top, band - 32 * scale)
-    for t, colour in parts:
-        d.text((tx + 2 * scale, ty + 3 * scale), t, font=ef, fill=(0, 0, 0))
-        d.text((tx, ty), t, font=ef, fill=colour)
-        tx += d.textlength(t, font=ef)
+        im.paste(logo, ((w - lw) // 2, (band - logo.height) // 2), logo)
+    else:
+        ef = font(FONT_CANDIDATES, 22 * scale)
+        words = edition.upper().rsplit(" ", 1)      # "BOSMAN" in white, "EDITION" in gold, as on the site
+        parts = [(words[0] + " ", (255, 255, 255))] + ([(words[1], GOLD)] if len(words) > 1 else [])
+        tw = sum(d.textlength(t, font=ef) for t, _ in parts)
+        tx, ty = (w - tw) / 2, (band - 32 * scale) / 2
+        for t, colour in parts:
+            d.text((tx + 2 * scale, ty + 3 * scale), t, font=ef, fill=(0, 0, 0))
+            d.text((tx, ty), t, font=ef, fill=colour)
+            tx += d.textlength(t, font=ef)
 
     # The arrow from the app to the Applications folder.
     ay = 255 * scale

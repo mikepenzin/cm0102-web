@@ -28,7 +28,7 @@
  * RECOMP_SEASON_JUMP=<year>: the game plays on with no match engine, and the program ends with code 0 after
  * the end report of the season that starts in that year. The test steps put the manager on holiday
  * (tests/seasons/rules_report_check.py), so the days pass with no input. A value that is not a year from 2001
- * to 2099 stops the program at the start (season_report_init).
+ * to SEASON_YEAR_MAX stops the program at the start (season_report_init).
  *
  * No match engine: the original has a switch for it, ENABLE_MATCH_ENGINE=NO in its setup file
  * (create_game_from_setup_file 0x827110 compares with "YES" 0xa812c0 and "NO" 0xa812bc and writes the byte
@@ -74,6 +74,8 @@
 #include "season_cups.h"
 #include "season_comps.h"
 #include "season_uefa.h"
+#include "season_split.h"
+#include "season_sizes_arg.h"
 #include "season_comps.h"
 #include "../host.h"
 #include "../rt_host.h"
@@ -227,11 +229,15 @@ static void write_comp(FILE *f, int season, const char *phase, const char *slot,
     }
     int league = c && c->kind == SEASON_KIND_LEAGUE;
     char rules[128] = "-\t-\t-\t-\t-\t-\t-\t-";
-    if (league)
+    if (league) {
+        int up = (int8_t)g_mem[obj + 0xbe], po_up = (int8_t)g_mem[obj + 0xbf], po_down = (int8_t)g_mem[obj + 0xc0];
+        int down = (int8_t)g_mem[obj + 0xc1];
+        season_arg_report_places(obj, &up, &po_up, &po_down, &down);
         snprintf(rules, sizeof rules, "%d\t%d\t%d\t%d\t%d\t0x%x\t%d\t%d", (int16_t)rd16(g_mem, obj + 0xa7),
-                 (int8_t)g_mem[obj + 0xbe], (int8_t)g_mem[obj + 0xbf], (int8_t)g_mem[obj + 0xc0],
-                 (int8_t)g_mem[obj + 0xc1], rd16(g_mem, obj + 0xd9), (int32_t)rd32(g_mem, obj + 0x1c),
+                 up, po_up, po_down, down, rd16(g_mem, obj + 0xd9),
+                 (int32_t)rd32(g_mem, obj + 0x1c),
                  (int32_t)rd32(g_mem, obj + 0x20));
+    }
     /* Slice 23: a UEFA cup of the access list counts its clubs, not its entry slots (season_uefa_qual.c). */
     int clubs = season_uefa_report_clubs(obj);
     if (clubs < 0) clubs = (int16_t)rd16(g_mem, obj + 0x3e);
@@ -241,7 +247,7 @@ static void write_comp(FILE *f, int season, const char *phase, const char *slot,
     fprintf(f, "comp\t%d\t%s\t%s\t%d\t%s\t%s\t%s\t0x%x\t%d\t%d\t%d\t%d\t%d\t%s\t%s\n", season, phase, slot, id,
             file, c ? c->cls : "?",
             c ? (league ? "league" : c->kind == SEASON_KIND_CUP ? "cup" : "comp") : "?", vt,
-            (int16_t)rd16(g_mem, obj + 0x40), clubs, (int16_t)rd16(g_mem, obj + 0x3c),
+            (int16_t)rd16(g_mem, obj + 0x40), clubs, league ? season_split_meetings(obj) : (int16_t)rd16(g_mem, obj + 0x3c),
             g_mem[obj + 0x4a], g_mem[obj + 0x49], rules, name);
     if (c && c->kind == SEASON_KIND_CUP) write_cup_rounds(f, season, phase, slot, file, obj);
     if (sweep_on) sweep_comp(f, season, phase, file, c, obj);
@@ -320,6 +326,10 @@ static void write_season(int season, const char *phase)
     season_uefa_report(report, season, phase);      /* slice 22: the stages of the Champions League */
     season_cups_more_report(report, season, phase); /* slice 21c: super cups, group stages, new cups */
     if (*phase == 's') write_clubs(season, phase);
+    if (*phase == 's') rt_squad_move_test();       /* open item 187 (original_faults.c) */
+    if (*phase == 's') rt_squad_loan_test();       /* issue 159 (original_faults.c) */
+    if (*phase == 's') rt_club_key_test();         /* open item 295 (original_faults.c) */
+    if (*phase == 's') rt_comp_menu_test();        /* issue 163 (screen_sweep.c) */
     if (sweep_on) {
         fprintf(report, "sweepok\t%d\t%s\t%d objects\t%d round tables\t%d dates\t%d faults\n", season, phase,
                 sweep_objects, sweep_tables, sweep_rounds, sweep_faults);
@@ -346,8 +356,9 @@ void season_report_init(void)
     if (v && *v) {
         char *end;
         long y = strtol(v, &end, 10);
-        if (*end || y < 2001 || y > 2099) {
-            fprintf(stderr, "cm0102_recomp: RECOMP_SEASON_JUMP=%s is not a year from 2001 to 2099.\n", v);
+        if (*end || y < SEASON_FIRST_YEAR || y > SEASON_YEAR_MAX) {
+            fprintf(stderr, "cm0102_recomp: RECOMP_SEASON_JUMP=%s is not a year from %d to %d.\n", v,
+                    SEASON_FIRST_YEAR, SEASON_YEAR_MAX);
             exit(2);
         }
         jump_to = (int)y;

@@ -149,8 +149,19 @@ static const SeasonCompDef *def_at(int i)
 
 #define MAX_DEFS 64
 static uint32_t objects[MAX_DEFS];      /* the object of each def, 0 when not made */
+static int made_season[MAX_DEFS];        /* the season whose change made the object (comps_entry), 0 otherwise */
 
-static void reset(void) { memset(objects, 0, sizeof objects); }
+static uint32_t loading_records[MAX_DEFS];   /* season_comps_record_of before the objects of a load exist */
+static int loading_known;                    /* loading_records is filled */
+static int objects_made;                     /* season_comps_before_comp_table has run for this game */
+
+static void reset(void)
+{
+    memset(objects, 0, sizeof objects);
+    memset(made_season, 0, sizeof made_season);
+    loading_known = 0;
+    objects_made = 0;
+}
 
 int season_comps_on(void)
 {
@@ -218,7 +229,10 @@ static int def_next_edition(const SeasonCompDef *d, int s)
     int h = d->held(d, s);
     if (h < 0) return 0;
     if (h) return s;
-    for (int y = s + 1; y <= SEASON_LAST_YEAR; y++)
+    /* A rule ends with the last row of its table (SEASON_RULE_LAST at most), and a row of one season may hold the
+     * edition of the next: after that the rule stays, so a later search finds nothing new. */
+    int last = s > SEASON_RULE_LAST + 2 ? s : SEASON_RULE_LAST + 2;
+    for (int y = s + 1; y <= last; y++)
         if (d->held(d, y) == 1) return y;
     return NEVER;
 }
@@ -427,6 +441,40 @@ static uint32_t make(const SeasonCompDef *d, int i, int s, int loading)
 
 /* ---- The rule kind ---- */
 
+/* 0.6.2 item 135: the competitions of the defs that had real editions before the table's first season (2001/02),
+ * by `file`. Such a competition that the game makes at a season change is played again, not for the first time
+ * (the lead's ruling on Max's rule of real life, 5 November 2026). Editions from 2001/02 on come from the table.
+ * Sources, English Wikipedia, read 5 November 2026:
+ * - Recopa Sudamericana: first edition 1989, a hiatus from 1999 to 2002 (club-world-8).
+ * - CONCACAF Gold Cup: first edition 1991, then 1993, 1996, 1998 and 2000.
+ * - Finalissima (CONMEBOL-UEFA Cup of Champions): 1985 and 1993, then 2022 (int-continental-4).
+ * - Turkish Super Cup: the Presidential Cup from 1966 to 1998, the TFF Super Cup from 2006 (rus-tur-271).
+ * - Conference League Cup (National League Cup): from 1979/80 to 2000/01, then 2004/05 (eng-303).
+ * - Greek second tier, group 2: three or four groups from 1959/60 to 1974/75, two groups in 1968/69 and from 1975/76
+ *   to 1982/83 (Football League (Greece), 1968-69 Beta Ethniki).
+ * - Italian third tier, group C: three groups from the reform of 1959 to 1977/78 (Serie C).
+ * New ones, so not in the list: the Copa Sudamericana (2002), the Suruga Bank Championship (2008), the FIFA
+ * Intercontinental Cup (2024, a new competition, not the Intercontinental Cup of 1960 to 2004), AFC Champions
+ * League Two (2024/25), the UEFA Conference League (2021/22), the two Nations Leagues (2018/19), the Russian Super
+ * Cup (2003), the Russian Premier League Cup (2003) and the Superfinalen (2009).
+ * The Brazilian state championships are held from 2001/02, so the game makes them at the start. The All-Ireland cup
+ * (the Setanta Cup) is new too: its first edition, of 2005, is in the row of 2004/05, and the game plays it from
+ * there (item 145; before, the game first made the cup in 2010/11 and the list held it). */
+static const char *const played_before_table[] = {
+    "new_recopa", "new_concacaf_gold_cup", "new_finalissima", "new_tur_super", "new_conf_cup", "gre_second",
+    "ita_ser_c2a",
+};
+
+/* 1 when the competition of def `d` had a real edition before season s. */
+static int played_before(const SeasonCompDef *d, int s)
+{
+    for (size_t i = 0; i < sizeof played_before_table / sizeof played_before_table[0]; i++)
+        if (!strcmp(d->file, played_before_table[i])) return 1;
+    for (int y = SEASON_RULE_FIRST; y < s; y++)
+        if (season_comps_def_held(d, y) == 1) return 1;
+    return 0;
+}
+
 static void comps_entry(const SeasonChange *c)
 {
     if (!season_comps_on() || !entry_in_game(c->entry)) return;
@@ -439,11 +487,22 @@ static void comps_entry(const SeasonChange *c)
                          * season does not hold stays off); slice 21c: the def's own `held` */
         uint32_t obj = make(d, i, c->season, 0);
         if (!obj) continue;
+        made_season[i] = c->season;
         char name[64];
         table_name(d, c->season, name, sizeof name);
         if (*name) season_change_rename(rd32(g_mem, obj + NAME_AT), name);
-        if (*name) season_change_news("The %s is played for the first time.", name);
+        /* One sentence per competition (0.6.2 item 135): new_after says nothing for an object made at this change. */
+        if (*name)
+            season_change_news(played_before(d, c->season) ? "The %s is played again."
+                                                            : "The %s is played for the first time.", name);
     }
+}
+
+int season_comps_made_in(uint32_t comp)
+{
+    for (int i = 0; i < season_comp_def_count && i < MAX_DEFS; i++)
+        if (comp && objects[i] == comp) return made_season[i];
+    return 0;
 }
 
 /* A later name of the table (Q226, Q238). */
@@ -482,6 +541,44 @@ static void save_file(uint32_t rec, char *out, size_t room)
     snprintf(out, room, "%s_%d.tmp", name, (int)rd32(g_mem, rec));
 }
 
+/* 1 when the load extracted the saved file of the competition of record rec to the user folder (a stale file of
+ * the game folder, which win_existing_file gives too, is not this game's). Inference: the temp files are in the
+ * user folder, as the game's own *.tmp files of a run are. */
+static int saved_in_user_folder(uint32_t rec)
+{
+    char file[128], host[2048];
+    save_file(rec, file, sizeof file);
+    return win_existing_file(file, host, sizeof host) && !strncmp(host, win_user_dir, strlen(win_user_dir));
+}
+
+/* The record of a def's competition in this game: its object's record (+4), or, at a load before
+ * season_comps_before_comp_table has made the objects, the record of a def whose saved file the load extracted
+ * (0.6.2 open item 91). The load files every fixture of the save under a type: the FIXTURE_MANAGER constructor
+ * 0x5a9cf0 (called at 0x82c548) calls 0x5ac3b0 at 0x5a9ffb, which works out the type with 0x48dd70 (0x5ac523),
+ * which asks 0x669ae0 (0x48deb6); build_comp_object_table runs only later (0x82c5f6). A type test that asked the
+ * objects alone gave the fixtures of the season's international competitions type 3, not 1, after every load:
+ * the squad pass 0x76b100 reads types 0 and 1 only, and their sides played with the squad they last had
+ * (Portugal fielded 10 in the Nations League in September 2076, 17 of its 27 players picked for a B
+ * international). No entry_in_game test here, unlike the load's own: the entry of a continental competition
+ * needs objects that key_nation_create_all_comps (0x82c5aa) makes after the fixtures. No answer is kept while the
+ * record table is empty (the load frees it at 0x82abea and reads it again before 0x82c548). */
+uint32_t season_comps_record_of(const SeasonCompDef *d)
+{
+    int i = def_index(d);
+    if (i < 0 || i >= MAX_DEFS) return 0;
+    if (objects[i] || objects_made) return objects[i] ? rd32(g_mem, objects[i] + 4) : 0;
+    if (!season_comps_on() || season_change_is_creating() || !rd32(g_mem, COMP_RECORDS)) return 0;
+    if (!loading_known) {
+        for (int k = 0; k < season_comp_def_count && k < MAX_DEFS; k++) {
+            const SeasonCompDef *e = def_at(k);
+            uint32_t rec = e ? season_comps_record(e->record) : 0;
+            loading_records[k] = rec && saved_in_user_folder(rec) ? rec : 0;
+        }
+        loading_known = 1;
+    }
+    return loading_records[i];
+}
+
 /* build_comp_object_table, cdecl, called by create_game (0x829640) and the load (0x82c5f6). Its one wrap is in
  * season_names.c (slices 15 and 26 both need it); it calls this before the original. At a load the
  * creators made only the original's objects (key_nation_create_all_comps 0x669180 at 0x82c5aa), so each def
@@ -498,15 +595,11 @@ void season_comps_before_comp_table(void)
             if (!d || !entry_in_game(d->entry)) continue;
             uint32_t rec = season_comps_record(d->record);
             if (!rec) continue;
-            char file[128], host[2048];
-            save_file(rec, file, sizeof file);
-            /* Only the file of the user folder, where the load extracts the save's *.tmp files: a stale file of
-             * the game folder (win_existing_file gives that form too) is not this game's. */
-            if (win_existing_file(file, host, sizeof host) && !strncmp(host, win_user_dir, strlen(win_user_dir)))
-                make(d, i, year, 1);
+            if (saved_in_user_folder(rec)) make(d, i, year, 1);
             if (rt_unwinding) return;
         }
     }
+    objects_made = 1;
 }
 
 /* ---- New records (docs/research/2026-10-18-new-comp-records.md) ----

@@ -3,8 +3,7 @@
 2002	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-13: game 5, table 50 (50)
 2002	clubs	european_cup (UEFA Champions League), row uefa-10: game 55, table 72 (72 (32 in the group stage))
 2002	clubs	fifa_confed (FIFA Confederations Cup), row int-world-22: game 0/4, table 8 (8)
-2002	clubs	oceania_nations (OFC Nations Cup), row int-continental-21: game 0, table 8 (8)
-2002	down	eng_third (Football League Third Division), row eng-41: game 1 (+0 play-off places), table 2 (2)
+2002	clubs	oceania_nations (OFC Nations Cup), row int-continental-21: game 0/4, table 8 (8)
 2002	no_row	friendly (Friendly): no table row
 2002	no_row	record_utils ('B' International): no table row
 2002	no_row	record_utils (Reserve): no table row
@@ -17,12 +16,10 @@
 2003	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-24: game 5, table 50 (50)
 2003	clubs	european_cup (UEFA Champions League), row uefa-18: game 55, table 72 (72 (32 in the group stage))
 2003	clubs	intertoto_cup (UEFA Intertoto Cup), row uefa-23: game 60, table 61 (61)
-2003	clubs	oceania_nations (OFC Nations Cup), row int-continental-32: game 0, table 6 (6)
-2003	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-30: game 50, table 51 (51 entrants)
+2003	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-30: game 44, table 51 (51 entrants)
 2003	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-31: game 0, table 39 (39 entrants)
 2003	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-29: game 24, table 34 (34 entrants)
 2003	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-32: game 5, table 12 (12 entrants)
-2003	down	eng_third (Football League Third Division), row eng-51: game 1 (+0 play-off places), table 2 (2)
 2003	idle	new_concacaf_gold_cup (CONCACAF Gold Cup), row int-continental-27: the game waits for 2005, the table holds it
 2003	name	african_nations (Africa Cup of Nations), row int-continental-29: game 'Africa Cup of Nations', table '2004 African Cup of Nations'
 2003	no_row	friendly (Friendly): no table row
@@ -40,17 +37,17 @@
 2004	clubs	asia_nations (AFC Asian Cup), row int-continental-42: game 0/4, table 16 (16)
 2004	clubs	european_cup (UEFA Champions League), row uefa-26: game 55, table 72 (72 (32 in the group stage))
 2004	clubs	fifa_confed (FIFA Confederations Cup), row int-world-46: game 0/4, table 8 (8)
-2004	clubs	goldcup (Copa América), row int-continental-44: game 4, table 12 (12)
+2004	clubs	goldcup (Copa América), row int-continental-44: game 0/4, table 12 (12)
 2004	clubs	intertoto_cup (UEFA Intertoto Cup), row uefa-31: game 60, table 61 (61)
+2004	clubs	oceania_nations (OFC Nations Cup), row int-continental-43: game 6, table 2 (2)
 2004	clubs	olympics (Football at the Summer Olympics), row int-world-47: game 4, table 16 (16)
-2004	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-42: game 50, table 30 (30)
+2004	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-42: game 44, table 30 (30)
 2004	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-43: game 0/4, table 32 (32, then 8)
 2004	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-41: game 24, table 12 (12, then 6)
 2004	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-39: game 5, table 51 (51 entrants)
-2004	down	eng_third (Football League Two), row eng-61: game 1 (+0 play-off places), table 2 (2)
-2004	idle	oceania_nations (OFC Nations Cup), row int-continental-43: the game waits for 2002, the table holds it
 2004	name	african_nations (African Cup of Nations), row int-continental-40: game 'African Cup of Nations', table 'Africa Cup of Nations'
 2004	name	new_concacaf_gold_cup (2003 CONCACAF Gold Cup), row int-continental-38: game '2003 CONCACAF Gold Cup', table 'CONCACAF Gold Cup'
+2004	name	oceania_nations (OFC Nations Cup), row int-continental-43: game 'OFC Nations Cup', table '2004 OFC Nations Cup final'
 2004	no_row	friendly (Friendly): no table row
 2004	no_row	record_utils ('B' International): no table row
 2004	no_row	record_utils (Reserve): no table row
@@ -60,6 +57,5 @@
 2004	not_held	new_concacaf_gold_cup (2003 CONCACAF Gold Cup), row int-continental-38: the game holds 2005, the table says not held
 2004	not_held	world_club_champ (FIFA Club World Championship), row club-world-59: the game holds 2005, the table says not held
 2004	not_in_game	eng-319 eng_fa_trophy 'FA Trophy' (England)
-2004	not_in_game	eng-321 new 'Conference Cup' (England)
 2004	not_in_game	eng-62 eng_conf 'Conference National' (England)
 2004	not_in_game	uefa-25 uefa_seeding 'UEFA access list and seeding' (UEFA)

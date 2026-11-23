@@ -11,12 +11,25 @@
 2012	bench	fra_lge_cup (Coupe de la Ligue), row fra-107: game 3, table 7 (7)
 2012	bench	ita_ser_a (Serie A), row ita-189: game 9, table 12 (12)
 2012	bench	world_club_champ (FIFA Club World Cup), row club-world-211: game 7, table 12 (12)
+2012	club_list	Brazilian National Third Division: 21 of 21 listed clubs that the database holds (21 listed), 35 other clubs, 56 in all; not in it: -; others: Alecrim Futebol Clube, América Football Club (RJ), América Futebol Clube (AM), Araguaína Futebol e Regatas, Associação Desportiva Confiança, Botafogo Futebol Clube (SP), Botafogo Futebol e Regatas, Brasília Futebol Clube, Brusque Futebol Clube, Camaçari Futebol Clube, Cametá Sport Club, Ceilândia Esporte Clube, Central Sport Club, Centro Esportivo Nova Esperança, Centro Sportivo Alagoano, Clube Atlético Metropolitano, Clube Náutico Marcílio Dias, Esporte Clube Flamengo, Esporte Clube Gênus Rondoniense, Esporte Clube Juventude, Ferroviário Atlético Clube, Fluminense de Feira Futebol Clube, Grêmio Esportivo Brasil, Guarany Sporting Clube, Iraty Sport Club, Londrina Esporte Clube, Mixto Esporte Clube, Náuas Esporte Clube, Paulista Futebol Clube, Sociedade Esportiva River Plate, Sociedade Esportiva Vila Aurora, Sociedade Esportiva do Gama, Sport Club Corinthians Paranaense, Vilhena Esporte Clube, Ypiranga Futebol Clube
+2012	club_list	Croatian First Division: 12 of 12 listed clubs that the database holds (12 listed), 4 other clubs, 16 in all; not in it: -; others: NK Croatia Sesvete, NK Marsonia 1909, NK Medjimurje Cakovec, NK Vrapce Zagreb
+2012	club_list	Danish First Division: 12 of 12 listed clubs that the database holds (12 listed), 4 other clubs, 16 in all; not in it: -; others: Blokhus Football Club, Boldklubben af 1893, FC Roskilde, Greve Idrætsforening
+2012	club_list	Danish Second Division: 16 of 32 listed clubs that the database holds (32 listed), 0 other clubs, 16 in all; not in it: Blokhus Football Club, Boldklubben Fremad Amager, Boldklubben Marienlyst, FC Roskilde, FC Skanderborg, Fodbold Club Sydvest 05, Herlev Idrætsforening, IK Skovbakken, Idrætsforeningen Skjold Birkerød, Kjellerup Idrætsforening, Middelfart Gymnastik & Boldklub, Nexø Boldklub Bornholm, Otterup Bold- & Idrætsklub, Ringkøbing IF, Svebølle B&I, Varde Idrætsforening; others: -
+2012	club_list	Greek National A Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: AO Kerkyras, AO Platanias; others: -
+2012	club_list	Greek National B Division: 14 of 21 listed clubs that the database holds (21 listed), 0 other clubs, 14 in all; not in it: A.E.P Iraklis 1908, A.O Kavalas, Anagennisi Giannitsa, E.S Ethnikos Gazorou Serres, GS Apollon Smyrnis, Thrasyvoulos Fylis, Vyzas FC; others: -
+2012	club_list	Italian Serie A: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Sampdoria, Torino; others: -
+2012	club_list	Italian Serie B: 20 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 20 in all; not in it: Pro Vercelli, Virtus Lanciano; others: -
+2012	club_list	Italian Serie C1/A: 17 of 17 listed clubs that the database holds (17 listed), 1 other clubs, 18 in all; not in it: -; others: Pro Vercelli
+2012	club_list	Italian Serie C1/B: 16 of 16 listed clubs that the database holds (16 listed), 2 other clubs, 18 in all; not in it: -; others: Sampdoria, Virtus Lanciano
+2012	club_list	Japanese J-League 1: 16 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 16 in all; not in it: Oita Trinita, Shonan Bellmare; others: -
+2012	club_list	Japanese J-League 2: 12 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 12 in all; not in it: Avispa Fukuoka, Ehime FC, FC Gifu, Gainere Tottori, Kataller Toyama, Matsumoto Yamaga, Mito HollyHock, New Wave Kitakyushu, Roasso Kumamoto, Thespa Kusatsu; others: -
+2012	club_list	Northern Irish League First Division: 10 of 13 listed clubs that the database holds (13 listed), 0 other clubs, 10 in all; not in it: Coagh United, Larne, Tobermore United; others: -
+2012	club_list	Northern Irish League Premier Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Ballinamallard United, Lisburn Distillery; others: -
+2012	club_list	Norwegian Premier Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: Sandnes Ulf SK, Sarpsborg 08; others: -
 2012	clubs	african_nations (Africa Cup of Nations), row int-continental-128: game 0, table 16 (16)
 2012	clubs	arg_second (Primera B Nacional), row arg-usa-39: game 25, table 20 (20)
 2012	clubs	asia_club_champ (AFC Champions League), row club-world-222: game 16, table 32 (32)
-2012	clubs	bel_first (Belgian Pro League), row hol-bel-151: game 18, table 16 (16)
 2012	clubs	bel_third (Belgian Third Division), row hol-bel-153: game 16, table 37 (37 (A 18, B 19))
-2012	clubs	bra_champ_cup (Copa dos Campeões), row bra-201: game 3, table 0 (0)
 2012	clubs	bra_cup (Copa do Brasil), row bra-147: game 71, table 87 (87)
 2012	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-93: game 7, table 21 (21)
 2012	clubs	bra_reg_bahia (Campeonato Baiano), row bra-444: game 10, table 12 (12)
@@ -27,7 +40,6 @@
 2012	clubs	bra_reg_sp (Campeonato Paulista Série A1), row bra-714: game 16, table 20 (20)
 2012	clubs	conmebol_liber (Copa Libertadores), row club-world-213: game 4, table 38 (38)
 2012	clubs	cro_a1 (Prva HNL), row gre-pol-cro-336: game 16, table 12 (12)
-2012	clubs	den_first (Danish 1st Division), row den-swe-69: game 16, table 12 (12)
 2012	clubs	den_second (Danish 2nd Divisions), row den-swe-70: game 16, table 32 (32)
 2012	clubs	fifa_confed (FIFA Confederations Cup), row int-world-142: game 0, table 8 (8)
 2012	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-12: game 4, table 62 (62)
@@ -53,7 +65,7 @@
 2012	clubs	nor_prm (Tippeligaen), row nor-fin-112: game 14, table 16 (16)
 2012	clubs	olympics (Football at the Summer Olympics), row int-world-143: game 4, table 16 (16)
 2012	clubs	uefa_cup (UEFA Europa League), row uefa-93: game 161, table 193 (193 (161 entered + 32 from the Champions League); 48 in the group stage (+8 Cham)
-2012	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-138: game 50, table 40 (40)
+2012	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-138: game 44, table 40 (40)
 2012	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-139: game 0, table 10 (10)
 2012	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-137: game 24, table 12 (12, then 6)
 2012	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-135: game 5, table 53 (53 entrants)
@@ -68,7 +80,6 @@
 2012	down	cro_a2a (Druga HNL), row gre-pol-cro-363: game 2 (+0 play-off places), table unknown (unknown)
 2012	down	cro_a2b (Druga HNL South), row gre-pol-cro-390: game 2 (+0 play-off places), table na (n/a)
 2012	down	den_first (Danish 1st Division), row den-swe-69: game 3 (+0 play-off places), table 2 (2)
-2012	down	eng_third (Football League Two), row eng-141: game 1 (+0 play-off places), table 2 (2)
 2012	down	fra_third (Championnat National), row fra-103: game 4 (+0 play-off places), table 6 (6)
 2012	down	ger_second (2. Bundesliga), row ger-145: game 4 (+0 play-off places), table 2 (2)
 2012	down	ita_ser_b (Serie B), row ita-190: game 4 (+0 play-off places), table 3 (3 direct + play-out 4th-last v 5th-last (two legs; not held if gap over 4 points)
@@ -76,15 +87,19 @@
 2012	down	ita_ser_c1b (Lega Pro Prima Divisione girone B), row ita-192: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers)
 2012	down	jap_j1 (J.League Division 1), row aus-jap-kor-201: game 2 (+0 play-off places), table 3 (3)
 2012	down	nir_first (IFA Championship 1), row wal-nir-irl-286: game 0 (+0 play-off places), table 1 (1 (pos 13))
+2012	meetings	arg_second (Primera B Nacional), row arg-usa-39: game 1, table 2
+2012	meetings	bra_nat_first (Campeonato Brasileiro Série A), row bra-39: game 1, table 2
+2012	meetings	bra_nat_second (Campeonato Brasileiro Série B), row bra-66: game 1, table 2
+2012	meetings	cro_a1 (Prva HNL), row gre-pol-cro-336: game 2, table 3
+2012	meetings	den_first (Danish 1st Division), row den-swe-69: game 2, table 3
+2012	meetings	jap_j2 (J.League Division 2), row aus-jap-kor-228: game 4, table 2
+2012	meetings	nir_first (IFA Championship 1), row wal-nir-irl-286: game 4, table 2
+2012	meetings	nir_prm (IFA Premiership), row wal-nir-irl-285: game 4, table 3
 2012	no_row	friendly (Friendly): no table row
 2012	no_row	record_utils ('B' International): no table row
 2012	no_row	record_utils (Reserve): no table row
 2012	no_row	record_utils (Under 21 International): no table row
-2012	not_held	bra_champ_cup (Copa dos Campeões), row bra-201: the game holds 2012, the table says not held
 2012	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-390: the game holds 2012, the table says not held
-2012	not_held	ger_lge_cup (DFL-Ligapokal), row ger-154: the game holds 2012, the table says not held
-2012	not_held	gre_super (Greek Super Cup), row gre-pol-cro-93: the game holds 2012, the table says not held
-2012	not_held	nir_charity (Charity Shield), row wal-nir-irl-290: the game holds 2012, the table says not held
 2012	not_in_game	arg-usa-201 argentina_rules 'Argentina' (Argentina)
 2012	not_in_game	arg-usa-66 new 'Copa Argentina' (Argentina)
 2012	not_in_game	arg-usa-93 new 'Supercopa Argentina' (Argentina)
@@ -117,6 +132,21 @@
 2012	playoffs	ita_ser_c1b (Lega Pro Prima Divisione girone B), row ita-192: game 4 up and 4 down play-off places, table 4 and 0 ('2nd to 5th: semi-finals and final over two legs, winner promoted to Serie B')
 2012	playoffs	jap_j2 (J.League Division 2), row aus-jap-kor-228: game 0 up and 0 down play-off places, table 4 and 0 ('3rd to 6th: single-match semi-finals and final at the higher-placed club; a draw')
 2012	playoffs	nor_first (Adeccoligaen), row nor-fin-113: game 1 up and 0 down play-off places, table 4 and 0 ('3rd-6th single-leg knockout; winner v Tippeligaen 14th, two legs')
+2012	rounds	arg_second (Primera B Nacional), row arg-usa-39: game 25, table 38 (2 meetings, zones -, extra 0)
+2012	rounds	bra_nat_first (Campeonato Brasileiro Série A), row bra-39: game 19, table 38 (2 meetings, zones -, extra 0)
+2012	rounds	bra_nat_second (Campeonato Brasileiro Série B), row bra-66: game 19, table 38 (2 meetings, zones -, extra 0)
+2012	rounds	cro_a1 (Prva HNL), row gre-pol-cro-336: game 30, table 33 (3 meetings, zones -, extra 0)
+2012	rounds	den_first (Danish 1st Division), row den-swe-69: game 30, table 33 (3 meetings, zones -, extra 0)
+2012	rounds	gre_prm (Super League Greece), row gre-pol-cro-39: game 26, table 30 (2 meetings, zones -, extra 0)
+2012	rounds	gre_second (Football League), row gre-pol-cro-66: game 26, table 42 (2 meetings, zones -, extra 0)
+2012	rounds	ita_ser_a (Serie A), row ita-189: game 34, table 38 (2 meetings, zones -, extra 0)
+2012	rounds	ita_ser_b (Serie B), row ita-190: game 38, table 42 (2 meetings, zones -, extra 0)
+2012	rounds	ita_ser_c1b (Lega Pro Prima Divisione girone B), row ita-192: game 34, table 30 (2 meetings, zones -, extra 0)
+2012	rounds	jap_j1 (J.League Division 1), row aus-jap-kor-201: game 30, table 34 (2 meetings, zones -, extra 0)
+2012	rounds	jap_j2 (J.League Division 2), row aus-jap-kor-228: game 44, table 42 (2 meetings, zones -, extra 0)
+2012	rounds	nir_first (IFA Championship 1), row wal-nir-irl-286: game 36, table 26 (2 meetings, zones -, extra 0)
+2012	rounds	nir_prm (IFA Premiership), row wal-nir-irl-285: game 36, table 33 (3 meetings, zones -, extra 0)
+2012	rounds	nor_prm (Tippeligaen), row nor-fin-112: game 26, table 30 (2 meetings, zones -, extra 0)
 2012	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-524: game 3, table 7 (7)
 2012	up	arg_second (Primera B Nacional), row arg-usa-39: game 1 (+0 play-off places), table 3 (3 (champion, runner-up, 3rd))
 2012	up	aus_nsl (A-League), row aus-jap-kor-35: game 6 (+0 play-off places), table na (n/a)

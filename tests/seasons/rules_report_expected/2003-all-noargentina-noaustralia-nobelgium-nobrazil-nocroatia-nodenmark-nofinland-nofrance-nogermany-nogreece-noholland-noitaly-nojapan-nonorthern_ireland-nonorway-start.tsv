@@ -1,5 +1,13 @@
 # Differences between the rules report and the rules table that the check accepts. Made by
 # tests/seasons/rules_report_check.py --update-expected. Columns: season, kind, text.
+2003	club_list	American Major League: 10 of 10 listed clubs that the database holds (10 listed), 2 other clubs, 12 in all; not in it: -; others: Miami Fusion FC, Tampa Bay Mutiny
+2003	club_list	Irish First Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Dundalk F.C., Monaghan United; others: -
+2003	club_list	Irish Premier Division: 10 of 10 listed clubs that the database holds (10 listed), 2 other clubs, 12 in all; not in it: -; others: Dundalk F.C., Monaghan United
+2003	club_list	Korean League: 10 of 13 listed clubs that the database holds (13 listed), 0 other clubs, 10 in all; not in it: Daegu FC, Incheon United, Sangmoo; others: -
+2003	club_list	Polish First Division: 14 of 14 listed clubs that the database holds (14 listed), 2 other clubs, 16 in all; not in it: -; others: Slask Wroclaw, Stomil Olsztyn
+2003	club_list	Russian First Division: 18 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 18 in all; not in it: Baltika Kaliningrad, Metallurg-Zapsib Novokuznetsk, Svetotekhnika Saransk, Uralan Elista; others: -
+2003	club_list	Turkish 2. Division Category A: 18 of 18 listed clubs that the database holds (18 listed), 2 other clubs, 20 in all; not in it: -; others: Aydinspor, Batman Petrolspor
+2003	club_list	Welsh Premier Division: 17 of 17 listed clubs that the database holds (17 listed), 1 other clubs, 18 in all; not in it: -; others: Llandudno
 2003	clubs	african_nations (African Cup of Nations), row int-continental-29: game 0, table 16 (16)
 2003	clubs	asia_club_champ (AFC Champions League), row club-world-51: game 16, table 28 (28)
 2003	clubs	euro_champ (UEFA European Championship), row int-continental-23: game 0, table 16 (16)
@@ -12,23 +20,23 @@
 2003	clubs	oceania_nations (OFC Nations Cup), row int-continental-32: game 0, table 6 (6)
 2003	clubs	pol_first (I liga), row gre-pol-cro-192: game 8, table 14 (14)
 2003	clubs	por_cup (Taça de Portugal), row por-24: game 164, table 228 (228)
-2003	clubs	rus_first (Russian First Division), row rus-tur-30: game 18, table 22 (22)
 2003	clubs	spa_cup (Copa del Rey), row spa-23: game 83, table 81 (81)
-2003	clubs	tur_second (Second League Category A), row rus-tur-192: game 20, table 18 (18)
 2003	clubs	tur_second_b (Second League Category B), row rus-tur-219: game 10, table 51 (51)
 2003	clubs	usa_mls (Major League Soccer), row arg-usa-219: game 4, table 10 (10)
 2003	clubs	usa_open_cup (Lamar Hunt U.S. Open Cup), row arg-usa-273: game 32, table 40 (40)
-2003	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-30: game 50, table 51 (51 entrants)
+2003	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-30: game 44, table 51 (51 entrants)
 2003	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-31: game 0, table 39 (39 entrants)
 2003	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-29: game 24, table 34 (34 entrants)
 2003	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-32: game 5, table 12 (12 entrants)
 2003	clubs	wel_first (Welsh Premier League), row wal-nir-irl-54: game 18, table 17 (17)
 2003	clubs	wel_prm_cup (FAW Premier Cup), row wal-nir-irl-59: game 4, table 12 (12)
-2003	down	eng_third (Football League Third Division), row eng-51: game 1 (+0 play-off places), table 2 (2)
 2003	down	pol_first (I liga), row gre-pol-cro-192: game 0 (+0 play-off places), table 2 (2 (13th-14th))
 2003	down	rus_first (Russian First Division), row rus-tur-30: game 3 (+0 play-off places), table 5 (5)
 2003	down	tur_second_b (Second League Category B), row rus-tur-219: game 0 (+0 play-off places), table 6 (6 (16th and 17th of each of three groups))
 2003	down	wel_first (Welsh Premier League), row wal-nir-irl-54: game 0 (+0 play-off places), table 1 (1 (pos 17))
+2003	meetings	ire_first (League of Ireland First Division), row wal-nir-irl-67: game 4, table 3
+2003	meetings	ire_prm (League of Ireland Premier Division), row wal-nir-irl-66: game 3, table 4
+2003	meetings	kor_league (K League), row aus-jap-kor-327: game 3, table 2
 2003	no_row	friendly (Friendly): no table row
 2003	no_row	record_utils ('B' International): no table row
 2003	no_row	record_utils (Reserve): no table row
@@ -36,12 +44,7 @@
 2003	no_row	spa_lower (Spanish Lower Division): no table row
 2003	not_held	asia_nations (AFC Asian Cup), row int-continental-31: the game holds 2004, the table says not held
 2003	not_held	goldcup (Copa América), row int-continental-33: the game holds 2004, the table says not held
-2003	not_held	ire_leinster_cup (Leinster Senior Cup), row wal-nir-irl-71: the game holds 2003, the table says not held
-2003	not_held	ire_pres_cup (President's Cup), row wal-nir-irl-73: the game holds 2003, the table says not held
-2003	not_held	ire_super_cup (FAI Super Cup), row wal-nir-irl-74: the game holds 2003, the table says not held
 2003	not_held	olympics (Football at the Summer Olympics), row int-world-35: the game holds 2004, the table says not held
-2003	not_held	pol_lge_cup (Polish League Cup), row gre-pol-cro-219: the game holds 2003, the table says not held
-2003	not_held	pol_super (Polish Super Cup), row gre-pol-cro-273: the game holds 2003, the table says not held
 2003	not_held	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-27: the game holds 2004, the table says not held
 2003	not_in_game	arg-usa-354 usa_rules 'United States' (United States)
 2003	not_in_game	aus-jap-kor-300 korea_rules 'n/a' (South Korea)
@@ -53,7 +56,6 @@
 2003	not_in_game	eng-52 eng_conf 'Football Conference' (England)
 2003	not_in_game	int-continental-27 new '2003 CONCACAF Gold Cup' (CONCACAF)
 2003	not_in_game	por-21 por_second_b 'Segunda Divisão B' (Portugal)
-2003	not_in_game	rus-tur-84 new 'Russian Super Cup' (Russia)
 2003	not_in_game	spa-17 spain_rules 'n/a' (Spain)
 2003	not_in_game	spa-20 spa_second_b 'Segunda División B' (Spain)
 2003	not_in_game	uefa-17 uefa_seeding 'UEFA access list and seeding' (UEFA)
@@ -62,6 +64,9 @@
 2003	playoffs	pol_first (I liga), row gre-pol-cro-192: game 0 up and 0 down play-off places, table 0 and 1 ('12th: relegation play-off')
 2003	playoffs	pol_second (II liga), row gre-pol-cro-246: game 2 up and 0 down play-off places, table 1 and 4 ('3rd: promotion play-off; 11th-14th: relegation play-offs')
 2003	playoffs	tur_second_b (Second League Category B), row rus-tur-219: game 2 up and 0 down play-off places, table 0 and 0 ('none')
+2003	rounds	ire_first (League of Ireland First Division), row wal-nir-irl-67: game 36, table 33 (3 meetings, zones -, extra 0)
+2003	rounds	ire_prm (League of Ireland Premier Division), row wal-nir-irl-66: game 33, table 36 (4 meetings, zones -, extra 0)
+2003	rounds	pol_first (I liga), row gre-pol-cro-192: game 14, table 26 (2 meetings, zones -, extra 0)
 2003	up	pol_first (I liga), row gre-pol-cro-192: game 4 (+0 play-off places), table na (n/a)
 2003	up	tur_second_b (Second League Category B), row rus-tur-219: game 0 (+2 play-off places), table 3 (3)
 2003	up	usa_mls (Major League Soccer), row arg-usa-219: game 1 (+0 play-off places), table na (n/a (closed league))

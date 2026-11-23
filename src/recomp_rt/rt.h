@@ -84,12 +84,16 @@ enum { K_ADD = 0, K_SUB = 1, K_INC = 2, K_DEC = 3, K_RES = 4, K_RAW = 5 };
 #define SZ1 0x10u
 #define SZ2 0x20u
 #define SZ4 0x40u
+/* The flag helpers are always inlined: at -O1 the compiler kept them as calls in each file of generated code,
+ * 15 to 20 % of a game day in the profile of 30 October 2026 (0.6.2 slice 14). Inlined, the kind
+ * of flag folds to one comparison where the generated code knows it. The results are the same. */
+#define RT_FLAG_FN static inline __attribute__((always_inline))
 #define SETF(o, A, B, R, C) (F.op = (o), F.a = (A), F.b = (B), F.r = (R), F.c = (C))
 
-static inline uint32_t f_mask(uint32_t op) { return op & SZ1 ? 0xffu : op & SZ2 ? 0xffffu : 0xffffffffu; }
-static inline uint32_t f_msb(uint32_t op) { return op & SZ1 ? 0x80u : op & SZ2 ? 0x8000u : 0x80000000u; }
+RT_FLAG_FN uint32_t f_mask(uint32_t op) { return op & SZ1 ? 0xffu : op & SZ2 ? 0xffffu : 0xffffffffu; }
+RT_FLAG_FN uint32_t f_msb(uint32_t op) { return op & SZ1 ? 0x80u : op & SZ2 ? 0x8000u : 0x80000000u; }
 
-static inline uint32_t f_cf(Flags f)
+RT_FLAG_FN uint32_t f_cf(Flags f)
 {
     uint32_t m = f_mask(f.op);
     switch (f.op & 15) {
@@ -100,10 +104,10 @@ static inline uint32_t f_cf(Flags f)
     default: return f.r & 1;
     }
 }
-static inline uint32_t f_zf(Flags f) { return (f.op & 15) == K_RAW ? (f.r >> 6) & 1 : (f.r & f_mask(f.op)) == 0; }
-static inline uint32_t f_sf(Flags f) { return (f.op & 15) == K_RAW ? (f.r >> 7) & 1 : (f.r & f_msb(f.op)) != 0; }
-static inline uint32_t f_pf(Flags f) { return (f.op & 15) == K_RAW ? (f.r >> 2) & 1 : !__builtin_parity(f.r & 0xffu); }
-static inline uint32_t f_of(Flags f)
+RT_FLAG_FN uint32_t f_zf(Flags f) { return (f.op & 15) == K_RAW ? (f.r >> 6) & 1 : (f.r & f_mask(f.op)) == 0; }
+RT_FLAG_FN uint32_t f_sf(Flags f) { return (f.op & 15) == K_RAW ? (f.r >> 7) & 1 : (f.r & f_msb(f.op)) != 0; }
+RT_FLAG_FN uint32_t f_pf(Flags f) { return (f.op & 15) == K_RAW ? (f.r >> 2) & 1 : !__builtin_parity(f.r & 0xffu); }
+RT_FLAG_FN uint32_t f_of(Flags f)
 {
     uint32_t s = f_msb(f.op), m = f_mask(f.op);
     switch (f.op & 15) {
@@ -115,7 +119,7 @@ static inline uint32_t f_of(Flags f)
     default: return (f.r >> 11) & 1;
     }
 }
-static inline uint32_t f_af(Flags f)
+RT_FLAG_FN uint32_t f_af(Flags f)
 {
     switch (f.op & 15) {
     case K_ADD: case K_SUB: case K_INC: case K_DEC: return ((f.a ^ f.b ^ f.r) >> 4) & 1;
@@ -123,37 +127,37 @@ static inline uint32_t f_af(Flags f)
     default: return 0;
     }
 }
-static inline uint32_t f_flags(Flags f)
+RT_FLAG_FN uint32_t f_flags(Flags f)
 {
     return f_cf(f) | 2u | f_pf(f) << 2 | f_af(f) << 4 | f_zf(f) << 6 | f_sf(f) << 7 | f_of(f) << 11;
 }
 
 /* Conditions. The common cases fold to one comparison when the flag kind is known. */
-static inline int cc_o(Flags f) { return f_of(f); }
-static inline int cc_b(Flags f)
+RT_FLAG_FN int cc_o(Flags f) { return f_of(f); }
+RT_FLAG_FN int cc_b(Flags f)
 {
     if ((f.op & 15) == K_SUB && f.c == 0) return (f.a & f_mask(f.op)) < (f.b & f_mask(f.op));
     return f_cf(f);
 }
-static inline int cc_e(Flags f) { return f_zf(f); }
-static inline int cc_be(Flags f)
+RT_FLAG_FN int cc_e(Flags f) { return f_zf(f); }
+RT_FLAG_FN int cc_be(Flags f)
 {
     if ((f.op & 15) == K_SUB && f.c == 0) return (f.a & f_mask(f.op)) <= (f.b & f_mask(f.op));
     return f_cf(f) | f_zf(f);
 }
-static inline int cc_s(Flags f) { return f_sf(f); }
-static inline int cc_p(Flags f) { return f_pf(f); }
-static inline int32_t f_sext(Flags f, uint32_t v)
+RT_FLAG_FN int cc_s(Flags f) { return f_sf(f); }
+RT_FLAG_FN int cc_p(Flags f) { return f_pf(f); }
+RT_FLAG_FN int32_t f_sext(Flags f, uint32_t v)
 {
     return f.op & SZ1 ? (int8_t)v : f.op & SZ2 ? (int16_t)v : (int32_t)v;
 }
-static inline int cc_l(Flags f)
+RT_FLAG_FN int cc_l(Flags f)
 {
     if ((f.op & 15) == K_SUB && f.c == 0) return f_sext(f, f.a) < f_sext(f, f.b);
     if ((f.op & 15) == K_RES) return f_sf(f) != ((f.c >> 1) & 1);
     return f_sf(f) != f_of(f);
 }
-static inline int cc_le(Flags f)
+RT_FLAG_FN int cc_le(Flags f)
 {
     if ((f.op & 15) == K_SUB && f.c == 0) return f_sext(f, f.a) <= f_sext(f, f.b);
     return f_zf(f) | (f_sf(f) != f_of(f));
@@ -312,25 +316,163 @@ extern uint32_t rt_screen_w, rt_screen_h;
 /* The start year of the game (0.6.0 slice 11, src/recomp_rt/win/season.c): 2001 in the base game. The year
  * sites of tools/recomp/seasons.py read it in place of the constants 2001, 2002 and 2003. */
 extern uint32_t rt_season_year;
+uint32_t rt_euro_cfg_year(void);       /* win/season_uefa_seeding.c: 0x9041ec, the season of euro.cfg */
 
 /* The league load's row arrays (win/league_load.c, tools/recomp/league_load.py at 0x68c898): 0 when the read
  * of a row's result array failed only because the array has 0 bytes (a league of one club), else 1. */
 uint32_t rt_league_row_read_failed(uint32_t league);
+/* Squad numbers 1 to 99 (win/squad_numbers.c, tools/recomp/squad_numbers.py). */
+uint32_t rt_squad_number_top(void);
+void rt_squad_assign_begin(void);
+uint32_t rt_squad_assign_taken(uint32_t esp, uint32_t number);
+uint32_t rt_squad_assign_slot(uint32_t esp, uint32_t number);
+void rt_squad_assign_keep(uint32_t slot, uint32_t ebx, uint32_t player);
+uint32_t rt_squad_assign_holder(uint32_t slot, int32_t n);
+void rt_squad_allocate_begin(void);
+uint32_t rt_squad_allocate_mark(uint32_t number);
+uint32_t rt_squad_allocate_high(uint32_t club);
+uint32_t rt_squad_carried(uint32_t number);
+uint32_t rt_squad_screen_strips(uint32_t club, uint32_t list);
+uint32_t rt_squad_screen_list_top(void);
+uint32_t rt_squad_screen_list_bottom(void);
 /* The ban release's nation index (win/discipline_ban.c, tools/recomp/discipline_ban.py at 0x556dcf): the entry
  * of the staff id under any nation, 0 for none, or 1 when the fix is off (the original's box). */
 uint32_t rt_discipline_ban_entry(uint32_t discipline, uint32_t staff);
+/* 1 when the fix of group 0 (captain), 1 (players), 2 (daily), 3 (stats), 4 (loans), 5 (squads), 6 (officials), 7
+ * (training), 8 (contracts), 9 (schedules) or 10 (fitness) of the reads that depend on where memory lies acts (open
+ * item 138b; win/layout_reads.c, tools/recomp/layout_reads.py). RECOMP_LAYOUT_FIXES=keep... turns it off. */
+uint32_t rt_layout_fix(uint32_t group);
+/* 1 when a senior national team gets a manager vacancy that the original refuses (0.6.2 slice 11, Q23; win/original_faults.c,
+ * tools/recomp/original_faults.py at 0x69bb02, 0x7ab158, 0x68fe65, 0x69d0a5, 0x69b6d8: site 0 to 4). */
+uint32_t rt_national_vacancy(uint32_t club, uint32_t site);
+/* 1 when the Olympic pick leaves a player in an AI senior squad whose window runs (open item 102; win/original_faults.c,
+ * tools/recomp/original_faults.py at 0x76ce1c). */
+uint32_t rt_olympic_keeps_senior(uint32_t player, uint32_t nation, uint32_t slot, uint32_t fixture);
+/* 1 when the Irish Super Cup's last loop must skip a club already in its table (open item 127; win/original_faults.c,
+ * tools/recomp/original_faults.py at 0x63b2ae). */
+uint32_t rt_ire_super_has(uint32_t cup, uint32_t club, uint32_t rows);
+/* Item 127: forget the game year that the Irish Super Cup restart last saw (a load or a new game). */
+void rt_ire_super_forget(void);
+/* Item 166: free the pot 1 slots of the 2002 World Cup that hold 0xff before its draw (win/original_faults.c,
+ * from the draw wrap of win/season_wc48.c). */
+void rt_wc2002_pots(uint32_t cup);
+/* AusNsl::start_new_season frees the stages and sets the stage index to -1 (open item 128; win/original_faults.c,
+ * tools/recomp/original_faults.py at 0x411e1c). */
+void rt_aus_nsl_new_season(uint32_t self);
+/* The holiday settings "Reject all offers" and "below asking price" (open item 132; win/original_faults.c,
+ * tools/recomp/original_faults.py at 0x84b02f, 0x84af77 and 0x8c8264). */
+uint32_t rt_holiday_predict(uint32_t club, uint32_t contract, uint32_t player);
+uint32_t rt_holiday_refuses_loan(uint32_t club);
+uint32_t rt_holiday_below_asking(uint32_t option, uint32_t slot);
+uint32_t rt_callup_released(uint32_t slot);
+/* Group club_regulars (open item 160; win/original_faults.c): the marks at 0x777704 and 0x777729 and the new pick of a
+ * kept squad at 0x76bba8 and 0x76be1b, and of a kept B squad (0x76bc76, 0x76bec7) or under-21 squad (0x76bd34,
+ * 0x76bf85) through rt_squad_kept_at with the window end offset of that squad (open item 299). keep:club_regulars
+ * turns off all of them. */
+uint32_t rt_callup_mark_all(void);
+/* Group callup_counts (open item 300; win/original_faults.c): record_club_call_ups 0x7771c0 also writes the call-up
+ * count of the club that sorts last (0x777426, 0x777401). */
+uint32_t rt_callup_count_last(uint32_t club);
+uint32_t rt_squad_kept(uint32_t nt, uint32_t side, uint32_t record, uint32_t fixture);
+uint32_t rt_squad_kept_at(uint32_t nt, uint32_t side, uint32_t record, uint32_t fixture, uint32_t window);
+void rt_link_marks(uint32_t nt, uint32_t fixture, uint32_t on);
+/* Open item 187 (win/original_faults.c, tools/recomp/original_faults.py at 0x4cc03d): the move of a one-contract
+ * player to the linked side sets his contract's placement bit and the move back clears it, as the other moves do.
+ * rt_squad_move_test: RECOMP_SQUAD_MOVE_TEST=1 at the first start report (season_report.c). */
+/* Issue 132 (win/original_faults.c): a crash site of the original was reached. One stderr line per site and run,
+ * "recomp: crash site <addr> reached", so that the run set's logs show whether a site can happen in the port. */
+void rt_crash_site(uint32_t site);
+void rt_squad_move_set(uint32_t manager, uint32_t staff, int down);
+void rt_squad_move_test(void);
+/* Test runs at the first start report (season_report.c): RECOMP_SQUAD_LOAN_TEST=1, a human move of a loanee of a linked
+ * pair (issue 159, win/original_faults.c); RECOMP_COMP_MENU_TEST=1, the competition menu of each history screen (issue
+ * 163, win/screen_sweep.c). */
+void rt_squad_loan_test(void);
+void rt_club_key_twins(uint32_t old_row, uint32_t new_row, uint32_t hit);
+void rt_club_key_test(void);                    /* RECOMP_CLUB_KEY_TEST=1, open item 295 (win/original_faults.c) */
+void rt_comp_menu_test(void);
+/* Money above 2,147,483,647 (0.6.2 slice 11, Q24; win/original_faults.c, tools/recomp/original_faults.py). */
+uint32_t rt_budget_hi(uint32_t lo, uint32_t hi);          /* get_transfer_budget: the high word in place of cdq */
+uint32_t rt_budget_floor(uint32_t finance, uint32_t less); /* the balance less 10m or 15m (0x599135, 0x599185) */
+uint32_t rt_budget_floor_low(uint32_t r);
+uint32_t rt_budget_floor_high(uint32_t lo);
+int64_t rt_budget_floor_wide(uint32_t r);
+void rt_cash_wide(uint32_t cash, uint32_t lo, uint32_t hi, uint32_t reads); /* a 64-bit amount put into a Cash */
+void rt_cash_wide_end(void);                                  /* a two-read hand-over ends (0x4639ee, 0x463a6e, 0x463b7a) */
+uint32_t rt_cash_wide_clamped(uint32_t cash, uint32_t lo, uint32_t hi, uint32_t reads); /* bid screen 0x8ea2c0 */
+void rt_news_wide(uint32_t item, uint32_t club, uint32_t value);  /* news slot 2 of a budget: slots 8 and 9 */
+void rt_news_read(uint32_t item, uint32_t value);                 /* a text writer reads slot 2 */
+void rt_cash_news(uint32_t cash, uint32_t value);                 /* ... and puts it into a Cash */
+int64_t rt_cash_amount(uint32_t cash);                       /* the amount that 0x43f460 reads from a Cash */
+void rt_max_wage_high(uint32_t edx, uint32_t eax);  /* get_max_wage 0x5968e8: the product of 1.3 x the balance */
+uint32_t rt_max_wage_sum(uint32_t term, uint32_t lo); /* get_max_wage 0x597019 */
 /* The rule-set load's Oceania body (win/season_intl.c, tools/recomp/discipline_ban.py at 0x55deb6): 1 when a
  * season game moved a selected Australia to Asia, so its saves hold the body. */
 uint32_t rt_discipline_oceania_body(void);
+/* The Oceania entry's creator at a load (win/season_intl.c, tools/recomp/oceania_entry.py at 0x831f84): 1 when a season
+ * game moved a selected Australia to Asia, so its saves hold the OFC Champions League. */
+uint32_t rt_oceania_entry_kept(void);
+/* The Asian entry's creator at a load (the same files, at 0x831c75): 1 in that game when no Asian nation but Australia
+ * is selected, so the load makes no Asian object, as the new game did not. */
+uint32_t rt_asia_entry_left_out(uint32_t continent);
 /* The ruling body's held ban (win/discipline_ban.c, tools/recomp/discipline_ban.py at 0x7e833c): 1 goes on without
  * the box ruling_body..cpp 661, 0 when the fix is off. */
 uint32_t rt_ruling_body_held(uint32_t body, uint32_t staff);
 /* The loan's ban hold and restore (win/season_new_cups.c, tools/recomp/discipline_ban.py at 0x55647d, 0x55671e): 1
  * when a domestic body of one nation applies at a club of the other through the All-Ireland cup. */
 uint32_t rt_ban_nation_applies(uint32_t club, uint32_t body);
+/* International caps above 255 (0.6.2 slice 12, win/caps_wide_game.c, tools/recomp/caps_wide.py): the caps byte
+ * after one more cap at 0x76b8ce (it stops at 255), and the full caps of a staff record for the screens, the sorts
+ * and the most caps record. */
+uint32_t rt_caps_add(uint32_t staff, uint32_t byte);
+uint32_t rt_caps_full(uint32_t staff);
+uint32_t rt_caps_word(uint32_t staff);       /* the same, at most 32767: the most caps record word */
+/* A weather postponement keeps the match day's place in its fixture list (0.6.2 item 84, win/match_day_place.c,
+ * tools/recomp/match_day.py at 0x6b3d2d and 0x6b3d76). */
+void rt_match_day_keep_place(uint32_t list);
+void rt_match_day_set_place(uint32_t list);
+/* Test switch RECOMP_TEST_MARKET_WEEKLY (open item 193, win/market_weekly.c, tools/recomp/market_weekly.py at
+ * 0x5cdc4e): the Enable Computer Bids flag that the day loop reads, 0 on days that are not Mondays when it is on. */
+uint32_t rt_market_bids_flag(uint32_t flag);
+/* The dates of a season database's player_setup.cfg (open item 229, win/player_setup.c, tools/recomp/player_setup.py
+ * in player_setup_apply_line 0x7a3a10): a year of the file (low 16 bits) moved by the rule of the database's contract
+ * ends in a season game; the high bits stay. */
+uint32_t rt_player_setup_year(uint32_t value);
+/* International goals above 255 (0.6.2 item 66): the goals byte after the goals of a match at 0x76b8d6, and the full
+ * goals of a staff record for the screens. */
+uint32_t rt_goals_add(uint32_t staff, uint32_t byte, uint32_t goals);
+uint32_t rt_goals_full(uint32_t staff);
 /* The club count of a league in a season game (0.6.0 slice 18, src/recomp_rt/win/season_sizes.c): the
  * patched stores of tools/recomp/league_sizes.py in create_table read it in place of the class's constant. */
 uint32_t rt_league_clubs(uint32_t obj, uint32_t original);
+/* The bytes of the table that create_table of a grown class allocates (season_sizes.h, issue 106). */
+uint32_t rt_league_table_bytes(uint32_t obj, uint32_t original);
+/* The matches that League::check_complete 0x689ad0 wants of every row (0x689b47), the original's +0xa7 except in a
+ * league whose sections of a split play different matches (0.7.2 slice 7, win/season_split.c). */
+uint32_t rt_league_played_target(uint32_t obj, uint32_t original);
+/* 1 when the sort of a split league (0x682b0f) must keep a row's place after match N (win/season_split.c). */
+int rt_league_keep_split_place(uint32_t obj, uint32_t played);
+/* The periods of the Eerste Divisie and the Belgian Second Division at the rounds of the season (0.7.2 slice 10, D6,
+ * win/season_sizes_periods.c): the round where a period begins (HolFirst 0x5f65b0, BelSecond 0x420110) and the matches
+ * of a period stage (HolFirst 0x5f6ad0, BelSecond 0x4204d0). */
+uint32_t rt_league_period_bound(uint32_t obj, uint32_t original);
+uint32_t rt_league_period_length(uint32_t obj, uint32_t period, uint32_t original);
+/* The byte offset of the Second Division row that BelThird's promotion play-off reads (0x423a80): the count less 3
+ * (0.7.2 slice 10, win/season_sizes_bel.c). */
+uint32_t rt_bel_third_row(uint32_t third, uint32_t original);
+/* First Division B with the row's two periods (gap 33, win/season_sizes_periods.c): the stage of the play-off
+ * (0x42021c) and its clubs (0x42028e, 0x42036b, 0x420412). */
+uint32_t rt_bel_playoff_stage(uint32_t obj, uint32_t original);
+uint32_t rt_bel_playoff_clubs(uint32_t obj, uint32_t original);
+uint32_t rt_hol_stage_room(uint32_t original);
+uint32_t rt_league_stage_bytes(uint32_t obj, uint32_t original);  /* League::load's stage array (0x688e4b) */
+uint32_t rt_period_handler(void);  /* the object of HolFirst 0x5f73d0 or BelSecond 0x420d40 while it runs */
+uint32_t rt_hol_playoff_stage(uint32_t obj, uint32_t original);
+uint32_t rt_hol_match_news_stage(uint32_t obj, uint32_t original);   /* the match news 0x5f7110 (issue 150) */
+uint32_t rt_hol_period_news(void);
+uint32_t rt_league_last_stage(uint32_t obj, uint32_t original);  /* the last stage index (0x6849d7) */
+void rt_split_sort_order(uint32_t obj);
+int rt_split_bounds(uint32_t obj);              /* season_split.c: best and worst places by section */
 /* The club count of the German Regional object, the 3. Liga from 2008/09 (0.6.0 slice 20,
  * win/season_divisions.c): the patched stores of tools/recomp/new_divisions.py at 0x5dd801 and 0x5dd809. */
 uint32_t rt_ger_regional_clubs(uint32_t obj, uint32_t original);
@@ -343,6 +485,22 @@ uint32_t rt_tur_table_clubs(uint32_t obj, uint32_t original);
 uint32_t rt_tur_table_bytes(uint32_t obj, uint32_t original);
 uint32_t rt_tur_stage_clubs(uint32_t obj, uint32_t original);
 uint32_t rt_tur_stage_bytes(uint32_t obj, uint32_t original);
+/* A constant of ArgPrm for 20 clubs plus (count - 20) in a season game (win/season_sizes_arg.c, tools/recomp/arg_prm.py). */
+uint32_t rt_arg_count(uint32_t original);
+uint32_t rt_arg_apertura_dates(uint32_t obj, uint32_t original);
+/* The count at which ArgSecond adds its fixed 25th club (win/season_sizes_arg_second.c, tools/recomp/arg_second.py). */
+uint32_t rt_arg_second_fixed_at(uint32_t obj, uint32_t original);
+/* The Ekstraklasa in one table (win/season_pol_first.c, GitHub issue 92): the 16 club slots of the constructor's
+ * predicted positions (0x7c8ce5, 0x7c8d09) and of set_predicted_positions (0x7ca264, 0x7ca288), tools/recomp/pol_first.py. */
+uint32_t rt_pol_first_slots(uint32_t obj, uint32_t original);
+/* The exchange of the Ekstraklasa and the I liga of each season (win/season_pol_first.c): the clubs of the play-off
+ * (0x7cc3d1), the chain's pairs (0x7ca4cc) and the clubs that come from the third tier (0x7ca132, 0x7ca13c, 0x7ca14a). */
+uint32_t rt_pol_playoff_clubs(uint32_t obj, uint32_t original);
+uint32_t rt_pol_first_pairwise(uint32_t obj, uint32_t original);
+uint32_t rt_pol_lower_intake(uint32_t obj, uint32_t original);
+uint32_t rt_pol_history_index(uint32_t table, uint32_t original);
+uint32_t rt_pol_split_index(uint32_t table, uint32_t original);
+uint32_t rt_pol_played_before(uint32_t table, uint32_t original);
 /* 1 when the Portuguese Cup takes a club with no division (0x7ce37d): a Portuguese club in a game with Liga 3. */
 uint32_t rt_por_cup_none(uint32_t club);
 /* The date count of a French league's template for the clubs that its division holds (slice 18). */
@@ -354,13 +512,81 @@ uint32_t rt_cup_room(uint32_t original, uint32_t entrants, uint32_t key_a, uint3
 uint32_t rt_cup_add(uint32_t original, uint32_t base, uint32_t entrants, uint32_t key_a, uint32_t key_b);
 uint32_t rt_fra_lge_first(uint32_t original, uint32_t edx);   /* FraLgeCup first loop limit (0x5bd244) */
 uint32_t rt_fa_cup_takes(uint32_t esp);   /* EngFaCup places by pool (0x56ffe4) */
+/* The clubs of up to four divisions (key ids, 0 for none), the original outside a season game with the sizes on:
+ * the cups of Britain and Ireland that take whole divisions (0.7.2 slice 4, season_cup_sizes_uk.c). */
+uint32_t rt_cup_clubs(uint32_t original, uint32_t key_a, uint32_t key_b, uint32_t key_c, uint32_t key_d);
 uint32_t rt_fra_cfa_lower_cap(uint32_t original);              /* FraCfa lower club cap (0x5b92e8) */
 uint32_t rt_fra_lower_cap(uint32_t original);                  /* FraLower lower club cap (0x5bd71d) */
 uint32_t rt_ita_cup_first_position(uint32_t original);   /* ItaCup second loop start (0x63fb16) */
-uint32_t rt_cup_places_list(uint32_t list, uint32_t bytes);  /* provincial and Polish cup lists, cleared */
+/* The cups of western Europe (0.7.2 slice 5, win/season_cup_sizes_west.c, tools/recomp/league_sizes.py CUP_INSNS). */
+uint32_t rt_bel_cup_lower(uint32_t original, uint32_t pool);                /* BelFaCup pool clubs (0x41d9e4) */
+uint32_t rt_bel_cup_place(uint32_t original, uint32_t taken);               /* BelFaCup third tier (0x41da43) */
+uint32_t rt_hol_cup_lower(uint32_t original, uint32_t esp);                 /* HolCup pool clubs (0x5f49e1) */
+uint32_t rt_ita_c_cup_fill(uint32_t original, uint32_t cup, uint32_t placed);  /* ItaCCup fill (0x63e109) */
+uint32_t rt_fra_cfa_fill(uint32_t array, uint32_t count);   /* FraCfa empty places (0x5b9320) */
+uint32_t rt_fra_lower_fill(uint32_t array, uint32_t count); /* French Lower Division places (0x5bd752) */
+uint32_t rt_cup_places_list(uint32_t list, uint32_t bytes);  /* a cup list from 0x944e46, cleared (season game) */
 uint32_t rt_promote_expected(uint32_t league, uint32_t up, uint32_t original);  /* ItaSerA chain counts (0x642476) */
+/* IreFirst::create_table 0x635910 at its real count (0.7.2 league sizes, slice 13, win/season_sizes_irl.c): the least
+ * count it takes (0x63596f) and its meetings for a count (0x63598f, 0x635997), the original's outside the engine. */
+uint32_t rt_ire_first_least(uint32_t obj, uint32_t original);
+uint32_t rt_ire_first_meetings(uint32_t obj, uint32_t original);
+uint32_t rt_ire_prm_down(uint32_t obj, uint32_t original);
+/* The Irish awards (IrelandAwards::daily_update 0x63bf10, OldIrelandAwards::daily_update 0x79f250) on the day of the
+ * calendar move (gap row 2 of 0.7.2, win/season_calendar_game.c), the original's 1 May in winter. */
+uint32_t rt_ire_award_day(uint32_t original);
+uint32_t rt_ire_award_month(uint32_t original);
+uint32_t rt_ire_prm_playoff(uint32_t obj, uint32_t original);
+/* The cups of eastern Europe and Asia follow the divisions (0.7.2 league sizes, slice 6, win/season_cup_sizes_east.c,
+ * tools/recomp/cup_sizes_east.py). Each returns the original's constant in the base game. */
+uint32_t rt_gre_cup_lower(uint32_t pool);
+/* The CroA2a tie-break list of a table of more than 16 (0.7.2 slice 11, season_sizes_cro.c) */
+uint32_t rt_cro_tiebreak_slot(uint32_t obj, uint32_t array, uint32_t index);
+uint32_t rt_cro_tiebreak_list(uint32_t obj, uint32_t array);
+uint32_t rt_cro_regroup_max(uint32_t original);
+uint32_t rt_cro_regroup_slot(uint32_t array, uint32_t index);
+uint32_t rt_cro_regroup_list(uint32_t array, uint32_t count);
+uint32_t rt_cro_regroup_north(uint32_t original);
+uint32_t rt_cro_regroup_end(uint32_t original);
+uint32_t rt_cro_regroup_target(uint32_t chosen, uint32_t place);
+uint32_t rt_cro_regroup_sort_count(uint32_t count);
+uint32_t rt_cro_south_swap(void);
+uint32_t rt_cro_south_idle(void);
+uint32_t rt_cro_south_empty(uint32_t obj);
+uint32_t rt_gre_fix_count(uint32_t original, uint32_t second);
+uint32_t rt_rus_cup_lower(uint32_t pool);
+uint32_t rt_rus_cup_picks(uint32_t esp);
+uint32_t rt_rus_cup_premier_place(uint32_t placed);
+uint32_t rt_tur_cup_copy_from(uint32_t esp);
+uint32_t rt_tur_cup_lower(uint32_t esp);
+uint32_t rt_tur_cup_second_place(uint32_t esp);
+uint32_t rt_pol_lge_second(uint32_t cup);
+uint32_t rt_jap_j_cup_j2(uint32_t cup);
+uint32_t rt_jap_emp_lower(uint32_t pool);
+uint32_t rt_jap_emp_place(uint32_t original, uint32_t mult, uint32_t add);
+/* Russia and Turkey at their real counts (0.7.2 league sizes, slice 12, win/season_sizes_rus.c,
+ * tools/recomp/sizes_rus_tur.py): 18 in the base game. */
+uint32_t rt_rus_first_take(uint32_t obj);
+/* J1 halves of the row's count (0.7.2 league sizes, slice 14, D8; win/season_sizes_asia.c, tools/recomp/sizes_asia.py):
+ * the first round of the second half and the matches of a club in a half; the original in the base game. */
+uint32_t rt_jap_half_rounds(uint32_t league, uint32_t original);
+uint32_t rt_jap_half_matches(uint32_t league, uint32_t original);
 /* Italy's Serie C of three groups (0.6.0 slice 20b, win/season_divisions_ita.c, tools/recomp/new_divisions.py). */
 uint32_t rt_ita_table_bytes(uint32_t obj, uint32_t original);
+/* Italy at its real sizes (0.7.2 league sizes slice 9, season_sizes_ita.c, tools/recomp/league_sizes_ita.py). */
+uint32_t rt_ita_zone(uint32_t obj, uint32_t serie_b, uint32_t row, uint32_t at);
+uint32_t rt_ita_c1_row(uint32_t obj, uint32_t original);
+uint32_t rt_ita_c1_seed(uint32_t obj, uint32_t original);
+uint32_t rt_ita_playout_count(uint32_t obj, uint32_t original);
+int rt_ita_playout_none(uint32_t obj);
+uint32_t rt_ita_playout_block(uint32_t obj, uint32_t block);
+uint32_t rt_ita_regroup_max(uint32_t original);
+uint32_t rt_ita_regroup_buf(uint32_t stack);
+uint32_t rt_ita_regroup_count(uint32_t n);
+uint32_t rt_ita_regroup_split(uint32_t original);
+uint32_t rt_ita_regroup_end(uint32_t original);
+uint32_t rt_ita_c1_rows(uint32_t c1a, uint32_t c1b);
+uint32_t rt_ita_row_status(uint32_t obj, uint32_t i, uint32_t row);
 uint32_t rt_ita_c2a_clubs(uint32_t obj, uint32_t original);
 uint32_t rt_ita_c2_end_clubs(uint32_t obj, uint32_t original);
 uint32_t rt_ita_c2_none(uint32_t group);
@@ -401,6 +627,9 @@ uint32_t rt_oceania_step(uint32_t original);
 uint32_t rt_club_world_month(uint32_t original);
 uint32_t rt_club_world_day(uint32_t original);
 uint32_t rt_club_world_waits(uint32_t obj);
+/* The top-up's reputation rule for an under-21 side (0.6.2 fault 65, win/season_national_fill.c, tools/recomp/seasons.py
+ * at 0x90dd67): 1 keeps its virtual players. 0 in the base game. */
+uint32_t rt_u21_keeps_virtual(uint32_t club);
 /* The CONCACAF Champions Cup's club count of the edition of `year` (slice 26c, win/season_club_cups.c): 8 in the
  * base game and with no row. */
 uint32_t rt_concacaf_clubs(uint32_t year, uint32_t original);
@@ -415,6 +644,10 @@ uint32_t rt_intl_wc_holder(uint32_t holder);
 uint32_t rt_intl_wc_holder_slot(uint32_t year);
 uint32_t rt_intl_oceania_left_out(uint32_t id);
 uint32_t rt_intl_euro_no_host(void);
+uint32_t rt_intl_host_pick(uint32_t row, uint32_t r);
+uint32_t rt_intl_history_host(uint32_t cup, uint32_t club);
+void rt_intl_news_hosts(uint32_t key, uint32_t first_at, uint32_t second_at);
+uint32_t rt_intl_news_text_host(uint32_t key, uint32_t year, uint32_t stored, uint32_t k);
 /* The European Championship of 24 teams (win/season_intl_euro.c): the team count (16), the knockout stage index
  * (3) and a new stage array after the step of start_new_season. Each gives the original's value for an edition
  * of 16 teams and in the base game. */
@@ -435,8 +668,19 @@ uint32_t rt_wcq26_concacaf_hosts(uint32_t self, uint32_t exempt);
 uint32_t rt_wcq26_africa_first(uint32_t self, uint32_t original);
 uint32_t rt_wcq26_africa_groups(uint32_t self, uint32_t original);
 void rt_wcq26_africa_format(uint32_t self);
+/* Every African nation in CAF World Cup qualifying (0.6.2 item 199, win/season_caf_pool.c). */
+uint32_t rt_caf_pool_cap(uint32_t self, uint32_t original);
+uint32_t rt_caf_pool_bytes(uint32_t self, uint32_t original);
+uint32_t rt_caf_load_bytes(uint32_t self, uint32_t original);
+void rt_caf_pool(uint32_t self, uint32_t found);
+uint32_t rt_caf_first(uint32_t self, uint32_t original);
+uint32_t rt_caf_group_size(uint32_t self, uint32_t original);
+uint32_t rt_caf_band(uint32_t self, uint32_t stage, uint32_t position);
+uint32_t rt_caf_round_date(uint32_t self, int round, int which, uint32_t original);
 uint32_t rt_wcq26_asia_direct(uint32_t self, uint32_t original);
-uint32_t rt_wcq26_asia_playoff_row(uint32_t self, uint32_t original);
+uint32_t rt_wcq26_asia_direct_b(uint32_t self, uint32_t current);
+uint32_t rt_wcq26_asia_playoff_row(uint32_t self, int g, uint32_t original);
+uint32_t rt_wcq26_pool_exempt(uint32_t self, uint32_t exempt);
 uint32_t rt_wcq26_asia_stages(uint32_t self, uint32_t original);
 void rt_wcq26_asia_format(uint32_t self);
 uint32_t rt_wcq26_oceania_stages(uint32_t self, uint32_t original);
@@ -448,13 +692,24 @@ uint32_t rt_wcq26_europe_index(uint32_t self, uint32_t original);
 uint32_t rt_intl_cup_teams(uint32_t self, uint32_t original);
 uint32_t rt_intl_cup_groups(uint32_t self, uint32_t original);
 uint32_t rt_intl_cup_ko(uint32_t self, uint32_t original);
+uint32_t rt_intl_cup_ko_ctor(uint32_t self, uint32_t original);     /* the Asian Cup ctor: by the edition only */
 void rt_intl_cup_stages(uint32_t self);
+/* The hosts after the second of the ACN (entrants 0x4022c0 at 0x40242f) and the Asian Cup (0x40fdf0 at 0x40ffb2):
+ * each gives the new count << 8 | the hosts it added; no change in the base game. */
+uint32_t rt_intl_cup_acn_hosts(uint32_t self, uint32_t count, uint32_t hosts);
+uint32_t rt_intl_cup_asian_hosts(uint32_t self, uint32_t list, uint32_t count, uint32_t placed);
+/* The Asian Cup entrants after the hosts (0x40fdf0 at 0x40ffc8, GitHub issue 136): the original's pick 0x4afbd0, then
+ * the list sorted by reputation again, so the best sides play. Every game; RECOMP_ASIAN_PICK=original keeps the pick. */
+void rt_intl_cup_asian_pick(uint32_t self, uint32_t list, uint32_t count, uint32_t places);
 /* The Copa America of 16 teams (win/season_intl_copa.c): the knockout stage index (2), the group count (3) and a
  * new stage array after the step of start_new_season. Each gives the original's value for an edition of 12
  * teams and in the base game. */
 uint32_t rt_intl_copa_ko(uint32_t self, uint32_t original);
 uint32_t rt_intl_copa_groups(uint32_t self, uint32_t original);
 void rt_intl_copa_stages(uint32_t self);
+/* The OFC Nations Cup of 8 teams (win/season_intl_ofc.c): the size of a group (3), 4 when the draw holds 8 teams or
+ * the one group of 4, 6 for the one group of 6 (2004). */
+uint32_t rt_intl_ofc_group(uint32_t self, uint32_t original);
 /* Euro qualifying places (win/season_intl_euroq.c): the places and stage indices of the format of the Euro year
  * (Euro 2016: 9 groups, top two, best third, play-off of 8 thirds; Euro 2020 on: 10 groups, top two). Each
  * gives the original's value in the base game and for a Euro of 16 teams. */
@@ -492,9 +747,13 @@ uint32_t rt_copa_next_year(uint32_t self, uint32_t year, uint32_t step);
 extern uint32_t rt_staff_reserve;
 uint32_t rt_staff_reserve_size(void);
 
+/* The buffer of the game list's names (0.7.0 slice 4a, src/recomp_rt/win/game_list.c): 51 slots of 50 bytes and
+ * 2 more, in place of the global 0xdd6cd0 of 10 slots. The sites of tools/recomp/game_list.py read it. */
+uint32_t rt_game_list_names(void);
+
 /* Full player search (#57, src/recomp_rt/win/playersearch.c): 1 when the option is on. The replaced jumps
  * at 0x7afc8d, 0x7afc9d and 0x7afcdf in tools/recomp/widescreen.py ask it. */
-uint32_t rt_full_player_search(uint32_t screen);
+uint32_t rt_full_player_search(uint32_t screen, uint32_t staff);
 /* The limit of the list with the option on (playersearch.c): the sites 0x7afbb3, 0x7afdda, 0x7afe5e, 0x7afe6b
  * and 0x7af467 in tools/recomp/widescreen.py. */
 void rt_full_player_search_reset(void);
@@ -508,6 +767,15 @@ uint32_t rt_full_player_search_shown(uint32_t passed);
 uint32_t rt_groups_cells(uint32_t esp);
 uint32_t rt_groups_table(void);
 uint32_t rt_groups_count(void);
+
+/* Network screens in Widescreen mode (0.7.0 item 212, win/net_scale.c, tools/recomp/net_scale.py): a coordinate of
+ * this screen as a classic one and back, and the four words of a widget move, at these addresses, widened to this
+ * screen. */
+uint32_t rt_net_classic_x(uint32_t v, int far_edge);
+uint32_t rt_net_classic_y(uint32_t v, int far_edge);
+uint32_t rt_net_screen_x(uint32_t v, int far_edge);
+uint32_t rt_net_screen_y(uint32_t v, int far_edge);
+void rt_net_rect_in16(uint32_t x1_at, uint32_t y1_at, uint32_t x2_at, uint32_t y2_at);
 
 /* Arguments and return for replacements: esp points at the return address. */
 static inline uint32_t rt_arg(int i) { return rd32(g_mem, cpu.esp + 4 + 4 * (uint32_t)i); }

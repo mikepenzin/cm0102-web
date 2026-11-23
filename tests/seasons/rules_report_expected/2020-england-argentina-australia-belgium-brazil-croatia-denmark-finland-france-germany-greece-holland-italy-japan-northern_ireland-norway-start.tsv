@@ -26,11 +26,24 @@
 2020	bench	new_recopa (Recopa Sudamericana), row club-world-369: game 9, table 12 (12)
 2020	bench	new_sudamericana (Copa Sudamericana), row club-world-368: game 9, table 12 (12)
 2020	bench	world_club_champ (FIFA Club World Cup), row club-world-363: game 7, table 12 (12)
+2020	club_list	Argentine Premier Division: 20 of 26 listed clubs that the database holds (26 listed), 0 other clubs, 20 in all; not in it: Aldosivi, Club Atlético Sarmiento (Junin), Colón de Santa Fé, Godoy Cruz Antonio Tomba, Huracán, Platense; others: -
+2020	club_list	Argentine Second Division: 25 of 35 listed clubs that the database holds (35 listed), 0 other clubs, 25 in all; not in it: AA Estudiantes de Río Cuarto, Club Atletico Güemes, Club Atlético San Telmo, Club Deportivo Riestra, Club Social y Atlético Guillermo Brown, Club Social y Deportivo Tristan Suarez, Deportivo Morón, Deportivo Santamarina, Gimnasia y Esgrima de Mendoza, Instituto de Córdoba; others: -
+2020	club_list	Brazilian National Third Division: 20 of 20 listed clubs that the database holds (20 listed), 36 other clubs, 56 in all; not in it: -; others: AA Aparecidense (GO), AA Portuguesa (RJ), Agremiação Sportiva Arapiraquense (AL), Associação Atlética Anapolina (GO), Associação Atlética Caldense (MG), Associação Atlética Coruripe (AL), Associação Ferroviária de Esportes (SP), Associação Olímpica de Itabaiana (SE), Atlético Acreano (AC), Atlético Cajazeirense de Desportos (PB), Boavista Sport Club (RJ), Brasiliense Futebol Clube (DF), CA Patrocinense (MG), Campinense Clube (PB), Central Sport Club (PE), Cianorte Futebol Clube (PR), Corumbaense Futebol Clube (MS), Esporte Clube Avenida (RS), Esporte Clube Internacional, Fluminense de Feira Futebol Clube (BA), Foz do Iguaçu FC, Globo Futebol Clube RN, Iporá EC, Maringá Futebol Clube (PR), Moto Club de São Luís (MA), Operário (MS), Palmas Futebol e Regatas, Salgueiro Atlético Clube (PE), Sociedade Desportiva Juazeirense (BA), Sociedade Imperatriz de Desportos (MA), Treze Futebol Clube (PB), União Recreativa dos Trabalhadores (MG), União Rondonópolis, Vilhena Esporte Clube (RO), Villa Nova Atlético Clube (MG), XV de Piracicaba
+2020	club_list	Croatian First Division: 10 of 10 listed clubs that the database holds (10 listed), 6 other clubs, 16 in all; not in it: -; others: NK Granicar Zupanja, NK Kurilovec Velika Gorica, NK Kutjevo, NK Maksimir, NK Marsonia 1909, NK Slavonija Pozega
+2020	club_list	Croatian Second Division North: 16 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 16 in all; not in it: HNK Hajduk Split II, NK Junak Sinj; others: -
+2020	club_list	Danish First Division: 12 of 12 listed clubs that the database holds (12 listed), 4 other clubs, 16 in all; not in it: -; others: Aarhus Fremad, FC Roskilde, Naestved Boldklub, Nyköbing FC
+2020	club_list	Danish Second Division: 16 of 28 listed clubs that the database holds (28 listed), 0 other clubs, 16 in all; not in it: AB Taarnby, Aarhus Fremad, FC Roskilde, FC Sydvest 05, Holstebro Boldklub, Naesby Boldklub, Naestved Boldklub, Nyköbing FC, Roskilde KFUM, Skovshoved IF, Slagelse B&I, Svendborg fb - Oure FA; others: -
+2020	club_list	Greek National B Division: 12 of 12 listed clubs that the database holds (12 listed), 2 other clubs, 14 in all; not in it: -; others: AO Egaleo, AO Platanias
+2020	club_list	Italian Serie A: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: FC Crotone, Spezia Calcio; others: -
+2020	club_list	Japanese J-League 1: 16 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 16 in all; not in it: Avispa Fukuoka, Shonan Bellmare, Tokushima Vortis, Vegalta Sendai; others: -
+2020	club_list	Japanese J-League 2: 12 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 12 in all; not in it: Blaublitz Akita, Ehime FC, Fagiano Okayama, Matsumoto Yamaga, Mito HollyHock, Renofa Yamaguchi, SC Sagamihara, ThespaKusatsu Gunma, Tokyo Verdy, Zweigen Kanazawa; others: -
+2020	club_list	Northern Irish League First Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Knockbreda FC, Queen's University; others: -
+2020	club_list	Northern Irish League Premier Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Portadown FC, Warrenpoint Town FC; others: -
+2020	club_list	Norwegian Premier Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: Sandefjord Fotball, Tromsø IL; others: -
 2020	clubs	african_nations (Africa Cup of Nations), row int-continental-216: game 0, table 24 (24)
 2020	clubs	arg_prm (Liga Profesional de Fútbol), row arg-usa-20: game 20, table 26 (26)
 2020	clubs	arg_second (Primera Nacional), row arg-usa-47: game 25, table 35 (35)
 2020	clubs	asia_club_champ (AFC Champions League), row club-world-374: game 16, table 40 (40)
-2020	clubs	bel_second (Belgian First Division B), row hol-bel-256: game 18, table 8 (8)
 2020	clubs	bra_cup (Copa do Brasil), row bra-155: game 71, table 92 (92)
 2020	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-101: game 7, table 20 (20)
 2020	clubs	bra_reg_gaucho (Campeonato Gaúcho), row bra-560: game 17, table 12 (12)
@@ -40,13 +53,10 @@
 2020	clubs	conmebol_liber (Copa Libertadores), row club-world-365: game 4, table 47 (47)
 2020	clubs	cro_a1 (Prva HNL), row gre-pol-cro-344: game 16, table 10 (10)
 2020	clubs	cro_a2a (Druga HNL), row gre-pol-cro-371: game 16, table 18 (18)
-2020	clubs	den_first (Danish 1st Division), row den-swe-117: game 16, table 12 (12)
 2020	clubs	den_second (Danish 2nd Divisions), row den-swe-118: game 16, table 28 (28)
 2020	clubs	fin_first (Ykkönen), row nor-fin-198: game 10, table 12 (12)
-2020	clubs	fra_third (Championnat National), row fra-175: game 20, table 18 (18)
 2020	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-20: game 4, table 14 (14)
 2020	clubs	gre_second (Super League 2), row gre-pol-cro-74: game 14, table 12 (12)
-2020	clubs	hol_first (Eerste Divisie), row hol-bel-250: game 18, table 20 (20)
 2020	clubs	ita_c1_super (Supercoppa Serie C), row ita-339: game 2, table 3 (3)
 2020	clubs	ita_cup (Coppa Italia), row ita-336: game 4, table 78 (78)
 2020	clubs	ita_ser_a (Serie A), row ita-325: game 18, table 20 (20)
@@ -59,21 +69,18 @@
 2020	clubs	nir_prm (NIFL Premiership), row wal-nir-irl-485: game 10, table 12 (12)
 2020	clubs	nor_prm (Eliteserien), row nor-fin-192: game 14, table 16 (16)
 2020	clubs	uefa_cup (UEFA Europa League), row uefa-157: game 161, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
-2020	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-234: game 50, table 40 (40)
+2020	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-234: game 48, table 40 (40)
 2020	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-235: game 0, table 40 (40)
 2020	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-233: game 24, table 30 (30, then 6)
 2020	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-231: game 5, table 55 (55 entrants)
 2020	clubs	world_club_champ (FIFA Club World Cup), row club-world-363: game 0, table 6 (6)
-2020	down	bel_first (Belgian First Division A), row hol-bel-255: game 2 (+0 play-off places), table 1 (1 (18th); 17th plays the First Division B runner-up)
-2020	down	bel_second (Belgian First Division B), row hol-bel-256: game 2 (+1 play-off places), table 1 (1 (8th))
+2020	down	bel_second (Belgian First Division B), row hol-bel-256: game 2 (+1 play-off places), table 0 (0 (no club relegated: the Pro League general meeting of 16 March 2021 cancelled )
 2020	down	bel_third (Belgian National Division 1), row hol-bel-257: game 2 (+1 play-off places), table unknown (unknown (13th to a relegation round; direct places not stated))
 2020	down	bra_nat_third (Campeonato Brasileiro Série C), row bra-101: game 2 (+0 play-off places), table 4 (4)
 2020	down	cro_a1 (Prva HNL), row gre-pol-cro-344: game 2 (+0 play-off places), table 1 (1 (10th))
 2020	down	cro_a2b (Druga HNL South), row gre-pol-cro-398: game 2 (+0 play-off places), table na (n/a)
 2020	down	den_first (Danish 1st Division), row den-swe-117: game 3 (+0 play-off places), table 2 (2)
 2020	down	den_second (Danish 2nd Divisions), row den-swe-118: game 4 (+0 play-off places), table 16 (16)
-2020	down	eng_third (EFL League Two), row eng-221: game 1 (+0 play-off places), table 2 (2)
-2020	down	fra_second (Ligue 2), row fra-174: game 3 (+0 play-off places), table 2 (2)
 2020	down	ger_second (2. Bundesliga), row ger-249: game 4 (+0 play-off places), table 2 (2)
 2020	down	gre_prm (Super League 1), row gre-pol-cro-47: game 2 (+0 play-off places), table 1 (1 (14th))
 2020	down	ita_ser_b (Serie B), row ita-326: game 4 (+0 play-off places), table 3 (3 direct (18th-20th) + play-out 16th v 17th (two legs; not held if gap over 4 po)
@@ -84,6 +91,14 @@
 2020	down	jap_j2 (J2 League), row aus-jap-kor-236: game 0 (+0 play-off places), table 4 (4)
 2020	down	nir_first (NIFL Championship), row wal-nir-irl-486: game 0 (+0 play-off places), table 1 (1 (pos 12; inference from the rules of 2019/20 and 2021/22))
 2020	down	nor_first (OBOS-ligaen), row nor-fin-193: game 4 (+0 play-off places), table 2 (15th-16th (2))
+2020	meetings	arg_second (Primera Nacional), row arg-usa-47: game 1, table 2
+2020	meetings	bel_third (Belgian National Division 1), row hol-bel-257: game 2, table 1
+2020	meetings	bra_nat_first (Campeonato Brasileiro Série A), row bra-47: game 1, table 2
+2020	meetings	bra_nat_second (Campeonato Brasileiro Série B), row bra-74: game 1, table 2
+2020	meetings	cro_a1 (Prva HNL), row gre-pol-cro-344: game 2, table 4
+2020	meetings	fin_first (Ykkönen), row nor-fin-198: game 3, table 2
+2020	meetings	jap_j2 (J2 League), row aus-jap-kor-236: game 4, table 2
+2020	meetings	nir_prm (NIFL Premiership), row wal-nir-irl-485: game 4, table 3
 2020	no_row	friendly (Friendly): no table row
 2020	no_row	record_utils ('B' International): no table row
 2020	no_row	record_utils (Reserve): no table row
@@ -130,6 +145,19 @@
 2020	playoffs	ita_ser_c2a (Serie C girone C), row ita-334: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
 2020	playoffs	nir_first (NIFL Championship), row wal-nir-irl-486: game 1 up and 0 down play-off places, table 1 and 1 ('pos 2: promotion play-off with the Premiership 11th; pos 11: relegation play-off')
 2020	playoffs	nor_first (OBOS-ligaen), row nor-fin-193: game 1 up and 0 down play-off places, table 4 and 1 ('3rd-6th single-leg knockout; winner v top-flight 14th, one match on neutral grou')
+2020	rounds	arg_prm (Liga Profesional de Fútbol), row arg-usa-20: game 19, table 25 (1 meetings, zones -, extra 0)
+2020	rounds	bel_third (Belgian National Division 1), row hol-bel-257: game 30, table 15 (1 meetings, zones -, extra 0)
+2020	rounds	bra_nat_first (Campeonato Brasileiro Série A), row bra-47: game 19, table 38 (2 meetings, zones -, extra 0)
+2020	rounds	bra_nat_second (Campeonato Brasileiro Série B), row bra-74: game 19, table 38 (2 meetings, zones -, extra 0)
+2020	rounds	cro_a1 (Prva HNL), row gre-pol-cro-344: game 30, table 36 (4 meetings, zones -, extra 0)
+2020	rounds	cro_a2a (Druga HNL), row gre-pol-cro-371: game 30, table 34 (2 meetings, zones -, extra 0)
+2020	rounds	den_first (Danish 1st Division), row den-swe-117: game 30, table 22 (2 meetings, zones -, extra 0)
+2020	rounds	gre_second (Super League 2), row gre-pol-cro-74: game 26, table 22 (2 meetings, zones -, extra 0)
+2020	rounds	ita_ser_a (Serie A), row ita-325: game 34, table 38 (2 meetings, zones -, extra 0)
+2020	rounds	jap_j1 (J1 League), row aus-jap-kor-209: game 30, table 38 (2 meetings, zones -, extra 0)
+2020	rounds	jap_j2 (J2 League), row aus-jap-kor-236: game 44, table 42 (2 meetings, zones -, extra 0)
+2020	rounds	nir_prm (NIFL Premiership), row wal-nir-irl-485: game 36, table 33 (3 meetings, zones -, extra 0)
+2020	rounds	nor_prm (Eliteserien), row nor-fin-192: game 26, table 30 (2 meetings, zones -, extra 0)
 2020	subs_used	asia_club_champ (AFC Champions League), row club-world-374: game 3, table 5 (5, a sixth in extra time)
 2020	subs_used	cro_cup (Croatian Football Cup), row gre-pol-cro-425: game 3, table 5 (5)
 2020	subs_used	den_cup (Danish Cup), row den-swe-119: game 3, table 5 (5)
@@ -147,7 +175,5 @@
 2020	up	cro_a2a (Druga HNL), row gre-pol-cro-371: game 0 (+0 play-off places), table 1 (1 (1st))
 2020	up	den_second (Danish 2nd Divisions), row den-swe-118: game 3 (+0 play-off places), table 2 (2)
 2020	up	fin_first (Ykkönen), row nor-fin-198: game 2 (+0 play-off places), table 1 (1st (1))
-2020	up	fra_third (Championnat National), row fra-175: game 3 (+0 play-off places), table 2 (2)
 2020	up	gre_cup (Greek Football Cup), row gre-pol-cro-20: game 2 (+0 play-off places), table na (n/a)
 2020	up	gre_second (Super League 2), row gre-pol-cro-74: game 2 (+0 play-off places), table 1 (1 (1st of play-off round))
-2020	up	hol_first (Eerste Divisie), row hol-bel-250: game 1 (+0 play-off places), table 2 (2 (champion and runner-up; Jong teams cannot be promoted))

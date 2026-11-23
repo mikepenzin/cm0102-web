@@ -8,7 +8,8 @@ Usage:
 
 The tables are docs/research/rules-0.6.0/databases-date-shifts.tsv (the decided shifts of each known
 database), databases-date-shifts-last-rows.tsv (the competitions whose 2001 history row moves) and
-databases-date-shifts-careers.tsv (the staff rows whose career keeps its years). tools/seasons/
+databases-date-shifts-careers.tsv (the staff rows whose career keeps its years) and
+databases-date-shifts-nation-comps.tsv (the nation competitions with a shift of their own). tools/seasons/
 measure_date_shifts.py makes them from the databases. Every database name must be a row of
 databases-signatures.tsv. A value that is not a small whole number, or a name the signatures table does not
 know, stops the tool with exit code 1.
@@ -22,7 +23,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 RULES = os.path.join(ROOT, "docs", "research", "rules-0.6.0")
 OUT = os.path.join(ROOT, "src", "recomp_rt", "win", "season_dates_table.c")
-FIELDS = ["birth", "joined", "contract", "officials", "staff_history", "comp_history", "last_rows"]
+FIELDS = ["birth", "joined", "contract", "officials", "staff_history", "comp_history", "last_rows", "nation_history"]
 HEX = re.compile(r"^[0-9a-f]*$")
 
 
@@ -39,6 +40,12 @@ def text():
     known = {r["database"] for r in read("databases-signatures.tsv")}
     last = {r["database"]: [int(x) for x in r["competition_ids"].split()] for r in read("databases-date-shifts-last-rows.tsv")}
     kept = {r["database"]: (int(r["staff_rows"]), r["kept_bitmap"]) for r in read("databases-date-shifts-careers.tsv")}
+    nation = {}
+    for r in read("databases-date-shifts-nation-comps.tsv"):
+        cid, s = int(r["competition_id"]), int(r["shift"])
+        if not 0 <= cid < 32768 or not -30 <= s <= 60:          # int16_t pairs in the C table
+            fail(f"{r['database']}: bad nation competition row {cid} {s}")
+        nation.setdefault(r["database"], []).append((cid, s))
     lines = [
         "/* The date shifts of the known databases (season_dates.h). Made by tools/seasons/make_dates_table.py from",
         " * docs/research/rules-0.6.0/databases-date-shifts*.tsv. Do not edit by hand: change the tables and run the tool. */",
@@ -71,18 +78,24 @@ def text():
             lines.append(f"static const char kept_{ident}[] =")
             for i in range(0, len(bits), 120):
                 lines.append(f'    "{bits[i:i + 120]}"' + (";" if i + 120 >= len(bits) else ""))
-        rows.append((name, vals, f"last_{ident}" if ids else "0", len(ids), nrows, f"kept_{ident}" if nrows else "0"))
+        comps = nation.get(name, [])
+        if comps:
+            lines.append(f"static const int16_t nation_{ident}[] = {{")
+            lines.append("    " + ", ".join(f"{c}, {s}" for c, s in comps) + ",")
+            lines.append("};")
+        rows.append((name, vals, f"last_{ident}" if ids else "0", len(ids), nrows, f"kept_{ident}" if nrows else "0",
+                     len(comps), f"nation_{ident}" if comps else "0"))
     names = {r[0] for r in rows}
-    for name in sorted((set(last) | set(kept)) - names):
-        print(f"make_dates_table.py: warning: {name!r} has last rows or kept careers but no row in "
-              "databases-date-shifts.tsv: dropped", file=sys.stderr)
+    for name in sorted((set(last) | set(kept) | set(nation)) - names):
+        print(f"make_dates_table.py: warning: {name!r} has last rows, kept careers or nation competition shifts but "
+              "no row in databases-date-shifts.tsv: dropped", file=sys.stderr)
     with_season = {r["database"] for r in read("databases-signatures.tsv") if r["data_season"] != "none"}
     for name in sorted(with_season - names):
         print(f"make_dates_table.py: warning: {name!r} of databases-signatures.tsv has no shift row: "
               "the game moves none of its dates", file=sys.stderr)
     lines += ["", "const SeasonDateShifts season_date_shifts[] = {"]
-    for name, vals, lname, lcount, nrows, kname in rows:
-        lines.append(f'    {{"{name}", {", ".join(map(str, vals))}, {lcount}, {lname}, {nrows}u, {kname}}},')
+    for name, vals, lname, lcount, nrows, kname, ncount, nname in rows:
+        lines.append(f'    {{"{name}", {", ".join(map(str, vals))}, {lcount}, {lname}, {nrows}u, {kname}, {ncount}, {nname}}},')
     lines += ["};", "", f"const int season_date_shifts_count = {len(rows)};", ""]
     return "\n".join(lines)
 

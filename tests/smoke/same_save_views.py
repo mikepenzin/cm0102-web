@@ -35,17 +35,12 @@ sys.path.insert(0, HERE)
 import fixtures  # noqa: E402
 import smoke_run  # noqa: E402
 
-# The parts of a saved game that depend on where the game's memory blocks sit (Q152): any change of memory
-# layout, even opening one of the original's own screens, changes them after a few days. Research of slices 3
-# and 7 (docs/research/2026-10-15-attribute-groups.md) found these five and no others.
-LAYOUT_PARTS = ("fifa_rankings.dat", "general.dat", "national_teams.dat", "staff history.tmp", "transfer.dat")
+LAYOUT_PARTS = smoke_run.LAYOUT_PARTS
 
-# Positions for 800x600; "| x y" gives the widescreen position where the game does not scale.
-HOLIDAY = [
-    "2500 click 45 165",                    # the manager's menu
-    "4500 click 150 427 | 199 474",  # Go on Holiday
-    "7000 click 705 572",                   # Please Confirm: Yes
-]
+# Positions for 800x600; "| x y" gives the widescreen position where the game does not scale. The holiday is the one
+# of smoke_run.STEPS, with a wait for the manager's menu and for Please Confirm (item 185).
+HOLIDAY = [s for s in smoke_run.STEPS[smoke_run.STEPS.index("wait first-news") + 1:]
+           if " dump " not in s and not s.endswith(" quit")]
 
 COMPARE = [
     "2500 click 45 165",                    # the manager's menu
@@ -125,14 +120,12 @@ def print_steps(choice, times=1, boxes=None):
         else:
             add(f"type squadtxt{n}", 4000)  # the Save Printout dialog: a new name each time, then Save
             add("click 705 573", 3000)
-    add("click 45 165", 4000)               # holiday
-    add("click 150 427", 2500)
-    add("click 705 572", 3000)
-    return steps
+    add("click 45 165", 4000)               # holiday, with the waits of HOLIDAY
+    return steps + HOLIDAY[1:]
 
 
 def run_compare(program, game, days, folder):
-    steps = smoke_run.without_intro_click(fixtures.LOAD_STEPS) + COMPARE + HOLIDAY + ["400000 quit"]
+    steps = smoke_run.without_intro_click(smoke_run.load_steps(fixtures)) + COMPARE + HOLIDAY + ["400000 quit"]
     failed = 0
     for mode in ("classic", "widescreen"):
         print(f"--- comparison screen, {mode}")
@@ -153,7 +146,7 @@ def run_print(program, game, days, folder):
     opening a screen (Q152) and changes the five parts that depend on the layout (fifa_rankings, general,
     national_teams, staff history, transfer). Nor is a PDF run compared with a run that does not print, or
     with a File run (the Save Printout dialog is the original's code and changes much more)."""
-    base = smoke_run.without_intro_click(fixtures.LOAD_STEPS)
+    base = smoke_run.without_intro_click(smoke_run.load_steps(fixtures))
     save = os.path.join(folder, "start.sav")
     failed = 0
     for times in (2, 3):
@@ -168,7 +161,7 @@ def run_print(program, game, days, folder):
 
 
 def run_tactics(program, game, days, folder):
-    steps = smoke_run.without_intro_click(fixtures.LOAD_STEPS) + TACTICS + HOLIDAY + ["400000 quit"]
+    steps = smoke_run.without_intro_click(smoke_run.load_steps(fixtures)) + TACTICS + HOLIDAY + ["400000 quit"]
     failed = 0
     for mode in ("classic", "widescreen"):
         print(f"--- tactics screen, Condition view, {mode}")
@@ -212,8 +205,9 @@ def run_match_tactics(program, game, days, folder, modes=("classic", "widescreen
                 out = os.path.join(os.path.abspath(shots), f"{mode}-{name.replace(' ', '-')}")
                 os.makedirs(out, exist_ok=True)
                 tactics = [t.replace("{d}", out) for t in tactics]
-            steps = smoke_run.without_intro_click(fixtures.LOAD_STEPS) + smoke_run.MATCH_STEPS[:half] + tactics + \
-                smoke_run.MATCH_STEPS[half:]
+            # The substitution changes the second half, which then has no MATCH_EVENT (item 155).
+            steps = smoke_run.without_intro_click(smoke_run.load_steps(fixtures)) + smoke_run.MATCH_STEPS[:half] + \
+                tactics + smoke_run.MATCH_STEPS_ORIGINAL[half:]
             runs.append((name, {"match_columns": value, "_steps": steps}))
         failed += smoke_run.compare_runs(program, game, mode, runs, [], days,
                                          os.path.join(folder, smoke_run.MATCH_SAVE), timeout=900,

@@ -152,6 +152,11 @@ int season_change_comps(uint32_t *out, int max);
 /* The competition objects of one league table entry (its array, +0xc count, +0x10 array). */
 int season_change_entry_comps(int entry, uint32_t *out, int max);
 
+/* The day of the year (0 is 1 January) on which the league table entry that holds comp starts its season: the
+ * entry's +0x15, which the season update 0x5d5ae0 compares with the game day (0x5d5b2c..0x5d5b35) before it calls
+ * the entry's start_new_season. -1 when no entry holds comp. */
+int season_change_start_day(uint32_t comp);
+
 /* Keeps a competition idle for the season that starts (a league cup that ends, the Intertoto Cup after 2008).
  * Only inside a before hook. The start_new_season of that competition does not run: it keeps its finished
  * season, makes no fixtures and plays no matches. The object stays in its entry's array, so the game saves it,
@@ -182,6 +187,22 @@ int season_change_add_comp(int entry, uint32_t obj);
  * its state after a load takes the season of the game from it (the larger of this and the start year). */
 int season_change_point(void);
 
+/* Keeps a competition's start_new_season from running while held (outside a season pass too): the wrap of
+ * season_starts.c returns at once, as for season_change_skip. 0.6.2 slice 4b holds a running qualifying campaign
+ * while the repair of an old save restarts its finals (season_intl.c repair_idle). At most 8 at once. */
+void season_change_hold(uint32_t comp, int on);
+
+/* Starts one competition outside its entry's update day, as game_season_update_pass 0x5d5ae0 starts each competition
+ * of a due entry (0x5d5cc6..0x5d5d29): only a complete one (vtable +0xc) whose +0x2c is 0, then the attendances of a
+ * league division, start_new_season (vtable +8) with the hooks of season S (the game year, the next one from 1
+ * October; the hooks only where the pass would run them, season_hooks_due) and Discipline::start_new_season_for_comp
+ * 0x556210. The pass's last step for a competition (0x5d5d2e..0x5d5dbb) builds SimulatedStats 0x84b940 again (the
+ * background match groups of the leagues the game does not play, ranked by reputation) on the first start of a day,
+ * when the date at 0xae2c80 is not the game date. That belongs to the update days of the entries: here it is not
+ * done, so the groups stay those of the last update day until the next one (many entries change from June to
+ * August). Returns 1 when the competition started. Not inside a pass. */
+int season_change_late_start(uint32_t comp);
+
 /* season_starts.c calls it around each start_new_season (this, 0 before and 1 after). */
 int season_change_start(uint32_t comp, int after);   /* 1 before: a kind skips this season */
 
@@ -201,8 +222,14 @@ void season_change_reset(void);                               /* before a new ga
  *       (season_friendly_dates.c). No bytes at all when none wait.
  * season_change_part_size gives 0 when the game has none of these (the part stays version 1). A reader takes
  * these fields of a later version too and leaves what follows them. */
+/* Version 3 (0.6.2 slice 12) keeps these fields, then the row A18 list always with its u32 count and whole entries of
+ * SEASON_FRIENDLY_ENTRY bytes, then the caps above 255 (caps_wide.h). Version 4 (item 66) adds the goals above 255
+ * after the caps field, whose count may then be 0. A game with no caps or goals above 255 writes version 2 (or 1),
+ * byte for byte as before. A later version keeps these fields and adds its own after them. */
+#define SEASON_FRIENDLY_ENTRY 20u    /* the bytes of one entry of the row A18 list (season_friendly_dates.c) */
 uint32_t season_change_part_size(void);
+int season_change_part_form(void);                            /* the part version: 1 to 4 */
 void season_change_part_write(uint8_t *out);                  /* season_change_part_size bytes */
-int season_change_part_read(const uint8_t *in, uint32_t n);   /* 0 for damaged bytes */
+int season_change_part_read(const uint8_t *in, uint32_t n, uint32_t form);   /* 0 for damaged bytes */
 
 #endif

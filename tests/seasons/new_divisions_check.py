@@ -19,6 +19,9 @@ The runs (changing_rules off, the database of the start season, test-fixtures/da
                  with the Portuguese Cup's safety net off (RECOMP_BOX_FIXES=off, rt_por_cup_none): the club moves send
                  the clubs that leave Liga 3's group divisions to the Third Division, so the cup finds its 164
                  entrants with no club of no division (O260 A24; before, por_cup.cpp 74)
+    subset-extra a 2001/02 start (base data) with England and Italy and RECOMP_TEST_EXTRA=spain,portugal to its first
+                 start report: the switch selects Spain and Portugal as the box of their extra division does
+                 (id 0x38), so no box (item 226: before, por_super.cpp 211 from PorSuper::select_teams 0x7d3260)
 A run takes about 5 to 25 minutes (iberia-load selects every nation below the 16 rows).
 """
 import os
@@ -79,6 +82,21 @@ def check_por_cup(program, game, work):
     return fails
 
 
+def check_subset_extra(program, game, work):
+    code, _ = rrc.run(program, game, 2001, 2001, None, ["England", "Italy"], ["spain", "portugal"], work, 3600,
+                      start_only=True, stop_on_box=True)
+    log = open(os.path.join(work, "stderr.txt"), encoding="latin-1").read()
+    fails = [] if code == 0 else [f"subset-extra: code {code} ({work})"]
+    box = re.search(r"message box from .*", log)
+    if box:
+        fails.append(f"subset-extra: {box.group(0)} ({work}/stderr.txt)")
+    for n in ("spain", "portugal"):
+        if not re.search(rf"test: extra division of {n} on \(flags 0 before, the nation is selected with it\)", log):
+            fails.append(f"subset-extra: the switch did not select {n} with its extra division ({work}/stderr.txt)")
+    print("  subset-extra: " + " | ".join(re.findall(r"test: extra division of .*", log)))
+    return fails
+
+
 def check_load(name, program, game, work):
     year, db, nations, extra, want = RUNS[name]
     # The jump goes on to the next season, so it does not end at the last report (1 June) before the save.
@@ -120,11 +138,11 @@ def main(argv):
     program, game = os.path.abspath(argv[1]), os.path.abspath(argv[2])
     only = rrc.arg(argv, "--only")
     keep = os.path.abspath(rrc.arg(argv, "--keep")) if "--keep" in argv else tempfile.mkdtemp(prefix="cm0102-div-")
-    names = only.split(",") if only else ["liga3", "por-cup"] + list(RUNS)
+    names = only.split(",") if only else ["liga3", "por-cup", "subset-extra"] + list(RUNS)
     failed = []
     for name in names:
         work = os.path.join(keep, name)
-        check = {"liga3": check_liga3, "por-cup": check_por_cup}.get(name)
+        check = {"liga3": check_liga3, "por-cup": check_por_cup, "subset-extra": check_subset_extra}.get(name)
         failed += check(program, game, work) if check else check_load(name, program, game, work)
     for text in failed:
         print("FAIL  " + text)

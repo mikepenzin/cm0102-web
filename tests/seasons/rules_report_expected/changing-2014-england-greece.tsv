@@ -6,10 +6,7 @@
 2014	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-145: game 6, table 53 (53)
 2014	clubs	goldcup (Copa América), row int-continental-154: game 0/4, table 12 (12)
 2014	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-14: game 4, table 46 (46)
-2014	clubs	gre_prm (Super League Greece), row gre-pol-cro-41: game 14, table 18 (18)
-2014	clubs	gre_second (Football League North), row gre-pol-cro-68: game 14, table 13 (13)
 2014	clubs	world_club_champ (FIFA Club World Cup), row club-world-249: game 0, table 7 (7)
-2014	down	eng_third (Football League Two), row eng-161: game 1 (+0 play-off places), table 2 (2)
 2014	down	gre_prm (Super League Greece), row gre-pol-cro-41: game 2 (+0 play-off places), table 4 (4 (15th-18th))
 2014	down	gre_second (Football League North), row gre-pol-cro-68: game 2 (+0 play-off places), table 3 (3 per group (bottom three))
 2014	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-163: the game waits for 2016, the table holds it
@@ -18,7 +15,6 @@
 2014	no_row	record_utils ('B' International): no table row
 2014	no_row	record_utils (Reserve): no table row
 2014	no_row	record_utils (Under 21 International): no table row
-2014	not_held	gre_super (Greek Super Cup), row gre-pol-cro-95: the game holds 2014, the table says not held
 2014	not_held	new_concacaf_gold_cup (CONCACAF Gold Cup), row int-continental-148: the game holds 2015, the table says not held
 2014	not_in_game	eng-162 eng_conf 'Conference Premier' (England)
 2014	not_in_game	eng-379 eng_fa_trophy 'FA Trophy' (England)
@@ -31,18 +27,16 @@
 2015	bench	world_club_champ (FIFA Club World Cup), row club-world-268: game 7/9, table 12 (12)
 2015	clubs	euro_champ (UEFA European Championship), row int-continental-155: game 0/4, table 24 (24)
 2015	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-156: game 6, table 53 (53)
+2015	clubs	european_cup (UEFA Champions League), row uefa-114: game 77, table 78 (78 (32 in the group stage))
 2015	clubs	goldcup (Copa América), row int-continental-165: game 4, table 16 (16)
 2015	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-15: game 4, table 34 (34)
-2015	clubs	gre_prm (Super League Greece), row gre-pol-cro-42: game 14, table 16 (16)
-2015	clubs	gre_second (Football League), row gre-pol-cro-69: game 14, table 18 (18)
 2015	clubs	new_concacaf_gold_cup (CONCACAF Gold Cup), row int-continental-159: game 0/4, table 12 (12)
-2015	clubs	oceania_nations (OFC Nations Cup), row int-continental-164: game 0/3, table 8 (8)
-2015	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-174: game 50, table 54 (54 entrants)
+2015	clubs	oceania_nations (OFC Nations Cup), row int-continental-164: game 0/4, table 8 (8)
+2015	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-174: game 44, table 54 (54 entrants)
 2015	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-175: game 0, table 40 (40)
 2015	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-173: game 24, table 12 (12)
 2015	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-176: game 5, table 11 (11 entrants)
 2015	clubs	world_club_champ (FIFA Club World Cup), row club-world-268: game 0, table 7 (7)
-2015	down	eng_third (Football League Two), row eng-171: game 1 (+0 play-off places), table 2 (2)
 2015	down	gre_second (Football League), row gre-pol-cro-69: game 2 (+0 play-off places), table 4 (4 (bottom four))
 2015	name	goldcup (Copa América), row int-continental-165: game 'Copa América', table 'Copa América Centenario'
 2015	no_row	friendly (Friendly): no table row
@@ -51,7 +45,6 @@
 2015	no_row	record_utils (Under 21 International): no table row
 2015	not_held	african_nations (Africa Cup of Nations), row int-continental-161: the game holds 2015, the table says not held
 2015	not_held	asia_nations (AFC Asian Cup), row int-continental-163: the game holds 2015, the table says not held
-2015	not_held	gre_super (Greek Super Cup), row gre-pol-cro-96: the game holds 2015, the table says not held
 2015	not_held	olympics (Football at the Summer Olympics), row int-world-179: the game holds 2016, the table says not held
 2015	not_held	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-171: the game holds 2016, the table says not held
 2015	not_in_game	eng-172 eng_conf 'National League' (England)
@@ -61,18 +54,16 @@
 2016	bench	fifa_confed (FIFA Confederations Cup), row int-world-190: game 7, table 12 (12)
 2016	bench	world_club_champ (FIFA Club World Cup), row club-world-287: game 7/9, table 12 (12)
 2016	clubs	african_nations (Africa Cup of Nations), row int-continental-172: game 0/4, table 16 (16)
+2016	clubs	european_cup (UEFA Champions League), row uefa-122: game 77, table 78 (78 (32 in the group stage))
 2016	clubs	fifa_confed (FIFA Confederations Cup), row int-world-190: game 0/4, table 8 (8)
 2016	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-16: game 4, table 34 (34)
-2016	clubs	gre_prm (Super League Greece), row gre-pol-cro-43: game 14, table 16 (16)
-2016	clubs	gre_second (Football League), row gre-pol-cro-70: game 14, table 18 (18)
 2016	clubs	olympics (Football at the Summer Olympics), row int-world-191: game 4, table 16 (16)
-2016	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-186: game 50, table 20 (20)
+2016	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-186: game 44, table 20 (20)
 2016	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-187: game 0/4, table 12 (12)
 2016	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-185: game 24, table 6 (6)
 2016	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-183: game 5, table 54 (54 entrants)
 2016	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-188: game 5, table 6 (6)
 2016	clubs	world_club_champ (FIFA Club World Cup), row club-world-287: game 0, table 7 (7)
-2016	down	eng_third (EFL League Two), row eng-181: game 1 (+0 play-off places), table 2 (2)
 2016	down	gre_second (Football League), row gre-pol-cro-70: game 2 (+0 play-off places), table 4 (4 (bottom four))
 2016	name	goldcup (Copa América Centenario), row int-continental-176: game 'Copa América Centenario', table 'Copa América'
 2016	name	new_concacaf_gold_cup (2015 CONCACAF Gold Cup), row int-continental-170: game '2015 CONCACAF Gold Cup', table 'CONCACAF Gold Cup'
@@ -82,7 +73,6 @@
 2016	no_row	record_utils (Under 21 International): no table row
 2016	not_held	euro_champ (UEFA European Championship), row int-continental-166: the game holds 2016, the table says not held
 2016	not_held	goldcup (Copa América Centenario), row int-continental-176: the game holds 2016, the table says not held
-2016	not_held	gre_super (Greek Super Cup), row gre-pol-cro-97: the game holds 2016, the table says not held
 2016	not_held	new_concacaf_gold_cup (2015 CONCACAF Gold Cup), row int-continental-170: the game holds 2017, the table says not held
 2016	not_held	oceania_nations (OFC Nations Cup), row int-continental-175: the game holds 2016, the table says not held
 2016	not_in_game	eng-182 eng_conf 'National League' (England)

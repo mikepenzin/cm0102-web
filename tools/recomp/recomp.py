@@ -38,6 +38,7 @@ import callbacks  # noqa: E402
 from translate import GUARDS_SEEN, PATCHED, SITES_SEEN, FunctionWriter  # noqa: E402
 from crashguards import GUARDS  # noqa: E402
 from widescreen import INSNS, PATCHES, TRUE_WIDTH  # noqa: E402
+from league_sizes import table_insns  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 RUNTIME = os.path.join(ROOT, "src", "recomp_rt")
@@ -141,6 +142,8 @@ def main(argv):
 
     t_start = time.time()
     image = Image(args.exe)
+    # The table allocations of the grown league classes, found in the original (league_sizes.py GROWN, D21).
+    INSNS.update(table_insns(image.read, set(INSNS) | set(PATCHES)))
     known = read_functions(args.functions) if args.functions else []
     entries = [int(x, 16) for x in args.entries.split(",") if x]
     if args.all:

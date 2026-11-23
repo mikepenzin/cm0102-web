@@ -116,3 +116,42 @@ RT_WRAP(00415640, menu_rows_item)
     }
     o_00415640();
 }
+
+/* The arrow menu of a competition screen and its history screen (issue 163). comp_screens_add_related_comps_menu
+ * 0x49d070 lists the objects of one league table entry, and asks key_nation_index_of_comp 0x669470 which (0x49d10d).
+ * That function knows the world club competitions by the key ids of the Intercontinental Cup and the Club World
+ * Championship (0x669570, 0x66957a: entry 2). Any other record with no nation and no continent runs through its loop
+ * and gets the fallback entry 3, Europe (0x6695ac). The FIFA Intercontinental Cup is such a record, made for entry 2
+ * (season_club_cups.c), so its menu listed the UEFA competitions. For this one call the menu takes the entry that
+ * holds the competition. The other callers of 0x669470 keep its answer. */
+#define MENU_ENTRY_RET 0x49d112u
+#define ENTRIES 0xb63d60u               /* league table entries, 0x48 bytes */
+#define ENTRY_SIZE 0x48u
+#define ENTRY_COUNT 35u
+
+static int entry_holds_record(uint32_t entry, uint32_t rec)
+{
+    uint32_t e = ENTRIES + entry * ENTRY_SIZE, list = rd32(g_mem, e + 0x10);
+    int32_t n = (int32_t)rd32(g_mem, e + 0xc);
+    for (int32_t k = 0; list >= 0x10000u && k < n; k++) {
+        uint32_t obj = rd32(g_mem, list + 4u * (uint32_t)k);
+        if (obj >= 0x10000u && rd32(g_mem, obj + 4) == rec) return 1;
+    }
+    return 0;
+}
+
+void o_00669470(void);
+
+RT_WRAP(00669470, comp_menu_entry)
+{
+    uint32_t ret = rd32(g_mem, cpu.esp), rec = rt_arg(0);
+    o_00669470();
+    if (ret != MENU_ENTRY_RET || rt_unwinding || !season_comps_on()) return;
+    uint32_t asked = cpu.eax & 0xffu;
+    if (asked < ENTRY_COUNT && entry_holds_record(asked, rec)) return;
+    for (uint32_t e = 0; e < ENTRY_COUNT; e++) {
+        if (!entry_holds_record(e, rec)) continue;
+        cpu.eax = (cpu.eax & 0xffffff00u) | e;
+        return;
+    }
+}

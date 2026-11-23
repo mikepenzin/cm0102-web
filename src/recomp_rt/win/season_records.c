@@ -8,9 +8,12 @@
  * then treat them as clubs of the files. Record layouts: include/database.h. All work is in host memory. */
 #include "win.h"
 #include "season.h"
+#include "season_closed.h"
+#include "season_clubs.h"
 #include "season_dates.h"
 #include "season_names.h"
 #include "season_records.h"
+#include "season_rules.h"
 #include "seasons_db.h"
 #include "../host.h"
 
@@ -140,7 +143,7 @@ int season_records_load(const char *path)
         char *c[12];
         if (!split(line, c, 12)) return fail_table(path, lineno, "a wrong number of columns");
         RecordRow *r = &rows[nrows];
-        r->season = number(c[0], 2002, SEASON_LAST_YEAR);
+        r->season = number(c[0], SEASON_FIRST_YEAR, SEASON_RULE_LAST);
         r->division = c[1];
         r->real = c[2];
         r->name = c[3];
@@ -727,7 +730,10 @@ int season_records_merge(const char *dir, int season, SeasonRecordsFind find_sou
     log[0] = 0;
     int first = -1, n = 0;
     for (int i = 0; i < nrows; i++)
-        if (rows[i].season == season) {
+        /* 0.7.3 slice 6: the clubs of a closed league come with changing rules on only (decision L7). The rows of
+         * closed-leagues.tsv have no source. A row with a source belongs to the club list of its season. */
+        if (season_closed_league(rows[i].division) && !rows[i].source[0] && !season_next_rules()) continue;
+        else if (rows[i].season == season_clubs_list_season(rows[i].division, season)) {   /* item 260 */
             if (first < 0) first = i;
             result.row_of[n] = i;
             result.club_id[n] = -1;
@@ -757,14 +763,28 @@ int season_records_merge(const char *dir, int season, SeasonRecordsFind find_sou
         int nation_id = gets32(row(t, T_CLUB_COMP, d) + 0x5d);
         for (int i = 0; i < c && !skip[r]; i++) {
             const uint8_t *cl = row(t, T_CLUB, i);
-            char nm[64];
+            char nm[64], sh[64];
             field(cl + 4, 51, nm);
-            if (gets32(cl + 0x53) == nation_id && (!strcmp(nm, rr->name) || !strcmp(nm, rr->real))) {
+            field(cl + 0x38, 26, sh);
+            /* 0.7.3 slice 6: a closed league's club under another name of the table ("CF Montreal", "Montreal Impact"). */
+            const char *league = season_closed_league(rr->division);
+            int closed = league && season_closed_row(league, rr->real) >= 0;
+            int same = closed ? season_closed_club(league, nm, sh) == season_closed_row(league, rr->real)
+                              : !strcmp(nm, rr->name) || !strcmp(nm, rr->real);
+            if ((gets32(cl + 0x53) == nation_id || (closed && season_closed_abroad(league, nm, sh))) && same) {
                 skip[r] = 1;
                 result.held++;
                 fprintf(stderr, "recomp: club records: %s: this database holds the club (record %d), no new record\n",
                         rr->name, gets32(cl));
             }
+        }
+        /* 0.7.3 slice 7: two rows of one closed league's club make one record. The row with a source comes first
+         * (make_club_records.py): 2005 lists Queensland Roar, and the closed league table has Brisbane Roar. */
+        const char *closed_league = season_closed_league(rr->division);
+        int closed_row = closed_league ? season_closed_row(closed_league, rr->real) : -1;
+        for (int e = 0; closed_row >= 0 && e < r && !skip[r]; e++) {
+            const RecordRow *er = &rows[result.row_of[e]];
+            skip[r] = !strcmp(er->division, rr->division) && season_closed_row(closed_league, er->real) == closed_row;
         }
         will += !skip[r];
     }
@@ -983,7 +1003,11 @@ void season_records_before_load(const char *dir, int start_year)
     win_memory_files_clear();
     season_records_free();
     const char *off = getenv("RECOMP_CLUB_RECORDS");     /* test switch: off adds no club */
-    if (!season_code_on() || start_year == SEASON_FIRST_YEAR || !nrows || (off && !strcmp(off, "off"))) return;
+    /* A 2001 start takes records with changing rules on only (decision L7). The rules flag of the game is not set yet
+     * at the load, so the choice of the next new game decides (as season_history.c find_record). */
+    if (!season_code_on() || (start_year == SEASON_FIRST_YEAR && !season_next_rules()) || !nrows ||
+        (off && !strcmp(off, "off")))
+        return;
     char log[400];
     int k = season_records_merge(dir, start_year, find_source, log, sizeof log);
     if (k < 0) {
@@ -1055,6 +1079,104 @@ static int median_of(int *v, int n) { return median(v, n); }
  * of its continent (nation +0x71). A person can join only one club: he leaves the pool when he is placed, and every
  * person of a source squad is a new staff row of a club already. The joined date becomes 1 July of the start year
  * and the contract ends on 30 June of the year after. */
+/* A player joins a club of a running game. At a new game CONTRACT_MANAGER::initialise_all_staff_contracts 0x4c7560
+ * makes the contracts later (0x829809), in a running game nothing does. player_regen_sign_for_club 0x7a6f10 (staff,
+ * club; ret 8 at 0x7a6f5c) takes the first free squad slot (0x7a6f32..0x7a6f6a), sets the club (0x7a6f73), the value
+ * (0x4d0c60 at 0x7a6f81), the contract end (0x417c10 at 0x7a7064) and adds the contract (0x4c7950 at 0x7a7078). */
+#define F_SIGN_FOR_CLUB 0x7a6f10u
+#define G_CONTRACT_INDEX 0xae2d0cu      /* a staff id * 0x4f: the row of the contract (0x4c796d..0x4c7973) */
+static int joined_contracts;
+
+int season_records_joined_contracts(void) { return joined_contracts; }
+
+static void sign_in_running_game(uint32_t staff, uint32_t club)
+{
+    Cpu saved = cpu;
+    uint32_t args[2] = {staff, club};
+    rt_callback(F_SIGN_FOR_CLUB, 2, args);
+    if (!rt_unwinding) cpu = saved;
+}
+
+/* The fill of one club, from the staff rows 0 .. n - 1. cas has room for n values. The new players joined on day/year.
+ * Returns the players of the club after the fill, and adds to the counts of the caller. */
+static int fill_club(uint32_t club, int season, uint32_t n, int *cas, int day, int year, int running, int *filled)
+{
+    uint32_t staff = rd32(g_mem, G_STAFF), div = rd32(g_mem, club + 0x57), nation = rd32(g_mem, club + 0x53);
+    char name[52];
+    memcpy(name, g_mem + club + 4, 51);
+    name[51] = 0;
+    int slots = 0, players = 0, keepers = 0;
+    for (int j = 0; j < SQUAD; j++) {
+        uint32_t sp = rd32(g_mem, club + 0xd7 + 4 * (uint32_t)j);
+        if (!sp) continue;
+        slots = j + 1;
+        players++;
+        uint32_t pr = rd32(g_mem, sp + 0x61);
+        if (pr && g_mem[pr + 0x0f] >= KEEPER_FROM) keepers++;
+    }
+    if (players >= FILL_TO) return players;
+    int ncas = 0;
+    for (uint32_t i = 0; i < n; i++) {
+        uint32_t sp = staff + i * STAFF_SIZE, cl = rd32(g_mem, sp + 0x39), pr = rd32(g_mem, sp + 0x61);
+        if (cl && pr && rd32(g_mem, cl + 0x57) == div) cas[ncas++] = (int16_t)rd16(g_mem, pr + 5);
+    }
+    int good = median_of(cas, ncas);
+    uint32_t continent = nation ? rd32(g_mem, nation + 0x71) : 0;
+    int from_nation = 0, from_continent = 0;
+    for (int wide = 0; wide < 2 && players < FILL_TO; wide++)
+        while (players < FILL_TO && slots < SQUAD) {
+            int want_keeper = keepers < FILL_KEEPERS, best_key = 0;
+            uint32_t best = 0;
+            for (uint32_t i = 0; i < n; i++) {
+                uint32_t sp = staff + i * STAFF_SIZE;
+                if (rd32(g_mem, sp + 0x39) || g_mem[sp + 0x5f] != 2) continue;
+                uint32_t nat = rd32(g_mem, sp + 0x1a), pr = rd32(g_mem, sp + 0x61);
+                if (!pr || !nat) continue;
+                if (wide ? nat == nation || !continent || rd32(g_mem, nat + 0x71) != continent : nat != nation) continue;
+                int by = (int)rd16(g_mem, sp + 0x12);
+                int age = by > EMPTY_YEAR ? season - by : 0;
+                if (age < 17 || age > 34) continue;
+                if (want_keeper && g_mem[pr + 0x0f] < KEEPER_FROM) continue;
+                int ca = (int16_t)rd16(g_mem, pr + 5);
+                int key = ca >= good ? 100000 + (60 - age) * 1000 + ca : ca;  /* good ones youngest first */
+                if (!best || key > best_key) best_key = key, best = sp;
+            }
+            if (!best) {
+                if (want_keeper) { keepers = FILL_KEEPERS; continue; }   /* no goalkeeper left: any player */
+                break;
+            }
+            if (g_mem[rd32(g_mem, best + 0x61) + 0x0f] >= KEEPER_FROM) keepers++;
+            if (running) {
+                sign_in_running_game(best, club);
+                if (rt_unwinding) return players;
+                if (rd32(g_mem, best + 0x39) != club) break;    /* the signing found no free squad slot */
+                joined_contracts += (int32_t)rd32(g_mem, rd32(g_mem, G_CONTRACT_INDEX) + rd32(g_mem, best) * 0x4f) >= 0;
+                slots = 0;
+                for (int j = 0; j < SQUAD; j++)
+                    if (rd32(g_mem, club + 0xd7 + 4 * (uint32_t)j)) slots = j + 1;
+            } else {
+                wr32(g_mem, best + 0x39, club);
+                wr32(g_mem, best + 0x42, 0);
+                wr16(g_mem, best + 0x46, 180);             /* contract to 30 June of the year after */
+                wr16(g_mem, best + 0x48, (uint32_t)season + 1);
+                wr32(g_mem, best + 0x4a, 0);
+                wr32(g_mem, club + 0xd7 + 4 * (uint32_t)slots++, best);
+            }
+            g_mem[best + 0x3d] = 11;
+            wr16(g_mem, best + 0x3e, (uint32_t)day);
+            wr16(g_mem, best + 0x40, (uint32_t)year);
+            players++;
+            (*filled)++;
+            if (wide) from_continent++;
+            else from_nation++;
+        }
+    if (from_continent)
+        fprintf(stderr, "recomp: club records: %s: %d players of its nation and %d of its continent with no club\n",
+                name, from_nation, from_continent);
+    if (players < MIN_SQUAD) fprintf(stderr, "recomp: club records: %s has %d players, fewer than %d\n", name, players, MIN_SQUAD);
+    return players;
+}
+
 void season_records_fill(int season)
 {
     if (!loaded_records || season != loaded_season || rt_unwinding) return;
@@ -1067,81 +1189,32 @@ void season_records_fill(int season)
     for (int r = 0; r < result.n; r++) {
         if (result.club_id[r] < 0) continue;
         uint32_t club = clubs + (uint32_t)result.club_id[r] * CLUB_SIZE;
-        uint32_t div = rd32(g_mem, club + 0x57), nation = rd32(g_mem, club + 0x53);
-        char name[52];
-        memcpy(name, g_mem + club + 4, 51);
-        name[51] = 0;
-        if (!div) {
-            fprintf(stderr, "recomp: club records: %s has no division: no squad fill\n", name);
-            continue;
-        }
-        int slots = 0, players = 0, keepers = 0;
-        for (int j = 0; j < SQUAD; j++) {
-            uint32_t sp = rd32(g_mem, club + 0xd7 + 4 * (uint32_t)j);
-            if (!sp) continue;
-            slots = j + 1;
-            players++;
-            uint32_t pr = rd32(g_mem, sp + 0x61);
-            if (pr && g_mem[pr + 0x0f] >= KEEPER_FROM) keepers++;
-        }
-        if (players >= FILL_TO) continue;
-        int ncas = 0;
-        for (uint32_t i = 0; i < n; i++) {
-            uint32_t sp = staff + i * STAFF_SIZE, cl = rd32(g_mem, sp + 0x39), pr = rd32(g_mem, sp + 0x61);
-            if (cl && pr && rd32(g_mem, cl + 0x57) == div) cas[ncas++] = (int16_t)rd16(g_mem, pr + 5);
-        }
-        int good = median_of(cas, ncas);
-        uint32_t continent = nation ? rd32(g_mem, nation + 0x71) : 0;
-        int from_nation = 0, from_continent = 0;
-        for (int wide = 0; wide < 2 && players < FILL_TO; wide++)
-            while (players < FILL_TO && slots < SQUAD) {
-                int want_keeper = keepers < FILL_KEEPERS, best_key = 0;
-                uint32_t best = 0;
-                for (uint32_t i = 0; i < n; i++) {
-                    uint32_t sp = staff + i * STAFF_SIZE;
-                    if (rd32(g_mem, sp + 0x39) || g_mem[sp + 0x5f] != 2) continue;
-                    uint32_t nat = rd32(g_mem, sp + 0x1a), pr = rd32(g_mem, sp + 0x61);
-                    if (!pr || !nat) continue;
-                    if (wide ? nat == nation || !continent || rd32(g_mem, nat + 0x71) != continent : nat != nation) continue;
-                    int by = (int)rd16(g_mem, sp + 0x12);
-                    int age = by > EMPTY_YEAR ? season - by : 0;
-                    if (age < 17 || age > 34) continue;
-                    if (want_keeper && g_mem[pr + 0x0f] < KEEPER_FROM) continue;
-                    int ca = (int16_t)rd16(g_mem, pr + 5);
-                    int key = ca >= good ? 100000 + (60 - age) * 1000 + ca : ca;  /* good ones youngest first */
-                    if (!best || key > best_key) best_key = key, best = sp;
-                }
-                if (!best) {
-                    if (want_keeper) { keepers = FILL_KEEPERS; continue; }   /* no goalkeeper left: any player */
-                    break;
-                }
-                if (g_mem[rd32(g_mem, best + 0x61) + 0x0f] >= KEEPER_FROM) keepers++;
-                wr32(g_mem, best + 0x39, club);
-                g_mem[best + 0x3d] = 11;
-                wr16(g_mem, best + 0x3e, 181);                 /* joined 1 July of the start year */
-                wr16(g_mem, best + 0x40, (uint32_t)season);
-                wr32(g_mem, best + 0x42, 0);
-                wr16(g_mem, best + 0x46, 180);                 /* contract to 30 June of the year after */
-                wr16(g_mem, best + 0x48, (uint32_t)season + 1);
-                wr32(g_mem, best + 0x4a, 0);
-                wr32(g_mem, club + 0xd7 + 4 * (uint32_t)slots++, best);
-                players++;
-                filled++;
-                if (wide) from_continent++;
-                else from_nation++;
-            }
-        clubs_filled++;
-        if (from_continent)
-            fprintf(stderr, "recomp: club records: %s: %d players of its nation and %d of its continent with no club\n",
-                    name, from_nation, from_continent);
-        if (players < MIN_SQUAD) {
-            short_squads++;
-            fprintf(stderr, "recomp: club records: %s has %d players, fewer than %d\n", name, players, MIN_SQUAD);
-        }
+        /* A closed league's later club gets its squad when it joins (season_records_fill_club). */
+        if (!rd32(g_mem, club + 0x57)) continue;
+        int before = filled;
+        int players = fill_club(club, season, n, cas, 181, season, 0, &filled);    /* joined 1 July of the start year */
+        clubs_filled += filled > before || players < FILL_TO;
+        short_squads += players < MIN_SQUAD;
     }
     free(cas);
     fprintf(stderr, "recomp: club records: squad fill of %d clubs: %d players with no club joined, %d squads under %d\n",
             clubs_filled, filled, short_squads, MIN_SQUAD);
+}
+
+/* 0.7.3 slice 6: a club that joins a closed league at a season change takes its squad as a new record does at a new
+ * game, from the players with no club of the running game. The game date [0xae2c90] (s16 day, s16 year) is the day
+ * they join. [0xae2364] is the staff count, and the fill reads player rows only, so the human managers (its last 16
+ * rows, with no player row) take no part. */
+int season_records_fill_club(uint32_t club, int season)
+{
+    uint32_t n = rd32(g_mem, 0xae2364u);
+    int *cas = malloc(((size_t)n + 1) * sizeof *cas);
+    if (!cas) rt_fatal("club records: no memory");
+    int filled = 0;
+    joined_contracts = 0;
+    int players = fill_club(club, season, n, cas, (int16_t)rd16(g_mem, 0xae2c90u), (int16_t)rd16(g_mem, 0xae2c92u), 1, &filled);
+    free(cas);
+    return players;
 }
 
 void o_005267c0(void);
@@ -1235,8 +1308,9 @@ RT_WRAP(0090dae0, virtual_staff_top_up)
 
 
 /* Test log (RECOMP_CLUB_LOG=2): FIXTURE_MANAGER::add_fixture 0x5aa680 (its wrap in season_kind_cup_breaks.c calls
- * this), for a fixture whose record (+0x14) has the long name of RECOMP_FIXTURE_RECORD: the caller (return
- * address) and the fixture's clubs (+0x1c, +0x20). It only reads. */
+ * this), for a fixture whose record (+0x14) has the long name of RECOMP_FIXTURE_RECORD, or one of several names
+ * joined by "|": the caller (return address), the fixture's clubs (+0x1c, +0x20) with their names, and its date (day
+ * +0x2a, year +0x28). It only reads. */
 void season_records_fixture_log(uint32_t fx, uint32_t ret)
 {
     const char *want = getenv("RECOMP_FIXTURE_RECORD"), *v = getenv("RECOMP_CLUB_LOG");
@@ -1251,9 +1325,17 @@ void season_records_fixture_log(uint32_t fx, uint32_t ret)
         uint32_t c = rd32(g_mem, fx + 0x1c + 4u * (uint32_t)k);
         bad |= c < base || c >= end || (c - base) % 0x245u;
     }
-    if ((want && *want && !strcmp(rn, want)) || bad)
-        fprintf(stderr, "recomp: club records: add_fixture from %08x: %s, clubs %08x %08x%s\n", ret, rn,
-                rd32(g_mem, fx + 0x1c), rd32(g_mem, fx + 0x20), bad ? " (not a club)" : "");
+    int named = 0;
+    for (const char *w = want; w && *w && *rn && !named;) {         /* the names joined by "|" */
+        size_t len = strcspn(w, "|");
+        named = len == strlen(rn) && !strncmp(w, rn, len);
+        w += len + (w[len] == '|');
+    }
+    if (named || bad)
+        fprintf(stderr, "recomp: club records: add_fixture from %08x: %s, clubs %08x %08x%s %.24s v %.24s day %d/%d\n",
+                ret, rn, rd32(g_mem, fx + 0x1c), rd32(g_mem, fx + 0x20), bad ? " (not a club)" : "",
+                bad ? "?" : win_str(rd32(g_mem, fx + 0x1c) + 4), bad ? "?" : win_str(rd32(g_mem, fx + 0x20) + 4),
+                (int16_t)rd16(g_mem, fx + 0x2a), (int16_t)rd16(g_mem, fx + 0x28));
 }
 
 /* Test log (RECOMP_CLUB_LOG=2): League::create_fixtures 0x6835c0 (its wrap in season_uefa_league.c calls this):
@@ -1297,6 +1379,7 @@ void o_0090d2f0(void);
  * with no modal box that stops the game. The base game keeps the original's check (Q152). */
 void season_national_sizes(uint32_t fixture);   /* season_national_fill.c */
 void season_national_fill(uint32_t fixture);
+void season_national_prefill(uint32_t fixture);
 
 RT_WRAP(0090d2f0, virtual_staff_fill_check)
 {
@@ -1304,6 +1387,8 @@ RT_WRAP(0090d2f0, virtual_staff_fill_check)
     int season = season_code_on() && (season_start_year() != SEASON_FIRST_YEAR || season_changing_rules());
     if (season) g_mem[cpu.esp + 0xc] = 1;   /* no_check; the wrap of 0x90dae0 above names a short club (RECOMP_CLUB_LOG) */
     if (season) season_national_sizes(fixture);   /* a national side whose nation has no squad sizes */
+    if (season) season_national_prefill(fixture);   /* a short under-21 side (0.6.2 fault 65) */
+    if (rt_unwinding) return;
     o_0090d2f0();
     if (season && !rt_unwinding) season_national_fill(fixture);   /* a national side that stays short */
 }
@@ -1341,4 +1426,25 @@ RT_WRAP(006db500, team_pick_log)
     }
     fprintf(stderr, ", record %d %s, home %s, round %d\n", rec >= 0x10000u ? (int)rd32(g_mem, rec) : -1, cname, hname,
             (int16_t)rd16(g_mem, fixture + 0x30));
+    /* Each filled slot: the staff id, the age byte +0x18 (as 0x8cf9a8 reads it), the club of +0x39 when it is not
+     * this club, and the loan contract's club (the staff row [0xae2d0c] + id * 79, +4; the contract table
+     * [[0xae1050]], 80 bytes a contract, +4 the club id). */
+    uint32_t rows = rd32(g_mem, 0xae2d0cu), table = rd32(g_mem, 0xae1050u), clubs = rd32(g_mem, 0xae23b4u);
+    table = table ? rd32(g_mem, table) : 0;
+    fprintf(stderr, "recomp: club records:   slots:");
+    for (uint32_t j = 0; j < SQUAD; j++) {
+        uint32_t s = rd32(g_mem, club + 0xd7 + 4 * j);
+        if (!s) continue;
+        uint32_t id = rd32(g_mem, s), at = rd32(g_mem, s + 0x39);
+        fprintf(stderr, " %u/%d", id, (int8_t)g_mem[s + 0x18]);
+        if (at != club) fprintf(stderr, "@%.12s", at >= clubs && clubs && at < clubs + rd32(g_mem, 0xae235cu) * 0x245u ?
+                                                      (char *)(g_mem + at + 4) : "none");
+        int32_t loan = rows && id < rd32(g_mem, 0xae2364u) ? (int32_t)rd32(g_mem, rows + id * 79u + 4u) : -1;
+        if (loan >= 0 && table) {
+            int32_t lc = (int32_t)rd32(g_mem, table + (uint32_t)loan * 80u + 4u);
+            int ok = lc >= 0 && clubs && lc < (int32_t)rd32(g_mem, 0xae235cu);
+            fprintf(stderr, "(loan %.12s)", ok ? (char *)(g_mem + clubs + (uint32_t)lc * 0x245u + 4) : "?");
+        }
+    }
+    fputc('\n', stderr);
 }

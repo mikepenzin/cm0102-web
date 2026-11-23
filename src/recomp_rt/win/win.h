@@ -48,6 +48,17 @@ int win_host_path(const char *winpath, char *out, size_t room);
 /* The host path that a read of a Windows path opens (the user folder first, then the game folder); 0 when
  * the file does not exist. */
 int win_existing_file(const char *winpath, char *out, size_t room);
+/* The parts of a save merged across seasons (save_parts.c). win_list_files calls each with the name and host path
+ * of every file of a Windows folder that matches mask, as FindFirstFileA lists them (the user folder first), and
+ * gives the count, -1 when the folder has no host path. While win_find_hide is set, a find leaves out the names for
+ * which it gives 1. win_create_file opens a Windows path to write from the start, as CreateFileA with CREATE_ALWAYS
+ * (in the user folder): a host descriptor, or -1. */
+int win_list_files(const char *folder, const char *mask, void (*each)(const char *name, const char *host, void *ctx),
+                   void *ctx);
+void win_find_hide(int (*hidden)(const char *name));
+int win_create_file(const char *winpath);
+/* Deletes the user-folder file of a Windows path (not a save): 1 when a file was deleted (history_trim.c). */
+int win_delete_file(const char *winpath);
 /* The Windows path of a host folder (C:\ plus the host path). */
 void win_windows_path(const char *host, char *out, size_t room);
 extern char win_cwd[1024];             /* current folder, as a Windows path */
@@ -86,7 +97,32 @@ void win_read_settings(void);
 /* The option database changed: the next file open finds the data set folder again (files.c). */
 void win_data_set_changed(void);
 const char *win_data_set_dir(void);     /* the host folder of the data set, "" for the game's own Data */
+int win_data_set_has(const char *name); /* 1 when the data set folder holds its own copy of Data/<name> */
 const char *win_databases_root(void);   /* the folder that holds Databases: the save folder */
+void net_lobby_install(void);           /* net_lobby.c: online games in the game list, at the first WSAStartup */
+const char *net_lobby_host_line(char *out, unsigned room);   /* this host's place in the lobby, or NULL (slice 7) */
+/* 0.7.1 (#137): the game code and invite link while this host's game is open in the lobby (1), else 0. */
+int net_lobby_invite(char *code, unsigned code_room, char *link, unsigned link_room);
+void net_lobby_test_start(void);        /* the connection test on this game's lobby address (net_test.c) */
+/* net_session.c (0.7.0 slice 6): drop in, drop out and host quit. */
+void net_session_turn(void);            /* at each human turn */
+void net_session_game_ends(void);       /* at free_game_data 0x82ff40: the game ends */
+int net_session_hosting(void);          /* 1 while this game hosts a network game */
+typedef struct {                        /* one joining computer: its managers' names and clubs, empty while made */
+    int slot, managers;
+    char name[64], club[48];
+} NetManager;
+int net_session_managers(NetManager *out, int max);   /* the human managers online on this host: the count */
+int net_session_kick(int slot);         /* closes the connection of a player slot: 0 on success */
+int net_session_ping(int slot);         /* the ping of a player slot in ms, -1 when none is known (slice 7) */
+int net_session_defer_quit(void);       /* a window close or the script's quit: 1 when the host saves first */
+int net_session_screen_idle(void);      /* at the screen loop's poll: 1 when the host saved and now quits */
+int net_session_quit_overdue(void);     /* 1 when a deferred quit waited too long for the screen loop */
+void win_quit_now(void);                /* user32.c: saves the window place and ends the program with code 0 */
+int net_password_ask(int was_wrong);     /* net_password.c: opens the joiner's password box: 1 when it opened */
+void net_password_connecting(void);      /* at a join's connect */
+int net_password_typed(void);            /* 1 when the last refusal came after a password from the box */
+void net_password_reset(void);           /* a join passed or failed for another reason: the password goes */
 
 /* Sound (dsound.c): 0 mutes every sound while the window lacks focus, 1 makes them heard again. */
 void win_sound_focus(int focused);
@@ -95,6 +131,8 @@ void win_sound_focus(int focused);
 void win_video_init(void);
 /* Stores the window size, place and full screen state in window.txt (option remember_window). Call it at quit. */
 void win_save_window(void);
+/* The Screen Mode of the game (preference bit 0x8 Full, 0x10 Windowed): switches full screen on or off. Called from SetDisplayMode. */
+void win_screen_mode(int pref_full);
 void win_present(void);                /* show the primary surface */
 void win_poll_events(void);            /* SDL events to the message queue */
 void win_game_work(void);              /* user32.c: game work ran in this pass, no idle sleep (#58) */
@@ -103,6 +141,8 @@ void win_progress_idle(void);          /* display.c: the game waits for the play
  * the call (the return address is at [esp]), the caller's edi and the result, returns the result to use. NULL
  * when no code asks for it (season_uefa_qual.c, the Champions League group draw). */
 extern uint32_t (*win_random_hook)(uint32_t esp, uint32_t edi, uint32_t result);
+/* Item 155 (match_numbers.c): 1 unless RECOMP_ORIGINAL_FAULTS keeps the group match_numbers (original_faults.c). */
+int win_match_numbers_fix_on(void);
 uint32_t win_back_buffer(void);        /* flat address of the RGB565 back buffer, or 0 */
 void win_dump_screen(const char *path);
 extern uint32_t win_wndproc;
@@ -125,6 +165,11 @@ extern uint32_t win_hwnd;
 int holiday_widget_before(void);               /* at each widget create: 1 for the Go on Holiday item */
 void holiday_widget_after(void);               /* after that create: adds the new item */
 void screen_sweep_turn(void);                  /* RECOMP_SCREEN_SWEEP, at each human turn (screen_sweep.c) */
+void screen_sweep_build_now(void);             /* test runs: builds and draws the current screen now */
+void screen_sweep_menu_item(uint32_t text);    /* RECOMP_COMP_MENU_TEST: an item of the competition menu 0x49d070 */
+void squad_numbers_test_poll(void);            /* RECOMP_TEST_SQUAD_NUMBERS=screen, at each input poll (squad_numbers.c) */
+void squad_numbers_test_turn(void);            /* RECOMP_TEST_SQUAD_NUMBERS, at each human turn (squad_numbers.c) */
+void nation_job_turn(void);                    /* RECOMP_TEST_NATION_JOB, at each human turn (nation_job.c, Q15) */
 void holiday_next_turn(void);                  /* at each human turn, before the original */
 /* The Bosman Edition Options box (options_screen.c). */
 uint32_t options_screen_build_fn(void);        /* the build function of the box, for the wait state "options" */
@@ -233,5 +278,8 @@ struct SDL_Texture *win_sdl_texture(void);
 void display_report_event(const char *what);
 int display_report_write(const char *when, char *path, size_t room, char **text);
 void display_report_key(void);
+
+/* user32.c: a step of a long sort or a day's work; in the browser, every 1024th lets the page have a moment. */
+void win_sort_step(void);
 
 #endif

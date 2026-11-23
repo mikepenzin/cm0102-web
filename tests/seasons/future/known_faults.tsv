@@ -1,0 +1,2 @@
+# Known faults of ctest future_2300 (tests/seasons/future/test_future_2300.c): one key per line, then a tab and the
+# fault. The test fails on a fault that is not here, and on a key here that passes (then remove the line).

@@ -5,12 +5,11 @@
 2020	bench	world_club_champ (FIFA Club World Cup), row club-world-363: game 7/9, table 12 (12)
 2020	clubs	african_nations (Africa Cup of Nations), row int-continental-216: game 0/4, table 24 (24)
 2020	clubs	new_uefa_nations_league (2020-21 UEFA Nations League), row int-continental-212: game 4, table 55 (55)
-2020	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-234: game 50, table 40 (40)
+2020	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-234: game 48, table 40 (40)
 2020	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-235: game 0/4, table 40 (40)
 2020	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-233: game 24, table 30 (30, then 6)
 2020	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-231: game 5, table 55 (55 entrants)
 2020	clubs	world_club_champ (FIFA Club World Cup), row club-world-363: game 0, table 6 (6)
-2020	down	eng_third (EFL League Two), row eng-221: game 1 (+0 play-off places), table 2 (2)
 2020	no_row	friendly (Friendly): no table row
 2020	no_row	record_utils ('B' International): no table row
 2020	no_row	record_utils (Reserve): no table row
@@ -25,17 +24,16 @@
 2021	bench	european_cup (UEFA Champions League), row uefa-162: game 9, table 12 (12)
 2021	bench	new_conference_league (UEFA Europa Conference League), row uefa-166: game 9, table 12 (12)
 2021	bench	new_finalissima (2022 Finalissima), row int-continental-224: game 7, table 12 (12)
-2021	bench	uefa_cup (UEFA Europa League), row uefa-165: game 7/9, table 12 (12)
+2021	bench	uefa_cup (UEFA Europa League), row uefa-165: game 9, table 12 (12)
 2021	bench	world_club_champ (FIFA Club World Cup), row club-world-382: game 7/9, table 12 (12)
 2021	clubs	new_concacaf_gold_cup (CONCACAF Gold Cup), row int-continental-225: game 0/4, table 16 (16)
 2021	clubs	new_concacaf_nations_league (2022-23 CONCACAF Nations League), row int-continental-226: game 2, table 41 (41)
-2021	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-246: game 50, table 40 (40, then 10)
+2021	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-246: game 48, table 40 (40, then 10)
 2021	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-247: game 4, table 12 (12)
 2021	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-245: game 24, table 8 (8)
 2021	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-243: game 5, table 55 (55 entrants)
 2021	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-248: game 5, table 8 (8 in groups (Tonga withdrew); Cook Islands and Vanuatu withdrew because of COVID)
 2021	clubs	world_club_champ (FIFA Club World Cup), row club-world-382: game 0, table 7 (7)
-2021	down	eng_third (EFL League Two), row eng-231: game 1 (+0 play-off places), table 2 (2)
 2021	idle	olympics (Football at the Summer Olympics), row int-world-251: the game waits for 2024, the table holds it
 2021	name	new_uefa_nations_league (2020-21 UEFA Nations League), row int-continental-223: game '2020-21 UEFA Nations League', table '2020-21 Finals; 2022-23 UEFA Nations League (start)'
 2021	no_row	friendly (Friendly): no table row

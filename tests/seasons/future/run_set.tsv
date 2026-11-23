@@ -1,0 +1,59 @@
+# The run set of the release tests from 0.7.1 (spec docs/specs/2026-11-12-release-tests-0.7.1-spec.md, decisions R1 to R10; the 0.7.0 rows are in run_set_legacy.tsv, test data only).
+# Input of tests/seasons/future/run_set.py. One row per game.
+# tier: A (RECOMP_TIER_A=1, slice 3), B (the full world, with the world-health checks and the Tier B limits), world (as B
+#   with no Tier B limit, which needs decades of saves; the release rows), late (as B, from the checkpoint save of the
+#   Tier A row in the column from, in the year start; open item 193), weekly (as B with the test-only market
+#   RECOMP_TEST_MARKET_WEEKLY=1: the AI market on Mondays only; not the shipped game), jump (a new game in a far year,
+#   RECOMP_DATE_JUMP=1, the December 2025 database), normal (the full world, the checker only; the quick set that tests
+#   the script).
+# changing: changing rules on or off. nations: all, or names joined by commas. last: the last season (2100: the game
+# plays the season 2100/01). leg_years: the seasons of one leg (one save and load each); a leg that ends in a new
+# decade keeps its save as the checkpoint of that decade. set: release (the whole run set, Q12), quick (only with --set quick), background (plays on after the release, not in --verify). status: run, or waits (with the reason in note).
+# database (release tests 0.7.1, slice 1; empty means tile): tile (the data of the start year on the start screen),
+#   3.9.60, 3.9.65 or 3.9.68 (the base data, 2001 only). extras: none (empty), all (the English Conference, German
+#   Regionalliga, Serie C2, Spanish Segunda B, Portuguese Second Division B and Swedish Second Division) or names
+#   joined by commas. last: a season, or tile (the season before the end point of the start, Decisions R1 of the spec).
+name	tier	start	changing	nations	seed	last	leg_years	set	status	note	from	database	extras
+sp2001	world	2001	on	all	1	tile	1	release	run	R1 spine soak: the full world, plain Select All, from 2001 to the end point of the spec (World Cup and Euro)			
+sp2004	world	2004	on	all	1	tile	1	release	run	R1 spine soak: the full world, plain Select All, from 2004 to the end point of the spec (World Cup and Euro)			
+sp2008	world	2008	on	all	1	tile	1	release	run	R1 spine soak: the full world, plain Select All, from 2008 to the end point of the spec (World Cup and Euro)			
+sp2012	world	2012	on	all	1	tile	1	release	run	R1 spine soak: the full world, plain Select All, from 2012 to the end point of the spec (World Cup and Euro)			
+sp2016	world	2016	on	all	1	tile	1	release	run	R1 spine soak: the full world, plain Select All, from 2016 to the end point of the spec (World Cup and Euro)			
+sp2021	world	2021	on	all	1	tile	1	release	run	R1 spine soak: the full world, plain Select All, from 2021 to the end point of the spec (World Cup and Euro)			
+sp2024	world	2024	on	all	1	tile	1	release	run	R1 spine soak: the full world, plain Select All, from 2024 to the end point of the spec (World Cup and Euro)			
+sp2026	world	2026	on	all	1	tile	1	release	run	R1 spine soak: the full world, plain Select All, from 2026 to the end point of the spec (World Cup and Euro)			
+t2002	world	2002	on	all	1	2002	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2002/03			all
+t2003	world	2003	on	all	1	2003	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2003/04			all
+t2005	world	2005	on	all	1	2005	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2005/06			all
+t2006	world	2006	on	all	1	2006	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2006/07			all
+t2007	world	2007	on	all	1	2007	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2007/08			all
+t2009	world	2009	on	all	1	2009	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2009/10			all
+t2010	world	2010	on	all	1	2010	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2010/11			all
+t2011	world	2011	on	all	1	2011	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2011/12			all
+t2013	world	2013	on	all	1	2013	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2013/14			all
+t2014	world	2014	on	all	1	2014	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2014/15			all
+t2015	world	2015	on	all	1	2015	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2015/16			all
+t2017	world	2017	on	all	1	2017	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2017/18			all
+t2018	world	2018	on	all	1	2018	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2018/19			all
+t2019	world	2019	on	all	1	2019	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2019/20			all
+t2020	world	2020	on	all	1	2020	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2020/21			all
+t2022	world	2022	on	all	1	2022	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2022/23			all
+t2023	world	2023	on	all	1	2023	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2023/24			all
+t2025	world	2025	on	all	1	2025	1	release	run	R2 tile row: the full world, Select All with all six extra divisions, the first season change of 2025/26			all
+db3960	world	2001	on	all	1	2001	1	release	run	R3: 3.9.60 data, all six extra divisions, to Sep 2002 (item 224, line 656); sp2001 plays on to 2004		3.9.60	all
+db3965	world	2001	on	all	1	tile	1	release	run	R3: 3.9.65 data, all six extra divisions, to Sep 2004 (item 224, line 643)		3.9.65	all
+db3968	world	2001	on	all	1	tile	1	release	run	R3: 3.9.68 data, all six extra divisions, to Sep 2004 (item 123)		3.9.68	all
+off2001	world	2001	off	all	1	tile	1	release	run	R4: changing rules off, 3.9.68 data, to Sep 2004 (items 157 to 162, 102)		3.9.68	
+off2016	world	2016	off	all	1	tile	1	release	run	R4: changing rules off, to Sep 2021 (items 157 to 162, 102)			
+jump2098	jump	2098	on	all	1	2100	1	release	run	R6: a date jump through the season change of 2100/01 (the non-leap year 2100, item 169)			
+ta2001	A	2001	on	all	1	2060	10	release	run	R5: Tier A, all nations, 2001 to 2060, a checkpoint save each decade (items 201, 183, 218, 102)			
+ta2026	A	2026	on	all	1	2066	10	release	run	R5: Tier A, all nations, 2026 to 2066, a checkpoint save each decade (items 102, 194)			
+bg2300	A	2001	on	all	1	2300	10	background	run	R10: Tier A to 2300 while the Mac is idle, a checkpoint save each decade; not in --verify			
+bg2100	B	2025	on	all	1	2100	1	background	run	R10: the full world from 2025 to 2100 while the Mac is idle; not in --verify			
+quick2025	normal	2025	on	England	1	2026	1	quick	run	tests the script: two seasons, one save and load
+quickjump	jump	2098	on	England	1	2099	1	quick	run	tests the script: a date jump, two seasons
+quicka	A	2025	on	England	1	2034	5	quick	run	tests the script: Tier A, two legs of five seasons
+quickgre	normal	2025	on	Greece	1	2027	1	quick	run	open item 68: the Greek Super League 2 plays one group from 2026/27
+quick2026	normal	2026	on	all	1	2026	1	quick	run	slice 21: the 2026/27 tile, the full world one season, the checker on its save
+quick60x	normal	2001	on	all	1	2001	1	quick	run	slice 1 of the release tests: 3.9.60 with all six extra divisions, one season		3.9.60	all
+quick68	world	2001	on	England,France,Holland	1	2001	1	quick	run	slice 1 of the release tests: 3.9.68, one season		3.9.68	

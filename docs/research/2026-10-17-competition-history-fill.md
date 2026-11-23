@@ -128,7 +128,26 @@ The nation part pointer [0xae23dc]. After the grow it is base + (count - nation 
 
 The game then treats the rows as its own: at the creation of the game it keeps only the rows of the selected nations (0x539ae0, function map; seen in the test: the Scottish rows are in memory after the load and gone at the first turn of an England-only game). A saved game holds the rows; its load does not run the fill.
 
-Nothing changes for a start in 2001, for a start year that is not the season of the database (the table has rows for that season only), for a Custom database, and with `RECOMP_SEASON_CODE=off`.
+The researched rows do not come for a start in 2001, for an Update Team database in another season than its own (the shift of slice 11b moves its whole history by N - D, Q344, so real rows would sit beside moved ones), or for a Custom database. Since 0.6.2 (open item 149) they come for the official data sets in every start year: see "Official data sets in later start years" below. Nothing runs with `RECOMP_SEASON_CODE=off`. Since 0.6.2 (open item 74) the fill also runs without a shift plan, in every season game (a 2001 start with changing rules on included): it writes the past editions of the records that the season code adds, which no database holds (the Finalissima of 1985, 1993 and 2022; `new_comp_rows` in `season_history.c`, source Wikipedia, "Finalissima", Results). The base game adds no record and gets no row.
+
+### Official data sets in later start years (0.6.2 open item 149)
+
+The rule is the real-life rule: a game started in any year shows the real past editions of every competition. Before 0.6.2, the table held rows only for the season of each database, so the official data sets moved to a later start (3.9.60, 3.9.65 and 3.9.68 from 2003 on, and 3.9.60 and 3.9.65 also in 2002) got none: a 2004 start held no World Cup 2002, no Euro 2004 and no OFC Nations Cup 2002 or 2004, and no league row of 2002 to 2004 (`season_dates.c`, the log "3.9.68 in 2004: 2 rows written", session s062-145).
+
+The history of an official data set stays that of 2001 in every start year: its plan (`plan_for_folder`) moves no history year (`competition history +0`, no last rows). So `history_fill.py` makes the plan of each official data set for every start year from 2002 to the year after the last researched edition ended (2027), with the rules of "Which rows" (the research only, the July rule, the names of that data, no row for a winner the data lacks). Each plan row holds for one range of start years, from the first start year after its edition ended on (the tool stops when a row's start years are not one range). `plan-official.tsv` gives each row once, with its first start year (`start_year`) and its last (`last_start`, empty for every later one). The 2002/03 tile of 3.9.68 keeps its own entry in `plan.tsv`.
+
+In the game each official data set is one entry of the table (`last` 0xffff) and each row carries its range (`from`, `to`): `entry_for` takes the entry of the start year when there is one, else the official entry that holds for it, and the fill writes and clears only the rows whose range holds the start year.
+
+The research covers the label years 2001 to 2009 (200 to 500 rows a year) and, after that, only the World Cup and the Euro (and a few US Open Cup, Argentine and African rows). A 3.9.68 start in 2015 therefore holds the World Cups of 2010 and 2014 and the Euro 2012, but no league row of 2010 to 2014: those years need new research.
+
+The July rule, two additions (open item 149):
+
+- The World Cup and the Euro count in the start year of a July final (`JULY_FINALS` in `history_fill.py`). The game does not play them then: the finals code fills an edition only for a start in the finals' season or the one before (`real_draws`, `season_intl_rules.c`, Q388), and the 2010 gate saves of 0.6.0 hold no game row of the 2010 World Cup (the same rule as `GAP_FINALS` for the databases from 2010/11). So a 2010 start holds World Cup 2010 (final 11 July), a 2014 start World Cup 2014, a 2016 start Euro 2016.
+- `july-days.tsv` gives the day of the deciding match of every other researched edition that ended in July (69 editions, one source each: RSSSF, RSSSF Brasil or Wikipedia, read 5 November 2026). An edition decided from 1 to 9 July counts at that start year, as Euro 2004 and World Cup 2006 already did (`EARLY_JULY`, first news day 10 July or later). 17 editions: the Argentine Clausura 2003, 2005 and 2009, the Copa Libertadores 2003, 2004 and 2008, the Recopa 2009, the Austrian Super Cup 2001, 2002 and 2004, the Brazilian Cup 2009, the Gaucho 2003, the Rio de Janeiro lower division 2006, the Northeast 2001, the Indonesian and Malaysian first divisions 2002, the Arab Club Champions Cup 2005. This also adds those rows to the season databases in their own season (`plan.tsv`: 3.9.68 and Summer 2002 in 2002, October 2003, Summer 2004, September 2005, Summer 2006, December 2008, March 2009, September 2008, and the four databases of 2009). The note of the NSW Super League 2006 in `july-days.tsv` (the infobox and the match report name different champions) is open; its final of 16 July changes nothing.
+
+Changing rules off: the fill runs in every season game with the season code on, with the rules on or off, as before (`shift_for`, `season_dates.c`); a 2001 start has no plan and gets no row, so the base game does not change.
+
+Test: `tests/seasons/history_official_run.py` (3.9.68 in 2003, 2004 and 2010, 3.9.65 and 3.9.60 in 2004, Summer 2004 in its season).
 
 ### Test
 
@@ -160,7 +179,7 @@ Max answered on 2026-10-17 (spec, Q352 to Q357), and the build follows each answ
 - Q352: the researched rows replace the database rows of the label years 2002 to the start year (and 2001 where the 2000/01 pass has a row).
 - Q353: the calendar-year season of the start year is added.
 - Q354: the 2000/01 pass: `y2001-a.tsv` and `y2001-b.tsv` (233 rows for the 230 competitions of `targets-2001.tsv` that lack the label 2001 in at least one database after the shift), with their checks. Of 165 of those competitions with a 3.9.68 row at 2001, 163 agree with the research; the research corrects Italian Serie B (second Piacenza) and the Polish Super Cup (second Polonia Warszawa).
-- Q355: titles taken away later show the result on the pitch: Serie A 2004/05 and 2005/06 Juventus (second AC Milan), the Chinese league 2003 Shanghai Shenhua, the Polish Cup 2005 Dyskobolia.
+- Q355: titles taken away later show the result on the pitch: Serie A 2004/05 and 2005/06 Juventus (second AC Milan), the Chinese league 2003 Shanghai Shenhua, the Polish Cup 2005 Dyskobolia. Replaced on 3 November 2026 (0.6.2 item 108, Max: do what real life does): the rows give today's official record. Serie A 2005/06 holds Internazionale and AS Roma. Serie A 2004/05, the Chinese league 2003 and the Polish Cup 2005 are `not awarded` (no row). A start season that began before the ruling takes the holder of that time (`season_titles.c`, wrap of 0x4afd80 in `season_history.c`).
 - Q356: Dutch Premier Division 2005/06: PSV first, AZ second (the table). Ajax was 4th; the play-off decided a Champions League place.
 - Q357: the Austrian First Division and the Swiss National Division A rows carry the year where the season ends.
 

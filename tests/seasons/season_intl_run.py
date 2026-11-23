@@ -27,7 +27,8 @@ The checks (each run):
     - the jump ends with code 0 and the report holds the end of the last season
     - every year that the game holds for a finals class (world_cup, euro_champ, fifa_confed, olympics,
       goldcup, african_nations, asia_nations, oceania_nations) at the first report is the first edition of
-      the table from the start season (or the waiting year 2200 when the table has none)
+      the table from the start season, after the table on the class's last cycle (the never year 2999 for the
+      ended Confederations Cup)
     - on: when the year of a class changes between two reports, the new year is the next edition of the
       table (tools/seasons/make_intl.py); off: the old year plus the original's step
     - no draw after a full qualifying is short (log "short after a full qualifying"; a tie that ends after the
@@ -106,7 +107,11 @@ LINES = {"2015": ["euro_champ 2016 draw of 24 teams in 6 groups", "euro_champ 20
 NO_FILL = {"2008": ["world_cup 2010"], "2014": ["euro_champ 2016"]}
 STEPS = {"world_cup": 4, "euro_champ": 4, "fifa_confed": 2, "olympics": 4, "goldcup": 2, "african_nations": 2,
          "asia_nations": 4, "oceania_nations": 2}
-IDLE = 2200
+# After its table each class continues on its last cycle (0.6.2 decision A, season_intl_rules.c class_cycles); the
+# ended Confederations Cup waits for the never year 2999.
+CYCLES = {"world_cup": 4, "euro_champ": 4, "fifa_confed": 0, "olympics": 4, "goldcup": 4, "african_nations": 2,
+          "asia_nations": 4, "oceania_nations": 4}
+NEVER = 2999
 BASE_ENV = {"RECOMP_STAFF_RESERVE": "23000", "RECOMP_SEASON_INTL_LOG": "1"}
 HOST_LOG = re.compile(r"recomp: season intl: host (\w+) (\d+): (.*)$")
 
@@ -128,11 +133,26 @@ def table():
 
 
 def first(eds, start):
-    return next((e["year"] for e in eds if e["season"] >= start), IDLE)
+    hit = next((e["year"] for e in eds if e["season"] >= start), None)
+    if hit is not None:
+        return hit
+    last, cycle = eds[-1], CYCLES[eds[-1]["file"]]
+    if not cycle:
+        return NEVER
+    year = last["year"] + cycle
+    while year - (last["year"] - last["season"]) < start:
+        year += cycle
+    return year
 
 
 def nxt(eds, year):
-    return next((e["year"] for e in eds if e["year"] > year), IDLE if year < IDLE else year)
+    hit = next((e["year"] for e in eds if e["year"] > year), None)
+    if hit is not None:
+        return hit
+    last, cycle = eds[-1], CYCLES[eds[-1]["file"]]
+    if not cycle:
+        return max(year, NEVER)
+    return last["year"] + ((year - last["year"]) // cycle + 1) * cycle
 
 
 def check(name, start, rules, work):

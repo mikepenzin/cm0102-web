@@ -4,6 +4,7 @@
 Usage:
     python3 -I tests/seasons/season_screen_run.py <cm0102_recomp> <game folder> <folder of source zips>
         [--ref-build <program>] [--only <run>] [--shots <folder>] [--own-zips <folder>]
+        [--data-3960 <folder> --data-3965 <folder>]
 
 <folder of source zips> is test-fixtures/databases/zips. The run makes the season zips of four seasons with
 tools/release/make_season_zips.py and a new game folder: links to the files of <game folder> and Seasons/ with
@@ -32,12 +33,23 @@ unpacked into Databases (the log of seasons_db_prepare), and the save has the se
                 news screen: the save has no season part and the first news screen is in 2001. The run "ref" plays
                 the plain new game (this build, or --ref-build) and the run prints a note whether the saves are the
                 same: opening a screen moves the original's memory blocks (Q152), so a difference is expected.
+    data60      the data sets of the 2001/02 tile (item 11 of 0.6.1), with no database line (the default): the
+                screen opens with the 2001/02 tile chosen, three clicks on it go to 3.9.65, 3.9.68 and back to
+                3.9.60, then Start. Checks: settings.txt has database = 3.9.60 and Rio Ferdinand is at Leeds in
+                the save.
+    data65      as data60 with one click: database = 3.9.65, Ferdinand at Leeds.
+    data68      database = 3.9.65 in settings.txt: a click on the 2003/04 tile, a click on the 2001/02 tile (it
+                chooses the tile and keeps 3.9.65, the value of the setting), a click more (3.9.68), then Start.
+                Checks: database = 3.9.68, Ferdinand at Manchester United.
+                The data runs need Data-3.9.60 and Data-3.9.65 in <game folder>, or --data-3960 and --data-3965.
+                "--only data" plays the three of them and makes no season zips.
 --shots keeps a picture of the screen after the tile click of each run in that folder.
 """
 import concurrent.futures
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -49,6 +61,10 @@ sys.path.insert(0, os.path.join(ROOT, "tests", "smoke"))
 sys.path.insert(0, HERE)
 import season_core_run as core  # noqa: E402
 import smoke_run  # noqa: E402
+sys.path.insert(0, os.path.join(ROOT, "tools", "save"))
+sys.path.insert(0, os.path.join(ROOT, "tools", "seasons", "own_db"))
+import cmdb  # noqa: E402
+import savfile  # noqa: E402
 
 MAKE = os.path.join(ROOT, "tools", "release", "make_season_zips.py")
 
@@ -85,6 +101,45 @@ def game_steps(year, shots):
     return base[:i] + screen_steps(year, shots) + base[i:]
 
 
+# The data runs (item 11 of 0.6.1): settings.txt, the clicks on the 2001/02 tile, the database and the club of
+# Rio Ferdinand that the save must have.
+DATA_RUNS = {"data60": ({}, [2001, 2001, 2001], "3.9.60", "Leeds United"),
+             "data65": ({}, [2001], "3.9.65", "Leeds United"),
+             "data68": ({"database": "3.9.65"}, [2003, 2001, 2001], "3.9.68", "Manchester United")}
+
+
+def data_steps(clicks, shots, name):
+    base = core.new_game_steps()
+    i = base.index("wait setup") + 1
+    screen = [f"2000 {SETUP_SEASON}", "wait seasons"]
+    for k, year in enumerate(clicks):
+        screen.append(f"{2000 + 1500 * k} click {TILE[year][0]} {TILE[year][1]}")
+    t = 2000 + 1500 * len(clicks)
+    if shots:
+        screen.append(f"{t} dump {shots}/tile-{name}.bmp")
+    screen += [f"{t + 1000} {CHOOSE}", "wait setup 300000"]
+    return base[:i] + screen + base[i:]
+
+
+def clubs_in_save(path, first, second):
+    """The clubs of the players with these names in the data tables of a saved game (cmdb.py reads them: the
+    save's index.dat has the same rows as a data folder's, with more tables)."""
+    sav = savfile.Sav(path)
+    f = cmdb.Folder.__new__(cmdb.Folder)
+    f.path, f.raw, f.idx = path, {}, {}
+    for n in ("index.dat", "staff.dat", "first_names.dat", "second_names.dat", "common_names.dat", "club.dat",
+              "nat_club.dat"):
+        f.raw[n] = bytearray(sav.read_member(n))
+    ib = f.raw["index.dat"]
+    for i in range(8, len(ib) - 66, 67):
+        name = ib[i:i + 51].split(b"\0")[0].decode("latin1")
+        if name in f.raw:
+            tid, count, off, ver = struct.unpack_from("<iiii", ib, i + 51)
+            f.idx.setdefault(tid, dict(file=name, count=count, off=off, ver=ver, pos=i))
+    staff, clubs = cmdb.staff_view(f)
+    return [clubs.get(p["club"]) for p in staff if p["first"] == first and p["second"] == second]
+
+
 def custom_steps():
     base = core.new_game_steps()
     i = base.index("wait setup") + 1
@@ -119,20 +174,27 @@ def play_custom(program, game, work, zips):
     return (path if r.returncode == 0 and os.path.exists(path) else None), r.stderr, time.time() - start
 
 
-def make_game(game, zips, work, own=None):
-    """A game folder as in a download: links to the files of game, and Seasons/ with the season zips."""
+def make_game(game, zips, work, own=None, data_sets=None):
+    """A game folder as in a download: links to the files of game, and Seasons/ with the season zips (none when
+    zips is None). data_sets: {"Data-3.9.60": folder, ...} links the data sets that game lacks."""
     out = os.path.join(work, "zips")
-    only = [a for _, (_, z) in RUNS.items() if z for a in ("--only", z)]
-    sources = ["--season-dbs", zips] + (["--season-dbs", own] if own else [])
-    r = subprocess.run([sys.executable, "-I", MAKE, *sources, "--out", out, *only], capture_output=True, text=True)
-    if r.returncode:
-        raise SystemExit("make_season_zips.py failed: " + r.stderr[-400:])
+    if zips:
+        only = [a for _, (_, z) in RUNS.items() if z for a in ("--only", z)]
+        sources = ["--season-dbs", zips] + (["--season-dbs", own] if own else [])
+        r = subprocess.run([sys.executable, "-I", MAKE, *sources, "--out", out, *only], capture_output=True,
+                           text=True)
+        if r.returncode:
+            raise SystemExit("make_season_zips.py failed: " + r.stderr[-400:])
     folder = os.path.join(work, "game")
     os.makedirs(folder)
     for n in os.listdir(game):
         if n != "Seasons":
             os.symlink(os.path.join(game, n), os.path.join(folder, n))
-    os.symlink(out, os.path.join(folder, "Seasons"))
+    for n, src in (data_sets or {}).items():
+        if src and not os.path.exists(os.path.join(folder, n)):
+            os.symlink(src, os.path.join(folder, n))
+    if zips:
+        os.symlink(out, os.path.join(folder, "Seasons"))
     return folder
 
 
@@ -156,6 +218,8 @@ def main(argv):
     only = argv[argv.index("--only") + 1] if "--only" in argv else None
     shots = os.path.abspath(argv[argv.index("--shots") + 1]) if "--shots" in argv else None
     own = os.path.abspath(argv[argv.index("--own-zips") + 1]) if "--own-zips" in argv else None
+    data_sets = {f"Data-{v}": os.path.abspath(argv[argv.index(f"--data-{v.replace('.', '')}") + 1])
+                 for v in ("3.9.60", "3.9.65") if f"--data-{v.replace('.', '')}" in argv}
     if only in ("2002", "2004", "2006") and not own:
         print(f"FAIL  run {only} needs --own-zips (our own databases)")
         return 1
@@ -173,21 +237,27 @@ def main(argv):
             failed.append(text)
 
     with tempfile.TemporaryDirectory(prefix="cm0102-season-screen-") as work:
-        folder = make_game(game, zips, work, own)
+        folder = make_game(game, None if only == "data" else zips, work, own, data_sets)
         jobs = {}
         with concurrent.futures.ThreadPoolExecutor(7) as pool:
             for year in RUNS:
                 if only in (None, str(year)):
                     jobs[str(year)] = pool.submit(core.play, program, folder, work, str(year), {},
                                                   game_steps(year, shots), 1)
+            for name, (options, clicks, _, _) in DATA_RUNS.items():
+                if only in (None, "data", name):
+                    jobs[name] = pool.submit(core.play, program, folder, work, name, options,
+                                             data_steps(clicks, shots, name), 1)
             if only in (None, "custom"):
                 jobs["custom"] = pool.submit(play_custom, program, folder, work, zips)
             if only in (None, "base"):
-                jobs["base"] = pool.submit(core.play, program, folder, work, "base", {"changing_rules": "off"},
+                jobs["base"] = pool.submit(core.play, program, folder, work, "base",
+                                           {"changing_rules": "off", "database": "3.9.68"},
                                            game_steps(2001, shots), 14)
                 # Q342: the reference is the plain new game of the same build (or of --ref-build, the main build
                 # from slice 13 on): opening the screen and choosing 2001/02 must not change the game.
-                jobs["ref"] = pool.submit(core.play, ref or program, folder, work, "ref", {"changing_rules": "off"},
+                jobs["ref"] = pool.submit(core.play, ref or program, folder, work, "ref",
+                                          {"changing_rules": "off", "database": "3.9.68"},
                                           core.new_game_steps(), 14, None, None, None, 900)
             results = {k: v.result() for k, v in jobs.items()}
         for name, (path, log, took) in results.items():
@@ -215,6 +285,15 @@ def main(argv):
                       f"{year}: Databases/{zipname} is there")
             part = core.read_part(path)
             check(part is not None and part[2] == year, f"{year}: the save has the season part with {year} ({part})")
+        for name, (_, _, value, club) in DATA_RUNS.items():
+            if name not in results:
+                continue
+            path, log, _ = results[name]
+            s = settings_of(os.path.join(work, name, "user", "settings.txt"))
+            check(s.get("database") == value and s.get("season") == "2001/02",
+                  f"{name}: settings.txt has database = {s.get('database')}, season = {s.get('season')}")
+            clubs = clubs_in_save(path, "Rio", "Ferdinand") if path else None
+            check(clubs == [club], f"{name}: Rio Ferdinand is at {clubs} in the save (want {club})")
         if "custom" in results:
             path, log, _ = results["custom"]
             s = settings_of(os.path.join(work, "custom", "user", "settings.txt"))

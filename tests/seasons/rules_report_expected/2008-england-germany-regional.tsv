@@ -4,25 +4,21 @@
 2008	clubs	european_cup (UEFA Champions League), row uefa-58: game 55, table 76 (76 (32 in the group stage))
 2008	clubs	fifa_confed (FIFA Confederations Cup), row int-world-94: game 0/4, table 8 (8)
 2008	clubs	intertoto_cup (UEFA Intertoto Cup), row uefa-63: game 60, table 50 (50)
-2008	clubs	oceania_nations (OFC Nations Cup), row int-continental-87: game 0/3, table 4 (4)
 2008	clubs	olympics (Football at the Summer Olympics), row int-world-95: game 4, table 16 (16)
 2008	clubs	uefa_cup (UEFA Cup), row uefa-61: game 153, table 157 (157 in all, with the 24 Champions League clubs (the page labels it qualifying; i)
-2008	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-90: game 50, table 20 (20)
+2008	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-90: game 42, table 20 (20)
 2008	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-91: game 0/4, table 10 (10)
 2008	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-89: game 24, table 12 (12, then 6)
 2008	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-87: game 5, table 53 (53 entrants)
 2008	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-92: game 5, table 4 (4)
 2008	clubs	world_club_champ (FIFA Club World Cup), row club-world-135: game 0, table 7 (7)
-2008	down	eng_third (Football League Two), row eng-101: game 1 (+0 play-off places), table 2 (2)
 2008	down	ger_second (2. Bundesliga), row ger-93: game 3 (+0 play-off places), table 2 (2)
 2008	no_row	friendly (Friendly): no table row
 2008	no_row	record_utils ('B' International): no table row
 2008	no_row	record_utils (Reserve): no table row
 2008	no_row	record_utils (Under 21 International): no table row
-2008	not_held	ger_lge_cup (DFL-Ligapokal), row ger-102: the game holds 2008, the table says not held
 2008	not_in_game	eng-102 eng_conf 'Conference Premier' (England)
 2008	not_in_game	eng-343 eng_fa_trophy 'FA Trophy' (England)
-2008	not_in_game	eng-345 new 'Conference League Cup (Setanta Shield)' (England)
 2008	not_in_game	ger-103 new 'T-Home Supercup' (Germany)
 2008	not_in_game	uefa-57 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2008	playoffs	ger_first (Bundesliga), row ger-92: game 0 up and 0 down play-off places, table 0 and 1 ('16th v 2. Bundesliga 3rd, two legs, away goals rule, extra time and penalties')
@@ -37,16 +33,16 @@
 2009	clubs	african_nations (Africa Cup of Nations), row int-continental-95: game 0/4, table 16 (16 (15 played))
 2009	clubs	european_cup (UEFA Champions League), row uefa-66: game 55, table 76 (76 (32 in the group stage))
 2009	clubs	uefa_cup (UEFA Cup), row uefa-69: game 153, table 192 (192 (159 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
-2009	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-102: game 50, table 20 (20)
+2009	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-102: game 42, table 20 (20)
 2009	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-103: game 4, table 2 (2)
 2009	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-101: game 24, table 6 (6)
 2009	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-99: game 5, table 53 (53 entrants)
 2009	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-104: game 5, table 1 (1)
 2009	clubs	world_club_champ (FIFA Club World Cup), row club-world-154: game 0, table 7 (7)
 2009	clubs	world_cup (FIFA World Cup), row int-world-98: game 0/4, table 32 (32)
-2009	down	eng_third (Football League Two), row eng-111: game 1 (+0 play-off places), table 2 (2)
 2009	down	ger_second (2. Bundesliga), row ger-106: game 3 (+0 play-off places), table 2 (2)
 2009	format	uefa_cup, row uefa-69: game 40 clubs in the group stage and 32 in the knockout round after it, table 48 and 32
+2009	name	new_conf_cup (Conference League Cup (Setanta Shield)), row eng-351: game 'Conference League Cup (Setanta Shield)', table 'Conference League Cup'
 2009	name	uefa_cup (UEFA Cup), row uefa-69: game 'UEFA Cup', table 'UEFA Europa League'
 2009	no_row	friendly (Friendly): no table row
 2009	no_row	record_utils ('B' International): no table row
@@ -54,9 +50,9 @@
 2009	no_row	record_utils (Under 21 International): no table row
 2009	not_held	euro_champ_qual (UEFA European Championship qualifying), row int-continental-90: the game holds 2010, the table says not held
 2009	not_held	fifa_confed (FIFA Confederations Cup), row int-world-106: the game holds 2009, the table says not held
-2009	not_held	ger_lge_cup (DFL-Ligapokal), row ger-115: the game holds 2009, the table says not held
 2009	not_held	intertoto_cup (UEFA Intertoto Cup), row uefa-71: the game holds 2009, the table says not held
-2009	not_held	oceania_nations (OFC Nations Cup), row int-continental-98: the game holds 2010, the table says not held
+2009	not_held	new_conf_cup (Conference League Cup (Setanta Shield)), row eng-351: the game holds 2009, the table says not held
+2009	not_held	oceania_nations (OFC Nations Cup), row int-continental-98: the game holds 2008, the table says not held
 2009	not_held	olympics (Football at the Summer Olympics), row int-world-107: the game holds 2008, the table says not held
 2009	not_in_game	eng-112 eng_conf 'Conference Premier' (England)
 2009	not_in_game	eng-349 eng_fa_trophy 'FA Trophy' (England)

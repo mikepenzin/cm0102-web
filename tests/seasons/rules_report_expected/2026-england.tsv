@@ -1,0 +1,26 @@
+# Differences between the rules report and the rules table that the check accepts. Made by
+# tests/seasons/rules_report_check.py --update-expected. Columns: season, kind, text.
+2026	bench	asia_nations (AFC Asian Cup), row int-continental-284: game 7/9, table 15 (15)
+2026	bench	eur_super_cup (UEFA Super Cup), row uefa-208: game 9, table 12 (12 (23 players on the match sheet, Art. 40.01))
+2026	bench	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 9, table 12 (12)
+2026	bench	european_cup (UEFA Champions League), row uefa-202: game 9, table 12 (12)
+2026	bench	new_conference_league (UEFA Conference League), row uefa-206: game 9, table 12 (12)
+2026	bench	uefa_cup (UEFA Europa League), row uefa-205: game 9, table 12 (12)
+2026	clubs	african_nations (Africa Cup of Nations), row int-continental-282: game 0/4, table 24 (24)
+2026	clubs	asia_nations (AFC Asian Cup), row int-continental-284: game 0/4, table 24 (24)
+2026	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 6, table 54 (54 (scheduled))
+2026	clubs	new_concacaf_gold_cup (2027 CONCACAF Gold Cup), row int-continental-280: game 4, table 16 (16)
+2026	clubs	new_uefa_nations_league (2026-27 UEFA Nations League), row int-continental-278: game 4, table 54 (54)
+2026	idle	new_concacaf_nations_league (2026-27 CONCACAF Nations League), row int-continental-281: the game waits for 2028, the table holds it
+2026	idle	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-306: the game waits for 2028, the table holds it
+2026	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-307: the game waits for 2028, the table holds it
+2026	idle	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-308: the game waits for 2028, the table holds it
+2026	idle	wc_south_american_league (FIFA World Cup qualification (CONMEBOL)), row int-world-304: the game waits for 2028, the table holds it
+2026	no_row	friendly (Friendly): no table row
+2026	no_row	record_utils ('B' International): no table row
+2026	no_row	record_utils (Reserve): no table row
+2026	no_row	record_utils (Under 21 International): no table row
+2026	not_in_game	eng-282 eng_conf 'National League' (England)
+2026	not_in_game	eng-451 eng_fa_trophy 'FA Trophy' (England)
+2026	not_in_game	uefa-201 uefa_seeding 'UEFA access list and seeding' (UEFA)
+2026	playoffs	eng_first (EFL Championship), row eng-279: game 4 up and 0 down play-off places, table 6 and 0 ('3rd-8th: 5v8 and 6v7 single-leg eliminators (higher club at home), then semi-fin')

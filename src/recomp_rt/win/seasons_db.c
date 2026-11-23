@@ -26,6 +26,22 @@ static const char *const data_files[] = {
     "staff_comp.dat", "staff_comp_history.dat", "staff_history.dat"};
 enum { FILE_COUNT = sizeof data_files / sizeof *data_files };
 
+/* The optional files of a season zip (tools/release/make_season_zips.py OPTIONAL_FILES), unpacked when the zip has
+ * them. Without one the game reads the file of its own Data.
+ * - euro.cfg: the first season's European entrants (UefaSeeding::apply_euro_cfg_order 0x9059e0; 0.6.2 open item
+ *   100, season_uefa_seeding.c rt_euro_cfg_year).
+ * - player_setup.cfg: the loans, injuries, bans, retirements and future transfers of the database
+ *   (player_setup_apply_line 0x7a3a10; open item 229, player_setup.c moves its dates to the season). */
+static const char *const optional_files[] = {"euro.cfg", "player_setup.cfg"};
+enum { OPTIONAL_COUNT = sizeof optional_files / sizeof *optional_files };
+
+static int optional_index(const char *base)
+{
+    for (int o = 0; o < OPTIONAL_COUNT; o++)
+        if (!strcasecmp(base, optional_files[o])) return o;
+    return -1;
+}
+
 /* ---- Names and the table ---- */
 
 SeasonsDecade seasons_db_decade(int y)
@@ -316,8 +332,10 @@ void seasons_db_scan_in(const char *game_dir, const char *save_dir, SeasonsList 
                 snprintf(s->folder, sizeof s->folder, "%s", names[i]);
             }
         } else if (s->extra_count < SEASONS_EXTRA_MAX) {
-            int dup = 0;                          /* a copy of a data set that the game folder holds */
-            for (int j = 0; j < s->extra_count; j++) dup |= s->extra[j].db == k;
+            /* a copy of a data set that the game folder holds: by name, since 3.9.60 and 3.9.65 have two rows (the
+             * shipped files and the forum files, open item 230) and the identify cache keeps only the name */
+            int dup = 0;
+            for (int j = 0; j < s->extra_count; j++) dup |= !strcmp(s->extra[j].db->name, k->name);
             if (dup) continue;
             SeasonsExtra *x = &s->extra[s->extra_count++];
             x->db = k;
@@ -432,6 +450,18 @@ static int unpack_zip(const char *zip, const char *tmp, const SeasonKnownDb *row
         }
         int k;
         for (k = 0; k < FILE_COUNT; k++) if (!strcasecmp(base, data_files[k])) break;
+        /* An optional file (optional_files) is unpacked when the zip has it. */
+        int o = k == FILE_COUNT ? optional_index(base) : -1;
+        if (o >= 0) {
+            char out[1400], hex[65];
+            snprintf(out, sizeof out, "%s/%s", tmp, optional_files[o]);
+            if (seasons_zip_extract(&z, i, out, hex, err, sizeof err)) {
+                say(r, "Could not unpack %s: %s.", row->name, err);
+                seasons_zip_close(&z);
+                return -1;
+            }
+            continue;
+        }
         if (k == FILE_COUNT) continue;              /* a readme or a picture: not part of a database */
         if (seen[k]) {
             say(r, "The file for %s holds %s twice.", row->name, data_files[k]);
@@ -464,6 +494,72 @@ static int unpack_zip(const char *zip, const char *tmp, const SeasonKnownDb *row
         return -1;
     }
     return 0;
+}
+
+/* Removes the <name>.*.tmp files of a copy that stopped (a crash between the extract and the rename) when
+ * nobody changed them for an hour. A fresh one may belong to a run that is writing it now. */
+static void remove_stale_parts(const char *folder, const char *name)
+{
+    char names[8][260];
+    int n = 0;
+    size_t nl = strlen(name);
+    HostDir *d = host_opendir(folder);
+    if (!d) return;
+    const char *e;
+    while ((e = host_readdir(d)) && n < 8) {
+        size_t len = strlen(e);
+        if (len > nl + 5 && !strncasecmp(e, name, nl) && e[nl] == '.' && !strcasecmp(e + len - 4, ".tmp"))
+            snprintf(names[n++], sizeof names[0], "%s", e);
+    }
+    host_closedir(d);
+    int64_t now = (int64_t)(host_unix_time_us() / 1000000u);
+    for (int i = 0; i < n; i++) {
+        char p[1400];
+        HostStat st;
+        snprintf(p, sizeof p, "%s/%s", folder, names[i]);
+        if (!host_stat(p, &st) && !st.is_dir && st.mtime < now - 3600) host_unlink(p);
+    }
+}
+
+/* A folder that a player unpacked from an older zip lacks an optional file: euro.cfg before 0.6.2 (open item 100),
+ * player_setup.cfg before 0.7.2 (open item 229). When the folder lacks the file and the zip of the season has it,
+ * copies it in. A file that is there is never replaced. The file is written under a temporary name and renamed, so
+ * a stop leaves no half file under the real name. A failure changes nothing: the game then reads the file of its own
+ * Data, as before. */
+static void add_missing_optional(const char *game_dir, const SeasonKnownDb *row, const char *folder)
+{
+    char zip[1100];
+    HostStat st;
+    int missing[OPTIONAL_COUNT], any = 0;
+    for (int o = 0; o < OPTIONAL_COUNT; o++) {
+        char have[1300];
+        remove_stale_parts(folder, optional_files[o]);
+        missing[o] = !find_file(folder, optional_files[o], have, sizeof have);   /* any case of the name counts */
+        any |= missing[o];
+    }
+    if (!any || !zip_path(game_dir, row, zip, sizeof zip) || host_stat(zip, &st) || st.is_dir) return;
+    SeasonsZip z;
+    char err[160] = "";
+    if (seasons_zip_open(&z, zip, err, sizeof err)) return;
+    for (int o = 0; o < OPTIONAL_COUNT; o++) {
+        if (!missing[o]) continue;
+        int found = -1;
+        for (int i = 0; i < z.count; i++) {
+            const SeasonsZipEntry *e = &z.e[i];
+            const char *base;
+            if (e->is_dir || !safe_entry_name(e->name, &base) || strcasecmp(base, optional_files[o])) continue;
+            found = i;                               /* the last entry, as unpack_zip keeps it */
+        }
+        if (found < 0) continue;
+        char cfg[1300], part[1400], hex[65];
+        snprintf(cfg, sizeof cfg, "%s/%s", folder, optional_files[o]);
+        snprintf(part, sizeof part, "%s/%s.%lu-%llu.tmp", folder, optional_files[o], (unsigned long)getpid(),
+                 (unsigned long long)host_unix_time_us());
+        if (seasons_zip_extract(&z, found, part, hex, err, sizeof err) ||
+            host_rename_new(part, cfg))                          /* a file that came meanwhile is kept */
+            host_unlink(part);
+    }
+    seasons_zip_close(&z);
 }
 
 SeasonsPrepareStatus seasons_db_prepare_in(const char *game_dir, const char *save_dir, int year, SeasonsPrepare *r)
@@ -499,6 +595,7 @@ SeasonsPrepareStatus seasons_db_prepare_in(const char *game_dir, const char *sav
     if (pick >= 0) {
         snprintf(r->name, sizeof r->name, "%s", names[pick]);
         dbfolders_path(save_dir, r->name, r->path, sizeof r->path);
+        add_missing_optional(game_dir, row, r->path);
         return r->status = SEASONS_PREPARE_OK;
     }
 

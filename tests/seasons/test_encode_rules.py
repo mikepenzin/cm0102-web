@@ -91,8 +91,16 @@ check(foreign("Italy", 2011, "Serie A: two non-EU signings from abroad per seaso
       "Italy: quota of signings")
 check(foreign("Russia", 2008, "Premier League: at most 6 foreigners on the pitch (6+5)")[0:3:2] == ("gap", "pitch"),
       "Russia: a limit on the pitch")
-check(foreign("Croatia", 2025, "HNL: 6 non-EU players per team per match; Ukrainian players counted as domestic")[0:3:2]
-      == ("gap", "kind"), "Croatia: non-EU limit against a foreign slot")
+# Croatia (issue 135): a non-EU limit, or foreign players with EU/EEA nationals not counted, moves the game's foreign
+# limit to the non-EU slot (squad_non_eu N, squad_foreign none); before 2013/14 every foreigner counts.
+check(foreign("Croatia", 2025, "HNL: 6 non-EU players per team per match; Ukrainian players counted as domestic")[0:2]
+      == ("ok", (6, "none", "keep", "keep")), "Croatia 2025: 6 non-EU")
+check(foreign("Croatia", 2013, "HNL: 6 foreign players per match; EU/EEA nationals and Croatian dual nationals not "
+              "counted as foreign")[0:2] == ("ok", (6, "none", "keep", "keep")), "Croatia 2013: 6 non-EU")
+check(foreign("Croatia", 2007, "no quota on foreigners, but max 4 may be fielded")[0:2]
+      == ("ok", ("keep", 4, "keep", "keep")), "Croatia 2007: 4 foreign")
+check(foreign("Croatia", 2016, "HNL and cup: 8 foreign players per team from 18 October 2016 (6 before)")[0:3:2]
+      == ("gap", "mid_season"), "Croatia 2016: a change in the season")
 check(foreign("Norway", 2001, "unknown")[0] == "keep", "unknown keeps")
 
 # --- permits and registration

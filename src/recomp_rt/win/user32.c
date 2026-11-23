@@ -21,6 +21,9 @@
 #include "options.h"
 #include "winfit.h"
 #include "winscale.h"
+#include "press_hold.h"
+#include "net_core.h"
+#include "invite.h"
 
 #include <SDL.h>
 #include <stdlib.h>
@@ -140,12 +143,13 @@ static int in_wait;
 static uint32_t press_count;
 uint32_t win_press_count(void) { return press_count; }
 static uint64_t press_at;
+static int press_x, press_y;       /* where the press went down */
 
 static void post_mouse(uint32_t msg, int x, int y)
 {
     mouse_x = x;
     mouse_y = y;
-    if (msg == WM_LBUTTONDOWN) { press_count++; press_at = SDL_GetTicks64(); }
+    if (msg == WM_LBUTTONDOWN) { press_count++; press_at = SDL_GetTicks64(); press_x = x, press_y = y; }
     post(msg, (uint32_t)buttons, mouse_lparam());
 }
 
@@ -277,15 +281,94 @@ static int full_screen_on(void)
     return SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
 
-static void toggle_full_screen(void)
+/* The Screen Mode row of the Preferences screen: bit 0x8 (Full) or 0x10 (Windowed) of the preference word
+ * at +4 of the game options object [0xae3138] (Config::set_option 0x5d7c60 cases 8 and 0x10). */
+#define GAME_OPTIONS 0xae3138u
+#define PREF_FULL 0x8u
+#define PREF_WINDOWED 0x10u
+#define DISPLAY_IS_FULL 0xae319cu       /* the full screen flag of the display code: set by 0x5e2620, read by 0x5e2ea0 */
+
+static int window_is_full(void)
 {
-    if (!window) return;
-    int full = (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) != 0;
-    if (full ? SDL_SetWindowFullscreen(window, 0) : full_screen_on())
+    return window && (SDL_GetWindowFlags(window) & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP)) != 0;
+}
+
+/* Sets the row and the full screen flag of the display code to the real state of the window. Ok on the Preferences
+ * screen (Config::apply_and_save 0x5d8480) starts the display init 0x5e2620 only when the row and the flag (0x5e2ea0)
+ * disagree, so without this a change of the F11 key, or a window that the start left in a window while the row said
+ * Full, would not match the row. Writes the same bits as 0x5d7c60, only when they differ. */
+static void sync_screen_mode_row(void)
+{
+    uint32_t obj = rd32(g_mem, GAME_OPTIONS);
+    if (!obj) return;
+    wr32(g_mem, DISPLAY_IS_FULL, window_is_full());
+    uint32_t bits = rd32(g_mem, obj + 4);
+    uint32_t want = (bits & ~(PREF_FULL | PREF_WINDOWED)) | (window_is_full() ? PREF_FULL : PREF_WINDOWED);
+    if (want != bits) wr32(g_mem, obj + 4, want);
+}
+
+static void set_full_screen(int want)
+{
+    if (!window || window_is_full() == want) return;
+    if (want ? full_screen_on() : SDL_SetWindowFullscreen(window, 0))
         fprintf(stderr, "recomp: full screen: %s\n", SDL_GetError());
     update_scaling();
     win_screen_dirty = 1;
-    display_report_event(full ? "full screen off" : "full screen on");
+    display_report_event(want ? "full screen on" : "full screen off");
+}
+
+static void toggle_full_screen(void)
+{
+    if (!window) return;
+    set_full_screen(!window_is_full());
+    sync_screen_mode_row();
+}
+
+/* 1 when the game options come from game.cfg or were applied once: the flag at +0x213 (0x81ba23 opens the settings
+ * screen of a first start when it is 0; 0x5d8480 sets it to 1 after it wrote the file). */
+static int prefs_saved(void)
+{
+    uint32_t obj = rd32(g_mem, GAME_OPTIONS);
+    return obj && rd32(g_mem, obj + 0x213) != 0;
+}
+
+/* The remembered full screen state of the last quit (window.txt), read when the window opens. */
+static int remembered_known, remembered_full;
+static int screen_mode_started;
+
+/* The original asks for the mode through IDirectDraw::SetCooperativeLevel in its display init 0x5e2620
+ * (DDSCL_FULLSCREEN 0x13 or DDSCL_NORMAL 8, from bit 0x8 of the preferences) at start and again after Ok on
+ * the Preferences screen when the Screen Mode row changed (0x5d8480 calls 0x5e2620). ddraw.c calls this at
+ * the SetDisplayMode that follows, so the 8 that 0x5e2620 sets first on a re-init does not show. The
+ * first call is the start of the game. */
+static int start_pending, start_level;
+
+void win_screen_mode(int pref_full)
+{
+    if (!window) return;
+    int want = pref_full;
+    if (!screen_mode_started) {
+        /* The first call comes from the constructor of the game options 0x5d72c0, which stores its object in
+         * [0xae3138] only after it returns. The start waits for the object (win_screen_mode_poll). */
+        if (!rd32(g_mem, GAME_OPTIONS)) { start_pending = 1; start_level = pref_full; return; }
+        screen_mode_started = 1;
+        want = winscale_start_full(pref_full, prefs_saved(), options_bool(OPT_REMEMBER_WINDOW), remembered_known,
+                                   remembered_full);
+        if (strstr(win_str(0xae2c98u), "-windowed")) want = 0;      /* the command line option of the original (0x5d7973) */
+        fprintf(stderr, "recomp: screen mode at start: row %s, game.cfg %s, window.txt %s: %s\n",
+                pref_full ? "Full" : "Windowed", prefs_saved() ? "read" : "none",
+                remembered_known ? (remembered_full ? "full" : "windowed") : "none", want ? "full" : "windowed");
+    }
+    set_full_screen(want);
+    sync_screen_mode_row();
+}
+
+/* Runs the start of the Screen Mode when the game options exist. */
+static void win_screen_mode_poll(void)
+{
+    if (!start_pending || !rd32(g_mem, GAME_OPTIONS)) return;
+    start_pending = 0;
+    win_screen_mode(start_level);
 }
 
 /* Remember the window (option remember_window): window.txt in the user folder, beside settings.txt,
@@ -414,7 +497,7 @@ void win_video_init(void)
         int ok = f && fscanf(f, "%d %d %d %d %d", &sx, &sy, &sw, &sh, &sf) == 5;
         if (f) fclose(f);
         if (ok) {
-            if (window_on_screen(sx, sy, sw, sh)) { x = sx; y = sy; w = sw; h = sh; full = sf != 0; remembered = 1; }
+            if (window_on_screen(sx, sy, sw, sh)) { x = sx; y = sy; w = sw; h = sh; full = sf != 0; remembered = 1; remembered_known = 1; remembered_full = sf != 0; }
             else { w = FALLBACK_W; h = FALLBACK_H; }          /* off every screen: 1280x800 in the middle */
         }
     }
@@ -540,18 +623,37 @@ static struct {
     uint64_t at;
 } key_click;
 
-/* The same rule for a click of RECOMP_SCRIPT (test runs only): its up step waits until the input poll has run
- * once with the down in the game, or SCRIPT_CLICK_LONGEST ms. Under a slow emulation (the Windows build under
- * wine in an emulated container) one frame took longer than the 100 ms from the down to the up, the game took
- * both in one poll and the button did not react. On a normal machine the poll runs within the 100 ms, so the
- * up keeps its time. */
+/* A like rule for a click of RECOMP_SCRIPT (test runs only): its up step waits until the input poll has run
+ * SCRIPT_CLICK_POLLS times with the down in the game, or SCRIPT_CLICK_LONGEST ms. Under a slow emulation (the
+ * Windows build under wine in an emulated container) one frame took longer than the 100 ms from the down to the
+ * up, the game took both in one poll and the button did not react. Two polls, not one: the input function
+ * 0x560490 first gives each text entry to 0x5617c0. For a button down outside an entry that has the cursor,
+ * 0x5617c0 ends the entry (cursor field +0xba9a2 to -1) and returns non-zero when its text changed (+0xbaade).
+ * 0x560490 then returns the entry's widget at once, and only the next poll gives the down to the button under
+ * the pointer. At a load of 15 to 18 one poll took about 1 s, the up came after the first poll, and Next of
+ * the name screen 0x820f50 never acted (item 154; tests/smoke/slow_machine_run.py). On a normal machine dozens
+ * of polls run in the 100 ms, so the up keeps its time. */
 #define SCRIPT_CLICK_LONGEST 10000u
+#define SCRIPT_CLICK_POLLS 2
 static struct {
     int on;
     uint32_t down_at;
     int polls;
     uint64_t at;
 } script_click;
+
+/* A character of the script (the steps of "type") waits until the input poll has run once with the character
+ * before it in the game, or SCRIPT_CLICK_LONGEST ms. The window procedure 0x68d630 keeps only the last WM_CHAR
+ * (0xb67a24), and the text entry 0x5617c0 takes it at the next input poll, so two characters in one frame lost
+ * the first: under load the name "Test Smoke" became "st Sme" (item 154). One loss stays, in the original too:
+ * at the start of each poll 0x569610 redraws a blinking widget (the cursor of a text entry every 1000 ms) with
+ * 0x55f300, which clears 0xb67a24, so a character that comes in the frame of that redraw is lost. */
+static struct {
+    int on;
+    uint32_t sent_at;
+    int polls;
+    uint64_t at;
+} script_char;
 
 static int click_for_key(int x, int y)
 {
@@ -764,6 +866,14 @@ static void load_script(void)
 }
 
 /* Ends the program at once, as the quit step does, with this exit code. */
+void win_quit_now(void)
+{
+    win_save_window();
+    if (rt_on_fatal) rt_on_fatal();
+    SDL_Quit();
+    exit(0);
+}
+
 static void script_exit(int code)
 {
     if (rt_on_fatal) rt_on_fatal();
@@ -789,9 +899,38 @@ static int wait_done(Step *s, uint64_t now)
         char state[256];
         waits_describe(state, sizeof state);
         fprintf(stderr, "recomp: script: wait %s timed out after %d ms. Now: %s\n", s->text, s->a, state);
+        /* RECOMP_SCRIPT_SOFT_WAIT=1 (test runs only, quick_click_run.py): a wait that times out goes on, so one
+         * run can count the clicks that did not act. */
+        const char *soft = getenv("RECOMP_SCRIPT_SOFT_WAIT");
+        if (soft && !strcmp(soft, "1")) {
+            fprintf(stderr, "recomp: script missed %s\n", s->text);
+            waiting = 0;
+            return 1;
+        }
         script_exit(3);
     }
     return 0;
+}
+
+/* The presses of the real mouse, left and right (press_hold.h): the up of a short press waits for the game. */
+static PressHold real_press[2];
+
+/* The waiting up of button bit goes to the game, where the pointer is now. */
+static void release_press(uint32_t bit)
+{
+    buttons &= ~(int)bit;
+    post(bit == 1 ? WM_LBUTTONUP : WM_RBUTTONUP, (uint32_t)buttons, mouse_lparam());
+}
+
+/* 1 while the left button of the mouse is really down: a waiting up counts as up. The repeat waits below end at
+ * the up, so a short press gives one step, as before the hold. */
+static int left_down(void) { return (buttons & 1) && !real_press[0].up_waits; }
+
+static void release_due_presses(void)
+{
+    uint64_t now = SDL_GetTicks64();
+    for (uint32_t bit = 1; bit <= 2; bit++)
+        if (press_hold_due(&real_press[bit - 1], now)) release_press(bit);
 }
 
 static SDL_Keycode swallow_key = SDLK_UNKNOWN;    /* a key that did the work of an option */
@@ -816,11 +955,13 @@ static void handle_event(SDL_Event *e)
         update_scaling();
         win_screen_dirty = 1;
         break;
+    case SDL_DROPFILE:                         /* macOS gives a cm0102:// link this way (invite.h) */
+        if (e->drop.file && !strncasecmp(e->drop.file, "cm0102:", 7)) invite_open(e->drop.file);
+        SDL_free(e->drop.file);
+        break;
     case SDL_QUIT:
-        win_save_window();
-        if (rt_on_fatal) rt_on_fatal();
-        SDL_Quit();
-        exit(0);
+        if (net_session_defer_quit()) break;       /* a host saves first (net_session.c) */
+        win_quit_now();
     case SDL_MOUSEMOTION:
         if (key_click.on) { key_click.real_x = e->motion.x; key_click.real_y = e->motion.y; break; }
         post_mouse(WM_MOUSEMOVE, e->motion.x, e->motion.y);
@@ -834,10 +975,26 @@ static void handle_event(SDL_Event *e)
         }
         uint32_t bit = e->button.button == SDL_BUTTON_LEFT ? 1u : e->button.button == SDL_BUTTON_RIGHT ? 2u : 0u;
         if (!bit) break;
+        PressHold *h = &real_press[bit - 1];
+        if (h->up_waits) {                     /* a new press: the up of the last one goes first */
+            h->up_waits = h->pressed = 0;
+            release_press(bit);
+        }
+        if (key_click.on) {                    /* the click of a key runs: drop the event, keep the button state */
+            if (down) buttons |= (int)bit; else buttons &= ~(int)bit;
+            h->pressed = 0;
+            break;
+        }
+        static int hold = -1;                  /* RECOMP_PRESS_HOLD=0: test runs only, the up never waits */
+        if (hold < 0) hold = !(getenv("RECOMP_PRESS_HOLD") && !strcmp(getenv("RECOMP_PRESS_HOLD"), "0"));
+        if (!down && hold && press_hold_up(h, SDL_GetTicks64())) {   /* a short press: the up waits for the game */
+            if (getenv("RECOMP_SCREEN_LOG")) fprintf(stderr, "recomp: click up waits for the game (%d polls)\n", h->polls);
+            break;
+        }
         if (down) buttons |= (int)bit; else buttons &= ~(int)bit;
-        if (key_click.on) break;               /* the click of a key runs: drop the event, keep the button state */
         uint32_t msg = bit == 1 ? (down ? WM_LBUTTONDOWN : WM_LBUTTONUP) : (down ? WM_RBUTTONDOWN : WM_RBUTTONUP);
         post_mouse(msg, e->button.x, e->button.y);
+        if (down) press_hold_down(h, q_tail);
         break;
     }
     case SDL_MOUSEWHEEL:
@@ -880,6 +1037,7 @@ static void handle_event(SDL_Event *e)
         if (e->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
             update_scaling();
             note_windowed();
+            if (screen_mode_started) sync_screen_mode_row();     /* the green button of the window, or Mission Control, left full screen */
             display_report_event("size changed");
         }
         if (e->window.event == SDL_WINDOWEVENT_MAXIMIZED) display_report_event("maximised");
@@ -925,6 +1083,9 @@ static void press_key(const char *name)
     }
     SDL_Keycode k = SDL_GetKeyFromName(name);
     if (k == SDLK_UNKNOWN) { fprintf(stderr, "recomp: script: unknown key %s\n", name); return; }
+    int x, y;
+    if (k == SDLK_SPACE && !mod && options_bool(OPT_SPACE_TO_CONTINUE) && !keys_continue_game(&x, &y))
+        fprintf(stderr, "recomp: script: Space finds no Continue Game, so the game gets the key\n");
     e.type = SDL_KEYDOWN;
     e.key.state = SDL_PRESSED;
     e.key.keysym.sym = k;
@@ -955,8 +1116,11 @@ static void run_script(void)
             part_start = now;
             continue;
         }
-        if (!strcmp(s->action, "up") && script_click.on && script_click.polls < 1 &&
+        if (!strcmp(s->action, "up") && script_click.on && script_click.polls < SCRIPT_CLICK_POLLS &&
             SDL_GetTicks64() - script_click.at < SCRIPT_CLICK_LONGEST)
+            break;
+        if (!strcmp(s->action, "char") && script_char.on && script_char.polls < 1 &&
+            SDL_GetTicks64() - script_char.at < SCRIPT_CLICK_LONGEST)
             break;
         step_next++;
         fprintf(stderr, "recomp: script %llu %s %d %d %s\n", (unsigned long long)(part_start + s->at), s->action, s->a,
@@ -984,7 +1148,67 @@ static void run_script(void)
         } else if (!strcmp(s->action, "key")) {
             post(WM_KEYDOWN, (uint32_t)s->a, 1);
             post(WM_KEYUP, (uint32_t)s->a, 0xC0000001u);
-        } else if (!strcmp(s->action, "char")) post(WM_CHAR, (uint32_t)s->a, 1);
+        } else if (!strcmp(s->action, "char")) {
+            post(WM_CHAR, (uint32_t)s->a, 1);
+            script_char.on = 1;
+            script_char.sent_at = q_tail;
+            script_char.polls = 0;
+            script_char.at = SDL_GetTicks64();
+        }
+        else if (!strcmp(s->action, "wtap")) {
+            /* Test runs only: a move, a down and an up through SDL at window point x y, as given (no mapping). */
+            SDL_Event ev;
+            memset(&ev, 0, sizeof ev);
+            ev.type = SDL_MOUSEMOTION;
+            ev.motion.windowID = window ? SDL_GetWindowID(window) : 0;
+            ev.motion.x = s->a;
+            ev.motion.y = s->b;
+            SDL_PushEvent(&ev);
+            memset(&ev, 0, sizeof ev);
+            ev.button.windowID = window ? SDL_GetWindowID(window) : 0;
+            ev.button.button = SDL_BUTTON_LEFT;
+            ev.button.clicks = 1;
+            ev.button.x = s->a;
+            ev.button.y = s->b;
+            ev.type = SDL_MOUSEBUTTONDOWN;
+            ev.button.state = SDL_PRESSED;
+            SDL_PushEvent(&ev);
+            ev.type = SDL_MOUSEBUTTONUP;
+            ev.button.state = SDL_RELEASED;
+            SDL_PushEvent(&ev);
+        }
+        else if (!strcmp(s->action, "tap") || !strcmp(s->action, "sdldown") || !strcmp(s->action, "sdlup")) {
+            /* Test runs only (quick_click_run.py): left button events through SDL, as from a mouse or a trackpad,
+             * so they take the path of a real click (handle_event). tap gives the down and the up in one batch. */
+            /* The position is in the picture; SDL maps window points to the picture (logical size), so the events
+             * carry window points. A move comes first, as from a real mouse: the window procedure takes the pointer
+             * only from WM_MOUSEMOVE (0x68d922), not from the button messages. */
+            SDL_Event ev;
+            int wx = s->a, wy = s->b;
+            if (renderer) SDL_RenderLogicalToWindow(renderer, (float)s->a + 0.5f, (float)s->b + 0.5f, &wx, &wy);
+            memset(&ev, 0, sizeof ev);
+            ev.type = SDL_MOUSEMOTION;
+            ev.motion.windowID = window ? SDL_GetWindowID(window) : 0;
+            ev.motion.x = wx;
+            ev.motion.y = wy;
+            SDL_PushEvent(&ev);
+            memset(&ev, 0, sizeof ev);
+            ev.button.windowID = window ? SDL_GetWindowID(window) : 0;
+            ev.button.button = SDL_BUTTON_LEFT;
+            ev.button.clicks = 1;
+            ev.button.x = wx;
+            ev.button.y = wy;
+            if (strcmp(s->action, "sdlup")) {
+                ev.type = SDL_MOUSEBUTTONDOWN;
+                ev.button.state = SDL_PRESSED;
+                SDL_PushEvent(&ev);
+            }
+            if (strcmp(s->action, "sdldown")) {
+                ev.type = SDL_MOUSEBUTTONUP;
+                ev.button.state = SDL_RELEASED;
+                SDL_PushEvent(&ev);
+            }
+        }
         else if (!strcmp(s->action, "press")) press_key(s->text);
         else if (!strcmp(s->action, "resize")) {
             SDL_SetWindowSize(window, s->a, s->b);
@@ -994,8 +1218,7 @@ static void run_script(void)
         else if (!strcmp(s->action, "shot")) shot_window(s->text);
         else if (!strcmp(s->action, "report")) display_report_key();
         else if (!strcmp(s->action, "quit")) {
-            win_save_window();
-            script_exit(0);
+            if (!net_session_defer_quit()) win_quit_now();
         }
     }
 }
@@ -1012,11 +1235,20 @@ void win_poll_events(void)
 #ifdef __EMSCRIPTEN__
     web_feed();                                   /* the page's keyboard (web/keyboard.js) */
 #endif
+    if (net_session_quit_overdue()) win_quit_now();
     end_click_for_key();
+    release_due_presses();
     SDL_Event e;
     while (SDL_PollEvent(&e))
         handle_event(&e);
     if (!in_wait) win_play_poll();                /* not inside a wait for a held button (input_poll, below) */
+    char link[128];
+    if (host_link_take(link, sizeof link)) {        /* a link that a second copy gave (host/link_pass.c) */
+        invite_open(link);
+        if (window) SDL_RaiseWindow(window);
+    }
+    invite_poll();
+    win_screen_mode_poll();
     if (window) run_script();
 }
 
@@ -1072,6 +1304,42 @@ RT_IMPORT(GetMessageA)
  * (a click that ends a text entry and then hits the button under the pointer), go through at once. */
 #define REPEAT_DELAY 400u
 #define REPEAT_INTERVAL 100u
+
+/* A joining game in a network game (0.7.0, #45, Q34, research note 2026-10-27-network-code-reading.md,
+ * section 11). Its client loop run_network_client 0x7fdc00 calls the poll at 0x7fdf17 (return address 0x7fdf1c)
+ * and sends the widget to the host as a click (opcode 6, Display::send_widget_click 0x568560, call at 0x7fe1df)
+ * when it differs from the last one (0x7fdf2c). Each new screen from the host clears the Display, so while the
+ * button stays down the same press went to every screen that arrived: on a LAN a normal click acted on two or
+ * more host screens, and the press of the join click (the game list's Next, before the loop runs) reached the
+ * host's Enter Name as Next ("Names Are Blank"). The original's WinSock hid this behind the peer's delayed
+ * acknowledgement (up to 200 ms), so its next screen came after a normal click had ended.
+ *
+ * So the poll at 0x7fdf17 gives -1 (nothing) for a held press that already gave a widget, unless the widget is
+ * another one and no new host screen came since: no packet with opcode 0, which resets the Display
+ * (Display::process_command_packet 0x564080, case 0 at 0x564131 calls Display::reset 0x55f7c0, counted by
+ * nc_resets_in). Other packets do not count: the host sent 5 bytes within 2 ms of each click (logged
+ * 2026-10-27), before the next poll of the same press. The loop then clears its last widget at 0x7fe1e8, as
+ * for a pointer over no widget, and the next press clicks as before. A widget from a poll outside the client
+ * loop counts too: the join click. The exception keeps a click that ends a text entry: the hit test 0x560490
+ * gives the field in one poll and the widget under the pointer in the next poll of the same press (logged
+ * 2026-10-27: field 0xb, then Next 0x15 on Enter Name), both on the same host screen, and the loop sends both.
+ * Only the poll at 0x7fdf17 changes. A screen loop of the joining game and every single-player poll are as
+ * before.
+ *
+ * Through the relay (0.7.0 slice 5) the client loop polls again only after the host's answer to the click
+ * (opcode 9, 5 bytes), about 130 ms later through the deployed relay (2026-10-28). A press is shorter than that,
+ * so the field came and the button under the pointer never did: Next on Enter Name was lost. So when the press
+ * that gave the last widget at this poll is up by its next poll, no new host screen came, and the pointer is
+ * still exactly where the press went down, that poll runs once more with the button flag 0xb67a34 set. The rule
+ * above then applies to it as to a held press: the same widget gives nothing. A new host screen before the poll
+ * stops the replay before the poll, because the poll acts on the screen with the flag set (lists, entries). */
+#define CLIENT_LOOP_POLL 0x7fdf1cu
+static uint32_t replay_press;               /* the press that the client loop's poll ran once more */
+/* The poll of the screen loop ScreenManager::monitor 0x7fc7e0 (call at 0x7fcc14): the game waits for input there,
+ * as when the original handles a click and its Auto Save. A host's quit saves there (net_session.c). */
+#define SCREEN_LOOP_POLL 0x7fcc19u
+static uint32_t click_press, click_widget;  /* the press that last gave a widget, and that widget */
+static uint64_t click_resets;               /* nc_resets_in at that poll */
 static uint32_t last_press, last_widget = 0xffffu, last_top;
 static uint64_t next_repeat_at;
 
@@ -1085,10 +1353,14 @@ static uint64_t next_repeat_at;
  * The game work rule keeps match results. While a commentary line waits, each pass runs one step of
  * a background match (0x6b5ce0 from the commentary step 0x6b55c0), and that step draws from the
  * game's random function 0x90cfc0 (docs/research/2026-10-15-commentary-speed-inventory.md, section
- * 3). The human match takes its numbers from the same table. So a call of the commentary step or of
- * the random function counts as game work, and no pass sleeps until WORK_HOLD ms after the last poll
- * that saw one. Evidence: with RECOMP_IDLE_SLEEP=force (no IDLE_AFTER and no WORK_HOLD rule) the
- * match check fails (tests/smoke/smoke_run.py --match --sleep-danger). An idle screen draws no number
+ * 3). In the original the human match takes its numbers from the same table, so the count of passes
+ * changes the match. Since item 155 the background matches of each match day take numbers from a
+ * second stream (match_numbers.c), and the count of passes no longer changes the watched match. The
+ * work rule stays for the test switch RECOMP_ORIGINAL_FAULTS=keep:match_numbers: a call of the
+ * commentary step or of the random function counts as game work, and no pass sleeps until WORK_HOLD
+ * ms after the last poll that saw one. Evidence: with RECOMP_IDLE_SLEEP=force (no IDLE_AFTER and no
+ * WORK_HOLD rule) and keep:match_numbers the match check fails (tests/smoke/smoke_run.py --match
+ * --sleep-danger). An idle screen draws no number
  * (docs/research/2026-10-14-assistant-and-days-inventory.md: no draw under the screen loop in a 10 s
  * sample).
  *
@@ -1145,7 +1417,7 @@ void o_007c6de0(void);
  * 0x9454d5, a byte loop that the partition and the short sort call) or a comparison of PlayerStats' two comparators
  * (0x7c6d90 by club, 0x7c6de0 by staff: cdecl(a, b) to -1, 0 or 1): a list already nearly in order is compared much
  * and swapped little, and swaps alone still left 0.42 s. Only time passes; nothing of the game changes. */
-static void sort_step(void)
+void win_sort_step(void)
 {
 #ifdef __EMSCRIPTEN__
     static uint32_t steps;
@@ -1153,13 +1425,11 @@ static void sort_step(void)
 #endif
 }
 
-RT_WRAP(009454d5, sort_swap) { sort_step(); o_009454d5(); }
-RT_WRAP(007c6d90, history_by_club) { sort_step(); o_007c6d90(); }
-RT_WRAP(007c6de0, history_by_staff) { sort_step(); o_007c6de0(); }
+RT_WRAP(009454d5, sort_swap) { win_sort_step(); o_009454d5(); }
+RT_WRAP(007c6d90, history_by_club) { win_sort_step(); o_007c6d90(); }
+RT_WRAP(007c6de0, history_by_staff) { win_sort_step(); o_007c6de0(); }
 
-void o_00945333(void);
 void o_004cf5a0(void);
-void o_00600a50(void);
 
 /* The AI's transfer work of a day. With a 60 MB career a day's processing held the page up to 1.1 s at a time (a
  * holiday in Chromium, 22 November 2026): CONTRACT_MANAGER::daily_update (0x4c7ac0) and the Shortlist_Manager filling
@@ -1167,10 +1437,9 @@ void o_00600a50(void);
  * random function too seldom for its moment, and sort with comparators of their own. Each of these counts as a step
  * too (sort_step, the same counter and the same 100 ms): qsort itself (0x945333, any comparator; 322 call sites),
  * CONTRACT_MANAGER::get_contract (0x4cf5a0, a person's contract record from the table at 0xae2d0c; 622 call sites)
- * and human_manager_is_human_club (0x600a50; 420 call sites). Only time passes; nothing of the game changes. */
-RT_WRAP(00945333, crt_qsort) { sort_step(); o_00945333(); }
-RT_WRAP(004cf5a0, get_contract) { sort_step(); o_004cf5a0(); }
-RT_WRAP(00600a50, is_human_club) { sort_step(); o_00600a50(); }
+ * and human_manager_is_human_club (0x600a50; 420 call sites). Only time passes; nothing of the game changes. qsort and
+ * human_manager_is_human_club are wrapped by the host copies of 0.6.1 (crt.c, hot_loops.c), which call win_sort_step. */
+RT_WRAP(004cf5a0, get_contract) { win_sort_step(); o_004cf5a0(); }
 
 void o_00945bfe(void);
 void o_00945ce6(void);
@@ -1218,22 +1487,87 @@ static void idle_rest(uint32_t widget)
 
 void o_0055f620(void);
 
+/* RECOMP_CLICK_LOG=1 (test runs only, 0.7.2 tactics click): for each press, at the first poll that sees the held
+ * flag 0xb67a34, the game's pointer (0xb67a20, 0xb67a14) and the widget of the hit test 0x560490 with its hit
+ * rectangle: widget i at Display+0xba95e+i*0x18c, x1 +0x10, y1 +0x14, x2 +0x18, y2 +0x1c, inclusive (0x56050e..
+ * 0x56052c). */
+static void click_log(uint32_t display, uint32_t widget)
+{
+    static int on = -1;
+    static uint32_t logged = 0xffffffffu;
+    if (on < 0) on = getenv("RECOMP_CLICK_LOG") != NULL;
+    if (!on || !rd32(g_mem, 0xb67a34u) || logged == press_count) return;
+    logged = press_count;
+    int32_t mx = (int32_t)rd32(g_mem, 0xb67a20u), my = (int32_t)rd32(g_mem, 0xb67a14u);
+    if (!strcmp(getenv("RECOMP_CLICK_LOG"), "all")) {   /* every clickable free widget: order list +0x12eb96 */
+        uint32_t n = rd16(g_mem, display + 0x12f4f8u);
+        for (uint32_t k = 0; k < n && k < 2000; k++) {
+            uint32_t i = rd16(g_mem, display + 0x12eb96u + k * 2), w = display + 0xba95eu + i * 0x18cu;
+            if (!(rd32(g_mem, w + 0x0c) & 2)) continue;
+            fprintf(stderr, "recomp: widget %u rect %d %d %d %d\n", i, (int32_t)rd32(g_mem, w + 0x10),
+                    (int32_t)rd32(g_mem, w + 0x14), (int32_t)rd32(g_mem, w + 0x18), (int32_t)rd32(g_mem, w + 0x1c));
+        }
+        /* the rows of open top-level areas (0x5605ba..0x560633): area a at Display+a*0xbf1, open +0xbed, owner
+         * +0x212 (-1: top level), count +0xb78, first +0xb7a, widget list +0x216 */
+        uint32_t na = rd16(g_mem, display + 0x12f4f6u);
+        for (uint32_t k = 0; k < na && k < 500; k++) {
+            uint32_t a = display + rd16(g_mem, display + 0x12e9a2u + k * 2) * 0xbf1u;
+            if (!rd32(g_mem, a + 0xbed) || rd16(g_mem, a + 0x212) != 0xffffu) continue;
+            for (uint32_t r = rd16(g_mem, a + 0xb7a); r < rd16(g_mem, a + 0xb78) && r < 2000; r++) {
+                uint32_t i = rd16(g_mem, a + 0x216 + r * 2), w = display + 0xba95eu + i * 0x18cu;
+                if (i == 0xffffu) break;
+                fprintf(stderr, "recomp: row %u widget %u flags %x rect %d %d %d %d\n", k, i, rd32(g_mem, w + 0x0c),
+                        (int32_t)rd32(g_mem, w + 0x10), (int32_t)rd32(g_mem, w + 0x14),
+                        (int32_t)rd32(g_mem, w + 0x18), (int32_t)rd32(g_mem, w + 0x1c));
+            }
+        }
+    }
+    if (widget == 0xffffu) {      /* display mode 1 (Display+0): the press opened a popup (0x560490) */
+        fprintf(stderr, "recomp: click at %d %d: no widget, mode %u\n", mx, my, rd32(g_mem, display));
+        return;
+    }
+    uint32_t w = display + 0xba95eu + widget * 0x18cu;
+    fprintf(stderr, "recomp: click at %d %d: widget %u rect %d %d %d %d\n", mx, my, widget,
+            (int32_t)rd32(g_mem, w + 0x10), (int32_t)rd32(g_mem, w + 0x14), (int32_t)rd32(g_mem, w + 0x18),
+            (int32_t)rd32(g_mem, w + 0x1c));
+}
+
 /* The input poll, thiscall, no arguments: the widget index in AX, -1 for nothing. */
 RT_WRAP(0055f620, input_poll)
 {
     int key_down_in = key_click.on && (int32_t)(q_head - key_click.down_at) >= 0;
     keys_display = cpu.ecx;
     uint32_t poll_ret = rd32(g_mem, cpu.esp), poll_display = cpu.ecx;
+    if (poll_ret == SCREEN_LOOP_POLL && net_session_screen_idle()) win_quit_now();
     waits_poll();
+    squad_numbers_test_poll();
+    int replay = poll_ret == CLIENT_LOOP_POLL && click_press == press_count && replay_press != press_count &&
+                 !(buttons & 1) && !rd32(g_mem, 0xb67a34u) && mouse_x == press_x && mouse_y == press_y &&
+                 nc_resets_in() == click_resets;
+    if (replay) {
+        replay_press = press_count;
+        wr32(g_mem, 0xb67a34u, 1);
+    }
+    uint32_t head_in = q_head;
     o_0055f620();
+    if (replay) wr32(g_mem, 0xb67a34u, 0);
+    press_hold_poll(&real_press[0], head_in);
+    press_hold_poll(&real_press[1], head_in);
     options_screen_after_poll(poll_ret, poll_display, cpu.eax & 0xffffu);   /* the options box item */
     names_after_poll();
     if (key_down_in) key_click.polls++;
     if (script_click.on && (int32_t)(q_head - script_click.down_at) >= 0) script_click.polls++;
+    if (script_char.on && (int32_t)(q_head - script_char.sent_at) >= 0) script_char.polls++;
     uint32_t widget = cpu.eax & 0xffffu;
-    int held = (buttons & 1) && rd32(g_mem, 0xb67a34u) && !rd32(g_mem, 0xb67a3cu);
+    click_log(poll_display, widget);
+    int held = replay || ((buttons & 1) && rd32(g_mem, 0xb67a34u) && !rd32(g_mem, 0xb67a3cu));
     idle_rest(widget);
     if (widget == 0xffffu || !held) return;
+    /* The client loop of a joining game sends each press to one host screen only. */
+    uint64_t resets = nc_resets_in();
+    if (poll_ret == CLIENT_LOOP_POLL && press_count == click_press &&
+        (widget == click_widget || resets != click_resets)) { cpu.eax |= 0xffffu; return; }
+    click_press = press_count, click_widget = widget, click_resets = resets;
     uint32_t top = rd32(g_mem, 0xb74450u + 0x7d4u + 0x0eu);   /* the screen node on top (waits.c) */
     if (press_count != last_press || widget != last_widget) {
         last_press = press_count;
@@ -1246,12 +1580,12 @@ RT_WRAP(0055f620, input_poll)
      * there is another widget (the options box, options_screen.c). */
     if (top != last_top) { cpu.eax |= 0xffffu; return; }
     in_wait++;
-    while ((buttons & 1) && SDL_GetTicks64() < next_repeat_at) {
+    while (left_down() && SDL_GetTicks64() < next_repeat_at) {
         win_poll_events();
         SDL_Delay(1);
     }
     in_wait--;
-    if (!(buttons & 1)) { cpu.eax |= 0xffffu; return; }    /* released while it waited */
+    if (!left_down()) { cpu.eax |= 0xffffu; return; }      /* released while it waited */
     next_repeat_at = SDL_GetTicks64() + REPEAT_INTERVAL;
 }
 
@@ -1276,12 +1610,12 @@ RT_WRAP(00561f10, scrollbar_test)
     int again = held && scroll_press == press_count && scroll_this == self && scroll_area == area;
     if (again) {
         in_wait++;
-        while ((buttons & 1) && SDL_GetTicks64() < next_scroll_at) {
+        while (left_down() && SDL_GetTicks64() < next_scroll_at) {
             win_poll_events();
             SDL_Delay(1);
         }
         in_wait--;
-        if (!(buttons & 1)) {                                  /* released while it waited */
+        if (!left_down()) {                                    /* released while it waited */
             wr32(g_mem, 0xb67a34u, 0);
             o_00561f10();
             wr32(g_mem, 0xb67a34u, 1);

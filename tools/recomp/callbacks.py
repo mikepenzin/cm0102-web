@@ -16,15 +16,23 @@ CALLBACK_FILES = ("picker.c", "assistant.c", "commentary.c", "holiday_next.c", "
                   "foreign.c", "season.c", "season_dates.c", "season_history.c",
                   "season_change.c", "season_kind_club_world.c", "season_comps.c", "season_bra_states.c",
                   "season_super_cups.c", "season_new_cups.c", "season_cup_groups.c",
-                  "season_club_cups.c", "season_playoffs.c", "season_nl.c", "season_nl_euro.c", "season_nl_wc.c",
-                  "season_gold_cup.c", "season_divisions.c", "season_tur_groups.c", "screen_sweep.c",
-                  "language_sort.c")
+                  "season_club_cups.c", "season_playoffs.c", "season_ned_playoff.c", "season_nl.c", "season_nl_euro.c", "season_nl_wc.c",
+                  "season_gold_cup.c", "season_divisions.c", "season_tur_groups.c", "season_pol_first.c", "screen_sweep.c",
+                  "season_national_fill.c", "news_text.c", "language_sort.c")
                                 # in src/recomp_rt/win
 
 # address: (bytes of the first eight, name)
 CALLBACKS = {
     # language_sort.c: the compare function of the language table's qsort (0x945333), when the wrap leaves the sort to it.
     0x7C6D40: ("8b5424045685d275", "player_stats_compare_language_entries (entry, entry), cdecl"),
+    # season_change_late_start (season_change.c): the steps of game_season_update_pass 0x5d5ae0 for one competition.
+    0x4B0700: ("8b4424048b0db0f6", "comp_util_is_league_division (record id), cdecl"),
+    0x556210: ("8b4424048b10a1fc", "Discipline::start_new_season_for_comp (this, record), ret 4"),
+    0x5D6280: ("558bec83e4f883ec", "game_update_league_attendances (League *), cdecl"),
+    # Open item 192 (history_trim.c, not in CALLBACK_FILES: it compares return addresses of the calls of add_node
+    # 0x58e340 and set_year 0x5aa2d0): the test of the Club History lists.
+    0x450D50: ("81ec08020000538b", "Club_Records::build_history_list (this, club, &count), ret 8: the test of the list"),
+    0x9452CA: ("558bec51568b7508", "free (block), cdecl"),
     # O288 (fixture_season_end.c, not in CALLBACK_FILES: it compares return addresses of 0x5abb10's calls): the free
     # day before a season change for a match moved for a call-up.
     0x549EF0: ("668b442404568b74", "Date::Date (day of the year, year), ret 8"),
@@ -34,6 +42,8 @@ CALLBACKS = {
     0x68D280: ("8b4102568b742408", "LLIST::remove_node (node), ret 4"),
     # O260 A15 (call_up_news.c): the repeats of the national squads before the call-up news.
     0x76C060: ("51535532c0565788", "national_teams_remove_duplicate_squad_entries (nation), ret 4"),
+    # Open item 89 (season_national_fill.c): a player leaves a national squad as the original drops him.
+    0x896C60: ("81ec0c020000538b", "drop a player from the stored selections (side, staff, flag, 1)"),
     # Slice 21c (season_super_cups.c): the clubs and rounds of the super cups.
     0x521E60: ("8b4c24148b442418", "cup_set_round_draw_date (table, round, day, month, year+, weekday, year), cdecl"),
     0x521EB0: ("8b4c24148b442418", "cup_set_round_match_date (table, round, day, month, year+, weekday, slot, year, venue)"),
@@ -76,6 +86,7 @@ CALLBACKS = {
     # Slice 26 (season_kind_club_world.c): the knockout of the FIFA Club World Championship.
     0x92A8B0: ("81ec08020000568b", "WorldClubChamp::pick_entrants (this): the 12 entrants into +0xee"),
     0x92AE60: ("b844210000e8a6a7", "WorldClubChamp::pick_entrant (this, continent, nation, picked, count, record)"),
+    0x6699D0: ("8b54240453b9603d", "key_nation_continent_has_selected_nation (continent record), cdecl"),
     0x929390: ("81ec000200005356", "WorldClubChamp::create_schedule (this, stage, &rounds, &code, &is_league)"),
     # Slice 26c: the 32-club Club World Cup (Form G) with the Libertadores builders.
     0x4C37A0: ("81ec04020000568b", "Conmebol_Liber group A: the parent's group from entrants 0 to 3 (this)"),
@@ -174,6 +185,12 @@ CALLBACKS = {
     0x9452CA: ("558bec51568b7508", "free, cdecl"),
     0x5A8F60: ("c390909090909090", "the empty function (compared with vtable +0x28, wrapped in season_uefa_cup.c)"),
     0x686940: ("8a4424083c057519", "League +0x44, base (compared with vtable +0x44, wrapped in season_playoffs.c)"),
+    # Issue 150 (season_ned_playoff.c): the news of a club that goes up or down.
+    0x869480: ("6aff68962b960064", "news: a club wins promotion, thiscall (club, record, code)"),
+    0x86A1C0: ("6aff68062c960064", "news: a club goes down, thiscall (club, record)"),
+    # Gap row 11 (season_playoffs.c): ScoFirst's own play-off slots, wrapped for the cross play-off.
+    0x7EF270: ("81ec00020000568b", "ScoFirst +0x28: advance_stage (the three-club stage with the Premier Division)"),
+    0x7EF5D0: ("8b15dcf59c00a1fc", "ScoFirst +0x44: a stage result, ret 0x18"),
     # season_divisions.c (slice 20): the 3. Liga in the German Regional object
     0x689C80: ("81ec100200008b84", "league_promote_and_relegate, stdcall (upper, lower, expire, pairwise, up, down)"),
     0x6830B0: ("8b0df07edd005556", "League::move_club_to_division, thiscall (club, record, 1), ret 0xc"),
@@ -191,10 +208,19 @@ CALLBACKS = {
     # season_tur_groups.c (Summer 2002 slice 5): the Turkish Category B in three groups
     0x53FE50: ("81ec080200008b84", "the compare of the Turkish group deal 0x8fe580 (passed to qsort)"),
     0x8FF7E0: ("8a44240481ec0802", "TurSecondB::create_schedule, thiscall (stage, &count, &code, &flag), ret 0x10"),
+    # season_pol_first.c (GitHub issue 92): the Ekstraklasa in one table
+    0x7C8DF0: ("8a44240481ec0002", "PolFirst::create_schedule, thiscall (stage, &count, &code, &flag), ret 0x10"),
+    0x68AB70: ("53568b74241085f6", "League::find_club_row, thiscall (club, 0), ret 8"),
+    0x682F70: ("81ec000200005657", "League::calc_prize_fund, thiscall (share), ret 4"),
+    0x683010: ("a1382aae0053568b", "League::pay_tv_rights, thiscall (amount, 0), ret 8"),
+    0x7CA450: ("8b442404568b088b", "PolFirst final stage row compare (championship group first), set at stage +0xa3"),
     0x7D2CD0: ("81ec04020000558b", "PorSecondB::set_predicted_positions (own table and slots 0, 1), thiscall"),
     0x4241B0: ("8b4424048b490856", "BelThird::set_club_progress (three groups), thiscall, ret 0x14"),
     0x684640: ("83ec0c5355568bf1", "League::record_season_honours, thiscall"),
     0x48C6D0: ("8b44241453565785", "Comp::build_fate_news_text, thiscall, ret 0x28"),
+    # Issue 161 (news_text.c, season_nl.c): the text of a match item, and the group news of the Nations League.
+    0x4B0010: ("53558b6c2414568b", "comp_util_read_fixture_from_news_slots (item, fixture, &slot), cdecl"),
+    0x4B4590: ("8a44241083ec643c", "comp_util_write_group_qualify_news (team, code, record, fate, full, text), cdecl"),
 }
 
 

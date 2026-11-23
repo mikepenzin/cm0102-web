@@ -1,0 +1,27 @@
+competition	label	guard_first	field	accept	write	sources
+European Football Championship	2000	France	host	Belgium|Holland	Belgium	https://en.wikipedia.org/wiki/UEFA_Euro_2000
+European Football Championship	2004	Greece	host	Portugal	Portugal	https://en.wikipedia.org/wiki/UEFA_Euro_2004
+European Football Championship	2008	Spain	host	Austria|Switzerland	Austria	https://en.wikipedia.org/wiki/UEFA_Euro_2008
+European Football Championship	2012	Spain	host	Poland|Ukraine	Ukraine	https://en.wikipedia.org/wiki/UEFA_Euro_2012
+European Football Championship	2016	Portugal	host	France	France	https://en.wikipedia.org/wiki/UEFA_Euro_2016
+European Football Championship	2020	Italy	host	England	England	https://en.wikipedia.org/wiki/UEFA_Euro_2020
+European Football Championship	2024	Spain	host	Germany	Germany	https://en.wikipedia.org/wiki/UEFA_Euro_2024
+FIFA World Cup	2002	Brazil	host	Japan|South Korea	Japan	https://en.wikipedia.org/wiki/2002_FIFA_World_Cup
+FIFA World Cup	2006	Italy	host	Germany	Germany	https://en.wikipedia.org/wiki/2006_FIFA_World_Cup
+FIFA World Cup	2010	Spain	host	South Africa	South Africa	https://en.wikipedia.org/wiki/2010_FIFA_World_Cup
+FIFA World Cup	2014	Germany	host	Brazil	Brazil	https://en.wikipedia.org/wiki/2014_FIFA_World_Cup
+FIFA World Cup	2018	France	host	Russia	Russia	https://en.wikipedia.org/wiki/2018_FIFA_World_Cup
+FIFA World Cup	2022	Argentina	host	Qatar	Qatar	https://en.wikipedia.org/wiki/2022_FIFA_World_Cup
+FIFA World Cup	2026	Spain	host	United States	United States	https://en.wikipedia.org/wiki/2026_FIFA_World_Cup
+European Football Championship	2000	France	third			https://en.wikipedia.org/wiki/UEFA_European_Championship ; https://en.wikipedia.org/wiki/UEFA_Euro_2000
+European Football Championship	2004	Greece	third			https://en.wikipedia.org/wiki/UEFA_European_Championship ; https://en.wikipedia.org/wiki/UEFA_Euro_2004
+European Football Championship	2008	Spain	third			https://en.wikipedia.org/wiki/UEFA_European_Championship ; https://en.wikipedia.org/wiki/UEFA_Euro_2008
+European Football Championship	2024	Spain	third			https://en.wikipedia.org/wiki/UEFA_European_Championship ; https://en.wikipedia.org/wiki/UEFA_Euro_2024
+South American Copa Libertadores	2022	Clube de Regatas do Flamengo	second	Clube Atlético Paranaense	Clube Atlético Paranaense	https://en.wikipedia.org/wiki/2022_Copa_Libertadores_final
+European Football Championship	1984	France	third			https://en.wikipedia.org/wiki/UEFA_European_Championship ; https://en.wikipedia.org/wiki/UEFA_Euro_1984
+European Football Championship	1988	Holland	third			https://en.wikipedia.org/wiki/UEFA_European_Championship ; https://en.wikipedia.org/wiki/UEFA_Euro_1988
+European Football Championship	1992	Denmark	third			https://en.wikipedia.org/wiki/UEFA_European_Championship ; https://en.wikipedia.org/wiki/UEFA_Euro_1992
+European Football Championship	1996	Germany	third			https://en.wikipedia.org/wiki/UEFA_European_Championship ; https://en.wikipedia.org/wiki/UEFA_Euro_1996
+African Cup of Nations	2012	Zambia	host	Equatorial Guinea|Gabon	Equatorial Guinea	https://en.wikipedia.org/wiki/2012_Africa_Cup_of_Nations
+Oceania Nations Cup	2012	Tahiti	host	Solomon Islands	Solomon Islands	https://en.wikipedia.org/wiki/2012_OFC_Nations_Cup
+Oceania Nations Cup	2012	Tahiti	third	New Zealand	New Zealand	https://en.wikipedia.org/wiki/2012_OFC_Nations_Cup

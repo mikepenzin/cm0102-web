@@ -14,7 +14,7 @@ Slice 7 of `docs/specs/2026-10-15-features-0.4.0-spec.md`. Code: `src/recomp_rt/
 ## How the slice changes it
 
 - `attribute_groups.py` turns the three constants (0x87a81e, 0x87a85b, 0x87acb5) into calls of the runtime. With the option off they give 0x24, 0xddf5d4, 0x24.
-- With the option on, `rt_groups_cells` copies the game's own cells into a runtime table in group order, finds each attribute by the name that `0x5428a0` gives, and adds heading and blank cells (name starts with byte 1). A goalkeeper is a player whose positions text (`0x53ee50`, as the squad list shows it) starts with "GK".
+- With the option on, `rt_groups_cells` copies the game's own cells into a runtime table in group order, finds each attribute by the name that `0x5428a0` gives, and adds heading and blank cells (name starts with byte 1). A goalkeeper is a player whose positions text (`0x53ee50`, as the squad list shows it) starts with the goalkeeper. Since 0.6.1 the runtime reads this from the position ratings (player data +0x0f to +0x15, `groups_is_keeper`), because the text is in the chosen language and "GK" is English only: the text puts the goalkeeper first when his rating is 15 or more, or 10 or more and no higher than the sweeper, defender, defensive midfielder, midfielder and attacker ratings (threshold 15 at 0x53ef62, goalkeeper check 0x53ef9e, threshold lowered to 10 at 0x53f7b9..0x53f7da).
 - The area create (call site profile_area) gets 13 rows in both modes. In classic the font's row is 18 pixels and the area 220, so 13 rows are 17 pixels apart. On the classic screenshots (outfield player and goalkeeper, zoomed) no text clips, the descenders and the last row included (Q125).
 
 ## Same save and uninitialised stack in index.dat

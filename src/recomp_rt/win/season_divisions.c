@@ -4,10 +4,13 @@
 #include "season.h"
 #include "season_change.h"
 #include "season_comps.h"
+#include "season_cro_gre_places.h"
 #include "season_divisions.h"
 #include "season_divisions_ita.h"
+#include "season_esp_second.h"
 #include "season_names.h"
 #include "season_rules.h"
+#include "season_sizes.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -140,12 +143,12 @@ static uint32_t object_of(uint32_t key)
     return readable(o) ? o : 0;
 }
 
-/* The rows of a file in a season; after the last season of the file the last rows stay (Q248). */
+/* The rows of a file in a season; after the last season of the file the last rows stay, with no end year (the
+ * after-table rule, Q248). */
 static const SeasonRule *row_in(const char *file, int season, int n)
 {
-    for (int s = season; s >= SEASON_FIRST_YEAR && s > season - 10; s--)
-        if (season_rules_find(s, file, 0)) return season_rules_find(s, file, n);
-    return NULL;
+    int s = season_rules_last_season(season, file);
+    return s ? season_rules_find(s, file, n) : NULL;
 }
 
 /* 1 when the rules of a row give play-off places (a text, not a code such as none or n/a). */
@@ -859,7 +862,9 @@ static void group_refill(const GroupTier *g, void (*original)(void))
     const SeasonRule *r;
     uint32_t obj = group_next(g, self, &r);
     if (!obj) {
+        season_esp_second_pool(g->nation_key, 0);      /* items 121, 122: no B side into its club's tier */
         original();
+        season_esp_second_pool(g->nation_key, 1);
         return;
     }
     uint32_t rec = record_of(g->key), out_rec = record_of(g->out_key), table = rd32(g_mem, CLUBS);
@@ -1020,6 +1025,7 @@ static void group_above_rules(uint32_t obj, const GroupTier *g)
 #define KEY_GRE_LOWER 0x009cf874u       /* Greek Lower Division: the pool of 0x5eb120 */
 #define GRE_GROUP_COMP "league group 2"
 #define GRE_GROUP_MAX 14                /* GreSecond's table: malloc(0x33a) at 0x5ebcbb, 14 rows */
+#define GRE_GROUP_GROWN 21              /* the table with the sizes on (0.7.2 slice 11, league_sizes.py GROWN) */
 #define F_NEW 0x00944cf1u               /* operator new, cdecl (size) */
 #define F_GRE_SECOND 0x005eb2b0u        /* GreSecond::GreSecond, thiscall (year, record), ret 8 */
 
@@ -1036,12 +1042,14 @@ static uint32_t gre_group(void)
 
 static int gre_held(int season) { return season_comps_held(GRE_GROUP_COMP, season) == 1; }
 
-/* The group's club count in a season: its row (the second gre_second row of the season), at most 14. */
+/* The group's club count in a season: its row (the second gre_second row of the season), at most the rows of
+ * its table: 14, or 21 with the sizes on (the 17 of 2021/22). */
 static int gre_count(int season)
 {
     const SeasonRule *r = season_rules_find(season, "gre_second", 1);
     int n = r && r->clubs >= MIN_CLUBS ? r->clubs : 0;
-    return n > GRE_GROUP_MAX ? GRE_GROUP_MAX : n;
+    int most = season_sizes_on() ? GRE_GROUP_GROWN : GRE_GROUP_MAX;
+    return n > most ? most : n;
 }
 
 /* Fills a record from the Greek Lower Division up to n clubs, as 0x5eb120 takes its new clubs: the clubs of the
@@ -1133,13 +1141,15 @@ static void gre_rules(uint32_t obj)
         if (r->down >= 0) g_mem[obj + DOWN] = (uint8_t)r->down;
     } else if (!strcmp(season_change_file(obj), "gre_second") && gre_held(s)) {
         /* The National B Division in a season with the group: the two groups of one tier promote by one rule
-         * (review 2). It is a floor division of slice 18 (its class keeps 2 up and 2 down), and its relegations stay
-         * 2: the original's exchange 0x5eb120 brings 2 clubs back from the Lower Division (0x5eb219). */
+         * (review 2). Its relegation places come from its row (season_sizes_cro_rules, item 282). The original's
+         * exchange 0x5eb120 brings 2 clubs back from the Lower Division (0x5eb219), and the size step closes the gap. */
         g_mem[obj + UP] = (uint8_t)gre_up(s, 0);
         g_mem[obj + UP_PLAYOFF] = 0;
     } else if (!strcmp(season_change_file(obj), "gre_prm") && gre_held(s)) {
         /* Both groups' promotions, from their rows (at a new game GrePrm's rules run before the groups' own). */
-        g_mem[obj + DOWN] = (uint8_t)(gre_up(s, 0) + gre_up(s, 1));
+        /* Item 282: a row that sends more clubs down shrinks the division (2014/15: 4 down, 18 clubs to 16). */
+        const SeasonRule *top = season_changing_rules() ? season_rules_find(s, "gre_prm", 0) : NULL;
+        g_mem[obj + DOWN] = (uint8_t)season_gre_prm_down(gre_up(s, 0) + gre_up(s, 1), top ? top->down : -1);
         g_mem[obj + DOWN_PLAYOFF] = 0;
     }
 }
@@ -1229,6 +1239,11 @@ RT_WRAP(005eb120, gre_swap)
  * start_new_season (0x5ebe90 adds 1) makes the new season's dates (the third case of season_comps.h). */
 static void divisions_before(const SeasonChange *c)
 {
+    /* The Croatian South in a season of one group (season_sizes_cro.c). */
+    if (season_sizes_cro_south_before(c->comp, c->season)) {
+        season_change_skip();
+        return;
+    }
     uint32_t group = gre_group();
     if (!group || c->comp != group) return;
     if (!gre_held(c->season)) {
@@ -1309,19 +1324,46 @@ int season_divisions_new_record(const char *division)
     return division && !strcmp(division, SEASON_DIV_GRE_RECORD);
 }
 
+/* The counters of the Select League(s) screen (2026-10-14-start-new-game-inventory.md, 1c): the leagues to load,
+ * the selected nations and the first selected nation. save_game_data 0x82e430 writes them (0x82e8ab, 0x82e8c8). */
+#define LEAGUES_TO_LOAD 0x00ae2d00u
+#define SELECTED_NATIONS 0x00ae2d04u
+#define MAIN_NATION 0x00ae2d08u
+#define SELECTED 0x02u
+
 void season_divisions_test_extra(void)
 {
     const char *want = getenv("RECOMP_TEST_EXTRA");
     static const struct { const char *name; uint32_t key; } nations[] = {
         {"germany", KEY_GERMANY}, {"italy", 0x009cf360u}, {"spain", 0x009cf488u}, {"portugal", 0x009cf434u},
+        {"sweden", 0x009cf4a8u},
     };
     uint32_t table = rd32(g_mem, NATIONS);
     if (!want || !*want || !readable(table)) return;
     for (size_t i = 0; i < sizeof nations / sizeof nations[0]; i++) {
         int32_t id = (int32_t)rd32(g_mem, nations[i].key);
         if (!strstr(want, nations[i].name) || id < 0) continue;
-        g_mem[table + (uint32_t)id * NATION_SIZE + NATION_SELECTED] |= EXTRA_DIVISION;
-        fprintf(stderr, "recomp: new divisions: test: extra division of %s on\n", nations[i].name);
+        /* Item 226: the click on the extra division box (Select League(s), id 0x38, 0x81e139..0x81e288). A nation
+         * with flag 0 first becomes a selected nation (flag 2, one more league and one more selected nation, the
+         * first selected nation when there is none), then bit 0x04 goes on with one more league. A flag of 0x04
+         * alone, which the screen never makes, gave a nation that create_game trims as not loaded (comp history
+         * 0x539ae0 at 0x828371, clubs 0x5267c0 at 0x828395) but makes the competitions of (+0x11c not 0,
+         * key_nation_create_all_comps 0x669196): PorSuper::select_teams 0x7d3260 then found no league champion
+         * (comp_util_get_latest_placed_club 0x4afd80) and stopped at por_super.cpp 211, SpaSuper at 203. */
+        uint32_t nation = table + (uint32_t)id * NATION_SIZE;
+        uint8_t before = g_mem[nation + NATION_SELECTED];
+        if (!before) {
+            g_mem[nation + NATION_SELECTED] = SELECTED;
+            wr32(g_mem, LEAGUES_TO_LOAD, rd32(g_mem, LEAGUES_TO_LOAD) + 1);
+            wr32(g_mem, SELECTED_NATIONS, rd32(g_mem, SELECTED_NATIONS) + 1);
+            if (!rd32(g_mem, MAIN_NATION)) wr32(g_mem, MAIN_NATION, nation);
+        }
+        if (!(before & EXTRA_DIVISION)) {
+            g_mem[nation + NATION_SELECTED] |= EXTRA_DIVISION;
+            wr32(g_mem, LEAGUES_TO_LOAD, rd32(g_mem, LEAGUES_TO_LOAD) + 1);
+        }
+        fprintf(stderr, "recomp: new divisions: test: extra division of %s on (flags %u before%s)\n",
+                nations[i].name, before, before ? "" : ", the nation is selected with it");
     }
 }
 

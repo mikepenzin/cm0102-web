@@ -16,6 +16,13 @@ gives the data in memory at the first human turn. The checks:
                that the game keeps (+0x18) is the real age on the day of the first turn.
     champions  the last row of the English Premier Division history is the season before the start, with the
                real champions (for example 2019 Manchester City in a 2019/20 game).
+    nations    the last rows of the FIFA World Cup and the European Football Championship are the last finals
+               before the start, in their real years with their real winners (0.6.2 slice 7, open items 20 and
+               39: the nation rows of many databases need another shift than the club rows; October 2023 kept
+               France 2018 at 2020, October 2014 Germany 2014 at 2013).
+    last rows  the databases that keep their last season one year early in some competitions hold it in its own year
+               at the start (open items 59 and 83, LAST_ROWS): Autumn 2013, the Croatian, Greek and Northern Irish competitions of LAST_ROWS
+               hold 2011/12 at 2012 and 2012/13 at 2013, once each (the test log of the rows at the creation).
     fields     the stats line of the log: 95 % of the contract ends and 80 % of the national job dates from 2
                years before the start to 6 years after, the latest joined date in the start year or the year
                before and a quarter of them there (not where the joined dates are real), the latest career year
@@ -26,6 +33,10 @@ Also:
                2010/11 tile, a start again: the game is a 2010/11 game with the September 2010 ODB data and
                passes the checks above.
     base       October 2019 in a game that starts in 2001/02: nothing moves (the database plays as in 0.5.0).
+    other      October 2019 in a game that starts in 2020/21, a season after its own (open item 169): the last
+               FIFA World Cup and Euro rows are the last finals before the start in their real years (2018
+               France, 2016 Portugal). The whole database moves by 1 year, but the nation rows move by whole
+               4-year cycles only, so no final lands in a year without one.
     off        October 2019 in 2019/20 with RECOMP_SEASON_CODE=off: nothing moves.
     again      the 2010/11 game twice: the saves are byte for byte the same.
 With --extras the extra databases of each season run too (people and champions of their data season).
@@ -70,6 +81,76 @@ CHAMPIONS = {
 # differ per referee (no rule, docs/research/2026-10-17-season-date-shifts.md), so no check.
 REFEREES = {"Michael Oliver": (20, 2, 1985), "Anthony Taylor": (20, 10, 1978), "Howard Webb": (14, 7, 1971)}
 COMP = "English Premier Division"
+# The finals by label year: (winner, (year, month, day) of the final). Euro 2020 was played in 2021; the data
+# labels it 2020.
+FINALS = {
+    "FIFA World Cup": {1998: ("France", (1998, 7, 12)), 2002: ("Brazil", (2002, 6, 30)),
+                       2006: ("Italy", (2006, 7, 9)), 2010: ("Spain", (2010, 7, 11)),
+                       2014: ("Germany", (2014, 7, 13)), 2018: ("France", (2018, 7, 15)),
+                       2022: ("Argentina", (2022, 12, 18))},
+    "European Football Championship": {2000: ("France", (2000, 7, 2)), 2004: ("Greece", (2004, 7, 4)),
+                                       2008: ("Spain", (2008, 6, 29)), 2012: ("Spain", (2012, 7, 1)),
+                                       2016: ("Portugal", (2016, 7, 10)), 2020: ("Italy", (2021, 7, 11)),
+                                       2024: ("Spain", (2024, 7, 14))},
+}
+# A final in July of the start year is history: the game plays no finals in the July of its start
+# (tools/seasons/history_fill.py, GAP_FINALS).
+START_END = (7, 31)
+
+
+# Open items 59 and 83: (name pattern, nation) of a competition and its expected (label, winner, runner-up) rows, by
+# database in its own season. Sources: the final tables of the 2011/12 and 2012/13 seasons (en.wikipedia.org,
+# 2012-13 Prva HNL and 2012-13 Super League Greece; 2011/12 Dinamo Zagreb / Hajduk Split and Olympiacos /
+# Panathinaikos; the Northern Irish rows: 2012-13 IFA Premiership, IFA Championship and Irish League Cup).
+LAST_ROWS = {
+    "Autumn 2013": [
+        ("Croatian First Division",
+         [(2012, "GNK Dinamo Zagreb", "HNK Hajduk Split"), (2013, "GNK Dinamo Zagreb", "NK Lokomotiva Zagreb")]),
+        ("Greek National A Division",
+         [(2012, "Olympiacos Piraeus", "Panathinaikos AO"), (2013, "Olympiacos Piraeus", "PAOK Salonika")]),
+        ("Northern Irish League Premier Division", [(2012, "Linfield", "Portadown"), (2013, "Cliftonville", "Crusaders")]),
+        ("Northern Irish League First Division", [(2012, "Ballinamallard United", "Newry City"), (2013, "Ards", "")]),
+        ("Northern Irish League Cup", [(2012, "Crusaders", "Coleraine"), (2013, "Cliftonville", "Crusaders")]),
+        # open item 176: the database's own 2012 row stays, 2012/13 moves to 2013; the Trophee des Champions 2011
+        # was Marseille against Lille, 2012 Lyon against Montpellier
+        ("English Southern League Premier Division", [(2012, "Woking", "Dartford"),
+                                                      (2013, "Leamington", "Gosport Borough")]),
+        ("French Champions Trophy", [(2010, "Olympique de Marseille", "Paris Saint-Germain"),
+                                     (2011, "Olympique de Marseille", "Lille Olympique SC"),
+                                     (2012, "Olympique Lyonnais", "Montpellier Hérault SC")]),
+    ],
+}
+
+
+def last_rows_env(label):
+    """The test log of the rows at the creation (RECOMP_HISTORY_LOG, season_history.c) for the run of LAST_ROWS."""
+    return {"RECOMP_HISTORY_LOG": ";".join(c for c, _ in LAST_ROWS[label])} if label in LAST_ROWS else {}
+
+
+def check_last_rows(label, log):
+    """None, or the faults of LAST_ROWS for the run of database label: the rows at the creation, before the game
+    keeps only the rows of the selected nations (the runs select England)."""
+    want = LAST_ROWS.get(label)
+    if not want:
+        return None
+    bad = []
+    for comp, expect in want:
+        m = re.search(r"recomp: history log create: " + re.escape(comp) + r":(.*)", log)
+        if not m:
+            bad.append(f"{comp}: no log of the rows at the creation")
+            continue
+        rows = [tuple(x.strip().split(" ", 1)) for x in m.group(1).split(";") if x.strip()]
+        for year, first, second in expect:
+            got = [r[1] for r in rows if r[0] == str(year)]
+            if got != [f"{first} / {second}".strip()]:
+                bad.append(f"{comp} {year}: {got}, want [{first} / {second}]")
+    return bad
+
+
+def last_final(comp, year):
+    """(label, winner) of the last final of comp before a game that starts in year."""
+    done = [(y, w) for y, (w, d) in FINALS[comp].items() if d <= (year,) + START_END]
+    return max(done) if done else None
 MIN_PEOPLE = 5
 
 
@@ -103,7 +184,7 @@ def play(program, game, work, label, year, db_folder, env=None, steps=None, seas
     """As season_core_run.play, with the log read as Latin-1: the game's own log lines may hold the letters of
     code page 1252 (club names). year None: no RECOMP_START_SEASON (the season comes from the settings file,
     season). more_folders: more databases in Databases (for the Choose Season screen)."""
-    env = dict(env or {}, RECOMP_DATES_LOG=";".join(list(PEOPLE) + ["ref:" + r for r in REFEREES] + ["comp:" + COMP]))
+    env = dict(env or {}, RECOMP_DATES_LOG=";".join(list(PEOPLE) + ["ref:" + r for r in REFEREES] + ["comp:" + COMP] + ["comp:" + c for c in FINALS]))
     if year:
         env["RECOMP_START_SEASON"] = str(year)
     steps = [s + " 600000" if s in ("wait typing", "wait first-news") else s for s in (steps or scr.new_game_steps())]
@@ -112,6 +193,8 @@ def play(program, game, work, label, year, db_folder, env=None, steps=None, seas
     for d in (user, home, shots):
         os.makedirs(d)
     settings = "display = classic\n"
+    if not db_folder:
+        settings += "database = 3.9.68\n"
     for f in more_folders:
         scr.cdr.copy_data(f, os.path.join(user, "Databases", os.path.basename(f)))
     if db_folder:
@@ -172,6 +255,11 @@ def parse(log):
     c = re.search(r"dates log: competition " + re.escape(COMP) + r": (\d+) (.*?); (\d+) ", log)
     if c:
         out["comp"] = (int(c.group(1)), c.group(2))
+    out["finals"] = {}
+    for comp in FINALS:
+        c = re.search(r"dates log: competition " + re.escape(comp) + r": (\d+) (.*?); (\d+) ", log)
+        if c:
+            out["finals"][comp] = (int(c.group(1)), c.group(2))
     return out
 
 
@@ -250,6 +338,9 @@ def main(argv):
     if "--no-base" not in argv and "October 2019" in dbs:
         runs.append(("base", 2001, "October 2019", None))
         runs.append(("off", 2019, "October 2019", {"RECOMP_SEASON_CODE": "off"}))
+    if "October 2019" in dbs and ("--no-base" not in argv or (only and "other" in only)):
+        # open item 169: a database in a later season than its own (October 2019 in 2020/21, 1 year on)
+        runs.append(("other", 2020, "October 2019", None))
     if "--no-base" not in argv and "September 2010 ODB" in dbs and "October 2019" in dbs:
         # Choose Season: a start in 2019/20, Back, the 2010/11 tile, a start again (Q344, review of slice 11b).
         runs.append(("second", 2010, "October 2019", {"_second": "September 2010 ODB"}))
@@ -274,7 +365,8 @@ def main(argv):
                     fut[label] = pool.submit(play, program, game, work, tag, None, folders[name], None,
                                              second_steps(), 2019, [folders[env["_second"]]])
                 else:
-                    fut[label] = pool.submit(play, program, game, work, tag, year, folders.get(name), env)
+                    fut[label] = pool.submit(play, program, game, work, tag, year, folders.get(name),
+                                             dict(env or {}, **last_rows_env(label)) or None)
             results = {k: v.result() for k, v in fut.items()}
         for label, year, name, env in runs:
             path, log, took = results[label]
@@ -299,6 +391,16 @@ def main(argv):
                 else:
                     fail("again: the two 2010/11 saves differ or are missing")
                 continue
+            if label == "other":
+                # The finals keep their real years (open item 169): the nation rows move by whole 4-year cycles,
+                # so the last rows are the last finals before the start, as in a game of the data's own season.
+                for comp in FINALS:
+                    want, have = last_final(comp, year), res["finals"].get(comp)
+                    if have == want:
+                        print(f"ok    other: last {comp} row {have[0]} {have[1]}")
+                    else:
+                        fail(f"other: last {comp} row {have}, the last final before the start is {want}")
+                continue
             if res["date"][1] != year:
                 fail(f"{label}: the game starts in {res['date'][1]}, not {year}")
                 continue
@@ -320,6 +422,21 @@ def main(argv):
                 fail(f"{label}: last {COMP} row {res['comp']} (real champions of {year}: {want})")
             else:
                 fail(f"{label}: last {COMP} row {res['comp']}, not the year {year}")
+            wrong = check_last_rows(label, log)
+            if wrong:
+                fail(f"{label}: last rows " + "; ".join(wrong))
+            elif wrong is not None:
+                print(f"ok    {label}: the last rows of LAST_ROWS are in their own years")
+            for comp in FINALS:
+                want, have = last_final(comp, year), res["finals"].get(comp)
+                # A final of the start year after July (the World Cup 2022 in December, April 2023 in 2022/23) may
+                # stand as the data gives it: the game plays that edition, and its row replaces the data's
+                # (season_history.c, 0x4afce0).
+                later = FINALS[comp].get(year)
+                if have == want or (later and have == (year, later[0])):
+                    print(f"ok    {label}: last {comp} row {have[0]} {have[1]}")
+                else:
+                    fail(f"{label}: last {comp} row {have}, the last final before the start is {want}")
     print(f"{len(failed)} failed" if failed else "all passed")
     return 1 if failed else 0
 

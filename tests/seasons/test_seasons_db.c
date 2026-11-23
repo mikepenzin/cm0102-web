@@ -197,9 +197,9 @@ static void test_table(void)
         rows++;
     }
     fclose(f);
-    CHECK(rows == seasons_known_count && rows == 52);
+    CHECK(rows == seasons_known_count && rows == 55);
 #endif
-    /* 24 season databases, none for 2001 (the official data); every signature is unique. Summer 2002, Summer 2004
+    /* 25 season databases, none for 2001 (the official data); every signature is unique. Summer 2002, Summer 2004
      * and Summer 2006 are our own (Q351; Summer 2002 spec, slice 4: the 2002/03 tile starts Summer 2002). Every
      * season from 2002/03 on has one, so the screen's "No database" tile cannot appear with these tables (this
      * loop fails first). Summer 2002 has the club.dat size of 3.9.68, Summer 2004 that of September 2005 and
@@ -212,7 +212,7 @@ static void test_table(void)
         if (y == 2001) CHECK(!k);
         else CHECK(k && k->season == y);
     }
-    CHECK(have == 24);
+    CHECK(have == 25);
     CHECK(seasons_db_for_season(2002) && !strcmp(seasons_db_for_season(2002)->name, "Summer 2002"));
     for (int i = 0; i < seasons_known_count; i++)
         for (int j = i + 1; j < seasons_known_count; j++)
@@ -225,6 +225,44 @@ static void test_table(void)
           seasons_db_decade(2010) == SEASONS_DECADE_2010S && seasons_db_decade(2019) == SEASONS_DECADE_2010S &&
           seasons_db_decade(2020) == SEASONS_DECADE_2020S && seasons_db_decade(2025) == SEASONS_DECADE_2020S);
     CHECK(!strcmp(seasons_db_decade_name(SEASONS_DECADE_2010S), "2010s"));
+}
+
+/* The data sets that the game ships, Data-3.9.60 and Data-3.9.65 (tools/clean_files/make_clean_files.py and its
+ * manifests): each is known by the table, under its own name, as an official version (open item 230). The manifest
+ * gives the sha256 and size of each file. The name lookup gives the shipped row first. */
+static void test_shipped_data_sets(void)
+{
+#ifdef MANIFEST_DIR
+    static const char *const sets[][2] = {{"3.9.60", "manifest-3960.tsv"}, {"3.9.65", "manifest-3965.tsv"}};
+    for (int s = 0; s < 2; s++) {
+        char path[1100], line[512], club[65] = "", staff[65] = "";
+        unsigned long long club_size = 0, staff_size = 0;
+        snprintf(path, sizeof path, "%s/%s", MANIFEST_DIR, sets[s][1]);
+        FILE *f = fopen(path, "r");
+        CHECK(f != NULL);
+        if (!f) continue;
+        while (fgets(line, sizeof line, f)) {
+            char sha[65], name[256];
+            unsigned long long size;
+            if (line[0] == '#' || sscanf(line, "%64s %llu %255s", sha, &size, name) != 3) continue;
+            if (!strcmp(name, "club.dat")) { snprintf(club, sizeof club, "%s", sha); club_size = size; }
+            if (!strcmp(name, "staff.dat")) { snprintf(staff, sizeof staff, "%s", sha); staff_size = size; }
+        }
+        fclose(f);
+        CHECK(club[0] && staff[0]);
+        const SeasonKnownDb *hit = NULL;
+        for (int i = 0; i < seasons_known_count; i++) {
+            const SeasonKnownDb *k = &seasons_known_dbs[i];
+            if (k->club_size == club_size && k->staff_size == staff_size && !strcmp(k->club_sha256, club) &&
+                !strcmp(k->staff_sha256, staff))
+                hit = k;
+        }
+        if (!hit) printf("FAIL: the shipped %s data set (%s) is not in the table\n", sets[s][0], sets[s][1]);
+        CHECK(hit && !strcmp(hit->name, sets[s][0]) && hit->role == SEASONS_ROLE_OFFICIAL_VERSION &&
+              hit->season == 2001);
+        CHECK(hit && seasons_db_known(sets[s][0]) == hit);
+    }
+#endif
 }
 
 static void test_prepare_without_zip(void)
@@ -240,7 +278,8 @@ static void test_prepare_without_zip(void)
     CHECK(seasons_db_prepare_in(game, save, 2002, &r) == SEASONS_PREPARE_NO_ZIP && r.error[0] && !r.name[0]);
     CHECK(seasons_db_prepare_in(game, save, 2004, &r) == SEASONS_PREPARE_NO_ZIP);
     CHECK(seasons_db_prepare_in(game, save, 2006, &r) == SEASONS_PREPARE_NO_ZIP);
-    CHECK(seasons_db_prepare_in(game, save, 2026, &r) == SEASONS_PREPARE_NO_DATABASE && r.error[0]);
+    CHECK(seasons_db_prepare_in(game, save, 2027, &r) == SEASONS_PREPARE_NO_DATABASE && r.error[0]);
+    CHECK(seasons_db_prepare_in(game, save, 2026, &r) == SEASONS_PREPARE_NO_ZIP && r.error[0] && !r.name[0]);
     CHECK(seasons_db_prepare_in(game, save, 2003, &r) == SEASONS_PREPARE_NO_ZIP && r.error[0] && !r.name[0]);
     /* A zip that is no season database: the unpack fails and leaves no folder. */
     char sd[1100], zp[1200];
@@ -264,7 +303,8 @@ static void test_prepare_without_zip(void)
     CHECK(list->season[2].status == SEASONS_IN_DOWNLOAD && !strcmp(list->season[2].database, "October 2003"));
     CHECK(list->season[3].status == SEASONS_MISSING && !strcmp(list->season[3].database, "Summer 2004"));
     CHECK(list->season[4].status == SEASONS_MISSING && list->season[5].status == SEASONS_MISSING);
-    CHECK(!strcmp(list->season[2].label, "2003/04") && !strcmp(list->season[24].label, "2025/26"));
+    CHECK(!strcmp(list->season[2].label, "2003/04") && !strcmp(list->season[24].label, "2025/26") &&
+          !strcmp(list->season[25].label, "2026/27"));
     CHECK(list->custom_count == 0 && list->season[0].extra_count == 0);
     /* The data sets of the game folder are the versions of 2001/02. */
     static const char *const files[] = {
@@ -350,6 +390,7 @@ int main(int argc, char **argv)
     test_sha_crc();
     test_inflate();
     test_table();
+    test_shipped_data_sets();
     test_zip();
     test_prepare_without_zip();
     remove_tree(root, 0);

@@ -102,6 +102,45 @@ def season_checks(name, log, report, season, ecl):
     return fails
 
 
+def pot_faults(name, log, season, changing):
+    """The pots of each league phase (decision L8 of the 0.7.3 spec). Changing rules on: both nation rules hold (draw
+    rules 0), and no more clubs of a lower pot have a higher reputation than a club of the pot above than the log says
+    changed pots for the nation rules in that league phase. Changing rules off: the entry codes of the original's seed
+    order 0x586f60 never fall."""
+    key = f"{season}/{(season + 1) % 100:02d}"
+    fails, phases, moved = [], [], 0
+    line = re.compile(rf"league phase {key}: (?:(\d+) clubs change pots|\d matches, pot (\d):((?: \d+:-?\d+:-?\d+)+)"
+                      r"|36 clubs, \d matches each, draw rules (\d))")
+    for m in line.finditer(log):
+        if m.group(1):
+            moved = int(m.group(1))
+        elif m.group(2):
+            if m.group(2) == "1":
+                phases.append({"pots": [], "moved": moved})
+                moved = 0
+            phases[-1]["pots"].append([tuple(int(x) for x in c.split(":")) for c in m.group(3).split()])
+        elif changing and m.group(4) != "0":
+            fails.append(f"{name}: a league phase of {key} has draw rules {m.group(4)}")
+    if len(phases) < 2:
+        fails.append(f"{name}: {len(phases)} league phases with pot lines in {key}")
+    for phase in phases:
+        pots = phase["pots"]
+        size = len(pots[0]) if pots else 0
+        if len(pots) * size != 36 or any(len(pot) != size for pot in pots):
+            fails.append(f"{name}: a league phase of {key} logs pots of {[len(pot) for pot in pots]} clubs")
+            continue
+        clubs = [c for pot in pots for c in pot]
+        if not changing and [c[0] for c in clubs] != sorted(c[0] for c in clubs):
+            fails.append(f"{name}: changing rules off, the pots of {key} left the seed order")
+        if changing:
+            high = sum(c[1] > min(u[1] for u in upper) for i, upper in enumerate(pots) for lower in pots[i + 1:]
+                       for c in lower)
+            if high > phase["moved"] * len(pots):
+                fails.append(f"{name}: {high} clubs of lower pots of {key} hold a higher reputation, "
+                             f"{phase['moved']} changed pots")
+    return fails
+
+
 def has_ecl(log, season):
     return re.search(rf"new competition {ECL_FILE} made for {season}", log) is not None
 
@@ -113,6 +152,7 @@ def run_season(name, season, database):
         found, log = ufr.boxes(work)
         fails += [f"{name}: message box {b}" for b in found]
         fails += season_checks(name, log, report, season, has_ecl(log, season))
+        fails += pot_faults(name, log, season, False)
         m = re.search(r"suspended Russia: (\d+) clubs with a place", log)
         if not m or m.group(1) != "0":
             fails.append(f"{name}: Russia: {m.group(0) if m else 'no log line of the suspension'}")
@@ -132,6 +172,7 @@ def run_change(program, game, work):
     if re.search(r"league phase 2023/24", log):
         fails.append("change: a league phase in 2023/24")
     fails += season_checks("change", log, report, 2024, has_ecl(log, 2024))
+    fails += pot_faults("change", log, 2024, True)
     for sentence in NEWS:
         if sentence not in log:
             fails.append(f"change: no news sentence {sentence!r}")
@@ -164,9 +205,7 @@ def run_load(program, game, work):
         os.makedirs(user, exist_ok=True)
         shutil.copyfile(first, os.path.join(user, "uefa.sav"))
         shutil.copytree(os.path.join(w, "user", "Databases"), os.path.join(user, "Databases"))
-        fixtures.write_settings(user, "classic", [])
-        with open(os.path.join(user, "settings.txt"), "a") as f:
-            f.write(f"database = folder:{os.path.basename(db)}\nfaster_days = on\n")
+        fixtures.write_settings(user, "classic", [("database", f"folder:{os.path.basename(db)}"), ("faster_days", "on")])
         report = os.path.join(again, "report.tsv")
         steps = fixtures.LOAD_STEPS[:-1] + ["3600000 quit"]     # no first-news wait (its 120 s limit under load)
         r, _ = fixtures.run(program, game, "classic", user, smoke_run.scaled_steps("classic", again, steps),

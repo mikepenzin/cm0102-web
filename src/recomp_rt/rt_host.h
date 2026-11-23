@@ -46,6 +46,12 @@ void rt_heap_free_parts(uint32_t *small_bytes, uint32_t *small_blocks, uint32_t 
 /* The arena in bytes (a test: the ctest of heap.c; the game reads RECOMP_HEAP_ARENA_MB). 0: RT_HEAP_ARENA. */
 void rt_heap_set_arena(uint32_t bytes);
 uint32_t rt_heap_arena_bytes(void);       /* the arena: RT_HEAP_ARENA, or RECOMP_HEAP_ARENA_MB */
+/* The zone (heap.c): while rt_heap_zone returns 1, new blocks come from RT_ZONE_BASE up (the player search,
+ * playersearch.c). NULL: no zone. rt_heap_zone_top: the top of the zone, for the test. */
+#define RT_ZONE_BASE 0x50000000u
+#define RT_ZONE_SIZE 0x10000000u
+extern int (*rt_heap_zone)(void);
+uint32_t rt_heap_zone_top(void);
 
 /* A host function at a fake address that the original can call (stdcall: it pops its own arguments).
  * The same function under another name gets another address; rt_call_target tells them apart. */

@@ -8,7 +8,7 @@ Checks:
   1. The bundle has Info.plist, the program, Frameworks and Resources/game with cm0102.exe, Data and
      Sounds (the game opens its sounds there, for example intro1.wav).
   2. Info.plist and the window title in the program hold the version. Without --version the check
-     reads it from project() in CMakeLists.txt.
+     reads it from project() in CMakeLists.txt. Info.plist names the cm0102:// link of invite links (0.7.0).
   3. The program and every library hold exactly the expected architectures (default arm64 and x86_64).
   4. otool -L, for each architecture, lists only /usr/lib, /System, or @rpath, @loader_path and
      @executable_path names that resolve to a file in Contents/Frameworks. No Homebrew path.
@@ -124,6 +124,8 @@ def check_app(app, version, want_archs, manifest):
         data = f.read()
     check(title in data, "window title with the version is in the program",
           "window title %r is not in the program" % title.decode())
+    schemes = [s for t in info.get("CFBundleURLTypes", []) for s in t.get("CFBundleURLSchemes", [])]
+    check(schemes == ["cm0102"], "Info.plist names the cm0102:// link", "Info.plist link schemes are %r" % schemes)
 
     # 3. Architectures of every Mach-O file.
     fw = os.path.join(contents, "Frameworks")

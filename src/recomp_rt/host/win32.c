@@ -9,6 +9,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shlobj.h>
+#include <shellapi.h>
 
 #include <errno.h>
 #include <stdarg.h>
@@ -118,6 +119,8 @@ int host_stat(const char *path, HostStat *out)
     out->is_dir = (st.st_mode & _S_IFDIR) != 0;
     out->size = (uint64_t)st.st_size;
     out->mtime = (int64_t)st.st_mtime;
+    out->mtime_ns = out->ctime = out->ctime_ns = 0;
+    out->dev = out->ino = 0;
     return 0;
 }
 
@@ -144,6 +147,8 @@ int host_rename(const char *from, const char *to)
     wchar_t a[WPATH], b[WPATH];
     return to_wide(from, a, WPATH) && to_wide(to, b, WPATH) ? _wrename(a, b) : -1;
 }
+
+int host_rename_new(const char *from, const char *to) { return host_rename(from, to); }   /* fails when to exists */
 
 int host_replace(const char *from, const char *to)
 {
@@ -445,4 +450,16 @@ void host_restart(char *const argv[])
     CloseHandle(pi.hProcess);
     fflush(NULL);
     exit(0);
+}
+
+/* Open folder: the shell's "open" verb on the folder, which opens it in an Explorer window. Explorer wants a
+ * backslash between the parts. ShellExecuteW gives a value above 32 on success. */
+int host_open_folder(const char *path)
+{
+    wchar_t w[MAX_PATH * 4];
+    if (!to_wide(path, w, MAX_PATH * 4)) return 0;
+    for (wchar_t *c = w; *c; c++) if (*c == L'/') *c = L'\\';
+    DWORD a = GetFileAttributesW(w);
+    if (a == INVALID_FILE_ATTRIBUTES || !(a & FILE_ATTRIBUTE_DIRECTORY)) return 0;
+    return (INT_PTR)ShellExecuteW(NULL, L"open", w, NULL, NULL, SW_SHOWNORMAL) > 32;
 }

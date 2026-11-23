@@ -1,0 +1,61 @@
+# The competition names of the saves (3.9.68, the season databases and their languages) and the key of
+# tests/seasons/future/competitions.tsv (column comp) that holds the expected rule of each. history_check.py
+# strips a leading season ("2022-23 ", "2025 ") from a name, then matches each pattern (a Python regular
+# expression, whole name, case ignored) from the top. A name with no match takes the checker's own rules.
+pattern	comp
+(FIFA )?World Cup	world_cup
+(UEFA )?European Championship|Euro(pean)? Championship	euro_champ
+(FIFA )?Confederations Cup	fifa_confed
+Cop(p)?a Am[eé]rica( Centenario)?	goldcup
+Africa(n)? Cup of Nations	african_nations
+(AFC )?Asian Cup	asia_nations
+(OFC )?(Men's )?(Oceania )?Nations Cup( final)?|Oceania Nations Cup	oceania_nations
+Football at the Summer Olympics|Olympic Games|Olympics	olympics
+(CONCACAF )?Gold Cup	gold_cup
+(\d{4} )?Finalissima	finalissima
+FIFA World Cup qualification \(UEFA\)	wc_qual_uefa
+FIFA World Cup qualification \(CAF\)	wc_qual_caf
+FIFA World Cup qualification \(AFC\)	wc_qual_afc
+FIFA World Cup qualification \(CONMEBOL\)	wc_qual_conmebol
+FIFA World Cup qualification \(CONCACAF\)	wc_qual_concacaf
+FIFA World Cup qualification \(OFC\)	wc_qual_ofc
+(UEFA )?European Championship qualifying|Euro(pean)? Championship Qual(s|ifying)?	euro_qual
+Asian Cup Qual(s|ifying)?	asia_nations_qual
+.*UEFA Nations League.*	nations_league_uefa
+CONCACAF Nations League( Finals)?	nations_league_concacaf
+UEFA Champions League|European Champions Cup	uefa_cl
+UEFA Cup|UEFA Europa League	uefa_el
+UEFA (Europa )?Conference League	uefa_ecl
+UEFA Intertoto Cup	uefa_intertoto
+UEFA Super Cup|European Super Cup	uefa_super_cup
+(South American |Coppa )?Cop(p)?a Libertadores( Sudamericana)?	libertadores
+Copa Sudamericana|South American CONMEBOL Cup	sudamericana
+(South American )?Recopa( Sudamericana)?	recopa
+Suruga Bank Championship|J\.League YBC Levain Cup / CONMEBOL Sudamericana.*	suruga_bank
+FIFA Intercontinental Cup	fifa_intercontinental
+AFC Champions League Two	acl_two
+CONCACAF Champions('|s)? (Cup|League)	concacaf_champions
+AFC Champions League( Elite)?|Asian Club Championship	asia_club_champ
+OFC Club Championship|Oceania Champions Cup|OFC (Men's )?Champions League	oceania_club_champ
+FIFA Club World (Cup|Championship)	world_club_champ
+Intercontinental Cup	world_club_cup
+Copa Interamericana	inter_amer_cup
+(Copa |Coppa )?Merconorte( Cup| CONCACAF)?	con_merc_cup
+(South American )?Copa Mercosur	conmebol_merc
+Asian Cup Winners'? Cup	asia_cup_winner
+Asian Super Cup	asia_super_cup
+DFL-Ligapokal|Ligapokal	ger_lge_cup
+Coupe de la Ligue	fra_lge_cup
+FAW Premier Cup|Welsh Premier Cup	wel_prm_cup
+League of Ireland Cup	ire_lge_cup
+FAI Super Cup	ire_super_cup
+Korean League Cup|K League Cup|Rush & Cash Cup	kor_league_cup
+Polish League Cup|Puchar Ekstraklasy	pol_lge_cup
+Copa dos Campe[õo]es	bra_champ_cup
+Turkish Super Cup	tur_super
+Russian Super Cup	rus_super
+(Conference|National) League Cup( \(Setanta Shield\))?	conf_cup
+J\.? ?League (YBC Levain |Yamazaki Nabisco )?Cup	j_league_cup
+(African|CAF) Champions League	caf_champions
+K League Super Cup|Korean Super Cup	kor_super
+(Druga HNL|Croatian Second Division) South	cro_druga_south

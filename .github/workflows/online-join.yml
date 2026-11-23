@@ -1,0 +1,116 @@
+# Release test 3 of the online play spec (docs/specs/2026-10-27-online-play-0.7.0-spec.md, slice 5): a GitHub
+# Linux machine and a GitHub Windows machine join a game that the Mac hosts, through the deployed lobby and relay.
+#
+# Started by hand. It needs two repository secrets, the download addresses of the free release CM0102.iso and of
+# the official patch cm0102_3968.exe (README.md, "Build from source"): CM0102_ISO_URL and CM0102_PATCH_URL.
+#
+# 1. Start this workflow with the lobby address. The build takes about 20 minutes; then each joiner waits up to
+#    wait_minutes for the game in the lobby.
+# 2. On the Mac, start the host:
+#      python3 tests/smoke/network_run.py <cm0102_recomp> <clean files> --relay --lobby-url <address> \
+#          --remote 2 --game-name <the game_name input> --shots <folder>
+# 3. When the run ends, download the joiners' results (gh run download) and compare their dumps with the host's:
+#      python3 tests/smoke/relay_join_remote.py --compare <host shots> <joiner shots>
+name: Online join test
+
+on:
+  workflow_dispatch:
+    inputs:
+      lobby_url:
+        description: "The lobby address, for example https://online.cm0102bosman.co.uk"
+        required: true
+      game_name:
+        description: "The name of the host's game: one word of letters and digits, unique in the lobby"
+        default: "Bosman"
+      wait_minutes:
+        description: "How long each joiner waits for the game in the lobby"
+        default: "40"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends build-essential cmake ninja-build libsdl2-dev \
+              mingw-w64 nsis unshield libarchive-tools python3-venv
+          python3 -m venv /tmp/venv
+          /tmp/venv/bin/pip install -q capstone
+      - name: Make the clean files
+        env:
+          ISO_URL: ${{ secrets.CM0102_ISO_URL }}
+          PATCH_URL: ${{ secrets.CM0102_PATCH_URL }}
+        run: |
+          curl -fsSL -o /tmp/CM0102.iso "$ISO_URL"
+          curl -fsSL -o /tmp/cm0102_3968.exe "$PATCH_URL"
+          /tmp/venv/bin/python tools/clean_files/make_clean_files.py /tmp/CM0102.iso /tmp/cm0102_3968.exe "$RUNNER_TEMP/game"
+      - name: Build for Linux
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCM0102_EXE="$RUNNER_TEMP/game/cm0102.exe" \
+              -DRECOMP_PYTHON=/tmp/venv/bin/python
+          cmake --build build --target cm0102_recomp relay_test lobby_test net_core_test
+          ctest --test-dir build -R "^(relay|relay_tls|lobby|net_core)$" --output-on-failure
+      - name: Build for Windows
+        run: |
+          curl -fsSL -o /tmp/sdl2.tar.gz \
+              https://github.com/libsdl-org/SDL/releases/download/release-2.32.10/SDL2-devel-2.32.10-mingw.tar.gz
+          tar -xzf /tmp/sdl2.tar.gz -C /tmp
+          cmake -S . -B build-win -G Ninja -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE=packaging/windows/mingw-w64-x86_64.cmake \
+              -DSDL2_DIR=/tmp/SDL2-2.32.10/x86_64-w64-mingw32/lib/cmake/SDL2 \
+              -DCM0102_EXE="$RUNNER_TEMP/game/cm0102.exe" -DRECOMP_PYTHON=/tmp/venv/bin/python
+          cmake --build build-win --target cm0102_recomp
+      - name: Pack the builds
+        run: |
+          mkdir -p out
+          cp build/cm0102_recomp build-win/cm0102_recomp.exe out/
+          tar -C "$RUNNER_TEMP" -cf out/game.tar game
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builds
+          path: out
+          retention-days: 1
+
+  join:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 80
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: builds
+          path: builds
+      - name: Unpack
+        shell: bash
+        run: |
+          tar -C builds -xf builds/game.tar
+          chmod +x builds/cm0102_recomp || true
+          if [ "$RUNNER_OS" = Linux ]; then sudo apt-get update -qq && sudo apt-get install -y -qq libsdl2-2.0-0; fi
+      - name: Join the game on the Mac
+        shell: bash
+        env:
+          LOBBY_URL: ${{ inputs.lobby_url }}
+          GAME_NAME: ${{ inputs.game_name }}
+          WAIT_MINUTES: ${{ inputs.wait_minutes }}
+        run: |
+          exe=builds/cm0102_recomp py=python3
+          if [ "$RUNNER_OS" = Windows ]; then exe=builds/cm0102_recomp.exe py=python; fi
+          "$py" -I tests/smoke/relay_join_remote.py "$exe" builds/game --lobby-url "$LOBBY_URL" \
+              --name "$GAME_NAME" --wait $((WAIT_MINUTES * 60)) --shots shots --id "join-$RUNNER_OS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots-${{ matrix.os }}
+          path: shots
+          retention-days: 7

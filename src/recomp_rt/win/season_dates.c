@@ -17,7 +17,8 @@
  * - a known Update Team database in its own season (N = D): the measured shifts of the table;
  * - a known Update Team database in another season: the whole database moves by N - D on top, so every person
  *   keeps the age that the database gives him and no history row lies after the start (a 2019/20 squad in a
- *   2010/11 game is not made of children, and its 2019 champions do not appear in 2010);
+ *   2010/11 game is not made of children, and its 2019 champions do not appear in 2010); the nation
+ *   competition rows move by whole 4-year steps of that only (whole_cycles, open item 169);
  * - the official data sets (3.9.60, 3.9.65, 3.9.68; D = 2001): real dates of birth, careers and history stay,
  *   and the contract ends move by N - 2001 (the 2002/03 tile: +1);
  * - a Custom database: the dates of birth are measured against the game's own data (3.9.68), shift d, so
@@ -33,6 +34,7 @@
 #include "season_dates.h"
 #include "season_comps.h"
 #include "season_history.h"
+#include "season_coeffs.h"
 #include "season_records.h"
 #include "seasons_db.h"
 #include "season_screen.h"
@@ -154,9 +156,24 @@ static int loaded_year;             /* the start year at that load */
 typedef struct {
     const char *name;
     int D, N;                       /* data season, start year */
-    int birth, joined, officials, careers, kept, history, last_rows, contract_old, contract_real;
+    int birth, joined, officials, careers, kept, history, nation_history, last_rows, contract_old, contract_real;
+    int nation_kept;                /* the part of kept that the nation competition rows take: whole cycles */
     const SeasonDateShifts *row;    /* careers kept and last rows; NULL for none */
 } Plan;
+
+/* Open item 169: the nation competitions (the international finals and their qualifiers) are held every 1, 2
+ * or 4 years in fixed years (class_cycles, season_intl_rules.c: a World Cup in a year after a multiple of 4
+ * from 2002, a Euro after one from 2000). A database that moves by N - D years in a game of another season
+ * moves its nation rows by whole 4-year steps only, the most that is not more than N - D, so each final stays
+ * in a year of its own cycle and no row lies after the start. A shift of 73 (December 2025 in 2098) put the
+ * World Cup of 2022 at 2095 and the next editions of the class at 2102, 2106 (in phase with the table). */
+#define NATION_CYCLE 4
+
+static int whole_cycles(int e)
+{
+    int r = e % NATION_CYCLE;
+    return e - (r < 0 ? r + NATION_CYCLE : r);
+}
 
 /* A date: adds s to its year when it is set, keeps a 29 February valid and the year at 1901 or later. */
 static void shift_date(uint32_t a, int s)
@@ -188,13 +205,24 @@ static void shift_year(uint32_t a, int s)
     wr16(g_mem, a, (uint32_t)ny);
 }
 
+/* The contract rule: a year of D or later and REAL_CONTRACT_FROM or later is a real year (shift real), an earlier one
+ * a year of a 2001 start (shift old). */
+static int contract_shift(int y, int D, int old, int real)
+{
+    return y >= D && y >= REAL_CONTRACT_FROM ? real : old;
+}
+
+int season_dates_contract_shift(const SeasonShiftPlan *p, int y)
+{
+    return contract_shift(y, p->D, p->contract_old, p->contract_real);
+}
+
 /* A contract end or national job date, by the rule of its row. */
 static void shift_contract(uint32_t a, const Plan *p)
 {
     int y = (int)rd16(g_mem, a + 2);
     if (y <= (int)EMPTY_YEAR) return;
-    int real = y >= p->D && y >= REAL_CONTRACT_FROM;
-    int ny = y + (real ? p->contract_real : p->contract_old);
+    int ny = y + contract_shift(y, p->D, p->contract_old, p->contract_real);
     if (ny > p->N + CONTRACT_YEARS) ny = p->N + CONTRACT_YEARS;
     shift_date(a, ny - y);
 }
@@ -230,6 +258,21 @@ static int career_kept(const SeasonDateShifts *s, uint32_t i)
 
 int season_dates_career_kept(const SeasonDateShifts *s, uint32_t i) { return career_kept(s, i); }
 
+/* The shift of a nation competition row: its own (row->nation_comps), else the shift of the nation rows. */
+static int nation_shift(const Plan *p, uint32_t id)
+{
+    for (uint32_t i = 0; p->row && i < p->row->nation_count; i++)
+        if ((uint32_t)p->row->nation_comps[2 * i] == id) return p->row->nation_comps[2 * i + 1] + p->nation_kept;
+    return p->nation_history;
+}
+
+static const SeasonYearFixes *year_fixes_for(const char *name)
+{
+    for (int i = 0; name && i < season_year_fixes_count; i++)
+        if (!strcmp(season_year_fixes[i].name, name)) return &season_year_fixes[i];
+    return NULL;
+}
+
 static int last_row_comp(const SeasonDateShifts *s, uint32_t id)
 {
     for (uint32_t i = 0; s && i < s->last_count; i++)
@@ -260,29 +303,61 @@ static void apply(const Plan *p)
         shift_year(r + 8, career_kept(p->row, row) ? p->kept : p->careers);
     }
 
-    /* The club rows and the nation rows of one array. */
-    uint32_t ch = rd32(g_mem, COMP_HISTORY_PTR);
-    uint32_t n_ch = file_rows(T_COMP_HISTORY) + file_rows(T_NATION_HISTORY), have = rd32(g_mem, COMP_HISTORY_COUNT);
+    /* The club rows and the nation rows of one array. The nation rows have a shift of their own (0.6.2 slice 7:
+     * the Update Team databases keep them at another offset than the club rows, docs/research/
+     * 2026-10-17-season-date-shifts.md). */
+    uint32_t ch = rd32(g_mem, COMP_HISTORY_PTR), n_club = file_rows(T_COMP_HISTORY);
+    uint32_t n_ch = n_club + file_rows(T_NATION_HISTORY), have = rd32(g_mem, COMP_HISTORY_COUNT);
     if (n_ch > have) n_ch = have;
     uint32_t nation_at = rd32(g_mem, NATION_HISTORY_PTR);
     if (nation_at && nation_at != ch + file_rows(T_COMP_HISTORY) * COMP_HISTORY_SIZE) {
         fprintf(stderr, "recomp: season dates: the nation competition history is not after the club rows "
                         "(%08x, %08x): only the club rows move\n", ch, nation_at);
-        n_ch = file_rows(T_COMP_HISTORY);
+        n_ch = n_club;
     }
     uint32_t comps = rd32(g_mem, COMPS_PTR);
     journal_ch_base = ch;
     journal_ch_end = ch + rd32(g_mem, COMP_HISTORY_COUNT) * COMP_HISTORY_SIZE;
+    const SeasonYearFixes *fx = year_fixes_for(p->name);
+    uint32_t k = 0, fixed = 0, missed = 0, cleared = 0;
     for (uint32_t i = 0; ch && i < n_ch; i++) {
         uint32_t r = ch + i * COMP_HISTORY_SIZE, c = rd32(g_mem, r + 4);
-        int last = p->last_rows && rd16(g_mem, r + 8) == LAST_ROW_YEAR && c >= comps && (c - comps) % COMP_SIZE == 0 &&
-                   last_row_comp(p->row, (c - comps) / COMP_SIZE);
-        shift_year(r + 8, last ? p->last_rows : p->history);
+        int id_ok = c >= comps && (c - comps) % COMP_SIZE == 0;
+        uint32_t id = id_ok ? (c - comps) / COMP_SIZE : 0xffffffffu;
+        int last = p->last_rows && rd16(g_mem, r + 8) == LAST_ROW_YEAR && id_ok && last_row_comp(p->row, id);
+        int s = last ? p->last_rows : i >= n_club ? nation_shift(p, id) : p->history;
+        /* open item 233: the rows of the year fix table, in the order of this walk (club rows, then nation rows) */
+        uint32_t nation = i >= n_club, row = nation ? i - n_club : i;
+        while (fx && k < fx->count && (fx->fixes[k].nation < nation || (fx->fixes[k].nation == nation &&
+                                                                       fx->fixes[k].row < row))) {
+            k++;
+            missed++;               /* a row past the end of its file */
+        }
+        if (fx && k < fx->count && fx->fixes[k].nation == nation && fx->fixes[k].row == row) {
+            if (fx->fixes[k].comp == id && fx->fixes[k].year == rd16(g_mem, r + 8) && !fx->fixes[k].delta) {
+                keep(r + 4, 4);     /* a row of no real edition: a free row (competition 0), as the duplicate clear */
+                wr32(g_mem, r + 4, 0);
+                cleared++;
+            } else if (fx->fixes[k].comp == id && fx->fixes[k].year == rd16(g_mem, r + 8)) {
+                s += fx->fixes[k].delta;
+                fixed++;
+            } else {
+                missed++;
+            }
+            k++;
+        }
+        shift_year(r + 8, s);
     }
+    if (fx) missed += fx->count - k;
+    if (fx)
+        fprintf(stderr, "recomp: season dates: %u competition history years corrected for %s (open item 233), %u "
+                        "rows of the table not found, %u rows of no real edition cleared\n", fixed, p->name, missed,
+                cleared);
     fprintf(stderr, "recomp: season dates: %s (data %d) in %d: birth %+d, joined %+d, contract %+d (real ends "
-                    "%+d), officials %+d, careers %+d (kept %+d), competition history %+d (last rows %+d); %u staff, "
-                    "%u careers, %u history rows, %zu changes\n", p->name, p->D, p->N, p->birth, p->joined,
-            p->contract_old, p->contract_real, p->officials, p->careers, p->kept, p->history, p->last_rows, n_staff,
+                    "%+d), officials %+d, careers %+d (kept %+d), competition history %+d (nations %+d, last rows "
+                    "%+d); %u staff, %u careers, %u history rows, %zu changes\n", p->name, p->D, p->N, p->birth,
+            p->joined, p->contract_old, p->contract_real, p->officials, p->careers, p->kept, p->history,
+            p->nation_history, p->last_rows, n_staff,
             n_hist, n_ch, journal_n);
 }
 
@@ -471,7 +546,9 @@ static int plan_for_folder(const char *dir, int N, Plan *p)
         p->officials = row->officials + e;
         p->careers = row->staff_history + e;
         p->kept = e;
+        p->nation_kept = whole_cycles(e);
         p->history = row->comp_history + e;
+        p->nation_history = row->nation_history + p->nation_kept;
         p->last_rows = row->last_rows ? row->last_rows + e : 0;
         p->contract_old = row->contract + e;
         p->contract_real = e;
@@ -488,8 +565,10 @@ static int plan_for_folder(const char *dir, int N, Plan *p)
     p->D = D;
     p->birth = p->joined = p->careers = d + e;
     p->kept = e;
+    p->nation_kept = whole_cycles(e);
     p->officials = (D >= 2020) + e;
     p->history = (D >= 2010 ? d : 0) + e;
+    p->nation_history = (D >= 2010 ? d : 0) + p->nation_kept;
     p->contract_old = d + e;
     p->contract_real = e;
     return 1;
@@ -518,37 +597,87 @@ int season_dates_plan(const char *folder, int N, SeasonShiftPlan *out)
     return 1;
 }
 
+static const char *loaded_db_name(void);
+static int official_version(void);
+
 static void shift_for(int N)
 {
+    season_coeffs_undo();           /* open item 106 */
     season_history_undo();          /* slice 11c: its rows first, then the shift that they follow */
     restore();
     applied_year = 0;
+    if (!season_code_on()) return;
     Plan p;
-    if (N == SEASON_FIRST_YEAR || !season_code_on() || !plan_for(N, &p)) return;
-    apply(&p);
-    applied_year = N;
-    log_stats();
-    season_history_fill(p.name, N); /* slice 11c: the history between 2001 and the start */
+    int plan = N != SEASON_FIRST_YEAR && plan_for(N, &p);
+    if (plan) {
+        apply(&p);
+        applied_year = N;
+        log_stats();
+    }
+    /* slice 11c: the history between 2001 and the start; open item 74: with or without a plan (a 2001 game with
+     * changing rules on), the past editions of the records that the season code adds */
+    season_history_fill(plan ? p.name : NULL, N, official_version());
+    /* 0.6.2 open item 106: the real six seasons, in every start year (a 2001 start has no plan) */
+    season_coeffs_fill(loaded_db_name());
 }
 
 void season_dates_forget(void)
 {
     season_history_forget();
+    season_coeffs_forget();
+    rt_ire_super_forget();                      /* open item 127 (original_faults.c) */
     journal_ch_base = journal_ch_end = 0;
     loaded = 0;
     applied_year = 0;
     journal_n = 0;
 }
 
+/* The known database of the loaded data, or NULL (a Custom database). */
+static const SeasonKnownDb *loaded_db(void)
+{
+    char folder[1100];
+    if (loaded_dir[0]) snprintf(folder, sizeof folder, "%s", loaded_dir);
+    else snprintf(folder, sizeof folder, "%s/Data", win_game_dir);
+    return seasons_db_identify(folder);
+}
+
+static const char *loaded_db_name(void)
+{
+    const SeasonKnownDb *k = loaded_db();
+    return k ? k->name : NULL;
+}
+
+/* 1 when the loaded data is an official data set (3.9.60, 3.9.65, 3.9.68). */
+static int official_data(void)
+{
+    const SeasonKnownDb *k = loaded_db();
+    return k && (k->role == SEASONS_ROLE_OFFICIAL_BASE || k->role == SEASONS_ROLE_OFFICIAL_VERSION);
+}
+
+/* 1 when the loaded data is 3.9.60 or 3.9.65: its duplicate history rows go in every start year (open item 227).
+ * Not the 3.9.68 data of the base game (Q152). The signature table knows the folders Data-3.9.60 and Data-3.9.65
+ * that the game ships (make_clean_files.py) and the forum files of these versions (open item 230). */
+static int official_version(void)
+{
+    const SeasonKnownDb *k = loaded_db();
+    return k && k->role == SEASONS_ROLE_OFFICIAL_VERSION;
+}
+
 void season_dates_at_create(void)
 {
     if (!loaded || rt_unwinding) return;
     int N = season_start_year();
-    if (N == (applied_year ? applied_year : SEASON_FIRST_YEAR)) return;
+    if (N == (applied_year ? applied_year : SEASON_FIRST_YEAR)) {
+        season_history_drop_after_start(N, official_data());    /* 0.6.2 slice 7 */
+        season_history_log_create();
+        return;
+    }
     fprintf(stderr, "recomp: season dates: the game is made in %d, the data was loaded for %d: the shift is made "
                     "again\n", N, applied_year ? applied_year : SEASON_FIRST_YEAR);
     uint32_t eax = cpu.eax;
     shift_for(N);
+    season_history_drop_after_start(N, official_data());
+    season_history_log_create();
     loaded_year = N;
     log_load();
     cpu.eax = eax;
@@ -571,8 +700,9 @@ RT_WRAP(00524d50, database_load_files)
     loaded = 1;
     loaded_year = season_start_year();
     snprintf(loaded_dir, sizeof loaded_dir, "%s", win_data_set_dir());
-    fprintf(stderr, "recomp: season dates: data loaded from %s in %d\n", loaded_dir[0] ? "a database folder"
-            : "the game's Data", season_start_year());
+    const char *known = loaded_db_name();      /* open item 230: the known database, or Custom */
+    fprintf(stderr, "recomp: season dates: data loaded from %s (%s) in %d\n", loaded_dir[0] ? "a database folder"
+            : "the game's Data", known ? known : "Custom", season_start_year());
     shift_for(season_start_year());
     /* Test switch RECOMP_DATES_RESHIFT=<year>: the shift is made again for that year and then for the start year,
      * as season_dates_at_create does when the game is made in another year than the load. The data must end as
@@ -634,14 +764,14 @@ static void log_stats(void)
         if (c > (int)EMPTY_YEAR && rd32(g_mem, r + 0x39)) { set++; inside += c >= N - 2 && c <= N + CONTRACT_YEARS; }
         if (m > (int)EMPTY_YEAR) { nat_set++; nat_inside += m >= N - 2 && m <= N + CONTRACT_YEARS; }
         if (j > (int)EMPTY_YEAR && rd32(g_mem, r + 0x39)) {
-            if (j > joined_max && j < 2100) joined_max = j;
+            if (j > joined_max && j < N + 100) joined_max = j;
             joined_n[j >= N - 1 && j <= N ? 0 : j < N - 1 ? 1 : 2]++;
         }
     }
     uint32_t hist = rd32(g_mem, HISTORY_PTR), n_hist = rows_of(T_HISTORY, HISTORY_COUNT);
     for (uint32_t i = 0; hist && i < n_hist; i++) {
         int y = (int)rd16(g_mem, hist + i * HISTORY_SIZE + 8);
-        if (y > career_max && y < 2100) career_max = y;
+        if (y > career_max && y < N + 100) career_max = y;
     }
     uint32_t off = rd32(g_mem, OFFICIALS_PTR), n_off = rows_of(T_OFFICIALS, OFFICIALS_COUNT), young = 0, born = 0;
     for (uint32_t i = 0; off && i < n_off; i++) {

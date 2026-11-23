@@ -2,8 +2,15 @@
  * division pointer (+0x57) of club records in the game's memory, and only in a season game. */
 #include "win.h"
 #include "season.h"
+#include "season_mls.h"
+#include "season_closed.h"
 #include "season_clubs.h"
+#include "season_second_teams.h"
+#include "season_fin_second.h"
+#include "season_bel_second.h"
+#include "season_esp_second.h"
 #include "season_tur_groups.h"
+#include "season_pol_first.h"
 #include "season_arg_zones.h"
 #include "season_names.h"
 #include "season_records.h"
@@ -26,6 +33,8 @@
 #define CLUB_SIZE 0x245u
 #define CLUB_ZONE 0x60u             /* zone record of an Argentine club (club_comp pointer; 0 when the data has none) */
 #define CLUB_NAME 4u                /* long name, 52 bytes */
+#define CLUB_SHORT 0x38u            /* short name */
+#define CLUB_REPUTATION 0x80u       /* s16 */
 #define CLUB_NATION 0x53u           /* nation pointer */
 #define CLUB_DIVISION 0x57u         /* club_comp pointer */
 #define CLUB_REPUTATION 0x80u      /* s16 */
@@ -165,6 +174,24 @@ typedef struct {
     int kept;                       /* 1 when a list keeps it in its division */
 } Club;
 
+/* The clubs of the moves that run (items 121, 122: season_esp_barred reads the planned division of a club). */
+static const Club *moves_club;
+static uint32_t moves_table;
+static int moves_count;
+static int moves_season;
+
+static uint32_t planned_division(uint32_t at)
+{
+    uint32_t i = (at - moves_table) / CLUB_SIZE;
+    if (!moves_club || at < moves_table || i >= (uint32_t)moves_count) return rd32(g_mem, at + CLUB_DIVISION);
+    return moves_club[i].div;
+}
+
+uint32_t season_clubs_planned_division(uint32_t club)
+{
+    return planned_division(club);
+}
+
 /* One division of the game. */
 typedef struct {
     uint32_t at, nation;
@@ -173,6 +200,7 @@ typedef struct {
     int listed, found, kept, missing, missing_reserve, filled_own, filled_left, filled_up, filled_pool, filled_spare, filled_lower;
     int open, stand_in;
     const char *name;
+    char missing_names[160];    /* open item 123b: the real names of the missing clubs that are no reserve side */
 } Division;
 
 static int same_name(uint32_t at, const char *name)
@@ -186,8 +214,8 @@ static int same_name(uint32_t at, const char *name)
  * table and stops at its count (EngConf::create_table 0x56ecb0 at 0x56ed54..0x56ed7f). With fewer the table
  * is not made (0x56ed95..0x56edab), and the constructor stops at its assert (fra_first.cpp 108 for FraFirst).
  * The address is that of the write. These classes are not here, so their divisions keep the database count:
- * - classes that count the clubs of the data: IrePrm 0x63a740, IreFirst 0x635910, PolFirst 0x7c9450,
- *   NorFirst 0x7909a0;
+ * - classes that count the clubs of the data: IrePrm 0x63a740, IreFirst 0x635910, NorFirst 0x7909a0 (PolFirst
+ *   0x7c9450 stores a register, but it holds 8, and the class takes 16: it is in the table);
  * - classes that take groups: BraNatThird 0x42dc90, FraLower 0x5be230, SpaLower 0x8533d0,
  *   and the Belgian, Portuguese, Spanish, Swedish, Italian C2 and Turkish group classes;
  * - classes that take no club by the division pointer: the Brazilian state classes (BraRegSp::create_table
@@ -238,6 +266,11 @@ static const ClassSize CLASS_SIZE[] = {
     {"Northern Irish League First Division", "nir_first", 10, 10},    /* 0x78bc62 */
     {"Northern Irish League Premier Division", "nir_prm", 10, 10},  /* 0x78ec72 */
     {"Norwegian Premier Division", "nor_prm", 14, 14},              /* 0x7925f2 */
+    /* PolFirst::create_table 0x7c9450: two groups of 8 (+0x3e = 8 at 0x7c945a..0x7c9469) in a cleared table of 16
+     * slots (+0xee, 0x7c950e..0x7c951c); each club of [0x9cf858] goes to the slot of its last place (0x7c95a0..
+     * 0x7c963d). With 15 a slot stays 0, and a fixture with no home club stops the new game at Database.cpp 13471
+     * (2005 start, 3.9.68 data, 0.6.2 item 64). */
+    {"Polish First Division", "pol_first", 16, 16},
     {"Polish Second Division", "pol_second", 18, 20},                  /* 0x7cbdfd: 20 at 0x7cbe03 when +0x40 is 2001 */
     {"Portuguese Premier League", "por_prm", 18, 18},               /* 0x7cf812 */
     {"Portuguese Second League", "por_second", 18, 18},                /* 0x7d1532 */
@@ -262,13 +295,39 @@ static int class_size(const char *name, int season)
 {
     int new_division = season_divisions_class_size(name, season);   /* slice 20 */
     if (new_division >= 0) return new_division;
+    int mls = season_mls_division_size(name, season);                /* gap row 7: the MLS of real life */
+    if (mls >= 0) return mls;
+    if (!strncmp(name, "Polish First Division", 52)) {                 /* issue 92: one table of 14, 16 or 18 */
+        int one_table = season_pol_first_clubs(season);
+        if (one_table > 0) return one_table;
+    }
     for (size_t k = 0; k < sizeof CLASS_SIZE / sizeof CLASS_SIZE[0]; k++)
         if (!strncmp(name, CLASS_SIZE[k].name, 52)) {
             int table = season_sizes_clubs(CLASS_SIZE[k].file, season);
             if (table > 0) return table;
             return season == SEASON_FIRST_YEAR ? CLASS_SIZE[k].first_season : CLASS_SIZE[k].size;
         }
+    /* A class that counts the clubs of its data plays the count of its row with the sizes on (0.7.2 slice 13): the
+     * 2013 list holds 8 Irish First Division clubs, and the 3.9.68 data 10. Off, the data's count stays. */
+    if (!strncmp(name, "Irish First Division", 52)) return season_sizes_data_clubs("ire_first", season);
+    /* Item 260: the Irish Premier Division too (IrePrm takes 10 or 12). Without a count the division kept the
+     * database's 12 after its list of 10, in a 2003 or 2004 start. */
+    if (!strncmp(name, "Irish Premier Division", 52)) return season_sizes_data_clubs("ire_prm", season);
     return -1;
+}
+
+/* Item 260: the season of the lists of a division in a start season. The lists are kept by the season of the rules
+ * table row ("2004 Irish Premier Division" holds the clubs of the real 2005, row 2004 of ire_prm), and a League of
+ * Ireland edition plays the row whose real season begins in its year (season_sizes_edition: edition 2004 plays row
+ * 2003, real 2004). So an Irish division takes the list of its edition's row; any other division the list of the
+ * season. With the sizes off the season stays. The club records of a division follow the same season
+ * (season_records_merge). */
+int season_clubs_list_season(const char *division, int season)
+{
+    if (!season_sizes_on()) return season;
+    if (!strncmp(division, "Irish Premier Division", 52)) return season_sizes_edition("ire_prm", season);
+    if (!strncmp(division, "Irish First Division", 52)) return season_sizes_edition("ire_first", season);
+    return season;
 }
 
 /* The file of a division's class, or NULL. */
@@ -279,12 +338,91 @@ static const char *class_file(const char *name)
     return NULL;
 }
 
-/* The count of a class after 2001. */
-static int class_size_of(const char *file)
+/* Open item 123: the least count of n or more that the class of a division takes, for a class that counts the
+ * clubs of the data and takes only some counts. The club moves leave the place of a listed club that the data
+ * lacks open in the top two tiers (below), and the count that is left must be one that the class takes:
+ * - IrePrm::create_table 0x63a740 takes 10 (+0x3c 4) or 12 (+0x3c 3) (0x63a79f..0x63a7c6) and returns 0 for any
+ *   other count, so IrePrm::IrePrm 0x639bb0 stops at ire_prm..cpp 82 (push 0x52 at 0x639ca7). In a 2008 start on
+ *   3.9.68 one open place (Bray Wanderers, held as "Bray Wanderers A.F.C.") left the Premier Division with 11;
+ * - IreFirst::create_table 0x635910 takes 9 to 12 (0x63596f..0x63597d). The 3.9.60 and 3.9.65 data hold 9 First
+ *   Division clubs, so one open place left 8;
+ * - NorFirst::create_table 0x7909a0 takes 14 (0x790a6e..0x790a73) and sets 16 for any other count, and returns 1
+ *   only when it adds that many clubs (0x790add..0x790aeb), so 15 or fewer than 14 fail.
+ * Any other division gives n. */
+static int data_class_count(const char *name, int n)
 {
-    for (size_t k = 0; file && k < sizeof CLASS_SIZE / sizeof CLASS_SIZE[0]; k++)
-        if (!strcmp(file, CLASS_SIZE[k].file)) return CLASS_SIZE[k].size;
-    return 0;
+    if (n <= 0) return n;
+    if (!strncmp(name, "Irish Premier Division", 52) && n < 12) return n <= 10 ? 10 : 12;
+    /* In a season game with the sizes on, IreFirst takes any count from 2 (0.7.2 slice 13, season_sizes_irl.c). */
+    if (!strncmp(name, "Irish First Division", 52) && n < 9 && !season_sizes_on()) return 9;
+    if (!strncmp(name, "Norwegian First Division", 52) && n < 16 && n != 14) return n < 14 ? 14 : 16;
+    return n;
+}
+
+/* 1 for a letter or digit of Windows-1252 (a letter with an accent counts). */
+static int plain_letter(unsigned char ch)
+{
+    return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ||
+           (ch >= 0xc0 && ch != 0xf7);
+}
+
+/* The words of a plain form, see plain_words. join: initials with full stops are one word ("A.F.C." is "afc",
+ * "S.S.C." is "ssc"): a full stop joins when one letter stands before it and one letter after it, and no letter
+ * follows that letter, so "St. Patrick's", "J. Smith" and "A.Smith" stay apart. With join and drop_words a
+ * joined word is left out as a club-form word, as fc is.
+ * initials: only the club-form initials are given, the joined words and the short form words (fc, cd, afc, ...). */
+enum { PLAIN_JOIN = 1, PLAIN_INITIALS = 2 };
+
+static void plain_words_by(const char *in, char *out, size_t room, int drop_words, int how)
+{
+    static const char *const forms[] = {"fc", "cf", "sc", "ac", "ec", "ca", "cd", "sd", "ud", "if", "fk", "sk", "bk",
+                                        "afc"};     /* the short form words */
+    static const char *const words[] = {"club", "clube", "futebol", "football", "ltda", "de", "da", "do", "das",
+                                        "dos", "the", "e", "y", "and"};
+    static const char fold[] = "AAAAAAACEEEEIIIIDNOOOOOxOUUUUYTsaaaaaaaceeeeiiiidnooooo/ouuuuyty";   /* 0xc0.. */
+    char word[64];
+    size_t n = 0, w = 0, seg = 0;       /* seg: the letters since the start of the word or a joining full stop */
+    int joined = 0;
+    out[0] = 0;
+    for (const unsigned char *p = (const unsigned char *)in;; p++) {
+        int ch = *p;
+        if (ch >= 0xc0) ch = (unsigned char)fold[ch - 0xc0];
+        if (ch >= 'A' && ch <= 'Z') ch += 32;
+        int letter = (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
+        if (letter) {
+            if (w < sizeof word - 1) word[w++] = (char)ch;
+            seg++;
+            continue;
+        }
+        if ((how & (PLAIN_JOIN | PLAIN_INITIALS)) && ch == '.' && seg == 1 && plain_letter(p[1]) &&
+            !plain_letter(p[1] ? p[2] : 0)) {
+            seg = 0;
+            joined = 1;
+            continue;
+        }
+        seg = 0;
+        if (w) {
+            word[w] = 0;
+            int skip = 0;
+            int form = 0;
+            for (size_t k = 0; k < sizeof forms / sizeof forms[0] && !form; k++) form = !strcmp(word, forms[k]);
+            if (how & PLAIN_INITIALS) {
+                skip = !joined && !form;
+            } else if (drop_words) {
+                skip = form || (joined && (how & PLAIN_JOIN));
+                for (size_t k = 0; k < sizeof words / sizeof words[0] && !skip; k++) skip = !strcmp(word, words[k]);
+            }
+            if (!skip && n + w + 2 < room) {
+                if (n) out[n++] = ' ';
+                memcpy(out + n, word, w);
+                n += w;
+                out[n] = 0;
+            }
+            w = 0;
+            joined = 0;
+        }
+        if (!*p) break;
+    }
 }
 
 /* A club name in a plain form, to find a club whose name in the research differs a little from the database
@@ -293,36 +431,59 @@ static int class_size_of(const char *file)
  * clube, ltda, ...) left out. */
 static void plain_words(const char *in, char *out, size_t room, int drop_words)
 {
-    static const char *const drop[] = {"fc", "cf", "sc", "ac", "ec", "ca", "cd", "sd", "ud", "if", "fk", "sk",
-                                       "bk", "afc", "club", "clube", "futebol", "football", "ltda", "de", "da",
-                                       "do", "das", "dos", "the", "e", "y", "and"};
-    static const char fold[] = "AAAAAAACEEEEIIIIDNOOOOOxOUUUUYTsaaaaaaaceeeeiiiidnooooo/ouuuuyty";   /* 0xc0.. */
-    char word[64];
-    size_t n = 0, w = 0;
-    out[0] = 0;
-    for (const unsigned char *p = (const unsigned char *)in;; p++) {
-        int ch = *p;
-        if (ch >= 0xc0) ch = (unsigned char)fold[ch - 0xc0];
-        if (ch >= 'A' && ch <= 'Z') ch += 32;
-        int letter = (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9');
-        if (letter && w < sizeof word - 1) {
-            word[w++] = (char)ch;
-            continue;
+    plain_words_by(in, out, room, drop_words, 0);
+}
+
+/* Open item 123b: list names that no rule of the match can find in some base data, with the database name that the
+ * club has there. "Bray Wanderers" (the lists from 2008/09) is "Bray Wanderers A.F.C." in 3.9.60, 3.9.65 and
+ * 3.9.68. The lists hold 3.9.68 ids, and 3.9.60 and 3.9.65 hold the club under ids 1479 and 1522, and only one of
+ * the two names has initials, so the initials step does not find it there. The count fill of the Irish divisions
+ * then hid each of these clubs (its log now names the clubs it fills for). */
+static const struct { const char *list, *data; } NAME_EXCEPTIONS[] = {
+    {"Bray Wanderers", "Bray Wanderers A.F.C."},
+    /* The lists from 2017/18 (ids 11003 and 5902); 3.9.60, 3.9.65 and 3.9.68 say "Saint". */
+    {"St. Patrick's Athletic", "Saint Patrick's Athletic"},
+    {"St. Patricks Athletic", "Saint Patrick's Athletic"},
+    /* The lists from 2018/19 (id 1710, "Bohemian F.C." in 3.9.68). */
+    {"Bohemian Football Club Dublin", "Bohemian F.C."},
+    {"Bohemian Football Club", "Bohemian F.C."},
+    /* The lists of 2011 and 2012; 3.9.60 and 3.9.65 hold "Cork City" under other ids than 2741. The 2010 list names
+     * the club by its owner of that season, Cork City FORAS Co-op, the same club in the same league place. */
+    {"Cork City F.C.", "Cork City"},
+    {"Cork City FORAS Co-op", "Cork City"},
+    /* The list of 2012 (Salthill Devon of Galway, club 10004 in 3.9.68). */
+    {"Salthill Devon Galway", "Salthill Devon"},
+    /* The lists of 2013/14 ("Galway", no id) and 2014/15 ("Galway FC", id 1752) name the Galway United of 1937 (4287
+     * in 3.9.68) as it played the 2014 season, as Galway F.C., before it bought back its name for 2015. Same club:
+     * en.wikipedia.org/wiki/Galway_United_F.C. ("initially playing as Galway F.C."; founded 1937) and
+     * galwayunitedfc.ie/club-history (read 5 November 2026). A start in 2013/14 makes the slice 15b record Galway
+     * F.C., which the record step finds first. The rows act where no record exists: a 2014/15 start, and a 2013/14
+     * start with no record (its source database missing). The club moves run only at a new game, so a game that
+     * starts in 2013/14 keeps the record club in 2014/15. */
+    {"Galway", "Galway United"},
+    {"Galway FC", "Galway United"},
+};
+
+static const char *name_exception(const char *list)
+{
+    for (size_t i = 0; i < sizeof NAME_EXCEPTIONS / sizeof NAME_EXCEPTIONS[0]; i++)
+        if (!strncmp(list, NAME_EXCEPTIONS[i].list, 52)) return NAME_EXCEPTIONS[i].data;
+    return NULL;
+}
+
+/* 1 when the two lists of words (space between) have a word in common. */
+static int share_word(const char *a, const char *b)
+{
+    for (const char *p = a; *p;) {
+        size_t n = strcspn(p, " ");
+        for (const char *q = b; *q;) {
+            size_t m = strcspn(q, " ");
+            if (n == m && !strncmp(p, q, n)) return 1;
+            q += m + (q[m] == ' ');
         }
-        if (w) {
-            word[w] = 0;
-            int skip = 0;
-            for (size_t k = 0; drop_words && k < sizeof drop / sizeof drop[0] && !skip; k++) skip = !strcmp(word, drop[k]);
-            if (!skip && n + w + 2 < room) {
-                if (n) out[n++] = ' ';
-                memcpy(out + n, word, w);
-                n += w;
-                out[n] = 0;
-            }
-            w = 0;
-        }
-        if (!*p) break;
+        p += n + (p[n] == ' ');
     }
+    return 0;
 }
 
 static void plain_name(const char *in, char *out, size_t room)
@@ -340,7 +501,7 @@ static int word_prefix(const char *a, const char *b)
 
 /* 1 for the name of a reserve or B side: a last word B, II, 2 or Reserves, a word such as U21, Jong at the
  * start, or "(reserve team)" (the research form). */
-static int reserve_name(const char *name)
+int season_clubs_reserve_name(const char *name)
 {
     char plain[128];
     plain_name(name, plain, sizeof plain);
@@ -367,20 +528,45 @@ static int fill_takes(const Club *c, const Division *div, int ncomps, uint32_t c
                       uint32_t spare1, uint32_t spare2, uint32_t cup_pool_nation)
 {
     if (c->kept || c->national || c->nation != d->nation || c->div == d->at) return 0;
+    /* 0.7.3 slice 6: a record of a closed league's later club has no division until its season (season_mls.c). */
+    if (season_changing_rules() && !c->db_div &&
+        season_closed_waits(win_str(c->at + CLUB_NAME), win_str(c->at + CLUB_SHORT), moves_season))
+        return 0;
+    if (season_second_barred(c->at, d->at)) return 0;   /* open items 111, 114 to 122: a second team's bar */
+    if (season_fin_barred(c->at, d->at)) return 0;      /* open item 118: no Finnish second team in the Veikkausliiga */
+    if (season_bel_barred(c->at, d->at)) return 0;      /* open item 115: a Belgian U23 side below its first team */
+    if (season_esp_barred(c->at, d->at, planned_division)) return 0;      /* items 121, 122: no B or C side in its club's division */
     if (season_tur_groups_tagged(c->at)) return 0;      /* Summer 2002: the first season places it in its group */
     int t = c->db_div >= comps ? (int)((c->db_div - comps) / COMP_SIZE) : -1;
-    int reserve_ok = !reserve_name(win_str(c->at + CLUB_NAME)) || d->missing_reserve;
+    int reserve_ok = !season_clubs_reserve_name(win_str(c->at + CLUB_NAME)) || d->missing_reserve;
+    /* 0.7.2 slice 3 (D12): groups 2 and 3 take no reserve or B side either. Groups 5 and 6 are groups 2 and 3 with
+     * them, the last resort of a class that cannot play with fewer clubs (move_clubs). */
+    if (group == 5 || group == 6) group -= 3, reserve_ok = 1;
     if (group == 0)                     /* a club that left a division of a higher rank */
         return !c->div && t >= 0 && t < ncomps && div[t].rank > d->rank && reserve_ok;
     if (group == 4)                     /* a club that left a lower division with a list */
         return !c->div && t >= 0 && t < ncomps && div[t].target && !div[t].spare && div[t].rank < d->rank && reserve_ok;
     if (group == 1) return !c->div && !c->db_div && reserve_ok;
-    if (group == 2) return c->div && (c->div == spare1 || c->div == spare2) && c->nation != cup_pool_nation;
+    if (group == 2)
+        return c->div && (c->div == spare1 || c->div == spare2) && c->nation != cup_pool_nation && reserve_ok;
     if (c->div >= comps && c->div < comps + (uint32_t)ncomps * COMP_SIZE) {
         const Division *from = &div[(c->div - comps) / COMP_SIZE];
-        return !from->spare && !from->target && from->rank < d->rank;
+        return !from->spare && !from->target && from->rank < d->rank && reserve_ok;
     }
     return 0;
+}
+
+int season_clubs_in_spare(uint32_t club)
+{
+    uint32_t comps = rd32(g_mem, COMPS), now = rd32(g_mem, club + CLUB_DIVISION);
+    int32_t key_lower = (int32_t)rd32(g_mem, KEY_LOWER), key_premier = (int32_t)rd32(g_mem, KEY_PREMIER);
+    if (!comps || !now) return 0;
+    if (now != (key_lower >= 0 ? comps + (uint32_t)key_lower * COMP_SIZE : 0) &&
+        now != (key_premier >= 0 ? comps + (uint32_t)key_premier * COMP_SIZE : 0))
+        return 0;
+    /* As move_clubs: DenCup::collect_entrants 0x551240 takes its lower clubs from A Lower Division. */
+    uint32_t nations = rd32(g_mem, NATIONS);
+    return !nations || rd32(g_mem, club + CLUB_NATION) != nations + rd32(g_mem, DEN_NATION) * 0x122u;
 }
 
 /* FILL_BY_REP: the club of the group with the highest reputation (+0x80), or -1. A list of a lower division (the
@@ -404,11 +590,74 @@ static int best_fill(const Club *club, int count, const Division *div, int ncomp
 }
 
 /* The moves of a season. */
+/* 0.7.3 slice 6 (issue 157, decision L7): the first edition of a closed league holds the clubs of its real season.
+ * The list of season S names the clubs of the next real season of a league that plays in one calendar year (list 2024
+ * holds San Diego FC, who first play in 2025), and a database can lack a club of the list. The plan of the season
+ * change (season_closed.h) puts this right, with changing rules on only. */
+static void closed_moves(Club *club, int count, const Division *div, int ncomps, int season, uint32_t spare1,
+                         uint32_t spare2)
+{
+    if (!season_changing_rules()) return;
+    for (int t = 0; t < ncomps; t++) {
+        const Division *d = &div[t];
+        const char *league = season_closed_league(d->name);
+        if (!league || d->spare || (d->n0 <= 0 && !d->fresh)) continue;
+        ClosedClub *list = calloc((size_t)count + 1, sizeof *list);
+        int *of = calloc((size_t)count + 1, sizeof *of), *action = calloc((size_t)count + 1, sizeof *action);
+        unsigned *from = calloc((size_t)count + 1, sizeof *from), *to = calloc((size_t)count + 1, sizeof *to);
+        int *pool = calloc((size_t)count + 1, sizeof *pool);
+        if (!list || !of || !action || !from || !to || !pool) rt_fatal("club moves: no memory for a closed league");
+        int n = 0;
+        for (int i = 0; i < count; i++) {
+            if (club[i].national) continue;
+            const char *name = win_str(club[i].at + CLUB_NAME), *short_name = win_str(club[i].at + CLUB_SHORT);
+            if (club[i].nation != d->nation && club[i].div != d->at && !season_closed_abroad(league, name, short_name))
+                continue;
+            of[n] = i;
+            list[n].name = name;
+            list[n].short_name = short_name;
+            list[n].in_league = club[i].div == d->at;
+            list[n].reserve = season_clubs_reserve_name(name);
+            list[n].reputation = (int16_t)rd16(g_mem, club[i].at + CLUB_REPUTATION);
+            n++;
+        }
+        ClosedResult r;
+        season_closed_plan(league, season, d->want, list, n, action, &r);
+        int gaps = 0;
+        for (int k = 0; k < n; k++) {
+            const Club *c = &club[of[k]];
+            /* A place only in a division of the league's nation: not a spare division, not a New Zealand division. */
+            from[k] = action[k] == CLOSED_JOIN && c->div && rd32(g_mem, c->div + COMP_NATION) == d->nation ? c->div : 0;
+            gaps += from[k] != 0;
+            pool[k] = !list[k].in_league && !list[k].reserve && c->nation == d->nation &&
+                      (!c->div || c->div == spare1 || c->div == spare2) &&
+                      season_closed_club(league, list[k].name, list[k].short_name) < 0;
+        }
+        /* s073-16: a club that leaves the league, or a club of the nation with no division or in a spare division, takes
+         * the place of a club that joins (season_closed_places). */
+        int places = season_closed_places(list, action, from, pool, n, to);
+        if (places < gaps)
+            fprintf(stderr, "recomp: club moves: %s of %d: %d places of the clubs that join stay empty\n", d->name, season,
+                    gaps - places);
+        for (int k = 0; k < n; k++)
+            if (action[k] != CLOSED_STAY || to[k]) club[of[k]].div = action[k] == CLOSED_JOIN ? d->at : to[k];
+        fprintf(stderr, "recomp: club moves: %s of %d: %d clubs, %d join, %d fold, %d leave, %d take the places of the "
+                        "clubs that join, %d not in this database\n",
+                d->name, season, r.count, r.joined, r.folded, r.cut, places, r.missing);
+        free(from);
+        free(to);
+        free(pool);
+        free(list);
+        free(of);
+        free(action);
+    }
+}
+
 static void move_clubs(int season)
 {
     int first = -1, last = -1;
     for (int i = 0; i < nrows; i++)
-        if (rows[i].season == season) {
+        if (rows[i].season == season_clubs_list_season(rows[i].division, season)) {
             if (first < 0) first = i;
             last = i;
         }
@@ -450,6 +699,11 @@ static void move_clubs(int season)
         c->db_div = c->div = rd32(g_mem, c->at + CLUB_DIVISION);
         c->national = c->id >= national_from;
     }
+    moves_club = club;
+    moves_table = table;
+    moves_count = count;
+    moves_season = season;
+    season_esp_second_moves();
     /* The divisions: every club_comp record, its club count in the database and the count it keeps. */
     for (int i = 0; i < ncomps; i++) {
         Division *d = &div[i];
@@ -467,10 +721,6 @@ static void move_clubs(int season)
     for (int i = 0; i < ncomps; i++) {
         int size = (div[i].n0 > 0 || div[i].fresh) && !div[i].spare ? class_size(div[i].name, season) : -1;
         const char *file = class_file(div[i].name);
-        if (size > 0 && div[i].n0 > size && season_sizes_keeps_database(file)) {     /* a cup takes it whole */
-            int most = class_size_of(file);
-            size = div[i].n0 < most ? div[i].n0 : most;
-        }
         div[i].want = size >= 0 ? size : div[i].n0;     /* 0: a division that ends (slice 20, Q290) */
         if (div[i].want != div[i].n0) {
             div[i].sized = 1;
@@ -492,7 +742,7 @@ static void move_clubs(int season)
     for (int r = first; r <= last; r++) {
         by_list[r - first] = -1;
         to_div[r - first] = -1;
-        if (rows[r].season != season) continue;
+        if (rows[r].season != season_clubs_list_season(rows[r].division, season)) continue;
         if (!season_divisions_list_on(rows[r].division, season)) continue;     /* slice 20 */
         int t = find_division(div, ncomps, rows[r].division);
         if (t < 0) {
@@ -534,9 +784,77 @@ static void move_clubs(int season)
             else if (hits > 1 && close == 1) k = close_hit, by_plain++;
         }
         if (k < 0) {
+            /* Open item 123b: the club of the list id, when its name differs from the list name only in dotted
+             * initials. "Bray Wanderers" (the 2008 list) is "Bray Wanderers A.F.C." in 3.9.68 (club 1855), and the
+             * plain forms "bray wanderers" and "bray wanderers a f c" differ. With the initials joined and left out
+             * as club-form words both are "bray wanderers". Three checks keep other clubs out: the club has the
+             * list id, the initials of the two names have a word in common or one name has none ("UD Logroñés" is
+             * not "C.D. Logroñés", club 6678 in the 2008 data), and no other club of the nation has the joined
+             * form ("Ehime F.C." is not "Ehime" while "Ehime FC" is there). */
+            char want[128], have[128], old_want[128], old_have[128], ini_want[64], ini_have[64];
+            plain_words_by(rows[r].club, want, sizeof want, 1, PLAIN_JOIN);
+            plain_name(rows[r].club, old_want, sizeof old_want);
+            plain_words_by(rows[r].club, ini_want, sizeof ini_want, 1, PLAIN_INITIALS);
+            /* With no club of the list id in the nation (the 3.9.60 and 3.9.65 data hold other ids, or the row has
+             * none), the name alone, and then both names must have initials with a word in common: "Dundalk FC" is
+             * "Dundalk F.C." (club 2709 in 3.9.65), and "C.D. Marino" is not "Club Marino" (no initials). */
+            int id_in_nation = 0;
+            for (int i = 0; i < count && !id_in_nation && rows[r].club_id >= 0; i++)
+                id_in_nation = club[i].id == rows[r].club_id && !club[i].national && club[i].nation == div[t].nation;
+            int id_hit = -1;
+            for (int i = 0; i < count && id_hit < 0 && *want; i++) {
+                if (club[i].national || club[i].nation != div[t].nation) continue;
+                if (id_in_nation ? club[i].id != rows[r].club_id : 0) continue;
+                const char *name = win_str(club[i].at + CLUB_NAME);
+                plain_words_by(name, have, sizeof have, 1, PLAIN_JOIN);
+                if (!id_in_nation && strcmp(have, want)) continue;
+                plain_name(name, old_have, sizeof old_have);
+                plain_words_by(name, ini_have, sizeof ini_have, 1, PLAIN_INITIALS);
+                if (strcmp(have, want) || !strcmp(old_have, old_want)) break;
+                if (*ini_have && *ini_want && !share_word(ini_have, ini_want)) break;
+                if (!id_in_nation && !(*ini_have && *ini_want)) break;
+                id_hit = i;
+            }
+            int others = 0;
+            for (int i = 0; i < count && id_hit >= 0 && !others; i++) {
+                if (i == id_hit || club[i].national || club[i].nation != div[t].nation) continue;
+                plain_words_by(win_str(club[i].at + CLUB_NAME), have, sizeof have, 1, PLAIN_JOIN);
+                others = !strcmp(have, want);
+            }
+            if (id_hit >= 0 && !others) {
+                k = id_hit, by_plain++;
+                if (log) fprintf(stderr, "recomp: club moves: by initials: %d/%02d\t%s\t%s\t%s (%d)\n", season,
+                                 (season + 1) % 100, rows[r].division, rows[r].club, win_str(club[k].at + CLUB_NAME),
+                                 club[k].id);
+            }
+        }
+        if (k < 0) {
+            /* Open item 123b: the exception rows (NAME_EXCEPTIONS), when one club of the nation has the other name. */
+            const char *other = name_exception(rows[r].club);
+            int hits = 0, hit = -1;
+            for (int i = 0; i < count && other; i++)
+                if (!club[i].national && club[i].nation == div[t].nation && same_name(club[i].at + CLUB_NAME, other))
+                    hits++, hit = i;
+            if (hits == 1) {
+                k = hit, by_plain++;
+                if (log) fprintf(stderr, "recomp: club moves: by exception: %d/%02d\t%s\t%s\t%s (%d)\n", season,
+                                 (season + 1) % 100, rows[r].division, rows[r].club, other, club[k].id);
+            }
+        }
+        if (k < 0) {
             unmatched++;
             div[t].missing++;
-            if (reserve_name(rows[r].real) || reserve_name(rows[r].club)) div[t].missing_reserve++;
+            if (season_clubs_reserve_name(rows[r].real) || season_clubs_reserve_name(rows[r].club))
+                div[t].missing_reserve++;
+            else {
+                char *m = div[t].missing_names;
+                size_t used = strlen(m);
+                size_t need = strlen(rows[r].real) + (used ? 2 : 0);
+                if (used + need + 5 < sizeof div[t].missing_names)
+                    snprintf(m + used, sizeof div[t].missing_names - used, "%s%s", used ? ", " : "", rows[r].real);
+                else if (used + 5 < sizeof div[t].missing_names && (used < 4 || strcmp(m + used - 4, ", ...")))
+                    snprintf(m + used, sizeof div[t].missing_names - used, ", ...");
+            }
             if (log) fprintf(stderr, "recomp: club moves: missing: %d/%02d\t%s\ttier %d\t%s\n", season,
                              (season + 1) % 100, rows[r].division, div[t].tier, rows[r].real);
             continue;
@@ -625,8 +943,11 @@ static void move_clubs(int season)
          *   one of the nation's clubs that the database has in no division (no national team, and no reserve or
          *   B side unless the list lacks one). The place of a missing reserve or B side takes such a club in
          *   every tier. In the top two tiers the place of another missing club stays open for slice 15b when the
-         *   class counts the clubs of the data. A class with a fixed count stops at its assert with an open
-         *   place, so there it takes a club with no division too, and the log calls it a stand-in;
+         *   class counts the clubs of the data. A class with a fixed count needs every place, so there it takes a
+         *   club with no division too, and the log calls it a stand-in. With no such club, a class of CLASS_SIZE
+         *   gives the place to the groups of the other places (open item 105, below). When the open places would
+         *   leave a count that the class does not take, as many of them as it needs go to those groups too (open
+         *   item 123, data_class_count);
          * - any other place (a club that moved up, or a class that takes more clubs than the real division has,
          *   slice 18): first a club that left a division of a higher rank (step "Leave"; no reserve or B side,
          *   and no move between two divisions of one rank such as German Regional North and South), so the
@@ -637,6 +958,10 @@ static void move_clubs(int season)
         for (int i = 0; i < count && now < d->want; i++) {
             Club *c = &club[i];
             if (c->kept || c->national || c->nation != d->nation || c->div || c->db_div != d->at) continue;
+            if (season_second_barred(c->at, d->at)) continue;   /* open items 111, 114 to 122 */
+            if (season_fin_barred(c->at, d->at)) continue;      /* open item 118 */
+            if (season_bel_barred(c->at, d->at)) continue;      /* open item 115 */
+            if (season_esp_barred(c->at, d->at, planned_division)) continue;      /* items 121, 122 */
             /* Summer 2002: a club that the data tags for a Category B group (club +0x60) plays there; a database
              * place of another division does not keep it (two such clubs in Category A left two groups short). */
             if (season_tur_groups_tagged(c->at)) continue;
@@ -647,16 +972,39 @@ static void move_clubs(int season)
         int need = d->want - now;
         int missing_places = need < d->missing ? need : d->missing;
         int fixed = class_size(d->name, season) > 0;
+        int whole = fixed && class_file(d->name) && season_divisions_class_size(d->name, season) < 0;
         int reserve_places = missing_places < d->missing_reserve ? missing_places : d->missing_reserve;
         int places[2] = {d->tier > 2 || fixed ? missing_places : reserve_places, need - missing_places};
+        /* Open item 123: the places that stay open must leave a count that the class takes. */
+        int open_places = missing_places - places[0];
+        int ends = d->want - open_places;
+        int extra = data_class_count(d->name, ends) - ends;
+        if (extra > open_places) extra = open_places;
+        if (extra > 0) {
+            places[1] += extra;
+            /* Open item 123b: logged in every game with the list clubs that the database lacks, so that a club the
+             * match fails to find (as Bray Wanderers was) shows here and does not hide behind the fill. */
+            fprintf(stderr, "recomp: club moves: %s would hold %d clubs, its class takes %d: %d open places fill "
+                            "(missing clubs: %s)\n", d->name, ends, ends + extra, extra, d->missing_names);
+        }
         /* The groups of a kind 1 place, in this order: 0 a club that left a higher division, 4 a club that left a
          * lower division with a list, 1 a club with no division, 2 a club of a spare division, 3 a club of a lower
          * division with no list. Groups 4 and 2 take the club with the highest reputation first (see FILL_BY_REP). */
-        static const int kind1_groups[] = {0, 4, 1, 2, 3};
-        for (int kind = 0; kind < 2; kind++)
-            for (int g = 0; g < (kind ? 5 : 1) && places[kind] > 0; g++) {
+        static const int kind1_groups[] = {0, 4, 1, 2, 3, 5, 6};
+        /* D12: a class that plays with fewer clubs (season_sizes_plays_short) takes no reserve side of groups 5
+         * and 6. A class with a floor, or outside the size table, needs every place (open item 105). */
+        int kind1_count = season_sizes_plays_short(class_file(d->name)) ? 5 : 7;
+        for (int kind = 0; kind < 2; kind++) {
+            /* Open item 105: a class of CLASS_SIZE needs every place (BelSecond's period stages expect 10, 12 and
+             * 12 matches a club, BelSecond::create_period_stage 0x4204d0 at 0x4205b4..0x4205cb). A new division of
+             * slice 20 keeps its own fill (season_divisions.c). */
+            if (kind == 1 && whole) {
+                places[1] += places[0];
+                places[0] = 0;
+            }
+            for (int g = 0; g < (kind ? kind1_count : 1) && places[kind] > 0; g++) {
                 int group = kind ? kind1_groups[g] : 1;
-                int by_rep = group == 4 || group == 2;
+                int by_rep = group == 4 || group == 2 || group == 5;
                 for (int i = 0; i < count && places[kind] > 0; i++) {
                     int pick = by_rep ? best_fill(club, count, div, ncomps, comps, d, group, spare1, spare2,
                                                   cup_pool_nation)
@@ -673,11 +1021,12 @@ static void move_clubs(int season)
                     if (group == 0) d->filled_left++;
                     else if (group == 4) d->filled_up++;
                     else if (group == 1) d->filled_pool++;
-                    else if (group == 2) d->filled_spare++;
+                    else if (group == 2 || group == 5) d->filled_spare++;
                     else d->filled_lower++;
                     if (kind == 0 && d->tier <= 2 && reserve_places-- <= 0) d->stand_in++;
                 }
             }
+        }
         d->open = d->want - now;
         if (now < d->want) {
             short_after++;
@@ -701,6 +1050,7 @@ static void move_clubs(int season)
     if (to_lower)
         fprintf(stderr, "recomp: club moves: %d clubs that leave a group division of a new form go to its lower division\n",
                 to_lower);
+    closed_moves(club, count, div, ncomps, season, spare1, spare2);
     /* Write the moves. */
     int moved = 0;
     for (int i = 0; i < count; i++) {
@@ -767,6 +1117,7 @@ static void move_clubs(int season)
                     "the plain name), %d divisions not in it, %d divisions short, %d divisions with another class "
                     "count\n", season, (season + 1) % 100, lists, whole, moved, left, cut, unmatched, by_plain,
             unknown_division, short_after, resized);
+    moves_club = NULL;
     free(order);
     free(club);
     free(div);
@@ -784,8 +1135,8 @@ void o_00524d70(void);
 RT_WRAP(00524d70, trim_staff_tables)
 {
     const char *off = getenv("RECOMP_CLUB_MOVES");     /* test switch: off moves no club */
-    season_divisions_test_extra();                     /* slice 20: test switch RECOMP_TEST_EXTRA */
     if (season_game_changes() && nrows && !(off && !strcmp(off, "off"))) move_clubs(season_start_year());
     if (season_game_changes()) season_records_fill(season_start_year());     /* slice 15b: after the moves */
+    if (season_game_changes()) season_sizes_cro_new_game(season_start_year());   /* open item 255 */
     o_00524d70();
 }

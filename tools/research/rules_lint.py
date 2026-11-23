@@ -1,12 +1,15 @@
 """Checks the 0.6.0 rules table files in docs/research/rules-0.6.0.
 
 Usage: rules_lint.py [folder]
-Each <part>.tsv must have the 22 columns of the brief, unique ids, seasons
+Each <part>.tsv (the 20 parts that tools/seasons/make_rules.py reads, not the data files of NOT_PARTS) must have the 22 columns of the brief, unique ids, seasons
 2001/02 to 2027/28, and a source for every filled fact field (`all=` covers a row).
 A value that points to another row ("see nation rules", "as Champions League") needs no source. Nor does the name of a nation rules row or of a row that is not held.
 Prints one line per problem and a count per part. Exit code 1 if any problem.
 """
 import csv, os, re, sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'seasons'))
+from make_rules import NOT_PARTS  # noqa: E402   the data files of the folder that are not parts of the table
 
 COLUMNS = ('id season real_season nation comp_file comp tier name clubs up down playoffs split format '
            'subs_used bench foreign work_permit registration windows notes sources').split()
@@ -24,7 +27,7 @@ def covered(sources):
 def lint(folder):
     bad = 0
     for name in sorted(os.listdir(folder)):
-        if not name.endswith('.tsv') or '.' in name[:-4] or name.endswith(('-clubs.tsv', '-academy.tsv')) or name == 'databases-signatures.tsv':
+        if not name.endswith('.tsv') or '.' in name[:-4] or name.endswith(NOT_PARTS):
             continue
         path = os.path.join(folder, name)
         problems = []

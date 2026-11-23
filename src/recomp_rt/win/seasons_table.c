@@ -3,6 +3,12 @@
 #include "seasons_db.h"
 
 const SeasonKnownDb seasons_known_dbs[] = {
+    {"3.9.60", "n/a", 2001, SEASONS_ROLE_OFFICIAL_VERSION, 6146980u, 30150534u,
+     "280f19b43c72e57446360c3a93dd3cdee1bb7b50eca058565b754dded623c178",
+     "eaf0c40525cf0d5ff1985f41a9bab118e91857c9d6944a8e41d1c809031b54fd"},
+    {"3.9.65", "n/a", 2001, SEASONS_ROLE_OFFICIAL_VERSION, 6287001u, 30900029u,
+     "67a5dec870a9fe00ca8fa46167d893e4b94eb09771b5a9929427bbef023c1f63",
+     "0c50375c752d4362661cda559921b55f3383225de808729e871f69b5aca38f41"},
     {"3.9.60", "n/a", 2001, SEASONS_ROLE_OFFICIAL_VERSION, 6146980u, 30814144u,
      "d905a43fc0b2cef21b815601e5de0701258499ecd03b23568e7c93d05be3de17",
      "d2e45c56bfbc34fd779a4460cd5d9f84740d71651ca29c4bf93a03117bda7dfd"},
@@ -156,9 +162,12 @@ const SeasonKnownDb seasons_known_dbs[] = {
     {"May 2026", "n/a", 2025, SEASONS_ROLE_EXTRA, 6708226u, 33451704u,
      "6fe60f05f6571059a52204665e1e5e21d8a7efd84322cdae969e59769b0cc970",
      "af693eb69669e59e012e445614e0e46397e32616bd0bed9a2942cf9233f5ecce"},
+    {"October 2026", "n/a", 2026, SEASONS_ROLE_SEASON, 7476308u, 40551418u,
+     "95ba9ed63e0683465f13b7fa2d3203aedcebc07f3cb64973036f594051c3546e",
+     "d31bcf7ef0589e6ab2b67e28c18d789b9c3e9e35f90db31577a2270a444a9c13"},
     {"Empty database", "n/a", 0, SEASONS_ROLE_NOT_SEASON, 6590864u, 1846u,
      "838bc3edfb2738471c42c8182dffd67a19c6929a0b94c8108d304507f157aeaf",
      "ec878079d3224ac6d7f62d65a456519307acae9192af4fa08e92799263423853"},
 };
 
-const int seasons_known_count = 52;
+const int seasons_known_count = 55;

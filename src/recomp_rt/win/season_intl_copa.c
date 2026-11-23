@@ -142,6 +142,8 @@ static int copa16(uint32_t self)
     if (!e || e->teams != TEAMS) return -1;
     for (int i = 0; i < EDITIONS; i++)
         if (editions[i].year == year_of(self)) return i;
+    /* An edition after the table continues the last one: its guests and bracket (0.6.2 decision A). */
+    if (!season_intl_table_edition("goldcup", year_of(self))) return EDITIONS - 1;
     return -1;
 }
 
@@ -200,9 +202,21 @@ uint32_t season_intl_copa_template(void (*original)(void))
     int mapped = idx == KO ? 2 : (idx + 1) % 3 - 1;
     uint32_t out_id = rd32(g_mem, sp + 0xcu);
     wr8(g_mem, sp + 4u, (uint32_t)mapped);
+    /* Group D plays in the kick-off slots of group A, so the game moves some group matches a week (find_fixture_
+     * clashes 0x5ad780, severity 10: the Copa America 2100 of a 2098 date jump, run-logs/0.6.2-s4a/c2100u) and
+     * the groups end late: the knockout, made at the stage step 0x5e1620 when the groups end (site 0x5E169F), then
+     * moves by whole weeks, as that of the Asian Cup of 16 (season_intl_rest_delay; the original's quarter-finals
+     * from 15 July, weekday flag 5, at 0x5e0c74). Group D keeps group A's slots: the original has three group
+     * templates (0x5e0a1b..0x5e0a2b), and a fourth set of slots would change every edition of 16 in the table. */
+    int delay = idx == KO ? season_intl_rest_delay(season_gold_cup_of(self) ? "gold_cup" : "goldcup", year_of(self),
+                                                   15, 6, 5)
+                          : 0;
+    season_intl_shift_more(delay);
     original();
+    season_intl_shift_more(-delay);
     if (rt_unwinding) return cpu.eax;
     if (idx < KO && mapped != idx && readable(out_id)) wr16(g_mem, out_id, (uint32_t)(idx + 0x420));
+    if (idx < KO && mapped != idx) season_intl_twin_venues(cpu.eax, rd32(g_mem, sp + 8u));
     return cpu.eax;
 }
 
@@ -348,6 +362,51 @@ static uint32_t entrants16(int e, uint32_t self)
     return 1;
 }
 
+/* The guests of a Copa America of 12 that the real edition took from outside CONCACAF (rules table row
+ * int-continental-198: the 2019 Copa America in Brazil, 14 June to 7 July, guests Japan and Qatar). The original's
+ * guests are CONCACAF nations (Mexico and others, 0x5e1fbd..0x5e206c). In 2019 the CONCACAF Gold Cup (season_gold_cup.c,
+ * 15 June to 7 July) plays on the same days, so its nations then played both finals: find_fixture_clashes 0x5ad780
+ * gave their matches severities 10 and 22, add_fixture moved them, and both finals stalled with no final (0.6.2 open
+ * item 54: Uruguay v Mexico and Mexico v Puerto Rico in June 2019 of a 2018 start, run-logs/0.6.2-s4a/c2019t). */
+static const struct { int year; const char *guests[2]; } guests12[] = {
+    {2019, {"Japan", "Qatar"}},
+};
+
+/* After the original's entrants (12 at +0xee, sorted by strength at 0x5e20fe): the guests of guests12 replace the
+ * teams that are not from CONMEBOL (a host outside CONMEBOL would be replaced too; no such edition is in guests12:
+ * Brazil hosts 2019), and the list is sorted again by strength. A guest that the data lacks is skipped; with
+ * neither guest the original's teams stay. */
+static void guests_of_year(uint32_t self)
+{
+    int g = -1;
+    for (int i = 0; i < (int)(sizeof guests12 / sizeof guests12[0]); i++)
+        if (guests12[i].year == year_of(self)) g = i;
+    uint32_t list = rd32(g_mem, self + TEAMS_OF);
+    int n = (int)rd32(g_mem, self + TEAM_COUNT), next = 0, changed = 0;
+    if (g < 0 || !season_intl_on() || !readable(list) || n <= 0 || n > TEAMS) return;
+    uint32_t south = rd32(g_mem, CONTINENT_SOUTH_AMERICA);
+    for (int k = 0; k < n && next < 2; k++) {
+        uint32_t club = rd32(g_mem, list + 4u * (uint32_t)k), nation = team_nation(club);
+        if (!nation || continent_of(nation) == south) continue;
+        uint32_t guest = 0;
+        while (next < 2 && !guest) {
+            for (int id = 0; id < nation_count() && !guest; id++)
+                if (!strcmp(win_str(nation_at(id) + NATION_NAME), guests12[g].guests[next])) guest = team_of(nation_at(id));
+            if (rt_unwinding) return;
+            next++;
+        }
+        if (!guest) break;
+        if (logging())
+            fprintf(stderr, "recomp: season intl: copa %d: guest %s in place of %s\n", year_of(self),
+                    win_str(team_nation(guest) + NATION_NAME), win_str(nation + NATION_NAME));
+        wr32(g_mem, list + 4u * (uint32_t)k, guest);
+        changed = 1;
+    }
+    if (!changed) return;
+    uint32_t qa[4] = {list, (uint32_t)n, 4, CLUB_COMPARE};
+    call_cdecl(GAME_QSORT, 4, qa);
+}
+
 void o_005e1cd0(void);
 
 /* copa_america entrants, thiscall (), returns 1 or 0 (0x5e21f2). */
@@ -363,6 +422,7 @@ RT_WRAP(005e1cd0, copa_entrants)
     int e = copa16(self);
     if (e < 0) {
         o_005e1cd0();
+        if (!rt_unwinding && cpu.eax) guests_of_year(self);
         return;
     }
     uint32_t r = entrants16(e, self);

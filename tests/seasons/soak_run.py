@@ -6,7 +6,7 @@ save near each season change that a new program loads and plays on.
 Usage:
     python3 tests/seasons/soak_run.py <cm0102_recomp> <game folder> --keep <folder> [--start 2001] [--last 2027]
         [--seed 1] [--nations all|England,...] [--database <folder>] [--changing-rules on|off] [--leg-days 365]
-        [--extra regional,c2,spain,...] [--timeout 14400]
+        [--extra regional,c2,spain,...] [--timeout 14400] [--env NAME=VALUE ...] [--checkpoints 10]
 
 The legs. Leg 0 makes the game (tests/seasons/rules_report_check.py: the steps of a new game, the season jump to
 --last, the rules report) with RECOMP_SAVE_AFTER_DAYS=<leg days>: at the first human turn that many game days after
@@ -26,6 +26,11 @@ At the end: the last leg's rules report holds the end of --last, and over the re
 division's edition moves on from the end of one season to the next (rules_report_check.league_stalls). The run
 folder holds one folder per leg (leg00, leg01, ...) with its stderr.txt, report.tsv and user folder, and soak.tsv
 with one line per leg (leg, the season it starts in, the result, seconds, the first box).
+
+--env sets a test variable for every leg, for example --env RECOMP_TIER_A=1 (the Tier A switch, 0.6.2 slice 3) or
+--env RECOMP_DATE_JUMP=1. --checkpoints N keeps a checkpoint save in each July of a year that N divides, and the last
+save. When a leg passes, the script deletes the loaded copy of the leg before it, and that leg's save if it is not a
+checkpoint save. So a run to 2300 keeps one save a decade. (With --leg-days 365 each save comes in July.)
 
 A leg of Select All takes about 20 to 60 minutes on a loaded machine (a 2001 game to 2027/28: 27 legs). The script
 starts one game at a time and waits while /Users/max/Projects/cm0102/run-logs/HOLD exists, while 15 or more games
@@ -101,12 +106,18 @@ def play(args, env, log, timeout):
     return code, time.time() - start, box or first_box(log)
 
 
+LEG_ENV = {}        # --env NAME=VALUE: test variables for every leg
+
+
 def leg_env(program, game, user, home, shots, steps, last, report, extra):
     table = rrc.rules_table(program, game)
-    return dict(os.environ, HOME=home, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", RECOMP_NO_BOX="1",
+    extra = dict(LEG_ENV, **extra)
+    env = dict(os.environ, HOME=home, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", RECOMP_NO_BOX="1",
                 RECOMP_USER_DIR=user, RECOMP_FIXED_CLOCK="1", RECOMP_SEASON_JUMP=str(last), RECOMP_SCREEN_LOG="1",
                 RECOMP_RULES_REPORT=report, RECOMP_RULES_TABLE=table, RECOMP_SEASON_INTL_LOG="1",
-                RECOMP_SCRIPT="; ".join(smoke_run.scaled_steps("classic", shots, steps)), **extra)
+                RECOMP_SCRIPT="; ".join(smoke_run.scaled_steps("classic", shots, steps)))
+    env.update(extra)
+    return env
 
 
 def folders(work):
@@ -116,19 +127,29 @@ def folders(work):
     return user, home, shots
 
 
-def settings(user, rules, database):
+def settings(user, rules, database, option="3.9.68"):
     import custom_database_run as cdr
     lines = ["display = classic", f"changing_rules = {rules}", "faster_days = on"]
-    if database:
+    if database:                               # a leg with a database never falls back to the base data
+        database = rrc.database_folder(database)
         cdr.copy_data(database, os.path.join(user, "Databases", os.path.basename(database)))
         lines.append("database = folder:" + os.path.basename(database))
+    else:
+        lines.append("database = " + option)   # 3.9.68, or 3.9.60 / 3.9.65 (RECOMP_DATA_DIR names the data)
     with open(os.path.join(user, "settings.txt"), "w") as f:
         f.write("\n".join(lines) + "\n")
 
 
+def read_database(o, work, result):
+    """The result of a leg; stops when the leg has a database and the game fell back to its own Data."""
+    if o["database"]:
+        rrc.no_fallback(os.path.join(work, "stderr.txt"), o["database"])
+    return result
+
+
 def new_game_leg(o, work, save_days):
     user, home, shots = folders(work)
-    settings(user, o["rules"], o["database"])
+    settings(user, o["rules"], o["database"], o.get("option", "3.9.68"))
     steps = rrc.league_steps(o["nations"], o["extra"])
     extra = {"RECOMP_START_SEASON": str(o["start"])}
     test_extra = [e for e in o["extra"] if e in rrc.ENV_EXTRA]     # Spain and Portugal: a test switch, no click
@@ -137,22 +158,32 @@ def new_game_leg(o, work, save_days):
     if save_days:
         extra["RECOMP_SAVE_AFTER_DAYS"] = str(save_days)
     env = leg_env(o["program"], o["game"], user, home, shots, steps, o["last"], os.path.join(work, "report.tsv"), extra)
-    return play([o["program"], "--game", o["game"], "-seed", str(o["seed"])], env, os.path.join(work, "stderr.txt"),
-                o["timeout"])
+    return read_database(o, work, play([o["program"], "--game", o["game"], "-seed", str(o["seed"])], env,
+                                       os.path.join(work, "stderr.txt"), o["timeout"]))
 
 
 def load_leg(o, work, save, save_days):
     import fixtures
     user, home, shots = folders(work)
-    settings(user, o["rules"], o["database"])
+    settings(user, o["rules"], o["database"], o.get("option", "3.9.68"))
     shutil.copyfile(save, os.path.join(user, "soak.sav"))
     # The save was made on holiday, so the loaded game goes on by itself and shows no first news to wait for.
     load = smoke_run.without_intro_click(fixtures.LOAD_STEPS)
     steps = [x for x in load if x != "wait first-news"] + [f"{o['timeout'] * 1000} quit"]
     extra = {"RECOMP_SAVE_AFTER_DAYS": str(save_days)} if save_days else {}
     env = leg_env(o["program"], o["game"], user, home, shots, steps, o["last"], os.path.join(work, "report.tsv"), extra)
-    return play([o["program"], "--game", o["game"], "-seed", str(o["seed"])], env, os.path.join(work, "stderr.txt"),
-                o["timeout"])
+    return read_database(o, work, play([o["program"], "--game", o["game"], "-seed", str(o["seed"])], env,
+                                       os.path.join(work, "stderr.txt"), o["timeout"]))
+
+
+def prune(work, season, every):
+    """--checkpoints: the leg in work saved in July of season, and the next leg has passed. Its loaded copy goes,
+    and its save too unless every divides season."""
+    names = ["soak.sav"] + ([smoke_run.SAVE_NAME] if season % every else [])
+    for name in names:
+        path = os.path.join(work, "user", name)
+        if os.path.exists(path):
+            os.remove(path)
 
 
 def main(argv):
@@ -166,7 +197,12 @@ def main(argv):
          "database": os.path.abspath(arg(argv, "--database")) if "--database" in argv else None,
          "rules": arg(argv, "--changing-rules", "on"), "days": int(arg(argv, "--leg-days", 365)),
          "timeout": int(arg(argv, "--timeout", 14400)),
-         "extra": [e for e in arg(argv, "--extra", "").split(",") if e]}
+         "extra": [e for e in arg(argv, "--extra", "").split(",") if e],
+         "checkpoints": int(arg(argv, "--checkpoints", 0))}
+    for i, a in enumerate(argv):
+        if a == "--env" and i + 1 < len(argv) and "=" in argv[i + 1]:
+            name, value = argv[i + 1].split("=", 1)
+            LEG_ENV[name] = value
     if o["last"] < o["start"]:
         print("soak_run.py: --last is before --start")
         return 2
@@ -205,6 +241,8 @@ def main(argv):
         if result != "ok":
             fails.append(f"leg {leg} ({season}/{(season + 1) % 100:02d}): {result} ({work})")
             break
+        if o["checkpoints"] and leg and season < o["last"]:
+            prune(os.path.join(o["keep"], f"leg{leg - 1:02d}"), season, o["checkpoints"])
         save = saved
     if not fails:
         seasons, _ = rrc.read_report(os.path.join(o["keep"], f"leg{o['last'] - o['start']:02d}", "report.tsv"))

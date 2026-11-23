@@ -2,11 +2,12 @@
 """Picker check: the Assistant's picks from a saved game against the best possible assignment.
 
 Usage:
-    python3 tests/smoke/picker_check.py <cm0102_recomp> <game folder> <save> [--dir <fixtures folder>]
+    python3 tests/smoke/picker_check.py <cm0102_recomp> <game folder> <save>|new:<row> [--dir <fixtures folder>]
         [--expect SLOT=Name]... [--never SLOT=Name]... [--keep <file>]
 
 The run copies the save (from the fixtures folder, tests/fixtures/fixtures.py) into a new empty user folder
-and loads it. At the first human turn the runtime (RECOMP_PICK_CHECK, src/recomp_rt/win/picker.c) computes
+and loads it. With new:<row> in place of a save, the run plays a new game (the smoke run's steps, England, 3.9.68)
+with the club of that row of Select Team, for example new:1 for Barnsley. At the first human turn the runtime (RECOMP_PICK_CHECK, src/recomp_rt/win/picker.c) computes
 the three picks (best, most match-fit, under-21) of the player's club without writing them, dumps the
 candidates, the value of each candidate in each slot and the picks, then runs "Pick best team" and ends.
 
@@ -24,6 +25,11 @@ Checks for each pick:
     - --expect DR=Warner: a slot of that label holds the player (full name or surname); --never: no such
       slot does. SAVE_CHECKS adds the checks of yeovil.sav and start.sav.
     - SAVE_ATTRS: one player's shown attributes, against a wrong attribute index in the runtime
+    - no candidate is a virtual player: the dump's "staff" lines give each candidate's staff id and the staff
+      count [0xae2364]. A virtual player (id at or above the count, VIRTUAL_STAFF 0x90d4f0) is a temporary
+      row of a short squad: the squad screen shows him grey (0x45b984) and a match counts only real players
+      (0x6dbaa1). On a new game as Barnsley (new:1, 14.7.01) 0.6.0 picked the virtual "Cooper, J" at ML, and
+      Continue Game later said "You have only selected ten outfield players" (0.6.1 item 7).
 --keep copies the dump to a file. It has one "cand" line per candidate: name, the position ratings, the 31
 shown attributes, current ability, age, condition, first group, then the fit and the value of each slot.
 
@@ -64,6 +70,7 @@ SAVE_CHECKS = {
     "yeovil.sav": (["GK=Dean Williams", "AMC=Moukoko", "DR=Warner", "DC=Sodje", "FC=Georcelin", "FC=Alford"],
                    ["DMC=O'Brien"]),
     "start.sav": (["FC=Henry", "FC=Bergkamp"], []),
+    "new:1": ([], ["ML=Cooper"]),     # Barnsley: the virtual "Cooper, J" of 0.6.0 (item 7)
 }
 # Shown attributes of one player for each test save: a wrong getter index fails here (Influence 16 and
 # Jumping 17 differ for D. Williams).
@@ -120,6 +127,9 @@ def parse(path):
             cur["cands"].append({"name": f[2], "ratings": [int(x, 16) for x in f[3].split()],
                                  "attrs": [int(x) for x in f[4].split()], "ability": nums[0], "age": nums[1], "condition": nums[2],
                                  "first": nums[3], "fit": nums[4:4 + n], "value": nums[4 + n:4 + 2 * n]})
+        elif f[0] == "staff":
+            # staff, candidate index, staff id, staff count
+            cur["cands"][int(f[1])].update(id=int(f[2]), count=int(f[3]))
         elif f[0] == "team":
             cur["team"] = [int(x) for x in f[1].split()]
         elif f[0] == "picked":
@@ -223,6 +233,11 @@ def check_pick(kind, pick, expect, never):
                       name in (cands[team[s]]["name"], cands[team[s]]["name"].split()[-1]) for s in eleven)
             if hit != want_in:
                 problems.append(f"{name} {'not ' if want_in else ''}at {slot_label}")
+    for c in cands:
+        if "id" not in c:
+            return problems + [f"{c['name']}: no staff id in the dump"]
+        if c["id"] >= c["count"]:
+            problems.append(f"{c['name']} is a virtual player (staff id {c['id']}, staff count {c['count']})")
     return problems
 
 
@@ -263,17 +278,24 @@ def main(argv):
     program, game, name = os.path.abspath(rest[0]), os.path.abspath(rest[1]), rest[2]
     expect += SAVE_CHECKS.get(name, ([], []))[0]
     never += SAVE_CHECKS.get(name, ([], []))[1]
+    row = int(name[4:]) if name.startswith("new:") else None
     save = os.path.join(folder, name)
-    if not os.path.exists(save):
+    if row is None and not os.path.exists(save):
         print(f"no saved game {save}")
         return 2
     with tempfile.TemporaryDirectory(prefix="cm0102-picker-") as work:
         user = os.path.join(work, "user")
         os.makedirs(user)
-        shutil.copyfile(save, os.path.join(user, name))
+        if row is None:
+            shutil.copyfile(save, os.path.join(user, name))
+            load = fixtures.LOAD_STEPS
+        else:
+            load = [s.replace("click 155 163", f"click 155 {163 + 24 * row}")   # Select Team: rows 24 apart
+                    for s in smoke_run.STEPS if "dump" not in s]
+            load = load[:load.index("wait first-news") + 1]
         fixtures.write_settings(user, "classic", [])
         dump = os.path.join(work, "pick.txt")
-        steps = smoke_run.scaled_steps("classic", work, fixtures.LOAD_STEPS) + ["600000 quit"]
+        steps = smoke_run.scaled_steps("classic", work, load) + ["600000 quit"]
         r, took = fixtures.run(program, game, "classic", user, steps, {"RECOMP_PICK_CHECK": dump}, 900)
         if not os.path.exists(dump) or r.returncode != 0 or "picker check of club" not in r.stderr:
             print(r.stderr[-2000:])

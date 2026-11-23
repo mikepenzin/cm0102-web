@@ -39,7 +39,7 @@ SAVE_AS = ["2500 click 45 342",                  # Game Options
 def run(program, game, user, save_folder, steps, home):
     os.makedirs(user, exist_ok=True)
     with open(os.path.join(user, "settings.txt"), "w") as f:
-        f.write(f"display = classic\nsave_folder = {save_folder}\n")
+        f.write(f"display = classic\ndatabase = 3.9.68\nsave_folder = {save_folder}\n")
     env = dict(os.environ, HOME=home, SDL_VIDEODRIVER="dummy", RECOMP_NO_BOX="1",
                RECOMP_USER_DIR=user, RECOMP_SCRIPT="; ".join(steps))
     return subprocess.run([program, "--game", game], env=env, capture_output=True, text=True, timeout=300)

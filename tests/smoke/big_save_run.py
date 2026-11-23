@@ -8,7 +8,8 @@ Usage:
 The save container keeps the offset of each part in an unsigned 32-bit word (tools/save/savfile.py). The original
 wrote 0xffffffff for every part from 2 GB on (tools/recomp/save_size.py, src/recomp_rt/win/files.c). A save takes
 every .tmp file of the user folder along, so the test makes the save large with filler .tmp files of random bytes
-(1.1 GB each; the byte run code stores random bytes at about 1.5 times their size). A load deletes the .tmp files of
+(1.1 GB each; the byte run code stores random bytes at about 1.5 times their size). The fillers are of one type,
+so from 0.6.2 they go into one merged part (src/recomp_rt/win/save_parts.c). A load deletes the .tmp files of
 the user folder, so the fillers are hard links that go in after the load (or, for a new game, again until the save
 starts). Cases:
     load    start.sav, two fillers, save after 7 days: a save of about 3.3 GB with no offset 0xffffffff and parts
@@ -101,7 +102,7 @@ def play(program, game, run, steps, days, save=None, fillers=(), again=False, se
     if save:
         shutil.copyfile(save, os.path.join(user, os.path.basename(save)))
     with open(os.path.join(user, "settings.txt"), "w") as f:
-        f.write("display = classic\n" + settings)
+        f.write("display = classic\ndatabase = 3.9.68\n" + settings)
     env = dict(os.environ, HOME=home, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", RECOMP_NO_BOX="1",
                RECOMP_USER_DIR=user, RECOMP_FIXED_CLOCK="1", RECOMP_SAVE_AFTER_DAYS=str(days),
                RECOMP_SCRIPT="; ".join(smoke_run.scaled_steps("classic", shots, steps + ["3000000 quit"])))

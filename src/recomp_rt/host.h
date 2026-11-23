@@ -41,12 +41,22 @@ int host_close(int fd);
 /* fopen for a UTF-8 host path. */
 FILE *host_fopen(const char *utf8_path, const char *mode);
 
-typedef struct { int is_dir; uint64_t size; int64_t mtime; } HostStat;
+/* mtime_ns and ctime_ns: 0 to 999999999. dev, ino and the ctime are 0 on Windows (the folder cache does not
+ * run there: HOST_FOLDS_CASE). */
+typedef struct {
+    int is_dir;
+    uint64_t size;
+    int64_t mtime, mtime_ns, ctime, ctime_ns;
+    uint64_t dev, ino;
+} HostStat;
 int host_stat(const char *path, HostStat *st);   /* 0 on success */
 int host_mkdir(const char *path);                /* 0 on success */
 int host_unlink(const char *path);               /* 0 on success */
 int host_rmdir(const char *path);                /* removes an empty folder; 0 on success */
 int host_rename(const char *from, const char *to);
+/* Moves from to to and fails when to exists, also when it appears at that moment (link and unlink on POSIX,
+ * the Windows rename). 0 on success. */
+int host_rename_new(const char *from, const char *to);
 /* Moves from over to, and replaces to when it exists (also on Windows). 0 on success. */
 int host_replace(const char *from, const char *to);
 /* Flushes the file to the disk. 0 on success. Call fflush first. */
@@ -100,6 +110,29 @@ void host_display_notes(char *out, size_t room);
  * out ("/" between parts, no "/" at the end), 0 when the player cancels, -1 when this computer has no picker
  * (Linux without zenity or kdialog). It blocks until the player answers. */
 int host_pick_folder(const char *title, char *out, size_t room);
+/* Opens a folder in the computer's file manager (0.6.1 item 5, the Open folder buttons of the options box and
+ * Load Game): Finder on a Mac (open), Explorer on Windows (ShellExecute), the desktop's file manager on Linux
+ * (xdg-open). 1 when the file manager was started, 0 when the folder does not exist or nothing could open it. It
+ * does not wait for the file manager. The test variable RECOMP_OPEN_FOLDER_PROGRAM names another program to start
+ * with the folder as its one argument (Mac and Linux). */
+int host_open_folder(const char *path);
+
+/* The cm0102:// link handler (0.7.0 slice 8, host/link.c): the computer starts this program with a link
+ * cm0102://join/<code> from an invite link page. on 1 writes it for this program, for the current user only,
+ * and writes nothing when it is there already. on 0 removes it when it starts this program (on Linux: this AppImage). Windows: the key
+ * HKEY_CURRENT_USER\Software\Classes\cm0102. Linux, only in an AppImage: the file
+ * cm0102-bosman-edition.desktop in ~/.local/share/applications. macOS: nothing, because the app's Info.plist
+ * names the link and the system reads it. 1 when the handler is this program's now, 0 when there is none, -1
+ * on a failure (with a message on stderr). */
+int host_link_handler(int on);
+
+/* One copy of the game takes the invite links of a user (0.7.0 slice 8, Q41, host/link_pass.c). host_link_pass
+ * gives the link to the copy that listens on the channel of this user folder: 1 when that copy kept it, and the
+ * caller then ends. host_link_listen makes this copy the one that listens, when no other copy does: 0 when it
+ * listens. host_link_take gives a link that arrived, once: 1 with the link in out. */
+int host_link_pass(const char *user_dir, const char *link);
+int host_link_listen(const char *user_dir);
+int host_link_take(char *out, size_t room);
 
 /* Time. */
 void host_gmtime(time_t t, struct tm *out);

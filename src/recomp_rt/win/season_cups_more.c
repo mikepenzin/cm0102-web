@@ -120,10 +120,26 @@ int season_super_four_pick(const uint32_t *league, int count, uint32_t cw, uint3
  *   played on national-team dates (the dates of the Euro 2004 qualifiers of 2003 are an inference).
  * - Conference League Cup (eng.tsv): 2004/05, 2007/08 and 2008/09, a knockout of the Conference clubs with extra time
  *   and penalties (the game holds one Conference division; the months are an inference). From 2024/25 the National
- *   League Cup has 16 Premier League 2 under-21 sides, which the game does not hold (Q336): not played.
+ *   League Cup has 16 Premier League 2 under-21 sides, which the game does not hold (Q336): not played. A game with
+ *   changing rules off plays every edition in its start season's format (season_new_cup_played, open item 131).
  * - All-Ireland cup (wal-nir-irl.tsv): 2010/11 to 2012/13 12 clubs (two-legged first round, quarter-finals and
- *   semi-finals, one-match final), 2013/14 8 clubs (4 from each league). The group formats of 2004/05 to 2007/08 and
- *   2009/10 are not played (docs/research/2026-10-18-cups-more.md, section 4). */
+ *   semi-finals, one-match final), 2013/14 8 clubs (4 from each league). Item 148: in each of these editions every
+ *   tie of the first round drawn paired a League of Ireland club with an Irish League club (the 2011 and 2013 rule in
+ *   two sources each, the 2012 and 2014 ties in two sources each; docs/research/2026-11-05-setanta-cup.md), so these
+ *   rows have NEW_CUP_PAIRED. The later rounds were open draws. Item 145: the group editions of 2004/05
+ *   (the Setanta Cup of 2005) to 2007/08 and 2009/10, with the groups in group_formats below; none in 2008/09 (the
+ *   2009 draw was put back and made on 28 July 2009 for the edition of 2009/10). Their rows give the clubs (picks,
+ *   extra) and the rounds of the class's table, which a group season does not play (Cup::update_for_date 0x51f890
+ *   draws no base round once +0xb1 is set, 0x51fa01): the final, the semi-finals and the group days. The clubs, by
+ *   the rules of each edition (docs/research/2026-11-05-setanta-cup.md):
+ *   - 2005: the top two of each league and the two national cup winners (Shelbourne, Cork City and FAI Cup winners
+ *     Longford Town; Linfield, Portadown and Irish Cup winners Glentoran), 3 from each league.
+ *   - 2006 to 2008: 4 from each league. The sources name the champions and the FAI Cup holders but no rule for the
+ *     other places (a gap): the top four of each league is the closest rule.
+ *   - 2009/10: the top four of each league and the holders (Cork City), 9 clubs (one source for the rule). Gaps: the
+ *     Irish League sent its 1st, 2nd, 5th and 6th of 2008/09 (Glentoran, Linfield, Coleraine, Cliftonville), for a
+ *     reason not found; and the draw of 28 July 2009 took the 2008 League of Ireland table, while the game's draw,
+ *     after its season change, takes the season just ended (row 2008/09, the 2009 season). */
 #define ET_PENS (CUP_PENALTIES | CUP_EXTRA_TIME)
 static const SeasonNewCup new_cups[] = {
     {"new_tur_super", 2006, 0, 2, {{1, ET_PENS, 7, 7, 0, 0}}},
@@ -135,10 +151,20 @@ static const SeasonNewCup new_cups[] = {
     {"new_conf_cup", 2004, 0, 0, {{1, ET_PENS, 22, 2, 1, 0}, {1, ET_PENS, 18, 0, 1, 0}, {1, ET_PENS, 14, 11, 0, 0},
                                   {1, ET_PENS, 16, 10, 0, 0}, {1, ET_PENS, 19, 9, 0, 0}}},
     {"new_conf_cup", 2024, 0, -1, {{0}}},
-    {"new_all_ireland", 2004, 0, -1, {{0}}},
+    {"new_all_ireland", 2004, 0, 6, {{1, ET_PENS, 21, 4, 1, 0}, {1, ET_PENS, 16, 4, 1, 0}, {1, ET_PENS, 15, 2, 1, 0}},
+     {2, 2}, NEW_CUP_CUP_WINNERS},
+    {"new_all_ireland", 2005, 0, 8, {{1, ET_PENS, 22, 3, 1, 0}, {1, ET_PENS, 10, 3, 1, 0}, {1, ET_PENS, 20, 1, 1, 0}},
+     {4, 4}, 0},
+    {"new_all_ireland", 2006, 0, 8, {{1, ET_PENS, 12, 4, 1, 0}, {1, ET_PENS, 23, 3, 1, 0}, {1, ET_PENS, 26, 1, 1, 0}},
+     {4, 4}, 0},
+    {"new_all_ireland", 2007, 0, 8, {{1, ET_PENS, 10, 4, 1, 0}, {1, ET_PENS, 28, 3, 1, 0}, {1, ET_PENS, 26, 1, 1, 0}},
+     {4, 4}, 0},
+    {"new_all_ireland", 2009, 0, 9, {{1, ET_PENS, 15, 4, 1, 0}, {2, ET_PENS, 3, 3, 1, 14}, {1, ET_PENS, 13, 2, 1, 0},
+                                     {1, ET_PENS, 29, 7, 0, 0}}, {4, 4}, NEW_CUP_HOLDERS},
     {"new_all_ireland", 2010, 0, 12, {{1, ET_PENS, 21, 4, 1, 0}, {2, ET_PENS, 9, 3, 1, 7}, {2, ET_PENS, 7, 2, 1, 7},
-                                      {2, ET_PENS, 14, 1, 1, 7}}},
-    {"new_all_ireland", 2013, 0, 8, {{1, ET_PENS, 17, 4, 1, 0}, {2, ET_PENS, 5, 3, 1, 7}, {2, ET_PENS, 1, 2, 1, 7}}},
+                                      {2, ET_PENS, 14, 1, 1, 7}}, {0, 0}, NEW_CUP_PAIRED},
+    {"new_all_ireland", 2013, 0, 8, {{1, ET_PENS, 17, 4, 1, 0}, {2, ET_PENS, 5, 3, 1, 7}, {2, ET_PENS, 1, 2, 1, 7}},
+     {0, 0}, NEW_CUP_PAIRED},
 };
 #define NEW_CUP_COUNT ((int)(sizeof new_cups / sizeof new_cups[0]))
 
@@ -179,6 +205,16 @@ int season_new_cup_held(const char *file, int edition)
     if (r->format_text && !strncmp(r->format_text, "cancelled", 9)) return 0;
     const SeasonNewCup *f = season_new_cup(file, edition);
     return f && f->clubs >= 0;
+}
+
+int season_new_cup_late(int day, int entry_day, int edition, int year, int held)
+{
+    return day == SEASON_NEW_CUP_LATE_DAY && entry_day != day && edition < year && held == 1;
+}
+
+const SeasonNewCup *season_new_cup_played(const char *file, int edition, int rules, int start)
+{
+    return season_new_cup(file, rules ? edition : season_new_cup_row_edition(file, start));
 }
 
 int season_new_cup_next(const char *file, int edition)
@@ -233,7 +269,26 @@ int season_new_cup_round_code(int rounds, int r)
  *   rounds 1 to 3 (16 clubs: 4 groups of 4, top 2 to the quarter-finals) for 2005/06 to 2010/11 and 2024/25 to
  *   2025/26 (the real groups of 5, 6 or 8 clubs need more clubs than the class holds at that point); 2012/13 and
  *   2013/14 2 groups of 4 after its rounds 1 to 4, top 2 to the semi-finals. Quarter-finals and semi-finals over two
- *   legs where the row says so. */
+ *   legs where the row says so.
+ * - All-Ireland cup (item 145, wal-nir-irl.tsv, docs/research/2026-11-05-setanta-cup.md), home and away groups:
+ *   - 2004/05 (Setanta Cup 2005): 2 groups of 3, the winners meet in the final (21 May 2005). Group days 15 and 28
+ *     March, 11 and 25 April, 2 and 16 May 2005 (6 of the 10 real dates of the two groups). The draw kept the two
+ *     league winners apart (one source): the pots by strength put them in the first pot. Draw date not found: 13
+ *     December 2004, as the editions after it (inference).
+ *   - 2005/06 to 2007/08: 2 groups of 4, two clubs of each league in each group (all four sources show it, the 2008
+ *     rules say so), the top 2 to one-match semi-finals (winner v runner-up of the other group, the winner at home)
+ *     with extra time and penalties, then the final. 2006: group days of group A, 20 February to 27 March, semi-finals
+ *     10 April, final 22 April, draw 12 December 2005. 2007: 26 February to 16 April (6 of the 7 real days; the
+ *     last of group 1 was on 17 April), semi-finals 23 April, final 12 May, draw 7 December 2006. 2008: the draw of
+ *     17 January 2008 set three match days to mid-April and three in September, the semi-finals and the final in
+ *     October (played 13 and 14 October and 1 November 2008). The game plays one edition a season: the season
+ *     change of 2008 starts the cup's next season (with changing rules off a 2007 game plays an edition every
+ *     season), so an edition cannot run on to the autumn. A gap: the days after 14 April and the knockout dates
+ *     are an inference from 2007 (21 April, 28 April, 10 May).
+ *   - 2009/10: 3 groups of 3, the 3 winners and the best runner-up to two-legged semi-finals (first legs 3 April 2010,
+ *     14 days), final 15 May 2010. Group days of the draw's schedule (28 July 2009): 29 August, 19 September,
+ *     3 October and 9 November 2009, 27 February and 13 March 2010. The pots by strength (the mix was 2+1 and 1+2;
+ *     they keep the two champions apart, which the real draw did not: a gap, the draw rule is not found). */
 static const SeasonCupGroups group_formats[] = {
     {"sco_lge_cup", 2016, 8, 0, 1, 1, 1, 16, {{15, 6, 0}, {18, 6, 0}, {22, 6, 0}, {25, 6, 0}, {29, 6, 0}},
      {{1, ET_PENS, 26, 10, 0, 0}, {1, ET_PENS, 22, 9, 0, 0}, {1, ET_PENS, 20, 8, 0, 0}, {1, ET_PENS, 9, 7, 0, 0}}},
@@ -252,6 +307,18 @@ static const SeasonCupGroups group_formats[] = {
     {"tur_cup", 2024, 4, 3, 1, 2, 0, 8, {{7, 0, 1}, {21, 0, 1}, {4, 1, 1}},
      {{1, ET_PENS, 14, 4, 1, 0}, {1, ET_PENS, 2, 3, 1, 0}, {1, ET_PENS, 4, 2, 1, 0}}},
     {"tur_cup", 2026, 0},
+    {"new_all_ireland", 2004, 2, 0, 2, 1, 0, 2, {{15, 2, 1}, {28, 2, 1}, {11, 3, 1}, {25, 3, 1}, {2, 4, 1}, {16, 4, 1}},
+     {{1, ET_PENS, 21, 4, 1, 0}}, 0, {13, 11, 0}},
+    {"new_all_ireland", 2005, 2, 0, 2, 2, 0, 4, {{20, 1, 1}, {27, 1, 1}, {6, 2, 1}, {14, 2, 1}, {21, 2, 1}, {27, 2, 1}},
+     {{1, ET_PENS, 22, 3, 1, 0}, {1, ET_PENS, 10, 3, 1, 0}}, 1, {12, 11, 0}},
+    {"new_all_ireland", 2006, 2, 0, 2, 2, 0, 4, {{26, 1, 1}, {5, 2, 1}, {12, 2, 1}, {19, 2, 1}, {2, 3, 1}, {16, 3, 1}},
+     {{1, ET_PENS, 12, 4, 1, 0}, {1, ET_PENS, 23, 3, 1, 0}}, 1, {7, 11, 0}},
+    {"new_all_ireland", 2007, 2, 0, 2, 2, 0, 4, {{26, 1, 1}, {10, 2, 1}, {18, 2, 1}, {7, 3, 1}, {14, 3, 1}, {21, 3, 1}},
+     {{1, ET_PENS, 10, 4, 1, 0}, {1, ET_PENS, 28, 3, 1, 0}}, 1, {17, 0, 1}},
+    {"new_all_ireland", 2008, 0},
+    {"new_all_ireland", 2009, 3, 0, 2, 1, 0, 4, {{29, 7, 0}, {19, 8, 0}, {3, 9, 0}, {9, 10, 0}, {27, 1, 1}, {13, 2, 1}},
+     {{1, ET_PENS, 15, 4, 1, 0}, {2, ET_PENS, 3, 3, 1, 14}}, 0, {28, 6, 0}},
+    {"new_all_ireland", 2010, 0},
     /* Test only (RECOMP_CUP_GROUPS_TEST=1, season_cup_groups.c): the League Cup with 16 groups of 5 and 6 and a last
      * 32, so a run with England alone plays the path of the Scottish League Cup (the same Cup base slots). */
     {"test_eng_cc_cup", 2001, 16, 0, 1, 2, 0, 32, {{13, 7, 0}, {27, 7, 0}, {10, 8, 0}, {24, 8, 0}, {8, 9, 0}},

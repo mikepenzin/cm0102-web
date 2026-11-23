@@ -20,7 +20,7 @@ def main(argv):
             user = os.path.join(work, "u" + str(len(os.listdir(work))))
             os.makedirs(user)
             with open(os.path.join(user, "settings.txt"), "w") as f:
-                f.write("display = classic\n")
+                f.write("display = classic\ndatabase = 3.9.68\n")
             env = dict(os.environ, SDL_VIDEODRIVER="dummy", RECOMP_NO_BOX="1", RECOMP_KEYS_WINDOWS="1",
                        RECOMP_USER_DIR=user, RECOMP_SCRIPT=f"3000 press {key}; 5000 quit")
             out = subprocess.run([program, "--game", game], env=env, capture_output=True, text=True, timeout=120).stderr

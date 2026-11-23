@@ -27,11 +27,22 @@
 2019	bench	new_sudamericana (Copa Sudamericana), row club-world-349: game 9, table 12 (12)
 2019	bench	new_suruga_bank (J.League YBC Levain Cup / CONMEBOL Sudamericana Ch), row club-world-531: game 7, table 9 (9)
 2019	bench	world_club_champ (FIFA Club World Cup), row club-world-344: game 7, table 12 (12)
+2019	club_list	Argentine Premier Division: 20 of 24 listed clubs that the database holds (24 listed), 0 other clubs, 20 in all; not in it: Aldosivi, Arsenal de Sarandí, Central Córdoba de Santiago del Estero, Club Atlético Patronato; others: -
+2019	club_list	Argentine Second Division: 25 of 32 listed clubs that the database holds (32 listed), 0 other clubs, 25 in all; not in it: Club Deportivo Riestra, Club Social y Atlético Guillermo Brown, Club Villa Dálmine, Deportivo Santamarina, Estudiantes (Río Cuarto), Estudiantes de Buenos Aires, Gimnasia y Esgrima de Mendoza; others: -
+2019	club_list	Brazilian National Third Division: 20 of 20 listed clubs that the database holds (20 listed), 36 other clubs, 56 in all; not in it: -; others: AA Aparecidense (GO), Associação Atlética Caldense (MG), Associação Atlética Coruripe (AL), Bangu Atlético Clube (RJ), Campinense Clube (PB), Central Sport Club (PE), Clube Atlético Linense (SP), Clube Atlético Metropolitano (SC), Clube Esportivo Lajeadense (RS), Clube Recreativo e Atlético Catalano (GO), Colo Colo de Futebol e Regatas (BA), Esporte Clube Comercial (MS), Esporte Clube Cruzeiro (RS), Estanciano Esporte Clube (SE), Fluminense de Feira Futebol Clube (BA), Foz do Iguaçu FC, Globo Futebol Clube RN, Goianésia Esporte Clube (GO), Grêmio Osasco Audax, Guarani Esporte Clube (CE), Internacional de Lages, Mirassol Futebol Clube (SP), Moto Club de São Luís (MA), Nacional Futebol Clube (AM), Operário Futebol Clube Ltda. (MT), Palmas Futebol e Regatas, Paulista Futebol Clube (SP), Resende Futebol Clube (RJ), Serrano Sport Club (BA), Sociedade Desportiva Juazeirense (BA), Sociedade Esportiva do Gama (DF), União Recreativa dos Trabalhadores (MG), Veranópolis Esporte Clube (RS), Vilhena Esporte Clube (RO), Villa Nova Atlético Clube (MG), XV de Piracicaba
+2019	club_list	Croatian First Division: 10 of 10 listed clubs that the database holds (10 listed), 6 other clubs, 16 in all; not in it: -; others: BSK Zmaj Blato, NK Krk, NK Lucko, NK Trnje Zagreb, NK Zadar, NK Zagreb
+2019	club_list	Danish First Division: 12 of 12 listed clubs that the database holds (12 listed), 4 other clubs, 16 in all; not in it: -; others: FC Helsingör, Lyngby BK, Silkeborg IF, Thisted FC
+2019	club_list	Danish Second Division: 16 of 24 listed clubs that the database holds (24 listed), 0 other clubs, 16 in all; not in it: Boldklubben Avarta, FC Helsingör, Frederiksberg Alliancen, Holbaek B&I, Naesby Boldklub, Skovshoved IF, Thisted FC, VSK Aarhus; others: -
+2019	club_list	Greek National B Division: 12 of 12 listed clubs that the database holds (12 listed), 2 other clubs, 14 in all; not in it: -; others: AO Egaleo, Iraklis Thessaloniki
+2019	club_list	Italian Serie A: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Hellas Verona, US Lecce; others: -
+2019	club_list	Japanese J-League 1: 16 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 16 in all; not in it: Oita Trinita, Yokohama FC; others: -
+2019	club_list	Japanese J-League 2: 12 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 12 in all; not in it: Albirex Niigata, Ehime FC, FC Ryukyu, Fagiano Okayama, Kyoto Sanga, Mito HollyHock, Montedio Yamagata, ThespaKusatsu Gunma, Tochigi SC, Zweigen Kanazawa; others: -
+2019	club_list	Northern Irish League First Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Knockbreda FC, PSNI FC; others: -
+2019	club_list	Northern Irish League Premier Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Carrick Rangers, Larne FC; others: -
+2019	club_list	Norwegian Premier Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: Aalesunds FK, IK Start; others: -
 2019	clubs	arg_prm (Superliga Argentina), row arg-usa-19: game 20, table 24 (24)
 2019	clubs	arg_second (Primera Nacional), row arg-usa-46: game 25, table 32 (32)
 2019	clubs	asia_club_champ (AFC Champions League), row club-world-355: game 16, table 29 (29)
-2019	clubs	bel_first (Belgian First Division A), row hol-bel-242: game 18, table 16 (16)
-2019	clubs	bel_second (Belgian First Division B), row hol-bel-243: game 18, table 8 (8)
 2019	clubs	bra_cup (Copa do Brasil), row bra-154: game 71, table 91 (91)
 2019	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-100: game 7, table 20 (20)
 2019	clubs	bra_reg_gaucho (Campeonato Gaúcho), row bra-559: game 17, table 12 (12)
@@ -39,17 +50,13 @@
 2019	clubs	bra_reg_rio (Campeonato Carioca), row bra-478: game 12, table 16 (16)
 2019	clubs	conmebol_liber (Copa Libertadores), row club-world-346: game 4, table 47 (47)
 2019	clubs	cro_a1 (Prva HNL), row gre-pol-cro-343: game 16, table 10 (10)
-2019	clubs	den_first (Danish 1st Division), row den-swe-111: game 16, table 12 (12)
-2019	clubs	den_prm (Danish Superliga), row den-swe-110: game 12, table 14 (14)
 2019	clubs	den_second (Danish 2nd Divisions), row den-swe-112: game 16, table 24 (24)
 2019	clubs	euro_champ (UEFA European Championship), row int-continental-199: game 0, table 24 (24)
 2019	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-200: game 0, table 55 (55)
 2019	clubs	fin_first (Ykkönen), row nor-fin-188: game 10, table 12 (12)
-2019	clubs	fra_third (Championnat National), row fra-166: game 20, table 18 (18)
 2019	clubs	goldcup (Copa América), row int-continental-209: game 0, table 12 (12)
 2019	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-19: game 4, table 84 (84)
 2019	clubs	gre_second (Super League 2), row gre-pol-cro-73: game 14, table 12 (12)
-2019	clubs	hol_first (Eerste Divisie), row hol-bel-237: game 18, table 20 (20)
 2019	clubs	ita_c_cup (Coppa Italia Serie C), row ita-320: game 3, table 60 (60)
 2019	clubs	ita_cup (Coppa Italia), row ita-319: game 4, table 78 (78)
 2019	clubs	ita_ser_a (Serie A), row ita-308: game 18, table 20 (20)
@@ -64,21 +71,18 @@
 2019	clubs	nir_prm (NIFL Premiership), row wal-nir-irl-460: game 10, table 12 (12)
 2019	clubs	nor_prm (Eliteserien), row nor-fin-182: game 14, table 16 (16)
 2019	clubs	uefa_cup (UEFA Europa League), row uefa-149: game 161, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
-2019	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-222: game 50, table 54 (54 entrants)
+2019	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-222: game 48, table 54 (54 entrants)
 2019	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-223: game 0, table 40 (40)
 2019	clubs	world_club_champ (FIFA Club World Cup), row club-world-344: game 0, table 7 (7)
-2019	down	arg_prm (Superliga Argentina), row arg-usa-19: game 0 (+0 play-off places), table 3 (3 (worst average over three seasons))
 2019	down	arg_second (Primera Nacional), row arg-usa-46: game 0 (+0 play-off places), table 2 (2 (last of each zone))
-2019	down	bel_first (Belgian First Division A), row hol-bel-242: game 2 (+0 play-off places), table 1 (1 (16th))
 2019	down	bel_second (Belgian First Division B), row hol-bel-243: game 2 (+1 play-off places), table 1 (1 after a relegation play-off of the bottom two)
 2019	down	bra_nat_third (Campeonato Brasileiro Série C), row bra-100: game 2 (+0 play-off places), table 4 (4)
 2019	down	cro_a1 (Prva HNL), row gre-pol-cro-343: game 2 (+0 play-off places), table 1 (1 (10th))
 2019	down	cro_a2b (Druga HNL South), row gre-pol-cro-397: game 2 (+0 play-off places), table na (n/a)
 2019	down	den_second (Danish 2nd Divisions), row den-swe-112: game 4 (+0 play-off places), table 5 (5)
-2019	down	eng_third (EFL League Two), row eng-211: game 1 (+0 play-off places), table 2 (2)
-2019	down	fra_second (Ligue 2), row fra-165: game 3 (+0 play-off places), table 2 (2)
 2019	down	ger_second (2. Bundesliga), row ger-236: game 4 (+0 play-off places), table 2 (2)
 2019	down	gre_prm (Super League 1), row gre-pol-cro-46: game 2 (+0 play-off places), table 1 (1 (14th))
+2019	down	hol_prm (Eredivisie), row hol-bel-236: game 1 (+2 play-off places), table 0 (0 (season abandoned on 24 April 2020 after 26 rounds, COVID-19: no club relegate)
 2019	down	ita_ser_b (Serie B), row ita-309: game 4 (+0 play-off places), table 3 (3 direct (18th-20th) + play-out 16th v 17th (two legs; not held if gap over 4 po)
 2019	down	ita_ser_c1a (Serie C girone A), row ita-315: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers (positions 16th-19th: inference from 2014/1)
 2019	down	ita_ser_c1b (Serie C girone B), row ita-316: game 1 (+4 play-off places), table 3 (3: last direct + two play-out losers (positions 16th-19th: inference from 2014/1)
@@ -87,6 +91,15 @@
 2019	down	nir_first (NIFL Championship), row wal-nir-irl-461: game 0 (+0 play-off places), table 1 (1 (pos 12))
 2019	down	nor_first (OBOS-ligaen), row nor-fin-183: game 4 (+0 play-off places), table 2 (15th-16th (2))
 2019	idle	oceania_nations (OFC Nations Cup), row int-continental-208: the game waits for 2024, the table holds it
+2019	meetings	arg_second (Primera Nacional), row arg-usa-46: game 1, table 2
+2019	meetings	bra_nat_first (Campeonato Brasileiro Série A), row bra-46: game 1, table 2
+2019	meetings	bra_nat_second (Campeonato Brasileiro Série B), row bra-73: game 1, table 2
+2019	meetings	cro_a1 (Prva HNL), row gre-pol-cro-343: game 2, table 4
+2019	meetings	den_first (Danish 1st Division), row den-swe-111: game 2, table 3
+2019	meetings	fin_first (Ykkönen), row nor-fin-188: game 3, table 2
+2019	meetings	jap_j2 (J2 League), row aus-jap-kor-235: game 4, table 2
+2019	meetings	nir_first (NIFL Championship), row wal-nir-irl-461: game 4, table 2
+2019	meetings	nir_prm (NIFL Premiership), row wal-nir-irl-460: game 4, table 3
 2019	name	new_suruga_bank (J.League YBC Levain Cup / CONMEBOL Sudamericana Ch), row club-world-531: game 'J.League YBC Levain Cup / CONMEBOL Sudamericana Ch', table 'J.League YBC Levain Cup / CONMEBOL Sudamericana Championship Final'
 2019	no_row	friendly (Friendly): no table row
 2019	no_row	record_utils ('B' International): no table row
@@ -139,6 +152,19 @@
 2019	playoffs	ita_ser_c2a (Serie C girone C), row ita-317: game 4 up and 4 down play-off places, table 0 and 0 ('28 clubs: 4th-10th in group play-offs, 2nd, 3rd of each group and the Coppa Ital')
 2019	playoffs	nir_first (NIFL Championship), row wal-nir-irl-461: game 1 up and 0 down play-off places, table 1 and 1 ('pos 2: promotion play-off with the Premiership 11th; pos 11: relegation play-off')
 2019	playoffs	nor_first (OBOS-ligaen), row nor-fin-183: game 1 up and 0 down play-off places, table 4 and 1 ('3rd-6th single-leg knockout; winner v top-flight 14th, one match on neutral grou')
+2019	rounds	arg_prm (Superliga Argentina), row arg-usa-19: game 19, table 23 (1 meetings, zones -, extra 0)
+2019	rounds	bra_nat_first (Campeonato Brasileiro Série A), row bra-46: game 19, table 38 (2 meetings, zones -, extra 0)
+2019	rounds	bra_nat_second (Campeonato Brasileiro Série B), row bra-73: game 19, table 38 (2 meetings, zones -, extra 0)
+2019	rounds	cro_a1 (Prva HNL), row gre-pol-cro-343: game 30, table 36 (4 meetings, zones -, extra 0)
+2019	rounds	den_first (Danish 1st Division), row den-swe-111: game 30, table 33 (3 meetings, zones -, extra 0)
+2019	rounds	fin_first (Ykkönen), row nor-fin-188: game 27, table 22 (2 meetings, zones -, extra 0)
+2019	rounds	gre_second (Super League 2), row gre-pol-cro-73: game 26, table 22 (2 meetings, zones -, extra 0)
+2019	rounds	ita_ser_a (Serie A), row ita-308: game 34, table 38 (2 meetings, zones -, extra 0)
+2019	rounds	jap_j1 (J1 League), row aus-jap-kor-208: game 30, table 34 (2 meetings, zones -, extra 0)
+2019	rounds	jap_j2 (J2 League), row aus-jap-kor-235: game 44, table 42 (2 meetings, zones -, extra 0)
+2019	rounds	nir_first (NIFL Championship), row wal-nir-irl-461: game 36, table 22 (2 meetings, zones -, extra 0)
+2019	rounds	nir_prm (NIFL Premiership), row wal-nir-irl-460: game 36, table 33 (3 meetings, zones -, extra 0)
+2019	rounds	nor_prm (Eliteserien), row nor-fin-182: game 26, table 30 (2 meetings, zones -, extra 0)
 2019	subs_used	asia_club_champ (AFC Champions League), row club-world-355: game 3, table 5 (5, a sixth in extra time)
 2019	subs_used	eng_fa_cup (FA Cup), row eng-406: game 3, table 5 (5 (+1 in extra time))
 2019	subs_used	euro_champ (UEFA European Championship), row int-continental-199: game 3, table 5 (5 (a sixth in extra time), three stoppages)
@@ -153,7 +179,5 @@
 2019	up	cro_a2a (Druga HNL), row gre-pol-cro-370: game 0 (+0 play-off places), table 1 (1 (1st))
 2019	up	den_second (Danish 2nd Divisions), row den-swe-112: game 3 (+0 play-off places), table 1 (1)
 2019	up	fin_first (Ykkönen), row nor-fin-188: game 2 (+0 play-off places), table 1 (1st (1))
-2019	up	fra_third (Championnat National), row fra-166: game 3 (+0 play-off places), table 2 (2)
 2019	up	gre_cup (Greek Football Cup), row gre-pol-cro-19: game 2 (+0 play-off places), table na (n/a)
 2019	up	gre_second (Super League 2), row gre-pol-cro-73: game 2 (+0 play-off places), table 1 (1 (1st))
-2019	up	hol_first (Eerste Divisie), row hol-bel-237: game 1 (+0 play-off places), table 2 (2 (champion and runner-up; Jong teams cannot be promoted))

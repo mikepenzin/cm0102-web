@@ -17,7 +17,9 @@
  * The real cups are open to the senior league clubs of the province, so after the class's pick an empty place takes
  * the next club of the cup's own provincial league that is not in the list, by reputation (+0x80): no random draw is
  * added, so the rest of the game is as before when no place is empty. Only in a season game (season_game_changes);
- * the base game's lists are full, so it is never reached there (Q152). */
+ * the base game's lists are full, so it is never reached there (Q152).
+ *
+ * Item 64 (0.6.2): every cup list of the original starts cleared in a season game (rt_cup_places_list below). */
 #include "win.h"
 #include "season.h"
 #include "season_names.h"
@@ -86,7 +88,19 @@ static void top_up(uint32_t cup, uint32_t key, int from, int to, int places, int
  * again, place 15 still held it from the old block, so Arklow Town came in twice, a tie of round 2 lost its club
  * and Cup::process_fixture 0x51a150 stopped at Cup.cpp 1187 (find_tie 0x519c90 found no tie, 0x51a336). In a
  * season game the list now starts cleared. The base game writes every place, so it keeps the original's block
- * (Q152). */
+ * (Q152).
+ *
+ * Every other cup list of the original is made the same way (0.6.2 item 64), so every one starts cleared:
+ * LIST_STORES of tools/recomp/league_sizes.py holds the 55 stores, and tests/seasons/cup_list_clear_check.py finds
+ * them in the original and checks each size. CroCup::collect_entrants 0x517bb0 sets 48 places (0x517bc5), takes
+ * the 0x120-byte list (0x517bcb, stored at 0x517bd5) and writes every club of the two Second Divisions
+ * ([0x9cf8a8], [0x9cf8ac]; 0x517c68..0x517cdf), then every club of the First Division ([0x9cf8a4];
+ * 0x517cff..0x517d4e). In a 2005 start with the 3.9.68 data the club moves leave 13 clubs in the First Division,
+ * so the cup has 45 clubs and places 45 to 47 kept stale bytes: one pointed to a club of Brazil, so the cup
+ * entrants fill (season_cup_entrants.c) took the list for a cup of several nations and left it. Cleared, the three
+ * places read as empty and the cup entrants fill gives them Croatian clubs. The First Division loop writes no
+ * round byte (+4, the Second Division loop draws it at 0x517c89..0x517ca7), so in a season game those places now
+ * hold 0 there instead of stale bytes. */
 uint32_t rt_cup_places_list(uint32_t list, uint32_t bytes)
 {
     if (season_game_changes() && readable(list) && readable(list + bytes - 1u))

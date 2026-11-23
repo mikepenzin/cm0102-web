@@ -64,7 +64,7 @@ SAVE_AS = (["2500 click 45 342", "4500 click 140 334"] + [f"{5000 + 50 * i} key 
            ["7500 type Ita65", "9500 click 705 572", "16500 quit"])
 NEW_ITALIAN = [s for s in smoke_run.STEPS if " dump " not in s and s not in SETTINGS + [smoke_run.SETTINGS_WAIT]]
 NEW_ITALIAN = NEW_ITALIAN[:NEW_ITALIAN.index("wait first-news") + 1] + SAVE_AS
-LOAD_ITALIAN = [s for s in LOAD if s not in SETTINGS]
+LOAD_ITALIAN = [s for s in LOAD if s not in SETTINGS + [smoke_run.SETTINGS_WAIT]]
 LEAGUES_ITALIAN = ["1000 click 400 300", "wait setup", "2500 click 277 177", "wait leagues", "2000 quit"]
 
 

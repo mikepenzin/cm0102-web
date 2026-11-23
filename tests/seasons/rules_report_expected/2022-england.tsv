@@ -13,7 +13,6 @@
 2022	clubs	new_concacaf_nations_league (2022-23 CONCACAF Nations League), row int-continental-237: game 4, table 41 (41)
 2022	clubs	world_club_champ (FIFA Club World Cup), row club-world-401: game 0, table 7 (7)
 2022	clubs	world_cup (FIFA World Cup), row int-world-254: game 4, table 32 (32)
-2022	down	eng_third (EFL League Two), row eng-241: game 1 (+0 play-off places), table 2 (2)
 2022	idle	new_uefa_nations_league (2022-23 UEFA Nations League), row int-continental-234: the game waits for 2024, the table holds it
 2022	no_row	friendly (Friendly): no table row
 2022	no_row	record_utils ('B' International): no table row
@@ -24,22 +23,23 @@
 2022	not_in_game	uefa-169 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2023	bench	eng_first (EFL Championship), row eng-249: game 7, table 9 (9)
 2023	bench	eur_super_cup (UEFA Super Cup), row uefa-184: game 9, table 12 (12)
+2023	bench	euro_champ (UEFA European Championship), row int-continental-243: game 7, table 15 (15)
 2023	bench	european_cup (UEFA Champions League), row uefa-178: game 9, table 12 (12)
 2023	bench	new_conference_league (UEFA Europa Conference League), row uefa-182: game 9, table 12 (12)
+2023	bench	oceania_nations (OFC Nations Cup), row int-continental-252: game 7, table 12 (12)
 2023	bench	uefa_cup (UEFA Europa League), row uefa-181: game 9, table 12 (12)
 2023	bench	world_club_champ (FIFA Club World Cup), row club-world-420: game 7/9, table 12 (12)
 2023	clubs	euro_champ (UEFA European Championship), row int-continental-243: game 0/4, table 24 (24)
 2023	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-244: game 5, table 53 (53)
 2023	clubs	goldcup (Copa América), row int-continental-253: game 0/4, table 16 (16)
 2023	clubs	new_concacaf_nations_league (2022-23 CONCACAF Nations League), row int-continental-248: game 4, table 41 (41)
-2023	clubs	new_conference_league (UEFA Europa Conference League), row uefa-182: game 136/177, table 178 (178 (135 entered + 43 from the Champions League and Europa League); 32 in the gr)
+2023	clubs	new_conference_league (UEFA Europa Conference League), row uefa-182: game 152/177, table 178 (178 (135 entered + 43 from the Champions League and Europa League); 32 in the gr)
 2023	clubs	new_uefa_nations_league (2022-23 UEFA Nations League), row int-continental-245: game 0/4, table 2 (2)
-2023	clubs	oceania_nations (OFC Nations Cup), row int-continental-252: game 0/3, table 8 (8 (7 played))
-2023	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-270: game 50, table 53 (53 entrants)
+2023	clubs	oceania_nations (OFC Nations Cup), row int-continental-252: game 0/4, table 8 (8 (7 played))
+2023	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-270: game 48, table 53 (53 entrants)
 2023	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-271: game 0, table 46 (46 entrants)
 2023	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-269: game 24, table 32 (32 entrants (hosts exempt))
 2023	clubs	world_club_champ (FIFA Club World Cup), row club-world-420: game 0, table 7 (7)
-2023	down	eng_third (EFL League Two), row eng-251: game 1 (+0 play-off places), table 2 (2)
 2023	name	new_concacaf_gold_cup (2023 CONCACAF Gold Cup), row int-continental-247: game '2023 CONCACAF Gold Cup', table 'CONCACAF Gold Cup'
 2023	name	new_concacaf_nations_league (2022-23 CONCACAF Nations League), row int-continental-248: game '2022-23 CONCACAF Nations League', table '2023-24 CONCACAF Nations League'
 2023	name	new_uefa_nations_league (2022-23 UEFA Nations League), row int-continental-245: game '2022-23 UEFA Nations League', table '2022-23 UEFA Nations League (play-out)'
@@ -57,3 +57,5 @@
 2023	not_in_game	eng-252 eng_conf 'National League' (England)
 2023	not_in_game	eng-433 eng_fa_trophy 'FA Trophy' (England)
 2023	not_in_game	uefa-177 uefa_seeding 'UEFA access list and seeding' (UEFA)
+2023	subs_used	euro_champ (UEFA European Championship), row int-continental-243: game 3, table 5 (5)
+2023	subs_used	oceania_nations (OFC Nations Cup), row int-continental-252: game 3, table 5 (5)

@@ -53,6 +53,22 @@ typedef struct {
 /* Fills *out. Returns 1 when the nation has a row up to the season, 0 when it has none (*out holds only KEEP). */
 int season_nation_state(const char *nation, int season, SeasonNationState *out);
 
+/* The season of the rows that a season of the game reads for a nation. The Republic of Ireland plays calendar seasons
+ * from 2003 when the calendar move is on (moved: season_rules_moved, gap row 2 of 0.7.2), and its rows from 2003/04
+ * hold the real season of the next year ("2005" in row 2004/05), so season S from 2003 reads row S - 1 (open item 258).
+ * Any other nation, and Ireland with the move off, reads row S. */
+int season_nation_row_season(const char *nation, int season, int moved);
+
+/* The match squad record of a fixture of a nation under the state: rec holds bytes +0..+2 (foreign) and +3..+5
+ * (non-EU) of the 42-byte record that the lookup 0x8cf6b0 fills, 0xff for no rule; top is 1 for a fixture of the
+ * nation's first division. A number acts in the first division only, "no limit" in every competition. A state
+ * with a non-EU number and no foreign limit changes the kind of the game's limit in every competition of the
+ * nation: when the record has no non-EU slot set, each set foreign slot moves to its non-EU slot (+0 to +3, +2 to
+ * +5) before the numbers are given. Croatia (issue 135): the filler 0x518620 writes 4 foreign players at +0, and
+ * from 2013/14 the HNS counts only players not of the EU or EEA. The kind adds no limit the game does not have.
+ * Returns 1 when the record changed. */
+int season_nation_squad_record(uint8_t rec[6], const SeasonNationState *st, int top);
+
 /* The nation of the table with that name, or NULL. */
 const SeasonNation *season_nation_find(const char *name);
 

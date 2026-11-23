@@ -4,8 +4,8 @@
 2010	clubs	asia_nations (AFC Asian Cup), row int-continental-108: game 0/4, table 16 (16)
 2010	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-101: game 5, table 51 (51)
 2010	clubs	new_concacaf_gold_cup (2011 CONCACAF Gold Cup), row int-continental-104: game 4, table 12 (12)
+2010	clubs	uefa_cup (UEFA Europa League), row uefa-77: game 160/193, table 194 (194 (161 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
 2010	clubs	world_club_champ (FIFA Club World Cup), row club-world-173: game 0, table 7 (7)
-2010	down	eng_third (Football League Two), row eng-121: game 1 (+0 play-off places), table 2 (2)
 2010	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-115: the game waits for 2012, the table holds it
 2010	idle	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-113: the game waits for 2012, the table holds it
 2010	no_row	friendly (Friendly): no table row
@@ -23,14 +23,15 @@
 2011	clubs	african_nations (Africa Cup of Nations), row int-continental-117: game 0/4, table 16 (16)
 2011	clubs	euro_champ (UEFA European Championship), row int-continental-111: game 0/4, table 16 (16)
 2011	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-112: game 5, table 51 (51)
+2011	clubs	european_cup (UEFA Champions League), row uefa-82: game 75, table 76 (76 (32 in the group stage))
 2011	clubs	goldcup (Copa América), row int-continental-121: game 0/4, table 12 (12)
-2011	clubs	oceania_nations (OFC Nations Cup), row int-continental-120: game 0/3, table 8 (8)
-2011	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-126: game 50, table 52 (52 entrants)
+2011	clubs	oceania_nations (OFC Nations Cup), row int-continental-120: game 0/4, table 8 (8)
+2011	clubs	uefa_cup (UEFA Europa League), row uefa-85: game 159/191, table 194 (194 (161 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
+2011	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-126: game 44, table 52 (52 entrants)
 2011	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-127: game 0, table 20 (20, then 10)
 2011	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-125: game 24, table 30 (30, then 12)
 2011	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-128: game 5, table 11 (11 entrants)
 2011	clubs	world_club_champ (FIFA Club World Cup), row club-world-192: game 0, table 7 (7)
-2011	down	eng_third (Football League Two), row eng-131: game 1 (+0 play-off places), table 2 (2)
 2011	name	new_concacaf_gold_cup (2011 CONCACAF Gold Cup), row int-continental-115: game '2011 CONCACAF Gold Cup', table 'CONCACAF Gold Cup'
 2011	no_row	friendly (Friendly): no table row
 2011	no_row	record_utils ('B' International): no table row

@@ -49,6 +49,7 @@ DEFAULT_DIR = os.environ.get("FIXTURES_DIR", "/Users/max/Projects/cm0102/test-fi
 # the saves of the user folder in name order. With one save, it is the first row.
 LOAD_STEPS = [
     "1000 click 400 300",                   # the intro: a click ends the logos
+    smoke_run.SETTINGS_WAIT,                # the settings screen: the clicks count from it (item 155)
     "8200 click 522 272",                   # settings: Background Changes Off
     "8500 click 662 524",                   # settings: Ok
     "wait setup",
@@ -71,9 +72,16 @@ def run(program, game, mode, user, steps, env_extra, timeout):
     return r, time.time() - start
 
 
+# The data set of the base game (Q152). The option's default is 3.9.60 since 0.6.1 (item 11), so a test that
+# names no data set pins 3.9.68.
+BASE_DATABASE = "3.9.68"
+
+
 def write_settings(user, mode, options):
     with open(os.path.join(user, "settings.txt"), "w") as f:
         f.write(f"display = {mode}\n")
+        if not any(key == "database" for key, _ in options):
+            f.write(f"database = {BASE_DATABASE}\n")
         for key, value in options:
             f.write(f"{key} = {value}\n")
 

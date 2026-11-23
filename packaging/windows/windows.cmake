@@ -21,6 +21,9 @@ target_sources(cm0102_recomp PRIVATE "${CMAKE_BINARY_DIR}/version.rc")
 # The main thread gets the same deep stack as on the Mac.
 target_link_options(cm0102_recomp PRIVATE -static -s "LINKER:--stack,0x10000000")
 target_link_libraries(cm0102_recomp PRIVATE SDL2::SDL2main SDL2::SDL2-static)
+# The sockets of the network game (src/recomp_rt/host/net_win32.c), and the system's root certificates for the
+# secure connection (crypt32).
+target_link_libraries(cm0102_recomp PRIVATE ws2_32 iphlpapi crypt32)
 
 set(CM0102_GAME_DIR "" CACHE PATH "The folder of the clean files that the Windows installer holds")
 find_program(MAKENSIS makensis REQUIRED)
@@ -35,6 +38,7 @@ add_custom_target(windows_installer
         "-DGAME_DIR=${CM0102_GAME_DIR}"
         "-DOUT_FILE=${CMAKE_BINARY_DIR}/${CM0102_SETUP}"
         "-DICON=${CM0102_ICO}"
+        "-DLICENCES=${CMAKE_SOURCE_DIR}/packaging/licences"
         "${CMAKE_CURRENT_LIST_DIR}/installer.nsi"
     DEPENDS cm0102_recomp "${CMAKE_CURRENT_LIST_DIR}/installer.nsi" "${CM0102_ICO}"
     COMMENT "Making ${CM0102_SETUP}"

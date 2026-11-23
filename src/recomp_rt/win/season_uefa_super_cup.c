@@ -16,6 +16,8 @@
  * finds it, the round gets the flags 0x10 and the cup +0x24 its record index. The match date is the row's in
  * every season game. A stadium that the database does not hold by any name gets the national stadium of the nation of the row's
  * city (a fallback, the log names the stadium and the nation). Only when that fails does the original's venue stay.
+ * After the last table row the venue is drawn each year from the venues of the table (season_uefa_super_cup_venue,
+ * 0.6.2 Q28), so the last row's venue is not kept to 2300.
  * The base game and RECOMP_SEASON_CODE=off get the original's round (season_uefa_row gives NULL). */
 #include "win.h"
 #include "season_nl.h"                     /* slice 28: the Finalissima */
@@ -131,12 +133,14 @@ RT_WRAP(0057a3c0, super_cup_round_table)
     const SeasonUefa *r = season_uefa_row((int)year);
     if (!readable(t) || !r || !r->sc_city || r->sc_day <= 0 || rd32(g_mem, t + 0x13) != VENUE_MONACO) return;
     uint32_t venue = VENUE_MONACO;
-    if (strcmp(r->sc_city, "Monaco")) {
-        int id = stadium_of_row(r->sc_stadium);
+    const char *sc_stadium = r->sc_stadium, *sc_city = r->sc_city;
+    season_uefa_super_cup_venue((int)year, &sc_stadium, &sc_city);    /* after the table: a drawn venue (Q28) */
+    if (strcmp(sc_city, "Monaco")) {
+        int id = stadium_of_row(sc_stadium);
         char nation[52] = "";
         int fallback = 0;
         if (id < 0) {
-            id = national_stadium_of_city(r->sc_city, nation, sizeof nation);
+            id = national_stadium_of_city(sc_city, nation, sizeof nation);
             fallback = id >= 0;
         }
         if (id >= 0) {
@@ -144,13 +148,13 @@ RT_WRAP(0057a3c0, super_cup_round_table)
             venue = VENUE_STADIUM;
             wr32(g_mem, cup + 0x24, (uint32_t)id);
             fprintf(stderr, "recomp: uefa: Super Cup %u at %s, %s (stadium %d)\n", year,
-                    fallback ? win_str(table + STADIUM_SIZE * (uint32_t)id + 4) : r->sc_stadium, r->sc_city, id);
+                    fallback ? win_str(table + STADIUM_SIZE * (uint32_t)id + 4) : sc_stadium, sc_city, id);
             if (fallback)
                 fprintf(stderr, "recomp: uefa: Super Cup %u: no stadium %s in the database; the national stadium of %s\n",
-                        year, r->sc_stadium, nation);
+                        year, sc_stadium, nation);
         } else {
             fprintf(stderr, "recomp: uefa: Super Cup %u: no stadium %s in the database; the original's venue\n", year,
-                    r->sc_stadium);
+                    sc_stadium);
         }
     }
     /* Slice 24: no extra time from 2023 (the row's "penalties after 90 minutes"). The original writes the round

@@ -32,6 +32,13 @@ void season_records_league_log(uint32_t league, uint32_t ret);
 /* The squad fill (Q509) at the start of 0x524d70, after slice 15's club moves (season_clubs.c). */
 void season_records_fill(int season);
 
+/* The squad of a club that joins a closed league at a season change: the same fill, from the players with no club of
+ * the running game. Returns the players of the club. */
+int season_records_fill_club(uint32_t club, int season);
+
+/* The players of the last season_records_fill_club who have a contract row. */
+int season_records_joined_contracts(void);
+
 /* The staff reserve rows that the new clubs of this load need (staff_reserve.c): 16 for each new club, for the
  * coaches, scouts, physios and manager that 0x527240 makes. */
 uint32_t season_records_reserve_extra(void);

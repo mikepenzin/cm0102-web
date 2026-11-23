@@ -78,6 +78,7 @@ static uint32_t call_this(uint32_t fn, uint32_t self, int nargs, const uint32_t 
 static int format_of(uint32_t self)
 {
     if (!season_intl_on() || !readable(self) || rd32(g_mem, self) != QUAL_VTABLE) return -1;
+    if (season_intl_old_shape(self)) return ORIGINAL;  /* a campaign of a save of 0.6.1 or older (slice 4b, item 58) */
     int year = (int16_t)rd16(g_mem, self + 0x40u) + 2;
     const SeasonIntlEdition *e = season_intl_edition("euro_champ", year);
     if (!e || e->teams != 24) return ORIGINAL;

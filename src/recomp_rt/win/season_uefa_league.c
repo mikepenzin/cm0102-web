@@ -20,6 +20,7 @@
  * there means (clubs - 1) * meetings (0x689b1d..0x689b36), 35 for 36 clubs. The league phase passes its match
  * count, 8 or 6. */
 #include "win.h"
+#include "season_sizes_arg.h"
 #include "season_records.h"
 #include "season.h"
 #include "season_uefa.h"
@@ -132,9 +133,22 @@ RT_WRAP(006835c0, league_create_fixtures)
         wr32(g_mem, league + 0xea, pending_list);
         pending_stage = pending_list = 0;
     }
+    uint32_t arg = 0;
+    if (!rd32(g_mem, league + 0xea)) {      /* 0.7.2 slice 15: the Argentine Primera's zones and derby round */
+        arg = season_arg_fixtures(league);
+        if (rt_unwinding) return;
+        if (!arg) arg = season_arg_second_zone_fixtures(league);    /* 0.7.3 item 291: two zones in one table */
+        if (rt_unwinding) return;
+        if (arg) wr32(g_mem, league + 0xea, arg);
+    }
     season_fifa_stage_begin(league);        /* O259: a qualifier's FIFA day stays within its stage */
     o_006835c0();
+    season_arg_second_zone_fixtures_end();
     season_fifa_stage_end();
+    /* The original frees the list it plays (0x683aa1) and clears +0xea; one it did not play is a fault (test log). */
+    if (!rt_unwinding && arg && rd32(g_mem, league + 0xea) == arg)
+        fprintf(stderr, "recomp: league sizes: arg_prm fixed list not played (edition %d)\n",
+                (int16_t)rd16(g_mem, league + 0x40));
 }
 
 /* The fixed list of the draw (new[] of the game: the count, then the entries), or 0. */
@@ -186,6 +200,33 @@ uint32_t season_uefa_league_make(uint32_t parent, uint32_t *clubs, int days, int
         if (!readable(clubs[i])) return 0;
     if (!season_uefa_league_sort(clubs, SEASON_LEAGUE_CLUBS)) return 0;
     for (int i = 0; i < SEASON_LEAGUE_CLUBS; i++) nation[i] = (int)rd32(g_mem, clubs[i] + 0x53);
+    /* Decision L8 of the 0.7.3 spec, with changing rules on: the pots follow reputation (+0x80), and the seed order
+     * of 0x586f60 above breaks a tie. A pot that holds too many clubs of one nation has no draw under the nation
+     * rules, so its surplus clubs then change pots. With changing rules off the seed order stays. */
+    if (season_changing_rules()) {
+        int rep[SEASON_LEAGUE_CLUBS], by_rep[SEASON_LEAGUE_CLUBS], pot_order[SEASON_LEAGUE_CLUBS], moved = 0;
+        uint32_t seeded[SEASON_LEAGUE_CLUBS];
+        for (int i = 0; i < SEASON_LEAGUE_CLUBS; i++) rep[i] = (int16_t)rd16(g_mem, clubs[i] + 0x80), seeded[i] = clubs[i];
+        season_league_by_reputation(rep, by_rep);
+        for (int i = 0; i < SEASON_LEAGUE_CLUBS; i++) nation[i] = (int)rd32(g_mem, seeded[by_rep[i]] + 0x53);
+        season_league_pots(days, nation, pot_order);
+        for (int i = 0; i < SEASON_LEAGUE_CLUBS; i++) {
+            clubs[i] = seeded[by_rep[pot_order[i]]];
+            nation[i] = (int)rd32(g_mem, clubs[i] + 0x53);
+            moved += pot_order[i] != i;
+        }
+        if (moved) fprintf(stderr, "recomp: uefa: league phase %u/%02u: %d clubs change pots for the nation rules\n",
+                           year, (year + 1) % 100, moved);
+    }
+    /* The test seam of the pots: entry code (+0x1df), reputation (+0x80) and nation of each club, in pot order. */
+    for (int p = 0, s = days == 8 ? 9 : 6; p < SEASON_LEAGUE_CLUBS / s; p++) {
+        char line[32 * 9] = "";                 /* " code:reputation:nation", the nation a 10-digit address */
+        for (int i = p * s; i < (p + 1) * s; i++)
+            snprintf(line + strlen(line), sizeof line - strlen(line), " %d:%d:%d", g_mem[clubs[i] + 0x1df],
+                     (int16_t)rd16(g_mem, clubs[i] + 0x80), nation[i]);
+        fprintf(stderr, "recomp: uefa: league phase %u/%02u: %d matches, pot %d:%s\n", year, (year + 1) % 100, days,
+                p + 1, line);
+    }
     static SeasonLeagueDraw d;
     if (!season_league_draw(days, nation, game_random, NULL, &d)) {
         if (!rt_unwinding)

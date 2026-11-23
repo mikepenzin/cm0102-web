@@ -15,6 +15,7 @@
  * (0x54a0f2); here -1, the real date. */
 #include "win.h"
 #include "season_uefa.h"
+#include "season_uefa_days.h"
 
 #include <stddef.h>
 
@@ -59,4 +60,39 @@ int season_uefa_ko_dates(uint32_t table, char comp, int season, const int *kinds
         n++;
     }
     return n;
+}
+
+/* Writes day d of month m (1 to 12) of year y at rec + at (s16 day of the year) and rec + at + 2 (the year offset
+ * from season). */
+static int put_date(uint32_t rec, uint32_t at, int season, int y, int m, int d)
+{
+    int doy, yr;
+    if (!readable(rec) || !make_date(d, m - 1, y, &doy, &yr)) return 0;
+    wr16(g_mem, rec + at, (uint16_t)doy);
+    g_mem[rec + at + 2] = (uint8_t)(yr - season);
+    return 1;
+}
+
+int season_uefa_cup_qual_dates(uint32_t q2, uint32_t r1, int season)
+{
+    int y, m, d;
+    season_uefa_cup_q2_day(season, &y, &m, &d);
+    if (!put_date(q2, 3, season, y, m, d)) return 0;
+    season_uefa_cup_r1_draw(season, &y, &m, &d);
+    if (!put_date(r1, 0, season, y, m, d)) return 0;
+    season_uefa_cup_r1_day(season, &y, &m, &d);
+    return put_date(r1, 3, season, y, m, d);
+}
+
+int season_uefa_cup_draw_after(uint32_t r1, uint32_t next, int season)
+{
+    if (!readable(r1) || !readable(next)) return 0;
+    int y, m, d, doy, yr;
+    season_uefa_cup_r1_day(season, &y, &m, &d);
+    season_from_abs_day(season_abs_day(y, m, d) + g_mem[r1 + 0x22], &y, &m, &d);
+    if (!make_date(d, m - 1, y, &doy, &yr)) return 0;
+    int draw_yr = season + (int8_t)g_mem[next + 2], draw_doy = (int16_t)rd16(g_mem, next);
+    if (draw_yr > yr || (draw_yr == yr && draw_doy > doy)) return 0;
+    season_from_abs_day(season_abs_day(y, m, d) + 1, &y, &m, &d);
+    return put_date(next, 0, season, y, m, d);
 }

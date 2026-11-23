@@ -38,7 +38,7 @@ The rules report reads the parent's club count +0x3e, which is 0 for Form K, so 
 
 - Form G, the 32-club edition of 2024/25 (8 groups of 4 and a knockout from the round of 16, with the Libertadores builders, doc section 4). That season plays the original's 12-club form.
 
-- The Club World Championship host comes from `HostCountry::pick_club_world_champ_hosts` 0x5fab70 (random): the host of the table needs the host table that slice 27 owns.
+- The Club World Championship host: the original's `HostCountry::redraw_world_club_and_confed_hosts` 0x5fab70 draws a random nation. From 0.6.2 (open item 125) each knockout and group edition takes the host of its row in `club-world.tsv`: place 11 of the picks and the host row (`real_host` in `season_kind_club_world.c`). A random European host had put Barcelona in the 2023 play-off on 12 December, and the clash check moved its Champions League match of 13 December by a week.
 - Copa Libertadores: 38 clubs from 2005, 47 from 2017 with a calendar to November, a single final from 2019, no away goals from 2022 (`Conmebol_Seeding` 0x4c5fe0, places at 0x4c6168 and 0x4c617a, `assign_libertadores_places` 0x4c6430).
 - CONCACAF: Champions Cup of 8 to 2008 (0x4c11a0), Champions League 2008/09 to 2023, Champions Cup of 27 from 2024; the three Leagues Cup places go to the next MLS clubs in the league table (Q333).
 - Asian Club Championship to AFC Champions League from 2002/03 (entrants 0x40b950), autumn to spring from 2023/24, ACL Elite from 2024/25. Australian clubs: Oceania to 2005, the ACL from 2007. Australia's confederation is slice 27's.

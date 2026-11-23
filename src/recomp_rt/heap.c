@@ -19,7 +19,14 @@
  *   those spans, and a large block that grows by realloc gets half its size again as room, so that it grows in place.
  * Up to the end for small blocks (far past 1024 MB) nothing differs, so every address of a game that 0.5.0's arena
  * could hold stays the same (Q152). RECOMP_HEAP_ARENA_MB (a test switch) makes the arena smaller, so a test game
- * reaches the end early. */
+ * reaches the end early.
+ *
+ * The zone (0.6.1). While rt_heap_zone says so (the player search, playersearch.c), new blocks come from a second
+ * area at RT_ZONE_BASE, below the heap, with its own lists, and a block of the heap that is resized moves there.
+ * A zone block goes back to the zone when it is freed, also after the zone time. So a screen whose content
+ * changes with an option leaves the heap as it found it, apart from the blocks it frees, and the blocks of the game
+ * keep their addresses (Q152). The zone keeps lists like the heap: small blocks per room, large blocks sorted by
+ * address and joined with their free neighbours. */
 #include "rt.h"
 #include "rt_host.h"
 
@@ -382,8 +389,87 @@ static void list_free(uint32_t a)
     }
 }
 
+/* The zone. */
+int (*rt_heap_zone)(void);
+static uint32_t zone_top = RT_ZONE_BASE;
+static uint32_t zone_small[SMALL_CLASSES];
+static Span *zone_large;                        /* free large zone blocks, sorted by address, neighbours joined */
+static uint32_t zone_large_count, zone_large_cap;
+
+static int zone_on(void) { return !rt_heap_bump && rt_heap_zone && rt_heap_zone(); }
+static int in_zone(uint32_t a) { return a >= RT_ZONE_BASE + HDR && a < RT_ZONE_BASE + RT_ZONE_SIZE; }
+uint32_t rt_heap_zone_top(void) { return zone_top; }
+
+static uint32_t zone_alloc(uint32_t size)
+{
+    uint32_t room = ((size ? size : 1) + 15) & ~15u, a = 0;
+    if (room <= SMALL_MAX) {
+        a = zone_small[room / 16];
+        if (a) zone_small[room / 16] = rd32(g_mem, a);
+    } else {
+        uint32_t best = UINT32_MAX;
+        for (uint32_t i = 0; i < zone_large_count; i++)
+            if (zone_large[i].room >= room && (best == UINT32_MAX || zone_large[i].room < zone_large[best].room)) best = i;
+        if (best != UINT32_MAX) {
+            Span *sp = &zone_large[best];
+            a = sp->addr;
+            if (sp->room - room >= HDR + SMALL_MAX + 16) {      /* the rest stays a large free block */
+                sp->addr = a + room + HDR;
+                sp->room -= room + HDR;
+                h_set(sp->addr, 0, sp->room, MAGIC_FREE);
+            } else {
+                room = sp->room;
+                memmove(sp, sp + 1, (zone_large_count - best - 1) * sizeof *sp);
+                zone_large_count--;
+            }
+        }
+    }
+    if (!a) {
+        if ((uint64_t)zone_top + HDR + room > (uint64_t)RT_ZONE_BASE + RT_ZONE_SIZE)
+            rt_fatal("the memory of the player search is full (a block of %u bytes)", size);
+        a = zone_top + HDR;
+        zone_top += HDR + room;
+    }
+    h_set(a, size, room, MAGIC_USED);
+    return a;
+}
+
+static void zone_free(uint32_t a)
+{
+    if (a >= zone_top || h_state(a) != MAGIC_USED) rt_fatal("free of %#x, which is not a block of the zone", a);
+    uint32_t room = h_room(a);
+    h_set(a, 0, room, MAGIC_FREE);
+    if (room <= SMALL_MAX) {
+        wr32(g_mem, a, zone_small[room / 16]);
+        zone_small[room / 16] = a;
+        return;
+    }
+    uint32_t i = 0;
+    while (i < zone_large_count && zone_large[i].addr < a) i++;
+    if (i && zone_large[i - 1].addr + zone_large[i - 1].room + HDR == a) {    /* joins the block before it */
+        i--;
+        zone_large[i].room += HDR + room;
+    } else {
+        if (zone_large_count == zone_large_cap) {
+            zone_large_cap = zone_large_cap ? zone_large_cap * 2 : 64;
+            zone_large = realloc(zone_large, zone_large_cap * sizeof *zone_large);
+            if (!zone_large) rt_fatal("out of host memory (zone)");
+        }
+        memmove(zone_large + i + 1, zone_large + i, (zone_large_count - i) * sizeof *zone_large);
+        zone_large[i] = (Span){a, room};
+        zone_large_count++;
+    }
+    if (i + 1 < zone_large_count && zone_large[i].addr + zone_large[i].room + HDR == zone_large[i + 1].addr) {
+        zone_large[i].room += HDR + zone_large[i + 1].room;              /* and the block after it */
+        memmove(zone_large + i + 1, zone_large + i + 2, (zone_large_count - i - 2) * sizeof *zone_large);
+        zone_large_count--;
+    }
+    h_set(zone_large[i].addr, 0, zone_large[i].room, MAGIC_FREE);
+}
+
 uint32_t rt_alloc(uint32_t size)
 {
+    if (zone_on()) return zone_alloc(size);
     if (!rt_heap_bump) return list_alloc(size, size);
     uint32_t addr = heap_top;
     heap_top += ((size ? size : 1) + 15) & ~15u;
@@ -403,7 +489,8 @@ uint32_t rt_alloc_zero(uint32_t size)
 void rt_free(uint32_t addr)
 {
     if (!addr || rt_heap_bump) return;
-    list_free(addr);
+    if (in_zone(addr)) zone_free(addr);
+    else list_free(addr);
 }
 
 uint32_t rt_block_size(uint32_t addr)
@@ -421,13 +508,28 @@ void rt_set_block_size(uint32_t addr, uint32_t size)
 int rt_is_block(uint32_t addr)
 {
     if (rt_heap_bump) return size_get(addr) || addr == heap_top;
+    if (in_zone(addr)) return addr < zone_top && h_state(addr) == MAGIC_USED;
     return addr >= RT_HEAP_BASE + HDR && addr < heap_top && h_state(addr) == MAGIC_USED;
 }
+
+/* A block of this size or more that grows by realloc gets half its size again as room also before the join (open item
+ * 182). The staff contract array of the game (0x4c79a0) grows by 16000 bytes at a time and reaches 118 MB in 2221. With
+ * small blocks of the game between the copies no old copy joined its neighbours, each stayed as a hole one step too
+ * small for the next request, and the arena (2032 MB) was full of 118 MB holes with 1700 MB free ("heap full" in 2222).
+ * Below this size the blocks and addresses stay as they were (Q152): a game before about 2030 holds no such array. */
+#define GROW_FROM (16u << 20)
 
 uint32_t rt_realloc(uint32_t addr, uint32_t size, int in_place_only)
 {
     if (!addr) return in_place_only ? 0 : rt_alloc(size);
     uint32_t old = rt_block_size(addr);
+    /* A heap block that is resized in the zone time, and a zone block that grows past its room, get a zone block. */
+    if (!rt_heap_bump && !in_place_only && (in_zone(addr) ? size > h_room(addr) : zone_on())) {
+        uint32_t n = zone_alloc(size);
+        memcpy(g_mem + n, g_mem + addr, old < size ? old : size);
+        rt_free(addr);
+        return n;
+    }
     if (rt_heap_bump ? size <= old : size <= h_room(addr)) {
         rt_set_block_size(addr, size);
         return addr;
@@ -435,8 +537,8 @@ uint32_t rt_realloc(uint32_t addr, uint32_t size, int in_place_only)
     if (in_place_only) return 0;
     /* After the limit a large block that grows gets half its size again as room, so that its next growth stays in
      * place: an array that grows by a little at each call otherwise needs a new hole each time. */
-    uint32_t n = rt_heap_bump || !joined || size <= SMALL_MAX || size > 0x40000000u ? rt_alloc(size)
-                                                                                    : list_alloc(size, size + size / 2);
+    uint32_t n = rt_heap_bump || !(joined || size >= GROW_FROM) || size <= SMALL_MAX || size > 0x40000000u
+                     ? rt_alloc(size) : list_alloc(size, size + size / 2);
     memcpy(g_mem + n, g_mem + addr, old < size ? old : size);
     rt_free(addr);
     return n;

@@ -275,6 +275,66 @@ static int make_days(Draw *d, int days, SeasonLeagueDraw *out)
     return 0;
 }
 
+void season_league_by_reputation(const int *reputation, int order[SEASON_LEAGUE_CLUBS])
+{
+    for (int i = 0; i < N; i++) {                           /* an insertion sort: equal clubs keep their order */
+        int j = i;
+        for (; j > 0 && reputation[order[j - 1]] < reputation[i]; j--) order[j] = order[j - 1];
+        order[j] = i;
+    }
+}
+
+/* The clubs of nation x in pot p of size s. */
+static int pot_count(const int *nation, const int *order, int s, int p, int x)
+{
+    int k = 0;
+    for (int i = p * s; i < (p + 1) * s; i++) k += nation[order[i]] == x;
+    return k;
+}
+
+/* The most clubs of nation x that one pot can hold under the nation rules. Own pot: 4 of 9, or 3 of 6. Other pots:
+ * each of the k clubs of x meets 2 clubs of each pot (8 matches), and a club meets at most 2 clubs of x, so a pot
+ * needs k clubs of other nations: k <= 9 - in_pot. With 6 matches each meets 1, so k <= 2 * (6 - in_pot). */
+static int pot_limit(const int *nation, int s, int x)
+{
+    int k = 0;
+    for (int i = 0; i < N; i++) k += nation[i] == x;
+    int limit = s == 9 ? (9 - k < 4 ? 9 - k : 4) : (6 - (k + 1) / 2 < 3 ? 6 - (k + 1) / 2 : 3);
+    return limit < 1 ? 1 : limit;
+}
+
+/* The place of the club that takes the place of a surplus club of nation x from pot p: the nearest pot first, the
+ * later pot before the earlier one, and in that pot the club nearest in seed. -1 when no pot can take it. */
+static int swap_place(const int *nation, const int *order, int s, int p, int x)
+{
+    int pots = N / s, limit = pot_limit(nation, s, x);
+    for (int dist = 1; dist < pots; dist++)
+        for (int dir = 1; dir >= -1; dir -= 2) {
+            int q = p + dir * dist;
+            if (q < 0 || q >= pots || pot_count(nation, order, s, q, x) >= limit) continue;
+            for (int k = 0; k < s; k++) {
+                int j = dir > 0 ? q * s + k : (q + 1) * s - 1 - k, y = nation[order[j]];
+                if (y != x && pot_count(nation, order, s, p, y) < pot_limit(nation, s, y)) return j;
+            }
+        }
+    return -1;
+}
+
+void season_league_pots(int days, const int *nation, int order[SEASON_LEAGUE_CLUBS])
+{
+    int s = days == 8 ? 9 : 6;
+    for (int i = 0; i < N; i++) order[i] = i;
+    for (int p = 0; p < N / s; p++)
+        for (int i = (p + 1) * s - 1; i >= p * s; i--) {    /* the lowest seed of a nation moves first */
+            int x = nation[order[i]];
+            if (pot_count(nation, order, s, p, x) <= pot_limit(nation, s, x)) continue;
+            int j = swap_place(nation, order, s, p, x);
+            if (j < 0) continue;                            /* no place: the draw's last rule decides */
+            int t = order[i];
+            order[i] = order[j], order[j] = t;
+        }
+}
+
 int season_league_draw(int days, const int *nation, SeasonLeagueRandom rnd_fn, void *ctx, SeasonLeagueDraw *out)
 {
     if ((days != 8 && days != 6) || !nation || !rnd_fn || !out) return 0;

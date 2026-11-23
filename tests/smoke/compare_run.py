@@ -4,7 +4,7 @@ Compare players tab of the Team views screen.
 
 Usage:
     python3 tests/smoke/compare_run.py <cm0102_recomp> <game folder> <out folder> [--dir <fixtures folder>]
-        [--mode classic|widescreen]...
+        [--mode classic|widescreen]... [--language n]
 
 One run from start.sav (Arsenal, 14.7.01) for each mode (classic and widescreen when no --mode is given),
 at the same time. The tour:
@@ -15,7 +15,9 @@ at the same time. The tour:
       menu > Compare two chosen players (side bar item 0x434) > the first name box (the profile);
     - Liverpool's Compare tab, then the worst case for space on the comparison screen (WORST): Van Bronckhorst
       against the goalkeeper Arphexad of another club.
-Screen dumps of each step in <out>/<mode>.
+Screen dumps of each step in <out>/<mode>. --language n plays the tour in language n of game.cfg (1 English to
+10 Swedish, as tests/smoke/groups_language_run.py counts them): the goalkeepers come from the position ratings,
+not from the positions text in that language (0.6.1 item 8).
 
 The runtime writes a line for each build of a comparison (RECOMP_VIEWS_LOG=1), and "recomp: comparison
 screen built" for each build of the original's screen:
@@ -51,6 +53,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import fixtures  # noqa: E402
 import smoke_run  # noqa: E402
 import hidden_check  # noqa: E402
+import lng_fit_run  # noqa: E402
+
+LANGUAGE = None                         # --language n: game.cfg in language n
 
 # Positions for 800x600; "| x y" gives the widescreen position where the game does not scale
 # (popups).
@@ -206,8 +211,13 @@ def run(program, game, folder, mode, out):
     os.makedirs(user)
     shutil.copyfile(os.path.join(folder, "start.sav"), os.path.join(user, "start.sav"))
     fixtures.write_settings(user, mode, [])
+    load = fixtures.LOAD_STEPS
+    if LANGUAGE:
+        if not lng_fit_run.language_cfg(program, game, user, LANGUAGE):
+            return 1, "no game.cfg"
+        load = [s for s in load if s not in lng_fit_run.SETTINGS + [smoke_run.SETTINGS_WAIT]]
     tour = TOUR + (HIDDEN_CLASSIC if mode == "classic" else []) + WORST
-    steps = smoke_run.scaled_steps(mode, out, fixtures.LOAD_STEPS) + smoke_run.scaled_steps(mode, out, tour)
+    steps = smoke_run.scaled_steps(mode, out, load) + smoke_run.scaled_steps(mode, out, tour)
     steps.append("20000 quit" if mode == "classic" else "13000 quit")
     r, took = fixtures.run(program, game, mode, user, steps, {"RECOMP_SCREEN_LOG": "1", "RECOMP_VIEWS_LOG": "1",
                                                             "RECOMP_TEXT_CUT_LOG": "1"},
@@ -360,7 +370,12 @@ def check(name, code, log, folder=None):
 
 
 def main(argv):
+    global LANGUAGE
     args = argv[1:]
+    if "--language" in args:
+        i = args.index("--language")
+        LANGUAGE = int(args[i + 1])
+        del args[i:i + 2]
     folder = fixtures.DEFAULT_DIR
     modes = []
     while "--dir" in args or "--mode" in args:

@@ -2,8 +2,10 @@
 #include "../host.h"
 
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <spawn.h>
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #else
@@ -16,6 +18,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 void *host_reserve(size_t size)
@@ -69,6 +72,16 @@ int host_stat(const char *path, HostStat *out)
     out->is_dir = S_ISDIR(st.st_mode);
     out->size = (uint64_t)st.st_size;
     out->mtime = (int64_t)st.st_mtime;
+#ifdef __APPLE__
+    out->mtime_ns = (int64_t)st.st_mtimespec.tv_nsec;
+    out->ctime_ns = (int64_t)st.st_ctimespec.tv_nsec;
+#else
+    out->mtime_ns = (int64_t)st.st_mtim.tv_nsec;
+    out->ctime_ns = (int64_t)st.st_ctim.tv_nsec;
+#endif
+    out->ctime = (int64_t)st.st_ctime;
+    out->dev = (uint64_t)st.st_dev;
+    out->ino = (uint64_t)st.st_ino;
     return 0;
 }
 
@@ -77,6 +90,18 @@ int host_unlink(const char *path) { return unlink(path); }
 int host_rmdir(const char *path) { return rmdir(path); }
 int host_rename(const char *from, const char *to) { return rename(from, to); }
 int host_replace(const char *from, const char *to) { return rename(from, to); }
+int host_rename_new(const char *from, const char *to)
+{
+#ifdef __EMSCRIPTEN__
+    /* The browser's file system (MEMFS, IDBFS) has no hard links: the same test, then a rename. The page runs the
+     * game on one thread, so nothing comes between the two. */
+    if (access(to, F_OK) == 0) { errno = EEXIST; return -1; }
+    return rename(from, to);
+#else
+    if (link(from, to)) return -1;                /* fails with EEXIST: the file there is never replaced */
+    return unlink(from);
+#endif
+}
 int host_sync(FILE *f)
 {
 #ifdef __EMSCRIPTEN__
@@ -290,5 +315,80 @@ int host_pick_folder(const char *title, char *out, size_t room)
     while (n > 1 && line[n - 1] == '/') line[--n] = 0;
     if (!n || n >= room) return 0;
     memcpy(out, line, n + 1);
+    return 1;
+}
+
+/* Open folder: "open <folder>" on a Mac, "xdg-open <folder>" on Linux, started with posix_spawn and its own
+ * argument list, so a path with spaces or quotes needs no shell. The program is looked up on PATH first, so a
+ * computer without it gives 0: posix_spawnp does not report a program it cannot run on every system (glibc in the
+ * amd64 container of the Linux tests starts a child that exits with 127). The program is not waited for: xdg-open may run as long as the file manager. Each call collects the programs of
+ * earlier calls that have ended. In an AppImage, the AppImage's own library folder leaves LD_LIBRARY_PATH (AppRun
+ * puts it first), so the file manager uses the libraries of the system. */
+extern char **environ;
+
+static char **open_folder_env(void)
+{
+    const char *appdir = getenv("APPDIR"), *paths = getenv("LD_LIBRARY_PATH");
+    if (!appdir || !*appdir || !paths) return environ;
+    static char line[4096];
+    size_t al = strlen(appdir), len = (size_t)snprintf(line, sizeof line, "LD_LIBRARY_PATH=");
+    for (const char *p = paths; *p;) {
+        size_t n = strcspn(p, ":");
+        if (n && strncmp(p, appdir, al) && len + n + 2 < sizeof line) {
+            if (line[len - 1] != '=') line[len++] = ':';
+            memcpy(line + len, p, n);
+            len += n;
+            line[len] = 0;
+        }
+        p += n + (p[n] == ':');
+    }
+    static char *env[1024];
+    size_t k = 0;
+    for (char **e = environ; *e && k + 2 < sizeof env / sizeof *env; e++)
+        if (strncmp(*e, "LD_LIBRARY_PATH=", 16)) env[k++] = *e;
+    env[k++] = line;
+    env[k] = NULL;
+    return env;
+}
+
+/* The path of a program that can run: name itself when it has a "/", else the first match on PATH. 0 when none. */
+static int find_program(const char *name, char *out, size_t room)
+{
+    if (strchr(name, '/')) {
+        snprintf(out, room, "%s", name);
+        return !access(out, X_OK);
+    }
+    const char *paths = getenv("PATH");
+    for (const char *p = paths ? paths : "/usr/bin:/bin"; *p;) {
+        size_t n = strcspn(p, ":");
+        if (n && (size_t)snprintf(out, room, "%.*s/%s", (int)n, p, name) < room && !access(out, X_OK)) return 1;
+        p += n + (p[n] == ':');
+    }
+    return 0;
+}
+
+int host_open_folder(const char *path)
+{
+    static pid_t started[16];
+    for (int i = 0; i < 16; i++)
+        if (started[i] > 0 && waitpid(started[i], NULL, WNOHANG) != 0) started[i] = 0;
+    struct stat st;
+    if (stat(path, &st) || !S_ISDIR(st.st_mode)) return 0;
+    const char *program = getenv("RECOMP_OPEN_FOLDER_PROGRAM");
+#ifdef __APPLE__
+    if (!program || !*program) program = "open";
+#else
+    if (!program || !*program) program = "xdg-open";
+#endif
+    char full[PATH_MAX];
+    if (!find_program(program, full, sizeof full)) return 0;
+    char *argv[3] = {(char *)program, (char *)path, NULL};
+    pid_t pid;
+    if (posix_spawn(&pid, full, NULL, NULL, argv, open_folder_env())) return 0;
+    for (int i = 0; i < 16; i++)
+        if (started[i] <= 0) {
+            started[i] = pid;
+            break;
+        }
     return 1;
 }

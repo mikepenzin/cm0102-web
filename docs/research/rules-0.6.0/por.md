@@ -18,6 +18,12 @@ Date 2026-10-16. Research only. Files: `por.tsv` (243 rows), `por-clubs.tsv` (2,
 - Press: noticiasaominuto.com, 8 June 2020 (5 substitutes and bench 7 to 9 from round 26 of 2019/20); observador.pt, 15 May 2023 (bench 9 and 5 substitutes made permanent); abola.pt, 20 May 2026, and dnoticias.pt, 12 August 2026 (bench 12 from 2026/27, 22 under-23 players in the squad); record.pt, 4 December 2014 (8 locally trained players, 27 senior contracts); record.pt, 2 January 2019 (Taça da Liga: 2 locally trained starters); dnoticias.pt, 9 July 2024 (end of the "manifestação de interesse" route, windows of 12 and 4 weeks).
 - A comparative study of foreign player quotas, updated 30 May 2008 (rdes.it): "No quota for non EU-players" for Portugal. A sports law guide, 2026 (chambers.com): no nationality quotas in Portugal, non-EU players need a residence visa.
 
+## Non-EU players (GitHub issue 121, 11 November 2026)
+
+- 2001/02 to 2005/06, Liga: at most 6 non-EU players registered and at most 4 on the 18-man match sheet (TSF and Público, April 2001; Record, 2001 to 2005; O Jogo and A Bola, 2003 to 2005; Jornal da Madeira, 2005). The FPF voted on 16 December 2000 to cut the limits and revoked the cut on 28 April 2001. The registered limit in 2003/04 has one secondary source. Cotonou did not apply: PALOP players still counted as non-EU. Brazilians did not count only with the individual equality status.
+- 2006/07 on: no limit in the Liga and the Liga de Honra. The Liga general assembly of 30 June 2006 ended the foreign player status and its registration limit (Maisfutebol, Record, 30 June 2006; Correio da Manhã, 1 July 2006). The 2008 rdes.it study and the Liga regulations of 2013/14, 2024/25, 2025/26 and 2026/27 have no nationality limit.
+- The game: a signing limit of 6, 5 and 4 by division (PORTUGAL_RULES::can_sign_player 0x7d3ef0, can_make_offer 0x7d4040) and a match limit of 4, 3 in the Second Division B (0x7d43c0). They match the Liga of 2001/02 to 2005/06.
+
 ## Change points found
 
 | Season | Change |
@@ -103,7 +109,7 @@ The database count per real division also matters. Example: the real third tier 
 
 - Bench size in Liga competitions before 2019/20 (7 in 2019/20 before June 2020; start of 7 not found).
 - Bench size and the start of 5 substitutes in FPF competitions (lower leagues, Taça de Portugal, Supertaça).
-- Foreign player rules 2001/02 to 2006/07. The original uses 4/4/3 non-EU by division. No source for those seasons was found.
+- Non-EU limits of the Liga de Honra in 2001/02 to 2005/06 (5 registered and 4 usable in 2000/01). The Liga limits are known (issue 121, below).
 - Start season of the 8 locally trained players rule (found in force in 2014/15). Squad registration in other seasons.
 - Work permit rules before 2024.
 - Exact transfer window dates per season; transfer windows in 2001/02.
@@ -114,7 +120,7 @@ The database count per real division also matters. Example: the real third tier 
 
 - 5 substitutes and bench 9 in 2020/21 to 2022/23 (the 2023 assembly made a temporary rule permanent).
 - Liga rules on substitutes and bench apply to the second tier and the Taça da Liga, not only the Primeira Liga.
-- No non-EU quota from 2008/09 to 2025/26 (none in 2008, none in 2026).
+- No non-EU quota from 2014/15 to 2023/24: the Liga regulations of those seasons were not read; those of 2013/14 and 2024/25 have none.
 - Lower-tier promotion and relegation counts read from table colours where the text gives none.
 - 2027/28 rows copy 2026/27.
 

@@ -43,3 +43,5 @@ uefa_cup	30	2024	long,plural	Knockout Phase Play-offs	https://kassiesa.net/uefa/
 uefa_cup	30	2024	abbreviated	KO Play-offs	the long name in the original's short words; source of the name as the row above
 new_conference_league	30	2024	long,plural	Knockout Phase Play-offs	https://kassiesa.net/uefa/files/2024-25-uefa-co-rules.pdf ("knockout phase play-offs", Article 13.02); docs/research/2026-10-18-uefa-access-and-round-names.md (slice 25, Task B); slice 25
 new_conference_league	30	2024	abbreviated	KO Play-offs	the long name in the original's short words; source of the name as the row above
+arg_prm	20	2024	long,plural	Round of 16	LPF reglamento 2025 and 2026 ("octavos de final"); en Wikipedia 2025 and 2026 Argentine Primera Division (section "Final stage"), read 2026-11-15
+arg_prm	20	2024	abbreviated	Rnd of 16	the long name in the original's short words ("2nd Rnd", 0x4b7a84 on); source of the name as the row above

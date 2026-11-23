@@ -109,6 +109,12 @@ int season_uefa_dropped(const SeasonUefa *r, int el_code);
  * enter it. out has SEASON_UEFA_CODE_SLOTS entries. Out[code], 0 for codes the row does not play. */
 void season_uefa_new_clubs(const SeasonUefa *r, char comp, int *out);
 
+/* Open item 94 (season_uefa_qual.c): the layout of comp ('c', 'e' or 'k') from the clubs' ids and entry codes,
+ * as the set-up of the cups will make it. Returns 0 when it makes rounds. Returns 1 with code the entry code of the
+ * lowest round whose path holds an odd number of clubs, or the group code when the group stage would have short_by
+ * clubs fewer than the row (below 0: more). Returns -1 when no layout can be made for another cause. */
+int season_uefa_balance_probe(const SeasonUefa *r, char comp, int *code, int *short_by);
+
 /* The access list by association rank (slice 23, Q369: from 2009/10; the original's brackets before). */
 typedef struct {
     int season;
@@ -135,6 +141,15 @@ const char *season_uefa_access_places(int season, char comp, int rank);
 /* The places of a rule row ('h', 'H', 'X', 'f') in season S, or NULL. */
 const char *season_uefa_access_rule(int season, char comp);
 
+/* Open item 70: the most Champions League clubs of one association in season S (Art. 3 of the regulations).
+ * - 4 to 2014/15. A title holder from outside the league places took the place of the fourth club (Tottenham
+ *   Hotspur in 2012/13).
+ * - 5 from 2015/16. The same swap applies when both title holders are from one association and outside its
+ *   league places.
+ * - 7 from 2024/25: four league places, the European Performance Spot and the two title holders. This is an
+ *   inference from the format of 2024/25, not read in the regulations text. */
+int season_uefa_cl_cap(int season);
+
 /* 1 when the last Europa League place of the nation named name ("England") goes to its league cup winner in S. */
 int season_uefa_access_league_cup(int season, const char *name);
 
@@ -150,6 +165,12 @@ const SeasonUefa *season_uefa_table_row(int season);
 /* The row of season S for the game that runs, or NULL: the original's formats (see above). */
 const SeasonUefa *season_uefa_row(int season);
 
+/* Issue 119: the outcome that a UEFA Cup (or Conference League) with stages passes on for a result. stage is the
+ * byte +0x44 of the object that played the round (-1 the cup's own round table, else the knockout stage),
+ * outcome the status of the club (1 won the last round of its table, 2 lost it, 0 through to the next round, -1
+ * out). With stages the cup's own round table ends before the group stage, so its winners go on: 0, not 1. */
+int season_uefa_cup_outcome(int stage, int outcome);
+
 /* The clubs of a named round of a row's Champions League or UEFA Cup, 0 when the row has no such round. */
 int season_uefa_cl_round(const SeasonUefa *r, const char *name);
 int season_uefa_uc_round(const SeasonUefa *r, const char *name);
@@ -164,6 +185,11 @@ int season_uefa_ecl_level(const SeasonUefa *r, const char *name);
 
 /* 1 when the clubs of the nation named name have no UEFA places in row r (a suspension). */
 int season_uefa_suspended(const SeasonUefa *r, const char *name);
+
+/* The UEFA Super Cup venue of year Y for the game that runs: 1 with *stadium and *city set, 0 for the base game.
+ * To the last table row, the row's venue. After it, with changing rules on, a venue drawn each year from the
+ * venues of the table, never the one of the year before (Q28). */
+int season_uefa_super_cup_venue(int year, const char **stadium, const char **city);
 
 /* 1 when the Champions League of row r has one group stage and a knockout round of 16 (2003/04 on). */
 int season_uefa_cl_round_of_16(const SeasonUefa *r);
@@ -230,5 +256,20 @@ int season_uefa_ko_dates_log(char comp, int season);
  * of a knockout round table from the rows of comp and season (kinds[r] its round kind). A round with no row keeps
  * its dates. Returns the count of rounds it dated. */
 int season_uefa_ko_dates(uint32_t table, char comp, int season, const int *kinds, int rounds);
+
+/* season_uefa_dates.c, the game only: the dates of season_uefa_days.h in the Q2 record q2 (its first leg) and the
+ * R1 record r1 (its draw and first leg) of a UEFA Cup with groups. The Q2 draw and the days to each second leg
+ * stay. 1 when it wrote them. */
+int season_uefa_cup_qual_dates(uint32_t q2, uint32_t r1, int season);
+
+/* season_uefa_dates.c, the game only (item 298): the draw of record next a day after the second leg of record r1
+ * (its first leg + its days to the second leg, +0x22) when the draw is not later than that leg. 1 when it moved it. */
+int season_uefa_cup_draw_after(uint32_t r1, uint32_t next, int season);
+
+/* The winner of the nation's domestic cup in the history, or 0 (season_uefa_seeding.c). */
+uint32_t season_uefa_cup_winner(uint32_t nation);
+
+/* 1 when this season's final of the nation's domestic cup is played. */
+int season_uefa_cup_final_played(uint32_t nation);
 
 #endif

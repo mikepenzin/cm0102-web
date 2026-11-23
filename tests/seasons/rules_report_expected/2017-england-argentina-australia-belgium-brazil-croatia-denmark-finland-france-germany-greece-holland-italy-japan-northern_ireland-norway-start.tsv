@@ -24,10 +24,23 @@
 2017	bench	ita_super (Supercoppa Italiana), row ita-287: game 9, table 12 (12)
 2017	bench	world_club_champ (FIFA Club World Cup), row club-world-306: game 7, table 12 (12)
 2017	bench	world_cup (FIFA World Cup), row int-world-194: game 7, table 12 (12)
+2017	club_list	Argentine Premier Division: 20 of 28 listed clubs that the database holds (28 listed), 0 other clubs, 20 in all; not in it: Belgrano de Córdoba, Chacarita Juniors, Huracán, Olimpo de Bahía Blanca, Rosario Central, San Martín de San Juan, Temperley, Vélez Sarsfield; others: -
+2017	club_list	Brazilian National Third Division: 19 of 19 listed clubs that the database holds (20 listed), 37 other clubs, 56 in all; not in it: -; others: AER Auritânia Foz do Iguaçu, Associação Atlética Aparecidense, Associação Atlética Caldense, Associação Atlética Coruripe, Bangu Atlético Clube, Campinense Clube, Central Sport Club, Clube Atlético Metropolitano, Clube Recreativo e Atlético Catalano, Colo-Colo de Futebol e Regatas, Duque de Caxias Futebol Clube, EC Internacional, Esporte Clube Comercial, Esporte Clube Cruzeiro, Esporte Clube Novo Hamburgo, Esporte Clube XV de Novembro, Estanciano Esporte Clube, Goianésia Esporte Clube, Grêmio Osasco Audax, Guarani de Juazeiro, Ituano Futebol Clube, Mirassol Futebol Clube, Moto Club de São Luís, Nacional Futebol Clube (AM), Náutico Futebol Clube, Operário Futebol Club Ltda., Palmas Futebol e Regatas, Paulista Futebol Clube, SER Caxias do Sul, Serrano Sport Club, Sociedade Esportiva do Gama, Sociedade Imperatriz de Desportos, Treze Futebol Clube, União Recreativa dos Trabalhadores, Veranópolis Esporte Clube Recreativo e Cultural, Vilhena Esporte Clube, Villa Nova Atlético Clube
+2017	club_list	Croatian First Division: 10 of 10 listed clubs that the database holds (10 listed), 6 other clubs, 16 in all; not in it: -; others: NK Grobnican Cavle, NK Imotski, NK Val Kastel Stari, NK Zadar, NK Zagreb, RNK Split
+2017	club_list	Croatian Second Division North: 10 of 10 listed clubs that the database holds (12 listed), 6 other clubs, 16 in all; not in it: -; others: NK Cakovec, NK HASK Zagreb, NK Junak Sinj, NK Mladost Zdralovi, NK Mosor Zrnovnica, NK Primorac 1929 Stobrec
+2017	club_list	Danish First Division: 12 of 12 listed clubs that the database holds (12 listed), 4 other clubs, 16 in all; not in it: -; others: AB Gladsaxe, FC Helsingør, Fredensborg BI, Hobro IK
+2017	club_list	Danish Second Division: 16 of 24 listed clubs that the database holds (24 listed), 0 other clubs, 16 in all; not in it: AB Gladsaxe, Hellerup IK, Hillerød Fodbold, IF Lyseng, Jammerbugt FC, Middelfart G&BK, Ringkøbing IF, Skovshoved IF; others: -
+2017	club_list	Greek National A Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: GS Apollon Smyrnis, PAS Lamia 1964; others: -
+2017	club_list	Greek National B Division: 14 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 14 in all; not in it: AO Neos  Acharnaikos, GAS Eginiakos, GS Ergotelis, Kallithea; others: -
+2017	club_list	Italian Serie A: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Benevento, Hellas Verona; others: -
+2017	club_list	Italian Serie B: 20 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 20 in all; not in it: Cremonese, Foggia; others: -
+2017	club_list	Japanese J-League 1: 16 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 16 in all; not in it: Nagoya Grampus, V-Varen Nagasaki; others: -
+2017	club_list	Japanese J-League 2: 12 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 12 in all; not in it: Albirex Niigata, Ehime FC, FC Gifu, Kamatamare Sanuki, Mito HollyHock, Renofa Yamaguchi, Roasso Kumamoto, Tochigi SC, Ventforet Kofu, Zweigen Kanazawa; others: -
+2017	club_list	Northern Irish League First Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Limavady United, Lurgan Celtic; others: -
+2017	club_list	Northern Irish League Premier Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Carrick Rangers, Warrenpoint Town; others: -
+2017	club_list	Norwegian Premier Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: IK Start, Sandefjord Fotball; others: -
 2017	clubs	arg_prm (Superliga Argentina), row arg-usa-17: game 20, table 28 (28)
 2017	clubs	asia_club_champ (AFC Champions League), row club-world-317: game 16, table 32 (32)
-2017	clubs	bel_first (Belgian First Division A), row hol-bel-216: game 18, table 16 (16)
-2017	clubs	bel_second (Belgian First Division B), row hol-bel-217: game 18, table 8 (8)
 2017	clubs	bra_cup (Copa do Brasil), row bra-152: game 71, table 91 (91)
 2017	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-98: game 7, table 20 (20)
 2017	clubs	bra_reg_gaucho (Campeonato Gaúcho), row bra-557: game 17, table 12 (12)
@@ -38,14 +51,10 @@
 2017	clubs	conmebol_liber (Copa Libertadores), row club-world-308: game 4, table 47 (47)
 2017	clubs	cro_a1 (Prva HNL), row gre-pol-cro-341: game 16, table 10 (10)
 2017	clubs	cro_a2a (Druga HNL), row gre-pol-cro-368: game 16, table 12 (12)
-2017	clubs	den_first (Danish 1st Division), row den-swe-99: game 16, table 12 (12)
-2017	clubs	den_prm (Danish Superliga), row den-swe-98: game 12, table 14 (14)
 2017	clubs	den_second (Danish 2nd Divisions), row den-swe-100: game 16, table 24 (24)
-2017	clubs	fra_third (Championnat National), row fra-148: game 20, table 17 (17)
 2017	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-17: game 4, table 33 (33)
 2017	clubs	gre_prm (Super League Greece), row gre-pol-cro-44: game 14, table 16 (16)
 2017	clubs	gre_second (Football League), row gre-pol-cro-71: game 14, table 18 (18)
-2017	clubs	hol_first (Eerste Divisie), row hol-bel-211: game 18, table 20 (20)
 2017	clubs	ita_c1_super (Supercoppa Serie C), row ita-288: game 2, table 3 (3)
 2017	clubs	ita_c_cup (Coppa Italia Serie C), row ita-286: game 3, table 57 (57)
 2017	clubs	ita_cup (Coppa Italia), row ita-285: game 4, table 78 (78)
@@ -63,7 +72,7 @@
 2017	clubs	nir_prm (NIFL Premiership), row wal-nir-irl-410: game 10, table 12 (12)
 2017	clubs	nor_prm (Eliteserien), row nor-fin-162: game 14, table 16 (16)
 2017	clubs	uefa_cup (UEFA Europa League), row uefa-133: game 157, table 190 (190 (157 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
-2017	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-198: game 50, table 20 (20)
+2017	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-198: game 48, table 20 (20)
 2017	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-199: game 4, table 12 (12)
 2017	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-197: game 24, table 6 (6)
 2017	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-195: game 0, table 54 (54 entrants)
@@ -72,15 +81,12 @@
 2017	clubs	world_cup (FIFA World Cup), row int-world-194: game 0, table 32 (32)
 2017	down	arg_prm (Superliga Argentina), row arg-usa-17: game 0 (+0 play-off places), table 4 (4 (worst average over four seasons))
 2017	down	arg_second (Primera B Nacional), row arg-usa-44: game 0 (+0 play-off places), table 6 (6)
-2017	down	bel_first (Belgian First Division A), row hol-bel-216: game 2 (+0 play-off places), table 1 (1 (16th))
 2017	down	bel_second (Belgian First Division B), row hol-bel-217: game 2 (+1 play-off places), table 1 (1 after a relegation play-off of the bottom four)
 2017	down	bra_nat_third (Campeonato Brasileiro Série C), row bra-98: game 2 (+0 play-off places), table 4 (4)
 2017	down	cro_a1 (Prva HNL), row gre-pol-cro-341: game 2 (+0 play-off places), table 1 (1 (10th))
 2017	down	cro_a2a (Druga HNL), row gre-pol-cro-368: game 2 (+0 play-off places), table 1 (1 (12th))
 2017	down	cro_a2b (Druga HNL South), row gre-pol-cro-395: game 2 (+0 play-off places), table na (n/a)
 2017	down	den_first (Danish 1st Division), row den-swe-99: game 3 (+0 play-off places), table 2 (2)
-2017	down	eng_third (EFL League Two), row eng-191: game 1 (+0 play-off places), table 2 (2)
-2017	down	fra_second (Ligue 2), row fra-147: game 3 (+0 play-off places), table 2 (2)
 2017	down	fra_third (Championnat National), row fra-148: game 4 (+0 play-off places), table 3 (3)
 2017	down	ger_second (2. Bundesliga), row ger-210: game 4 (+0 play-off places), table 2 (2)
 2017	down	gre_second (Football League), row gre-pol-cro-71: game 2 (+0 play-off places), table 6 (6 (bottom six))
@@ -88,6 +94,14 @@
 2017	down	jap_j2 (J2 League), row aus-jap-kor-233: game 0 (+0 play-off places), table 2 (2)
 2017	down	nir_first (NIFL Championship), row wal-nir-irl-411: game 0 (+0 play-off places), table 1 (1 (pos 12))
 2017	down	nor_first (OBOS-ligaen), row nor-fin-163: game 4 (+0 play-off places), table 2 (15th-16th (2))
+2017	meetings	bra_nat_first (Campeonato Brasileiro Série A), row bra-44: game 1, table 2
+2017	meetings	bra_nat_second (Campeonato Brasileiro Série B), row bra-71: game 1, table 2
+2017	meetings	cro_a1 (Prva HNL), row gre-pol-cro-341: game 2, table 4
+2017	meetings	cro_a2a (Druga HNL), row gre-pol-cro-368: game 2, table 3
+2017	meetings	den_first (Danish 1st Division), row den-swe-99: game 2, table 3
+2017	meetings	jap_j2 (J2 League), row aus-jap-kor-233: game 4, table 2
+2017	meetings	nir_first (NIFL Championship), row wal-nir-irl-411: game 4, table 2
+2017	meetings	nir_prm (NIFL Premiership), row wal-nir-irl-410: game 4, table 3
 2017	no_row	friendly (Friendly): no table row
 2017	no_row	record_utils ('B' International): no table row
 2017	no_row	record_utils (Reserve): no table row
@@ -134,6 +148,21 @@
 2017	playoffs	jap_j2 (J2 League), row aus-jap-kor-233: game 0 up and 0 down play-off places, table 4 and 0 ('3rd to 6th play-off; winner plays J1 16th in one match (J1 entry play-off)')
 2017	playoffs	nir_first (NIFL Championship), row wal-nir-irl-411: game 1 up and 0 down play-off places, table 2 and 1 ('pos 2,3: promotion play-off; pos 11: relegation play-off')
 2017	playoffs	nor_first (OBOS-ligaen), row nor-fin-163: game 1 up and 0 down play-off places, table 4 and 1 ('3rd-6th single-leg knockout; winner v top-flight 14th, two legs. 14th v 2. divis')
+2017	rounds	arg_prm (Superliga Argentina), row arg-usa-17: game 19, table 27 (1 meetings, zones -, extra 0)
+2017	rounds	bra_nat_first (Campeonato Brasileiro Série A), row bra-44: game 19, table 38 (2 meetings, zones -, extra 0)
+2017	rounds	bra_nat_second (Campeonato Brasileiro Série B), row bra-71: game 19, table 38 (2 meetings, zones -, extra 0)
+2017	rounds	cro_a1 (Prva HNL), row gre-pol-cro-341: game 30, table 36 (4 meetings, zones -, extra 0)
+2017	rounds	cro_a2a (Druga HNL), row gre-pol-cro-368: game 30, table 33 (3 meetings, zones -, extra 0)
+2017	rounds	den_first (Danish 1st Division), row den-swe-99: game 30, table 33 (3 meetings, zones -, extra 0)
+2017	rounds	gre_prm (Super League Greece), row gre-pol-cro-44: game 26, table 30 (2 meetings, zones -, extra 0)
+2017	rounds	gre_second (Football League), row gre-pol-cro-71: game 26, table 34 (2 meetings, zones -, extra 0)
+2017	rounds	ita_ser_a (Serie A), row ita-274: game 34, table 38 (2 meetings, zones -, extra 0)
+2017	rounds	ita_ser_b (Serie B), row ita-275: game 38, table 42 (2 meetings, zones -, extra 0)
+2017	rounds	jap_j1 (J1 League), row aus-jap-kor-206: game 30, table 34 (2 meetings, zones -, extra 0)
+2017	rounds	jap_j2 (J2 League), row aus-jap-kor-233: game 44, table 42 (2 meetings, zones -, extra 0)
+2017	rounds	nir_first (NIFL Championship), row wal-nir-irl-411: game 36, table 22 (2 meetings, zones -, extra 0)
+2017	rounds	nir_prm (NIFL Premiership), row wal-nir-irl-410: game 36, table 33 (3 meetings, zones -, extra 0)
+2017	rounds	nor_prm (Eliteserien), row nor-fin-162: game 26, table 30 (2 meetings, zones -, extra 0)
 2017	subs_used	ita_c1_super (Supercoppa Serie C), row ita-288: game 3, table 5 (5)
 2017	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-529: game 3, table 7 (7)
 2017	up	arg_second (Primera B Nacional), row arg-usa-44: game 1 (+0 play-off places), table 2 (2 (champion; Torneo Reducido winner))
@@ -144,5 +173,4 @@
 2017	up	cro_a2a (Druga HNL), row gre-pol-cro-368: game 0 (+0 play-off places), table 1 (1 (1st))
 2017	up	den_second (Danish 2nd Divisions), row den-swe-100: game 3 (+0 play-off places), table 2 (2)
 2017	up	fin_first (Ykkönen), row nor-fin-168: game 2 (+0 play-off places), table 1 (1st (1))
-2017	up	fra_third (Championnat National), row fra-148: game 3 (+0 play-off places), table 2 (2)
 2017	up	gre_cup (Greek Football Cup), row gre-pol-cro-17: game 2 (+0 play-off places), table na (n/a)

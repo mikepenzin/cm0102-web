@@ -27,6 +27,24 @@ int main(int argc, char **argv)
         fprintf(stderr, "cannot read %s\n", argv[1]);
         return 2;
     }
+    /* Gap row 2 (0.7.2): while the Irish calendar move is on (season_rules_set_moved, set by the game when the move
+     * can happen), the League of Ireland Cup plays calendar years from 2003. Its rows hold the real season of each
+     * edition: 2002/03 "2002–03 and 2003" (not held in 2002-03), then calendar rows ("2004" in 2003/04, "2020" in
+     * 2019/20, "2021" in 2020/21, not held from then). Edition 2003 has no row of its own and takes row 2003/04 (held,
+     * as in 2003); edition 2020 takes row 2019/20, whose real season begins with 2020. The Leinster Cup's rows of
+     * 2003/04 to 2009/10 hold calendar years ("2004" to "2010"), so edition 2009 takes row 2008/09 ("2009", not held)
+     * and the cup comes back in 2010 (row 2009/10, "2010"). Off (a winter Ireland), every cup keeps row Y. */
+    season_rules_set_moved(1);
+    CHECK(season_cups_held("ire_lge_cup", 2002) == 0, "the League of Ireland Cup is not held in 2002-03");
+    CHECK(season_cups_held("ire_lge_cup", 2003) == 1, "the League of Ireland Cup is held in 2003");
+    CHECK(season_cups_held("ire_lge_cup", 2020) == 1, "the League of Ireland Cup 2020 takes row 2019/20 (held)");
+    CHECK(season_cups_held("ire_lge_cup", 2021) == 0, "the League of Ireland Cup 2021 takes row 2020/21 (not held)");
+    CHECK(season_cups_held("ire_chal_cup", 2003) == 1 && season_cups_held("ire_chal_cup", 2004) == 1,
+          "the FAI Cup is held in 2003 and 2004");
+    CHECK(season_cups_next("ire_leinster_cup", 2002) == 2010, "the next Leinster Cup from 2002 in calendar years is "
+          "2010, got %d", season_cups_next("ire_leinster_cup", 2002));
+    season_rules_set_moved(0);
+    CHECK(season_cups_held("ire_lge_cup", 2020) == 0, "a winter Ireland: the League Cup 2020 takes row 2020/21");
     /* Split-season cups: the edition of year Y is the row of season Y. */
     CHECK(season_cups_calendar("fra_lge_cup") == 0, "the Coupe de la Ligue is a split-season cup");
     CHECK(season_cups_held("fra_lge_cup", 2019) == 1, "the Coupe de la Ligue is held in 2019/20");
@@ -58,7 +76,15 @@ int main(int argc, char **argv)
           "the Korean League Cup never comes back after 2011");
     CHECK(season_cups_next("kor_super_cup", 2007) == 2026, "the next K League Super Cup from 2007 is 2026, got %d",
           season_cups_next("kor_super_cup", 2007));
-    CHECK(season_cups_next("jap_emp_cup", 2026) == 2027, "the next Emperor's Cup from 2026 is 2027");
+    /* Open item 97: edition 2026 is the 106th Emperor's Cup, 19 August 2026 to the final on 1 January 2027 (row of
+     * 2025/26, real season 2026). The game's edition E has its final on 1 January E + 1. */
+    CHECK(season_cups_held("jap_emp_cup", 2026) == 1 && season_cups_next("jap_emp_cup", 2026) == 2026,
+          "the Emperor's Cup is held in 2026 (the 106th edition), got held %d, next %d",
+          season_cups_held("jap_emp_cup", 2026), season_cups_next("jap_emp_cup", 2026));
+    CHECK(season_cups_held("jap_emp_cup", 2027) == 1, "the Emperor's Cup is held in 2027 (the 107th edition)");
+    CHECK(season_cups_held("jap_j_cup", 2026) == 1 && season_cups_held("jap_j_cup", 2027) == 1,
+          "the J.League Cup is held in 2026 (the 34th edition, from 2 September 2026) and 2027, got %d and %d",
+          season_cups_held("jap_j_cup", 2026), season_cups_held("jap_j_cup", 2027));
     CHECK(season_cups_held("jap_emp_cup", 2025) == 1, "the Emperor's Cup is held in 2025");
     /* A cup that the table always holds, and a file with no row. */
     CHECK(season_cups_next("eng_fa_cup", 2010) == 2010, "the FA Cup is held in 2010");

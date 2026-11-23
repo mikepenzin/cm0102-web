@@ -101,6 +101,27 @@ int main(void)
     CHECK(!strcmp(groups_hidden_name(CELL_CONSISTENCY), "Consistency"));
     CHECK(groups_hidden_name(ATTR_HANDLING) == NULL && groups_hidden_name(CELL_HEAD_GOALKEEPING) == NULL);
 
+    /* 5. A goalkeeper from the position ratings (+0x0f to +0x15), as the positions text 0x53ee50 puts the
+     * goalkeeper first. The old test read "GK" from that text, which is English only (0.6.1 item 8). */
+    static const struct { signed char r[GROUP_RATINGS]; int keeper; } cases[] = {
+        {{20, 1, 1, 1, 1, 1, 1}, 1},     /* a goalkeeper (Seaman) */
+        {{1, 1, 18, 20, 20, 1, 1}, 0},   /* an outfield player (Vieira) */
+        {{15, 1, 18, 1, 1, 1, 1}, 1},    /* 15 or more: the goalkeeper comes first at threshold 15 */
+        {{14, 1, 15, 1, 1, 1, 1}, 0},    /* a defender of 15: the text is D at threshold 15 */
+        {{12, 1, 11, 1, 1, 1, 1}, 1},    /* no position of 15: the threshold goes down to 12 */
+        {{12, 1, 1, 1, 1, 1, 13}, 0},    /* an attacker of 13 comes at threshold 13 */
+        {{12, 12, 1, 1, 1, 1, 1}, 1},    /* the same rating: the goalkeeper is first in the text */
+        {{12, 1, 1, 1, 1, 14, 1}, 1},    /* an attacking midfielder alone adds no text */
+        {{9, 1, 1, 1, 1, 1, 1}, 0},      /* below 10: the threshold stops at 10, no goalkeeper */
+        {{10, 1, 1, 1, 1, 1, 1}, 1},     /* 10 is the last threshold */
+    };
+    for (size_t i = 0; i < sizeof cases / sizeof cases[0]; i++) {
+        if (groups_is_keeper(cases[i].r) != cases[i].keeper) {
+            printf("FAIL keeper case %d\n", (int)i);
+            failures++;
+        }
+    }
+
     if (failures) printf("%d failures\n", failures);
     else printf("groups: all checks passed\n");
     return failures != 0;

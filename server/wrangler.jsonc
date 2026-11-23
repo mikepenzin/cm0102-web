@@ -1,0 +1,29 @@
+{
+  // Bosman Edition lobby and relay (0.7.0, slice 3). Max deploys: see README.md.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bosman-online",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-20",
+  // The game's address (29 October 2026). The zone cm0102bosman.co.uk carries the free WAF rate limiting
+  // rule, which blocks a flooding address before the Worker runs. workers.dev is off (29 October 2026),
+  // so that a flood cannot go around the WAF rule.
+  "routes": [{ "pattern": "online.cm0102bosman.co.uk", "custom_domain": true }],
+  "workers_dev": false,
+  // Privacy (Q26): no Workers Logs, so no stored request record holds an internet address.
+  "observability": { "enabled": false },
+  "durable_objects": {
+    "bindings": [
+      { "name": "LOBBY", "class_name": "Lobby" },
+      { "name": "RELAY", "class_name": "Relay" }
+    ]
+  },
+  // Layer 1 against call floods (src/flood.ts): calls and writes in 60 s from one address.
+  // The limits must match CALL_LIMIT, WRITE_LIMIT and WRITE_LIMIT_48 in src/flood.ts (a test checks it).
+  "ratelimits": [
+    { "name": "RATE_CALLS", "namespace_id": "1001", "simple": { "limit": 180, "period": 60 } },
+    { "name": "RATE_WRITES", "namespace_id": "1002", "simple": { "limit": 20, "period": 60 } },
+    { "name": "RATE_WRITES_48", "namespace_id": "1003", "simple": { "limit": 60, "period": 60 } }
+  ],
+  // The free plan allows only SQLite-backed Durable Objects.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Lobby", "Relay"] }]
+}

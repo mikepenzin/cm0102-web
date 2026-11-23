@@ -9,6 +9,13 @@
 2017	bench	tur_second (TFF 1. Lig), row rus-tur-206: game 9, table 10 (10)
 2017	bench	world_club_champ (FIFA Club World Cup), row club-world-306: game 7, table 12 (12)
 2017	bench	world_cup (FIFA World Cup), row int-world-194: game 7, table 12 (12)
+2017	club_list	American Major League: 12 of 20 listed clubs that the database holds (23 listed), 0 other clubs, 12 in all; not in it: Atlanta United, Montreal Impact, New York City FC, Orlando City, Philadelphia Union, Portland Timbers, Real Salt Lake, Vancouver Whitecaps; others: -
+2017	club_list	Irish Premier Division: 10 of 10 listed clubs that the database holds (10 listed), 2 other clubs, 12 in all; not in it: -; others: Newbridge Town, Tralee Dynamos
+2017	club_list	Korean League: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Daegu FC, Gangwon Football Club; others: -
+2017	club_list	Portuguese Second League: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Sporting Clube de Portugal B, Vitória Sport Club B; others: -
+2017	club_list	Russian First Division: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Spartak-2 Moscow, Zenit-2 St. Petersburg; others: -
+2017	club_list	Turkish 2. Division Category A: 18 of 18 listed clubs that the database holds (18 listed), 2 other clubs, 20 in all; not in it: -; others: Bandirmaspor, Sanliurfaspor
+2017	club_list	Welsh Premier Division: 12 of 12 listed clubs that the database holds (12 listed), 6 other clubs, 18 in all; not in it: -; others: Airbus UK Broughton, Caernarfon Town, Cardiff Met, Denbigh Town, Haverfordwest County, Port Talbot Town
 2017	clubs	asia_club_champ (AFC Champions League), row club-world-317: game 16, table 32 (32)
 2017	clubs	ire_chal_cup (FAI Cup), row wal-nir-irl-419: game 42, table 40 (40 (inference from RSSSF round list))
 2017	clubs	ire_lge_cup (League of Ireland Cup), row wal-nir-irl-420: game 3, table 24 (24)
@@ -17,16 +24,13 @@
 2017	clubs	pol_first (Ekstraklasa), row gre-pol-cro-206: game 8, table 16 (16)
 2017	clubs	por_cup (Taça de Portugal), row por-150: game 164, table 153 (153)
 2017	clubs	por_second (LigaPro), row por-146: game 18, table 20 (20)
-2017	clubs	rus_first (Football National League), row rus-tur-44: game 18, table 20 (20)
 2017	clubs	sco_chal_cup (Scottish Challenge Cup), row sco-136: game 30, table 56 (56)
 2017	clubs	sco_lge_cup (Scottish League Cup), row sco-135: game 42, table 44 (44)
-2017	clubs	swe_prm (Allsvenskan), row den-swe-260: game 14, table 16 (16)
-2017	clubs	tur_second (TFF 1. Lig), row rus-tur-206: game 20, table 18 (18)
 2017	clubs	tur_second_b (TFF 2. Lig), row rus-tur-233: game 10, table 36 (36)
 2017	clubs	uefa_cup (UEFA Europa League), row uefa-133: game 157, table 190 (190 (157 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
 2017	clubs	usa_mls (Major League Soccer), row arg-usa-233: game 4, table 23 (23)
 2017	clubs	usa_open_cup (Lamar Hunt U.S. Open Cup), row arg-usa-287: game 32, table 80 (80 or more)
-2017	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-198: game 50, table 20 (20)
+2017	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-198: game 48, table 20 (20)
 2017	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-199: game 4, table 12 (12)
 2017	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-197: game 24, table 6 (6)
 2017	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-195: game 0, table 54 (54 entrants)
@@ -35,7 +39,6 @@
 2017	clubs	wel_lge_cup (Welsh League Cup), row wal-nir-irl-408: game 3, table 28 (28)
 2017	clubs	world_club_champ (FIFA Club World Cup), row club-world-306: game 0, table 7 (7)
 2017	clubs	world_cup (FIFA World Cup), row int-world-194: game 0, table 32 (32)
-2017	down	eng_third (EFL League Two), row eng-191: game 1 (+0 play-off places), table 2 (2)
 2017	down	kor_league (K League 1), row aus-jap-kor-341: game 0 (+0 play-off places), table 1 (1 (12th))
 2017	down	pol_first (Ekstraklasa), row gre-pol-cro-206: game 0 (+0 play-off places), table 2 (2 (15th-16th))
 2017	down	pol_second (I liga), row gre-pol-cro-260: game 4 (+0 play-off places), table 3 (3 (16th-18th))
@@ -46,6 +49,8 @@
 2017	down	swe_first (Superettan), row den-swe-261: game 3 (+0 play-off places), table 2 (2)
 2017	down	tur_second_b (TFF 2. Lig), row rus-tur-233: game 0 (+0 play-off places), table 6 (6 (16th to 18th of each group))
 2017	down	wel_first (Welsh Premier League), row wal-nir-irl-404: game 0 (+0 play-off places), table 2 (2 (pos 11,12))
+2017	meetings	ire_first (League of Ireland First Division), row wal-nir-irl-417: game 4, table 3
+2017	meetings	ire_prm (League of Ireland Premier Division), row wal-nir-irl-416: game 3, table 4
 2017	no_row	friendly (Friendly): no table row
 2017	no_row	record_utils ('B' International): no table row
 2017	no_row	record_utils (Reserve): no table row
@@ -78,6 +83,12 @@
 2017	playoffs	sco_third (Scottish League Two), row sco-133: game 0 up and 0 down play-off places, table 3 and 1 ('2nd to 4th play off with League One 9th for a League One place (two-legged semi-')
 2017	playoffs	swe_first (Superettan), row den-swe-261: game 1 up and 0 down play-off places, table 1 and 2 ('3rd plays the Allsvenskan 14th; 13th and 14th play the Division 1 (Ettan) runner')
 2017	playoffs	tur_second_b (TFF 2. Lig), row rus-tur-233: game 2 up and 0 down play-off places, table 0 and 0 ('see format')
+2017	rounds	ire_first (League of Ireland First Division), row wal-nir-irl-417: game 36, table 27 (3 meetings, zones -, extra 0)
+2017	rounds	ire_prm (League of Ireland Premier Division), row wal-nir-irl-416: game 33, table 36 (4 meetings, zones -, extra 0)
+2017	rounds	kor_league (K League 1), row aus-jap-kor-341: game 27, table 33 (3 meetings, zones -, extra 0)
+2017	rounds	pol_first (Ekstraklasa), row gre-pol-cro-206: game 14, table 30 (2 meetings, zones -, extra 0)
+2017	rounds	por_second (LigaPro), row por-146: game 34, table 38 (2 meetings, zones -, extra 0)
+2017	rounds	wel_first (Welsh Premier League), row wal-nir-irl-404: game 34, table 22 (2 meetings, zones -, extra 0)
 2017	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-529: game 3, table 7 (7)
 2017	up	pol_first (Ekstraklasa), row gre-pol-cro-206: game 4 (+0 play-off places), table na (n/a)
 2017	up	sco_second (Scottish League One), row sco-132: game 2 (+0 play-off places), table 1 (1)

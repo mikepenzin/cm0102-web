@@ -52,7 +52,7 @@ def play(program, game, out, steps, days):
         os.makedirs(d, exist_ok=True)
     if not os.path.exists(os.path.join(user, "settings.txt")):
         with open(os.path.join(user, "settings.txt"), "w") as h:
-            h.write("display = classic\n")
+            h.write("display = classic\ndatabase = 3.9.68\n")
     env = dict(os.environ, HOME=home, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", RECOMP_NO_BOX="1",
                RECOMP_USER_DIR=user, RECOMP_SCREEN_LOG="1", RECOMP_SEASON_CODE="off",
                RECOMP_SAVE_AFTER_DAYS=str(days),

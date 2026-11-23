@@ -35,7 +35,6 @@ extern const uint32_t rt_site_profile_value;
 #define VALUE 0x64u
 #define CELLS 36u
 #define ATTRIBUTE_NAME 0x5428a0u /* cdecl (attribute 1..31, text, size, 0): the attribute's name */
-#define POSITIONS 0x53ee50u      /* cdecl (player data, text, size, 1): the positions text, "GK" first */
 #define KNOWN 0x543280u       /* cdecl (viewer, staff, attribute): 1 when the viewer knows the attribute */
 #define RATING 0x544380u      /* cdecl (player data, byte): a relative attribute as a 1 to 20 rating */
 #define MASKED 0xf9u          /* the value of an attribute that the viewer does not know (0x5434c6) */
@@ -44,7 +43,6 @@ extern const uint32_t rt_site_profile_value;
 
 /* Scratch text: the end of the game's text buffer 0xde1f64, as in columns.c (other bytes). */
 #define SCRATCH (0xde1f64u + 1400u)
-#define SCRATCH_SIZE 128u
 
 static struct {
     int widened;                 /* the area of the last profile build got 13 rows */
@@ -62,19 +60,14 @@ static uint32_t call_cdecl(uint32_t fn, int n, const uint32_t *args)
     return r;
 }
 
-/* 1 when the positions text of the player data starts with "GK", as the profile and the squad list
- * show it. */
+/* 1 when the player data is a goalkeeper's, from his position ratings (groups_is_keeper). The test reads the
+ * data and not the positions text, which is in the chosen language: "GK" is English only (0.6.1 item 8). */
 static int is_keeper(uint32_t data)
 {
     if (!data) return 0;
-    char keep[SCRATCH_SIZE];
-    memcpy(keep, g_mem + SCRATCH, SCRATCH_SIZE);
-    wr8(g_mem, SCRATCH, 0);
-    uint32_t a[4] = {data, SCRATCH, SCRATCH_SIZE, 1};
-    call_cdecl(POSITIONS, 4, a);
-    int keeper = !strncmp(win_str(SCRATCH), "GK", 2);
-    memcpy(g_mem + SCRATCH, keep, SCRATCH_SIZE);
-    return keeper;
+    signed char ratings[GROUP_RATINGS];
+    for (int i = 0; i < GROUP_RATINGS; i++) ratings[i] = (signed char)rd8(g_mem, data + 0x0f + (uint32_t)i);
+    return groups_is_keeper(ratings);
 }
 
 /* The game's cell of attribute k (1 to 31) by its name, or 0. */

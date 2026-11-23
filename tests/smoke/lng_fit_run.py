@@ -56,7 +56,8 @@ NEW_GAME = [s for s in smoke_run.STEPS if " dump " not in s and s not in SETTING
 NEW_GAME = NEW_GAME[:NEW_GAME.index("wait first-news") + 1]
 SAVE_AS = (["2500 click 45 342", "4500 click 140 334"] + [f"{5000 + 50 * i} key 8" for i in range(40)] +
            [f"7500 type {SAVE}", "9500 click 705 572", "16500 quit"])
-LOAD = [s for s in fixtures.LOAD_STEPS if "box" not in s and "399 330" not in s and s not in SETTINGS] + ["2000 quit"]
+LOAD = [s for s in fixtures.LOAD_STEPS
+        if "box" not in s and "399 330" not in s and s not in SETTINGS + [smoke_run.SETTINGS_WAIT]] + ["2000 quit"]
 
 
 def all_leagues_steps():

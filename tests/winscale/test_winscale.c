@@ -38,6 +38,14 @@ int main(void)
     CHECK(!winscale_short_screen(1280, 1080));
     CHECK(!winscale_short_screen(800, 768));                       /* classic: no hint */
     CHECK(!winscale_short_screen(1280, 0));                        /* height unknown */
+    /* The Screen Mode at start: the row decides when game.cfg holds it; a remembered window decides when stored. */
+    CHECK(winscale_start_full(1, 1, 0, 0, 0));                     /* Full in game.cfg */
+    CHECK(!winscale_start_full(0, 1, 0, 0, 0));                    /* Windowed in game.cfg */
+    CHECK(!winscale_start_full(1, 0, 0, 0, 0));                    /* first start: the default Full is not used */
+    CHECK(winscale_start_full(1, 1, 1, 0, 0));                     /* option on, no stored window: the row */
+    CHECK(winscale_start_full(1, 1, 0, 1, 0));                     /* option off: the row, not the file */
+    CHECK(!winscale_start_full(1, 1, 1, 1, 0));                    /* F11 left full screen at the last quit */
+    CHECK(winscale_start_full(0, 1, 1, 1, 1));                     /* F11 entered full screen at the last quit */
     if (!failed) printf("winscale: all checks passed\n");
     return failed;
 }

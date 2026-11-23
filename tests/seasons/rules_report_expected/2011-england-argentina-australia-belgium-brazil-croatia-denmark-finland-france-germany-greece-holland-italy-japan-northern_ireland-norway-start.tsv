@@ -6,12 +6,25 @@
 2011	bench	fra_cup (Coupe de France), row fra-97: game 3, table 7 (7)
 2011	bench	fra_lge_cup (Coupe de la Ligue), row fra-98: game 3, table 7 (7)
 2011	bench	world_club_champ (FIFA Club World Cup), row club-world-192: game 7, table 12 (12)
+2011	club_list	Argentine Second Division: 20 of 20 listed clubs that the database holds (20 listed), 5 other clubs, 25 in all; not in it: -; others: Comisión de Actividades Infantiles, Defensores de Belgrano, Nueva Chicago, San Martín de Tucumán, Tiro Federal de Rosario
+2011	club_list	Brazilian National Third Division: 19 of 20 listed clubs that the database holds (20 listed), 37 other clubs, 56 in all; not in it: Cuiabá; others: Alecrim Futebol Clube, América Football Club (RJ), América Futebol Clube (AM), Araguaína Futebol e Regatas, Associação Desportiva Confiança, Botafogo Futebol Clube (SP), Botafogo Futebol e Regatas, Brasília Futebol Clube, Brusque Futebol Clube, Camaçari Futebol Clube, Cametá Sport Club, Ceilândia Esporte Clube, Central Sport Club, Centro Esportivo Nova Esperança, Centro Sportivo Alagoano, Clube Atlético Metropolitano, Clube Náutico Marcílio Dias, Cristal Atlético Clube, Esporte Clube Flamengo, Esporte Clube Gênus Rondoniense, Esporte Clube Juventude, Ferroviário Atlético Clube, Fluminense de Feira Futebol Clube, Iraty Sport Club, Londrina Esporte Clube, Mixto Esporte Clube, Moto Clube de São Luís, Nacional Futebol Clube (AM), Náuas Esporte Clube, Operário Ferroviário EC, Paulista Futebol Clube, Sociedade Esportiva River Plate, Sociedade Esportiva Vila Aurora, Sociedade Esportiva do Gama, Sport Club Corinthians Paranaense, Vilhena Esporte Clube, Ypiranga Futebol Clube
+2011	club_list	Croatian Second Division North: 15 of 15 listed clubs that the database holds (15 listed), 1 other clubs, 16 in all; not in it: -; others: NK Belisce
+2011	club_list	Danish First Division: 14 of 14 listed clubs that the database holds (14 listed), 2 other clubs, 16 in all; not in it: -; others: FC Fyn, Nordvest Football Club
+2011	club_list	Danish Second Division: 16 of 25 listed clubs that the database holds (32 listed), 0 other clubs, 16 in all; not in it: Boldklubben Marienlyst, Boldklubben Skjold, FC Fyn, IF Skjold Birkerød, IK Skovbakken, Lindholm Idrætsforening, Nordvest Football Club, Otterup Boldklub, Varde Idrætsforening; others: -
+2011	club_list	French National: 19 of 19 listed clubs that the database holds (20 listed), 1 other clubs, 20 in all; not in it: -; others: Orange SC
+2011	club_list	Greek National A Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: Doxa Dramas, Levadiakos; others: -
+2011	club_list	Greek National B Division: 14 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 14 in all; not in it: A.O Platanias Chanion, AS Fokikos Amfissas, Anagennisi Giannitson, Iraklis Psachna; others: -
+2011	club_list	Italian Serie A: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Novara, Siena; others: -
+2011	club_list	Italian Serie B: 20 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 20 in all; not in it: Gubbio, Nocerina; others: -
+2011	club_list	Japanese J-League 1: 16 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 16 in all; not in it: Consadole Sapporo, FC Tokyo; others: -
+2011	club_list	Japanese J-League 2: 12 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 12 in all; not in it: Ehime FC, F.C. Machida Zelvia, FC Gifu, FC Mito Holly Hock, Gainere Tottori, Kataller Toyama, Matsumoto Yamaga, Montedio Yamagata, Roasso Kumamoto, Thespa Kusatsu; others: -
+2011	club_list	Northern Irish League First Division: 10 of 14 listed clubs that the database holds (14 listed), 0 other clubs, 10 in all; not in it: Banbridge Town, Glebe Rangers, Harland & Wolff Welders, Warrenpoint Town; others: -
+2011	club_list	Northern Irish League Premier Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Carrick Rangers, Glenavon; others: -
+2011	club_list	Norwegian Premier Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: Hønefoss BK, Sandnes Ulf; others: -
 2011	clubs	african_nations (Africa Cup of Nations), row int-continental-117: game 0, table 16 (16)
 2011	clubs	arg_second (Primera B Nacional), row arg-usa-38: game 25, table 20 (20)
 2011	clubs	asia_club_champ (AFC Champions League), row club-world-203: game 16, table 32 (32)
-2011	clubs	bel_first (Belgian Pro League), row hol-bel-138: game 18, table 16 (16)
 2011	clubs	bel_third (Belgian Third Division), row hol-bel-140: game 16, table 36 (36 (A 18, B 18))
-2011	clubs	bra_champ_cup (Copa dos Campeões), row bra-200: game 3, table 0 (0)
 2011	clubs	bra_cup (Copa do Brasil), row bra-146: game 71, table 64 (64)
 2011	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-92: game 7, table 20 (20)
 2011	clubs	bra_reg_bahia (Campeonato Baiano), row bra-443: game 10, table 12 (12)
@@ -22,7 +35,6 @@
 2011	clubs	bra_reg_sp (Campeonato Paulista Série A1), row bra-713: game 16, table 20 (20)
 2011	clubs	conmebol_liber (Copa Libertadores), row club-world-194: game 4, table 38 (38)
 2011	clubs	cro_a2a (Druga HNL), row gre-pol-cro-362: game 16, table 15 (15)
-2011	clubs	den_first (Danish 1st Division), row den-swe-63: game 16, table 14 (14)
 2011	clubs	den_second (Danish 2nd Divisions), row den-swe-64: game 16, table 32 (32)
 2011	clubs	euro_champ (UEFA European Championship), row int-continental-111: game 0, table 16 (16)
 2011	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-112: game 0, table 51 (51)
@@ -48,7 +60,7 @@
 2011	clubs	nor_prm (Tippeligaen), row nor-fin-102: game 14, table 16 (16)
 2011	clubs	oceania_nations (OFC Nations Cup), row int-continental-120: game 0, table 8 (8)
 2011	clubs	uefa_cup (UEFA Europa League), row uefa-85: game 161, table 194 (194 (161 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
-2011	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-126: game 50, table 52 (52 entrants)
+2011	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-126: game 44, table 52 (52 entrants)
 2011	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-127: game 0, table 20 (20, then 10)
 2011	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-125: game 24, table 30 (30, then 12)
 2011	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-128: game 5, table 11 (11 entrants)
@@ -62,7 +74,6 @@
 2011	down	cro_a2a (Druga HNL), row gre-pol-cro-362: game 2 (+0 play-off places), table 1 (1 (15th))
 2011	down	cro_a2b (Druga HNL South), row gre-pol-cro-389: game 2 (+0 play-off places), table na (n/a)
 2011	down	den_second (Danish 2nd Divisions), row den-swe-64: game 4 (+0 play-off places), table 8 (8)
-2011	down	eng_third (Football League Two), row eng-131: game 1 (+0 play-off places), table 2 (2)
 2011	down	ger_second (2. Bundesliga), row ger-132: game 4 (+0 play-off places), table 2 (2)
 2011	down	gre_prm (Super League Greece), row gre-pol-cro-38: game 2 (+0 play-off places), table 3 (3 (14th-16th))
 2011	down	gre_second (Football League), row gre-pol-cro-65: game 2 (+0 play-off places), table 3 (3 (16th-18th))
@@ -72,15 +83,17 @@
 2011	down	jap_j1 (J.League Division 1), row aus-jap-kor-200: game 2 (+0 play-off places), table 3 (3)
 2011	down	jap_j2 (J.League Division 2), row aus-jap-kor-227: game 0 (+0 play-off places), table 1 (1 (to the JFL, only if a JFL club holds a licence))
 2011	down	nir_first (IFA Championship 1), row wal-nir-irl-261: game 0 (+0 play-off places), table 2 (2 (pos 13,14))
+2011	meetings	arg_second (Primera B Nacional), row arg-usa-38: game 1, table 2
+2011	meetings	bra_nat_first (Campeonato Brasileiro Série A), row bra-38: game 1, table 2
+2011	meetings	bra_nat_second (Campeonato Brasileiro Série B), row bra-65: game 1, table 2
+2011	meetings	jap_j2 (J.League Division 2), row aus-jap-kor-227: game 4, table 2
+2011	meetings	nir_first (IFA Championship 1), row wal-nir-irl-261: game 4, table 2
+2011	meetings	nir_prm (IFA Premiership), row wal-nir-irl-260: game 4, table 3
 2011	no_row	friendly (Friendly): no table row
 2011	no_row	record_utils ('B' International): no table row
 2011	no_row	record_utils (Reserve): no table row
 2011	no_row	record_utils (Under 21 International): no table row
-2011	not_held	bra_champ_cup (Copa dos Campeões), row bra-200: the game holds 2011, the table says not held
 2011	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-389: the game holds 2011, the table says not held
-2011	not_held	ger_lge_cup (DFL-Ligapokal), row ger-141: the game holds 2011, the table says not held
-2011	not_held	gre_super (Greek Super Cup), row gre-pol-cro-92: the game holds 2011, the table says not held
-2011	not_held	nir_charity (Charity Shield), row wal-nir-irl-265: the game holds 2011, the table says not held
 2011	not_held	olympics (Football at the Summer Olympics), row int-world-131: the game holds 2012, the table says not held
 2011	not_held	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-123: the game holds 2012, the table says not held
 2011	not_in_game	arg-usa-200 argentina_rules 'Argentina' (Argentina)
@@ -116,6 +129,19 @@
 2011	playoffs	ita_ser_c1b (Lega Pro Prima Divisione girone B), row ita-175: game 4 up and 4 down play-off places, table 4 and 0 ('2nd to 5th: semi-finals and final over two legs, winner promoted to Serie B')
 2011	playoffs	jap_j2 (J.League Division 2), row aus-jap-kor-227: game 0 up and 0 down play-off places, table 4 and 0 ('3rd to 6th: single-match semi-finals and final at the higher-placed club; a draw')
 2011	playoffs	nor_first (Adeccoligaen), row nor-fin-103: game 1 up and 0 down play-off places, table 4 and 0 ('3rd-6th single-leg knockout; winner v Tippeligaen 14th, two legs')
+2011	rounds	arg_second (Primera B Nacional), row arg-usa-38: game 25, table 38 (2 meetings, zones -, extra 0)
+2011	rounds	bra_nat_first (Campeonato Brasileiro Série A), row bra-38: game 19, table 38 (2 meetings, zones -, extra 0)
+2011	rounds	bra_nat_second (Campeonato Brasileiro Série B), row bra-65: game 19, table 38 (2 meetings, zones -, extra 0)
+2011	rounds	den_first (Danish 1st Division), row den-swe-63: game 30, table 26 (2 meetings, zones -, extra 0)
+2011	rounds	gre_prm (Super League Greece), row gre-pol-cro-38: game 26, table 30 (2 meetings, zones -, extra 0)
+2011	rounds	gre_second (Football League), row gre-pol-cro-65: game 26, table 34 (2 meetings, zones -, extra 0)
+2011	rounds	ita_ser_a (Serie A), row ita-172: game 34, table 38 (2 meetings, zones -, extra 0)
+2011	rounds	ita_ser_b (Serie B), row ita-173: game 38, table 42 (2 meetings, zones -, extra 0)
+2011	rounds	jap_j1 (J.League Division 1), row aus-jap-kor-200: game 30, table 34 (2 meetings, zones -, extra 0)
+2011	rounds	jap_j2 (J.League Division 2), row aus-jap-kor-227: game 44, table 42 (2 meetings, zones -, extra 0)
+2011	rounds	nir_first (IFA Championship 1), row wal-nir-irl-261: game 36, table 26 (2 meetings, zones -, extra 0)
+2011	rounds	nir_prm (IFA Premiership), row wal-nir-irl-260: game 36, table 33 (3 meetings, zones -, extra 0)
+2011	rounds	nor_prm (Tippeligaen), row nor-fin-102: game 26, table 30 (2 meetings, zones -, extra 0)
 2011	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-523: game 3, table 7 (7)
 2011	up	arg_second (Primera B Nacional), row arg-usa-38: game 1 (+0 play-off places), table 2 (2 (champion and runner-up))
 2011	up	aus_nsl (A-League), row aus-jap-kor-34: game 6 (+0 play-off places), table na (n/a)

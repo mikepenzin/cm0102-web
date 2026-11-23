@@ -31,6 +31,15 @@ typedef struct {
  * classic mode too (Q125). */
 void groups_layout(int keeper, GroupLayout *out);
 
+/* The position ratings of the player data that the positions text reads, +0x0f to +0x15 (1 to 20):
+ * goalkeeper, sweeper, defender, defensive midfielder, midfielder, attacking midfielder, attacker. */
+#define GROUP_RATINGS 7
+
+/* 1 when the positions text of the player data starts with the goalkeeper, as the profile and the squad list
+ * show it, in every language (database_format_player_positions 0x53ee50, style 1). ratings holds the bytes
+ * +0x0f to +0x15 of the player data. */
+int groups_is_keeper(const signed char ratings[GROUP_RATINGS]);
+
 /* The text of a heading cell, or NULL for any other cell. */
 const char *groups_heading(int cell);
 

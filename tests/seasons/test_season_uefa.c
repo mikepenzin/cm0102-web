@@ -86,6 +86,10 @@ int main(void)
     CHECK(season_uefa_access_league_cup(2009, "France") && season_uefa_access_league_cup(2015, "England"));
     CHECK(!season_uefa_access_league_cup(2009, "Spain") && !season_uefa_access_league_cup(2008, "England"));
     CHECK(season_uefa_access_rule(2015, 'f') && season_uefa_access_rule(2016, 'f') == NULL);
+    /* Open item 70: the association limit of Art. 3 (4 to 2014/15, 5 from 2015/16, 7 from 2024/25). */
+    CHECK(season_uefa_cl_cap(2009) == 4 && season_uefa_cl_cap(2012) == 4 && season_uefa_cl_cap(2014) == 4);
+    CHECK(season_uefa_cl_cap(2015) == 5 && season_uefa_cl_cap(2017) == 5 && season_uefa_cl_cap(2023) == 5);
+    CHECK(season_uefa_cl_cap(2024) == 7 && season_uefa_cl_cap(2300) == 7);
 
     /* The new clubs of each entry code. 2009/10 Champions League: Q1 4, Q2 34 (2 Q1 winners and 32 new),
      * Q3 CP 20 (17 and 3), Q3 LP 10, PO CP 10 (10 winners), PO LP 10 (5 and 5), groups 32 (10 and 22). */
@@ -199,6 +203,16 @@ int main(void)
     CHECK(season_uefa_row(2010) == season_uefa_table_row(2010) && season_uefa_row(2012) == season_uefa_table_row(2010));
     code_on = 0;
     CHECK(season_uefa_row(2010) == NULL);
+
+    /* Issue 119: with stages a winner of the cup's own round table (stage -1: Q1, Q2, R1 of 2004/05 to 2008/09,
+     * the qualifying rounds from 2009/10) goes on to the group stage. It is not the cup winner (outcome 1 gave
+     * the cup winners record 0x86a800 and "Fans celebrate winning the UEFA Cup"). Only the final of the knockout
+     * stage gives outcome 1. A loser of any round stays out (2 or -1), and a winner of an earlier round stays 0. */
+    CHECK(season_uefa_cup_outcome(-1, 1) == 0);
+    CHECK(season_uefa_cup_outcome(-1, 2) == 2 && season_uefa_cup_outcome(-1, -1) == -1);
+    CHECK(season_uefa_cup_outcome(-1, 0) == 0);
+    CHECK(season_uefa_cup_outcome(8, 1) == 1 && season_uefa_cup_outcome(1, 1) == 1);
+    CHECK(season_uefa_cup_outcome(8, 2) == 2 && season_uefa_cup_outcome(8, 0) == 0);
 
     if (failures) return 1;
     printf("season_uefa: all checks pass\n");

@@ -1,0 +1,103 @@
+competition	season	label	final_date	first	second	data_first	data_second	source_url	note
+Belgian Second Division	1952/53	1953		K Lyra	K Lierse SK			https://rsssf.org/tablesb/belg2champ.html	Single league began 1952/53. No row of the ed file.
+Belgian Second Division	1953/54	1954		KSV Waterschei Thor	RRC de Bruxelles			https://rsssf.org/tablesb/belg2champ.html	No ed row for this pair.
+Belgian Second Division	1954/55	1955		R Daring Club de Bruxelles	K Beeringen FC	Daring Club de Bruxelles	Koninklijke Beringen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1955/56	1956		RCS Verviétois	ROC Charleroi	RCS Verviétois	ROC de Charleroi-Marchienne	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1956/57	1957		KSV Waterschei Thor	K Sint-Truidense VV	Koninklijke Waterschei SV Thor Genk	Koninklijke Sint-Truidense VV	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1957/58	1958		K Beringen FC	RRC Tournaisien	Koninklijke Beringen	RFC Tournai	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1958/59	1959		R Daring Club de Bruxelles	RFC Brugeois	Daring Club de Bruxelles	Club Brugge KV	https://rsssf.org/tablesb/belg2champ.html	RFC Brugeois taken as Club Brugge (data name Club Brugge KV)
+Belgian Second Division	1959/60	1960		KSC Eendracht Aalst	Patro Eisden	SC Eendracht Aalst	Patro Eisden Maasmechelen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1960/61	1961		KFC Diest	RCS Brugeois	Diest	Cercle Brugge KSV	https://rsssf.org/tablesb/belg2champ.html	RCS Brugeois taken as Cercle Brugge (Cercle Brugeois Royal Sportif); data name Cercle Brugge KSV
+Belgian Second Division	1961/62	1962		R Berchem Sport	Beeringen FC	Berchem Sport 2004	Koninklijke Beringen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1962/63	1963		RFC Malinois	K Waterschei SV Thor Genk	KV Mechelen	KRC Genk	https://rsssf.org/tablesb/belg2champ.html	Runner-up Waterschei Thor Genk; data holds KRC Genk (Waterschei merged into Genk). Champion RFC Malinois = KV Mechelen
+Belgian Second Division	1963/64	1964		R Union Saint-Gilloise	R Tilleur FC	Royale Union Saint-Gilloise	Tilleur-Saint-Nicolas	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1964/65	1965		R Racing White	RFC Malinois	RWD Molenbeek	KV Mechelen	https://rsssf.org/tablesb/belg2champ.html	Champion R Racing White = RWD Molenbeek line; runner-up RFC Malinois = KV Mechelen
+Belgian Second Division	1965/66	1966		KSV Waregem	R Charleroi SC	SV Zulte Waregem	Royal Charleroi SC	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1966/67	1967		SK Beveren	ROC Charleroi	KSK Beveren	ROC de Charleroi-Marchienne	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1967/68	1968		ARA La Gantoise	R Union Saint-Gilloise	ARA La Gantoise	Royale Union Saint-Gilloise	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1968/69	1969		AS Oostende KM	R Crossing Club Molenbeek	KV Oostende		https://rsssf.org/tablesb/belg2champ.html	Ed row has KCVV Elewijt as runner-up; sources give R Crossing Club Molenbeek. Ed row Oostende/Elewijt matches no real edition.
+Belgian Second Division	1969/70	1970		KFC Diest	R Antwerp FC	Diest	Royal Antwerp	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1970/71	1971		KSV Cercle Brugge	KV Mechelen	Cercle Brugge KSV	KV Mechelen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1971/72	1972		K Berchem Sport	R Beringen FC	Berchem Sport 2004	Koninklijke Beringen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1972/73	1973		SK Beveren	SV Waregem	KSK Beveren	SV Zulte Waregem	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1973/74	1974		ROC Montignies-sur-Sambre	AS Oostende	ROC de Charleroi-Marchienne	KV Oostende	https://rsssf.org/tablesb/belg2champ.html	Montignies-sur-Sambre = ROC de Charleroi-Marchienne in the data (assumed)
+Belgian Second Division	1974/75	1975		KRC Mechelen	K Boom FC	KV Mechelen	Boom FC	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1975/76	1976		KFC Winterslag	KFC Diest	KRC Genk	Diest	https://rsssf.org/tablesb/belg2champ.html	Winterslag merged into KRC Genk
+Belgian Second Division	1976/77	1977		K Boom FC	Patro Eisden	Boom FC	Patro Eisden Maasmechelen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1977/78	1978		KSV Waterschei Thor	K Berchem Sport	Koninklijke Waterschei SV Thor Genk	Berchem Sport 2004	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1978/79	1979		KSV Cercle Brugge	SK Tongeren	Cercle Brugge KSV	KSK Tongeren	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1979/80	1980		KAA Gent	KV Kortrijk	KAA Gent	KV Kortrijk	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1980/81	1981		KSK Tongeren	RFC Sérésien	KSK Tongeren	RFC Seraing	https://rsssf.org/tablesb/belg2champ.html	Sérésien = RFC Seraing
+Belgian Second Division	1981/82	1982		RFC Sérésien	K Beerschot VAV	RFC Seraing	Koninklijke Beerschot Antwerpen Club	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1982/83	1983		KV Mechelen	K Sint-Niklase SK	KV Mechelen	SK Sint-Niklaas	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1983/84	1984		K Sint-Niklase SK	KSC Hasselt	SK Sint-Niklaas	KSK Hasselt	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1984/85	1985		R White Daring Molenbeek	KRC Mechelen	RWD Molenbeek	KV Mechelen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1985/86	1986		K Berchem Sport	RC Jet de Bruxelles	Berchem Sport 2004	RJ Wavre	https://rsssf.org/tablesb/belg2champ.html	RC Jet de Bruxelles = RJ Wavre in the data (assumed same club, not checked)
+Belgian Second Division	1986/87	1987		K Sint-Truidense VV	KFC Winterslag	Koninklijke Sint-Truidense VV	KRC Genk	https://rsssf.org/tablesb/belg2champ.html	Runner-up Winterslag, data holds KRC Genk
+Belgian Second Division	1987/88	1988		KRC Mechelen	KSC Eendracht Aalst	KV Mechelen	SC Eendracht Aalst	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1988/89	1989		KFC Germinal Ekeren	RFC Sérésien	Koninklijke Beerschot Antwerpen Club	RFC Seraing	https://rsssf.org/tablesb/belg2champ.html	Champion Germinal Ekeren; data holds Beerschot (successor Germinal Beerschot, assumed)
+Belgian Second Division	1989/90	1990		R White Daring Molenbeek	K Boom FC	RWD Molenbeek	Boom FC	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1990/91	1991		KSK Beveren	K Sint-Niklase SK Excelsior	KSK Beveren	SK Sint-Niklaas	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1991/92	1992		KFC Lommelse SK	KFC Turnhout	KVSK United Overpelt-Lommel	KV Turnhout	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1992/93	1993		RFC Sérésien	K Beerschot VAC	RFC Seraing	Koninklijke Beerschot Antwerpen Club	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1993/94	1994		K Sint-Truidense VV	RE Mouscron	Koninklijke Sint-Truidense VV	R Excelsior Mouscron	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1994/95	1995		KSV Waregem	K Beerschot VAC	SV Zulte Waregem	Koninklijke Beerschot Antwerpen Club	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1995/96	1996		KSC Lokeren	KRC Genk	KSC Lokeren Oost-Vlaanderen	KRC Genk	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1996/97	1997		KSK Beveren	KVC Westerlo	KSK Beveren	KVC Westerlo	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1997/98	1998		KV Oostende	KV Kortrijk	KV Oostende	KV Kortrijk	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1998/99	1999		KV Mechelen	R Antwerp FC	KV Mechelen	Royal Antwerp	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	1999/00	2000		R Antwerp FC	KV Oostende	Royal Antwerp	KV Oostende	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2000/01	2001		KFC Lommelse SK	KFC Turnhout	KVSK United Overpelt-Lommel	KV Turnhout	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2001/02	2002		KV Mechelen	KSV Ingelmunster	KV Mechelen		https://rsssf.org/tablesb/belg2champ.html	Real runner-up KSV Ingelmunster. Ed row has SW Harelbeke as runner-up: no real match.
+Belgian Second Division	2002/03	2003		KSV Cercle Brugge	KAS Eupen	Cercle Brugge KSV	KAS Eupen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2003/04	2004		FC Molenbeek Brussels Strombeek	KV Oostende	RWDM Brussels	KV Oostende	https://rsssf.org/tablesb/belg2champ.html	Real champion FC Molenbeek Brussels Strombeek; data holds RWDM Brussels (assumed same club)
+Belgian Second Division	2004/05	2005		SV Zulte-Waregem	KSV Roeselare	SV Zulte Waregem	KSV Roeselare	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2005/06	2006		RAEC Mons	KVSK United Overpelt-Lommel	RAEC Mons	KVSK United Overpelt-Lommel	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2006/07	2007		FC Verbroedering Dender EH	KV Mechelen	FCV Dender EH	KV Mechelen	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2007/08	2008		KV Kortrijk	AFC Tubize	KV Kortrijk	AFC Tubize	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2008/09	2009		K Sint-Truidense VV	K Lierse SK	Koninklijke Sint-Truidense VV	Koninklijke Lierse SK	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2009/10	2010		K Lierse SK	KVSK United Overpelt-Lommel	Koninklijke Lierse SK	KVSK United Overpelt-Lommel	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2010/11	2011		Oud-Heverlee Leuven	Lommel United	Oud-Heverlee Leuven	KVSK United Overpelt-Lommel	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2011/12	2012		Charleroi	KV RS Waasland-Beveren	Royal Charleroi SC	KVRS Waasland - SK Beveren	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2012/13	2013		KV Oostende	R Mouscron-Péruwelz	KV Oostende	Royal Mouscron-Péruwelz	https://rsssf.org/tablesb/belg2champ.html	
+Belgian Second Division	2013/14	2014		KVC Westerlo	KAS Eupen	KVC Westerlo		https://rsssf.org/tablesb/belg2champ.html	Real runner-up KAS Eupen (Mouscron-Peruwelz won the play-off). Ed row Westerlo/Mouscron-Peruwelz has a wrong second.
+Belgian Second Division	2014/15	2015		K Sint-Truidense VV	Lommel United			https://rsssf.org/tablesb/belg2champ.html	No ed row with this pair.
+Belgian Super Cup	1979	1979	1979-08-22	Beveren	Beerschot			https://rsssf.org/tablesb/belgsupcuphist.html ; https://www.lavenir.net/sports/football/d1a/2025/07/18/amateurs-snobes-pluie-tropicale-et-mariage-chez-michel-verschueren-la-supercoupe-en-dix-histoires-bien-belges-ELGN3652SJCEDHWS7BRYT3EOSU/	1-1, 3-2 pens. No ed row for Beveren/Beerschot Super Cup.
+Belgian Super Cup	1980	1980		Club Brugge	Beveren	Club Brugge KV	KSK Beveren	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-1, 4-3 pens. Beveren stood in for amateur cup winner Waterschei.
+Belgian Super Cup	1981	1981		Standard	Anderlecht	Royal Standard de Liège	RSC Anderlecht	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 0-0, Standard won 3-1 on pens. Ed row lists Anderlecht first (wrong order).
+Belgian Super Cup	1982	1982		Waregem	Standard	SV Zulte Waregem	Royal Standard de Liège	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-2. Ed row lists Standard first (wrong order). Waregem stood in for Waterschei.
+Belgian Super Cup	1983	1983		Standard	Beveren	Royal Standard de Liège	KSK Beveren	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-1, 5-4 pens
+Belgian Super Cup	1984	1984		Beveren	AA Gent	KSK Beveren	KAA Gent	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 5-1
+Belgian Super Cup	1985	1985		Anderlecht	Cercle Brugge	RSC Anderlecht	Cercle Brugge KSV	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 2-1
+Belgian Super Cup	1986	1986		Club Brugge	Anderlecht	Club Brugge KV	RSC Anderlecht	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-0. Pair matches ed row, but the ed row shows no year near 1986.
+Belgian Super Cup	1987	1987	1987-08-18	Anderlecht	KV Mechelen			https://rsssf.org/tablesb/belgsupcuphist.html ; https://www.lavenir.net/sports/football/d1a/2025/07/18/amateurs-snobes-pluie-tropicale-et-mariage-chez-michel-verschueren-la-supercoupe-en-dix-histoires-bien-belges-ELGN3652SJCEDHWS7BRYT3EOSU/	Two legs: 1-1 on 1987-08-15 and 2-0 three days later (date derived). No ed row.
+Belgian Super Cup	1988	1988		Club Brugge	Anderlecht	Club Brugge KV	RSC Anderlecht	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-0. Pair matches ed row, but the ed row shows no year near 1988.
+Belgian Super Cup	1989			not held				https://rsssf.org/tablesb/belgsupcuphist.html	RSSSF: not played (would have been KV Mechelen v Anderlecht)
+Belgian Super Cup	1990	1990		Club Brugge	FC Liège	Club Brugge KV	RFC Liège	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 2-2, 7-6 pens
+Belgian Super Cup	1991	1991		Club Brugge	Anderlecht	Club Brugge KV	RSC Anderlecht	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-3, Club Brugge won on pens (RSSSF 5-6 pen). RSSSF lists Anderlecht first as champion.
+Belgian Super Cup	1992	1992		Club Brugge	Antwerp	Club Brugge KV	Royal Antwerp	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-1, 4-1 pens
+Belgian Super Cup	1993	1993		Anderlecht	Standard	RSC Anderlecht	Royal Standard de Liège	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-0
+Belgian Super Cup	1994	1994		Club Brugge	Anderlecht	Club Brugge KV	RSC Anderlecht	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-1. Anderlecht did the double, Club Brugge played as cup finalist.
+Belgian Super Cup	1995	1995		Anderlecht	Club Brugge	RSC Anderlecht	Club Brugge KV	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 2-1
+Belgian Super Cup	1996	1996		Club Brugge	Cercle Brugge	Club Brugge KV	Cercle Brugge KSV	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 5-2
+Belgian Super Cup	1997	1997		Lierse	Germinal Ekeren	Koninklijke Lierse SK	Koninklijke Beerschot Antwerpen Club	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-0. Data holds Beerschot as runner-up (Germinal Ekeren merged into Germinal Beerschot, assumed same club).
+Belgian Super Cup	1998	1998		Club Brugge	Genk	Club Brugge KV	KRC Genk	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 2-1
+Belgian Super Cup	1999	1999		Lierse	Genk	Koninklijke Lierse SK	KRC Genk	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-1
+Belgian Super Cup	2000	2000		Anderlecht	Genk	RSC Anderlecht	KRC Genk	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-1. Ed row Anderlecht/Lierse has no real edition; real 2000 pair is Anderlecht/Genk.
+Belgian Super Cup	2001	2001	2001-08-05	Anderlecht	Westerlo	RSC Anderlecht	KVC Westerlo	https://rsssf.org/tablesb/belgsupcuphist.html ; https://www.lavenir.net/sports/football/d1a/2025/07/18/amateurs-snobes-pluie-tropicale-et-mariage-chez-michel-verschueren-la-supercoupe-en-dix-histoires-bien-belges-ELGN3652SJCEDHWS7BRYT3EOSU/	4-1
+Belgian Super Cup	2002	2002		Club Brugge	Genk	Club Brugge KV	KRC Genk	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 2-0
+Belgian Super Cup	2003	2003		Club Brugge	La Louvière	Club Brugge KV	UR La Louvière Centre	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-1, 5-4 pens
+Belgian Super Cup	2004	2004		Club Brugge	Anderlecht	Club Brugge KV	RSC Anderlecht	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 2-0
+Belgian Super Cup	2005	2005		Club Brugge	Germinal Beerschot	Club Brugge KV	Koninklijke Beerschot Antwerpen Club	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-1, 4-2 pens
+Belgian Super Cup	2006	2006	2006-12-20	Anderlecht	Zulte Waregem	RSC Anderlecht	SV Zulte Waregem	https://rsssf.org/tablesb/belgsupcuphist.html ; https://en.wikipedia.org/wiki/Belgian_Super_Cup	3-1. First match 2006-07-22 abandoned at 0-0 by rain, replayed 2006-12-20. Label 2006 either way.
+Belgian Super Cup	2007	2007		Anderlecht	Club Brugge	RSC Anderlecht	Club Brugge KV	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-1
+Belgian Super Cup	2008	2008		Standard	Anderlecht	Royal Standard de Liège	RSC Anderlecht	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-1
+Belgian Super Cup	2009	2009		Standard	Genk	Royal Standard de Liège	KRC Genk	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 2-0
+Belgian Super Cup	2010	2010		Anderlecht	AA Gent	RSC Anderlecht	KAA Gent	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-0
+Belgian Super Cup	2011	2011		Genk	Standard	KRC Genk	Royal Standard de Liège	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-0
+Belgian Super Cup	2012	2012		Anderlecht	Lokeren	RSC Anderlecht	KSC Lokeren Oost-Vlaanderen	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 3-2
+Belgian Super Cup	2013	2013		Anderlecht	Genk	RSC Anderlecht	KRC Genk	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-0. Label 2013 (ed proposes 2014). Ed row Tubantia Borgerhout/Uccle Sport matches no real edition.
+Belgian Super Cup	2014	2014		Anderlecht	Lokeren	RSC Anderlecht	KSC Lokeren Oost-Vlaanderen	https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 2-1. Pair matches ed row Anderlecht/Lokeren (shown 2011 only).
+Belgian Super Cup	2015	2015		AA Gent	Club Brugge			https://rsssf.org/tablesb/belgsupcuphist.html	Year from RSSSF/Wikipedia list (match year); day not given in sources. 1-0. No ed row.
+Belgian Second Division				KSK Beveren	Koninklijke Beerschot Antwerpen Club	KSK Beveren	Koninklijke Beerschot Antwerpen Club	https://www.rsssf.org/tablesb/belg2champ.html	no real edition: no Second Division season has Beveren first and Beerschot second (data row shown at 2013; real 2012/13 KV Oostende / Mouscron-Peruwelz)
+Belgian Super Cup				Koninklijke Tubantia Borgerhout VK	Uccle Sport	Koninklijke Tubantia Borgerhout VK	Uccle Sport	https://www.rsssf.org/tablesb/belgsupcuphist.html	no real edition: neither club played a Super Cup (data row shown at 2012; real 2012 Anderlecht / Lokeren)

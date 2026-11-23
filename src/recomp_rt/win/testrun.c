@@ -1,6 +1,9 @@
 /* Test runs: a save at a fixed game date, for the same-save check (tests/smoke/smoke_run.py
  * --same-save). Only the environment switches it on. Play is unchanged without it.
  *
+ * RECOMP_SAVE_AFTER_SPLIT=n (season_split.c, testrun_save_in): the same save n game days after the first split of a
+ * league (0.7.2 slice 7).
+ *
  * RECOMP_SAVE_AFTER_DAYS=n: at the first human turn n or more game days after the first human turn,
  * the runtime saves the game as samesave.sav in the game folder of the original (the write goes to the
  * user folder, files.c) and ends the program with code 0.
@@ -22,6 +25,8 @@
 #include "season_history.h"
 #include "season_rules.h"
 
+void history_trim_screen_check(void);
+
 #include <SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +46,16 @@ static int game_day(void)
     return year * 366 + day;       /* only differences of a few months are used */
 }
 
+/* A save at the first human turn `days` game days from today (RECOMP_SAVE_AFTER_SPLIT, season_split.c): the same
+ * save and end as RECOMP_SAVE_AFTER_DAYS. Test runs only. */
+void testrun_save_in(int days)
+{
+    save_after = days;
+    first_day = game_day();
+}
+
 void o_005cde40(void);
+void progress_log_end(void);
 
 /* RECOMP_SCREEN_LOG: a line with the game date at a human turn 7 or more game days after the last such line. The
  * screen log (waits.c) prints a line only when the screen changes, and the stall check of the test runs reads the
@@ -62,13 +76,17 @@ static void date_log_turn(void)
 /* The human turn, cdecl (short *last date): 1 while the turn goes on. */
 RT_WRAP(005cde40, human_turn)
 {
+    progress_log_end();            /* RECOMP_PROGRESS_LOG (display.c): the time of the last progress text */
     date_log_turn();
     holiday_next_turn();
+    net_session_turn();
     season_log_turn();
     season_dates_log_turn();
     season_history_log_turn();
     season_report_turn();
     screen_sweep_turn();           /* RECOMP_SCREEN_SWEEP (screen_sweep.c, slice 30a) */
+    nation_job_turn();             /* RECOMP_TEST_NATION_JOB (nation_job.c, Q15) */
+    squad_numbers_test_turn();     /* RECOMP_TEST_SQUAD_NUMBERS (squad_numbers.c, issue 140) */
     if (picker_check_turn()) {     /* RECOMP_PICK_CHECK: the dump is written */
         if (rt_on_fatal) rt_on_fatal();
         SDL_Quit();
@@ -88,6 +106,7 @@ RT_WRAP(005cde40, human_turn)
             uint32_t args[2] = {rt_alloc_str(path), 0x16};
             uint32_t r = rt_callback(SAVE_GAME, 2, args);
             fprintf(stderr, "recomp: saved %s after %d game days (result %u)\n", path, today - first_day, r);
+            history_trim_screen_check();    /* RECOMP_TEST_CLUB_HISTORY=1 only (history_trim.c) */
             if (rt_on_fatal) rt_on_fatal();
             SDL_Quit();
             exit(0);

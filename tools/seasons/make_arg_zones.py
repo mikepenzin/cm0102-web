@@ -106,7 +106,7 @@ def derive(folder):
     i32 = lambda r, o: struct.unpack_from("<i", r, o)[0]  # noqa: E731
     folders, base, _ = c.database_folders(folder)
     by_year = {}
-    for year in range(2001, 2026):
+    for year in range(2001, 2027):
         path = folders.get(year, base)
         f = Folder(path)
         arg = [i32(r, 0) for r in f.rows(4) if cstr(r, 4, 51) == "Argentina"][0]
@@ -118,11 +118,11 @@ def derive(folder):
         with open(TSV, newline="", encoding="utf-8") as f:
             keep = [r for r in csv.DictReader(f, delimiter="\t") if not r["source"].startswith("database ")]
     out = []
-    for year in range(2001, 2025):
+    for year in range(2001, 2026):
         for cid, (name, zone) in by_year[year][1].items():
             if zone > 0:
                 continue
-            for later in range(year + 1, 2026):
+            for later in range(year + 1, 2027):
                 other = by_year[later][1].get(cid)
                 if not other or other[1] <= 0:
                     continue

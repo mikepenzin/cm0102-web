@@ -120,21 +120,21 @@ Croatia	2009	keep	keep	keep	keep	keep	keep
 Croatia	2010	keep	keep	keep	keep	keep	keep
 Croatia	2011	keep	keep	keep	keep	keep	keep
 Croatia	2012	keep	keep	keep	keep	keep	keep
-Croatia	2013	keep	keep	keep	keep	keep	keep
-Croatia	2014	keep	keep	keep	keep	keep	keep
-Croatia	2015	keep	keep	6	keep	keep	keep
+Croatia	2013	keep	6	none	keep	keep	keep
+Croatia	2014	keep	6	none	keep	keep	keep
+Croatia	2015	keep	6	none	keep	keep	keep
 Croatia	2016	keep	keep	keep	keep	keep	keep
-Croatia	2017	keep	keep	keep	keep	keep	keep
-Croatia	2018	keep	keep	keep	keep	keep	keep
-Croatia	2019	keep	keep	keep	keep	keep	keep
-Croatia	2020	keep	keep	6	keep	keep	keep
+Croatia	2017	keep	8	none	keep	keep	keep
+Croatia	2018	keep	8	none	keep	keep	keep
+Croatia	2019	keep	6	none	keep	keep	keep
+Croatia	2020	keep	6	none	keep	keep	keep
 Croatia	2021	keep	keep	keep	keep	keep	keep
 Croatia	2022	keep	keep	keep	keep	keep	keep
 Croatia	2023	keep	keep	keep	keep	keep	keep
 Croatia	2024	keep	keep	keep	keep	keep	keep
-Croatia	2025	keep	keep	keep	keep	keep	keep
-Croatia	2026	keep	keep	keep	keep	keep	keep
-Croatia	2027	keep	keep	keep	keep	keep	keep
+Croatia	2025	keep	6	none	keep	keep	keep
+Croatia	2026	keep	5	none	keep	keep	keep
+Croatia	2027	keep	5	none	keep	keep	keep
 Denmark	2001	keep	keep	keep	keep	keep	keep
 Denmark	2002	keep	keep	keep	keep	keep	keep
 Denmark	2003	keep	keep	keep	keep	keep	keep
@@ -464,37 +464,37 @@ Portugal	2002	keep	keep	keep	keep	keep	keep
 Portugal	2003	keep	keep	keep	keep	keep	keep
 Portugal	2004	keep	keep	keep	keep	keep	keep
 Portugal	2005	keep	keep	keep	keep	keep	keep
-Portugal	2006	keep	keep	keep	keep	keep	keep
-Portugal	2007	keep	none	none	keep	keep	keep
-Portugal	2008	keep	none	none	keep	keep	keep
-Portugal	2009	keep	none	none	keep	keep	keep
-Portugal	2010	keep	none	none	keep	keep	keep
-Portugal	2011	keep	none	none	keep	keep	keep
-Portugal	2012	keep	none	none	keep	keep	keep
-Portugal	2013	keep	none	none	keep	keep	keep
-Portugal	2014	keep	none	none	keep	keep	keep
-Portugal	2015	keep	none	none	keep	keep	keep
-Portugal	2016	keep	none	none	keep	keep	keep
-Portugal	2017	keep	none	none	keep	keep	keep
-Portugal	2018	keep	none	none	keep	keep	keep
-Portugal	2019	keep	none	none	keep	keep	keep
-Portugal	2020	keep	none	none	keep	keep	keep
-Portugal	2021	keep	none	none	keep	keep	keep
-Portugal	2022	keep	none	none	keep	keep	keep
-Portugal	2023	keep	none	none	keep	keep	keep
-Portugal	2024	keep	none	none	keep	keep	keep
-Portugal	2025	keep	none	none	keep	keep	keep
-Portugal	2026	keep	none	none	keep	keep	keep
-Portugal	2027	keep	none	none	keep	keep	keep
+Portugal	2006	keep	none	none	none	keep	keep
+Portugal	2007	keep	none	none	none	keep	keep
+Portugal	2008	keep	none	none	none	keep	keep
+Portugal	2009	keep	none	none	none	keep	keep
+Portugal	2010	keep	none	none	none	keep	keep
+Portugal	2011	keep	none	none	none	keep	keep
+Portugal	2012	keep	none	none	none	keep	keep
+Portugal	2013	keep	none	none	none	keep	keep
+Portugal	2014	keep	none	none	none	keep	keep
+Portugal	2015	keep	none	none	none	keep	keep
+Portugal	2016	keep	none	none	none	keep	keep
+Portugal	2017	keep	none	none	none	keep	keep
+Portugal	2018	keep	none	none	none	keep	keep
+Portugal	2019	keep	none	none	none	keep	keep
+Portugal	2020	keep	none	none	none	keep	keep
+Portugal	2021	keep	none	none	none	keep	keep
+Portugal	2022	keep	none	none	none	keep	keep
+Portugal	2023	keep	none	none	none	keep	keep
+Portugal	2024	keep	none	none	none	keep	keep
+Portugal	2025	keep	none	none	none	keep	keep
+Portugal	2026	keep	none	none	none	keep	keep
+Portugal	2027	keep	none	none	none	keep	keep
 Republic of Ireland	2001	keep	none	none	keep	keep	keep
 Republic of Ireland	2002	keep	none	none	keep	keep	keep
 Republic of Ireland	2003	keep	none	none	keep	keep	keep
-Republic of Ireland	2004	keep	none	none	keep	keep	keep
+Republic of Ireland	2004	7.1-4.3,1.7-30.7	none	none	keep	keep	keep
 Republic of Ireland	2005	keep	none	none	keep	keep	keep
 Republic of Ireland	2006	keep	none	none	keep	keep	keep
 Republic of Ireland	2007	keep	none	none	keep	keep	keep
 Republic of Ireland	2008	keep	none	none	keep	keep	keep
-Republic of Ireland	2009	keep	none	none	keep	keep	keep
+Republic of Ireland	2009	1.12-22.2,1.7-30.7	none	none	keep	keep	keep
 Republic of Ireland	2010	keep	none	none	keep	keep	keep
 Republic of Ireland	2011	keep	none	none	keep	keep	keep
 Republic of Ireland	2012	keep	none	none	keep	keep	keep
@@ -507,8 +507,8 @@ Republic of Ireland	2018	keep	none	none	keep	keep	keep
 Republic of Ireland	2019	keep	none	none	keep	keep	keep
 Republic of Ireland	2020	keep	none	none	keep	keep	keep
 Republic of Ireland	2021	keep	none	none	keep	keep	keep
-Republic of Ireland	2022	keep	none	none	keep	keep	keep
-Republic of Ireland	2023	keep	none	none	keep	keep	keep
+Republic of Ireland	2022	1.12-22.2,1.7-28.7	none	none	keep	keep	keep
+Republic of Ireland	2023	1.12-22.2,1.7-28.7	none	none	keep	keep	keep
 Republic of Ireland	2024	1.12-22.2,1.7-28.7	none	none	keep	keep	keep
 Republic of Ireland	2025	1.12-22.2,1.7-28.7	none	none	keep	keep	keep
 Republic of Ireland	2026	1.12-22.2,1.7-28.7	none	none	keep	keep	keep

@@ -27,6 +27,8 @@
  * its own entrants and qualifying rounds (season_uefa_qual.c), and for its knockout round play-offs the 8 thirds
  * of the Europa League groups. The format of 2004/05 to 2008/09 and the Intertoto hand-over are the Europa
  * League's only. */
+#include "season_bel_playoffs.h"
+#include "season_sizes_arg.h"
 #include "win.h"
 #include "season.h"
 #include "season_uefa.h"
@@ -37,6 +39,7 @@
 #include "season_load.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define COMP_TABLE 0xadadfcu
@@ -338,15 +341,39 @@ static uint32_t qual_table(uint32_t uc, int q1, int q2, int r1)
     set_round(t, 0, 250, q1, q1, 0, 0, 0);
     set_round(t + ROUND_SIZE, 1, 260, q2, q2 - q1 / 2, q1, 0, 0);
     set_round(t + 2 * ROUND_SIZE, 2, 10, r1, r1 - q2 / 2, q1 + q2 - q1 / 2, 0x400, 0);
-    /* Q1 on 13 July, Q2 on the original's qualifying round dates (draw 28 July, 10 August, 0x902720..0x902740),
-     * R1 on its first round dates (14 September); each second leg 14 days later (+0x22). */
-    set_date(t, 0, 1, 6, 0, 13, 6, 0, 0, (uint32_t)(int16_t)rd16(g_mem, uc + 0x40));
+    /* Q1 on 13 July. Q2 drawn on the original's 28 July, R1 on the original's first round: their first legs on the
+     * Thursday nearest the original's day whose legs meet no FIFA day, the R1 draw the day after Q2
+     * (season_uefa_cup_qual_dates); each second leg 14 days later (+0x22). */
+    int year = (int16_t)rd16(g_mem, uc + 0x40);
+    set_date(t, 0, 1, 6, 0, 13, 6, 0, 0, (uint32_t)year);
+    if (!rt_unwinding) season_uefa_cup_qual_dates(t + ROUND_SIZE, t + 2 * ROUND_SIZE, year);
     return rt_unwinding ? 0 : t;
 }
 
 static uint32_t ko_table(uint32_t uc, int ko_po);
 static uint32_t group_table(uint32_t year, int days);
 static uint32_t uc_group_name(int g);
+
+/* Item 298: the UEFA Cup before its groups (a row with a qualifying round "QR" and no group stage: 2001/02 to
+ * 2003/04) keeps the original's round table, whose qualifying round (code 0xdc, 10 August, 0x902735..0x90273c) and
+ * first round (code 10, 14 September, 0x9027cd..0x9027de; drawn on 25 August, 0x9027bf..0x9027c4) take the day of
+ * the year on a Thursday. In 2003 the first round fell on 11 September, the day after a FIFA day: the clubs played
+ * it without their players on duty (release set row t2002: Leeds United with 3 players in the squad of the Republic
+ * of Ireland, which played on 10 September). In a season game the two rounds take the dates of the UEFA Cup with
+ * groups (season_uefa_cup_qual_dates). t is the table that the original returned (eax), rounds its count. The base
+ * game has no row and keeps the original's days. */
+static void pre_group_dates(int kind, const SeasonUefa *r, uint32_t t, int rounds, int year)
+{
+    if (rt_unwinding || kind != 'e' || !r || r->uc_groups || r->uc_league || season_uefa_uc_round(r, "QR") <= 0 ||
+        !readable(t) || rounds < 2 || rounds > 16)
+        return;
+    uint32_t qr = record_of(t, rounds, 0xdc), first = record_of(t, rounds, 10), second = record_of(t, rounds, 20);
+    if (!qr || !first || !season_uefa_cup_qual_dates(qr, first, year) || rt_unwinding) return;
+    /* The second round's draw (29 September with weekday 4, 0x902858..0x90285e: 26 September 2003) comes after the
+     * first round's second leg (2 October 2003 when the rule moves it a week). The qualifying round's draw keeps the
+     * original's day. */
+    if (second) season_uefa_cup_draw_after(first, second, year);
+}
 
 /* The return addresses of the two calls that set up a season's rounds: the constructor (call at 0x9023cd) and
  * set_up_rules 0x9030b0 (call at 0x9030ca). Any other caller, such as Comp::build_match_date_list 0x48d500 (the
@@ -387,6 +414,7 @@ RT_WRAP(009025c0, uc_round_table)
                         kind == 'k' ? "Conference League" : "UEFA Cup", year, (int8_t)g_mem[uc + 0xb2],
                         (int16_t)rd16(g_mem, uc + 0x3e));
             o_009025c0();
+            if (readable(out_rounds)) pre_group_dates(kind, r, cpu.eax, (int16_t)rd16(g_mem, out_rounds), (int)year);
             return;
         }
         uint32_t t = qual_table(uc, q1, q2, r1);
@@ -413,6 +441,8 @@ RT_WRAP(009025c0, uc_round_table)
     }
     if (!groups_layout(uc) || stage < -1 || stage > ko_slot(uc) || !have_f) {
         o_009025c0();
+        if (stage == -1 && readable(out_rounds))       /* a reader of the season before groups: the same dates */
+            pre_group_dates(kind, r, cpu.eax, (int16_t)rd16(g_mem, out_rounds), (int)year);
         return;
     }
     /* A reader: the tables of this season's format, with no change to the object. */
@@ -785,6 +815,20 @@ static int ecl_take_el_thirds(uint32_t ecl)
     return put;
 }
 
+/* The knockout draw waits while a slot of the thirds is empty: the competition calls advance_stage again each day
+ * (Cup::update_for_date 0x51f890). Open item 125: the waiting line goes out once per wait, on the first day of the
+ * competition's season that finds a slot empty. */
+static int first_wait(uint32_t uc, uint32_t year)
+{
+    static struct { uint32_t uc, year; } seen[4];
+    static int next;
+    for (int i = 0; i < 4; i++)
+        if (seen[i].uc == uc && seen[i].year == year) return 0;
+    seen[next].uc = uc, seen[next].year = year;
+    next = (next + 1) % 4;
+    return 1;
+}
+
 static void draw_knockout_po(uint32_t uc, const UcGroups *f, uint32_t year, int groups)
 {
     uint32_t seed[8], unseed[8], winner[8];
@@ -819,8 +863,9 @@ static void draw_knockout_po(uint32_t uc, const UcGroups *f, uint32_t year, int 
         unseed[k] = readable(entries) ? rd32(g_mem, entries + 6u * (uint32_t)(count - 8 + k)) : 0;
         unseed_group[k] = -1;
         if (!readable(unseed[k])) {
-            fprintf(stderr, "recomp: uefa: %s knockout: no %s third in slot %d\n", uc_name(uc),
-                    ecl ? "Europa League" : "Champions League", count - 8 + k);
+            if (first_wait(uc, year))
+                fprintf(stderr, "recomp: uefa: %s knockout: no %s third in slot %d, so the draw waits\n", uc_name(uc),
+                        ecl ? "Europa League" : "Champions League", count - 8 + k);
             return;
         }
     }
@@ -918,7 +963,9 @@ static void draw_knockout(uint32_t uc)
     for (int k = 0; k < 8; k++) {                                     /* the slots of the Champions League thirds */
         thirds[k] = readable(entries) ? rd32(g_mem, entries + 6u * (uint32_t)(count - 8 + k)) : 0;
         if (!readable(thirds[k])) {
-            fprintf(stderr, "recomp: uefa: UEFA Cup knockout: no Champions League third in slot %d\n", count - 8 + k);
+            if (first_wait(uc, year))
+                fprintf(stderr, "recomp: uefa: UEFA Cup knockout: no Champions League third in slot %d, so the draw "
+                        "waits\n", count - 8 + k);
             return;
         }
     }
@@ -980,6 +1027,14 @@ void o_009030e0(void);
 RT_WRAP(005a8f60, empty_or_uc_advance)
 {
     uint32_t uc = cpu.ecx;
+    if (season_arg_advance(uc)) {                    /* 0.7.2 gap row 48: the Argentine Primera's title stages */
+        if (!rt_unwinding) rt_ret_cdecl(cpu.eax);
+        return;
+    }
+    if (season_bel_po_advance(uc)) {                 /* issue 150: the Belgian First Division's stages */
+        if (!rt_unwinding) rt_ret_cdecl(cpu.eax);
+        return;
+    }
     if (season_playoffs_advance(uc)) {               /* slice 19: a league's play-off (season_playoffs.c) */
         if (!rt_unwinding) rt_ret_cdecl(cpu.eax);
         return;
@@ -1045,18 +1100,35 @@ RT_WRAP(00519a90, cup_honours)
     rt_jump(rd32(g_mem, rd32(g_mem, ko) + 0x30));
 }
 
-/* Uefa_Cup slot 17 0x9030e0: the base 0x519890 does nothing for a cup with stages (+0x2c, 0x5198a3); here it
- * runs as for the original's UEFA Cup (the title holder of 0x519974, the staff records). A round index past the
- * round table is not read (0x5199e0..0x5199e6).
+/* Uefa_Cup slot 17 0x9030e0 (club, outcome, stage, &code, fixture, arg) ret 0x18: Cup::add_team_result_news
+ * 0x519690 calls it at 0x51970c with the outcome of a club and the byte +0x44 of the object that played the round
+ * (Cup::process_fixture 0x51a150 pushes it at 0x51afbf, 0x51afea and 0x51b118): -1 for the cup's own round table,
+ * the stage number for the knockout stage. It clears club +0x1db for the outcomes 1, 2 and -1
+ * (0x9030e8..0x9030f4) and calls Cup::update_staff_records_for_status 0x519890. The base 0x519890 does nothing
+ * for a cup with stages (+0x2c, 0x5198a3); here it runs as for the original's UEFA Cup (the staff records). A
+ * round index past the round table is not read (0x5199e0..0x5199e6).
  *
- * The club's European mark (O270). 0x9030e0 clears club +0x1db for the outcomes 1, 2 and -1 (0x9030e8..0x9030f4):
- * in the original's UEFA Cup, a knockout from start to final, each of them ends the club's cup. With groups the
- * round table ends at the last qualifying round, so its winners get outcome 1 there (the round codes of the access
- * list, 220 to 270, as 0x4b0870 rounds them) and lost the mark, though they go on into the groups. The registration
- * of 2 February (process_euro_registration 0x85a9b0, phase 3, at 0x85aa5c) then left them out, and in the knockout
- * rounds only the players registered in August could play: Leeds United had 10 on 14 February 2012 and the match
- * stopped at match_eng.cpp 652 (0x6b8aca). Such a winner keeps its mark; the group stage takes it off the clubs
- * that go out (draw_knockout, draw_knockout_po). */
+ * Issue 119, the outcome of the cup's own round table. 0x51a150 gives outcome 1 to the winner of a tie with no
+ * next tie (0x51af06, 0x51af95), so the winners of the last round of the round table get 1. In the original's
+ * UEFA Cup that is the final. With groups the round table ends before the group stage: at R1 (2004/05 to
+ * 2008/09) or at the last qualifying round (2009/10 on, the round codes 220 to 270). With outcome 1, 0x519890
+ * called Staff_Records::add_cup_winners_record 0x86a800 (0x5198d5) for each of those clubs: a cup win for the
+ * club, its manager and its squad, and Media::queue_trophy_praise_story 0x75c390 (0x86b000, 0x86b021), the news
+ * "Fans celebrate winning the UEFA Cup". The club also lost its European mark (O270 below). Such a winner goes
+ * on, so it now passes outcome 0 (season_uefa_cup_outcome), as a winner of an earlier round does: 0x519890 gives
+ * no record for a round past the round table (0x5199e6), and 0x9030e0 keeps the mark. Only the final of the
+ * knockout stage (stage >= 0) gives outcome 1. The news item of the result itself (0x519690, "win in UEFA Cup
+ * First Round") reads its own copy of the outcome and does not change.
+ *
+ * The club's European mark (O270). In the original's UEFA Cup, a knockout from start to final, the outcomes 1, 2
+ * and -1 each end the club's cup. The registration of 2 February (process_euro_registration 0x85a9b0, phase 3, at
+ * 0x85aa5c) left out a winner that lost its mark, and in the knockout rounds only the players registered in
+ * August could play: Leeds United had 10 on 14 February 2012 and the match stopped at match_eng.cpp 652
+ * (0x6b8aca). The group stage takes the mark off the clubs that go out (draw_knockout, draw_knockout_po).
+ *
+ * RECOMP_TEST_UC_OUTCOME=original (tests only): the code before issue 119 (outcome 1 to 0x9030e0, the mark put
+ * back for the qualifying round codes 220 to 270), with a log line for each such winner, for the replay of the
+ * fault. */
 RT_WRAP(009030e0, uc_result)
 {
     uint32_t uc = cpu.ecx;
@@ -1064,10 +1136,29 @@ RT_WRAP(009030e0, uc_result)
         o_009030e0();
         return;
     }
+    static int original = -1;
+    if (original < 0) {
+        const char *v = getenv("RECOMP_TEST_UC_OUTCOME");
+        original = v && !strcmp(v, "original");
+    }
     uint32_t club = rt_arg(0), fixture = rt_arg(4), mark = readable(club) ? rd32(g_mem, club + 0x1db) : 0;
-    int outcome = (int8_t)rt_arg(1), code = readable(fixture) ? (int16_t)rd16(g_mem, fixture + 0x30) : 0;
-    int base = code < 1000 ? code - code % 10 : code;
-    int keep = outcome == 1 && base >= 220 && base <= 270;
+    int outcome = (int8_t)rt_arg(1), stage = (int8_t)rt_arg(2);
+    int code = readable(fixture) ? (int16_t)rd16(g_mem, fixture + 0x30) : 0;
+    int pass = season_uefa_cup_outcome(stage, outcome), keep = 0;
+    uint32_t year = (uint32_t)(int16_t)rd16(g_mem, uc + 0x40);
+    const char *name = readable(club) ? win_str(club + 4) : "?";
+    const char *cup = is_uc(uc) == 'k' ? "Conference League" : year < 2009 ? "UEFA Cup" : "Europa League";
+    if (pass != outcome && original) {
+        int base = code < 1000 ? code - code % 10 : code;
+        keep = base >= 220 && base <= 270;
+        fprintf(stderr, "recomp: uefa: %s %u/%02u: %.50s won round %d of the round table: outcome 1, the cup "
+                "winners record 0x86a800 (fixture +0x3a %d, test: the code before issue 119)\n", cup, year,
+                (year + 1) % 100, name, code, readable(fixture) ? g_mem[fixture + 0x3a] : -1);
+    } else if (pass != outcome) {
+        g_mem[cpu.esp + 8] = (uint8_t)pass;
+        fprintf(stderr, "recomp: uefa: %s %u/%02u: %.50s won round %d of the round table: goes on, outcome %d "
+                "(not the cup winner)\n", cup, year, (year + 1) % 100, name, code, pass);
+    }
     uint32_t stages = rd32(g_mem, uc + 0x2c);
     wr32(g_mem, uc + 0x2c, 0);
     o_009030e0();

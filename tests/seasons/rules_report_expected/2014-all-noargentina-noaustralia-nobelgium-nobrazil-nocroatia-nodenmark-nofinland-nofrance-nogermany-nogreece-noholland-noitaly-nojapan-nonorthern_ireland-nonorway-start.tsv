@@ -4,6 +4,12 @@
 2014	bench	eng_fa_cup (FA Cup), row eng-376: game 5, table 7 (7)
 2014	bench	ire_chal_cup (FAI Cup), row wal-nir-irl-344: game 5, table 7 (7 (inference from final line-ups))
 2014	bench	world_club_champ (FIFA Club World Cup), row club-world-249: game 7, table 12 (12)
+2014	club_list	American Major League: 12 of 18 listed clubs that the database holds (20 listed), 0 other clubs, 12 in all; not in it: New York City FC, Orlando City, Philadelphia Union, Portland Timbers, Toronto FC, Vancouver Whitecaps; others: -
+2014	club_list	Irish First Division: 8 of 8 listed clubs that the database holds (8 listed), 2 other clubs, 10 in all; not in it: -; others: FC Carlow, Tralee Dynamos
+2014	club_list	Korean League: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Daejeon Citizen, Gwangju FC; others: -
+2014	club_list	Portuguese Second League: 18 of 23 listed clubs that the database holds (24 listed), 0 other clubs, 18 in all; not in it: Clube Sport Marítimo B, Futebol Clube do Porto B, Sport Lisboa e Benfica B, Sporting Clube de Braga B, Sporting Clube de Portugal B; others: -
+2014	club_list	Turkish 2. Division Category A: 18 of 18 listed clubs that the database holds (18 listed), 2 other clubs, 20 in all; not in it: -; others: Göztepe A.S., Hatayspor
+2014	club_list	Welsh Premier Division: 12 of 12 listed clubs that the database holds (12 listed), 6 other clubs, 18 in all; not in it: -; others: Afan Lido, Caernarfon Town, Caersws, Conwy Borough, Monmouth Town, Taffs Well
 2014	clubs	african_nations (Africa Cup of Nations), row int-continental-150: game 0, table 16 (16)
 2014	clubs	asia_club_champ (AFC Champions League), row club-world-260: game 16, table 32 (32)
 2014	clubs	asia_nations (AFC Asian Cup), row int-continental-152: game 0, table 16 (16)
@@ -18,8 +24,6 @@
 2014	clubs	por_cup (Taça de Portugal), row por-123: game 164, table 135 (135)
 2014	clubs	por_second (Segunda Liga), row por-119: game 18, table 24 (24)
 2014	clubs	sco_chal_cup (Scottish Challenge Cup), row sco-112: game 30, table 32 (32)
-2014	clubs	swe_prm (Allsvenskan), row den-swe-242: game 14, table 16 (16)
-2014	clubs	tur_second (TFF 1. Lig), row rus-tur-203: game 20, table 18 (18)
 2014	clubs	tur_second_b (TFF 2. Lig), row rus-tur-230: game 10, table 37 (37)
 2014	clubs	uefa_cup (UEFA Europa League), row uefa-109: game 162, table 195 (195 (162 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
 2014	clubs	usa_mls (Major League Soccer), row arg-usa-230: game 4, table 20 (20)
@@ -27,7 +31,6 @@
 2014	clubs	wel_first (Welsh Premier League), row wal-nir-irl-329: game 18, table 12 (12)
 2014	clubs	wel_lge_cup (Welsh League Cup), row wal-nir-irl-333: game 3, table 28 (28)
 2014	clubs	world_club_champ (FIFA Club World Cup), row club-world-249: game 0, table 7 (7)
-2014	down	eng_third (Football League Two), row eng-161: game 1 (+0 play-off places), table 2 (2)
 2014	down	kor_league (K League Classic), row aus-jap-kor-338: game 0 (+0 play-off places), table 1 (1 (12th))
 2014	down	pol_first (Ekstraklasa), row gre-pol-cro-203: game 0 (+0 play-off places), table 2 (2 (15th-16th))
 2014	down	pol_second (I liga), row gre-pol-cro-257: game 4 (+0 play-off places), table 3 (3 (16th-18th))
@@ -68,6 +71,11 @@
 2014	playoffs	sco_third (Scottish League Two), row sco-109: game 0 up and 0 down play-off places, table 3 and 1 ('2nd to 4th play off with League One 9th for a League One place (two-legged semi-')
 2014	playoffs	swe_first (Superettan), row den-swe-243: game 1 up and 0 down play-off places, table 1 and 2 ('3rd plays the Allsvenskan 14th; 13th and 14th play the Division 1 (Ettan) runner')
 2014	playoffs	tur_second_b (TFF 2. Lig), row rus-tur-230: game 2 up and 0 down play-off places, table 0 and 0 ('see format')
+2014	rounds	ire_first (League of Ireland First Division), row wal-nir-irl-342: game 36, table 28 (4 meetings, zones -, extra 0)
+2014	rounds	kor_league (K League Classic), row aus-jap-kor-338: game 27, table 33 (3 meetings, zones -, extra 0)
+2014	rounds	pol_first (Ekstraklasa), row gre-pol-cro-203: game 14, table 30 (2 meetings, zones -, extra 0)
+2014	rounds	por_second (Segunda Liga), row por-119: game 34, table 46 (2 meetings, zones -, extra 0)
+2014	rounds	wel_first (Welsh Premier League), row wal-nir-irl-329: game 34, table 22 (2 meetings, zones -, extra 0)
 2014	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-526: game 3, table 7 (7)
 2014	up	pol_first (Ekstraklasa), row gre-pol-cro-203: game 4 (+0 play-off places), table na (n/a)
 2014	up	sco_second (Scottish League One), row sco-108: game 2 (+0 play-off places), table 1 (1)

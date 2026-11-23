@@ -51,7 +51,9 @@ COMPS = ["English Premier Division", "English FA Cup", "European Champions Cup",
 EPL = "English Premier Division"
 FIRST = 2001                    # 2000/01 (Q354) to the start year
 # Real winners from public records, independent of the research table: a part of each name (the databases
-# spell clubs in different ways). Label years as the 3.9.68 data labels each competition.
+# spell clubs in different ways). Label years as the 3.9.68 data labels each competition. None: no champion in
+# the official record (Serie A 2004/05: the FIGC revoked Juventus's title in July 2006 and gave it to no club; 2005/06
+# went to Internazionale on 26 July 2006, item 108).
 FACTS = {
     EPL: {2001: "Manchester United", 2002: "Arsenal", 2003: "Manchester United", 2004: "Arsenal", 2005: "Chelsea",
           2006: "Chelsea", 2007: "Manchester United", 2008: "Manchester United", 2009: "Manchester United"},
@@ -60,8 +62,8 @@ FACTS = {
     "European Champions Cup": {2001: "Bayern", 2002: "Real Madrid", 2003: "Milan", 2004: "Porto",
                                2005: "Liverpool", 2006: "Barcelona", 2007: "Milan", 2008: "Manchester United",
                                2009: "Barcelona"},
-    "Italian Serie A": {2001: "Roma", 2002: "Juventus", 2003: "Juventus", 2004: "Milan", 2005: "Juventus",
-                        2006: "Juventus", 2007: "Internazionale", 2008: "Internazionale", 2009: "Internazionale"},
+    "Italian Serie A": {2001: "Roma", 2002: "Juventus", 2003: "Juventus", 2004: "Milan", 2005: None,
+                        2006: "Internazionale", 2007: "Internazionale", 2008: "Internazionale", 2009: "Internazionale"},
     "Scottish Premier Division": {2001: "Celtic", 2002: "Celtic", 2003: "Rangers", 2004: "Celtic",
                                   2005: "Rangers", 2006: "Celtic", 2007: "Celtic", 2008: "Celtic", 2009: "Rangers"},
     "Norwegian Premier Division": {2001: "Rosenborg", 2002: "Rosenborg", 2003: "Rosenborg", 2004: "Rosenborg",
@@ -120,7 +122,10 @@ def check(label, start, got, want, turn=False):
             if y > start or y not in want[comp]:
                 continue
             first = [a for a, b in rows.get(y, [])]
-            if len(first) != 1 or part.lower() not in first[0].lower():
+            if part is None:
+                if first:
+                    bad.append(f"{comp} {y}: winner {first}, real none")
+            elif len(first) != 1 or part.lower() not in first[0].lower():
                 bad.append(f"{comp} {y}: winner {first or 'none'}, real {part}")
     return n, bad
 

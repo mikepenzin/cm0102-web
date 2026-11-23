@@ -130,6 +130,8 @@ A name lookup in `staff.dat` and `club.dat` confirmed that each season database 
 
 The file is `docs/research/rules-0.6.0/databases-signatures.tsv`. It has one row per database (49) with the size and SHA-256 of `index.dat`, `club.dat` and `staff.dat`, the data season, the style and the role. The rows name each database by month and year only. The folder names are not in the file.
 
+The official versions 3.9.60 and 3.9.65 each have two rows under one name (0.7.2, open item 230). The first row is the data set that the game ships in Data-3.9.60 and Data-3.9.65: the files of CM0102.iso and of the official 3.9.65 patch (`tools/clean_files/manifest-3960.tsv` and `manifest-3965.tsv`). The second row is the fixed file of the forum topic (t=65 and t=276 above). The first row comes first, so a lookup by name gives the shipped data set.
+
 Uniqueness across the 49 folders:
 
 | Key | Unique values |

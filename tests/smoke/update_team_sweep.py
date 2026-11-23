@@ -203,7 +203,7 @@ def unpack_seasons(seasons, tool, work):
     os.makedirs(game)
     os.makedirs(save)
     os.symlink(seasons, os.path.join(game, "Seasons"))
-    for year in range(2001, 2026):
+    for year in range(2001, 2027):
         r = subprocess.run([tool, "prepare", game, save, str(year)], capture_output=True, text=True)
         if "status=0 " in r.stdout:
             print(f"unpacked {r.stdout.strip()}", flush=True)

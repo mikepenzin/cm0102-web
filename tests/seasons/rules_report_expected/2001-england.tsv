@@ -79,11 +79,11 @@
 2003	clubs	european_cup (European Champions Cup), row uefa-18: game 55, table 72 (72 (32 in the group stage))
 2003	clubs	intertoto_cup (Inter-Toto Cup), row uefa-23: game 60, table 61 (61)
 2003	clubs	oceania_nations (Oceania Nations Cup), row int-continental-32: game 3, table 6 (6)
-2003	clubs	uefa_cup (UEFA Cup), row uefa-21: game 146, table 145 (145)
 2003	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-30: game 50, table 51 (51 entrants)
 2003	clubs	wc_asia_league (World Cup Asian Qualifying Section), row int-world-31: game 0, table 39 (39 entrants)
 2003	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-29: game 24, table 34 (34 entrants)
 2003	clubs	wc_oceania_league (World Cup Oceania Qualifying Section), row int-world-32: game 5, table 12 (12 entrants)
+2003	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-28: game 9, table 10 (10)
 2003	down	eng_third (English Third Division), row eng-51: game 1 (+0 play-off places), table 2 (2)
 2003	format	european_cup, row uefa-18: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
 2003	name	asia_nations (Asian Cup), row int-continental-31: game 'Asian Cup', table 'AFC Asian Cup'
@@ -137,6 +137,7 @@
 2004	clubs	wc_asia_league (World Cup Asian Qualifying Section), row int-world-43: game 0/4, table 32 (32, then 8)
 2004	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-41: game 24, table 12 (12, then 6)
 2004	clubs	wc_europe_league (World Cup European Qualifying Section), row int-world-39: game 5, table 51 (51 entrants)
+2004	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-40: game 9, table 10 (10)
 2004	down	eng_third (English Third Division), row eng-61: game 1 (+0 play-off places), table 2 (2)
 2004	format	european_cup, row uefa-26: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
 2004	format	uefa_cup, row uefa-29: game 0 clubs in the group stage and 0 in the knockout round after it, table 40 and 32
@@ -190,6 +191,7 @@
 2005	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-53: game 24, table 6 (6)
 2005	clubs	wc_europe_league (World Cup European Qualifying Section), row int-world-51: game 5, table 51 (51 entrants)
 2005	clubs	wc_oceania_league (World Cup Oceania Qualifying Section), row int-world-56: game 5, table 2 (2)
+2005	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-52: game 9, table 10 (10)
 2005	clubs	world_club_champ (FIFA Club World Championship), row club-world-78: game 4, table 6 (6)
 2005	clubs	world_cup (FIFA World Cup), row int-world-50: game 0/4, table 32 (32)
 2005	down	eng_third (English Third Division), row eng-71: game 1 (+0 play-off places), table 2 (2)
@@ -286,11 +288,10 @@
 2007	clubs	intertoto_cup (Inter-Toto Cup), row uefa-55: game 60, table 50 (50)
 2007	clubs	oceania_nations (Oceania Nations Cup), row int-continental-76: game 3, table 4 (4)
 2007	clubs	uefa_cup (UEFA Cup), row uefa-53: game 145, table 80 (80 in the first round; total not stated on the page)
-2007	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-78: game 50, table 53 (53 entrants)
+2007	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-78: game 48, table 53 (53 entrants)
 2007	clubs	wc_asia_league (World Cup Asian Qualifying Section), row int-world-79: game 0, table 43 (43 entrants)
 2007	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-77: game 24, table 35 (35 entrants)
 2007	clubs	wc_oceania_league (World Cup Oceania Qualifying Section), row int-world-80: game 5, table 11 (11 entrants)
-2007	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-76: game 9, table 10 (10)
 2007	clubs	world_club_champ (FIFA Club World Championship), row club-world-116: game 4, table 7 (7)
 2007	down	eng_third (English Third Division), row eng-91: game 1 (+0 play-off places), table 2 (2)
 2007	format	european_cup, row uefa-50: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
@@ -347,12 +348,11 @@
 2008	clubs	oceania_nations (Oceania Nations Cup), row int-continental-87: game 0/3, table 4 (4)
 2008	clubs	olympics (Olympic Games), row int-world-95: game 4, table 16 (16)
 2008	clubs	uefa_cup (UEFA Cup), row uefa-61: game 145, table 157 (157 in all, with the 24 Champions League clubs (the page labels it qualifying; i)
-2008	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-90: game 50, table 20 (20)
+2008	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-90: game 48, table 20 (20)
 2008	clubs	wc_asia_league (World Cup Asian Qualifying Section), row int-world-91: game 0/4, table 10 (10)
 2008	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-89: game 24, table 12 (12, then 6)
 2008	clubs	wc_europe_league (World Cup European Qualifying Section), row int-world-87: game 5, table 53 (53 entrants)
 2008	clubs	wc_oceania_league (World Cup Oceania Qualifying Section), row int-world-92: game 5, table 4 (4)
-2008	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-88: game 9, table 10 (10)
 2008	clubs	world_club_champ (FIFA Club World Championship), row club-world-135: game 0/4, table 7 (7)
 2008	down	eng_third (English Third Division), row eng-101: game 1 (+0 play-off places), table 2 (2)
 2008	format	european_cup, row uefa-58: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
@@ -409,12 +409,11 @@
 2009	clubs	african_nations (African Cup of Nations), row int-continental-95: game 0/4, table 16 (16 (15 played))
 2009	clubs	european_cup (European Champions Cup), row uefa-66: game 55, table 76 (76 (32 in the group stage))
 2009	clubs	uefa_cup (UEFA Cup), row uefa-69: game 145, table 192 (192 (159 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
-2009	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-102: game 50, table 20 (20)
+2009	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-102: game 48, table 20 (20)
 2009	clubs	wc_asia_league (World Cup Asian Qualifying Section), row int-world-103: game 4, table 2 (2)
 2009	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-101: game 24, table 6 (6)
 2009	clubs	wc_europe_league (World Cup European Qualifying Section), row int-world-99: game 5, table 53 (53 entrants)
 2009	clubs	wc_oceania_league (World Cup Oceania Qualifying Section), row int-world-104: game 5, table 1 (1)
-2009	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-100: game 9, table 10 (10)
 2009	clubs	world_club_champ (FIFA Club World Championship), row club-world-154: game 4, table 7 (7)
 2009	clubs	world_cup (FIFA World Cup), row int-world-98: game 0/4, table 32 (32)
 2009	down	eng_third (English Third Division), row eng-111: game 1 (+0 play-off places), table 2 (2)
@@ -505,7 +504,7 @@
 2010	no_row	record_utils (Reserve): no table row
 2010	no_row	record_utils (Under 21 International): no table row
 2010	not_held	african_nations (African Cup of Nations), row int-continental-106: the game holds 2010, the table says not held
-2010	not_held	fifa_confed (Confederations Cup), row int-world-118: the game holds 2009, the table says not held
+2010	not_held	fifa_confed (Confederations Cup), row int-world-118: the game holds 2011, the table says not held
 2010	not_held	goldcup (Copa America), row int-continental-110: the game holds 2011, the table says not held
 2010	not_held	inter_amer_cup (Inter-American Cup), row club-world-183: the game holds 2010, the table says not held
 2010	not_held	intertoto_cup (Inter-Toto Cup), row uefa-79: the game holds 2010, the table says not held
@@ -548,6 +547,7 @@
 2011	name	euro_champ (European Football Championship), row int-continental-111: game 'European Football Championship', table 'UEFA Euro 2012'
 2011	name	euro_champ_qual (European Championship Qualifying), row int-continental-112: game 'European Championship Qualifying', table 'UEFA Euro 2012 qualifying'
 2011	name	european_cup (European Champions Cup), row uefa-82: game 'European Champions Cup', table 'UEFA Champions League'
+2011	name	fifa_confed (Confederations Cup), row int-world-130: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2011	name	goldcup (Copa America), row int-continental-121: game 'Copa America', table '2011 Copa América'
 2011	name	inter_amer_cup (Inter-American Cup), row club-world-202: game 'Inter-American Cup', table 'Copa Interamericana'
 2011	name	intertoto_cup (Inter-Toto Cup), row uefa-87: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -566,6 +566,7 @@
 2011	no_row	record_utils (Reserve): no table row
 2011	no_row	record_utils (Under 21 International): no table row
 2011	not_held	asia_nations (Asian Cup), row int-continental-119: the game holds 2012, the table says not held
+2011	not_held	fifa_confed (Confederations Cup), row int-world-130: the game holds 2011, the table says not held
 2011	not_held	inter_amer_cup (Inter-American Cup), row club-world-202: the game holds 2011, the table says not held
 2011	not_held	intertoto_cup (Inter-Toto Cup), row uefa-87: the game holds 2011, the table says not held
 2011	not_held	olympics (Olympic Games), row int-world-131: the game holds 2012, the table says not held
@@ -581,9 +582,11 @@
 2012	bench	eng_prm (English Premier Division), row eng-138: game 5, table 7 (7)
 2012	bench	eng_second (English Second Division), row eng-140: game 5, table 7 (7)
 2012	bench	eng_third (English Third Division), row eng-141: game 5, table 7 (7)
+2012	bench	fifa_confed (Confederations Cup), row int-world-142: game 7, table 12 (12)
 2012	bench	world_club_champ (FIFA Club World Championship), row club-world-211: game 7, table 12 (12)
 2012	clubs	african_nations (African Cup of Nations), row int-continental-128: game 0/4, table 16 (16)
 2012	clubs	european_cup (European Champions Cup), row uefa-90: game 55, table 76 (76 (32 in the group stage))
+2012	clubs	fifa_confed (Confederations Cup), row int-world-142: game 0/4, table 8 (8)
 2012	clubs	olympics (Olympic Games), row int-world-143: game 4, table 16 (16)
 2012	clubs	uefa_cup (UEFA Cup), row uefa-93: game 145, table 193 (193 (161 entered + 32 from the Champions League); 48 in the group stage (+8 Cham)
 2012	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-138: game 50, table 40 (40)
@@ -595,7 +598,6 @@
 2012	down	eng_third (English Third Division), row eng-141: game 1 (+0 play-off places), table 2 (2)
 2012	format	european_cup, row uefa-90: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
 2012	format	uefa_cup, row uefa-93: game 0 clubs in the group stage and 0 in the knockout round after it, table 48 and 32
-2012	idle	fifa_confed (Confederations Cup), row int-world-142: the game waits for 2009, the table holds it
 2012	name	african_nations (African Cup of Nations), row int-continental-128: game 'African Cup of Nations', table '2013 Africa Cup of Nations'
 2012	name	asia_nations (Asian Cup), row int-continental-130: game 'Asian Cup', table 'AFC Asian Cup'
 2012	name	eng_auto_cup (English Vans Trophy), row eng-366: game 'English Vans Trophy', table 'Football League Trophy'
@@ -609,6 +611,7 @@
 2012	name	eur_super_cup (European Super Cup), row uefa-96: game 'European Super Cup', table 'UEFA Super Cup'
 2012	name	euro_champ (European Football Championship), row int-continental-122: game 'European Football Championship', table 'UEFA European Championship'
 2012	name	european_cup (European Champions Cup), row uefa-90: game 'European Champions Cup', table 'UEFA Champions League'
+2012	name	fifa_confed (Confederations Cup), row int-world-142: game 'Confederations Cup', table '2013 FIFA Confederations Cup'
 2012	name	goldcup (Copa America), row int-continental-132: game 'Copa America', table 'Copa América'
 2012	name	inter_amer_cup (Inter-American Cup), row club-world-221: game 'Inter-American Cup', table 'Copa Interamericana'
 2012	name	intertoto_cup (Inter-Toto Cup), row uefa-95: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -669,6 +672,7 @@
 2013	name	eur_super_cup (European Super Cup), row uefa-104: game 'European Super Cup', table 'UEFA Super Cup'
 2013	name	euro_champ_qual (European Championship Qualifying), row int-continental-134: game 'European Championship Qualifying', table 'UEFA European Championship qualifying'
 2013	name	european_cup (European Champions Cup), row uefa-98: game 'European Champions Cup', table 'UEFA Champions League'
+2013	name	fifa_confed (Confederations Cup), row int-world-154: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2013	name	goldcup (Copa America), row int-continental-143: game 'Copa America', table 'Copa América'
 2013	name	inter_amer_cup (Inter-American Cup), row club-world-240: game 'Inter-American Cup', table 'Copa Interamericana'
 2013	name	intertoto_cup (Inter-Toto Cup), row uefa-103: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -689,6 +693,7 @@
 2013	not_held	african_nations (African Cup of Nations), row int-continental-139: the game holds 2014, the table says not held
 2013	not_held	asia_nations (Asian Cup), row int-continental-141: the game holds 2012, the table says not held
 2013	not_held	euro_champ_qual (European Championship Qualifying), row int-continental-134: the game holds 2014, the table says not held
+2013	not_held	fifa_confed (Confederations Cup), row int-world-154: the game holds 2013, the table says not held
 2013	not_held	goldcup (Copa America), row int-continental-143: the game holds 2013, the table says not held
 2013	not_held	inter_amer_cup (Inter-American Cup), row club-world-240: the game holds 2013, the table says not held
 2013	not_held	intertoto_cup (Inter-Toto Cup), row uefa-103: the game holds 2013, the table says not held
@@ -730,6 +735,7 @@
 2014	name	eur_super_cup (European Super Cup), row uefa-112: game 'European Super Cup', table 'UEFA Super Cup'
 2014	name	euro_champ_qual (European Championship Qualifying), row int-continental-145: game 'European Championship Qualifying', table 'UEFA Euro 2016 qualifying'
 2014	name	european_cup (European Champions Cup), row uefa-106: game 'European Champions Cup', table 'UEFA Champions League'
+2014	name	fifa_confed (Confederations Cup), row int-world-166: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2014	name	goldcup (Copa America), row int-continental-154: game 'Copa America', table '2015 Copa América'
 2014	name	inter_amer_cup (Inter-American Cup), row club-world-259: game 'Inter-American Cup', table 'Copa Interamericana'
 2014	name	intertoto_cup (Inter-Toto Cup), row uefa-111: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -740,6 +746,7 @@
 2014	no_row	record_utils ('B' International): no table row
 2014	no_row	record_utils (Reserve): no table row
 2014	no_row	record_utils (Under 21 International): no table row
+2014	not_held	fifa_confed (Confederations Cup), row int-world-166: the game holds 2015, the table says not held
 2014	not_held	inter_amer_cup (Inter-American Cup), row club-world-259: the game holds 2014, the table says not held
 2014	not_held	intertoto_cup (Inter-Toto Cup), row uefa-111: the game holds 2014, the table says not held
 2014	not_held	oceania_nations (Oceania Nations Cup), row int-continental-153: the game holds 2014, the table says not held
@@ -782,6 +789,7 @@
 2015	name	euro_champ (European Football Championship), row int-continental-155: game 'European Football Championship', table 'UEFA Euro 2016'
 2015	name	euro_champ_qual (European Championship Qualifying), row int-continental-156: game 'European Championship Qualifying', table 'UEFA Euro 2016 qualifying'
 2015	name	european_cup (European Champions Cup), row uefa-114: game 'European Champions Cup', table 'UEFA Champions League'
+2015	name	fifa_confed (Confederations Cup), row int-world-178: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2015	name	goldcup (Copa America), row int-continental-165: game 'Copa America', table 'Copa América Centenario'
 2015	name	inter_amer_cup (Inter-American Cup), row club-world-278: game 'Inter-American Cup', table 'Copa Interamericana'
 2015	name	intertoto_cup (Inter-Toto Cup), row uefa-119: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -801,6 +809,7 @@
 2015	no_row	record_utils (Under 21 International): no table row
 2015	not_held	african_nations (African Cup of Nations), row int-continental-161: the game holds 2016, the table says not held
 2015	not_held	asia_nations (Asian Cup), row int-continental-163: the game holds 2016, the table says not held
+2015	not_held	fifa_confed (Confederations Cup), row int-world-178: the game holds 2015, the table says not held
 2015	not_held	inter_amer_cup (Inter-American Cup), row club-world-278: the game holds 2015, the table says not held
 2015	not_held	intertoto_cup (Inter-Toto Cup), row uefa-119: the game holds 2015, the table says not held
 2015	not_held	olympics (Olympic Games), row int-world-179: the game holds 2016, the table says not held
@@ -816,9 +825,11 @@
 2016	bench	eng_prm (English Premier Division), row eng-178: game 5, table 7 (7)
 2016	bench	eng_second (English Second Division), row eng-180: game 5, table 7 (7)
 2016	bench	eng_third (English Third Division), row eng-181: game 5, table 7 (7)
+2016	bench	fifa_confed (Confederations Cup), row int-world-190: game 7, table 12 (12)
 2016	bench	world_club_champ (FIFA Club World Championship), row club-world-287: game 7, table 12 (12)
 2016	clubs	african_nations (African Cup of Nations), row int-continental-172: game 0/4, table 16 (16)
 2016	clubs	european_cup (European Champions Cup), row uefa-122: game 55, table 78 (78 (32 in the group stage))
+2016	clubs	fifa_confed (Confederations Cup), row int-world-190: game 0/4, table 8 (8)
 2016	clubs	olympics (Olympic Games), row int-world-191: game 4, table 16 (16)
 2016	clubs	uefa_cup (UEFA Cup), row uefa-125: game 145, table 188 (188 (155 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
 2016	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-186: game 50, table 20 (20)
@@ -831,7 +842,6 @@
 2016	down	eng_third (English Third Division), row eng-181: game 1 (+0 play-off places), table 2 (2)
 2016	format	european_cup, row uefa-122: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
 2016	format	uefa_cup, row uefa-125: game 0 clubs in the group stage and 0 in the knockout round after it, table 48 and 32
-2016	idle	fifa_confed (Confederations Cup), row int-world-190: the game waits for 2009, the table holds it
 2016	name	african_nations (African Cup of Nations), row int-continental-172: game 'African Cup of Nations', table '2017 Africa Cup of Nations'
 2016	name	asia_nations (Asian Cup), row int-continental-174: game 'Asian Cup', table 'AFC Asian Cup'
 2016	name	eng_auto_cup (English Vans Trophy), row eng-390: game 'English Vans Trophy', table 'EFL Trophy'
@@ -845,6 +855,7 @@
 2016	name	eur_super_cup (European Super Cup), row uefa-128: game 'European Super Cup', table 'UEFA Super Cup'
 2016	name	euro_champ (European Football Championship), row int-continental-166: game 'European Football Championship', table 'UEFA European Championship'
 2016	name	european_cup (European Champions Cup), row uefa-122: game 'European Champions Cup', table 'UEFA Champions League'
+2016	name	fifa_confed (Confederations Cup), row int-world-190: game 'Confederations Cup', table '2017 FIFA Confederations Cup'
 2016	name	goldcup (Copa America), row int-continental-176: game 'Copa America', table 'Copa América'
 2016	name	inter_amer_cup (Inter-American Cup), row club-world-297: game 'Inter-American Cup', table 'Copa Interamericana'
 2016	name	intertoto_cup (Inter-Toto Cup), row uefa-127: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -907,6 +918,7 @@
 2017	name	eur_super_cup (European Super Cup), row uefa-136: game 'European Super Cup', table 'UEFA Super Cup'
 2017	name	euro_champ_qual (European Championship Qualifying), row int-continental-178: game 'European Championship Qualifying', table 'UEFA European Championship qualifying'
 2017	name	european_cup (European Champions Cup), row uefa-130: game 'European Champions Cup', table 'UEFA Champions League'
+2017	name	fifa_confed (Confederations Cup), row int-world-202: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2017	name	goldcup (Copa America), row int-continental-187: game 'Copa America', table 'Copa América'
 2017	name	inter_amer_cup (Inter-American Cup), row club-world-316: game 'Inter-American Cup', table 'Copa Interamericana'
 2017	name	intertoto_cup (Inter-Toto Cup), row uefa-135: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -927,6 +939,7 @@
 2017	not_held	african_nations (African Cup of Nations), row int-continental-183: the game holds 2018, the table says not held
 2017	not_held	asia_nations (Asian Cup), row int-continental-185: the game holds 2016, the table says not held
 2017	not_held	euro_champ_qual (European Championship Qualifying), row int-continental-178: the game holds 2018, the table says not held
+2017	not_held	fifa_confed (Confederations Cup), row int-world-202: the game holds 2017, the table says not held
 2017	not_held	goldcup (Copa America), row int-continental-187: the game holds 2017, the table says not held
 2017	not_held	inter_amer_cup (Inter-American Cup), row club-world-316: the game holds 2017, the table says not held
 2017	not_held	intertoto_cup (Inter-Toto Cup), row uefa-135: the game holds 2017, the table says not held
@@ -968,6 +981,7 @@
 2018	name	eur_super_cup (European Super Cup), row uefa-144: game 'European Super Cup', table 'UEFA Super Cup'
 2018	name	euro_champ_qual (European Championship Qualifying), row int-continental-189: game 'European Championship Qualifying', table 'UEFA Euro 2020 qualifying'
 2018	name	european_cup (European Champions Cup), row uefa-138: game 'European Champions Cup', table 'UEFA Champions League'
+2018	name	fifa_confed (Confederations Cup), row int-world-214: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2018	name	goldcup (Copa America), row int-continental-198: game 'Copa America', table '2019 Copa América'
 2018	name	inter_amer_cup (Inter-American Cup), row club-world-335: game 'Inter-American Cup', table 'Copa Interamericana'
 2018	name	intertoto_cup (Inter-Toto Cup), row uefa-143: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -978,6 +992,7 @@
 2018	no_row	record_utils ('B' International): no table row
 2018	no_row	record_utils (Reserve): no table row
 2018	no_row	record_utils (Under 21 International): no table row
+2018	not_held	fifa_confed (Confederations Cup), row int-world-214: the game holds 2019, the table says not held
 2018	not_held	inter_amer_cup (Inter-American Cup), row club-world-335: the game holds 2018, the table says not held
 2018	not_held	intertoto_cup (Inter-Toto Cup), row uefa-143: the game holds 2018, the table says not held
 2018	not_held	oceania_nations (Oceania Nations Cup), row int-continental-197: the game holds 2018, the table says not held
@@ -1020,6 +1035,7 @@
 2019	name	euro_champ (European Football Championship), row int-continental-199: game 'European Football Championship', table 'UEFA Euro 2020'
 2019	name	euro_champ_qual (European Championship Qualifying), row int-continental-200: game 'European Championship Qualifying', table 'UEFA Euro 2020 qualifying'
 2019	name	european_cup (European Champions Cup), row uefa-146: game 'European Champions Cup', table 'UEFA Champions League'
+2019	name	fifa_confed (Confederations Cup), row int-world-226: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2019	name	goldcup (Copa America), row int-continental-209: game 'Copa America', table '2020 Copa América'
 2019	name	inter_amer_cup (Inter-American Cup), row club-world-354: game 'Inter-American Cup', table 'Copa Interamericana'
 2019	name	intertoto_cup (Inter-Toto Cup), row uefa-151: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1039,6 +1055,7 @@
 2019	no_row	record_utils (Under 21 International): no table row
 2019	not_held	african_nations (African Cup of Nations), row int-continental-205: the game holds 2020, the table says not held
 2019	not_held	asia_nations (Asian Cup), row int-continental-207: the game holds 2020, the table says not held
+2019	not_held	fifa_confed (Confederations Cup), row int-world-226: the game holds 2019, the table says not held
 2019	not_held	inter_amer_cup (Inter-American Cup), row club-world-354: the game holds 2019, the table says not held
 2019	not_held	intertoto_cup (Inter-Toto Cup), row uefa-151: the game holds 2019, the table says not held
 2019	not_held	olympics (Olympic Games), row int-world-227: the game holds 2020, the table says not held
@@ -1069,7 +1086,6 @@
 2020	clubs	wc_asia_league (World Cup Asian Qualifying Section), row int-world-235: game 0/4, table 40 (40)
 2020	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-233: game 24, table 30 (30, then 6)
 2020	clubs	wc_europe_league (World Cup European Qualifying Section), row int-world-231: game 5, table 55 (55 entrants)
-2020	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-232: game 9, table 10 (10)
 2020	clubs	world_club_champ (FIFA Club World Championship), row club-world-363: game 0/4, table 6 (6)
 2020	down	eng_third (English Third Division), row eng-221: game 1 (+0 play-off places), table 2 (2)
 2020	format	european_cup, row uefa-154: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
@@ -1087,6 +1103,7 @@
 2020	name	eur_super_cup (European Super Cup), row uefa-160: game 'European Super Cup', table 'UEFA Super Cup'
 2020	name	euro_champ (European Football Championship), row int-continental-210: game 'European Football Championship', table 'UEFA Euro 2020'
 2020	name	european_cup (European Champions Cup), row uefa-154: game 'European Champions Cup', table 'UEFA Champions League'
+2020	name	fifa_confed (Confederations Cup), row int-world-238: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2020	name	goldcup (Copa America), row int-continental-220: game 'Copa America', table '2021 Copa América'
 2020	name	inter_amer_cup (Inter-American Cup), row club-world-373: game 'Inter-American Cup', table 'Copa Interamericana'
 2020	name	intertoto_cup (Inter-Toto Cup), row uefa-159: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1106,6 +1123,7 @@
 2020	no_row	record_utils (Under 21 International): no table row
 2020	not_held	asia_nations (Asian Cup), row int-continental-218: the game holds 2020, the table says not held
 2020	not_held	euro_champ (European Football Championship), row int-continental-210: the game holds 2020, the table says not held
+2020	not_held	fifa_confed (Confederations Cup), row int-world-238: the game holds 2021, the table says not held
 2020	not_held	goldcup (Copa America), row int-continental-220: the game holds 2021, the table says not held
 2020	not_held	inter_amer_cup (Inter-American Cup), row club-world-373: the game holds 2020, the table says not held
 2020	not_held	intertoto_cup (Inter-Toto Cup), row uefa-159: the game holds 2020, the table says not held
@@ -1140,7 +1158,6 @@
 2021	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-245: game 24, table 8 (8)
 2021	clubs	wc_europe_league (World Cup European Qualifying Section), row int-world-243: game 5, table 55 (55 entrants)
 2021	clubs	wc_oceania_league (World Cup Oceania Qualifying Section), row int-world-248: game 5, table 8 (8 in groups (Tonga withdrew); Cook Islands and Vanuatu withdrew because of COVID)
-2021	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-244: game 9, table 10 (10)
 2021	clubs	world_club_champ (FIFA Club World Championship), row club-world-382: game 4, table 7 (7)
 2021	down	eng_third (English Third Division), row eng-231: game 1 (+0 play-off places), table 2 (2)
 2021	format	european_cup, row uefa-162: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
@@ -1158,6 +1175,7 @@
 2021	name	eur_super_cup (European Super Cup), row uefa-168: game 'European Super Cup', table 'UEFA Super Cup'
 2021	name	euro_champ_qual (European Championship Qualifying), row int-continental-222: game 'European Championship Qualifying', table 'UEFA European Championship qualifying'
 2021	name	european_cup (European Champions Cup), row uefa-162: game 'European Champions Cup', table 'UEFA Champions League'
+2021	name	fifa_confed (Confederations Cup), row int-world-250: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2021	name	goldcup (Copa America), row int-continental-231: game 'Copa America', table 'Copa América'
 2021	name	inter_amer_cup (Inter-American Cup), row club-world-392: game 'Inter-American Cup', table 'Copa Interamericana'
 2021	name	intertoto_cup (Inter-Toto Cup), row uefa-167: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1178,6 +1196,7 @@
 2021	not_held	african_nations (African Cup of Nations), row int-continental-227: the game holds 2022, the table says not held
 2021	not_held	asia_nations (Asian Cup), row int-continental-229: the game holds 2020, the table says not held
 2021	not_held	euro_champ_qual (European Championship Qualifying), row int-continental-222: the game holds 2022, the table says not held
+2021	not_held	fifa_confed (Confederations Cup), row int-world-250: the game holds 2021, the table says not held
 2021	not_held	goldcup (Copa America), row int-continental-231: the game holds 2021, the table says not held
 2021	not_held	inter_amer_cup (Inter-American Cup), row club-world-392: the game holds 2021, the table says not held
 2021	not_held	intertoto_cup (Inter-Toto Cup), row uefa-167: the game holds 2021, the table says not held
@@ -1210,7 +1229,7 @@
 2022	clubs	african_nations (African Cup of Nations), row int-continental-238: game 0/4, table 24 (24)
 2022	clubs	euro_champ_qual (European Championship Qualifying), row int-continental-233: game 5, table 53 (53)
 2022	clubs	european_cup (European Champions Cup), row uefa-170: game 55, table 78 (78 (32 in the group stage))
-2022	clubs	uefa_cup (UEFA Cup), row uefa-173: game 146, table 57 (57 (21 entered + 36 from the Champions League); 32 in the group stage (+8 Champi)
+2022	clubs	uefa_cup (UEFA Cup), row uefa-173: game 145, table 57 (57 (21 entered + 36 from the Champions League); 32 in the group stage (+8 Champi)
 2022	clubs	world_club_champ (FIFA Club World Championship), row club-world-401: game 0/4, table 7 (7)
 2022	down	eng_third (English Third Division), row eng-241: game 1 (+0 play-off places), table 2 (2)
 2022	format	european_cup, row uefa-170: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
@@ -1229,6 +1248,7 @@
 2022	name	eur_super_cup (European Super Cup), row uefa-176: game 'European Super Cup', table 'UEFA Super Cup'
 2022	name	euro_champ_qual (European Championship Qualifying), row int-continental-233: game 'European Championship Qualifying', table 'UEFA Euro 2024 qualifying'
 2022	name	european_cup (European Champions Cup), row uefa-170: game 'European Champions Cup', table 'UEFA Champions League'
+2022	name	fifa_confed (Confederations Cup), row int-world-262: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2022	name	goldcup (Copa America), row int-continental-242: game 'Copa America', table 'Copa América'
 2022	name	inter_amer_cup (Inter-American Cup), row club-world-411: game 'Inter-American Cup', table 'Copa Interamericana'
 2022	name	intertoto_cup (Inter-Toto Cup), row uefa-175: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1239,6 +1259,7 @@
 2022	no_row	record_utils ('B' International): no table row
 2022	no_row	record_utils (Reserve): no table row
 2022	no_row	record_utils (Under 21 International): no table row
+2022	not_held	fifa_confed (Confederations Cup), row int-world-262: the game holds 2023, the table says not held
 2022	not_held	goldcup (Copa America), row int-continental-242: the game holds 2023, the table says not held
 2022	not_held	inter_amer_cup (Inter-American Cup), row club-world-411: the game holds 2022, the table says not held
 2022	not_held	intertoto_cup (Inter-Toto Cup), row uefa-175: the game holds 2022, the table says not held
@@ -1268,7 +1289,9 @@
 2023	bench	eng_second (English Second Division), row eng-250: game 5, table 7 (7)
 2023	bench	eng_third (English Third Division), row eng-251: game 5, table 7 (7)
 2023	bench	eur_super_cup (European Super Cup), row uefa-184: game 7, table 12 (12)
+2023	bench	euro_champ (European Football Championship), row int-continental-243: game 7, table 15 (15)
 2023	bench	european_cup (European Champions Cup), row uefa-178: game 7, table 12 (12)
+2023	bench	oceania_nations (Oceania Nations Cup), row int-continental-252: game 7, table 12 (12)
 2023	bench	uefa_cup (UEFA Cup), row uefa-181: game 7, table 12 (12)
 2023	bench	world_club_champ (FIFA Club World Championship), row club-world-420: game 7, table 12 (12)
 2023	clubs	euro_champ (European Football Championship), row int-continental-243: game 0/4, table 24 (24)
@@ -1280,6 +1303,7 @@
 2023	clubs	wc_african_cup (World Cup African Qualifying Section), row int-world-270: game 50, table 53 (53 entrants)
 2023	clubs	wc_asia_league (World Cup Asian Qualifying Section), row int-world-271: game 0, table 46 (46 entrants)
 2023	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-269: game 24, table 32 (32 entrants (hosts exempt))
+2023	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-268: game 9, table 10 (10)
 2023	clubs	world_club_champ (FIFA Club World Championship), row club-world-420: game 4, table 7 (7)
 2023	down	eng_third (English Third Division), row eng-251: game 1 (+0 play-off places), table 2 (2)
 2023	format	european_cup, row uefa-178: game 16 clubs in a second group stage and 8 in the first knockout round, table 0 and 16
@@ -1298,6 +1322,7 @@
 2023	name	euro_champ (European Football Championship), row int-continental-243: game 'European Football Championship', table 'UEFA Euro 2024'
 2023	name	euro_champ_qual (European Championship Qualifying), row int-continental-244: game 'European Championship Qualifying', table 'UEFA Euro 2024 qualifying'
 2023	name	european_cup (European Champions Cup), row uefa-178: game 'European Champions Cup', table 'UEFA Champions League'
+2023	name	fifa_confed (Confederations Cup), row int-world-274: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2023	name	goldcup (Copa America), row int-continental-253: game 'Copa America', table '2024 Copa América'
 2023	name	inter_amer_cup (Inter-American Cup), row club-world-430: game 'Inter-American Cup', table 'Copa Interamericana'
 2023	name	intertoto_cup (Inter-Toto Cup), row uefa-183: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1317,6 +1342,7 @@
 2023	no_row	record_utils (Under 21 International): no table row
 2023	not_held	african_nations (African Cup of Nations), row int-continental-249: the game holds 2024, the table says not held
 2023	not_held	asia_nations (Asian Cup), row int-continental-251: the game holds 2024, the table says not held
+2023	not_held	fifa_confed (Confederations Cup), row int-world-274: the game holds 2023, the table says not held
 2023	not_held	inter_amer_cup (Inter-American Cup), row club-world-430: the game holds 2023, the table says not held
 2023	not_held	intertoto_cup (Inter-Toto Cup), row uefa-183: the game holds 2023, the table says not held
 2023	not_held	olympics (Olympic Games), row int-world-275: the game holds 2024, the table says not held
@@ -1336,9 +1362,12 @@
 2023	subs_used	eng_second (English Second Division), row eng-250: game 3, table 5 (5)
 2023	subs_used	eng_third (English Third Division), row eng-251: game 3, table 5 (5)
 2023	subs_used	eur_super_cup (European Super Cup), row uefa-184: game 3, table 5 (5)
+2023	subs_used	euro_champ (European Football Championship), row int-continental-243: game 3, table 5 (5)
 2023	subs_used	european_cup (European Champions Cup), row uefa-178: game 3, table 5 (5, plus a 6th in extra time of knockout matches)
+2023	subs_used	oceania_nations (Oceania Nations Cup), row int-continental-252: game 3, table 5 (5)
 2023	subs_used	uefa_cup (UEFA Cup), row uefa-181: game 3, table 5 (5, plus a 6th in extra time of knockout matches)
 2023	subs_used	world_club_champ (FIFA Club World Championship), row club-world-420: game 3, table 5 (5, a sixth in extra time)
+2024	bench	eng_auto_cup (English Vans Trophy), row eng-438: game 5, table 7 (7)
 2024	bench	eng_cc_cup (English League Cup), row eng-437: game 5, table 9 (9)
 2024	bench	eng_charity (English Charity Shield), row eng-440: game 7, table 9 (9)
 2024	bench	eng_fa_cup (English FA Cup), row eng-436: game 5, table 9 (9)
@@ -1349,6 +1378,7 @@
 2024	bench	eur_super_cup (European Super Cup), row uefa-192: game 7, table 12 (12)
 2024	bench	european_cup (European Champions Cup), row uefa-186: game 7, table 12 (12)
 2024	bench	uefa_cup (UEFA Cup), row uefa-189: game 7, table 12 (12)
+2024	bench	world_club_champ (FIFA Club World Championship), row club-world-439: game 7, table 15 (15)
 2024	clubs	european_cup (European Champions Cup), row uefa-186: game 55, table 81 (81 (36 in the league phase))
 2024	clubs	olympics (Olympic Games), row int-world-287: game 4, table 16 (16)
 2024	clubs	uefa_cup (UEFA Cup), row uefa-189: game 145, table 76 (76 (45 entered + 31 from the Champions League); 36 in the league phase)
@@ -1357,6 +1387,7 @@
 2024	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-281: game 24, table 30 (30)
 2024	clubs	wc_europe_league (World Cup European Qualifying Section), row int-world-279: game 5, table 54 (54 entrants)
 2024	clubs	wc_oceania_league (World Cup Oceania Qualifying Section), row int-world-284: game 5, table 11 (11 entrants)
+2024	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-280: game 9, table 10 (10)
 2024	clubs	world_club_champ (FIFA Club World Championship), row club-world-439: game 0/4, table 32 (32)
 2024	down	eng_third (English Third Division), row eng-261: game 1 (+0 play-off places), table 2 (2)
 2024	format	european_cup, row uefa-186: game 16 and 8 clubs in the league phase and its knockout stage, table 0 and 24
@@ -1374,6 +1405,7 @@
 2024	name	eur_super_cup (European Super Cup), row uefa-192: game 'European Super Cup', table 'UEFA Super Cup'
 2024	name	euro_champ (European Football Championship), row int-continental-254: game 'European Football Championship', table 'UEFA European Championship'
 2024	name	european_cup (European Champions Cup), row uefa-186: game 'European Champions Cup', table 'UEFA Champions League'
+2024	name	fifa_confed (Confederations Cup), row int-world-286: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2024	name	goldcup (Copa America), row int-continental-264: game 'Copa America', table 'Copa América'
 2024	name	inter_amer_cup (Inter-American Cup), row club-world-449: game 'Inter-American Cup', table 'Copa Interamericana'
 2024	name	intertoto_cup (Inter-Toto Cup), row uefa-191: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1394,6 +1426,7 @@
 2024	not_held	african_nations (African Cup of Nations), row int-continental-260: the game holds 2024, the table says not held
 2024	not_held	asia_nations (Asian Cup), row int-continental-262: the game holds 2024, the table says not held
 2024	not_held	euro_champ (European Football Championship), row int-continental-254: the game holds 2024, the table says not held
+2024	not_held	fifa_confed (Confederations Cup), row int-world-286: the game holds 2025, the table says not held
 2024	not_held	goldcup (Copa America), row int-continental-264: the game holds 2025, the table says not held
 2024	not_held	inter_amer_cup (Inter-American Cup), row club-world-449: the game holds 2024, the table says not held
 2024	not_held	intertoto_cup (Inter-Toto Cup), row uefa-191: the game holds 2024, the table says not held
@@ -1404,6 +1437,7 @@
 2024	not_in_game	int-continental-256 new '2024-25 UEFA Nations League' (UEFA)
 2024	not_in_game	uefa-185 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2024	not_in_game	uefa-190 new 'UEFA Conference League' (UEFA)
+2024	subs_used	eng_auto_cup (English Vans Trophy), row eng-438: game 3, table 5 (5)
 2024	subs_used	eng_cc_cup (English League Cup), row eng-437: game 3, table 5 (5 (+1 in extra time))
 2024	subs_used	eng_charity (English Charity Shield), row eng-440: game 5, table 6 (6)
 2024	subs_used	eng_fa_cup (English FA Cup), row eng-436: game 3, table 5 (5 (+1 in extra time))
@@ -1414,6 +1448,10 @@
 2024	subs_used	eur_super_cup (European Super Cup), row uefa-192: game 3, table 5 (max 5 (3 stoppages))
 2024	subs_used	european_cup (European Champions Cup), row uefa-186: game 3, table 5 (5, plus a 6th in extra time of knockout matches)
 2024	subs_used	uefa_cup (UEFA Cup), row uefa-189: game 3, table 5 (5, plus a 6th in extra time of knockout matches)
+2024	subs_used	world_club_champ (FIFA Club World Championship), row club-world-439: game 3, table 5 (5)
+2025	bench	african_nations (African Cup of Nations), row int-continental-271: game 7, table 12 (12)
+2025	bench	eng_auto_cup (English Vans Trophy), row eng-444: game 5, table 7 (7)
+2025	bench	eng_cc_cup (English League Cup), row eng-443: game 5, table 9 (9)
 2025	bench	eng_charity (English Charity Shield), row eng-446: game 7, table 9 (9)
 2025	bench	eng_fa_cup (English FA Cup), row eng-442: game 5, table 9 (9)
 2025	bench	eng_first (English First Division), row eng-269: game 5, table 9 (9)
@@ -1423,6 +1461,8 @@
 2025	bench	eur_super_cup (European Super Cup), row uefa-200: game 7, table 12 (12)
 2025	bench	european_cup (European Champions Cup), row uefa-194: game 7, table 12 (12)
 2025	bench	uefa_cup (UEFA Cup), row uefa-197: game 7, table 12 (12)
+2025	bench	wc_europe_league (World Cup European Qualifying Section), row int-world-291: game 7, table 12 (12)
+2025	bench	world_cup (FIFA World Cup), row int-world-290: game 7, table 15 (15)
 2025	clubs	african_nations (African Cup of Nations), row int-continental-271: game 0/4, table 24 (24)
 2025	clubs	european_cup (European Champions Cup), row uefa-194: game 55, table 82 (82 (36 in the league phase))
 2025	clubs	uefa_cup (UEFA Cup), row uefa-197: game 145, table 77 (77 (45 entered + 32 from the Champions League); 36 in the league phase)
@@ -1431,6 +1471,7 @@
 2025	clubs	wc_concacaf_cup (World Cup CONCACAF Qualifying Section), row int-world-293: game 24, table 12 (12)
 2025	clubs	wc_europe_league (World Cup European Qualifying Section), row int-world-291: game 5, table 54 (54 entrants)
 2025	clubs	wc_oceania_league (World Cup Oceania Qualifying Section), row int-world-296: game 5, table 1 (1)
+2025	clubs	wc_south_american_league (World Cup South American Qualifying Section), row int-world-292: game 9, table 10 (10)
 2025	clubs	world_cup (FIFA World Cup), row int-world-290: game 0/4, table 48 (48)
 2025	down	eng_third (English Third Division), row eng-271: game 1 (+0 play-off places), table 2 (2)
 2025	format	european_cup, row uefa-194: game 16 and 8 clubs in the league phase and its knockout stage, table 0 and 24
@@ -1448,6 +1489,7 @@
 2025	name	eur_super_cup (European Super Cup), row uefa-200: game 'European Super Cup', table 'UEFA Super Cup'
 2025	name	euro_champ_qual (European Championship Qualifying), row int-continental-266: game 'European Championship Qualifying', table 'UEFA European Championship qualifying'
 2025	name	european_cup (European Champions Cup), row uefa-194: game 'European Champions Cup', table 'UEFA Champions League'
+2025	name	fifa_confed (Confederations Cup), row int-world-298: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2025	name	goldcup (Copa America), row int-continental-275: game 'Copa America', table 'Copa América'
 2025	name	inter_amer_cup (Inter-American Cup), row club-world-468: game 'Inter-American Cup', table 'Copa Interamericana'
 2025	name	intertoto_cup (Inter-Toto Cup), row uefa-199: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1467,6 +1509,7 @@
 2025	no_row	record_utils (Under 21 International): no table row
 2025	not_held	asia_nations (Asian Cup), row int-continental-273: the game holds 2024, the table says not held
 2025	not_held	euro_champ_qual (European Championship Qualifying), row int-continental-266: the game holds 2026, the table says not held
+2025	not_held	fifa_confed (Confederations Cup), row int-world-298: the game holds 2025, the table says not held
 2025	not_held	goldcup (Copa America), row int-continental-275: the game holds 2025, the table says not held
 2025	not_held	inter_amer_cup (Inter-American Cup), row club-world-468: the game holds 2025, the table says not held
 2025	not_held	intertoto_cup (Inter-Toto Cup), row uefa-199: the game holds 2025, the table says not held
@@ -1479,6 +1522,8 @@
 2025	not_in_game	int-continental-267 new '2024-25 UEFA Nations League (C/D play-offs)' (UEFA)
 2025	not_in_game	uefa-193 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2025	not_in_game	uefa-198 new 'UEFA Conference League' (UEFA)
+2025	subs_used	eng_auto_cup (English Vans Trophy), row eng-444: game 3, table 5 (5 (+1 in extra time of the final))
+2025	subs_used	eng_cc_cup (English League Cup), row eng-443: game 3, table 5 (5 (+1 in extra time of the semi-final second leg and the final))
 2025	subs_used	eng_charity (English Charity Shield), row eng-446: game 5, table 6 (6)
 2025	subs_used	eng_fa_cup (English FA Cup), row eng-442: game 3, table 5 (5 (+1 in extra time))
 2025	subs_used	eng_first (English First Division), row eng-269: game 3, table 5 (5)
@@ -1489,6 +1534,7 @@
 2025	subs_used	european_cup (European Champions Cup), row uefa-194: game 3, table 5 (5, plus a 6th in extra time of knockout matches)
 2025	subs_used	uefa_cup (UEFA Cup), row uefa-197: game 3, table 5 (5, plus a 6th in extra time of knockout matches)
 2025	subs_used	world_cup (FIFA World Cup), row int-world-290: game 3, table 5 (5 in normal time, a sixth in extra time)
+2026	bench	eng_cc_cup (English League Cup), row eng-449: game 5, table 9 (9)
 2026	bench	eng_charity (English Charity Shield), row eng-452: game 7, table 9 (9)
 2026	bench	eng_fa_cup (English FA Cup), row eng-448: game 5, table 9 (9)
 2026	bench	eng_first (English First Division), row eng-279: game 5, table 9 (9)
@@ -1496,12 +1542,13 @@
 2026	bench	eng_second (English Second Division), row eng-280: game 5, table 7 (7)
 2026	bench	eng_third (English Third Division), row eng-281: game 5, table 7 (7)
 2026	bench	eur_super_cup (European Super Cup), row uefa-208: game 7, table 12 (12 (23 players on the match sheet, Art. 40.01))
+2026	bench	euro_champ_qual (European Championship Qualifying), row int-continental-277: game 7, table 12 (12)
 2026	bench	european_cup (European Champions Cup), row uefa-202: game 7, table 12 (12)
 2026	bench	uefa_cup (UEFA Cup), row uefa-205: game 7, table 12 (12)
 2026	clubs	african_nations (African Cup of Nations), row int-continental-282: game 0/4, table 24 (24)
 2026	clubs	euro_champ_qual (European Championship Qualifying), row int-continental-277: game 5, table 54 (54 (scheduled))
 2026	clubs	european_cup (European Champions Cup), row uefa-202: game 55, table 81 (81 (36 in the league phase))
-2026	clubs	uefa_cup (UEFA Cup), row uefa-205: game 145, table 76 (76 (45 entered + 31 from the Champions League); 36 in the league phase)
+2026	clubs	uefa_cup (UEFA Cup), row uefa-205: game 146, table 76 (76 (45 entered + 31 from the Champions League); 36 in the league phase)
 2026	down	eng_third (English Third Division), row eng-281: game 1 (+0 play-off places), table 2 (2)
 2026	format	european_cup, row uefa-202: game 16 and 8 clubs in the league phase and its knockout stage, table 0 and 24
 2026	format	uefa_cup, row uefa-205: game 0 and 0 clubs in the league phase and its knockout stage, table 36 and 24
@@ -1522,6 +1569,7 @@
 2026	name	eur_super_cup (European Super Cup), row uefa-208: game 'European Super Cup', table 'UEFA Super Cup'
 2026	name	euro_champ_qual (European Championship Qualifying), row int-continental-277: game 'European Championship Qualifying', table 'UEFA Euro 2028 qualifying'
 2026	name	european_cup (European Champions Cup), row uefa-202: game 'European Champions Cup', table 'UEFA Champions League'
+2026	name	fifa_confed (Confederations Cup), row int-world-310: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2026	name	goldcup (Copa America), row int-continental-286: game 'Copa America', table 'Copa América'
 2026	name	inter_amer_cup (Inter-American Cup), row club-world-487: game 'Inter-American Cup', table 'Copa Interamericana'
 2026	name	intertoto_cup (Inter-Toto Cup), row uefa-207: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1532,6 +1580,7 @@
 2026	no_row	record_utils ('B' International): no table row
 2026	no_row	record_utils (Reserve): no table row
 2026	no_row	record_utils (Under 21 International): no table row
+2026	not_held	fifa_confed (Confederations Cup), row int-world-310: the game holds 2027, the table says not held
 2026	not_held	goldcup (Copa America), row int-continental-286: the game holds 2027, the table says not held
 2026	not_held	inter_amer_cup (Inter-American Cup), row club-world-487: the game holds 2026, the table says not held
 2026	not_held	intertoto_cup (Inter-Toto Cup), row uefa-207: the game holds 2026, the table says not held
@@ -1544,6 +1593,7 @@
 2026	not_in_game	uefa-201 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2026	not_in_game	uefa-206 new 'UEFA Conference League' (UEFA)
 2026	playoffs	eng_first (English First Division), row eng-279: game 4 up and 0 down play-off places, table 6 and 0 ('3rd-8th: 5v8 and 6v7 single-leg eliminators (higher club at home), then semi-fin')
+2026	subs_used	eng_cc_cup (English League Cup), row eng-449: game 3, table 5 (5)
 2026	subs_used	eng_charity (English Charity Shield), row eng-452: game 5, table 6 (6)
 2026	subs_used	eng_fa_cup (English FA Cup), row eng-448: game 3, table 5 (5)
 2026	subs_used	eng_first (English First Division), row eng-279: game 3, table 5 (5)
@@ -1551,6 +1601,7 @@
 2026	subs_used	eng_second (English Second Division), row eng-280: game 3, table 5 (5)
 2026	subs_used	eng_third (English Third Division), row eng-281: game 3, table 5 (5)
 2026	subs_used	eur_super_cup (European Super Cup), row uefa-208: game 3, table 5 (max 5 (3 stoppages) (Art. 41.02))
+2026	subs_used	euro_champ_qual (European Championship Qualifying), row int-continental-277: game 3, table 5 (5)
 2026	subs_used	european_cup (European Champions Cup), row uefa-202: game 3, table 5 (5, plus a 6th in extra time of knockout matches)
 2026	subs_used	uefa_cup (UEFA Cup), row uefa-205: game 3, table 5 (5, plus a 6th in extra time of knockout matches)
 2027	bench	eng_charity (English Charity Shield), row eng-458: game 7, table 9 (9)
@@ -1581,6 +1632,7 @@
 2027	name	euro_champ (European Football Championship), row int-continental-287: game 'European Football Championship', table 'UEFA Euro 2028'
 2027	name	euro_champ_qual (European Championship Qualifying), row int-continental-288: game 'European Championship Qualifying', table 'UEFA Euro 2028 qualifying'
 2027	name	european_cup (European Champions Cup), row uefa-210: game 'European Champions Cup', table 'UEFA Champions League'
+2027	name	fifa_confed (Confederations Cup), row int-world-322: game 'Confederations Cup', table 'FIFA Confederations Cup'
 2027	name	goldcup (Copa America), row int-continental-297: game 'Copa America', table '2028 Copa América'
 2027	name	inter_amer_cup (Inter-American Cup), row club-world-506: game 'Inter-American Cup', table 'Copa Interamericana'
 2027	name	intertoto_cup (Inter-Toto Cup), row uefa-215: game 'Inter-Toto Cup', table 'UEFA Intertoto Cup'
@@ -1599,6 +1651,7 @@
 2027	no_row	record_utils (Reserve): no table row
 2027	no_row	record_utils (Under 21 International): no table row
 2027	not_held	asia_nations (Asian Cup), row int-continental-295: the game holds 2028, the table says not held
+2027	not_held	fifa_confed (Confederations Cup), row int-world-322: the game holds 2027, the table says not held
 2027	not_held	inter_amer_cup (Inter-American Cup), row club-world-506: the game holds 2027, the table says not held
 2027	not_held	intertoto_cup (Inter-Toto Cup), row uefa-215: the game holds 2027, the table says not held
 2027	not_held	olympics (Olympic Games), row int-world-323: the game holds 2028, the table says not held

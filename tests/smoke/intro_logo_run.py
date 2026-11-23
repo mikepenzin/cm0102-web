@@ -112,6 +112,8 @@ def run(program, games, name, mode, folder, update_team, work):
     if folder:
         shutil.copytree(update_team, os.path.join(user, "Databases", os.path.basename(update_team)))
         lines.append(f"database = folder:{os.path.basename(update_team)}")
+    else:
+        lines.append("database = 3.9.68")
     with open(os.path.join(user, "settings.txt"), "w") as f:
         f.write("\n".join(lines) + "\n")
     return intro(program, games["no-logo" if name == "no-logo" else "logo"], mode, user, shots)
@@ -124,7 +126,7 @@ def play_save(program, game, work, name):
     for d in (user, home, shots):
         os.makedirs(d)
     with open(os.path.join(user, "settings.txt"), "w") as f:
-        f.write("display = classic\n")
+        f.write("display = classic\ndatabase = 3.9.68\n")
     steps = [s for s in smoke_run.STEPS if "5-holiday" not in s and "quit" not in s]
     steps = smoke_run.without_intro_click(steps) + ["400000 quit"]
     env = dict(os.environ, HOME=home, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", RECOMP_NO_BOX="1",

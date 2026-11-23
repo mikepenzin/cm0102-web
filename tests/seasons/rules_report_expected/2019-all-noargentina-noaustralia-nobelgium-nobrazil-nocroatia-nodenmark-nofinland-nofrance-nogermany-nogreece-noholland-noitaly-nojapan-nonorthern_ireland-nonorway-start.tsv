@@ -11,6 +11,13 @@
 2019	bench	tur_first (Süper Lig), row rus-tur-181: game 9, table 10 (10 (21-man matchday list from 2017–18))
 2019	bench	tur_second (TFF 1. Lig), row rus-tur-208: game 9, table 10 (10)
 2019	bench	world_club_champ (FIFA Club World Cup), row club-world-344: game 7, table 12 (12)
+2019	club_list	American Major League: 12 of 23 listed clubs that the database holds (26 listed), 0 other clubs, 12 in all; not in it: FC Cincinnati, Minnesota United FC, Montreal Impact, Nashville SC, New York City FC, Orlando City SC, Philadelphia Union, Real Salt Lake City, Seattle Sounders FC, Toronto FC, Vancouver Whitecaps FC; others: -
+2019	club_list	Irish First Division: 9 of 9 listed clubs that the database holds (10 listed), 1 other clubs, 10 in all; not in it: -; others: Newbridge Town FC
+2019	club_list	Irish Premier Division: 10 of 10 listed clubs that the database holds (10 listed), 2 other clubs, 12 in all; not in it: -; others: Evergreen, Limerick FC
+2019	club_list	Korean League: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Busan IPark FC, Incheon United FC; others: -
+2019	club_list	Russian First Division: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: FK Krasnodar II, Spartak 2 Moscow; others: -
+2019	club_list	Turkish 2. Division Category A: 18 of 18 listed clubs that the database holds (18 listed), 2 other clubs, 20 in all; not in it: -; others: Afjet Afyonspor, Elazigspor
+2019	club_list	Welsh Premier Division: 12 of 12 listed clubs that the database holds (12 listed), 6 other clubs, 18 in all; not in it: -; others: Haverfordwest County, Llandudno FC, Llanelli AFC, Port Talbot Town, Prestatyn Town FC, Rhyl Football Club
 2019	clubs	asia_club_champ (AFC Champions League), row club-world-355: game 16, table 29 (29)
 2019	clubs	euro_champ (UEFA European Championship), row int-continental-199: game 0, table 24 (24)
 2019	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-200: game 0, table 55 (55)
@@ -21,21 +28,17 @@
 2019	clubs	kor_league (K League 1), row aus-jap-kor-343: game 10, table 12 (12)
 2019	clubs	pol_first (Ekstraklasa), row gre-pol-cro-208: game 8, table 16 (16)
 2019	clubs	por_cup (Taça de Portugal), row por-168: game 164, table 144 (144)
-2019	clubs	rus_first (Football National League), row rus-tur-46: game 18, table 20 (20)
 2019	clubs	sco_chal_cup (Scottish Challenge Cup), row sco-152: game 30, table 58 (58)
 2019	clubs	sco_lge_cup (Scottish League Cup), row sco-151: game 42, table 44 (44)
 2019	clubs	spa_cup (Copa del Rey), row spa-151: game 83, table 125 (125 clubs)
-2019	clubs	swe_prm (Allsvenskan), row den-swe-272: game 14, table 16 (16)
-2019	clubs	tur_second (TFF 1. Lig), row rus-tur-208: game 20, table 18 (18)
 2019	clubs	tur_second_b (TFF 2. Lig), row rus-tur-235: game 10, table 36 (36)
 2019	clubs	uefa_cup (UEFA Europa League), row uefa-149: game 161, table 213 (213 (158 entered + 55 from the Champions League); 48 in the group stage (+8 Cham)
 2019	clubs	usa_mls (Major League Soccer), row arg-usa-235: game 4, table 26 (26)
-2019	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-222: game 50, table 54 (54 entrants)
+2019	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-222: game 48, table 54 (54 entrants)
 2019	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-223: game 0, table 40 (40)
 2019	clubs	wel_first (Cymru Premier), row wal-nir-irl-454: game 18, table 12 (12)
 2019	clubs	wel_lge_cup (Welsh League Cup), row wal-nir-irl-458: game 3, table 46 (46)
 2019	clubs	world_club_champ (FIFA Club World Cup), row club-world-344: game 0, table 7 (7)
-2019	down	eng_third (EFL League Two), row eng-211: game 1 (+0 play-off places), table 2 (2)
 2019	down	kor_league (K League 1), row aus-jap-kor-343: game 0 (+0 play-off places), table 1 (1 (12th))
 2019	down	pol_first (Ekstraklasa), row gre-pol-cro-208: game 0 (+0 play-off places), table 3 (3 (14th-16th))
 2019	down	pol_second (I liga), row gre-pol-cro-262: game 4 (+0 play-off places), table 3 (3 (16th-18th))
@@ -49,6 +52,9 @@
 2019	down	tur_second_b (TFF 2. Lig), row rus-tur-235: game 0 (+0 play-off places), table 6 (6 (16th to 18th of each group))
 2019	down	wel_first (Cymru Premier), row wal-nir-irl-454: game 0 (+0 play-off places), table 2 (2 (pos 11,12))
 2019	idle	oceania_nations (OFC Nations Cup), row int-continental-208: the game waits for 2024, the table holds it
+2019	meetings	ire_first (League of Ireland First Division), row wal-nir-irl-467: game 4, table 3
+2019	meetings	ire_prm (League of Ireland Premier Division), row wal-nir-irl-466: game 3, table 4
+2019	meetings	kor_league (K League 1), row aus-jap-kor-343: game 3, table 2
 2019	name	new_suruga_bank (J.League YBC Levain Cup / CONMEBOL Sudamericana Ch), row club-world-531: game 'J.League YBC Levain Cup / CONMEBOL Sudamericana Ch', table 'J.League YBC Levain Cup / CONMEBOL Sudamericana Championship Final'
 2019	no_row	friendly (Friendly): no table row
 2019	no_row	record_utils ('B' International): no table row
@@ -86,6 +92,11 @@
 2019	playoffs	sco_third (Scottish League Two), row sco-149: game 0 up and 0 down play-off places, table 3 and 1 ('2nd to 4th play off with League One 9th for a League One place (two-legged semi-')
 2019	playoffs	swe_first (Superettan), row den-swe-273: game 1 up and 0 down play-off places, table 1 and 2 ('3rd plays the Allsvenskan 14th; 13th and 14th play the Division 1 (Ettan) runner')
 2019	playoffs	tur_second_b (TFF 2. Lig), row rus-tur-235: game 2 up and 0 down play-off places, table 0 and 0 ('see format')
+2019	rounds	ire_first (League of Ireland First Division), row wal-nir-irl-467: game 36, table 27 (3 meetings, zones -, extra 0)
+2019	rounds	ire_prm (League of Ireland Premier Division), row wal-nir-irl-466: game 33, table 36 (4 meetings, zones -, extra 0)
+2019	rounds	kor_league (K League 1), row aus-jap-kor-343: game 27, table 22 (2 meetings, zones -, extra 0)
+2019	rounds	pol_first (Ekstraklasa), row gre-pol-cro-208: game 14, table 30 (2 meetings, zones -, extra 0)
+2019	rounds	wel_first (Cymru Premier), row wal-nir-irl-454: game 34, table 22 (2 meetings, zones -, extra 0)
 2019	subs_used	asia_club_champ (AFC Champions League), row club-world-355: game 3, table 5 (5, a sixth in extra time)
 2019	subs_used	con_champ (CONCACAF Champions League), row club-world-351: game 3, table 5 (5, a sixth in extra time)
 2019	subs_used	eng_fa_cup (FA Cup), row eng-406: game 3, table 5 (5 (+1 in extra time))

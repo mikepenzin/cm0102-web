@@ -75,7 +75,7 @@ PATCHES = {
     0x632540: (2001, Y),        # InterAmerCup::select_teams: first edition, champions from the history
     0x63266C: (2001, Y),
     # UEFA seeding in the first season of the game (doc table 6).
-    0x9041EC: (2001, Y),        # UefaSeeding::collect_european_clubs: read euro.cfg of the database
+    0x9041EC: (2001, "rt_euro_cfg_year()"),  # UefaSeeding::collect_european_clubs: the start season's euro.cfg
     0x903B6F: (2001, Y),        # UefaSeeding::roll_coefficients: the coefficients of the database as they are
     0x9038AF: (2001, Y),        # UefaSeeding::pick_english_intertoto_club: no volunteer list yet
     0x9059B2: (2001, Y),        # uefa_check_registration_deadlines: no 1 February deadline in the run-up
@@ -154,17 +154,35 @@ PATCHES = {
     # docs/research/2026-10-19-world-cup-48.md, "Qualifying"). Each gives the original's value outside the gate (a
     # section whose campaign +0x40 + 2 is a World Cup of 48 teams, in a season game). this in the register named.
     0x921098: (0x4, "rt_wcq26_south_america_direct(esi, 4u)"),     # set_up_rules 0x921040: direct places, 6
-    0x91377F: (0x2, "rt_wcq26_asia_direct(esi, 2u)"),               # final groups 0x913740: direct places, 4
-    0x913BCE: (0x2, "rt_wcq26_asia_playoff_row(esi, 2u)"),          # play-off 0x913b60: the fifths of stage 9
-    0x913BDA: (0x2, "rt_wcq26_asia_playoff_row(esi, 2u)"),          # and of stage 10
+    0x91377F: (0x2, "rt_wcq26_asia_direct(esi, 2u)"),               # final groups 0x913740: group A's places
+    0x913BCE: (0x2, "rt_wcq26_asia_playoff_row(esi, 0, 2u)"),       # play-off 0x913b60: the row after them, stage 9
+    0x913BDA: (0x2, "rt_wcq26_asia_playoff_row(esi, 1, 2u)"),       # and stage 10
     0x911CF6: (0xD, "rt_wcq26_asia_stages(esi, 0xdu)"),             # ctor: no stage 12 (tie with Europe)
-    0x910133: (0x32, "rt_wcq26_africa_first(esi, 0x32u)"),          # first round 0x910120: 2 x (pool - 45)
-    0x90F6F0: (0x32, "rt_wcq26_africa_first(edi, 0x32u)"),          # template 0x90f600: first round teams
-    0x90F6F5: (0x19, "(rt_wcq26_africa_first(edi, 0x32u) / 2u)"),   # and ties
+    0x910133: (0x32, "rt_caf_first(esi, 0x32u)"),               # first round 0x910120: 2 x (pool - 45)
+    0x90F6F0: (0x32, "rt_caf_first(edi, 0x32u)"),               # template 0x90f600: first round teams
+    0x90F6F5: (0x19, "(rt_caf_first(edi, 0x32u) / 2u)"),        # and ties
     0x90F357: (0x5, "rt_wcq26_africa_groups(esi, 5u)"),             # ctor: stage count (9 groups)
     0x91058A: (0x5, "rt_wcq26_africa_groups(esi, 5u)"),             # start_new_season: stage count
     0x90F768: (0x5, "rt_wcq26_africa_groups(edi, 5u)"),             # template: group stages below 9
     0x90FC24: (0x5, "rt_wcq26_africa_groups(ecx, 5u)"),             # slot 17 0x90fbf0: winners of stages below 9
+    # Every African nation enters (0.6.2 item 199, season_caf_pool.c): the pool builder 0x9106a0 (this in esi)
+    # reads every nation of the table into an array of that size, and load_extra_data 0x910f00 (this in ebx)
+    # allocates +0xb6 slots when that is more than the original's 52.
+    0x910896: (0x34, "rt_caf_pool_cap(esi, 0x34u)"),
+    0x9107ED: (0xD0, "rt_caf_pool_bytes(esi, 0xd0u)"),
+    0x910FEC: (0xD0, "rt_caf_load_bytes(ebx, 0xd0u)"),
+    # The last group rounds of the template 0x90f600 (this in edi) leave July and the play-off follows them (item
+    # 211, rt_caf_round_date): the day and month pushes.
+    0x90F9E6: (0x1E, "rt_caf_round_date(edi, 7, 0, 0x1eu)"),
+    0x90F9E4: (0x5, "rt_caf_round_date(edi, 7, 1, 5u)"),
+    0x90FA18: (0xE, "rt_caf_round_date(edi, 8, 0, 0xeu)"),
+    0x90FA16: (0x6, "rt_caf_round_date(edi, 8, 1, 6u)"),
+    0x90FA52: (0x11, "rt_caf_round_date(edi, 9, 0, 0x11u)"),
+    0x90FA50: (0x6, "rt_caf_round_date(edi, 9, 1, 6u)"),
+    0x90FB42: (0x1D, "rt_caf_round_date(edi, 10, 0, 0x1du)"),  # play-off of exempt 2 and 3: first leg
+    0x90FB40: (0x8, "rt_caf_round_date(edi, 10, 1, 8u)"),
+    0x90FB59: (0x14, "rt_caf_round_date(edi, 11, 0, 0x14u)"),  # and second leg
+    0x90FB57: (0x9, "rt_caf_round_date(edi, 11, 1, 9u)"),
     0x91E076: (0x3, "rt_wcq26_oceania_stages(esi, 3u)"),            # ctor: stage count 4 (the tournament)
     0x91F002: (0xC, "(4u * rt_wcq26_oceania_stages(esi, 3u))"),     # start_new_season: malloc of the stage array
     0x91F004: (0x3, "rt_wcq26_oceania_stages(esi, 3u)"),            # start_new_season: stage count
@@ -217,8 +235,8 @@ PATCHES = {
     0x4024FD: (0x4, "rt_intl_cup_groups(esi, 4u)"),                 # ACN draw: random place in a pot, again
     0x402531: (0x4, "rt_intl_cup_groups(esi, 4u)"),                 # ACN draw: next pot
     0x402772: (0x3, "rt_intl_cup_ko(esi, 3u)"),                     # ACN update_for_date 0x4025a0: group stages
-    0x40E90A: (0xC, "(4u * (rt_intl_cup_ko(esi, 2u) + 1u))"),       # Asian Cup ctor: malloc of the stage array
-    0x40E923: (0x3, "(rt_intl_cup_ko(esi, 2u) + 1u)"),              # Asian Cup ctor: stage count +0x2c
+    0x40E90A: (0xC, "(4u * (rt_intl_cup_ko_ctor(esi, 2u) + 1u))"),  # Asian Cup ctor: malloc of the stage array
+    0x40E923: (0x3, "(rt_intl_cup_ko_ctor(esi, 2u) + 1u)"),         # Asian Cup ctor: stage count +0x2c
     0x40F593: (0x8, "(4u * rt_intl_cup_ko(ecx, 2u))"),              # Asian Cup vtable +0x30: stage[ko]
     0x40F5A5: (0x2, "rt_intl_cup_ko(ecx, 2u)"),                     # Asian Cup stage news (vtable +0x44)
     0x40F627: (0x8, "(4u * rt_intl_cup_ko(esi, 2u))"),              # Asian Cup stage news: round record of stage[ko]
@@ -247,6 +265,18 @@ PATCHES = {
     0x5E22EB: (0x2, "rt_intl_copa_ko(esi, 2u)"),                    # update_for_date 0x5e2120: group stages
     0x5E172E: (0xC, "(4u * rt_intl_copa_groups(esi, 3u))"),         # group builder 0x5e16b0: step in +0xee
     0x5E1735: (-0xC, "(0u - 4u * rt_intl_copa_groups(esi, 3u))"),   # group builder: the same step back
+
+    # OFC Nations Cup of 8 teams (0.6.2 open item 45, win/season_intl_ofc.c). OceaniaNations (ctor 0x7988b0) is the
+    # League of group A and stage[0] group B, each of 3 teams; with 8 teams each has 4. Group A takes the teams 0 to
+    # size - 1 of +0xee, group B the next size. rt_intl_ofc_group gives the size: 4 when the draw holds 8 teams or the
+    # one group of 4 (2008), 6 for the one group of 6 (2004, open item 136), else the original's 3, so the original's
+    # value in the base game. this in esi.
+    0x7995A9: (0xB1, "(0x3bu * rt_intl_ofc_group(esi, 3u))"),       # create_group_table 0x7995a0: malloc of the rows
+    0x7995AE: (0x3, "rt_intl_ofc_group(esi, 3u)"),                  # create_group_table: the row count +0x3e
+    0x799A80: (0xC, "(4u * rt_intl_ofc_group(esi, 3u))"),           # create_group_stage 0x799a60: malloc of its teams
+    0x799AC2: (0xC, "(4u * rt_intl_ofc_group(esi, 3u))"),           # create_group_stage: group B's start in +0xee
+    0x799ACB: (0x3, "rt_intl_ofc_group(esi, 3u)"),                  # create_group_stage: the teams it copies
+    0x799B74: (0x3, "rt_intl_ofc_group(esi, 3u)"),                  # create_group_stage: League_Stage team count
 
     # World Cup qualifying 2006 to 2022 (0.6.0 slice 27, win/season_intl_qual.c). C1: the CONCACAF final group
     # (0x917830, this in esi from 0x91784e) gives its 4th the play-off place: the second byte of its rules
@@ -327,6 +357,16 @@ INSNS = {
     # EuroChamp build_team_slots 0x57bd80: no host from find_hosts (0x57be34) leads to the box "euro_champ.cpp
     # 837" (0x57becc..0x57bf22). Euro 2020 and 2028 have no host place in the table, so in a season game the
     # builder goes on to the default nations (0x57bf2f) with no host (win/season_intl.c).
+    # 0.6.2 slice 5 (win/season_intl.c). HostCountry::daily_update 0x5fa850 stores the draw of a host row 5 years
+    # before its finals (random(3) at 0x5faaa0): a pair that names a nation that no longer exists is drawn again
+    # (Q6, Q32). Cup::record_season_honours 0x519a90 writes no host for the classes whose slot +0x88 gives 0: at
+    # 0x519c2f a season game takes the edition's first host (open item 18).
+    0x5FAAAE: ("mov byte ptr [edx + 0x1e], al", "SYNC(); W8(edx + 0x1eu, rt_intl_host_pick(edx, eax & 0xffu));"),
+    0x519C2F: ("mov ecx, dword ptr [esp + 0x10]", "SYNC(); ebx = rt_intl_history_host(esi, ebx); ecx = R32(esp + 0x10u);"),
+    # Issue 146: the news of the qualified nations names the hosts of its own edition (win/season_intl.c), when it is
+    # made and when its text is written (ebp part 0 the competition, edi and ebx parts 4 and 5, eax part 6 the year).
+    0x777D07: ("mov dword ptr [esp + 0x24], eax", "W32(esp + 0x24u, eax); SYNC(); edi = rt_intl_news_text_host(ebp, eax, edi, 0u); ebx = rt_intl_news_text_host(ebp, eax, ebx, 1u);"),
+    0x777B07: ("mov eax, dword ptr [esp + 0x18]", "SYNC(); rt_intl_news_hosts(R32(edi), esp + 0x18u, esp + 0x1cu); eax = R32(esp + 0x18u);"),
     0x57BE3D: ("jle 0x57becc", "if (cc_le(F)) { if (rt_intl_euro_no_host()) goto L_57bf2f; goto L_57becc; }"),
     # EuroChampQual::get_group_team_count 0x57d9d0 gives the size of each qualifying group by the hosts that the
     # pool leaves out (+0xf6): 1 (0x57d9de) or 2 (0x57d9e5), else the box "euro_champ_qual.cpp 581" (0x57da3d).
@@ -346,6 +386,11 @@ INSNS = {
     0x919F90: ("mov dword ptr [esi + 0xf2], eax", "W32(esi + 0xf2u, eax); rt_wcq26_europe_format(esi);"),
     0x91785C: ("sub al, cl", "t0 = (eax & 0xffu); t1 = rt_wcq26_concacaf_hosts(esi, ecx & 0xffu) & 0xffu; t2 = ((t0 - t1) & 0xffu); SETF(K_SUB | SZ1, t0, t1, t2, 0); eax = (eax & 0xffffff00u) | t2;"),
     0x910A4A: ("mov byte ptr [esp + 0x13], al", "W8(esp + 0x13u, rt_wcq26_africa_groups(esi, eax & 0xffu));"),
+    0x910A4E: ("mov dword ptr [esp + 0x18], eax", "W32(esp + 0x18u, rt_caf_group_size(esi, eax));"),  # item 199
+    # item 199: set_club_progress 0x9115a0 (this in esi), group position 6 of a group of 6 (season_caf_pool.c)
+    0x911600: ("mov bl, byte ptr [esp + 0x18]", "ebx = (ebx & 0xffffff00u) | (rt_caf_band(esi, R8(esp + 0x10u), R8(esp + 0x18u)) & 0xffu);"),
+    0x911631: ("mov dl, byte ptr [esp + 0x1c]", "edx = (edx & 0xffffff00u) | (rt_caf_band(esi, R8(esp + 0x10u), R8(esp + 0x1cu)) & 0xffu);"),
+    0x911A64: ("mov cl, byte ptr [esp + 0x14]", "ecx = (ecx & 0xffffff00u) | (rt_caf_band(esi, R8(esp + 0x10u), R8(esp + 0x14u)) & 0xffu);"),
 
     # World Cup of 48 teams (0.6.0 slice 29, win/season_wc48.c). start_new_season 0x92d330 keeps the stage array
     # and the slot array of the ctor (+0xc, count +0x2c; +0x14, room +0x38). After the step (0x92d409) an edition
@@ -358,6 +403,19 @@ INSNS = {
     # another size gets a new array. The instruction after the step only moves this to ecx.
     0x401D85: ("mov ecx, esi", "SYNC(); rt_intl_cup_stages(esi); ecx = esi;"),
     0x40F785: ("mov ecx, esi", "SYNC(); rt_intl_cup_stages(esi); ecx = esi;"),
+    # 0.6.2 open items 44 and 46 (win/season_intl_cups.c): every host plays. The entrants take the two hosts of
+    # find_hosts first (ACN 0x402338, Asian Cup 0x40fea7). The hosts after the second (2027 ACN: Uganda; 2007
+    # Asian Cup: Thailand, Vietnam) join them before the ACN sort (0x402446, its start dl and the count edi) and
+    # before the Asian Cup pick from the list on the stack (0x4afbd0 at 0x40ffc8: list esp + 0x228, count ebp and
+    # [esp + 0x14], hosts in +0xee ebx). [esp + 0x13] keeps the host count dl in both (0x40234c, 0x40feb5). The
+    # replaced instructions only move; the flags are set again before they are read (0x40243d, 0x40ffbf).
+    0x40242F: ("mov ecx, dword ptr [esi + 0xee]", "SYNC(); t0 = rt_intl_cup_acn_hosts(esi, edi, edx & 0xffu); edi = t0 >> 8; edx = (edx & 0xffffff00u) | ((edx + t0) & 0xffu); W8(esp + 0x13u, edx & 0xffu); ecx = R32(esi + 0xeeu);"),
+    0x40FFB2: ("mov cl, byte ptr [esi + 0xf2]", "SYNC(); t0 = rt_intl_cup_asian_hosts(esi, esp + 0x228u, ebp, ebx); t1 = t0 & 0xffu; ebp = t0 >> 8; W32(esp + 0x14u, ebp); ebx += t1; edx = (edx & 0xffffff00u) | ((edx + t1) & 0xffu); W8(esp + 0x13u, edx & 0xffu); ecx = (ecx & 0xffffff00u) | R8(esi + 0xf2u);"),
+    # GitHub issue 136 (win/season_intl_cups.c): 0x4afbd0 sorts the Asian list by reputation and shuffles the top
+    # 3 * places, so the Asian Cup took weak sides at random. The site calls the original (the same random numbers)
+    # and sorts the list again: the best sides play, in every game. Args list, count, places on the stack (pushed at
+    # 0x40ffc5..0x40ffc7); the caller reads no register the call leaves (0x40ffcd, 0x40ffd2).
+    0x40FFC8: ("call 0x4afbd0", "SYNC(); rt_intl_cup_asian_pick(esi, R32(esp), R32(esp + 4u), R32(esp + 8u)); RT_AFTER_CALL();"),
 
     # Copa America of 16 teams (0.6.0 slice 27, win/season_intl_copa.c). Group A (0x5e11e0) takes the teams
     # 3 * k of +0xee: 4 * k with 16 teams. start_new_season 0x5e1530 keeps the stage array of the ctor: after
@@ -386,6 +444,14 @@ INSNS = {
     # the final groups (0x913740), the play-off (0x913bc1) and the statuses (0x912642) take the format of no
     # host. The flags are not read before pop and ret.
     0x9141EA: ("mov dword ptr [esi + 0xf3], ecx", "W32(esi + 0xf3u, ecx); rt_wcq_asia_format(esi); rt_wcq26_asia_format(esi);"),
+    # World Cup qualifying from the 2026 cycle (0.6.2 slice 5, open item 59, win/season_wcq26.c): the AFC and OFC
+    # pools leave out every host. The count of hosts and holder +0xee that the pool size takes off (Asia 44 -
+    # count, Oceania 10 - count) gets the hosts that the pool wraps left out (this in esi). Final groups 0x913740:
+    # after group A is made the status counts at [esp + 0x10] get group B's direct places (this in esi; the
+    # stack holds no push here, 0x913983). The flags of none of them are read.
+    0x9140B2: ("movsx edx, byte ptr [esi + 0xee]", "edx = (uint32_t)(int32_t)(int8_t)rt_wcq26_pool_exempt(esi, R8(esi + 0xeeu));"),
+    0x91FBD3: ("movsx edx, byte ptr [esi + 0xee]", "edx = (uint32_t)(int32_t)(int8_t)rt_wcq26_pool_exempt(esi, R8(esi + 0xeeu));"),
+    0x9139C0: ("mov edi, ebx", "edi = ebx; W8(esp + 0x10u, rt_wcq26_asia_direct_b(esi, R8(esp + 0x10u)));"),
     # A2: Asia stage 12 (0x913d50, this in esi, the two teams at [ebp]) takes its partner from the European
     # section (0x91def0, ecx the Europe object). The partner of the cycle replaces it; the European runner-up
     # stays the fallback.
@@ -399,7 +465,7 @@ INSNS = {
     # F1: the African pool builder 0x9106a0 (this in esi) compares its count ebx with the pool size +0xb6. Before
     # the compare a pool of 50 or more takes the format of no host (South Africa 2010 stays out of the pool by
     # the compare at 0x9108aa).
-    0x9108D8: ("cmp ebx, dword ptr [esi + 0xb6]", "rt_wcq_africa_format(esi, ebx); rt_wcq26_africa_format(esi); t0 = ebx; t1 = R32(esi + 0xb6u); t2 = t0 - t1; SETF(K_SUB | SZ4, t0, t1, t2, 0);"),
+    0x9108D8: ("cmp ebx, dword ptr [esi + 0xb6]", "rt_wcq_africa_format(esi, ebx); rt_wcq26_africa_format(esi); rt_caf_pool(esi, ebx); t0 = ebx; t1 = R32(esi + 0xb6u); t2 = t0 - t1; SETF(K_SUB | SZ4, t0, t1, t2, 0);"),
 
     # UEFA Nations League (0.6.0 slice 28, season_nl.c). EuroChampQual::update_for_date 0x57fd60 makes the group
     # stages 0 to 7 on its draw day (create_group_stage 0x57ed10 at 0x57ff2e, `cmp edi, 8`, this in esi). The
@@ -438,4 +504,8 @@ INSNS = {
     # the load only in a season game (season_intl_on): the base game keeps the original's path, also when a
     # save of a later year is loaded (the ctor runs with the game year of the save).
     0x57D021: ("jle 0x57d02a", "if (cc_le(F) || rt_euroq_skip_2002(esi)) goto L_57d02a;"),
+    # VIRTUAL_STAFF top-up 0x90dae0 (0.6.2 fault 65, win/season_national_fill.c): an under-21 side of a nation with
+    # a reputation above 500 gets no virtual players (0x90dd5d..0x90dd73). In a season game such a side whose
+    # nation has fewer players it can field than the squad check wants keeps them (the jump past the zeroing).
+    0x90DD67: ("jle 0x90dd97", "if (cc_le(F) || rt_u21_keeps_virtual(esi)) goto L_90dd97;"),
 }

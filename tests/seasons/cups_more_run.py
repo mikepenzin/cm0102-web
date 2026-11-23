@@ -23,10 +23,31 @@ The runs:
             editions of March 2009 and March 2010 with two clubs, and the row of 2010/11 holds no edition of March 2011
     c2007   November 2007, changing rules off, England with the Conference: the Conference League Cup is made and
             has a winner
+    c2008-off  2008/09 (the original data moved to 2008), changing rules off, England, Tier A (RECOMP_TIER_A=1), to
+            the end of 2024/25 (about 7 minutes at load 15): the rules of the start season stay, so the Conference League Cup
+            plays every season in the format of 2008/09, also in 2024/25, whose row is the National League Cup that
+            the game does not play (open item 131: before, it took that row's rounds of day 0 and stopped at the box
+            "Date..cpp 52" on 15 June 2024); it has 5 rounds for 22 clubs in 2024, a winner at the end of 2024 and
+            no message box
     t2010   start run, September 2010 ODB, changing rules off, Select All without France (Turkey, Russia and the
             Republic of Ireland are not in the 16 rows that the steps click): the Turkish Cup has 4 groups after 3
             rounds, the Turkish Super Cup is made with two clubs, the Russian one of March 2011 (the edition of
             the row of 2010/11) with two clubs, the All-Ireland cup with 12 clubs
+    a2003   item 145: 2003/04 (the original data moved to 2003), changing rules on, Northern Ireland and the
+            Republic of Ireland, Tier A (RECOMP_TIER_A=1), to the end of 2010/11 (about 5 minutes): the season change
+            to 2004/05 makes the All-Ireland cup (the Setanta Cup), which plays each real edition from its first.
+            2004/05: 6 clubs (2 of each league by place and the two
+            national cup winners) in 2 groups of 3, the winners in the final. 2005/06 to 2007/08: 4 clubs of each
+            league in 2 groups of 4 with two of each league, semi-finals and final. 2008/09: none. 2009/10: 9 clubs
+            (4 of each league and the holders) in 3 groups of 3, the winners and the best runner-up in two-legged
+            semi-finals, then the final. 2010/11: the knockout of 12 clubs. Each edition has a winner in the history,
+            the news says "for the first time" in 2004/05 and "again" in 2009/10, and no error box
+    a2009   open item 148: 2009/10 (the original data moved to 2009), changing rules on, Northern Ireland and the
+            Republic of Ireland, Tier A, to the end of 2013/14: the knockout editions of 2010/11 to 2012/13 (12
+            clubs, 6 of each league) and 2013/14 (8 clubs, 4 of each league) pick their clubs again on the draw
+            day of the first round, so the clubs of each league are its first places of the season just ended, the
+            byes go to the first two of each league,
+            each first-round tie is one club of each league (the 2011 to 2014 rule); each edition has a winner
     r2002   start run, 2002/03 (the original data), changing rules off, Select All without France: the start hook
             makes the editions that the row of 2002/03 holds, the Russian Premier League Cup of 2003 (first round in
             March 2003) with 16 clubs and the Russian Super Cup of March 2003 with two clubs (log lines)
@@ -51,6 +72,14 @@ the season. The check reads the loaded program's report and log.
     n2008-load  September 2008, Norway, changing rules on: saved after 150 days (December 2008, after the module
                 made the Norwegian Super Cup of March 2009 on its vtable copy); after the load the cup is played
                 and has a winner
+    a2004-load-wait  item 145: 2004/05 (the original data moved to 2004), Northern Ireland and the Republic of
+                Ireland, changing rules on: saved after 100 days (October 2004, before the draw day of the
+                All-Ireland cup, 13 December); after the load the groups and the final are drawn and played
+    a2004-load-mid  the same, saved after 262 days (late March 2005, between group match days); after the load the
+                groups end, the final is drawn and the cup has a winner
+    a2007-load-gap  2007/08 (the original data moved to 2007), the same nations: saved after 400 days (August 2008,
+                in 2008/09, which has no edition); after the load the cup comes back in 2009/10 with 9 clubs in 3
+                groups and has a winner
 
 A run starts a game only when fewer than 15 games run on this Mac and the load of the last minute is below 24 (Max's
 limit), and its game stops when the script stops (SIGTERM, SIGINT, SIGHUP). Run at most three of these scripts at
@@ -183,12 +212,106 @@ def check_c2007(lines, log, fails, name):
     need_winner(lines, "new_conf_cup", 2007, fails, name)
 
 
+def check_c2008_off(lines, log, fails, name):
+    if "message box from" in log:
+        fails.append(f"{name}: a message box: {log[log.index('message box from'):].splitlines()[0]}")
+    need_log(log, "new cups: new_conf_cup 2024: 5 rounds for 22 clubs", fails, name)
+    need_winner(lines, "new_conf_cup", 2024, fails, name)
+
+
 def check_t2010(lines, log, fails, name):
     need_log(log, "cup groups: tur_cup 2010 with 4 groups after 3 rounds", fails, name)
     need_made(lines, "new_tur_super", fails, name, 2)
     # Changing rules off: the edition that the row of 2010/11 holds, the Russian Super Cup of March 2011.
     need_log(log, "new cups: new_rus_super 2011 with 2 clubs", fails, name)
     need_made(lines, "new_all_ireland", fails, name, 12)
+
+
+# Item 145: the group editions of the All-Ireland cup, by season: clubs, clubs of each league at least (the cup
+# winners and the holders may come from either), groups, the knockout clubs and rounds, the mix of each group (2:
+# two clubs of each league, None: free).
+SETANTA = {2004: (6, (2, 2), 2, 2, 1, None), 2005: (8, (4, 4), 2, 4, 2, 2), 2006: (8, (4, 4), 2, 4, 2, 2),
+           2007: (8, (4, 4), 2, 4, 2, 2), 2009: (9, (4, 4), 3, 4, 2, None)}
+
+
+def setanta_clubs(log, season):
+    """The clubs of an edition from the last "club" lines of its pick (the pick of the draw day): a list of (name,
+    division 1, 2 or 0, last place) in the order of the list."""
+    out = []
+    for m in re.finditer(rf"new cups: new_all_ireland {season} club (\d+): (.+) \(division (\d), last place "
+                         rf"(-?\d+)\)", log):
+        if m.group(1) == "1":
+            out = []
+        out.append((m.group(2), int(m.group(3)), int(m.group(4))))
+    return out
+
+
+def check_a2003(lines, log, fails, name):
+    if "message box from" in log:
+        fails.append(f"{name}: a message box: {log[log.index('message box from'):].splitlines()[0]}")
+    for season, (clubs, least, groups, ko, ko_rounds, mix) in SETANTA.items():
+        need_groups(lines, "new_all_ireland", season, (groups + 1, groups, clubs, ko, ko_rounds), fails, name)
+        need_winner(lines, "new_all_ireland", season, fails, name)
+        listed = setanta_clubs(log, season)
+        picked = {c: d for c, d, _ in listed}
+        per = [sum(1 for d in picked.values() if d == k) for k in (1, 2)]
+        if len(picked) != clubs or per[0] < least[0] or per[1] < least[1]:
+            fails.append(f"{name}: new_all_ireland {season}: {len(picked)} clubs, {per} of the two leagues, expected "
+                         f"{clubs} with at least {least}")
+        # The clubs taken by place come first in the list, league by league: places 1 to n of each league.
+        for k in (1, 2):
+            places = [p for _, d, p in listed if d == k][:least[k - 1]]
+            if places != list(range(1, least[k - 1] + 1)):
+                fails.append(f"{name}: new_all_ireland {season}: the places of league {k} are {places}, expected 1 to "
+                             f"{least[k - 1]}")
+        drawn = re.findall(rf"cup groups: new_all_ireland {season}/\d\d group (\d+): (.+)", log)
+        if len(drawn) != groups:
+            fails.append(f"{name}: new_all_ireland {season}: {len(drawn)} groups drawn, expected {groups}")
+        for g, members in drawn:
+            got = [picked.get(c, -1) for c in members.split(", ")]
+            if mix and (got.count(1) != mix or got.count(2) != mix):
+                fails.append(f"{name}: new_all_ireland {season} group {g}: {members} is not {mix} of each league")
+    need_log(log, "new cups: new_all_ireland is not held in 2008", fails, name)
+    need_log(log, "new cups: new_all_ireland 2010 with 12 clubs", fails, name)
+    need_winner(lines, "new_all_ireland", 2010, fails, name)
+    if not any(x["file"] == "new_all_ireland" and x["season"] == 2010 and x["phase"] == "end" and x["groups"] == 0
+               for x in lines):
+        fails.append(f"{name}: new_all_ireland 2010/11 is not a knockout at the end of the season")
+    need_log(log, "news 2004/05: The Setanta Cup is played for the first time", fails, name)
+    need_log(log, "news 2009/10: The Setanta Sports Cup is played again", fails, name)
+
+
+def check_a2009(lines, log, fails, name):
+    if "message box from" in log:
+        fails.append(f"{name}: a message box: {log[log.index('message box from'):].splitlines()[0]}")
+    for season in (2010, 2011, 2012, 2013):
+        each = 6 if season < 2013 else 4            # 12 clubs to 2012/13, 8 clubs (no byes) in 2013/14
+        need_log(log, f"new cups: new_all_ireland {season}: clubs picked again on the draw day", fails, name)
+        listed = setanta_clubs(log, season)
+        for k in (1, 2):
+            places = sorted(p for _, d, p in listed if d == k)
+            if places != list(range(1, each + 1)):
+                fails.append(f"{name}: new_all_ireland {season}: the places of league {k} are {places}, expected 1 to "
+                             f"{each}")
+        # The byes (the last 4 of the 12 slots): the first two of each league, the champions among them.
+        byes = sorted((d, p) for _, d, p in listed[8:])
+        if each == 6 and byes != [(1, 1), (1, 2), (2, 1), (2, 2)]:
+            fails.append(f"{name}: new_all_ireland {season}: the byes are {byes} (league, place), expected the first two "
+                         f"of each league")
+        # Open item 148, the 2011 to 2014 rule: each tie of the first round is one club of each league, and the ties
+        # hold the 8 clubs of the first round (the first 8 of the list). The game logs the ties after Cup::draw_round
+        # 0x51c410 has run, so a later shuffle would show here.
+        need_log(log, f"new cups: new_all_ireland {season}: first round paired by league", fails, name)
+        league = {c: d for c, d, _ in listed}
+        ties = re.findall(rf"new cups: new_all_ireland {season} tie \d+: (.+) v (.+)", log)[-4:]
+        if len(ties) != 4:
+            fails.append(f"{name}: new_all_ireland {season}: {len(ties)} first-round ties logged, expected 4")
+        for h, a in ties:
+            if sorted((league.get(h, -1), league.get(a, -1))) != [1, 2]:
+                fails.append(f"{name}: new_all_ireland {season}: the tie {h} v {a} is not one club of each league")
+        if ties and sorted(c for t in ties for c in t) != sorted(c for c, _, _ in listed[:8]):
+            fails.append(f"{name}: new_all_ireland {season}: the ties do not hold the 8 clubs of the first round")
+        need_winner(lines, "new_all_ireland", season, fails, name)
 
 
 def check_r2002(lines, log, fails, name):
@@ -210,9 +333,15 @@ RUNS = {
     "n2008": (2008, os.path.join(DB, "September 2008"), "on", 2010, ["Norway"], False, 5400, check_n2008, {}),
     "c2007": (2007, os.path.join(DB, "November 2007"), "off", 2007, ["England"], False, 3600, check_c2007,
               {"extra": ["conference"]}),
+    "c2008-off": (2008, None, "off", 2024, ["England"], False, 2700, check_c2008_off,
+                  {"env": {"RECOMP_TIER_A": "1"}}),
     "t2010": (2010, os.path.join(DB, "September 2010 ODB"), "off", 2010, ALL_BUT_FRANCE, True, 1800, check_t2010,
               {}),
     "r2002": (2002, None, "off", 2002, ALL_BUT_FRANCE, True, 1800, check_r2002, {}),
+    "a2009": (2009, None, "on", 2013, ["Northern Ireland", "Republic of Ireland"], False, 3600, check_a2009,
+              {"env": {"RECOMP_TIER_A": "1"}}),
+    "a2003": (2003, None, "on", 2010, ["Northern Ireland", "Republic of Ireland"], False, 3600, check_a2003,
+              {"env": {"RECOMP_TIER_A": "1"}}),
 }
 
 
@@ -287,7 +416,36 @@ def check_n2008_load(lines, log, fails, name):
 
 # name: (start year, database folder, nations, days to the save, season of the end report, a log line of the first
 # program that shows the save is inside the competition, check of the loaded program)
+def check_a2004_wait(lines, log, fails, name):
+    need_log(log, "cup groups: new_all_ireland 2004/05: 6 clubs drawn in 2 groups", fails, name)
+    need_log(log, "cup groups: new_all_ireland 2004/05: knockout of 2 clubs drawn", fails, name)
+    need_groups(lines, "new_all_ireland", 2004, (3, 2, 6, 2, 1), fails, name)
+    need_winner(lines, "new_all_ireland", 2004, fails, name)
+
+
+def check_a2004_mid(lines, log, fails, name):
+    need_log(log, "cup groups: new_all_ireland 2004/05: knockout of 2 clubs drawn", fails, name)
+    need_groups(lines, "new_all_ireland", 2004, (3, 2, 6, 2, 1), fails, name)
+    need_winner(lines, "new_all_ireland", 2004, fails, name)
+
+
+def check_a2007_gap(lines, log, fails, name):
+    need_log(log, "new cups: new_all_ireland resumes in 2009", fails, name)
+    need_log(log, "cup groups: new_all_ireland 2009/10: 9 clubs drawn in 3 groups", fails, name)
+    need_groups(lines, "new_all_ireland", 2009, (4, 3, 9, 4, 2), fails, name)
+    need_winner(lines, "new_all_ireland", 2009, fails, name)
+
+
+IRELANDS = ["Northern Ireland", "Republic of Ireland"]
 LOAD_RUNS = {
+    # Item 145, the All-Ireland cup: saved before its draw day (October 2004, the draw on 13 December 2004), in the
+    # middle of its groups (late March 2005) and in the season with no edition (August 2008).
+    "a2004-load-wait": (2004, None, IRELANDS, 100, 2004, "new cups: new_all_ireland 2004 with 6 clubs",
+                        check_a2004_wait),
+    "a2004-load-mid": (2004, None, IRELANDS, 262, 2004,
+                       "cup groups: new_all_ireland 2004/05: 6 clubs drawn in 2 groups", check_a2004_mid),
+    "a2007-load-gap": (2007, None, IRELANDS, 400, 2009, "new cups: new_all_ireland is not held in 2008",
+                       check_a2007_gap),
     "e2016-load": (2016, os.path.join(DB, "October 2016"), ["England"], 100, 2016,
                    "cup groups: eng_auto_cup 2016/17: 56 clubs drawn in 16 groups", check_e2016_load),
     "i2023-load": (2023, os.path.join(DB, "October 2023"), ["Italy"], 189, 2023,

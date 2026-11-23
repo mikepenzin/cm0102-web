@@ -205,9 +205,7 @@ def run_load(program, game, work):
         os.makedirs(user, exist_ok=True)
         shutil.copyfile(first, os.path.join(user, "uefa.sav"))
         shutil.copytree(os.path.join(w, "user", "Databases"), os.path.join(user, "Databases"))
-        fixtures.write_settings(user, "classic", [])
-        with open(os.path.join(user, "settings.txt"), "a") as f:
-            f.write(f"database = folder:{os.path.basename(db)}\nfaster_days = on\n")
+        fixtures.write_settings(user, "classic", [("database", f"folder:{os.path.basename(db)}"), ("faster_days", "on")])
         report = os.path.join(again, "report.tsv")
         steps = fixtures.LOAD_STEPS[:-1] + ["3600000 quit"]    # no first-news wait, as uefa_access_run.py
         r, _ = fixtures.run(program, game, "classic", user, smoke_run.scaled_steps("classic", again, steps),

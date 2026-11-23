@@ -41,6 +41,7 @@ LOG = WORK + 0x1F0000
 RESULT = 0x30FF0000          # Unicorn: st(0) is stored here after the call
 VFUNC = 0x401000             # a stub that the vtables of the competition table case name (thiscall, 2 arguments)
 FTOL = 0x945640
+ARG_ZONE_VTABLE, ARG_CUP_VTABLE = 0x96D0F0, 0x969468   # League_Stage (0x68b196), Cup_Stage (0x522e80)
 
 STAFF_PTR, STAFF_COUNT, CLUB_PTR, COMP_PTR = 0xAE23BC, 0xAE2364, 0xAE23B4, 0xADADFC
 STAFF_SIZE, CLUB_SIZE = 110, 581
@@ -49,7 +50,7 @@ STAFF_SIZE, CLUB_SIZE = 110, 581
 FUNCTIONS = {
     0x4AEAF0: [0x4AEB0F], 0x4B07B0: [0x4B07BA], 0x48CE10: [0x48CE46], 0x84AEB0: [0x84AEBB],
     0x85D8A0: [0x85D8B8], 0x8E7B50: [0x8E7BEF], 0x8E8800: [0x8E8827], 0x85A470: [0x85A556],
-    0x86CD70: [0x86D609], 0x8C9390: [0x8C94CA], 0x8C39F0: [0x8C3CAD, 0x8C3E16],
+    0x86CD70: [0x86D609], 0x8C9390: [0x8C94CA], 0x8C39F0: [0x8C3CAD, 0x8C3E16], 0x409C20: [0x409E25],
 }
 
 
@@ -103,7 +104,21 @@ EMULATE = {
     0x8C94CA: _if_zero(UC_X86_REG_EDX, 0x8C94EC),
     0x8C3CAD: _if_zero(UC_X86_REG_EAX, 0x8C3CB1),
     0x8C3E16: _if_zero(UC_X86_REG_EAX, 0x8C3E1A),
+    0x409E25: lambda uc: _arg_stage_not_zone(uc),
 }
+
+
+def _arg_stage_not_zone(uc):
+    """The stage bound at 0x409e25: the next stage index is below [esi+0x30] and that stage is not a League_Stage."""
+    i = uc.reg_read(UC_X86_REG_EAX) & 0xFFFF
+    i = i - 0x10000 if i & 0x8000 else i
+    esi = uc.reg_read(UC_X86_REG_ESI)
+    if i >= struct.unpack("<i", bytes(uc.mem_read(esi + 0x30, 4)))[0]:
+        return False
+    if _u32(uc, _u32(uc, _u32(uc, esi + 0xC) + 4 * i)) == ARG_ZONE_VTABLE:
+        return False
+    uc.reg_write(UC_X86_REG_EIP, 0x409E30)
+    return True
 
 
 class Mem:
@@ -364,6 +379,48 @@ def row_counter(site, null):
     return Case(name, 0x8C39F0, null, ecx=k, args=[match, slots], mem=m, queues=queues, stack=stack)
 
 
+def arg_averages(stages, last_club, second_club=None):
+    """ArgSecond::update_relegation_averages 0x409c20 with no rows of its own (+0x3e = 0) and flag 0, so only the
+    stage loop and the average sums run. Averages table [this+0x18]: 4 rows of 19 bytes, club ids 10 to 13. Stages
+    0 to 2 are League_Stage zones (vtable at +0, rows +0x3e, table +0xb1, rows of 59 bytes: club pointer, games
+    +0x11, points +0x19). Stages 3 and 4 are Cup_Stage blocks of 0xb2 bytes whose +0xb1 dword is junk. The stage
+    loop goes next to the averages index of the last club found, plus 1 (0x409e24)."""
+    m = Mem()
+    this, arr, avg = m.new(0x100), m.new(4 * 5), m.new(19 * 4)
+    m.u32(this + 0xC, arr)
+    m.u32(this + 0x18, avg)
+    m.u32(this + 0x30, stages)
+    m.u16(this + 0x34, 4)
+    for k in range(4):
+        m.u32(avg + 19 * k, 10 + k)
+        m.u16(avg + 19 * k + 0x10, 30 + k)
+        m.u8(avg + 19 * k + 0x12, 10)
+    clubs = {}
+    for cid in (10, 11, 12, 13, 99):
+        clubs[cid] = m.new(8)
+        m.u32(clubs[cid], cid)
+    for z, cid in enumerate((last_club, second_club, None)):
+        st = m.new(0xC0)
+        m.u32(st, ARG_ZONE_VTABLE)
+        m.u32(arr + 4 * z, st)
+        if cid is not None:
+            rows = m.new(59)
+            m.u16(st + 0x3E, 1)
+            m.write(st + 0xB1, struct.pack("<I", rows))
+            m.u32(rows, clubs[cid])
+            m.u8(rows + 0x11, 2)
+            m.u16(rows + 0x19, 4)
+    for z in (3, 4):
+        st = m.new(0xB2 + 3)
+        m.u32(st, ARG_CUP_VTABLE)
+        m.u16(st + 0x3E, 8)
+        m.write(st + 0xB1, b"\x00\xcc\xcc\xcc")
+        m.u32(arr + 4 * z, st)
+    null = stages > 3 and last_club == 12
+    name = f"arg average points, {stages} stages, last club of zone 0 at index {last_club - 10}"
+    return Case(name, 0x409C20, null, ecx=this, args=[0], mem=m)
+
+
 def cases():
     out = [news(True), news(False)]
     out += [worldcup(w) for w in range(4)]
@@ -373,6 +430,7 @@ def cases():
     out += [squad_manager_case(True), squad_manager_case(False), staff_records_club(True), staff_records_club(False)]
     out += [staff_records_squad(True), staff_records_squad(False)]
     out += [row_counter(1, True), row_counter(1, False), row_counter(2, True), row_counter(2, False)]
+    out += [arg_averages(5, 12), arg_averages(3, 12), arg_averages(5, 10, second_club=99)]
     return out
 
 

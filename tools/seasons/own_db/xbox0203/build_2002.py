@@ -35,8 +35,10 @@ that the duplicate merge removes. A change that would need a new row stops the b
    that duplicates.kept_apart calls two people. It runs again until no other pair is left. The kept pairs, with
    their ids after the merge, go to <changes>/kept-pairs.tsv, the list that duplicates.py check accepts.
 8. The folder is written, then staff_slots.py (first season 2002, Q12) fills empty staff slots until a new game
-   with every league selected stays under the staff limit, with nobody whom the list changed, and duplicates.py
-   check runs with kept-pairs.tsv. An applied row of a kind that no step writes stops the build.
+   with every league selected stays under the staff limit, with nobody whom the list changed. Then coeffs.py
+   writes the real UEFA season coefficients of 1996/97 to 2001/02 at nation +0xe0 to +0x108 (0.6.2 item 106: the
+   3.9.68 template holds 1995/96 to 2000/01), and duplicates.py check runs with kept-pairs.tsv. An applied row of
+   a kind that no step writes stops the build.
 
 Work folder: merge.tsv (each kept row and the rows merged into it), ids.tsv (old staff id, new staff id),
 staff-slots.tsv, duplicates-check.txt and build.txt (the counts).
@@ -56,6 +58,7 @@ sys.path.insert(0, OWN_DB)
 sys.path.insert(0, HERE)
 import cmdb  # noqa: E402
 import cmdb1  # noqa: E402
+import coeffs  # noqa: E402
 import duplicates  # noqa: E402
 import staff_slots  # noqa: E402
 from change_list import SLOTS, outside_repo, slot_keys  # noqa: E402
@@ -442,6 +445,7 @@ def main(argv):
               for r in read_tsv(os.path.join(a.changes, k + ".tsv")) if r["decision"] == "applied"}
     staff_slots.main([a.out, os.path.join(a.work, "staff-slots.tsv"), str(staff_slots.TARGET), str(FIRST_SEASON)],
                      keep_out=listed)
+    need(coeffs.main([a.out, str(FIRST_SEASON)]) == 0, "coeffs: the nation table was not written")
     saved = sys.stdout
     with open(os.path.join(a.work, "duplicates-check.txt"), "w", encoding="utf-8") as h:
         sys.stdout = h

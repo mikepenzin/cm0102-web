@@ -45,10 +45,7 @@ Belgium	2027/28	registration	new_code	8 players developed in Belgium in the squa
 Brazil	2019/20	registration	new_code	Series A, B and C: at most 40 registered players, at most 8 replaced until the final registration date (CBF notice of 31 Jul 2020)
 Brazil	2026/27	registration	new_code	at most 50 registered players: Lista A 30 (over 23), Lista B 20 (under 23); split moves to 25/25 by 2030
 Brazil	2027/28	registration	new_code	at most 50 registered players; the A/B split moves from 30/20 (2027) to 25/25 (2030); 2028 split not stated
-Croatia	2016/17	foreign	mid_season	HNL and cup: 8 foreign players per team from 18 October 2016 (6 before)
-Croatia	2025/26	foreign	kind	HNL: 6 non-EU players per team per match; Ukrainian players counted as domestic (temporary FIFA measure)
-Croatia	2026/27	foreign	kind	HNL: 5 non-EU players per team per match; Ukrainian players no longer counted as domestic
-Croatia	2027/28	foreign	kind	HNL: 5 non-EU players per team per match; Ukrainian players no longer counted as domestic
+Croatia	2016/17	foreign	mid_season	HNL and cup: 8 foreign players per team from 18 October 2016 (6 before); EU/EEA nationals and Croatian dual nationals not counted as foreign
 Denmark	2026/27	work_permit	new_code	Non-EU/EEA footballer needs a residence and work permit on special individual qualifications: club in a DIF-member association, advance statement from that association on pay and terms, pay and terms to Danish standards, full-time work (rule as read on 2026-10-16; start date unknown).
 Denmark	2027/28	work_permit	new_code	Non-EU/EEA footballer needs a residence and work permit on special individual qualifications: club in a DIF-member association, advance statement from that association on pay and terms, pay and terms to Danish standards, full-time work (carried from 2026/27, inference).
 England	2001/02	work_permit	new_code	non-EEA player needs a work permit: international of a FIFA top-70 nation who played 75% of competitive internationals in the last 2 years
@@ -347,7 +344,6 @@ Turkey	2019/20	registration	new_code	28-man squad with at least 14 Turkish playe
 Turkey	2020/21	windows	partial	first period 4 August to 5 October 2020; second period unknown
 Turkey	2024/25	foreign	form	Süper Lig: 14 foreigners in the 28-man A list (plan to cut to 12 reversed), 12 of them may be in the matchday list; pitch limit unknown
 Turkey	2024/25	registration	new_code	Süper Lig A list raised from 26 to 28 players
-Turkey	2027/28	foreign	form	Süper Lig: unknown
 United States	2001/02	registration	new_code	No Designated Player rule (adopted for 2007)
 United States	2002/03	registration	new_code	No Designated Player rule (adopted for 2007)
 United States	2003/04	registration	new_code	No Designated Player rule (adopted for 2007)

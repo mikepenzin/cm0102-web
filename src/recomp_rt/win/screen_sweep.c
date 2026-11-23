@@ -21,7 +21,10 @@
  * first months. The log names each screen
  * ("recomp: screen sweep: ... view n"), writes "recomp: screen sweep: built" at its first build and counts the
  * builds, so a run can tell that each screen was drawn. A box of the game while a screen is up is logged after
- * that screen's line (waits.c). */
+ * that screen's line (waits.c).
+ *
+ * RECOMP_SCREEN_SWEEP_DUMP=<folder> also writes the picture of each history screen to <folder>/history-<record id>.bmp
+ * (issue 145: the pictures show the rows that the screen draws). */
 #include "win.h"
 #include "season_change.h"
 
@@ -76,7 +79,7 @@ static uint32_t call_this(uint32_t fn, uint32_t self, int n, const uint32_t *arg
  * build function of the current node runs, then +0x12f53d and +0x12f4fa cleared and, for the local player, the
  * draw 0x55f300(-1, -1, -1, -1). In a season jump the day loop puts its own screen up before the next pass of the
  * loop, so a pushed screen is built here. */
-static void build_now(void)
+void screen_sweep_build_now(void)
 {
     int ch = (int16_t)rd16(g_mem, SCREENS + CHANNEL);
     uint32_t rec = SCREENS + RECORD_SIZE * (uint32_t)ch;
@@ -177,7 +180,48 @@ void screen_sweep_turn(void)
         call(OPEN_HISTORY, 2, a);
         if (rt_unwinding) return;
     }
-    build_now();
+    screen_sweep_build_now();
+    const char *dump = view == 5 && !rt_unwinding ? getenv("RECOMP_SCREEN_SWEEP_DUMP") : NULL;
+    if (dump && *dump) {
+        char path[1024];
+        snprintf(path, sizeof path, "%s/history-%d.bmp", dump, (int)rd32(g_mem, rec));
+        win_dump_screen(path);
+    }
+}
+
+/* RECOMP_COMP_MENU_TEST=1 (tests/seasons/comp_menu_run.py, issue 163): at the first start report the history screen of
+ * each competition opens and builds, and a line names the items that comp_screens_add_related_comps_menu 0x49d070
+ * added to its arrow menu. display.c passes each item's text from the widget create at 0x49d212. */
+static int menu_test_on;
+static char menu_items[1024];
+
+void screen_sweep_menu_item(uint32_t text)
+{
+    size_t n = strlen(menu_items);
+    if (menu_test_on && n < sizeof menu_items - 1)
+        snprintf(menu_items + n, sizeof menu_items - n, "%s%.51s", n ? "|" : "", win_str(text));
+}
+
+void rt_comp_menu_test(void)
+{
+    static int done;
+    if (done || !getenv("RECOMP_COMP_MENU_TEST")) return;
+    done = 1;
+    uint32_t all[MAX_OBJECTS];
+    int n = season_change_comps(all, MAX_OBJECTS);
+    menu_test_on = 1;
+    for (int i = 0; i < n && !rt_unwinding; i++) {
+        if (!openable(all[i]) || !strcmp(season_change_file(all[i]), "record_utils")) continue;
+        uint32_t rec = rd32(g_mem, all[i] + 4), a[2] = {rec, 0};
+        menu_items[0] = 0;
+        call(OPEN_HISTORY, 2, a);
+        if (rt_unwinding) break;
+        screen_sweep_build_now();
+        if (rt_unwinding) break;
+        fprintf(stderr, "recomp: comp menu: %.51s [%.51s]: %s\n", win_str(rec + 4), win_str(rec + 0x38), menu_items);
+    }
+    menu_test_on = 0;
+    fprintf(stderr, "recomp: comp menu: done\n");
 }
 
 void o_0048fcd0(void);

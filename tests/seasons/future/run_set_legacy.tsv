@@ -1,0 +1,65 @@
+# The 0.7.0 run set, kept as test data of run_set_test.py only (release tests from 0.7.1, slice 2): the rows that the test
+# plays the script's late, weekly, Tier B, nation job and release check on. No release plays these rows.
+# The run set of the future play spec (0.6.2 slice 15; decisions Q11, Q12, Q14, Q15, Q22 and the Tier B limits).
+# Input of tests/seasons/future/run_set.py. One row per game.
+# tier: A (RECOMP_TIER_A=1, slice 3), B (the full world, with the world-health checks and the Tier B limits), late (as
+#   B, from the checkpoint save of the Tier A row in the column from, in the year start; open item 193), weekly (as B
+#   with the test-only market RECOMP_TEST_MARKET_WEEKLY=1: the AI market on Mondays only; not the shipped game),
+#   jump (a new game in a far year, RECOMP_DATE_JUMP=1, the December 2025 database), normal (the full world, the
+#   checker only; the quick set that tests the script).
+# changing: changing rules on or off. nations: all, or names joined by commas. last: the last season (2100: the game
+# plays the season 2100/01). leg_years: the seasons of one leg (one save and load each); a leg that ends in a new
+# decade keeps its save as the checkpoint of that decade. set: release (the whole run set, Q12), nightly (also in the
+# release set), quick (only with --set quick), background (plays on after the release, not in --verify). status: run, or waits (with the reason in note).
+# database (release tests 0.7.1, slice 1; empty means tile): tile (the data of the start year on the start screen),
+#   3.9.60, 3.9.65 or 3.9.68 (the base data, 2001 only). extras: none (empty), all (the English Conference, German
+#   Regionalliga, Serie C2, Spanish Segunda B, Portuguese Second Division B and Swedish Second Division) or names
+#   joined by commas. last: a season, or tile (the season before the end point of the start, Decisions R1 of the spec).
+name	tier	start	changing	nations	seed	last	leg_years	set	status	note	from	database	extras
+a2001s1	A	2001	on	all	1	2100	10	release	run	Q11
+a2001s2	A	2001	on	all	2	2100	10	release	run	Q11
+a2001s3	A	2001	on	all	3	2100	10	release	run	Q11
+a2002s1	A	2002	on	all	1	2100	10	release	run	Q11
+a2002s2	A	2002	on	all	2	2100	10	release	run	Q11
+a2002s3	A	2002	on	all	3	2100	10	release	run	Q11
+a2006s1	A	2006	on	all	1	2100	10	release	run	Q11
+a2006s2	A	2006	on	all	2	2100	10	release	run	Q11
+a2006s3	A	2006	on	all	3	2100	10	release	run	Q11
+a2013s1	A	2013	on	all	1	2100	10	release	run	Q11
+a2013s2	A	2013	on	all	2	2100	10	release	run	Q11
+a2013s3	A	2013	on	all	3	2100	10	release	run	Q11
+a2021s1	A	2021	on	all	1	2100	10	release	run	Q11
+a2021s2	A	2021	on	all	2	2100	10	release	run	Q11
+a2021s3	A	2021	on	all	3	2100	10	release	run	Q11
+a2025s1	A	2025	on	all	1	2100	10	release	run	Q11
+a2025s2	A	2025	on	all	2	2100	10	release	run	Q11
+a2025s3	A	2025	on	all	3	2100	10	release	run	Q11
+a2026s1	A	2026	on	all	1	2100	10	release	run	Q56: the 2026 start (October 2026 data)
+a2026s2	A	2026	on	all	2	2100	10	release	run	Q56: the 2026 start (October 2026 data)
+a2026s3	A	2026	on	all	3	2100	10	release	run	Q56: the 2026 start (October 2026 data)
+a2001offs1	A	2001	off	all	1	2100	10	release	run	Q11: changing rules off
+a2001offs2	A	2001	off	all	2	2100	10	release	run	Q11: changing rules off
+a2001offs3	A	2001	off	all	3	2100	10	release	run	Q11: changing rules off
+a2001esb	A	2001	on	England,Spain,Brazil	1	2100	10	release	run	Q14: three nations loaded
+a2001nation	A	2001	on	all	1	2100	10	release	run	Q15: the manager also runs a national team (RECOMP_TEST_NATION_JOB in leg 0, run_set.py NATION_JOB)
+a2001to2300	A	2001	on	all	1	2300	10	nightly	run	Q22: one Tier A run to 2300 each night
+jump2098	jump	2098	on	all	1	2100	1	release	run	Q21: a date jump through the season change of 2100/01
+jump2198	jump	2198	on	all	1	2200	1	release	run	Q21: through 2200/01
+jump2298	jump	2298	on	all	1	2300	1	release	run	Q21: through 2300/01
+b2001	B	2001	on	all	1	2010	1	release	run	Tier B gate: the full world to 2010/11, past the 2010 World Cup and Euro 2008
+b2025	B	2025	on	all	1	2028	1	release	run	Tier B gate: a 2025 start to 2028/29, past the 2026 World Cup and Euro 2028
+b2001long	B	2001	on	all	1	2300	1	background	run	Tier B in the background: the full world to 2300, no release gate (Max, 9 Nov 2026)
+b2025long	B	2025	on	all	1	2300	1	background	run	Tier B in the background: a 2025 start to 2300, no release gate (Max, 9 Nov 2026)
+bw2001	weekly	2001	on	all	1	2300	1	background	run	item 193: TEST-ONLY MARKET (RECOMP_TEST_MARKET_WEEKLY, the AI market on Mondays only), the full world from 2001 to 2300; not the shipped game
+bw2025	weekly	2025	on	all	1	2300	1	background	run	item 193: TEST-ONLY MARKET (RECOMP_TEST_MARKET_WEEKLY, the AI market on Mondays only), the full world from 2025 to 2300; not the shipped game
+late2101	late	2101	on	all	1	2110	1	release	run	item 193: the full world from the 2101 save of a2001to2300, ten seasons	a2001to2300
+late2201	late	2201	on	all	1	2210	1	release	run	item 193: the full world from the 2201 save of a2001to2300, ten seasons	a2001to2300
+late2291	late	2291	on	all	1	2300	1	release	run	item 193: the full world from the 2291 save of a2001to2300, ten seasons	a2001to2300
+quick2025	normal	2025	on	England	1	2026	1	quick	run	tests the script: two seasons, one save and load
+quickjump	jump	2098	on	England	1	2099	1	quick	run	tests the script: a date jump, two seasons
+quicka	A	2025	on	England	1	2034	5	quick	run	tests the script: Tier A, two legs of five seasons
+quickgre	normal	2025	on	Greece	1	2027	1	quick	run	open item 68: the Greek Super League 2 plays one group from 2026/27
+quick2026	normal	2026	on	all	1	2026	1	quick	run	slice 21: the 2026/27 tile, the full world one season, the checker on its save
+quick60x	normal	2001	on	England,France,Germany,Italy,Spain,Portugal,Sweden	1	2001	1	quick	run	slice 1 of the release tests: 3.9.60 with all six extra divisions, one season		3.9.60	all
+quick65x	normal	2001	on	England,France,Holland,Sweden	1	2001	1	quick	run	slice 1 of the release tests: 3.9.65 with the Swedish Second Division, one season		3.9.65	sweden
+quick68	normal	2001	on	England,France,Holland	1	2001	1	quick	run	slice 1 of the release tests: 3.9.68, one season		3.9.68	

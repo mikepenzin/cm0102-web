@@ -24,7 +24,9 @@ season, and the Champions League with a round of 16 lists no group match day aft
             round (the game's label function 0x4bfa30, long and abbreviated names) has its real name from the
             season of the rename (Q370): the Champions League "Round of 16" from 2003/04 (not in 2002/03),
             the UEFA Cup "Round of 32" and "First Qualifying Round" from 2004/05 ("Third Round" in 2003/04), and in
-            the abbreviated names "Rnd of 16", "Rnd of 32" and the original's "Qual.1"
+            the abbreviated names "Rnd of 16", "Rnd of 32" and the original's "Qual.1". No competition gets both
+            "played for the first time" and "played again" in one season, and the Conference Cup of 2004/05,
+            which ran from 1979/80 to 2000/01, is "played again" (0.6.2 item 135)
     off2002 3.9.68 data from 2002/03, changing rules off, to the end of 2003/04: both seasons keep the format and
             the round names of 2002/03 (Q232): 13 stages and "Second Round", not "Round of 16"
     load    November 2007: the game saves 240 days after the start (March 2008, the knockout stages of both
@@ -194,6 +196,9 @@ def run_change(program, game, work):
     if os.path.exists(report):                  # the whole report against the expected file of changing rules on
         with CHECK_LOCK:
             fails += [f"change: {t}" for t in rrc.check(report, None, 2004, "changing-2002-england")]
+    fails += [f"change: {t}" for t in rrc.first_and_again(log)]
+    if "news 2004/05: The Conference Cup is played again." not in log:
+        fails.append("change: no news sentence 'The Conference Cup is played again.' in 2004/05")
     for sentence, season in ((NEWS_R16, 2003), (NEWS_UC, 2004)):
         if not re.search(rf"news.*{season}.*{re.escape(sentence)}|{re.escape(sentence)}", log):
             fails.append(f"change: no news sentence {sentence!r}")
@@ -214,9 +219,7 @@ def run_load(program, game, work):
     shutil.copyfile(first, os.path.join(user, "uefa.sav"))
     dbname = os.path.basename(NOV_2007)
     shutil.copytree(os.path.join(work, "user", "Databases"), os.path.join(user, "Databases"))
-    fixtures.write_settings(user, "classic", [])
-    with open(os.path.join(user, "settings.txt"), "a") as f:
-        f.write(f"database = folder:{dbname}\nfaster_days = on\n")
+    fixtures.write_settings(user, "classic", [("database", f"folder:{dbname}"), ("faster_days", "on")])
     report = os.path.join(again, "report.tsv")
     steps = fixtures.LOAD_STEPS + ["3600000 quit"]       # the loaded game goes on with its holiday
     r, _ = fixtures.run(program, game, "classic", user, smoke_run.scaled_steps("classic", again, steps),

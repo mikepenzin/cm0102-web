@@ -26,6 +26,7 @@
 #include "options.h"
 #include "dbfolders.h"
 #include "cp1252.h"
+#include "folder_names.h"
 
 #include <ctype.h>
 #include <errno.h>
@@ -40,20 +41,13 @@ char win_user_dir[1024];
 static int exists(const char *p) { HostStat st; return host_stat(p, &st) == 0; }
 static int is_dir(const char *p) { HostStat st; return host_stat(p, &st) == 0 && st.is_dir; }
 
-/* The spelling of a name in a folder, ignoring case: found = the entry, or empty. A host that ignores
- * case needs no lookup. */
+/* The spelling of a name in a folder, ignoring case: found = the entry, or empty (folder_names.c). A
+ * host that ignores case needs no lookup. */
 static void ci_lookup(const char *dir, const char *part, char *found, size_t room)
 {
     found[0] = 0;
     if (HOST_FOLDS_CASE) return;
-    HostDir *d = host_opendir(dir[0] ? dir : "/");
-    if (!d) return;
-    const char *e;
-    while ((e = host_readdir(d))) {
-        if (!strcmp(e, part)) { snprintf(found, room, "%s", e); break; }
-        if (!found[0] && !strcasecmp(e, part)) snprintf(found, room, "%s", e);
-    }
-    host_closedir(d);
+    folder_lookup(dir[0] ? dir : "/", part, found, room);
 }
 
 /* The start of a host path is the game folder (the whole path or the part before a '/'). */
@@ -412,6 +406,17 @@ const char *win_data_set_dir(void)
     return data_dir;
 }
 
+/* 1 when the data set folder holds its own copy of the Data file name (0.6.2 open item 100: euro.cfg). */
+int win_data_set_has(const char *name)
+{
+    if (!data_dir_known) data_dir_find();
+    if (!data_dir[0]) return 0;
+    char found[256], path[2048];
+    ci_lookup(data_dir, name, found, sizeof found);
+    snprintf(path, sizeof path, "%s/%s", data_dir, found[0] ? found : name);
+    return exists(path);
+}
+
 static void data_dir_swap(char *h, size_t room)
 {
     if (!data_dir_known) data_dir_find();
@@ -502,8 +507,11 @@ static int mem_files;
 static int mem_of[MAX_FILES];
 static size_t mem_pos[MAX_FILES];
 
+static void keep_drop(const char *path);
+
 void win_memory_file(const char *host_path, const uint8_t *data, size_t size)
 {
+    keep_drop(NULL);                        /* item 151: a kept read handle must not hide a new memory file */
     if (mem_files == MAX_MEM_FILES || strlen(host_path) >= sizeof mem_file[0].path) rt_fatal("too many memory files");
     snprintf(mem_file[mem_files].path, sizeof mem_file[0].path, "%s", host_path);
     mem_file[mem_files].data = data;
@@ -513,6 +521,7 @@ void win_memory_file(const char *host_path, const uint8_t *data, size_t size)
 
 void win_memory_files_clear(void)
 {
+    keep_drop(NULL);
     for (uint32_t i = 0; i < MAX_FILES; i++)
         if (fd_used[i] && fds[i] == MEM_FD) fd_used[i] = 0;
     mem_files = 0;
@@ -535,12 +544,140 @@ static int mem_slot(uint32_t h)
 
 int win_is_file_handle(uint32_t h) { return fd_of(h) >= 0 || mem_slot(h) >= 0; }
 
+/* Kept files. At the season change PlayerStats::end_season_for_key_nation 0x7c1350 archives the records
+ * of each player. archive_player_stats 0x7c5fe0 calls FILE_LLIST::add_node 0x58e340 for each record. add_node
+ * opens "player stats history.tmp" for read and write (0x58e5c1), appends, and closes it. These opens and
+ * closes took about 5 % of a Tier A year (the profile of 0.6.2 slice 3). So while 0x7c1350 runs, a closed
+ * handle of that file, opened with OPEN_EXISTING for read and write, keeps its host file open. The next
+ * CreateFileA of the same host path with the same flags takes it at position 0, as a new open does. It is one
+ * host file, read and written by the same calls, so the bytes are the same. A delete or rename of the path,
+ * an unwind out of 0x7c1350 and its end close the kept file. RECOMP_KEEP_FILES=0 closes it at once.
+ *
+ * Item 151: the constructor PlayerStats::PlayerStats 0x7bfd50 ("Player histories" of a new game) also keeps the
+ * file. Through FILE_LLIST::add_node_list 0x58e9b0 it opens the file 16,816 times in a 2025/26 start with four
+ * nations, each time for write with OPEN_ALWAYS (access 0x40000000, disposition 4), and the opens with their
+ * path lookups took about half of the step. A handle opened for write with OPEN_EXISTING or OPEN_ALWAYS keeps
+ * its host file at the close, with the game's name, access and disposition. A new CreateFileA with the same
+ * name, access and disposition takes the kept file at position 0 without the path lookup: the file exists
+ * (the game closed it a moment ago), so the slow path would find the same user-folder file, set no flag of
+ * a new file, and give ERROR_ALREADY_EXISTS for OPEN_ALWAYS. Every DeleteFileA, MoveFileA, CreateDirectoryA and
+ * SetCurrentDirectoryA closes all kept files, since a path lookup may then give another file. A handle for read
+ * is kept too (the last "Initialising game data", FOG_OF_WAR_MAP 0x5aff00), but only a file of the user folder:
+ * a read of a file that exists only in the game folder would find the user-folder copy once a write makes one.
+ * A new or cleared memory file closes the kept files too, since a read open would then take the memory file. */
+#define KEEP_NAME "player stats history.tmp"
+#define KEEP_MAX 4
+static struct { char *path; int fd; int flags; char *name; uint32_t access, disposition; } kept[KEEP_MAX];
+static char *fd_keep[MAX_FILES];              /* the host path of a handle of KEEP_NAME in the user folder */
+static char *fd_name[MAX_FILES];              /* the game's name, access and disposition of that handle */
+static uint32_t fd_access[MAX_FILES], fd_disposition[MAX_FILES];
+static int keep_depth;
+static uint32_t keep_esp;           /* item 151: the esp at the start of the outermost scope */
+
+/* A scope runs, and esp is in it (an unwind can run an older frame's code while the scope's wrap waits). */
+static int keep_live(void) { return keep_depth && cpu.esp < keep_esp; }
+static int fd_flags[MAX_FILES];     /* the host open flags of a handle */
+
+static int keep_on(void)
+{
+    static int on = -1;
+    if (on < 0) {
+        const char *v = getenv("RECOMP_KEEP_FILES");
+        on = !(v && !strcmp(v, "0"));
+    }
+    return on;
+}
+
+/* 1 for a host path whose name is KEEP_NAME. */
+static int kept_name(const char *path)
+{
+    const char *slash = strrchr(path, '/');
+    return !strcasecmp(slash ? slash + 1 : path, KEEP_NAME);
+}
+
+/* Closes the kept file of path, or every kept file when path is NULL. */
+static void keep_drop(const char *path)
+{
+    for (int k = 0; k < KEEP_MAX; k++) {
+        if (!kept[k].path || (path && (HOST_FOLDS_CASE ? strcasecmp(kept[k].path, path) : strcmp(kept[k].path, path))))
+            continue;
+        host_close(kept[k].fd);
+        free(kept[k].path);
+        free(kept[k].name);
+        kept[k].path = kept[k].name = NULL;
+    }
+}
+
+/* A kept file for the game's name, access and disposition: its slot, or -1. */
+static int keep_find_name(const char *name, uint32_t access, uint32_t disposition)
+{
+    for (int k = 0; k < KEEP_MAX; k++)
+        if (kept[k].path && kept[k].name && kept[k].access == access && kept[k].disposition == disposition
+            && !strcmp(kept[k].name, name))
+            return k;
+    return -1;
+}
+
+/* A kept host file for path and flags, at position 0, or -1. */
+static int keep_take(const char *path, int flags)
+{
+    for (int k = 0; k < KEEP_MAX; k++) {
+        if (!kept[k].path || kept[k].flags != flags || strcmp(kept[k].path, path)) continue;
+        int fd = kept[k].fd;
+        free(kept[k].path);
+        free(kept[k].name);
+        kept[k].path = kept[k].name = NULL;
+        if (host_seek(fd, 0, SEEK_SET) == 0) return fd;
+        host_close(fd);
+        return -1;
+    }
+    return -1;
+}
+
+void o_007c1350(void);
+
+/* PlayerStats::end_season_for_key_nation 0x7c1350, thiscall (key nation), ret 4. */
+RT_WRAP(007c1350, keep_files_archive)
+{
+    if (!keep_depth++) keep_esp = cpu.esp;
+    o_007c1350();
+    if (--keep_depth == 0 || rt_unwinding) {
+        keep_depth = 0;
+        keep_drop(NULL);
+    }
+}
+
+void o_007bfd50(void);
+
+void o_005aff00(void);
+
+/* FOG_OF_WAR_MAP::FOG_OF_WAR_MAP 0x5aff00 (item 151): the last "Initialising game data" of a new game reads the
+ * history of each player through PlayerStats::build_career_history 0x7c3e40 and FILE_LLIST::get_nodes 0x58f120,
+ * which opens the file for read (access 0x80000000, OPEN_EXISTING) 14,706 times in a 2025/26 start with four
+ * nations. */
+RT_WRAP(005aff00, keep_files_fog)
+{
+    if (!keep_depth++) keep_esp = cpu.esp;
+    o_005aff00();
+    if (--keep_depth == 0 || rt_unwinding) {
+        keep_depth = 0;
+        keep_drop(NULL);
+    }
+}
+
+/* PlayerStats::PlayerStats 0x7bfd50, thiscall, the "Player histories" step of a new game (item 151). */
+RT_WRAP(007bfd50, keep_files_histories)
+{
+    if (!keep_depth++) keep_esp = cpu.esp;
+    o_007bfd50();
+    if (--keep_depth == 0 || rt_unwinding) {
+        keep_depth = 0;
+        keep_drop(NULL);
+    }
+}
+
 int win_close_file(uint32_t h)
 {
-    if (fd_of(h) >= 0) {
-        free(fd_path[(h - FILE_BASE) / 4]);
-        fd_path[(h - FILE_BASE) / 4] = NULL;
-    }
     int m = mem_slot(h);
     if (m >= 0) {
         fd_used[m] = 0;
@@ -548,8 +685,28 @@ int win_close_file(uint32_t h)
     }
     int fd = fd_of(h);
     if (fd < 0) return 0;
-    host_close(fd);
-    fd_used[(h - FILE_BASE) / 4] = 0;
+    uint32_t i = (h - FILE_BASE) / 4;
+    int k = KEEP_MAX;
+    if (keep_live() && keep_on() && fd_keep[i] && !(fd_flags[i] & (O_TRUNC | O_EXCL)))
+        for (k = 0; k < KEEP_MAX && kept[k].path; k++) {}
+    if (k < KEEP_MAX) {
+        kept[k].path = fd_keep[i];          /* the path and the game's name move to the kept file */
+        kept[k].fd = fd;
+        kept[k].flags = fd_flags[i];
+        kept[k].name = fd_name[i];
+        kept[k].access = fd_access[i];
+        kept[k].disposition = fd_disposition[i];
+        fd_keep[i] = NULL;
+        fd_name[i] = NULL;
+    } else
+        host_close(fd);
+    free(fd_path[i]);
+    fd_path[i] = NULL;
+    free(fd_keep[i]);
+    fd_keep[i] = NULL;
+    free(fd_name[i]);
+    fd_name[i] = NULL;
+    fd_used[i] = 0;
     return 1;
 }
 
@@ -564,6 +721,29 @@ RT_IMPORT(CreateFileA)
     const char *name = win_str(rt_arg(0));
     uint32_t access = rt_arg(1), disposition = rt_arg(4);
     char h[2048], u[2048];
+    int kk = keep_live() && keep_on() && (disposition == 3 || disposition == 4)
+             ? keep_find_name(name, access, disposition) : -1;
+    if (kk >= 0) {                                      /* the kept file, as the path lookup would find it */
+        for (uint32_t i = 0; i < MAX_FILES; i++) {
+            if (fd_used[i]) continue;
+            int fd = kept[kk].fd;
+            if (host_seek(fd, 0, SEEK_SET) != 0) break;    /* the slow path below opens it again */
+            fd_used[i] = 1;
+            fds[i] = fd;
+            fd_flags[i] = kept[kk].flags;
+            fd_path[i] = (access & 0x40000000u) ? strdup(kept[kk].path) : NULL;
+            fd_keep[i] = kept[kk].path;
+            fd_name[i] = kept[kk].name;
+            fd_access[i] = access;
+            fd_disposition[i] = disposition;
+            kept[kk].path = kept[kk].name = NULL;
+            win_last_error = disposition == 4 ? ERROR_ALREADY_EXISTS : 0;
+            WIN_TRACE("CreateFileA(%s, %#x, %u) = %d (kept)\n", name, access, disposition, fd);
+            rt_ret_stdcall(FILE_BASE + 4 * i, 7);
+            return;
+        }
+        keep_drop(NULL);
+    }
     if (!win_paths(name, h, u, sizeof h)) {
         win_last_error = ERROR_PATH_NOT_FOUND;
         rt_ret_stdcall(INVALID_HANDLE, 7);
@@ -623,7 +803,8 @@ RT_IMPORT(CreateFileA)
         }
         rt_fatal("too many open files");
     }
-    int fd = host_open(target, flags, 0644);
+    int fd = keep_live() && !(flags & (O_CREAT | O_TRUNC | O_EXCL)) ? keep_take(target, flags) : -1;
+    if (fd < 0) fd = host_open(target, flags, 0644);
     WIN_TRACE("CreateFileA(%s -> %s, %#x, %u) = %d\n", name, target, access, disposition, fd);
     if (fd < 0) {
         win_error_from_errno();
@@ -634,7 +815,13 @@ RT_IMPORT(CreateFileA)
         if (!fd_used[i]) {
             fd_used[i] = 1;
             fds[i] = fd;
+            fd_flags[i] = flags;
             fd_path[i] = write_intent ? strdup(target) : NULL;
+            /* Item 151: a handle of KEEP_NAME in the user folder can be kept at its close. */
+            fd_keep[i] = target == u && kept_name(target) ? strdup(target) : NULL;
+            fd_name[i] = fd_keep[i] ? strdup(name) : NULL;
+            fd_access[i] = access;
+            fd_disposition[i] = disposition;
             win_last_error = existed && (disposition == 2 || disposition == 4) ? ERROR_ALREADY_EXISTS : 0;
             rt_ret_stdcall(FILE_BASE + 4 * i, 7);
             return;
@@ -840,6 +1027,7 @@ RT_IMPORT(DeleteFileA)
     if (save_refused(name)) {
         errno = ENOSPC;
     } else if (win_paths(name, h, u, sizeof h)) {
+        keep_drop(NULL);                                /* item 151: a kept name may now give another file */
         if (temp_save_beside(u) && save_backup(h, u, 0)) ok = 1;   /* a new save follows: the old moved to backups/ */
         else if (exists(u)) ok = host_unlink(u) == 0;
         /* A save without the temp file (no option bit 0x20000000) deletes the old .sav before it writes (0x82e62d). */
@@ -863,6 +1051,7 @@ RT_IMPORT(MoveFileA)
         ok = 0;
     } else if (ok && (exists(tu) || exists(th))) { win_last_error = ERROR_ALREADY_EXISTS; ok = 0; }
     else if (ok && exists(fu)) {
+        keep_drop(NULL);
         make_parents(tu);
         if (host_rename(fu, tu)) { win_error_from_errno(); ok = 0; }
     } else if (ok && exists(fh) && !is_dir(fh)) {
@@ -880,6 +1069,7 @@ RT_IMPORT(MoveFileA)
 RT_IMPORT(CreateDirectoryA)
 {
     char h[2048], u[2048], parent[2048];
+    keep_drop(NULL);                                    /* item 151: the kept names (keep_find_name) */
     int ok = win_paths(win_str(rt_arg(0)), h, u, sizeof h);
     if (ok && (exists(u) || exists(h))) { win_last_error = ERROR_ALREADY_EXISTS; rt_ret_stdcall(0, 2); return; }
     if (ok) {
@@ -905,6 +1095,7 @@ RT_IMPORT(SetCurrentDirectoryA)
 {
     const char *name = win_str(rt_arg(0));
     char h[2048], u[2048], full[1024];
+    keep_drop(NULL);                                    /* item 151: a relative kept name now means another file */
     if (!win_paths(name, h, u, sizeof h) || !(is_dir(u) || is_dir(h))) {
         win_last_error = ERROR_PATH_NOT_FOUND;
         rt_ret_stdcall(0, 1);
@@ -1052,6 +1243,15 @@ static void free_find(Find *f)
     memset(f, 0, sizeof *f);
 }
 
+/* Names that a find leaves out while it is set (save_parts.c: the files of a merged part, during the original's
+ * pack 0x933610). */
+static int (*find_hidden)(const char *name);
+
+void win_find_hide(int (*hidden)(const char *name))
+{
+    find_hidden = hidden;
+}
+
 /* Adds the matching names of one folder; a name already listed (ignoring case) is skipped. */
 enum { SAV_ALL, SAV_SKIP, SAV_ONLY };      /* which names of a folder a find takes: by the ending .sav */
 static void find_add_dir(Find *f, const char *host, const char *mask, int is_root, int sav)
@@ -1062,6 +1262,7 @@ static void find_add_dir(Find *f, const char *host, const char *mask, int is_roo
     while ((name = host_readdir(d))) {
         if (is_root && (!strcmp(name, ".") || !strcmp(name, ".."))) continue;
         if (!wild_match(mask, name)) continue;
+        if (find_hidden && find_hidden(name)) continue;
         if ((sav == SAV_SKIP && has_sav_ending(name)) || (sav == SAV_ONLY && !has_sav_ending(name))) continue;
         int dup = 0;
         for (int i = 0; i < f->count && !dup; i++) dup = !strcasecmp(f->names[i], name);
@@ -1137,4 +1338,37 @@ RT_IMPORT(FindClose)
     Find *f = find_of(rt_arg(0));
     if (f) free_find(f);
     rt_ret_stdcall(f != NULL, 1);
+}
+
+int win_list_files(const char *folder, const char *mask, void (*each)(const char *name, const char *host, void *ctx),
+                   void *ctx)
+{
+    char h[2048], u[2048];
+    if (!win_paths(folder, h, u, sizeof h)) return -1;
+    Find f;
+    memset(&f, 0, sizeof f);
+    find_add_dir(&f, u, mask, 0, SAV_ALL);      /* as FindFirstFileA: the user folder first */
+    find_add_dir(&f, h, mask, 0, SAV_ALL);
+    int n = f.count;
+    for (int i = 0; i < n; i++) each(f.names[i], f.paths[i], ctx);
+    free_find(&f);
+    return n;
+}
+
+/* Open item 192 (history_trim.c): deletes the user-folder file of a Windows path, as DeleteFileA does for a file that
+ * is not a save. 1 when a file was deleted. */
+int win_delete_file(const char *winpath)
+{
+    char h[2048], u[2048];
+    if (!win_paths(winpath, h, u, sizeof h) || !exists(u)) return 0;
+    keep_drop(NULL);                                /* item 151: a kept name may now give another file */
+    return host_unlink(u) == 0;
+}
+
+int win_create_file(const char *winpath)
+{
+    char h[2048], u[2048];
+    if (!win_paths(winpath, h, u, sizeof h)) return -1;
+    make_parents(u);
+    return host_open(u, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 }

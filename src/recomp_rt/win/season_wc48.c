@@ -495,6 +495,8 @@ RT_WRAP(0092e940, wc_draw)
 {
     uint32_t self = cpu.ecx;
     if (!season_wc48(self)) {
+        if (year_of(self) == 2002) rt_wc2002_pots(self);   /* item 166 */
+        cpu.ecx = self;
         o_0092e940();
         return;
     }

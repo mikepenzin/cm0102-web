@@ -30,7 +30,8 @@
  *
  * Europa League (Uefa_Cup, vtable 0x970790). build_entrants 0x902b90 (wrapped in season_uefa_cup.c) gives way
  * to uc_access_entrants: the qualifying clubs by round from the lowest (each round: its new clubs, then slots for
- * the Champions League losers that the drops of the row send to it), the group clubs, 16 slots for the
+ * the Champions League losers that the drops of the row send to it: as many as the Champions League rounds of
+ * the season give, actual_drops), the group clubs, 16 slots for the
  * Champions League play-off losers (the original's hand-over at count - 0x18, 0x585a02, in draw_phase1_groups),
  * and 8 slots for the Champions League group thirds (count - 8, 0x586282). The rounds are drawn by the
  * original (seeded, 0x400): the new clubs of a round have a higher tier byte +4 than the winners. A round with
@@ -41,7 +42,8 @@
  *
  * Conference League (slice 24, part b: a second object of the Uefa_Cup class, season_uefa_cup_kind 'k'). It is
  * built as the Europa League, with codes 21 to 25 and one path a round: its qualifying clubs by round from the
- * lowest, each round with slots for the losers of the other two cups that the row's ecl_drops send to it, then
+ * lowest, each round with slots for the losers of the other two cups that the row's ecl_drops send to it (as many
+ * as their rounds give), then
  * its group clubs, the slots of the Europa League play-off losers for the groups and 8 slots for the Europa League
  * group thirds (the knockout round play-offs, season_uefa_cup.c). The Champions League losers come as they come
  * to the Europa League. A Europa League loser is a side of a tie of its round whose entry byte +5 is -1 (set at
@@ -305,6 +307,28 @@ typedef struct {
 
 static int club_code(uint32_t club) { return g_mem[club + 0x1df]; }
 
+/* Open item 94: what make_layout found wrong, for season_uefa_balance_probe. code is the entry code of the first
+ * round, from the lowest, whose path holds an odd number of clubs, or the group code when the group stage would
+ * have short clubs fewer (short below 0: too many). */
+typedef struct {
+    int code, short_by;
+} Probe;
+static Probe *probe;
+static int log_drops;                   /* 1 in cup_entrants: actual_drops logs a count that is not the row's */
+
+static int actual_drops(const SeasonUefa *r, char comp, int *drops);
+
+/* The coefficient rank of a club's nation (1 the top) in the entries of Uefa_Seeding (this at [0xde1f58]: 0x12-byte
+ * entries at +0, nation record +4, count byte +0x438, as season_uefa_seeding.c reads them), 99 when not there. */
+static int nation_rank(uint32_t club)
+{
+    uint32_t self = rd32(g_mem, 0xde1f58u), nation = rd32(g_mem, club + 0x53);
+    int entries = readable(self) ? (int8_t)g_mem[self + 0x438] : 0;
+    for (int i = 0; i < entries && i < 60; i++)
+        if (rd32(g_mem, self + 0x12u * (uint32_t)i + 4) == nation) return i + 1;
+    return 99;
+}
+
 /* Slice 24: the tables of a comp ('c', 'e' or 'k'). */
 static const Level *levels_of(char comp, int *n)
 {
@@ -325,7 +349,9 @@ static const char *name_of(char comp)
  * build_entrants: a loser that goes to the Europa League gets that cup's id at +0x1db, 0x585a6a, but stays in the
  * list), else from the clubs with its id at +0x1db. The Europa League's from the clubs with its id and a code of
  * 11 to 16 (the Champions League losers there keep their codes of 1 to 9). Returns 0 when the counts cannot make
- * rounds (an odd number of clubs in a path). */
+ * rounds (an odd number of clubs in a path). Open item 94: the drops of the Europa League and Conference League
+ * are the losers the other cups' layouts give (actual_drops), as a free place left empty makes a Champions League
+ * round smaller; the row's counts when those layouts cannot be made. */
 static int make_layout(const SeasonUefa *r, char comp, Layout *L, uint32_t cl)
 {
     memset(L, 0, sizeof *L);
@@ -350,14 +376,29 @@ static int make_layout(const SeasonUefa *r, char comp, Layout *L, uint32_t cl)
             L->clubs[L->n++] = club;
             L->count[code]++;
         }
+        /* Open item 94: a preliminary round of 3 clubs (free places left empty) plays one semi-final, and the
+         * best-ranked club enters the final (a bye). It goes last in the list, so its slot is the final's. */
+        if (comp == 'c' && code == SEASON_UEFA_CL_PR && L->count[code] == 3) {
+            uint32_t *c = L->clubs + L->n - 3;
+            for (int i = 0; i < 2; i++)
+                if (nation_rank(c[i]) < nation_rank(c[2])) {
+                    uint32_t t = c[i];
+                    c[i] = c[2], c[2] = t;
+                }
+        }
     }
-    if (comp != 'c')
+    if (comp != 'c' && !actual_drops(r, comp, L->drops))
         for (int code = lo; code < codes; code++) L->drops[code] = season_uefa_dropped(r, code);
     int levels;
     const Level *lv = levels_of(comp, &levels);
-    int slot = 0, cp_win = 0, lp_win = 0;
+    int slot = 0, cp_win = 0, lp_win = 0, to_final = 0;
     for (int k = 0; k < levels; k++) {
         int cp = lv[k].cp ? L->count[lv[k].cp] + L->drops[lv[k].cp] : 0, lp = lv[k].lp ? L->count[lv[k].lp] : 0;
+        /* Open item 94: the preliminary round is a knockout of its clubs to one winner. With 3 clubs the last
+         * enters the final; with 2 the semi-final winner goes on and the final is not played (1 club for it). */
+        if (lv[k].final) cp = to_final, to_final = 0;
+        else if (k + 1 < levels && lv[k + 1].final && cp == 3) cp = 2, to_final = 1;
+        if (lv[k].final && cp + cp_win < 2) continue;
         if (lv[k].final && (k == 0 || L->rounds == 0 || L->level[L->rounds - 1] != k - 1)) continue;
         if (!cp && !lp && !cp_win && !lp_win) continue;
         if (!cp && !lp && !lv[k].final) {              /* a round with no new clubs: not in the access list */
@@ -375,6 +416,12 @@ static int make_layout(const SeasonUefa *r, char comp, Layout *L, uint32_t cl)
         L->cp_fresh[i] = cp, L->lp_fresh[i] = lp;
         L->fresh[i] = cp + lp, L->first[i] = slot, L->clubs_in[i] = cp + lp + cp_win + lp_win;
         if ((cp + cp_win) % 2 || (lp + lp_win) % 2) {
+            if (probe) {
+                /* The final of the preliminary round has no new clubs: its round of entry is the one before. */
+                probe->code = (cp + cp_win) % 2 ? lv[k].cp : lv[k].lp;
+                if (!probe->code && lv[k].final && k > 0) probe->code = lv[k - 1].cp;
+                return 0;
+            }
             fprintf(stderr, "recomp: uefa: %s round %d: %d + %d and %d + %d clubs, not even\n", name_of(comp),
                     lv[k].round_code, cp, cp_win, lp, lp_win);
             return 0;
@@ -388,17 +435,26 @@ static int make_layout(const SeasonUefa *r, char comp, Layout *L, uint32_t cl)
         /* Slice 25: the league phase has 36 clubs (2024/25 on), the group stage 32. */
         int group = season_uefa_cl_round(r, "Groups");
         if (direct < DIRECT_IN_LIST || direct + cp_win + lp_win != group) {
+            if (probe) {
+                probe->code = SEASON_UEFA_CL_G, probe->short_by = group - direct - cp_win - lp_win;
+                return 0;
+            }
             fprintf(stderr, "recomp: uefa: CL groups: %d direct and %d winners, not %d\n", direct, cp_win + lp_win,
                     group);
             return 0;
         }
         L->slots = slot + direct - DIRECT_IN_LIST;
-    } else if (comp == 'k') {
-        /* Slice 24: the group clubs, the slots of the Europa League play-off losers, the Europa League thirds. */
-        L->slots = slot + direct + L->drops[SEASON_UEFA_ECL_G] + THIRDS;
     } else {
-        L->drops[SEASON_UEFA_EL_G] = season_uefa_dropped(r, SEASON_UEFA_EL_G);
-        L->slots = slot + direct + HANDOVER + THIRDS;
+        /* Open item 94, for the probe only: the group stage of the row from its group clubs, the play-off
+         * winners and the losers of the other cups that enter it. */
+        int group = season_uefa_code_clubs(r, comp, group_code(comp)), have = direct + cp_win + L->drops[lo];
+        if (probe && group > 0 && have != group) {
+            probe->code = lo, probe->short_by = group - have;
+            return 0;
+        }
+        /* Slice 24: the Conference League's group clubs, the slots of the Europa League play-off losers, the
+         * Europa League thirds. */
+        L->slots = comp == 'k' ? slot + direct + L->drops[SEASON_UEFA_ECL_G] + THIRDS : slot + direct + HANDOVER + THIRDS;
     }
     return L->rounds > 0;
 }
@@ -766,7 +822,10 @@ static int cup_entrants(uint32_t uc, char comp)
     Layout L;
     int levels, g = group_code(comp);
     const Level *lv = levels_of(comp, &levels);
-    if (!r || !make_layout(r, comp, &L, 0)) return 0;
+    log_drops = 1;
+    int made = r && make_layout(r, comp, &L, 0);
+    log_drops = 0;
+    if (!made) return 0;
     uint32_t e = game_malloc(ENTRY * (uint32_t)L.slots), list = e ? game_malloc(ENTRY * (uint32_t)L.slots) : 0;
     if (!list) return 0;
     game_free(rd32(g_mem, uc + 0xa7));
@@ -848,10 +907,13 @@ uint32_t season_uefa_ecl_qual_table(uint32_t ecl, uint32_t rec, int *rounds) { r
  * one of the access list (a round code that is not of EL_LEVELS, slots that do not follow each other). Slice 24:
  * comp 'k' gives the Conference League's from ECL_LEVELS; any_stage 1 reads the table after the group draw too,
  * else the cup must be before its groups (+0x30 -1). */
+static int table_drops(uint32_t uc, const SeasonUefa *r, char comp, int *drops);
+
 static int table_layout(uint32_t uc, const SeasonUefa *r, Layout *L, char comp, int any_stage)
 {
     int levels;
     const Level *lvs = levels_of(comp, &levels);
+    int real[SEASON_UEFA_CODE_SLOTS], have = table_drops(uc, r, comp, real);
     memset(L, 0, sizeof *L);
     uint32_t t = rd32(g_mem, uc + 0xa3);
     int rounds = (int16_t)rd16(g_mem, uc + 0x3c), slot = 0, k = 0;
@@ -865,7 +927,7 @@ static int table_layout(uint32_t uc, const SeasonUefa *r, Layout *L, char comp, 
         int lv = lvs[k].cp, fresh = (int16_t)rd16(g_mem, rec + 0x1c);
         L->level[i] = k, L->first[i] = slot, L->fresh[i] = fresh, L->cp_fresh[i] = fresh;
         L->clubs_in[i] = (int16_t)rd16(g_mem, rec + 0x18);
-        L->drops[lv] = season_uefa_dropped(r, lv);
+        L->drops[lv] = have ? real[lv] : season_uefa_dropped(r, lv);
         L->count[lv] = fresh - L->drops[lv];
         slot += fresh;
         k++;
@@ -873,7 +935,7 @@ static int table_layout(uint32_t uc, const SeasonUefa *r, Layout *L, char comp, 
     L->rounds = rounds;
     L->direct_first = slot;
     L->slots = (int16_t)rd16(g_mem, uc + 0x3e);
-    L->drops[group_code(comp)] = season_uefa_dropped(r, group_code(comp));
+    L->drops[group_code(comp)] = have ? real[group_code(comp)] : season_uefa_dropped(r, group_code(comp));
     if (comp == 'k') {                  /* the group clubs: the slots after the rounds that hold a club */
         uint32_t e = rd32(g_mem, uc + 0xa7);
         for (int i = slot; readable(e) && i < L->slots - THIRDS; i++) {
@@ -1128,6 +1190,94 @@ static int round_of_code(const Layout *L, const Level *lvs, int code)
     for (int i = 0; i < L->rounds; i++)
         if (lvs[L->level[i]].round_code == code) return i;
     return -1;
+}
+
+/* Open item 94: the losers of the Champions League layout C (and for comp 'k' of the Europa League layout E)
+ * that enter each round of comp ('e' the row's drops, 'k' its ecl_drops), as uc_fill_drops and ecl_fill_drops
+ * hand them over: a Champions League round gives one loser a tie of its path (expected_losers; the preliminary
+ * round the losers of its semi-finals and final), a Europa League round one a tie. With the round sizes of the row
+ * these are the row's counts (season_uefa_dropped). A free place left empty makes a round smaller, so fewer
+ * losers come. */
+static void drops_from(const SeasonUefa *r, char comp, const Layout *C, const Layout *E, int *drops)
+{
+    for (int i = 0; i < SEASON_UEFA_CODE_SLOTS; i++) drops[i] = 0;
+    const char *s = comp == 'k' ? r->ecl_drops : r->drops;
+    for (const char *p = s ? s : ""; *p;) {
+        while (*p == ' ') p++;
+        const char *gt = strchr(p, '>');
+        if (!gt) break;
+        const char *end = gt + 1, *src = p;
+        while (*end && *end != ' ') end++;
+        char from = 'c';
+        if (comp == 'k') {
+            if (gt - p < 3 || p[1] != ':') break;
+            from = p[0], src = p + 2;
+        }
+        int to = season_uefa_code(comp, gt + 1, (int)(end - gt - 1));
+        p = end;
+        if (to <= 0 || to >= SEASON_UEFA_CODE_SLOTS) continue;
+        if (from == 'c') {
+            int path, level = drop_source(src, (int)(gt - src), &path);
+            int sources[2] = {level < 0 ? -1 : cl_round_of_level(C, level),
+                              level == LEVEL_PR ? cl_round_of_level(C, LEVEL_PR_FINAL) : -1};
+            for (int k = 0; k < 2; k++)
+                if (sources[k] >= 0) drops[to] += expected_losers(C, sources[k], path);
+        } else if (from == 'e' && E) {
+            int el_code = season_uefa_code('e', src, (int)(gt - src)), code = 0;
+            for (int k = 0; k < EL_N; k++)
+                if (EL_LEVELS[k].cp == el_code) code = EL_LEVELS[k].round_code;
+            int er = round_of_code(E, EL_LEVELS, code);
+            if (er >= 0) drops[to] += E->clubs_in[er] / 2;
+        }
+    }
+}
+
+/* The drops of comp from the layouts of the clubs (their ids at +0x1db and codes at +0x1df), for the seeding and
+ * the set-up of the cups (before a Champions League round is played: its losers keep its id until a hand-over).
+ * Returns 0 when a layout cannot be made. A loser count that differs from the row is logged. */
+static int actual_drops(const SeasonUefa *r, char comp, int *drops)
+{
+    Probe *saved = probe;
+    Layout C, E;
+    int saved_log = log_drops;
+    probe = NULL, log_drops = 0;
+    int ok = make_layout(r, 'c', &C, 0) && (comp != 'k' || make_layout(r, 'e', &E, 0));
+    probe = saved, log_drops = saved_log;
+    if (!ok) return 0;
+    drops_from(r, comp, &C, comp == 'k' ? &E : NULL, drops);
+    int lo = group_code(comp), hi = comp == 'k' ? SEASON_UEFA_ECL_CODES : SEASON_UEFA_EL_CODES;
+    for (int code = lo; code < hi && log_drops; code++)
+        if (drops[code] != season_uefa_dropped(r, code))
+            fprintf(stderr, "recomp: uefa: %s %d/%02d: %d losers of the other cups into entry code %d, the row "
+                            "gives %d\n", name_of(comp), r->season, (r->season + 1) % 100, drops[code], code,
+                    season_uefa_dropped(r, code));
+    return 1;
+}
+
+/* The drops of the cup uc of comp from the round tables of the other cups of the same season (cl_table_layout,
+ * table_layout), once the season has started. Returns 0 when one of them is not there. */
+static int table_drops(uint32_t uc, const SeasonUefa *r, char comp, int *drops)
+{
+    uint32_t cl = comp_object(KEY_CL, CL_VTABLE), el = comp == 'k' ? comp_object(KEY_UC, UC_VTABLE) : 0;
+    int16_t year = (int16_t)rd16(g_mem, uc + 0x40);
+    Layout C, E;
+    if (!cl || (int16_t)rd16(g_mem, cl + 0x40) != year || !access_row_of(cl) || !cl_table_layout(cl, &C)) return 0;
+    if (comp == 'k' && (!el || (int16_t)rd16(g_mem, el + 0x40) != year || !access_row_of(el) ||
+                        !table_layout(el, r, &E, 'e', 1)))
+        return 0;
+    drops_from(r, comp, &C, comp == 'k' ? &E : NULL, drops);
+    return 1;
+}
+
+int season_uefa_balance_probe(const SeasonUefa *r, char comp, int *code, int *short_by)
+{
+    Probe p = {0, 0};
+    Layout L;
+    probe = &p;
+    int ok = make_layout(r, comp, &L, 0);
+    probe = NULL;
+    *code = p.code, *short_by = p.short_by;
+    return ok ? 0 : p.code ? 1 : -1;
 }
 
 /* The drops of the row's ecl_drops ("c:PR>Q2 c:Q1>Q2 e:Q3>PO e:PO>G"). The slots of a round: its new clubs, then

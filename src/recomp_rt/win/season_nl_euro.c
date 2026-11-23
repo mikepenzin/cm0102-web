@@ -26,6 +26,7 @@
 #include "season.h"
 #include "season_comps.h"
 #include "season_nl.h"
+#include "season_intl.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,15 +81,26 @@ static int logging(void)
 static int readable(uint32_t p) { return rt_readable(p); }
 
 /* The matchdays of the campaign that the object holds, or NULL: a season game, the original class (not the
- * Nations League copy), a campaign of the table. */
+ * Nations League copy), a campaign of the table. A campaign for a Euro after the table (0.6.2 decision A: the
+ * Euro continues every 4 years) takes the last campaign of the table with its own year: its matchdays (year
+ * offsets from the campaign) and its play-off by the host places (a Euro with no kept places plays 4 two-leg ties). */
 static const SeasonNlQualifying *moved(uint32_t self)
 {
     if (!season_comps_on() || !readable(self) || rd32(g_mem, self) != QUAL_VTABLE) return NULL;
     int campaign = (int16_t)rd16(g_mem, self + F_YEAR);
-    for (int i = 0; i < season_nl_qualifying_count; i++)
-        if (!season_nl_qualifying[i].world_cup && season_nl_qualifying[i].euro == campaign + 2)
-            return &season_nl_qualifying[i];
-    return NULL;
+    const SeasonNlQualifying *last = NULL;
+    for (int i = 0; i < season_nl_qualifying_count; i++) {
+        if (season_nl_qualifying[i].world_cup) continue;
+        if (season_nl_qualifying[i].euro == campaign + 2) return &season_nl_qualifying[i];
+        if (!last || season_nl_qualifying[i].euro > last->euro) last = &season_nl_qualifying[i];
+    }
+    if (!last || campaign + 2 <= last->euro || (campaign + 2 - last->euro) % 4 ||
+        !season_intl_edition("euro_champ", campaign + 2) || season_intl_old_shape(self))
+        return NULL;                            /* old shape: a campaign of a save of 0.6.1 or older (slice 4b) */
+    static SeasonNlQualifying after;
+    after = *last;
+    after.euro = campaign + 2;
+    return &after;
 }
 
 static uint32_t call_cdecl(uint32_t fn, int nargs, const uint32_t *args)

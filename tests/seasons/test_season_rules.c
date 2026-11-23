@@ -68,6 +68,84 @@ int main(int argc, char **argv)
         if (strchr(r->comp_file, ';')) both++;
     CHECK(both == 1, "rows of 2001 with wc_oceania_league and another file: %d", both);
 
+    /* 0.6.1: the lookup by an index gives the rows of the plain scan, for each file of each row (and the
+     * file of a new competition), each season and each count, and none for other files. */
+    int keys = 0, wrong = 0;
+    for (int i = 0; i < season_rules_count(); i++) {
+        const SeasonRule *row = season_rules_row(i);
+        char files[512], newname[160];
+        snprintf(files, sizeof files, "%s", row->comp_file);
+        snprintf(newname, sizeof newname, "new_");
+        for (const char *c = row->comp ? row->comp : ""; *c && strlen(newname) < sizeof newname - 1; c++) {
+            char ch = *c == ' ' ? '_' : (*c >= 'A' && *c <= 'Z') ? (char)(*c - 'A' + 'a') : *c;
+            strncat(newname, &ch, 1);
+        }
+        char *names[64];
+        int nn = 0;
+        for (char *f = strtok(files, ";"); f && nn < 62; f = strtok(NULL, ";")) names[nn++] = f;
+        names[nn++] = newname;
+        names[nn++] = "no_such_file";
+        for (int k = 0; k < nn; k++)
+            for (int season = 1999; season <= 2032; season++)
+                for (int n = 0; n < 6; n++) {
+                    keys++;
+                    if (season_rules_find(season, names[k], n) != season_rules_find_scan(season, names[k], n)) wrong++;
+                }
+    }
+    CHECK(keys > 1000 && !wrong, "index lookups: %d of %d differ from the scan", wrong, keys);
+
+    /* 0.6.2 slice 10 (faults 8 and 9): the last row of a file stays to 2301 and later, with no lookback limit. For
+     * every file of every row and every season from 2001 to 2301, season_rules_last_season gives the latest season
+     * at or before it that has a row of the file, by a scan of every row. The leagues lost their rows in 2037 (a
+     * 10-season lookback) and the Brazilian state leagues in 2057 (30 seasons). The year of an ended competition
+     * gives none. */
+    int last_all = 0, lw = 0, lk = 0;
+    for (int i = 0; i < season_rules_count(); i++)
+        if (season_rules_row(i)->season > last_all) last_all = season_rules_row(i)->season;
+    static char done[2048][64];                                  /* each file once */
+    int ndone = 0;
+    for (int i = 0; i < season_rules_count(); i++) {
+        char files[256];
+        snprintf(files, sizeof files, "%s", season_rules_row(i)->comp_file);
+        for (char *f = strtok(files, ";"); f; f = strtok(NULL, ";")) {
+            int had = 0;
+            for (int d = 0; d < ndone && !had; d++) had = !strcmp(done[d], f);
+            if (had || ndone == 2048) continue;
+            snprintf(done[ndone++], sizeof done[0], "%s", f);
+            int seen[SEASON_RULE_LAST + 1] = {0};
+            size_t fl = strlen(f);
+            for (int j = 0; j < season_rules_count(); j++) {      /* the rows whose file list holds f */
+                const char *l = season_rules_row(j)->comp_file, *p = strstr(l, f);
+                for (; p; p = strstr(p + 1, f))
+                    if ((p == l || p[-1] == ';') && (!p[fl] || p[fl] == ';')) seen[season_rules_row(j)->season] = 1;
+            }
+            int want = 0;
+            for (int season = 2001; season <= 2301; season++) {
+                if (season <= SEASON_RULE_LAST && seen[season]) want = season;
+                lk++;
+                if (season_rules_last_season(season, f) != want) {
+                    if (lw++ < 5) fprintf(stderr, "  %s %d: %d, want %d\n", f, season,
+                                          season_rules_last_season(season, f), want);
+                }
+            }
+            if (season_rules_last_season(SEASON_RULE_ENDED, f) || season_rules_last_season(2999, f)) lw++;
+        }
+    }
+    CHECK(lk > 50000 && !lw, "last season to 2301: %d of %d wrong", lw, lk);
+    CHECK(season_rules_last_season(2301, "eng_prm") == last_all, "eng_prm keeps the last row in 2301");
+    /* The state league count of season_bra_states.c row_count: the nearest earlier row with a known count. The rows
+     * of 2026 and 2027 say unknown, so the count of 2025 holds, also after 2057. */
+    int sp_clubs[2] = {0, 0}, sp_at[2] = {2027, 2301};
+    for (int t = 0; t < 2; t++)
+        for (int k = season_rules_last_season(sp_at[t], "bra_reg_sp"); k && !sp_clubs[t];
+             k = season_rules_last_season(k - 1, "bra_reg_sp"))
+            if (season_rules_find(k, "bra_reg_sp", 0)->clubs > 0) sp_clubs[t] = season_rules_find(k, "bra_reg_sp", 0)->clubs;
+    CHECK(sp_clubs[0] > 0 && sp_clubs[1] == sp_clubs[0], "Paulista clubs %d in 2027, %d in 2301", sp_clubs[0],
+          sp_clubs[1]);
+    CHECK(!season_rules_last_season(2301, "no_such_file") && !season_rules_last_season(2000, "eng_prm") &&
+          season_rules_last_season(2013, "ita_ser_c2b") == 2013 && season_rules_last_season(2300, "ita_ser_c2b") == 2013,
+          "no file, before the table, a file that ends inside the table");
+
     /* Codes. */
     r = season_rules_find(2001, "uefa_cup", 0);
     CHECK(r && r->clubs == 145 && r->tier == 2, "uefa_cup 2001");

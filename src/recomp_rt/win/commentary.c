@@ -11,8 +11,9 @@
  * an extra pause after special events only at Very Fast (0x6b5686 in the commentary step 0x6b55c0), so
  * during that step the match shows 20, and during a line's delay (0x6d7b00) 10 again.
  *
- * In the original the speed already changes how often other matches of the day step while a line
- * waits, so the match result depends on the speed at every speed. Fastest does the same, no more. */
+ * The speed changes how often other matches of the day step while a line waits. In the original
+ * those steps take numbers from the human match, so its result depends on the speed. Since item 155
+ * they take numbers from a second stream (match_numbers.c), and the speed, Fastest too, does not change it. */
 #include "win.h"
 
 #include <string.h>

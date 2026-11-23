@@ -35,8 +35,10 @@ add	3.9.68	2002	Indian Dehli Senior Division	2002		add	Indian Air Force	India	Hi
 add	3.9.68	2002	Indian Bangalore Super Division	2002		differ	Hindustan Aeronautics Limited	India						
 add	3.9.68	2002	Indian Guwahati Super Division	2002		add	Guwahati Town Club	India						
 add	3.9.68	2002	Indian Punjab State Soccer League	2002		add	Jagatjit Cotton and Textiles Mills	India	Border Security Force	India				
+add	3.9.68	2002	Indonesian Premier Division	2002		add	Petrokimia Putra Gresik	Indonesia	Persita Tangerang	Indonesia				
 add	3.9.68	2002	Malaysia Cup	2002		add	Selangor	Malaysia	Sabah	Malaysia				
 add	3.9.68	2002	Malaysian Charity Shield	2002		add	Selangor	Malaysia	Terengganu	Malaysia				
+add	3.9.68	2002	Malaysian League Premier One	2002		add	Perak	Malaysia	Selangor	Malaysia				
 add	3.9.68	2002	Malaysian League Premier Two	2002		add	Kedah	Malaysia	Melaka Telekom	Malaysia				
 add	3.9.68	2002	Singaporean League	2002		add	Singapore Armed Forces FC	Singapore	Home United	Singapore				
 add	3.9.68	2002	Singapore Cup	2002		add	Tampines Rovers	Singapore	Jurong FC	Singapore				
@@ -144,6 +146,7 @@ add	3.9.68	2002	German Regional Division South	2002		agree	SV Wacker Burghausen	
 add	3.9.68	2002	Austrian Premier Division	2002		add	FC Tirol Innsbruck	Austria	SK Sturm Graz	Austria				
 add	3.9.68	2002	Austrian First Division	2002		add	SV Pasching	Austria	SC Austria Lustenau	Austria				
 add	3.9.68	2002	Austrian FA Cup	2002		add	Grazer AK	Austria	SK Sturm Graz	Austria				
+add	3.9.68	2002	Austrian Super Cup	2002		add	Grazer AK	Austria	SK Sturm Graz	Austria				
 add	3.9.68	2002	Swiss National Division A	2002		add	FC Basel	Switzerland	Grasshopper Club Zurich	Switzerland				
 add	3.9.68	2002	Swiss Cup	2002		add	FC Basel	Switzerland	Grasshopper Club Zurich	Switzerland				
 add	3.9.68	2002	Luxembourg National Division	2002		add	F91 Dudelange	Luxembourg	CS Grevenmacher	Luxembourg				
@@ -1004,8 +1007,10 @@ add	Summer 2002	2002	Indian Dehli Senior Division	2002		add	Indian Air Force	Ind
 add	Summer 2002	2002	Indian Bangalore Super Division	2002		differ	Hindustan Aeronautics Limited	India						
 add	Summer 2002	2002	Indian Guwahati Super Division	2002		add	Guwahati Town Club	India						
 add	Summer 2002	2002	Indian Punjab State Soccer League	2002		add	Jagatjit Cotton and Textiles Mills	India	Border Security Force	India				
+add	Summer 2002	2002	Indonesian Premier Division	2002		add	Petrokimia Putra Gresik	Indonesia	Persita Tangerang	Indonesia				
 add	Summer 2002	2002	Malaysia Cup	2002		add	Selangor	Malaysia	Sabah	Malaysia				
 add	Summer 2002	2002	Malaysian Charity Shield	2002		add	Selangor	Malaysia	Terengganu	Malaysia				
+add	Summer 2002	2002	Malaysian League Premier One	2002		add	Perak	Malaysia	Selangor	Malaysia				
 add	Summer 2002	2002	Malaysian League Premier Two	2002		add	Kedah	Malaysia	Melaka Telekom	Malaysia				
 add	Summer 2002	2002	Singaporean League	2002		add	Singapore Armed Forces FC	Singapore	Home United	Singapore				
 add	Summer 2002	2002	Singapore Cup	2002		add	Tampines Rovers	Singapore	Jurong FC	Singapore				
@@ -1113,6 +1118,7 @@ add	Summer 2002	2002	German Regional Division South	2002		agree	SV Wacker Burgha
 add	Summer 2002	2002	Austrian Premier Division	2002		add	FC Tirol Innsbruck	Austria	SK Sturm Graz	Austria				
 add	Summer 2002	2002	Austrian First Division	2002		add	SV Pasching	Austria	SC Austria Lustenau	Austria				
 add	Summer 2002	2002	Austrian FA Cup	2002		add	Grazer AK	Austria	SK Sturm Graz	Austria				
+add	Summer 2002	2002	Austrian Super Cup	2002		add	Grazer AK	Austria	SK Sturm Graz	Austria				
 add	Summer 2002	2002	Swiss National Division A	2002		add	FC Basel	Switzerland	Grasshopper Club Zurich	Switzerland				
 add	Summer 2002	2002	Swiss Cup	2002		add	FC Basel	Switzerland	Grasshopper Club Zurich	Switzerland				
 add	Summer 2002	2002	Luxembourg National Division	2002		add	F91 Dudelange	Luxembourg	CS Grevenmacher	Luxembourg				
@@ -1938,6 +1944,7 @@ clear	Summer 2002	2002	Yugoslav Second Division South	2002
 clear	Summer 2002	2002	Yugoslav Second Division West	2001										
 clear	Summer 2002	2002	Yugoslav Second Division West	2002										
 add	October 2003	2003	Argentine Premier Division	2002	Apertura	add	Independiente	Argentina	Boca Juniors	Argentina				
+add	October 2003	2003	Argentine Premier Division	2002	Clausura	add	River Plate	Argentina	Boca Juniors	Argentina				
 add	October 2003	2003	Argentine Second Division	2002		add	Atlético Rafaela	Argentina	Argentinos Juniors	Argentina				
 add	October 2003	2003	Mexican First Division	2002	Apertura	add	Deportivo Toluca	Mexico	Club Monarcas Morelia	Mexico				
 add	October 2003	2003	Mexican First Division	2002	Clausura	add	Club de Fútbol Monterrey	Mexico	Club Monarcas Morelia	Mexico				
@@ -1955,7 +1962,6 @@ add	October 2003	2003	Chinese FA Cup	2003		add	Beijing Guo'an	China PR	Dalian Sh
 add	October 2003	2003	Chinese FA Super Cup	2002		agree	Shanghai Shenhua	China PR	Dalian Shide	China PR				
 add	October 2003	2003	Chinese FA Super Cup	2003		add	Dalian Shide	China PR	Qingdao Yizhong	China PR				
 add	October 2003	2003	Chinese First Division A	2002		add	Dalian Shide	China PR	Shenzhen Pingan	China PR				
-add	October 2003	2003	Chinese First Division A	2003		add	Shanghai Shenhua	China PR	Shanghai Zhongyuan	China PR				
 add	October 2003	2003	Chinese First Division B	2002		add	Xiamen Hongshi	China PR	Dalian Sàidélóng	China PR				
 add	October 2003	2003	Chinese First Division B	2003		add	Changchun Yatai	China PR	Henan Jianye	China PR				
 add	October 2003	2003	Chinese Second Division	2002		add	Harbin Lange	China PR	Guangdong Xiongying	China PR				
@@ -2064,6 +2070,7 @@ add	October 2003	2003	Brazilian North State Championship	2003		add	Agremiação 
 add	October 2003	2003	Brazilian Northeast State Championship	2002		add	Nacional Futebol Clube (AM)	Brazil	Atlético Clíper Clube	Brazil				
 add	October 2003	2003	Brazilian Northeast State Championship	2003		add	Nacional Futebol Clube (AM)	Brazil	Atlético Rio Negro Clube (AM)	Brazil				
 add	October 2003	2003	Brazilian Gaúcho State Championship	2002		add	Sport Club Internacional	Brazil	Clube 15 de Novembro	Brazil				
+add	October 2003	2003	Brazilian Gaúcho State Championship	2003		add	Sport Club Internacional	Brazil	Clube 15 de Novembro	Brazil				
 add	October 2003	2003	Brazilian Goiás State Championship	2002		add	Goiás Esporte Clube	Brazil	Novo Horizonte Futebol Clube	Brazil				
 add	October 2003	2003	Brazilian Goiás State Championship	2003		add	Goiás Esporte Clube	Brazil	Novo Horizonte Futebol Clube	Brazil				
 add	October 2003	2003	Brazilian Minas Gerais State Championship	2002		add	Associação Atlética Caldense	Brazil	Ipatinga Futebol Clube	Brazil				
@@ -2274,6 +2281,7 @@ add	October 2003	2003	European Champions Cup	2003		agree	AC Milan	Italy	Juventus
 add	October 2003	2003	European Super Cup	2002		add	Real Madrid C.F.	Spain	Feyenoord	Holland				
 add	October 2003	2003	Intercontinental Cup	2002		add	Real Madrid C.F.	Spain	Club Olimpia	Paraguay				
 add	October 2003	2003	South American Copa Libertadores	2002		agree	Club Olimpia	Paraguay	Associação Desportiva São Caetano	Brazil				
+add	October 2003	2003	South American Copa Libertadores	2003		add	Boca Juniors	Argentina	Santos Futebol Clube	Brazil				
 add	October 2003	2003	South American Copa Mercosur	2002		add	San Lorenzo de Almagro	Argentina	Corporación Deportiva Club Atlético Nacional	Colombia				
 add	October 2003	2003	UEFA Cup	2002		add	Feyenoord	Holland	BV Borussia Dortmund	Germany				
 add	October 2003	2003	UEFA Cup	2003		agree	Futebol Clube do Porto	Portugal	Glasgow Celtic	Scotland				
@@ -3533,7 +3541,6 @@ add	Summer 2004	2004	Chinese FA Super Cup	2002		agree	Shanghai Shenhua	China PR	
 add	Summer 2004	2004	Chinese FA Super Cup	2003		add	Dalian Shide	China PR	Qingdao Yizhong	China PR				
 add	Summer 2004	2004	Chinese FA Super Cup	2004		add	Beijing Guo'an	China PR	Shanghai Shenhua	China PR				
 add	Summer 2004	2004	Chinese First Division A	2002		add	Dalian Shide	China PR	Shenzhen Pingan	China PR				
-add	Summer 2004	2004	Chinese First Division A	2003		add	Shanghai Shenhua	China PR	Shanghai International	China PR				
 add	Summer 2004	2004	Chinese First Division A	2004		add	Shenzhen Pingan	China PR	Shandong Luneng	China PR				
 add	Summer 2004	2004	Chinese First Division B	2002		add	Xiamen Hongshi	China PR	Dalian Sàidélóng	China PR				
 add	Summer 2004	2004	Chinese First Division B	2003		add	Changchun Yatai	China PR	Henan Jianye	China PR				
@@ -3963,6 +3970,7 @@ add	Summer 2004	2004	Austrian FA Cup	2003		add	FK Austria Vienna	Austria	FC Aust
 add	Summer 2004	2004	Austrian FA Cup	2004		add	Grazer AK	Austria	FK Austria Vienna	Austria				
 add	Summer 2004	2004	Austrian Super Cup	2002		add	Grazer AK	Austria	SK Sturm Graz	Austria				
 add	Summer 2004	2004	Austrian Super Cup	2003		add	FK Austria Vienna	Austria	FC Austria Kärnten	Austria				
+add	Summer 2004	2004	Austrian Super Cup	2004		add	FK Austria Vienna	Austria	Grazer AK	Austria				
 add	Summer 2004	2004	Swiss National Division A	2002		add	FC Basel	Switzerland	Grasshopper Club Zurich	Switzerland				
 add	Summer 2004	2004	Swiss National Division A	2003		add	Grasshopper Club Zurich	Switzerland	FC Basel	Switzerland				
 add	Summer 2004	2004	Swiss National Division A	2004		add	FC Basel	Switzerland	BSC Young Boys Bern	Switzerland				
@@ -3993,6 +4001,7 @@ add	Summer 2004	2004	Intercontinental Cup	2002		agree	Real Madrid C.F.	Spain	Clu
 add	Summer 2004	2004	Intercontinental Cup	2003		agree	Boca Juniors	Argentina	AC Milan	Italy				
 add	Summer 2004	2004	South American Copa Libertadores	2002		agree	Club Olimpia	Paraguay	Associação Desportiva São Caetano	Brazil				
 add	Summer 2004	2004	South American Copa Libertadores	2003		agree	Boca Juniors	Argentina	Santos Futebol Clube	Brazil				
+add	Summer 2004	2004	South American Copa Libertadores	2004		agree	Corporación Deportiva Once Caldas	Colombia	Boca Juniors	Argentina				
 add	Summer 2004	2004	South American Copa Mercosur	2002		differ	San Lorenzo de Almagro	Argentina	Corporación Deportiva Club Atlético Nacional	Colombia				
 add	Summer 2004	2004	South American Copa Mercosur	2003		agree	ADFP Club Cienciano	Peru	River Plate	Argentina				
 add	Summer 2004	2004	South American Recopa	2003		agree	Club Olimpia	Paraguay	San Lorenzo de Almagro	Argentina				
@@ -5582,6 +5591,7 @@ add	September 2005	2005	Argentine Premier Division	2002	Clausura	add	River Plate
 add	September 2005	2005	Argentine Premier Division	2003	Apertura	add	Boca Juniors	Argentina	San Lorenzo de Almagro	Argentina				
 add	September 2005	2005	Argentine Premier Division	2003	Clausura	add	River Plate	Argentina	Boca Juniors	Argentina				
 add	September 2005	2005	Argentine Premier Division	2004	Apertura	add	Newell's Old Boys	Argentina	Vélez Sarsfield	Argentina				
+add	September 2005	2005	Argentine Premier Division	2004	Clausura	add	Vélez Sarsfield	Argentina	Banfield	Argentina				
 add	September 2005	2005	Argentine Second Division	2002		add	Atlético Rafaela	Argentina	Argentinos Juniors	Argentina				
 add	September 2005	2005	Argentine Second Division	2003		add	Instituto de Córdoba	Argentina	Almagro	Argentina				
 add	September 2005	2005	Argentine Second Division	2004		add	Tiro Federal de Rosario	Argentina	Gimnasia y Esgrima de Jujuy	Argentina				
@@ -5613,7 +5623,6 @@ add	September 2005	2005	Chinese FA Super Cup	2002		agree	Shanghai Shenhua	China 
 add	September 2005	2005	Chinese FA Super Cup	2003		add	Dalian Shide	China PR	Qingdao Yizhong	China PR				
 add	September 2005	2005	Chinese FA Super Cup	2004		add	Beijing Guo'an	China PR	Shanghai Shenhua	China PR				
 add	September 2005	2005	Chinese First Division A	2002		add	Dalian Shide	China PR	Shenzhen Pingan	China PR				
-add	September 2005	2005	Chinese First Division A	2003		add	Shanghai Shenhua	China PR	Shanghai International	China PR				
 add	September 2005	2005	Chinese First Division A	2004		add	Shenzhen Pingan	China PR	Shandong Luneng	China PR				
 add	September 2005	2005	Chinese First Division A	2005		differ	Dalian Shide	China PR	Shanghai Shenhua	China PR				
 add	September 2005	2005	Chinese First Division B	2002		add	Xiamen Hongshi	China PR	Dalian Sàidélóng	China PR				
@@ -5835,7 +5844,6 @@ add	September 2005	2005	Polish First Division	2005		differ	Wisla Krakow SSA	Pola
 add	September 2005	2005	Polish FA Cup	2002		add	Wisla Krakow SSA	Poland	Amica Wronki SSA	Poland				
 add	September 2005	2005	Polish FA Cup	2003		add	Wisla Krakow SSA	Poland	Wisla Plock SSA	Poland				
 add	September 2005	2005	Polish FA Cup	2004		add	KKS Lech Poznan	Poland	KP Legia Warszawa SSA	Poland				
-add	September 2005	2005	Polish FA Cup	2005		differ	SSA Groclin Dyskobolia	Poland	SSA Zaglebie Lubin	Poland				
 add	September 2005	2005	Polish League Cup	2002		add	KP Legia Warszawa SSA	Poland	Wisla Krakow SSA	Poland				
 add	September 2005	2005	Polish Second Division	2002		add	KKS Lech Poznan	Poland	Wisla Plock SSA	Poland				
 add	September 2005	2005	Polish Second Division	2003		add	Gornik Polkowice	Poland	Swit Nowy Dwor Mazowiecki	Poland				
@@ -6222,6 +6230,7 @@ add	September 2005	2005	African Super Cup	2004		add	Enyimba FC	Nigeria	Hearts of
 add	September 2005	2005	Arab Club Champions Cup	2002		add	Al Ahli (KSA)	Saudi Arabia	Club Africain Tunis	Tunisia				
 add	September 2005	2005	Arab Club Champions Cup	2003		add	Zamalek Sporting Club	Egypt	Al Kuwait	Kuwait				
 add	September 2005	2005	Arab Club Champions Cup	2004		add	Club Sportif Sfaxien	Tunisia	Ismaily Sporting Club	Egypt				
+add	September 2005	2005	Arab Club Champions Cup	2005		add	Al Ittihad (KSA)	Saudi Arabia	Club Sportif Sfaxien	Tunisia				
 add	September 2005	2005	Asian Club Championship	2002		agree	Suwon Samsung Blue Wings	South Korea	Anyang LG Cheetahs	South Korea				
 add	September 2005	2005	Asian Club Championship	2003		add	Al Ain	United Arab Emirates	BEC Tero-Sasana	Thailand				
 add	September 2005	2005	Asian Club Championship	2004		add	Al Ittihad (KSA)	Saudi Arabia	Songnam Ilhwa Chunma	South Korea				
@@ -6268,7 +6277,6 @@ add	September 2005	2005	Italian Cup	2005		agree	Internazionale	Italy	AS Roma	Ita
 add	September 2005	2005	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	September 2005	2005	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	September 2005	2005	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	September 2005	2005	Italian Serie A	2005		agree	Juventus	Italy	AC Milan	Italy				
 add	September 2005	2005	Italian Serie B	2002		add	Como	Italy	Modena	Italy				
 add	September 2005	2005	Italian Serie B	2003		add	Siena	Italy	Sampdoria	Italy				
 add	September 2005	2005	Italian Serie B	2004		add	Città di Palermo	Italy	Cagliari	Italy				
@@ -8118,7 +8126,6 @@ add	Summer 2006	2006	Chinese FA Super Cup	2002		add	Shanghai Shenhua	China	Dalia
 add	Summer 2006	2006	Chinese FA Super Cup	2003		add	Dalian Shide	China	Qingdao Yizhong	China				
 add	Summer 2006	2006	Chinese FA Super Cup	2004		add	Beijing Guo'an	China	Shanghai Shenhua	China				
 add	Summer 2006	2006	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Pingan	China				
-add	Summer 2006	2006	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	Summer 2006	2006	Chinese First Division A	2004		add	Shenzhen Pingan	China	Shandong Luneng	China				
 add	Summer 2006	2006	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	Summer 2006	2006	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -8267,6 +8274,7 @@ add	Summer 2006	2006	Brazilian Rio de Janeiro Lower Division	2002		differ	Associ
 add	Summer 2006	2006	Brazilian Rio de Janeiro Lower Division	2003		differ	Associação Atlética Portuguesa (RJ)	Brazil						
 add	Summer 2006	2006	Brazilian Rio de Janeiro Lower Division	2004		differ	Volta Redonda Futebol Clube	Brazil	Sport Club Boavista	Brazil				
 add	Summer 2006	2006	Brazilian Rio de Janeiro Lower Division	2005		differ	Nova Iguaçu Futebol Clube	Brazil	Bangu Atlético Clube	Brazil				
+add	Summer 2006	2006	Brazilian Rio de Janeiro Lower Division	2006		differ	Sport Club Boavista	Brazil	Macaé Sports	Brazil				
 add	Summer 2006	2006	Polish First Division	2002		add	Legia Warszawa	Poland	Wisla Kraków	Poland				
 add	Summer 2006	2006	Polish First Division	2003		add	Wisla Kraków	Poland	Groclin Dyskobolia	Poland				
 add	Summer 2006	2006	Polish First Division	2004		add	Wisla Kraków	Poland	Legia Warszawa	Poland				
@@ -8275,7 +8283,6 @@ add	Summer 2006	2006	Polish First Division	2006		add	Legia Warszawa	Poland	Wisla
 add	Summer 2006	2006	Polish FA Cup	2002		add	Wisla Kraków	Poland	Amica Wronki	Poland				
 add	Summer 2006	2006	Polish FA Cup	2003		add	Wisla Kraków	Poland	Wisla Plock	Poland				
 add	Summer 2006	2006	Polish FA Cup	2004		add	Lech Poznañ	Poland	Legia Warszawa	Poland				
-add	Summer 2006	2006	Polish FA Cup	2005		add	Groclin Dyskobolia	Poland	Zaglebie Lubin	Poland				
 add	Summer 2006	2006	Polish FA Cup	2006		differ	Wisla Plock	Poland	Zaglebie Lubin	Poland				
 add	Summer 2006	2006	Croatian First Division	2002		differ	NK Dinamo Zagreb	Croatia	HNK Hajduk Split	Croatia				
 add	Summer 2006	2006	Croatian First Division	2003		differ	HNK Hajduk Split	Croatia	NK Dinamo Zagreb	Croatia				
@@ -8705,8 +8712,7 @@ add	Summer 2006	2006	Italian Cup	2006		agree	Internazionale	Italy	AS Roma	Italy
 add	Summer 2006	2006	Italian Serie A	2002		agree	Juventus	Italy	AS Roma	Italy				
 add	Summer 2006	2006	Italian Serie A	2003		agree	Juventus	Italy	Internazionale	Italy				
 add	Summer 2006	2006	Italian Serie A	2004		agree	AC Milan	Italy	AS Roma	Italy				
-add	Summer 2006	2006	Italian Serie A	2005		agree	Juventus	Italy	AC Milan	Italy				
-add	Summer 2006	2006	Italian Serie A	2006		differ	Juventus	Italy	AC Milan	Italy				
+add	Summer 2006	2006	Italian Serie A	2006		agree	Internazionale	Italy	AS Roma	Italy				
 add	Summer 2006	2006	Italian Serie B	2002		agree	Como	Italy	Modena	Italy				
 add	Summer 2006	2006	Italian Serie B	2003		agree	Siena	Italy	Sampdoria	Italy				
 add	Summer 2006	2006	Italian Serie B	2004		agree	Città di Palermo	Italy	Cagliari	Italy				
@@ -10449,7 +10455,6 @@ add	February 2008	2007	Chinese FA Super Cup	2002		add	Shanghai Shenhua	China	Dal
 add	February 2008	2007	Chinese FA Super Cup	2003		add	Dalian Shide	China	Qingdao Zhongneng	China				
 add	February 2008	2007	Chinese FA Super Cup	2004		add	Beijing Guo'an	China	Shanghai Shenhua	China				
 add	February 2008	2007	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Shangqingyin	China				
-add	February 2008	2007	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	February 2008	2007	Chinese First Division A	2004		add	Shenzhen Shangqingyin	China	Shandong Luneng	China				
 add	February 2008	2007	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	February 2008	2007	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -11017,8 +11022,7 @@ add	February 2008	2007	Italian Cup	2007		differ	AS Roma	Italy	Internazionale	Ita
 add	February 2008	2007	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	February 2008	2007	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	February 2008	2007	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	February 2008	2007	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	February 2008	2007	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	February 2008	2007	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	February 2008	2007	Italian Serie A	2007		differ	Internazionale	Italy	AS Roma	Italy				
 add	February 2008	2007	Italian Serie B	2002		add	Como	Italy	Modena	Italy				
 add	February 2008	2007	Italian Serie B	2003		add	Siena	Italy	Sampdoria	Italy				
@@ -12749,7 +12753,6 @@ add	November 2007	2007	Chinese FA Super Cup	2002		add	Shanghai Shenhua	China	Dal
 add	November 2007	2007	Chinese FA Super Cup	2003		add	Dalian Shide	China	Qingdao Yizhong	China				
 add	November 2007	2007	Chinese FA Super Cup	2004		add	Beijing Guo'an	China	Shanghai Shenhua	China				
 add	November 2007	2007	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Pingan	China				
-add	November 2007	2007	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	November 2007	2007	Chinese First Division A	2004		add	Shenzhen Pingan	China	Shandong Luneng	China				
 add	November 2007	2007	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	November 2007	2007	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -13312,8 +13315,7 @@ add	November 2007	2007	Italian Cup	2007		differ	AS Roma	Italy	Internazionale	Ita
 add	November 2007	2007	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	November 2007	2007	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	November 2007	2007	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	November 2007	2007	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	November 2007	2007	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	November 2007	2007	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	November 2007	2007	Italian Serie A	2007		differ	Internazionale	Italy	AS Roma	Italy				
 add	November 2007	2007	Italian Serie B	2002		add	Como	Italy	Modena	Italy				
 add	November 2007	2007	Italian Serie B	2003		add	Siena	Italy	Sampdoria	Italy				
@@ -15027,7 +15029,6 @@ add	December 2008	2008	Chinese FA Cup	2004		add	Shandong Luneng	China	Sichuan Qu
 add	December 2008	2008	Chinese FA Cup	2005		add	Dalian Shide	China	Shandong Luneng	China				
 add	December 2008	2008	Chinese FA Cup	2006		add	Shandong Luneng	China	Dalian Shide	China				
 add	December 2008	2008	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Shangqingyin	China				
-add	December 2008	2008	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	December 2008	2008	Chinese First Division A	2004		add	Shenzhen Shangqingyin	China	Shandong Luneng	China				
 add	December 2008	2008	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	December 2008	2008	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -15530,6 +15531,7 @@ add	December 2008	2008	South American Copa Libertadores	2004		add	Corporación D
 add	December 2008	2008	South American Copa Libertadores	2005		add	São Paulo Futebol Clube	Brazil	Clube Atlético Paranaense	Brazil				
 add	December 2008	2008	South American Copa Libertadores	2006		add	Sport Club Internacional	Brazil	São Paulo Futebol Clube	Brazil				
 add	December 2008	2008	South American Copa Libertadores	2007		add	Boca Juniors	Argentina	Grêmio Foot-Ball Porto-Alegrense	Brazil				
+add	December 2008	2008	South American Copa Libertadores	2008		add	Liga Universitaria de Quito	Ecuador	Fluminense FC	Brazil				
 add	December 2008	2008	South American Recopa	2003		add	Club Olimpia	Paraguay	San Lorenzo de Almagro	Argentina				
 add	December 2008	2008	South American Recopa	2004		add	ADFP Club Cienciano	Peru	Boca Juniors	Argentina				
 add	December 2008	2008	South American Recopa	2005		add	Boca Juniors	Argentina	Corporación Deportiva Once Caldas	Colombia				
@@ -15614,8 +15616,7 @@ add	December 2008	2008	Italian Cup	2008		add	AS Roma	Italy	Internazionale	Italy
 add	December 2008	2008	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	December 2008	2008	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	December 2008	2008	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	December 2008	2008	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	December 2008	2008	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	December 2008	2008	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	December 2008	2008	Italian Serie A	2007		add	Internazionale	Italy	AS Roma	Italy				
 add	December 2008	2008	Italian Serie A	2008		agree	Internazionale	Italy	AS Roma	Italy				
 add	December 2008	2008	Italian Serie B	2002		add	Como	Italy	Modena	Italy				
@@ -17345,7 +17346,6 @@ add	March 2009	2008	Chinese FA Cup	2004		add	Shandong Luneng	China	Sichuan Quanx
 add	March 2009	2008	Chinese FA Cup	2005		add	Dalian Shide	China	Shandong Luneng	China				
 add	March 2009	2008	Chinese FA Cup	2006		add	Shandong Luneng	China	Dalian Shide	China				
 add	March 2009	2008	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Shangqingyin	China				
-add	March 2009	2008	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	March 2009	2008	Chinese First Division A	2004		add	Shenzhen Shangqingyin	China	Shandong Luneng	China				
 add	March 2009	2008	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	March 2009	2008	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -17519,7 +17519,6 @@ add	March 2009	2008	Polish First Division	2008		differ	Wisla Kraków	Poland	KP L
 add	March 2009	2008	Polish FA Cup	2002		add	Wisla Kraków	Poland	Amica Wronki	Poland				
 add	March 2009	2008	Polish FA Cup	2003		add	Wisla Kraków	Poland	Wisla Plock	Poland				
 add	March 2009	2008	Polish FA Cup	2004		add	KKS Lech Poznañ	Poland	KP Legia Warszawa	Poland				
-add	March 2009	2008	Polish FA Cup	2005		add	Groclin Dyskobolia	Poland	KGHM Zaglebie Lubin	Poland				
 add	March 2009	2008	Polish FA Cup	2006		add	Wisla Plock	Poland	KGHM Zaglebie Lubin	Poland				
 add	March 2009	2008	Polish FA Cup	2007		add	Groclin Dyskobolia	Poland	Korona Kielce	Poland				
 add	March 2009	2008	Polish FA Cup	2008		differ	KP Legia Warszawa	Poland	Wisla Kraków	Poland				
@@ -17991,6 +17990,7 @@ add	March 2009	2008	South American Copa Libertadores	2004		add	Corporación Depo
 add	March 2009	2008	South American Copa Libertadores	2005		add	São Paulo Futebol Clube	Brazil	Clube Atlético Paranaense	Brazil				
 add	March 2009	2008	South American Copa Libertadores	2006		add	Sport Club Internacional	Brazil	São Paulo Futebol Clube	Brazil				
 add	March 2009	2008	South American Copa Libertadores	2007		add	Boca Juniors	Argentina	Grêmio Foot-Ball Porto-Alegrense	Brazil				
+add	March 2009	2008	South American Copa Libertadores	2008		add	Liga Universitaria de Quito	Ecuador	Fluminense FC	Brazil				
 add	March 2009	2008	South American Copa Mercosur	2002		add	San Lorenzo de Almagro	Argentina	Corporación Deportiva Club Atlético Nacional	Colombia				
 add	March 2009	2008	South American Copa Mercosur	2003		add	ADFP Club Cienciano	Peru	River Plate	Argentina				
 add	March 2009	2008	South American Copa Mercosur	2004		add	Boca Juniors	Argentina	Club Bolívar	Bolivia				
@@ -18081,8 +18081,7 @@ add	March 2009	2008	Italian Cup	2008		agree	AS Roma	Italy	Internazionale	Italy
 add	March 2009	2008	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	March 2009	2008	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	March 2009	2008	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	March 2009	2008	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	March 2009	2008	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	March 2009	2008	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	March 2009	2008	Italian Serie A	2007		add	Internazionale	Italy	AS Roma	Italy				
 add	March 2009	2008	Italian Serie A	2008		agree	Internazionale	Italy	AS Roma	Italy				
 add	March 2009	2008	Italian Serie B	2002		add	Como	Italy	Modena	Italy				
@@ -20161,7 +20160,6 @@ add	September 2008	2008	Chinese FA Super Cup	2002		add	Shanghai Shenhua	China	Da
 add	September 2008	2008	Chinese FA Super Cup	2003		add	Dalian Shide	China	Qingdao Zhongneng	China				
 add	September 2008	2008	Chinese FA Super Cup	2004		add	Beijing Guo'an	China	Shanghai Shenhua	China				
 add	September 2008	2008	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Shangqingyin	China				
-add	September 2008	2008	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	September 2008	2008	Chinese First Division A	2004		add	Shenzhen Shangqingyin	China	Shandong Luneng	China				
 add	September 2008	2008	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	September 2008	2008	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -20342,7 +20340,6 @@ add	September 2008	2008	Polish First Division	2008		differ	Wisla Kraków	Poland	
 add	September 2008	2008	Polish FA Cup	2002		add	Wisla Kraków	Poland	Amica Wronki	Poland				
 add	September 2008	2008	Polish FA Cup	2003		add	Wisla Kraków	Poland	Wisla Plock	Poland				
 add	September 2008	2008	Polish FA Cup	2004		add	Lech Poznañ	Poland	Legia Warszawa	Poland				
-add	September 2008	2008	Polish FA Cup	2005		add	Groclin Dyskobolia	Poland	Zaglebie Lubin	Poland				
 add	September 2008	2008	Polish FA Cup	2006		add	Wisla Plock	Poland	Zaglebie Lubin	Poland				
 add	September 2008	2008	Polish FA Cup	2007		add	Groclin Dyskobolia	Poland	Kolporter Korona Kielce	Poland				
 add	September 2008	2008	Polish FA Cup	2008		differ	Legia Warszawa	Poland	Wisla Kraków	Poland				
@@ -20828,6 +20825,7 @@ add	September 2008	2008	South American Copa Libertadores	2004		add	Corporación 
 add	September 2008	2008	South American Copa Libertadores	2005		add	São Paulo Futebol Clube	Brazil	Clube Atlético Paranaense	Brazil				
 add	September 2008	2008	South American Copa Libertadores	2006		add	Sport Club Internacional	Brazil	São Paulo Futebol Clube	Brazil				
 add	September 2008	2008	South American Copa Libertadores	2007		add	Boca Juniors	Argentina	Grêmio Foot-Ball Porto-Alegrense	Brazil				
+add	September 2008	2008	South American Copa Libertadores	2008		add	Liga Universitaria de Quito	Ecuador	Fluminense FC	Brazil				
 add	September 2008	2008	South American Copa Mercosur	2002		add	San Lorenzo de Almagro	Argentina	Corporación Deportiva Club Atlético Nacional	Colombia				
 add	September 2008	2008	South American Copa Mercosur	2003		add	ADFP Club Cienciano	Peru	River Plate	Argentina				
 add	September 2008	2008	South American Copa Mercosur	2004		add	Boca Juniors	Argentina	Club Bolívar	Bolivia				
@@ -20918,8 +20916,7 @@ add	September 2008	2008	Italian Cup	2008		agree	AS Roma	Italy	Internazionale	Ita
 add	September 2008	2008	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	September 2008	2008	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	September 2008	2008	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	September 2008	2008	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	September 2008	2008	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	September 2008	2008	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	September 2008	2008	Italian Serie A	2007		add	Internazionale	Italy	AS Roma	Italy				
 add	September 2008	2008	Italian Serie A	2008		agree	Internazionale	Italy	AS Roma	Italy				
 add	September 2008	2008	Italian Serie B	2002		add	Como	Italy	Modena	Italy				
@@ -23028,6 +23025,7 @@ add	April 2010 SIM	2009	Argentine Premier Division	2006	Clausura	add	San Lorenzo
 add	April 2010 SIM	2009	Argentine Premier Division	2007	Apertura	add	Lanús	Argentina	Tigre	Argentina				
 add	April 2010 SIM	2009	Argentine Premier Division	2007	Clausura	add	River Plate	Argentina	Boca Juniors	Argentina				
 add	April 2010 SIM	2009	Argentine Premier Division	2008	Apertura	add	Boca Juniors	Argentina	Tigre	Argentina				
+add	April 2010 SIM	2009	Argentine Premier Division	2008	Clausura	add	Vélez Sarsfield	Argentina	Huracán	Argentina				
 add	April 2010 SIM	2009	Argentine Second Division	2002		add	Atlético Rafaela	Argentina	Argentinos Juniors	Argentina				
 add	April 2010 SIM	2009	Argentine Second Division	2003		add	Instituto de Córdoba	Argentina	Almagro	Argentina				
 add	April 2010 SIM	2009	Argentine Second Division	2004		add	Tiro Federal de Rosario	Argentina	Gimnasia y Esgrima de Jujuy	Argentina				
@@ -23057,7 +23055,6 @@ add	April 2010 SIM	2009	Chinese FA Cup	2004		add	Shandong Luneng	China	Sichuan Q
 add	April 2010 SIM	2009	Chinese FA Cup	2005		add	Dalian Shide	China	Shandong Luneng	China				
 add	April 2010 SIM	2009	Chinese FA Cup	2006		add	Shandong Luneng	China	Dalian Shide	China				
 add	April 2010 SIM	2009	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Shangqingyin	China				
-add	April 2010 SIM	2009	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	April 2010 SIM	2009	Chinese First Division A	2004		add	Shenzhen Shangqingyin	China	Shandong Luneng	China				
 add	April 2010 SIM	2009	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	April 2010 SIM	2009	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -23226,6 +23223,7 @@ add	April 2010 SIM	2009	Brazilian Cup	2005		add	Paulista Futebol Clube	Brazil	Fl
 add	April 2010 SIM	2009	Brazilian Cup	2006		add	Clube de Regatas do Flamengo	Brazil	Clube de Regatas Vasco da Gama	Brazil				
 add	April 2010 SIM	2009	Brazilian Cup	2007		add	Fluminense FC	Brazil	Figueirense Futebol Clube	Brazil				
 add	April 2010 SIM	2009	Brazilian Cup	2008		add	Sport Club do Recife	Brazil	Sport Club Corinthians Paulista	Brazil				
+add	April 2010 SIM	2009	Brazilian Cup	2009		agree	Sport Club Corinthians Paulista	Brazil	Sport Club Internacional	Brazil				
 add	April 2010 SIM	2009	Brazilian Champions Cup	2002		add	Paysandu Sport Club	Brazil	Cruzeiro Esporte Clube	Brazil				
 add	April 2010 SIM	2009	Brazilian Central Regional Cup	2002		add	Goiás Esporte Clube	Brazil	Sociedade Esportiva do Gama	Brazil				
 add	April 2010 SIM	2009	Brazilian North Regional Cup	2002		add	Paysandu Sport Club	Brazil	São Raimundo Esporte Clube (AM)	Brazil				
@@ -23241,7 +23239,6 @@ add	April 2010 SIM	2009	Polish First Division	2009		differ	Wisla Kraków	Poland	
 add	April 2010 SIM	2009	Polish FA Cup	2002		add	Wisla Kraków	Poland	Amica Wronki	Poland				
 add	April 2010 SIM	2009	Polish FA Cup	2003		add	Wisla Kraków	Poland	Wisla Plock	Poland				
 add	April 2010 SIM	2009	Polish FA Cup	2004		add	KKS Lech Poznañ	Poland	KP Legia Warszawa	Poland				
-add	April 2010 SIM	2009	Polish FA Cup	2005		add	Groclin Dyskobolia	Poland	KGHM Zaglebie Lubin	Poland				
 add	April 2010 SIM	2009	Polish FA Cup	2006		add	Wisla Plock	Poland	KGHM Zaglebie Lubin	Poland				
 add	April 2010 SIM	2009	Polish FA Cup	2007		add	Groclin Dyskobolia	Poland	Korona Kielce	Poland				
 add	April 2010 SIM	2009	Polish FA Cup	2008		add	KP Legia Warszawa	Poland	Wisla Kraków	Poland				
@@ -23755,6 +23752,7 @@ add	April 2010 SIM	2009	South American Recopa	2005		add	Boca Juniors	Argentina	C
 add	April 2010 SIM	2009	South American Recopa	2006		add	Boca Juniors	Argentina	São Paulo Futebol Clube	Brazil				
 add	April 2010 SIM	2009	South American Recopa	2007		add	Sport Club Internacional	Brazil	Club Deportivo Pachuca	Mexico				
 add	April 2010 SIM	2009	South American Recopa	2008		add	Boca Juniors	Argentina	Arsenal de Sarandí	Argentina				
+add	April 2010 SIM	2009	South American Recopa	2009		add	Liga Universitaria de Quito	Ecuador	Sport Club Internacional	Brazil				
 add	April 2010 SIM	2009	UEFA Cup	2002		add	Feyenoord	Holland	Borussia Dortmund	Germany				
 add	April 2010 SIM	2009	UEFA Cup	2003		add	Futebol Clube do Porto	Portugal	Glasgow Celtic	Scotland				
 add	April 2010 SIM	2009	UEFA Cup	2004		add	Valencia C.F.	Spain	Olympique de Marseille	France				
@@ -23816,8 +23814,7 @@ add	April 2010 SIM	2009	Italian Cup	2009		differ	S.S. Lazio	Italy	Sampdoria	Ital
 add	April 2010 SIM	2009	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	April 2010 SIM	2009	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	April 2010 SIM	2009	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	April 2010 SIM	2009	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	April 2010 SIM	2009	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	April 2010 SIM	2009	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	April 2010 SIM	2009	Italian Serie A	2007		add	Internazionale	Italy	AS Roma	Italy				
 add	April 2010 SIM	2009	Italian Serie A	2008		add	Internazionale	Italy	AS Roma	Italy				
 add	April 2010 SIM	2009	Italian Serie A	2009		differ	Internazionale	Italy	Juventus	Italy				
@@ -25743,6 +25740,7 @@ add	February 2010 ODB	2009	Argentine Premier Division	2006	Clausura	add	San Lore
 add	February 2010 ODB	2009	Argentine Premier Division	2007	Apertura	add	Lanús	Argentina	Tigre	Argentina				
 add	February 2010 ODB	2009	Argentine Premier Division	2007	Clausura	add	River Plate	Argentina	Boca Juniors	Argentina				
 add	February 2010 ODB	2009	Argentine Premier Division	2008	Apertura	add	Boca Juniors	Argentina	Tigre	Argentina				
+add	February 2010 ODB	2009	Argentine Premier Division	2008	Clausura	add	Vélez Sarsfield	Argentina	Huracán	Argentina				
 add	February 2010 ODB	2009	Argentine Second Division	2002		add	Atlético Rafaela	Argentina	Argentinos Juniors	Argentina				
 add	February 2010 ODB	2009	Argentine Second Division	2003		add	Instituto de Córdoba	Argentina	Almagro	Argentina				
 add	February 2010 ODB	2009	Argentine Second Division	2004		add	Tiro Federal de Rosario	Argentina	Gimnasia y Esgrima de Jujuy	Argentina				
@@ -25772,7 +25770,6 @@ add	February 2010 ODB	2009	Chinese FA Cup	2004		add	Shandong Luneng	China	Sichua
 add	February 2010 ODB	2009	Chinese FA Cup	2005		add	Dalian Shide	China	Shandong Luneng	China				
 add	February 2010 ODB	2009	Chinese FA Cup	2006		add	Shandong Luneng	China	Dalian Shide	China				
 add	February 2010 ODB	2009	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Shangqingyin	China				
-add	February 2010 ODB	2009	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	February 2010 ODB	2009	Chinese First Division A	2004		add	Shenzhen Shangqingyin	China	Shandong Luneng	China				
 add	February 2010 ODB	2009	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	February 2010 ODB	2009	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -25941,6 +25938,7 @@ add	February 2010 ODB	2009	Brazilian Cup	2005		add	Paulista Futebol Clube	Brazil
 add	February 2010 ODB	2009	Brazilian Cup	2006		add	Clube de Regatas do Flamengo	Brazil	Clube de Regatas Vasco da Gama	Brazil				
 add	February 2010 ODB	2009	Brazilian Cup	2007		add	Fluminense FC	Brazil	Figueirense Futebol Clube	Brazil				
 add	February 2010 ODB	2009	Brazilian Cup	2008		add	Sport Club do Recife	Brazil	Sport Club Corinthians Paulista	Brazil				
+add	February 2010 ODB	2009	Brazilian Cup	2009		add	Sport Club Corinthians Paulista	Brazil	Sport Club Internacional	Brazil				
 add	February 2010 ODB	2009	Brazilian Champions Cup	2002		add	Paysandu Sport Club	Brazil	Cruzeiro Esporte Clube	Brazil				
 add	February 2010 ODB	2009	Brazilian Central Regional Cup	2002		add	Goiás Esporte Clube	Brazil	Sociedade Esportiva do Gama	Brazil				
 add	February 2010 ODB	2009	Brazilian North Regional Cup	2002		add	Paysandu Sport Club	Brazil	São Raimundo Esporte Clube (AM)	Brazil				
@@ -25973,7 +25971,6 @@ add	February 2010 ODB	2009	Polish First Division	2009		differ	Wisla Kraków	Pola
 add	February 2010 ODB	2009	Polish FA Cup	2002		add	Wisla Kraków	Poland	Amica Wronki	Poland				
 add	February 2010 ODB	2009	Polish FA Cup	2003		add	Wisla Kraków	Poland	Wisla Plock	Poland				
 add	February 2010 ODB	2009	Polish FA Cup	2004		add	KKS Lech Poznañ	Poland	KP Legia Warszawa	Poland				
-add	February 2010 ODB	2009	Polish FA Cup	2005		add	Groclin Dyskobolia	Poland	KGHM Zaglebie Lubin	Poland				
 add	February 2010 ODB	2009	Polish FA Cup	2006		add	Wisla Plock	Poland	KGHM Zaglebie Lubin	Poland				
 add	February 2010 ODB	2009	Polish FA Cup	2007		add	Groclin Dyskobolia	Poland	Korona Kielce	Poland				
 add	February 2010 ODB	2009	Polish FA Cup	2008		add	KP Legia Warszawa	Poland	Wisla Kraków	Poland				
@@ -26521,6 +26518,7 @@ add	February 2010 ODB	2009	South American Recopa	2005		add	Boca Juniors	Argentin
 add	February 2010 ODB	2009	South American Recopa	2006		add	Boca Juniors	Argentina	São Paulo Futebol Clube	Brazil				
 add	February 2010 ODB	2009	South American Recopa	2007		add	Sport Club Internacional	Brazil	Club Deportivo Pachuca	Mexico				
 add	February 2010 ODB	2009	South American Recopa	2008		add	Boca Juniors	Argentina	Arsenal de Sarandí	Argentina				
+add	February 2010 ODB	2009	South American Recopa	2009		add	Liga Universitaria de Quito	Ecuador	Sport Club Internacional	Brazil				
 add	February 2010 ODB	2009	UEFA Cup	2002		add	Feyenoord	Holland	Borussia Dortmund	Germany				
 add	February 2010 ODB	2009	UEFA Cup	2003		add	Futebol Clube do Porto	Portugal	Glasgow Celtic	Scotland				
 add	February 2010 ODB	2009	UEFA Cup	2004		add	Valencia C.F.	Spain	Olympique de Marseille	France				
@@ -26582,8 +26580,7 @@ add	February 2010 ODB	2009	Italian Cup	2009		differ	S.S. Lazio	Italy	Sampdoria	I
 add	February 2010 ODB	2009	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	February 2010 ODB	2009	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	February 2010 ODB	2009	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	February 2010 ODB	2009	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	February 2010 ODB	2009	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	February 2010 ODB	2009	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	February 2010 ODB	2009	Italian Serie A	2007		add	Internazionale	Italy	AS Roma	Italy				
 add	February 2010 ODB	2009	Italian Serie A	2008		add	Internazionale	Italy	AS Roma	Italy				
 add	February 2010 ODB	2009	Italian Serie A	2009		agree	Internazionale	Italy	Juventus	Italy				
@@ -28642,6 +28639,7 @@ add	June 2010	2009	Argentine Premier Division	2006	Clausura	add	San Lorenzo de A
 add	June 2010	2009	Argentine Premier Division	2007	Apertura	add	Lanús	Argentina	Tigre	Argentina				
 add	June 2010	2009	Argentine Premier Division	2007	Clausura	add	River Plate	Argentina	Boca Juniors	Argentina				
 add	June 2010	2009	Argentine Premier Division	2008	Apertura	add	Boca Juniors	Argentina	Tigre	Argentina				
+add	June 2010	2009	Argentine Premier Division	2008	Clausura	add	Vélez Sarsfield	Argentina	Huracán	Argentina				
 add	June 2010	2009	Argentine Second Division	2002		add	Atlético Rafaela	Argentina	Argentinos Juniors	Argentina				
 add	June 2010	2009	Argentine Second Division	2003		add	Instituto de Córdoba	Argentina	Almagro	Argentina				
 add	June 2010	2009	Argentine Second Division	2004		add	Tiro Federal de Rosario	Argentina	Gimnasia y Esgrima de Jujuy	Argentina				
@@ -28671,7 +28669,6 @@ add	June 2010	2009	Chinese FA Cup	2004		add	Shandong Luneng	China	Sichuan Quanxi
 add	June 2010	2009	Chinese FA Cup	2005		add	Dalian Shide	China	Shandong Luneng	China				
 add	June 2010	2009	Chinese FA Cup	2006		add	Shandong Luneng	China	Dalian Shide	China				
 add	June 2010	2009	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Shangqingyin	China				
-add	June 2010	2009	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Zhongjian Chanba	China				
 add	June 2010	2009	Chinese First Division A	2004		add	Shenzhen Shangqingyin	China	Shandong Luneng	China				
 add	June 2010	2009	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	June 2010	2009	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -28840,6 +28837,7 @@ add	June 2010	2009	Brazilian Cup	2005		add	Paulista Futebol Clube	Brazil	Flumine
 add	June 2010	2009	Brazilian Cup	2006		add	Clube de Regatas do Flamengo	Brazil	Clube de Regatas Vasco da Gama	Brazil				
 add	June 2010	2009	Brazilian Cup	2007		add	Fluminense FC	Brazil	Figueirense Futebol Clube	Brazil				
 add	June 2010	2009	Brazilian Cup	2008		add	Sport Club do Recife	Brazil	Sport Club Corinthians Paulista	Brazil				
+add	June 2010	2009	Brazilian Cup	2009		add	Sport Club Corinthians Paulista	Brazil	Sport Club Internacional	Brazil				
 add	June 2010	2009	Brazilian Champions Cup	2002		add	Paysandu Sport Club	Brazil	Cruzeiro Esporte Clube	Brazil				
 add	June 2010	2009	Brazilian Central Regional Cup	2002		add	Goiás Esporte Clube	Brazil	Sociedade Esportiva do Gama	Brazil				
 add	June 2010	2009	Brazilian North Regional Cup	2002		add	Paysandu Sport Club	Brazil	São Raimundo Esporte Clube (AM)	Brazil				
@@ -28872,7 +28870,6 @@ add	June 2010	2009	Polish First Division	2009		differ	Wisla Kraków	Poland	KP Le
 add	June 2010	2009	Polish FA Cup	2002		add	Wisla Kraków	Poland	Amica Wronki	Poland				
 add	June 2010	2009	Polish FA Cup	2003		add	Wisla Kraków	Poland	Wisla Plock	Poland				
 add	June 2010	2009	Polish FA Cup	2004		add	KKS Lech Poznañ	Poland	KP Legia Warszawa	Poland				
-add	June 2010	2009	Polish FA Cup	2005		add	Groclin Dyskobolia	Poland	KGHM Zaglebie Lubin	Poland				
 add	June 2010	2009	Polish FA Cup	2006		add	Wisla Plock	Poland	KGHM Zaglebie Lubin	Poland				
 add	June 2010	2009	Polish FA Cup	2007		add	Groclin Dyskobolia	Poland	Korona Kielce	Poland				
 add	June 2010	2009	Polish FA Cup	2008		add	KP Legia Warszawa	Poland	Wisla Kraków	Poland				
@@ -29419,6 +29416,7 @@ add	June 2010	2009	South American Recopa	2005		add	Boca Juniors	Argentina	Corpor
 add	June 2010	2009	South American Recopa	2006		add	Boca Juniors	Argentina	São Paulo Futebol Clube	Brazil				
 add	June 2010	2009	South American Recopa	2007		add	Sport Club Internacional	Brazil	Club Deportivo Pachuca	Mexico				
 add	June 2010	2009	South American Recopa	2008		add	Boca Juniors	Argentina	Arsenal de Sarandí	Argentina				
+add	June 2010	2009	South American Recopa	2009		add	Liga Universitaria de Quito	Ecuador	Sport Club Internacional	Brazil				
 add	June 2010	2009	UEFA Cup	2002		add	Feyenoord	Holland	Borussia Dortmund	Germany				
 add	June 2010	2009	UEFA Cup	2003		add	Futebol Clube do Porto	Portugal	Glasgow Celtic	Scotland				
 add	June 2010	2009	UEFA Cup	2004		add	Valencia C.F.	Spain	Olympique de Marseille	France				
@@ -29479,8 +29477,7 @@ add	June 2010	2009	Italian Cup	2009		differ	S.S. Lazio	Italy	Sampdoria	Italy
 add	June 2010	2009	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	June 2010	2009	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	June 2010	2009	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	June 2010	2009	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	June 2010	2009	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	June 2010	2009	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	June 2010	2009	Italian Serie A	2007		add	Internazionale	Italy	AS Roma	Italy				
 add	June 2010	2009	Italian Serie A	2008		add	Internazionale	Italy	AS Roma	Italy				
 add	June 2010	2009	Italian Serie A	2009		agree	Internazionale	Italy	Juventus	Italy				
@@ -31537,6 +31534,7 @@ add	September 2009	2009	Argentine Premier Division	2006	Clausura	add	San Lorenzo
 add	September 2009	2009	Argentine Premier Division	2007	Apertura	add	Lanús	Argentina	Tigre	Argentina				
 add	September 2009	2009	Argentine Premier Division	2007	Clausura	add	River Plate	Argentina	Boca Juniors	Argentina				
 add	September 2009	2009	Argentine Premier Division	2008	Apertura	add	Boca Juniors	Argentina	Tigre	Argentina				
+add	September 2009	2009	Argentine Premier Division	2008	Clausura	add	Vélez Sarsfield	Argentina	Huracán	Argentina				
 add	September 2009	2009	Argentine Second Division	2002		add	Atlético Rafaela	Argentina	Argentinos Juniors	Argentina				
 add	September 2009	2009	Argentine Second Division	2003		add	Instituto de Córdoba	Argentina	Almagro	Argentina				
 add	September 2009	2009	Argentine Second Division	2004		add	Tiro Federal de Rosario	Argentina	Gimnasia y Esgrima de Jujuy	Argentina				
@@ -31566,7 +31564,6 @@ add	September 2009	2009	Chinese FA Cup	2004		add	Shandong Luneng	China	Sichuan Q
 add	September 2009	2009	Chinese FA Cup	2005		add	Dalian Shide	China	Shandong Luneng	China				
 add	September 2009	2009	Chinese FA Cup	2006		add	Shandong Luneng	China	Dalian Shide	China				
 add	September 2009	2009	Chinese First Division A	2002		add	Dalian Shide	China	Shenzhen Shangqingyin	China				
-add	September 2009	2009	Chinese First Division A	2003		add	Shanghai Shenhua	China	Shaanxi Baorong Chanba FC	China				
 add	September 2009	2009	Chinese First Division A	2004		add	Shenzhen Shangqingyin	China	Shandong Luneng	China				
 add	September 2009	2009	Chinese First Division A	2005		add	Dalian Shide	China	Shanghai Shenhua	China				
 add	September 2009	2009	Chinese First Division A	2006		add	Shandong Luneng	China	Shanghai Shenhua	China				
@@ -31735,6 +31732,7 @@ add	September 2009	2009	Brazilian Cup	2005		add	Paulista Futebol Clube	Brazil	Fl
 add	September 2009	2009	Brazilian Cup	2006		add	Clube de Regatas do Flamengo	Brazil	Clube de Regatas Vasco da Gama	Brazil				
 add	September 2009	2009	Brazilian Cup	2007		add	Fluminense FC	Brazil	Figueirense Futebol Clube	Brazil				
 add	September 2009	2009	Brazilian Cup	2008		add	Sport Club do Recife	Brazil	Sport Club Corinthians Paulista	Brazil				
+add	September 2009	2009	Brazilian Cup	2009		agree	Sport Club Corinthians Paulista	Brazil	Sport Club Internacional	Brazil				
 add	September 2009	2009	Brazilian Champions Cup	2002		add	Paysandu Sport Club	Brazil	Cruzeiro Esporte Clube	Brazil				
 add	September 2009	2009	Brazilian Central Regional Cup	2002		add	Goiás Esporte Clube	Brazil	Sociedade Esportiva do Gama	Brazil				
 add	September 2009	2009	Brazilian North Regional Cup	2002		add	Paysandu Sport Club	Brazil	São Raimundo Esporte Clube (AM)	Brazil				
@@ -31750,7 +31748,6 @@ add	September 2009	2009	Polish First Division	2009		differ	Wisla Kraków	Poland	
 add	September 2009	2009	Polish FA Cup	2002		add	Wisla Kraków	Poland	Amica Wronki	Poland				
 add	September 2009	2009	Polish FA Cup	2003		add	Wisla Kraków	Poland	Wisla Plock	Poland				
 add	September 2009	2009	Polish FA Cup	2004		add	KKS Lech Poznañ	Poland	KP Legia Warszawa	Poland				
-add	September 2009	2009	Polish FA Cup	2005		add	Groclin Dyskobolia	Poland	KGHM Zaglebie Lubin	Poland				
 add	September 2009	2009	Polish FA Cup	2006		add	Wisla Plock	Poland	KGHM Zaglebie Lubin	Poland				
 add	September 2009	2009	Polish FA Cup	2007		add	Groclin Dyskobolia	Poland	Korona Kielce	Poland				
 add	September 2009	2009	Polish FA Cup	2008		add	KP Legia Warszawa	Poland	Wisla Kraków	Poland				
@@ -32261,6 +32258,7 @@ add	September 2009	2009	South American Recopa	2005		add	Boca Juniors	Argentina	C
 add	September 2009	2009	South American Recopa	2006		add	Boca Juniors	Argentina	São Paulo Futebol Clube	Brazil				
 add	September 2009	2009	South American Recopa	2007		add	Sport Club Internacional	Brazil	Club Deportivo Pachuca	Mexico				
 add	September 2009	2009	South American Recopa	2008		add	Boca Juniors	Argentina	Arsenal de Sarandí	Argentina				
+add	September 2009	2009	South American Recopa	2009		add	Liga Universitaria de Quito	Ecuador	Sport Club Internacional	Brazil				
 add	September 2009	2009	UEFA Cup	2002		add	Feyenoord	Holland	Borussia Dortmund	Germany				
 add	September 2009	2009	UEFA Cup	2003		add	Futebol Clube do Porto	Portugal	Glasgow Celtic	Scotland				
 add	September 2009	2009	UEFA Cup	2004		add	Valencia C.F.	Spain	Olympique de Marseille	France				
@@ -32322,8 +32320,7 @@ add	September 2009	2009	Italian Cup	2009		differ	S.S. Lazio	Italy	Sampdoria	Ital
 add	September 2009	2009	Italian Serie A	2002		add	Juventus	Italy	AS Roma	Italy				
 add	September 2009	2009	Italian Serie A	2003		add	Juventus	Italy	Internazionale	Italy				
 add	September 2009	2009	Italian Serie A	2004		add	AC Milan	Italy	AS Roma	Italy				
-add	September 2009	2009	Italian Serie A	2005		add	Juventus	Italy	AC Milan	Italy				
-add	September 2009	2009	Italian Serie A	2006		add	Juventus	Italy	AC Milan	Italy				
+add	September 2009	2009	Italian Serie A	2006		add	Internazionale	Italy	AS Roma	Italy				
 add	September 2009	2009	Italian Serie A	2007		add	Internazionale	Italy	AS Roma	Italy				
 add	September 2009	2009	Italian Serie A	2008		add	Internazionale	Italy	AS Roma	Italy				
 add	September 2009	2009	Italian Serie A	2009		agree	Internazionale	Italy	Juventus	Italy				
@@ -34245,6 +34242,19 @@ add	April 2011 SIM	2010	US Open Cup	2008		add	Washington DC United	United States
 add	April 2011 SIM	2010	US Open Cup	2009		add	Seattle Sounders	United States	Washington DC United	United States				
 add	April 2011 SIM	2010	US Open Cup	2010		add	Seattle Sounders	United States	Columbus Crew	United States				
 add	April 2011 SIM	2010	US Open Cup	2001		add	Los Angeles Galaxy	United States	New England Revolution	United States				
+add	April 2011 SIM	2010	FIFA World Cup	2002		add	Brazil		Germany		Turkey		South Korea	
+add	April 2011 SIM	2010	FIFA World Cup	2006		add	Italy		France		Germany		Germany	
+add	April 2011 SIM	2010	FIFA World Cup	2010		add	Spain		Holland		Germany		South Africa	
+add	April 2011 SIM	2010	European Football Championship	2004		add	Greece		Portugal				Portugal	
+add	April 2011 SIM	2010	European Football Championship	2008		add	Spain		Germany				Austria	
+add	April 2011 SIM	2010	African Cup of Nations	2002		add	Cameroon		Senegal		Nigeria		Mali	
+add	April 2011 SIM	2010	African Cup of Nations	2004		add	Tunisia		Morocco		Nigeria		Tunisia	
+add	April 2011 SIM	2010	African Cup of Nations	2006		add	Egypt		Ivory Coast		Nigeria		Egypt	
+add	April 2011 SIM	2010	African Cup of Nations	2008		add	Egypt		Cameroon		Ghana		Ghana	
+add	April 2011 SIM	2010	African Cup of Nations	2010		add	Egypt		Ghana		Nigeria		Angola	
+add	April 2011 SIM	2010	Oceania Nations Cup	2002		add	New Zealand		Australia		Tahiti		New Zealand	
+add	April 2011 SIM	2010	Oceania Nations Cup	2004		add	Australia		Solomon Islands				Australia	
+add	April 2011 SIM	2010	Oceania Nations Cup	2008		add	New Zealand		New Caledonia					
 add	December 2010 SIM	2010	US Open Cup	2002		add	Columbus Crew	United States	Los Angeles Galaxy	United States				
 add	December 2010 SIM	2010	US Open Cup	2003		add	Chicago Fire	United States	NY/NJ Metrostars	United States				
 add	December 2010 SIM	2010	US Open Cup	2004		add	Kansas City Wizards	United States	Chicago Fire	United States				
@@ -34255,6 +34265,8 @@ add	December 2010 SIM	2010	US Open Cup	2008		add	Washington DC United	United Sta
 add	December 2010 SIM	2010	US Open Cup	2009		add	Seattle Sounders	United States	Washington DC United	United States				
 add	December 2010 SIM	2010	US Open Cup	2010		add	Seattle Sounders	United States	Columbus Crew	United States				
 add	December 2010 SIM	2010	US Open Cup	2001		add	Los Angeles Galaxy	United States	New England Revolution	United States				
+add	February 2011 ODB	2010	African Cup of Nations	2010		add	Egypt		Ghana		Nigeria		Angola	
+add	February 2011 ODB	2010	Oceania Nations Cup	2008		add	New Zealand		New Caledonia					
 add	September 2010 ODB	2010	US Open Cup	2002		add	Columbus Crew	United States	Los Angeles Galaxy	United States				
 add	September 2010 ODB	2010	US Open Cup	2003		add	Chicago Fire	United States	NY/NJ Metrostars	United States				
 add	September 2010 ODB	2010	US Open Cup	2004		add	Kansas City Wizards	United States	Chicago Fire	United States				
@@ -34265,6 +34277,10 @@ add	September 2010 ODB	2010	US Open Cup	2008		add	Washington DC United	United St
 add	September 2010 ODB	2010	US Open Cup	2009		add	Seattle Sounders	United States	Washington DC United	United States				
 add	September 2010 ODB	2010	US Open Cup	2010		add	Seattle Sounders	United States	Columbus Crew	United States				
 add	September 2010 ODB	2010	US Open Cup	2001		add	Los Angeles Galaxy	United States	New England Revolution	United States				
+clear	September 2010 ODB	2010	FIFA World Cup	2007										
+add	September 2010 ODB	2010	FIFA World Cup	2010		add	Spain		Holland		Germany		South Africa	
+add	September 2010 ODB	2010	African Cup of Nations	2010		add	Egypt		Ghana		Nigeria		Angola	
+add	September 2010 ODB	2010	Oceania Nations Cup	2008		add	New Zealand		New Caledonia					
 add	March 2012 SIM	2011	US Open Cup	2002		add	Columbus Crew	United States	Los Angeles Galaxy	United States				
 add	March 2012 SIM	2011	US Open Cup	2003		add	Chicago Fire	United States	NY/NJ Metrostars	United States				
 add	March 2012 SIM	2011	US Open Cup	2004		add	Kansas City Wizards	United States	Chicago Fire	United States				
@@ -34276,3 +34292,90 @@ add	March 2012 SIM	2011	US Open Cup	2009		add	Seattle Sounders	United States	Was
 add	March 2012 SIM	2011	US Open Cup	2010		add	Seattle Sounders	United States	Columbus Crew	United States				
 add	March 2012 SIM	2011	US Open Cup	2011		add	Seattle Sounders	United States	Chicago Fire	United States				
 add	March 2012 SIM	2011	US Open Cup	2001		add	Los Angeles Galaxy	United States	New England Revolution	United States				
+add	March 2012 SIM	2011	FIFA World Cup	2002		add	Brazil		Germany		Turkey		South Korea	
+add	March 2012 SIM	2011	FIFA World Cup	2006		add	Italy		France		Germany		Germany	
+add	March 2012 SIM	2011	FIFA World Cup	2010		add	Spain		Holland		Germany		South Africa	
+add	March 2012 SIM	2011	European Football Championship	2004		add	Greece		Portugal				Portugal	
+add	March 2012 SIM	2011	European Football Championship	2008		add	Spain		Germany				Austria	
+clear	Autumn 2013	2013	French Champions Trophy	2011										
+add	March 2012 SIM	2011	African Cup of Nations	2002		add	Cameroon		Senegal		Nigeria		Mali	
+add	March 2012 SIM	2011	African Cup of Nations	2004		add	Tunisia		Morocco		Nigeria		Tunisia	
+add	March 2012 SIM	2011	African Cup of Nations	2006		add	Egypt		Ivory Coast		Nigeria		Egypt	
+add	March 2012 SIM	2011	African Cup of Nations	2008		add	Egypt		Cameroon		Ghana		Ghana	
+add	March 2012 SIM	2011	African Cup of Nations	2010		add	Egypt		Ghana		Nigeria		Angola	
+add	March 2012 SIM	2011	Oceania Nations Cup	2002		add	New Zealand		Australia		Tahiti		New Zealand	
+add	March 2012 SIM	2011	Oceania Nations Cup	2004		add	Australia		Solomon Islands				Australia	
+add	March 2012 SIM	2011	Oceania Nations Cup	2008		add	New Zealand		New Caledonia					
+clear	Autumn 2013	2013	Croatian First Division	2012										
+add	Autumn 2013	2013	Croatian First Division	2013		differ	GNK Dinamo Zagreb	Croatia	NK Lokomotiva Zagreb	Croatia	HNK Rijeka	Croatia		
+add	Autumn 2013	2013	Croatian First Division	2012		differ	GNK Dinamo Zagreb	Croatia	HNK Hajduk Split	Croatia	NK Koprivnica	Croatia		
+clear	Autumn 2013	2013	Greek National A Division	2012										
+add	Autumn 2013	2013	Greek National A Division	2012		differ	Olympiacos Piraeus	Greece	Panathinaikos AO	Greece	PAOK Salonika	Greece		
+add	Autumn 2013	2013	Greek National A Division	2013		differ	Olympiacos Piraeus	Greece	PAOK Salonika	Greece	Atromitos Athens	Greece		
+clear	Autumn 2013	2013	Northern Irish League Premier Division	2012										
+add	Autumn 2013	2013	Northern Irish League Premier Division	2013		differ	Cliftonville	Northern Ireland	Crusaders	Northern Ireland	Linfield	Northern Ireland		
+add	Autumn 2013	2013	Northern Irish League Premier Division	2012		differ	Linfield	Northern Ireland	Portadown	Northern Ireland	Cliftonville	Northern Ireland		
+clear	Autumn 2013	2013	Northern Irish League First Division	2012										
+add	Autumn 2013	2013	Northern Irish League First Division	2012		differ	Ballinamallard United	Northern Ireland	Newry City	Northern Ireland				
+add	Autumn 2013	2013	Northern Irish League First Division	2013		differ	Ards	Northern Ireland						
+clear	Autumn 2013	2013	Northern Irish League Cup	2012										
+add	Autumn 2013	2013	Northern Irish League Cup	2013		differ	Cliftonville	Northern Ireland	Crusaders	Northern Ireland				
+add	Autumn 2013	2013	Northern Irish League Cup	2012		differ	Crusaders	Northern Ireland	Coleraine	Northern Ireland				
+clear	Autumn 2013	2013	English Southern League Premier Division	2012										
+add	Autumn 2013	2013	English Southern League Premier Division	2013		differ	Leamington	England	Gosport Borough	England	Hemel Hempstead Town	England		
+add	Autumn 2013	2013	English Southern League Premier Division	2012		differ	Woking	England	Dartford	England	Welling United	England		
+clear	Autumn 2013	2013	French Champions Trophy	2012										
+add	Autumn 2013	2013	French Champions Trophy	2011		differ	Olympique de Marseille	France	Lille Olympique SC	France				
+add	Autumn 2013	2013	French Champions Trophy	2012		differ	Olympique Lyonnais	France	Montpellier Hérault SC	France				
+add	Autumn 2013	2013	African Cup of Nations	2013		add	Nigeria		Burkina Faso		Mali		South Africa	
+add	March 2014	2013	African Cup of Nations	2013		add	Nigeria		Burkina Faso		Mali		South Africa	
+add	April 2015	2014	African Cup of Nations	2013		add	Nigeria		Burkina Faso		Mali		South Africa	
+add	October 2014	2014	African Cup of Nations	2013		add	Nigeria		Burkina Faso		Mali		South Africa	
+add	April 2017	2016	African Cup of Nations	2002		add	Cameroon		Senegal		Nigeria		Mali	
+add	April 2017	2016	Oceania Nations Cup	2016		add	New Zealand		Papua New Guinea				Papua New Guinea	
+add	October 2016	2016	African Cup of Nations	2002		add	Cameroon		Senegal		Nigeria		Mali	
+add	October 2016	2016	Oceania Nations Cup	2016		add	New Zealand		Papua New Guinea				Papua New Guinea	
+add	October 2017	2017	African Cup of Nations	2002		add	Cameroon		Senegal		Nigeria		Mali	
+add	October 2017	2017	African Cup of Nations	2017		add	Cameroon		Egypt		Burkina Faso		Gabon	
+add	October 2017	2017	Oceania Nations Cup	2016		add	New Zealand		Papua New Guinea				Papua New Guinea	
+add	October 2018	2018	FIFA Club World Championship	2017		add	Real Madrid C.F.	Spain	Grêmio Foot-Ball Porto-Alegrense	Brazil				
+add	March 2020	2019	African Cup of Nations	2019		add	Algeria		Senegal		Nigeria		Egypt	
+add	October 2019	2019	African Cup of Nations	2019		add	Algeria		Senegal		Nigeria		Egypt	
+clear	April 2021	2020	US Open Cup	2019										
+add	April 2021	2020	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+clear	November 2020	2020	US Open Cup	2019										
+add	November 2020	2020	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	November 2020	2020	African Cup of Nations	2019		add	Algeria		Senegal		Nigeria		Egypt	
+clear	April 2022	2021	US Open Cup	2019										
+add	April 2022	2021	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	April 2022	2021	African Cup of Nations	2021		add	Senegal		Egypt		Cameroon		Cameroon	
+clear	October 2021	2021	US Open Cup	2019										
+add	October 2021	2021	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	October 2021	2021	African Cup of Nations	2021		add	Senegal		Egypt		Cameroon		Cameroon	
+clear	April 2023	2022	US Open Cup	2019										
+add	April 2023	2022	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	April 2023	2022	African Cup of Nations	2021		add	Senegal		Egypt		Cameroon		Cameroon	
+clear	October 2022	2022	US Open Cup	2019										
+add	October 2022	2022	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	October 2022	2022	African Cup of Nations	2021		add	Senegal		Egypt		Cameroon		Cameroon	
+clear	April 2024	2023	US Open Cup	2019										
+add	April 2024	2023	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+clear	October 2023	2023	US Open Cup	2019										
+add	October 2023	2023	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	October 2023	2023	FIFA World Cup	2022		add	Argentina		France		Croatia		Qatar	
+add	October 2023	2023	African Cup of Nations	2021		add	Senegal		Egypt		Cameroon		Cameroon	
+add	October 2023	2023	African Cup of Nations	2023		add	Ivory Coast		Nigeria		South Africa		Ivory Coast	
+clear	October 2024	2024	US Open Cup	2019										
+add	October 2024	2024	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	October 2024	2024	FIFA Club World Championship	2023		add	Manchester City	England	Fluminense Football Club	Brazil				
+clear	December 2025	2025	US Open Cup	2019										
+add	December 2025	2025	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	December 2025	2025	FIFA Club World Championship	2025		add	Chelsea	England	Paris Saint-Germain	France				
+clear	May 2026	2025	US Open Cup	2019										
+add	May 2026	2025	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	May 2026	2025	FIFA Club World Championship	2025		add	Chelsea	England	Paris Saint-Germain	France				
+clear	October 2026	2026	US Open Cup	2019										
+add	October 2026	2026	US Open Cup	2019		differ	Atlanta United FC	United States	Minnesota United FC	United States				
+add	October 2026	2026	FIFA World Cup	2026		add	Spain		Argentina		England		United States	
+add	October 2026	2026	African Cup of Nations	2025		add	Morocco		Senegal		Nigeria		Morocco	
+add	October 2026	2026	Argentine Premier Division	2026	Apertura	add	Belgrano de Córdoba	Argentina	River Plate	Argentina				

@@ -270,6 +270,54 @@ static void check_concacaf(void)
               size[1], size[2]);
         CHECK(p == 0 ? up == 8 && down == 0 : up == 8 && down == 8, "CONCACAF %s: %d up, %d down", pairs[p][1], up, down);
     }
+    /* Open item 183: a nation new to the competition (group place 0, its league from the table) joins the leagues
+     * through the same fill. The 2026-27 rules repeat after the table: leagues of 16, 16 and 9 in groups of 4, 4
+     * and 3, so no group holds more than four. Two new nations of real leagues A and B (Martinique and Guadeloupe,
+     * which a 0.6 save of 2035 holds with no continent until the load gives them one) find A and B full and play
+     * in C; the nations of the edition before keep their leagues. Before the fix the game put them into A and B
+     * on top (17 in four groups: a group of five, whose rounds after the sixth had no date). */
+    {
+        const SeasonNlEdition *e = edition("CONCACAF", "2026-27");
+        if (!e) {
+            CHECK(0, "no CONCACAF 2026-27");
+        } else {
+            SeasonNlRow rows[NL_MAX_NATIONS], ref[NL_MAX_NATIONS];
+            int next[NL_MAX_NATIONS], keep[NL_MAX_NATIONS], size[NL_MAX_LEAGUES] = {0};
+            int n = concacaf_rows(e, rows);
+            memcpy(ref, rows, sizeof ref);
+            CHECK(season_nl_next_leagues(e, e, ref, n, keep) == n, "2026-27 repeat: the leagues are made");
+            rows[n++] = (SeasonNlRow){900, 0, 0, 0, 0, 0, 0, 0, 0};
+            rows[n++] = (SeasonNlRow){901, 1, 0, 0, 0, 0, 0, 0, 0};
+            CHECK(season_nl_next_leagues(e, e, rows, n, next) == n, "2026-27 repeat with two new nations: made");
+            int same = 1;
+            for (int i = 0; i < n; i++) {
+                size[next[i]]++;
+                if (rows[i].nation == 900 || rows[i].nation == 901)
+                    CHECK(next[i] == 2, "new nation %d plays in league %c, not C", rows[i].nation, 'A' + next[i]);
+                for (int j = 0; j < n - 2; j++)
+                    if (ref[j].nation == rows[i].nation && keep[j] != next[i]) same = 0;
+            }
+            CHECK(same, "the new nations move no nation of the edition before");
+            CHECK(size[0] == 16 && size[1] == 16 && size[2] == 11, "sizes with two new nations %d %d %d", size[0],
+                  size[1], size[2]);
+            for (int l = 0; l < e->leagues; l++)
+                CHECK(size[l] <= 4 * e->groups[l], "league %c: %d nations in %d groups (a group of five)", 'A' + l,
+                      size[l], e->groups[l]);
+            /* A short competition: the room that the nations of the edition before leave is in B (no C nations,
+             * three of B gone). Both new nations take it, the one of A because A is full. */
+            n = concacaf_rows(e, rows) - 12;
+            rows[n++] = (SeasonNlRow){900, 0, 0, 0, 0, 0, 0, 0, 0};
+            rows[n++] = (SeasonNlRow){901, 1, 0, 0, 0, 0, 0, 0, 0};
+            memset(size, 0, sizeof size);
+            CHECK(season_nl_next_leagues(e, e, rows, n, next) == n, "new nations in a short competition: made");
+            for (int i = 0; i < n; i++) {
+                size[next[i]]++;
+                if (rows[i].nation >= 900) CHECK(next[i] == 1, "new nation %d plays in %c, not B", rows[i].nation,
+                                                 'A' + next[i]);
+            }
+            CHECK(size[0] == 16 && size[1] == 15 && size[2] == 0, "short sizes %d %d %d", size[0], size[1], size[2]);
+        }
+    }
     CHECK(season_nl_gold_cup_count == 12 && season_nl_gold_cups[0].year == 2005 && season_nl_gold_cups[0].teams == 12,
           "the Gold Cups from 2005 (12 teams)");
     for (int i = 0; i < season_nl_gold_cup_count; i++)
@@ -279,8 +327,69 @@ static void check_concacaf(void)
               season_nl_gold_cups[i].start.day, season_nl_gold_cups[i].start.month);
 }
 
+/* The day of the year from 0 (season_nl.c season_nl_day_of_year reads no table but is not in season_nl_rules.c). */
+static int season_nl_day_of_year_test(int day, int month, int year)
+{
+    static const int before[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+    int leap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+    return before[month - 1] + day - 1 + (month > 2 && leap);
+}
+
+/* World Cups in 2026, 2030, 2034 and every 4 years after. */
+static int wc_years(int y) { return y >= 2026 && (y - 2026) % 4 == 0; }
+
 int main(void)
 {
+    /* Item 209: the CONCACAF Nations League after its table (last edition 2026) takes the autumns that the World
+     * Cup qualifying (W - 2 and W - 1) leaves free; UEFA keeps every second year. */
+    {
+        static const int held[] = {2027, 2030, 2031, 2034, 2035};
+        static const int not_held[] = {2026, 2028, 2029, 2032, 2033, 2036};
+        int ok = 1;
+        for (unsigned i = 0; i < sizeof held / sizeof held[0]; i++)
+            ok &= season_nl_held_after("CONCACAF", 2026, held[i], wc_years);
+        for (unsigned i = 0; i < sizeof not_held / sizeof not_held[0]; i++)
+            ok &= !season_nl_held_after("CONCACAF", 2026, not_held[i], wc_years);
+        CHECK(ok, "CONCACAF editions after 2026-27: 2027, 2030, 2031, 2034, 2035, none in 2028, 2029, 2032, 2033");
+        CHECK(season_nl_next_after("CONCACAF", 2026, 2026, wc_years) == 2027 &&
+              season_nl_next_after("CONCACAF", 2026, 2027, wc_years) == 2030 &&
+              season_nl_next_after("CONCACAF", 2026, 2028, wc_years) == 2030 &&
+              season_nl_next_after("CONCACAF", 2026, 2031, wc_years) == 2034,
+              "the next CONCACAF edition: 2027 after 2026, 2030 after 2027 and 2028, 2034 after 2031");
+        CHECK(season_nl_held_after("UEFA", 2026, 2028, wc_years) && season_nl_held_after("UEFA", 2026, 2032, wc_years) &&
+              !season_nl_held_after("UEFA", 2026, 2027, wc_years) &&
+              season_nl_next_after("UEFA", 2026, 2026, wc_years) == 2028,
+              "UEFA after its table: every second year (2028, 2032), not 2027");
+        /* The draw of an edition after the table: a CONCACAF edition in a year with no World Cup takes the spring
+         * draw of 2024-25 (6 May), more than 12 weeks before its first matchday (the friendlies, 0x5cbb00); one in
+         * a World Cup year the draw of 2026-27 (23 July); UEFA its last edition's. */
+        const SeasonNlEdition *d27 = season_nl_draw_of("CONCACAF", 2027, wc_years),
+                              *d30 = season_nl_draw_of("CONCACAF", 2030, wc_years),
+                              *d31 = season_nl_draw_of("CONCACAF", 2031, wc_years),
+                              *u28 = season_nl_draw_of("UEFA", 2028, wc_years);
+        CHECK(d27 && d31 && !strcmp(d27->edition, "2024-25") && d27 == d31 && d31->draw.day == 6 &&
+              d31->draw.month == 5 && d31->draw.year == 0,
+              "the draw of the CONCACAF 2027 and 2031 editions: that of 2024-25 (6 May)");
+        CHECK(d31 && 7 * 12 <= season_nl_day_of_year_test(24, 9, 2031) - season_nl_day_of_year_test(d31->draw.day,
+                                                                                                    d31->draw.month, 2031),
+              "the 2031 draw lies 12 weeks or more before the first matchday (24 September)");
+        CHECK(d30 && !strcmp(d30->edition, "2026-27"), "the draw of the CONCACAF 2030 edition: that of 2026-27");
+        CHECK(u28 && !strcmp(u28->edition, "2026-27"), "the draw of the UEFA 2028 edition: that of 2026-27");
+    }
+    /* Item 215: the game draws CONCACAF 2023-24 on 19 June 2023, the day after the 2022-23 final (real: 16 May,
+     * before the finals of 15 and 18 June). A friendly of 5 September 2023 is arranged on 13 June, before it, and
+     * meets the first matchday (7 September); one of 14 September is arranged after the draw. */
+    CHECK(season_nl_late_window("CONCACAF", 2023, 9, 5) && season_nl_late_window("CONCACAF", 2023, 9, 10),
+          "a CONCACAF friendly of 5 or 10 September 2023 meets the late 2023-24 draw");
+    CHECK(!season_nl_late_window("CONCACAF", 2023, 9, 15) && !season_nl_late_window("CONCACAF", 2023, 10, 12) &&
+          !season_nl_late_window("CONCACAF", 2023, 11, 16),
+          "the friendlies of 15 September, 12 October and 16 November 2023 are arranged after the draw");
+    CHECK(!season_nl_late_window("CONCACAF", 2024, 9, 5) && !season_nl_late_window("CONCACAF", 2019, 9, 5),
+          "2024-25 (6 May) and 2019-20 (27 March) are drawn before their friendlies");
+    CHECK(!season_nl_late_window("UEFA", 2024, 9, 5) && !season_nl_late_window("UEFA", 2022, 6, 2) &&
+          !season_nl_late_window("UEFA", 2026, 9, 24), "UEFA draws before its friendlies");
+    CHECK(!season_nl_late_window("CONCACAF", 2031, 9, 24) && !season_nl_late_window(NULL, 2023, 9, 5),
+          "no edition after the table, no confederation");
     CHECK(season_nl_weekday(6, 9, 2018) == 3, "6 September 2018 is a Thursday");
     CHECK(season_nl_weekday(18, 10, 2026) == 6, "18 October 2026 is a Sunday");
     CHECK(season_nl_weekday(29, 2, 2020) == 5, "29 February 2020 is a Saturday");

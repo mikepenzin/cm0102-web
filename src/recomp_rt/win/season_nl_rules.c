@@ -23,6 +23,65 @@ const SeasonNlEdition *season_nl_first(const char *confed, int s)
     return NULL;
 }
 
+/* Item 209 (season_nl.h). */
+int season_nl_held_after(const char *confed, int last, int year, int (*wc)(int))
+{
+    if (!confed || year <= last) return 0;
+    if (!strcmp(confed, "CONCACAF") && wc) return !wc(year + 1) && !wc(year + 2);
+    return (year - last) % 2 == 0;
+}
+
+int season_nl_next_after(const char *confed, int last, int year, int (*wc)(int))
+{
+    for (int y = (year < last ? last : year) + 1; y <= year + 8; y++)
+        if (season_nl_held_after(confed, last, y, wc)) return y;
+    return 0;
+}
+
+const SeasonNlEdition *season_nl_draw_of(const char *confed, int year, int (*wc)(int))
+{
+    const SeasonNlEdition *last = NULL, *same = NULL;
+    for (int i = 0; confed && i < season_nl_edition_count; i++) {
+        const SeasonNlEdition *e = &season_nl_editions[i];
+        if (strcmp(e->confed, confed)) continue;
+        last = e;
+        if (wc && !wc(e->year) == !wc(year)) same = e;
+    }
+    return confed && !strcmp(confed, "CONCACAF") && same ? same : last;
+}
+
+/* Days from 1 January 1970 of a date (the civil calendar), for the gaps below. */
+static long nl_days(int y, int m, int d)
+{
+    y -= m <= 2;
+    long era = (y >= 0 ? y : y - 399) / 400;
+    long yoe = y - era * 400, doy = (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1;
+    return era * 146097 + yoe * 365 + yoe / 4 - yoe / 100 + doy - 719468;
+}
+
+/* Item 215 (season_nl.h). */
+int season_nl_late_window(const char *confed, int y, int m, int d)
+{
+    const SeasonNlEdition *prev = NULL;
+    long day = nl_days(y, m, d);
+    for (int i = 0; confed && i < season_nl_edition_count; i++) {
+        const SeasonNlEdition *e = &season_nl_editions[i];
+        if (strcmp(e->confed, confed)) continue;
+        long draw = nl_days(e->year + e->draw.year, e->draw.month, e->draw.day);
+        if (prev) {
+            long after = nl_days(prev->year + prev->final.year, prev->final.month, prev->final.day) + 1;
+            if (after > draw) draw = after;
+        }
+        prev = e;
+        if (draw < day - NL_FRIENDLY_AHEAD) continue;
+        for (int k = 0; k < 6; k++) {
+            long md = nl_days(e->year + e->md[k].year, e->md[k].month, e->md[k].day);
+            if (e->md[k].month && labs(md - day) <= NL_FRIENDLY_NEAR) return 1;
+        }
+    }
+    return 0;
+}
+
 /* The table is sorted by confederation, then season (make_nl.py). */
 const SeasonNlEdition *season_nl_after(const SeasonNlEdition *e)
 {
@@ -31,11 +90,14 @@ const SeasonNlEdition *season_nl_after(const SeasonNlEdition *e)
 }
 
 /* The overall ranking (season_nl.h). */
+/* A new nation (pos 0) ranks after the nations of its league. */
+static int place_key(const SeasonNlRow *r) { return r->pos > 0 ? r->pos : 1000; }
+
 static int rank_cmp(const void *a, const void *b)
 {
     const SeasonNlRow *x = a, *y = b;
     if (x->league != y->league) return x->league - y->league;
-    if (x->pos != y->pos) return x->pos - y->pos;
+    if (x->pos != y->pos) return place_key(x) - place_key(y);
     if (x->points != y->points) return y->points - x->points;
     if (x->gd != y->gd) return y->gd - x->gd;
     if (x->gf != y->gf) return y->gf - x->gf;
@@ -70,7 +132,7 @@ int season_nl_next_leagues(const SeasonNlEdition *from, const SeasonNlEdition *t
         const SeasonNlRow *r = &rows[i];
         int l = r->league;
         moved[i] = l;
-        if (l < 0 || l >= from->leagues) continue;
+        if (l < 0 || l >= from->leagues || r->pos <= 0) continue;     /* a new nation has no place to move by */
         if (from->up_winners && l > 0 && r->pos == 1) moved[i] = l - 1;
         else if (l + 1 < from->leagues && from->down_last[l] && r->pos > 1 &&
                  r->pos == group_size(rows, n, l, r->group)) moved[i] = l + 1;
@@ -97,20 +159,35 @@ int season_nl_next_leagues(const SeasonNlEdition *from, const SeasonNlEdition *t
     for (int l = 0; l <= NL_MAX_LEAGUES; l++)
         for (int pass = 0; pass < 3; pass++)
             for (int i = 0; i < n; i++) {
+                if (rows[i].pos <= 0) continue;
                 if (moved[i] != l && !(l == NL_MAX_LEAGUES && (moved[i] < 0 || moved[i] >= NL_MAX_LEAGUES)))
                     continue;
                 /* pass 0: came down, 1: stays, 2: came up */
                 int kind = rows[i].league < moved[i] ? 0 : rows[i].league == moved[i] ? 1 : 2;
                 if (kind == pass) order[k++] = i;
             }
-    int league = 0, used = 0;
+    int league = 0, used = 0, size[NL_MAX_LEAGUES] = {0};
     for (int j = 0; j < k; j++) {
         while (league < to->leagues - 1 && used >= to->size[league]) {
             league++;
             used = 0;
         }
         next[order[j]] = league;
+        size[league]++;
         used++;
+    }
+
+    /* 3. A nation new to the competition (pos 0, open item 183) takes the room that the nations of the edition
+     * before leave: in the league of its row if that league has room, else in the first league below with room,
+     * else in the last league. So it moves no nation of the edition before, and no league grows past its size
+     * while a league below has room (a league of 17 in four groups gave a group of five). */
+    for (int i = 0; i < n; i++) {
+        if (rows[i].pos > 0) continue;
+        int l = rows[i].league < 0 ? 0 : rows[i].league;
+        if (l > to->leagues - 1) l = to->leagues - 1;
+        while (l < to->leagues - 1 && size[l] >= to->size[l]) l++;
+        next[i] = l;
+        size[l]++;
     }
     return n;
 }

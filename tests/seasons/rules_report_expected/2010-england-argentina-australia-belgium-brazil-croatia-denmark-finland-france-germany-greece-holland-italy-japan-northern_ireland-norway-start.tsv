@@ -6,12 +6,22 @@
 2010	bench	fra_lge_cup (Coupe de la Ligue), row fra-89: game 3, table 7 (7)
 2010	bench	ger_cup (DFB-Pokal), row ger-127: game 6, table 7 (7)
 2010	bench	world_club_champ (FIFA Club World Cup), row club-world-173: game 7, table 12 (12)
+2010	club_list	Brazilian National Third Division: 20 of 20 listed clubs that the database holds (20 listed), 36 other clubs, 56 in all; not in it: -; others: Alagoinhas Atlético Clube, Americano FC (RJ), Associação Atlética Anapolina, Associação Cultural e Desportiva Potiguar, Atlético Roraima Clube, Brasília Futebol Clube, Brusque Futebol Clube, Central Sport Club, Centro Sportivo Alagoano, Clube Náutico Marcílio Dias, Clube Recreativo e Atlético Catalano, Clube Rio Branco, Clube do Remo, Cristal Atlético Clube, ECPP Vitória da Conquista, Esporte Clube Flamengo, Esporte Clube Pelotas, Ferroviário Atlético Clube, Fluminense de Feira Futebol Clube, Friburguense Atlético Clube, Iraty Sport Club, Ituano Futebol Clube, Londrina Esporte Clube, Mesquita Futebol Clube, Mirassol Futebol Clube, Mogi Mirim Esporte Clube, Moto Clube de São Luís, Nacional Atlético Clube, Nacional Futebol Clube (AM), Oeste Futebol Clube, Paulista Futebol Clube, Rio Branco Atlético Clube, Santa Cruz Futebol Clube, Sport Club Corinthians Paranaense, Vilhena Esporte Clube, Ypiranga Futebol Clube
+2010	club_list	Danish Second Division: 16 of 27 listed clubs that the database holds (32 listed), 0 other clubs, 16 in all; not in it: Boldklubben Avarta, Boldklubben af 1908, Fredrikssund Idrætsklub, Herlev Idrætsforening, IK Skovbakken, Lindholm Idrætsforening, Middelfart Gymnastik & Boldklub, Otterup Boldklub, Stenløse Boldklub, Tjørring Idrætsforening, Vedbæk Boldklub; others: -
+2010	club_list	Finnish Premier Division: 12 of 12 listed clubs that the database holds (12 listed), 2 other clubs, 14 in all; not in it: -; others: FC Lahti, Tampere United
+2010	club_list	Greek National A Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: Olympiakos Volou, Panserraikos; others: -
+2010	club_list	Greek National B Division: 14 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 14 in all; not in it: Doxa Dramas, Ethnikos Piraeus, PAE Thrasyvoulos, Trikala AO; others: -
+2010	club_list	Italian Serie A: 18 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 18 in all; not in it: Brescia, Cesena; others: -
+2010	club_list	Italian Serie B: 20 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 20 in all; not in it: Crotone, Pescara; others: -
+2010	club_list	Japanese J-League 1: 16 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 16 in all; not in it: Avispa Fukuoka, Ventforet Kofu; others: -
+2010	club_list	Japanese J-League 2: 12 of 20 listed clubs that the database holds (20 listed), 0 other clubs, 12 in all; not in it: Ehime F.C., FC Gifu, FC Mito Holly Hock, Fagiano Okayama F.C., Gainere Tottori, Kataller Toyama, Shonan Bellmare, Tochigi S.C.; others: -
+2010	club_list	Northern Irish League First Division: 10 of 14 listed clubs that the database holds (14 listed), 0 other clubs, 10 in all; not in it: Ballyclare Comrades, Ballymoney United, Banbridge Town, Glebe Rangers; others: -
+2010	club_list	Northern Irish League Premier Division: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Donegal Celtic, Glenavon; others: -
+2010	club_list	Norwegian Premier Division: 14 of 16 listed clubs that the database holds (16 listed), 0 other clubs, 14 in all; not in it: IK Start, Sparta Sarpsborg; others: -
 2010	clubs	arg_second (Primera B Nacional), row arg-usa-37: game 25, table 20 (20)
 2010	clubs	asia_club_champ (AFC Champions League), row club-world-184: game 16, table 32 (32)
 2010	clubs	asia_nations (AFC Asian Cup), row int-continental-108: game 0, table 16 (16)
-2010	clubs	bel_first (Belgian Pro League), row hol-bel-125: game 18, table 16 (16)
 2010	clubs	bel_third (Belgian Third Division), row hol-bel-127: game 16, table 36 (36 (A 18, B 18))
-2010	clubs	bra_champ_cup (Copa dos Campeões), row bra-199: game 3, table 0 (0)
 2010	clubs	bra_cup (Copa do Brasil), row bra-145: game 71, table 64 (64)
 2010	clubs	bra_nat_third (Campeonato Brasileiro Série C), row bra-91: game 7, table 20 (20)
 2010	clubs	bra_reg_bahia (Campeonato Baiano), row bra-442: game 10, table 12 (12)
@@ -24,7 +34,7 @@
 2010	clubs	den_second (Danish 2nd Divisions), row den-swe-58: game 16, table 32 (32)
 2010	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-101: game 5, table 51 (51)
 2010	clubs	fin_first (Ykkönen), row nor-fin-98: game 10, table 13 (13)
-2010	clubs	fra_third (Championnat National), row fra-85: game 20, table 21 (21)
+2010	clubs	fin_prm (Veikkausliiga), row nor-fin-97: game 14, table 12 (12)
 2010	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-10: game 4, table 67 (67)
 2010	clubs	gre_prm (Super League Greece), row gre-pol-cro-37: game 14, table 16 (16)
 2010	clubs	gre_second (Football League), row gre-pol-cro-64: game 14, table 18 (18)
@@ -43,7 +53,7 @@
 2010	clubs	nir_lge_cup (Irish League Cup), row wal-nir-irl-239: game 5, table 42 (42)
 2010	clubs	nir_prm (IFA Premiership), row wal-nir-irl-235: game 10, table 12 (12)
 2010	clubs	nor_prm (Tippeligaen), row nor-fin-92: game 14, table 16 (16)
-2010	clubs	uefa_cup (UEFA Europa League), row uefa-77: game 161, table 194 (194 (161 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
+2010	clubs	uefa_cup (UEFA Europa League), row uefa-77: game 160, table 194 (194 (161 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
 2010	clubs	world_club_champ (FIFA Club World Cup), row club-world-173: game 0, table 7 (7)
 2010	down	arg_prm (Primera División), row arg-usa-10: game 0 (+0 play-off places), table 2 (2 (19th and 20th of the three-season average table, promedios))
 2010	down	arg_second (Primera B Nacional), row arg-usa-37: game 0 (+0 play-off places), table 2 (2 direct (bottom two of the average table); 3 relegated in total (infobox))
@@ -54,7 +64,6 @@
 2010	down	cro_a2a (Druga HNL), row gre-pol-cro-361: game 2 (+0 play-off places), table 5 (5 (12th-16th))
 2010	down	cro_a2b (Druga HNL South), row gre-pol-cro-388: game 2 (+0 play-off places), table na (n/a)
 2010	down	den_second (Danish 2nd Divisions), row den-swe-58: game 4 (+0 play-off places), table 8 (8)
-2010	down	eng_third (Football League Two), row eng-121: game 1 (+0 play-off places), table 2 (2)
 2010	down	fin_first (Ykkönen), row nor-fin-98: game 2 (+1 play-off places), table 4 (10th-13th (4))
 2010	down	fra_third (Championnat National), row fra-85: game 4 (+0 play-off places), table 5 (5)
 2010	down	ger_second (2. Bundesliga), row ger-119: game 4 (+0 play-off places), table 2 (2)
@@ -67,16 +76,20 @@
 2010	down	nir_first (IFA Championship 1), row wal-nir-irl-236: game 0 (+0 play-off places), table 2 (2 (pos 13,14))
 2010	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-115: the game waits for 2012, the table holds it
 2010	idle	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-113: the game waits for 2012, the table holds it
+2010	meetings	arg_second (Primera B Nacional), row arg-usa-37: game 1, table 2
+2010	meetings	bra_nat_first (Campeonato Brasileiro Série A), row bra-37: game 1, table 2
+2010	meetings	bra_nat_second (Campeonato Brasileiro Série B), row bra-64: game 1, table 2
+2010	meetings	fin_first (Ykkönen), row nor-fin-98: game 3, table 2
+2010	meetings	fin_prm (Veikkausliiga), row nor-fin-97: game 2, table 3
+2010	meetings	jap_j2 (J.League Division 2), row aus-jap-kor-226: game 4, table 2
+2010	meetings	nir_first (IFA Championship 1), row wal-nir-irl-236: game 4, table 2
+2010	meetings	nir_prm (IFA Premiership), row wal-nir-irl-235: game 4, table 3
 2010	no_row	friendly (Friendly): no table row
 2010	no_row	record_utils ('B' International): no table row
 2010	no_row	record_utils (Reserve): no table row
 2010	no_row	record_utils (Under 21 International): no table row
-2010	not_held	bra_champ_cup (Copa dos Campeões), row bra-199: the game holds 2010, the table says not held
 2010	not_held	cro_a2b (Druga HNL South), row gre-pol-cro-388: the game holds 2010, the table says not held
-2010	not_held	ger_lge_cup (DFL-Ligapokal), row ger-128: the game holds 2010, the table says not held
 2010	not_held	goldcup (Copa América), row int-continental-110: the game holds 2011, the table says not held
-2010	not_held	gre_super (Greek Super Cup), row gre-pol-cro-91: the game holds 2010, the table says not held
-2010	not_held	nir_charity (Charity Shield), row wal-nir-irl-240: the game holds 2010, the table says not held
 2010	not_in_game	arg-usa-199 argentina_rules 'Argentina' (Argentina)
 2010	not_in_game	aus-jap-kor-10 australia_rules 'n/a' (Australia)
 2010	not_in_game	aus-jap-kor-118 japan_rules 'n/a' (Japan)
@@ -109,6 +122,19 @@
 2010	playoffs	ita_ser_c1b (Lega Pro Prima Divisione girone B), row ita-158: game 4 up and 4 down play-off places, table 4 and 0 ('2nd to 5th: semi-finals and final over two legs, winner promoted to Serie B')
 2010	playoffs	nor_first (Adeccoligaen), row nor-fin-93: game 1 up and 0 down play-off places, table 0 and 0 ('none')
 2010	playoffs	nor_prm (Tippeligaen), row nor-fin-92: game 0 up and 1 down play-off places, table 0 and 0 ('none')
+2010	rounds	arg_second (Primera B Nacional), row arg-usa-37: game 25, table 38 (2 meetings, zones -, extra 0)
+2010	rounds	bra_nat_first (Campeonato Brasileiro Série A), row bra-37: game 19, table 38 (2 meetings, zones -, extra 0)
+2010	rounds	bra_nat_second (Campeonato Brasileiro Série B), row bra-64: game 19, table 38 (2 meetings, zones -, extra 0)
+2010	rounds	fin_first (Ykkönen), row nor-fin-98: game 27, table 26 (2 meetings, zones -, extra 0)
+2010	rounds	fin_prm (Veikkausliiga), row nor-fin-97: game 26, table 33 (3 meetings, zones -, extra 0)
+2010	rounds	gre_prm (Super League Greece), row gre-pol-cro-37: game 26, table 30 (2 meetings, zones -, extra 0)
+2010	rounds	ita_ser_a (Serie A), row ita-155: game 34, table 38 (2 meetings, zones -, extra 0)
+2010	rounds	ita_ser_b (Serie B), row ita-156: game 38, table 42 (2 meetings, zones -, extra 0)
+2010	rounds	jap_j1 (J.League Division 1), row aus-jap-kor-199: game 30, table 34 (2 meetings, zones -, extra 0)
+2010	rounds	jap_j2 (J.League Division 2), row aus-jap-kor-226: game 44, table 38 (2 meetings, zones -, extra 0)
+2010	rounds	nir_first (IFA Championship 1), row wal-nir-irl-236: game 36, table 26 (2 meetings, zones -, extra 0)
+2010	rounds	nir_prm (IFA Premiership), row wal-nir-irl-235: game 36, table 33 (3 meetings, zones -, extra 0)
+2010	rounds	nor_prm (Tippeligaen), row nor-fin-92: game 26, table 30 (2 meetings, zones -, extra 0)
 2010	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-522: game 3, table 7 (7)
 2010	up	arg_second (Primera B Nacional), row arg-usa-37: game 1 (+0 play-off places), table 2 (2 (champion and runner-up))
 2010	up	aus_nsl (A-League), row aus-jap-kor-33: game 6 (+0 play-off places), table na (n/a)

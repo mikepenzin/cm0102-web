@@ -205,8 +205,18 @@ static int is_host_fn(uint32_t target)
     return target >= RT_HOST_FN_BASE && target < RT_HOST_FN_BASE + 4 * host_fn_count && !(target & 3);
 }
 
-/* Calls through an address. */
-static const RtEntry *find_entry(uint32_t target)
+/* Calls through an address: a virtual method, a function pointer or a jump table (0.6.2 item 110). The
+ * table holds about 12,000 entries, so a binary search takes 14 steps, and a day of a game makes millions
+ * of these calls: in a profile of Continue Game the search was 16 % of the main thread. A small cache in
+ * front of the search keeps the entry of each recent target. Each slot is one 64-bit word (entry index + 1
+ * in the high half, the address in the low half), read and written as one atomic word, so no thread (the
+ * network threads name functions with rt_name_of) reads a slot half written. The cache gives
+ * the same entry as the search, so the game does the same. RECOMP_CALL_CACHE=0 turns it off (test runs). */
+#define CALL_CACHE_BITS 12
+static uint64_t call_cache[1u << CALL_CACHE_BITS];
+static int call_cache_on = -1;
+
+static const RtEntry *search_entry(uint32_t target)
 {
     uint32_t lo = 0, hi = rt_table_size;
     while (lo < hi) {
@@ -215,6 +225,42 @@ static const RtEntry *find_entry(uint32_t target)
         else hi = mid;
     }
     return lo < rt_table_size && rt_table[lo].addr == target ? &rt_table[lo] : NULL;
+}
+
+static const RtEntry *find_entry(uint32_t target)
+{
+    uint32_t slot = ((target >> 4) ^ (target >> (4 + CALL_CACHE_BITS))) & ((1u << CALL_CACHE_BITS) - 1);
+    uint64_t c = __atomic_load_n(&call_cache[slot], __ATOMIC_RELAXED);
+    if ((uint32_t)c == target && c >> 32) return &rt_table[(c >> 32) - 1];
+    if (call_cache_on < 0) {
+        const char *v = getenv("RECOMP_CALL_CACHE");
+        call_cache_on = !(v && !strcmp(v, "0"));
+    }
+    const RtEntry *e = search_entry(target);
+    if (e && call_cache_on)
+        __atomic_store_n(&call_cache[slot], (uint64_t)(e - rt_table + 1) << 32 | target, __ATOMIC_RELAXED);
+    return e;
+}
+
+/* The self-test of the cache (RECOMP_QSORT_TEST, win/crt.c): every entry of the table and the address after
+ * each, looked up three times (an empty slot, a hit, and after a slot was taken by another address), must
+ * give what the search gives. Gives the count of lookups that differ. */
+int rt_call_cache_self_test(void)
+{
+    int bad = 0, on = call_cache_on;
+    call_cache_on = 1;                               /* the test runs the cache even with RECOMP_CALL_CACHE=0 */
+    memset(call_cache, 0, sizeof call_cache);
+    for (int pass = 0; pass < 3; pass++)
+        for (uint32_t i = 0; i < rt_table_size; i++) {
+            uint32_t a = pass == 2 ? rt_table[rt_table_size - 1 - i].addr : rt_table[i].addr;
+            bad += find_entry(a) != search_entry(a);
+            bad += find_entry(a + 1) != search_entry(a + 1);
+            bad += find_entry(a + (1u << (4 + CALL_CACHE_BITS))) != search_entry(a + (1u << (4 + CALL_CACHE_BITS)));
+        }
+    memset(call_cache, 0, sizeof call_cache);
+    call_cache_on = on;
+    fprintf(stderr, "call cache test: %u entries, %d lookups differ\n", rt_table_size, bad);
+    return bad;
 }
 
 RtFn rt_lookup(uint32_t target)

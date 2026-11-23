@@ -40,10 +40,29 @@
 #ifndef RECOMP_SEASON_CLUBS_H
 #define RECOMP_SEASON_CLUBS_H
 
+#include <stdint.h>
+
 /* Reads the table once at the start: clubs.tsv in the folder of RECOMP_RULES_TABLE (test runs) or
  * Seasons/clubs.tsv of the game folder. Host memory only. Returns the row count, 0 when the file is missing
  * or damaged (no club moves). */
 int season_clubs_init(const char *game_dir);
 int season_clubs_load(const char *path);
+
+/* 1 for the name of a reserve or B side (a last word B, II, 2 or Reserves, a word such as U21, Jong at the start,
+ * or "(reserve team)"). Also used for the Norwegian second teams (season_nor_second.c, open item 111). */
+int season_clubs_reserve_name(const char *name);
+
+/* The division (club_comp record) that the club moves of a new game plan for a club (a club record), or its
+ * division +0x57 outside the moves. The new-game bars of the reserve-side rules read a first team's division here,
+ * as Spain does (season_esp_barred), since the moves write +0x57 only at their end. */
+uint32_t season_clubs_planned_division(uint32_t club);
+/* The season of the club lists and club records of a division in a start season: an Irish division takes those of
+ * its edition's row (item 260, season_sizes_edition), any other division those of the season. */
+int season_clubs_list_season(const char *division, int season);
+
+/* 1 when the club sits in a spare division (A Lower Division, A Premier Division: the nation's small clubs) that a
+ * fill may take it from: not a Danish club (DenCup's pool). The size step of 0.7.2 slice 3 counts these clubs as
+ * clubs with no division. */
+int season_clubs_in_spare(uint32_t club);
 
 #endif

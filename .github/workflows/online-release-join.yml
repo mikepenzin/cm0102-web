@@ -1,0 +1,104 @@
+# Release test 3 of the online play spec (docs/specs/2026-10-27-online-play-0.7.0-spec.md, Q29, slice 9): a GitHub
+# Linux machine and a GitHub Windows machine join a game that the Mac hosts over the internet, through the lobby
+# and the relay, with scripted clicks.
+#
+# It needs no secret and builds nothing. The Mac makes the packages of the commit under test (the 0.7.0 AppImage,
+# and a zip of the Windows program with its game folder) and puts them on a draft release of this repository,
+# tag ci-online-test. A draft is visible only to people with write access to the repository, and this workflow's
+# token reads it. The Mac deletes the draft after the run. tests/online/github_join_run.py --push does all of this
+# and then pushes the branch online-ci-test, which starts this workflow (GitHub starts workflow_dispatch only for a
+# workflow on the default branch, and the 0.6.0 work owns main; Max allowed pushes of online branches, Q43).
+#
+# Slice 5 has .github/workflows/online-join.yml for its own test with tests/smoke/relay_join_remote.py, which
+# builds on the runner from two secrets. This workflow is the release test: no secrets, a game name for each run
+# (the public lobby can list other games) and the row of that name in the list. Keep one of the two.
+name: Online release join test
+
+on:
+  push:
+    branches: [online-ci-test]
+  workflow_dispatch:
+    inputs:
+      lobby_url:
+        description: "The lobby address"
+        default: "https://online.cm0102bosman.co.uk"
+      game_name:
+        description: "The name of the host's game, one word"
+        default: "00S9-CI"
+      wait_minutes:
+        description: "How long each joiner waits for the game in the lobby"
+        default: "40"
+
+# The draft release is visible only with write access to the repository's contents.
+permissions:
+  contents: write
+
+env:
+  RELEASE_TAG: ci-online-test
+  LOBBY_URL: ${{ inputs.lobby_url || 'https://online.cm0102bosman.co.uk' }}
+  GAME_NAME: ${{ inputs.game_name || '00S9-CI' }}
+  WAIT_MINUTES: ${{ inputs.wait_minutes || '40' }}
+
+jobs:
+  join:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            asset: linux-joiner.AppImage
+          - os: windows-2022
+            asset: windows-joiner.zip
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 80
+    steps:
+      # Only the scripts: some file names under tests/seasons are too long for a Windows checkout.
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tests/online
+            tests/smoke
+      - name: Download the package from the draft release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSET: ${{ matrix.asset }}
+        run: |
+          mkdir -p builds
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+                 --jq ".[] | select(.tag_name == \"$RELEASE_TAG\") | .assets[] | select(.name == \"$ASSET\") | .id" \
+               | head -n 1)
+          if [ -z "$id" ]; then echo "no asset $ASSET on the draft release $RELEASE_TAG"; exit 1; fi
+          gh api -H "Accept: application/octet-stream" "repos/$GITHUB_REPOSITORY/releases/assets/$id" > "builds/$ASSET"
+          ls -l builds
+      - name: Unpack
+        shell: bash
+        run: |
+          cd builds
+          if [ "$RUNNER_OS" = Linux ]; then
+            # The AppImage brings SDL2 but not the libraries SDL2 loads (libpulse and others), which a desktop has.
+            sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends libsdl2-2.0-0
+            chmod +x linux-joiner.AppImage
+            ./linux-joiner.AppImage --appimage-extract > /dev/null
+          else
+            7z x -y -owin windows-joiner.zip > /dev/null
+          fi
+      - name: Join the game on the Mac
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            exe=builds/squashfs-root/usr/bin/cm0102_recomp game=builds/squashfs-root/usr/share/game py=python3
+            export LD_LIBRARY_PATH="$PWD/builds/squashfs-root/usr/lib"
+          else
+            exe=builds/win/cm0102_recomp.exe game=builds/win/game py=python
+            # The two joiners join some seconds apart, as the joiners of tests/smoke/network_run.py do.
+            sleep 20
+          fi
+          "$py" -I tests/online/remote_join.py "$exe" "$game" --lobby-url "$LOBBY_URL" --name "$GAME_NAME" \
+              --wait $((WAIT_MINUTES * 60)) --shots shots --id "join-$RUNNER_OS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots-${{ matrix.os }}
+          path: shots
+          retention-days: 7

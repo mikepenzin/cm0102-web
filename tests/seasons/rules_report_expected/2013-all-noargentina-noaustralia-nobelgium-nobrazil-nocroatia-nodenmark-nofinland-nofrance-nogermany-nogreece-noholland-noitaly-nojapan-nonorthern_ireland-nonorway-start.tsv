@@ -6,6 +6,13 @@
 2013	bench	rus_prm (Russian Football Premier League), row rus-tur-13: game 9, table 12 (12)
 2013	bench	world_club_champ (FIFA Club World Cup), row club-world-230: game 7, table 12 (12)
 2013	bench	world_cup (FIFA World Cup), row int-world-146: game 7, table 12 (12 (all squad members not in the starting team))
+2013	club_list	American Major League: 12 of 17 listed clubs that the database holds (19 listed), 0 other clubs, 12 in all; not in it: Philadelphia Union, Portland Timbers, Real Salt Lake, Toronto FC, Vancouver Whitecaps; others: -
+2013	club_list	Irish First Division: 7 of 7 listed clubs that the database holds (8 listed), 3 other clubs, 10 in all; not in it: -; others: FC Carlow, Mervue United, Tralee Dynamos
+2013	club_list	Korean League: 10 of 12 listed clubs that the database holds (12 listed), 0 other clubs, 10 in all; not in it: Sangju Sangmu Phoenix FC, Seongnam Ilhwa Chunma; others: -
+2013	club_list	Portuguese Second League: 18 of 22 listed clubs that the database holds (22 listed), 0 other clubs, 18 in all; not in it: Clube Sport Marítimo B, Moreirense Futebol Clube, Sport Clube Beira-Mar, Sporting Clube de Braga B; others: -
+2013	club_list	Russian First Division: 18 of 19 listed clubs that the database holds (19 listed), 0 other clubs, 18 in all; not in it: Angusht Nazran; others: -
+2013	club_list	Turkish 2. Division Category A: 19 of 19 listed clubs that the database holds (19 listed), 1 other clubs, 20 in all; not in it: -; others: Göztepe A.S.
+2013	club_list	Welsh Premier Division: 12 of 12 listed clubs that the database holds (12 listed), 6 other clubs, 18 in all; not in it: -; others: Caersws, Cambrian & Clydach, Cefn Druids, Haverfordwest County, Taffs Well, West End
 2013	clubs	asia_club_champ (AFC Champions League), row club-world-241: game 16, table 32 (32)
 2013	clubs	ire_chal_cup (FAI Cup), row wal-nir-irl-319: game 42, table 40 (40)
 2013	clubs	ire_first (League of Ireland First Division), row wal-nir-irl-317: game 10, table 8 (8)
@@ -14,15 +21,12 @@
 2013	clubs	pol_first (Ekstraklasa), row gre-pol-cro-202: game 8, table 16 (16)
 2013	clubs	por_cup (Taça de Portugal), row por-114: game 164, table 156 (156)
 2013	clubs	por_second (Segunda Liga), row por-110: game 18, table 22 (22)
-2013	clubs	rus_first (Football National League), row rus-tur-40: game 18, table 19 (19)
 2013	clubs	sco_chal_cup (Scottish Challenge Cup), row sco-104: game 30, table 32 (32)
-2013	clubs	swe_prm (Allsvenskan), row den-swe-236: game 14, table 16 (16)
-2013	clubs	tur_second (TFF 1. Lig), row rus-tur-202: game 20, table 19 (19)
 2013	clubs	tur_second_b (TFF 2. Lig), row rus-tur-229: game 10, table 36 (36)
 2013	clubs	uefa_cup (UEFA Europa League), row uefa-101: game 161, table 194 (194 (161 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
 2013	clubs	usa_mls (Major League Soccer), row arg-usa-229: game 4, table 19 (19)
 2013	clubs	usa_open_cup (Lamar Hunt U.S. Open Cup), row arg-usa-283: game 32, table 80 (80 or more)
-2013	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-150: game 50, table 10 (10)
+2013	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-150: game 44, table 10 (10)
 2013	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-151: game 4, table 2 (2)
 2013	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-149: game 24, table 6 (6)
 2013	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-147: game 0, table 53 (53 entrants)
@@ -32,7 +36,6 @@
 2013	clubs	wel_lge_cup (Welsh League Cup), row wal-nir-irl-308: game 3, table 20 (20)
 2013	clubs	world_club_champ (FIFA Club World Cup), row club-world-230: game 0, table 7 (7)
 2013	clubs	world_cup (FIFA World Cup), row int-world-146: game 0, table 32 (32)
-2013	down	eng_third (Football League Two), row eng-151: game 1 (+0 play-off places), table 2 (2)
 2013	down	kor_league (K League Classic), row aus-jap-kor-337: game 0 (+0 play-off places), table 1 (1 (12th))
 2013	down	pol_first (Ekstraklasa), row gre-pol-cro-202: game 0 (+0 play-off places), table 2 (2 (15th-16th))
 2013	down	pol_second (I liga), row gre-pol-cro-256: game 4 (+0 play-off places), table 3 (3 (16th-18th))
@@ -50,12 +53,6 @@
 2013	no_row	record_utils (Under 21 International): no table row
 2013	no_row	spa_lower (Spanish Lower Division): no table row
 2013	not_held	euro_champ_qual (UEFA European Championship qualifying), row int-continental-134: the game holds 2014, the table says not held
-2013	not_held	ire_super_cup (FAI Super Cup), row wal-nir-irl-324: the game holds 2013, the table says not held
-2013	not_held	kor_league_cup (Korean League Cup), row aus-jap-kor-445: the game holds 2013, the table says not held
-2013	not_held	kor_super_cup (Korean Super Cup), row aus-jap-kor-391: the game holds 2013, the table says not held
-2013	not_held	pol_lge_cup (Polish League Cup), row gre-pol-cro-229: the game holds 2013, the table says not held
-2013	not_held	pol_super (Polish Super Cup), row gre-pol-cro-283: the game holds 2013, the table says not held
-2013	not_held	wel_prm_cup (FAW Premier Cup), row wal-nir-irl-309: the game holds 2013, the table says not held
 2013	not_in_game	arg-usa-364 usa_rules 'United States' (United States)
 2013	not_in_game	aus-jap-kor-310 korea_rules 'n/a' (South Korea)
 2013	not_in_game	club-world-232 conmebol_liber 'Copa Libertadores' (CONMEBOL)
@@ -68,8 +65,6 @@
 2013	not_in_game	int-continental-137 new '2013 CONCACAF Gold Cup' (CONCACAF)
 2013	not_in_game	por-111 por_second_b 'Campeonato Nacional de Seniores' (Portugal)
 2013	not_in_game	por-116 new 'Taça da Liga' (Portugal)
-2013	not_in_game	rus-tur-283 new 'Turkish Super Cup' (Turkey)
-2013	not_in_game	rus-tur-94 new 'Russian Super Cup' (Russia)
 2013	not_in_game	spa-100 spa_second_b 'Segunda División B' (Spain)
 2013	not_in_game	spa-97 spain_rules 'n/a' (Spain)
 2013	not_in_game	uefa-97 uefa_seeding 'UEFA access list and seeding' (UEFA)
@@ -86,6 +81,11 @@
 2013	playoffs	sco_third (Scottish League Two), row sco-101: game 0 up and 0 down play-off places, table 3 and 0 ('2nd to 4th play off with League One 9th for a League One place (two-legged semi-')
 2013	playoffs	swe_first (Superettan), row den-swe-237: game 1 up and 0 down play-off places, table 1 and 2 ('3rd plays the Allsvenskan 14th; 13th and 14th play the Division 1 (Ettan) runner')
 2013	playoffs	tur_second_b (TFF 2. Lig), row rus-tur-229: game 2 up and 0 down play-off places, table 0 and 0 ('see format')
+2013	rounds	ire_first (League of Ireland First Division), row wal-nir-irl-317: game 36, table 28 (4 meetings, zones -, extra 0)
+2013	rounds	kor_league (K League Classic), row aus-jap-kor-337: game 27, table 33 (3 meetings, zones -, extra 0)
+2013	rounds	pol_first (Ekstraklasa), row gre-pol-cro-202: game 14, table 30 (2 meetings, zones -, extra 0)
+2013	rounds	por_second (Segunda Liga), row por-110: game 34, table 42 (2 meetings, zones -, extra 0)
+2013	rounds	wel_first (Welsh Premier League), row wal-nir-irl-304: game 34, table 22 (2 meetings, zones -, extra 0)
 2013	subs_used	new_suruga_bank (Suruga Bank Championship), row club-world-525: game 3, table 7 (7)
 2013	up	pol_first (Ekstraklasa), row gre-pol-cro-202: game 4 (+0 play-off places), table na (n/a)
 2013	up	sco_second (Scottish League One), row sco-100: game 2 (+0 play-off places), table 1 (1)

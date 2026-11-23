@@ -184,8 +184,19 @@ static void dd_CreateSurface(void)
 }
 
 static void dd_RestoreDisplayMode(void) { rt_ret_stdcall(0, 1); }
-static void dd_SetCooperativeLevel(void) { rt_ret_stdcall(0, 3); }
-static void dd_SetDisplayMode(void) { rt_ret_stdcall(0, 4); }
+/* SetCooperativeLevel(hwnd, level): DDSCL_FULLSCREEN (1, in the 0x13 of the full screen call) or DDSCL_NORMAL (8).
+ * The mode is set at the SetDisplayMode that follows in both paths of the display init 0x5e2620 (0x5e2a2c, 0x5e2a7e). */
+static int level_full;
+static void dd_SetCooperativeLevel(void)
+{
+    level_full = (rt_arg(2) & 1) != 0;
+    rt_ret_stdcall(0, 3);
+}
+static void dd_SetDisplayMode(void)
+{
+    win_screen_mode(level_full);
+    rt_ret_stdcall(0, 4);
+}
 
 static const WinMethod dd_methods[] = {
     {0x04, "AddRef", win_com_addref}, {0x08, "Release", win_com_release},

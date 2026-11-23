@@ -42,6 +42,18 @@ static inline int winscale_mode_change(int pic_w, int pic_h, int has_800x600)
     return pic_w == 800 && pic_h == 600 && has_800x600;
 }
 
+/* Full screen at the start of the game. With the option remember_window and a stored window, the state of the
+ * last quit (window.txt) decides: it follows the Screen Mode row after every change of the row, and it also
+ * holds a change with the F11 key, which the file game.cfg does not. Else the row (pref_full) decides, but only
+ * when the preferences come from game.cfg (prefs_saved). The defaults of the original (0x5d7bc0) are Full, and
+ * a first start, which has no game.cfg, opens in a window as the port always did. */
+static inline int winscale_start_full(int pref_full, int prefs_saved, int remember_on, int remembered_known,
+                                      int remembered_full)
+{
+    if (remember_on && remembered_known) return remembered_full != 0;
+    return prefs_saved && pref_full != 0;
+}
+
 /* The hint for widescreen on a short screen: the picture is 1280x800 and the screen is less than 800 real
  * pixels high. */
 #define WINSCALE_SHORT_SCREEN 800

@@ -38,6 +38,7 @@ python3 -I convert.py 2004 "<DB>/September 2005" "<facts>" "<work>" "<DB>/Septem
 python3 -I keyplayers.py 2004 "<conv>" "<facts>" "<work>" "<DB>" "<out>" [<overrides.tsv>]
 python3 -I duplicates.py merge "<out>" "<DB>/September 2005" "<conv>" "<work>/duplicates.tsv"
 python3 -I staff_slots.py "<out>" "<work>/staff-slots.tsv"
+python3 -I coeffs.py "<out>" 2004
 python3 -I duplicates.py check "<out>"
 ```
 
@@ -54,8 +55,13 @@ python3 -I convert.py 2006 "<DB>/November 2007" "<facts>" "<work>" "<DB>/Septemb
 python3 -I keyplayers.py 2006 "<conv>" "<facts>" "<work>" "<DB>" "<out>" [<overrides.tsv>]
 python3 -I duplicates.py merge "<out>" "<DB>/November 2007" "<conv>" "<work>/duplicates.tsv"
 python3 -I staff_slots.py "<out>" "<work>/staff-slots.tsv"
+python3 -I coeffs.py "<out>" 2006
 python3 -I duplicates.py check "<out>"
 ```
+
+`coeffs.py` writes the real UEFA season coefficients of the six seasons before the start into the nation table
+(0.6.2 item 106). The template's own values are those of another season: November 2007 holds 2001/02 to 2006/07,
+one season early for 2006/07. `coeffs.py "<out>" <year> --check` fails while a value is not the real one.
 
 `duplicates.py merge` makes one row of each person who has two (a fill row or a key player's row beside the
 template's row, or a template that has a person twice; the rules are in its header), and `check` fails while one
@@ -117,7 +123,8 @@ is held (`move_key`).
 the list: staff clubs, dates and jobs, ratings, the club lists, divisions and the Florentia Viola name. It adds no
 row. Then `duplicates.merge_folder` merges the template's duplicate pairs (Q28) and keeps the pairs of two people
 (`duplicates.kept_apart`) on `<changes>/kept-pairs.tsv`. Then `staff_slots.py` fills empty staff slots (first
-season 2002, Q12) and `duplicates.py check` runs with that list. The header of the script gives the steps.
+season 2002, Q12), `coeffs.py` writes the real UEFA season coefficients and `duplicates.py check` runs with that
+list. The header of the script gives the steps.
 
 The Turkish groups (Q11, Q29, Q43, slice 5): the build puts the three Xbox rows "Turkish 2. Division Category B
 Group A" to "C" into the free 3.9.68 rows 287, 288 and 233 and tags each of the 52 member clubs with its row (club
@@ -161,6 +168,9 @@ FM data, outside the repo.
 4. Make the C tables with `python3 -I ../make_db_table.py` and `python3 -I ../make_dates_table.py`.
 5. Zip the database folder under its name (for example `Summer 2006/`) into the own databases folder that `make_release.sh --own-dbs` takes.
 6. Run `ctest -R "seasons_table|season_dates_table"` and `tests/seasons/season_dates_run.py --only <year>`.
+7. Check the coefficients with `python3 -I coeffs.py "<out>" <year> --check`. The rows of the database in
+   `docs/research/2026-11-03-database-coefficients.tsv` stay: they fix a copy of a zip from before 4 November 2026
+   (`make_coeff_table.py --measure` reads those zips, from `own-dbs/old`).
 
 The settings of each season are in `season_2004.py` and `season_2006.py`. Each file gives the template, the real
 lists with one source each, the play-off winners and the part file of each list.

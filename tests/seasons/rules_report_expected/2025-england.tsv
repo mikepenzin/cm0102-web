@@ -1,17 +1,19 @@
 # Differences between the rules report and the rules table that the check accepts. Made by
 # tests/seasons/rules_report_check.py --update-expected. Columns: season, kind, text.
+2025	bench	african_nations (Africa Cup of Nations), row int-continental-271: game 7/9, table 12 (12)
 2025	bench	eur_super_cup (UEFA Super Cup), row uefa-200: game 9, table 12 (12)
 2025	bench	european_cup (UEFA Champions League), row uefa-194: game 9, table 12 (12)
 2025	bench	new_conference_league (UEFA Conference League), row uefa-198: game 9, table 12 (12)
 2025	bench	uefa_cup (UEFA Europa League), row uefa-197: game 9, table 12 (12)
+2025	bench	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-291: game 7, table 12 (12)
+2025	bench	world_cup (FIFA World Cup), row int-world-290: game 7/9, table 15 (15)
 2025	clubs	african_nations (Africa Cup of Nations), row int-continental-271: game 0/4, table 24 (24)
-2025	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-294: game 50, table 53 (53 in groups (Eritrea withdrew; group E has 5 teams))
+2025	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-294: game 18, table 53 (53 in groups (Eritrea withdrew; group E has 5 teams))
 2025	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-295: game 4, table 6 (6, then 2)
-2025	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-293: game 24, table 12 (12)
+2025	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-293: game 4, table 12 (12)
 2025	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-291: game 0, table 54 (54 entrants)
 2025	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-296: game 5, table 1 (1)
 2025	clubs	world_cup (FIFA World Cup), row int-world-290: game 0/4, table 48 (48)
-2025	down	eng_third (EFL League Two), row eng-271: game 1 (+0 play-off places), table 2 (2)
 2025	no_row	friendly (Friendly): no table row
 2025	no_row	record_utils ('B' International): no table row
 2025	no_row	record_utils (Reserve): no table row
@@ -20,18 +22,19 @@
 2025	not_in_game	eng-272 eng_conf 'National League' (England)
 2025	not_in_game	eng-445 eng_fa_trophy 'FA Trophy' (England)
 2025	not_in_game	uefa-193 uefa_seeding 'UEFA access list and seeding' (UEFA)
+2026	bench	asia_nations (AFC Asian Cup), row int-continental-284: game 7, table 15 (15)
 2026	bench	eur_super_cup (UEFA Super Cup), row uefa-208: game 9, table 12 (12 (23 players on the match sheet, Art. 40.01))
+2026	bench	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 7, table 12 (12)
 2026	bench	european_cup (UEFA Champions League), row uefa-202: game 9, table 12 (12)
 2026	bench	new_conference_league (UEFA Conference League), row uefa-206: game 9, table 12 (12)
 2026	bench	uefa_cup (UEFA Europa League), row uefa-205: game 9, table 12 (12)
 2026	clubs	african_nations (Africa Cup of Nations), row int-continental-282: game 0/4, table 24 (24)
 2026	clubs	asia_nations (AFC Asian Cup), row int-continental-284: game 0/4, table 24 (24)
-2026	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 5, table 54 (54 (scheduled))
+2026	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 6, table 54 (54 (scheduled))
 2026	clubs	european_cup (UEFA Champions League), row uefa-202: game 82, table 81 (81 (36 in the league phase))
-2026	clubs	new_conference_league (UEFA Conference League), row uefa-206: game 131/164, table 165 (165 (111 entered + 54 from the Champions League and Europa League); 36 in the le)
+2026	clubs	new_conference_league (UEFA Conference League), row uefa-206: game 139/164, table 165 (165 (111 entered + 54 from the Champions League and Europa League); 36 in the le)
 2026	clubs	new_uefa_nations_league (2024-25 UEFA Nations League (C/D play-offs)), row int-continental-278: game 4, table 54 (54)
-2026	clubs	uefa_cup (UEFA Europa League), row uefa-205: game 45/77, table 76 (76 (45 entered + 31 from the Champions League); 36 in the league phase)
-2026	down	eng_third (EFL League Two), row eng-281: game 1 (+0 play-off places), table 2 (2)
+2026	clubs	uefa_cup (UEFA Europa League), row uefa-205: game 60/77, table 76 (76 (45 entered + 31 from the Champions League); 36 in the league phase)
 2026	idle	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-306: the game waits for 2028, the table holds it
 2026	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-307: the game waits for 2028, the table holds it
 2026	idle	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-308: the game waits for 2028, the table holds it
@@ -45,3 +48,5 @@
 2026	not_in_game	eng-451 eng_fa_trophy 'FA Trophy' (England)
 2026	not_in_game	uefa-201 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2026	playoffs	eng_first (EFL Championship), row eng-279: game 4 up and 0 down play-off places, table 6 and 0 ('3rd-8th: 5v8 and 6v7 single-leg eliminators (higher club at home), then semi-fin')
+2026	subs_used	asia_nations (AFC Asian Cup), row int-continental-284: game 3, table 5 (5)
+2026	subs_used	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 3, table 5 (5)

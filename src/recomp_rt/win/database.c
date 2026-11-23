@@ -32,6 +32,7 @@
  * play test of 0.6.0). The title is a text, not a picture. The widget keeps its text in the widget record
  * (+0x80), so the longer text takes no game memory. */
 #include "win.h"
+#include "invite.h"
 #include "draw.h"
 #include "options.h"
 
@@ -472,6 +473,12 @@ static void extras_open(void)
 RT_WRAP(0081bd70, setup_input)
 {
     int clicked = (int16_t)rt_arg(0);
+    uint16_t invite = clicked == -1 ? invite_command(INVITE_SETUP) : 0;
+    if (invite) {                  /* an invite link: Network Play (invite.c) */
+        invite_call(o_0081bd70, invite);
+        return;
+    }
+    if (clicked >= 0) invite_clicked();
     int id = clicked >= 0 && clicked < MAX_WIDGETS ? (int16_t)rd16(g_mem, WIDGETS + WIDGET_SIZE * (uint32_t)clicked + 8)
                                                    : 0;
     if (id == OPTIONS_ID) {

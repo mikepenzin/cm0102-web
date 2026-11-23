@@ -25,6 +25,7 @@ typedef struct {
     u32 address;    /* the global in the original */
     s32 initial;    /* its value in the file */
     u8 reset;       /* FUN_00601a40 sets it to -1 first */
+    u8 report;      /* FUN_00601a40 shows the box index.cpp 5809 when it stays -1 (0x6043ac..0x60ba80) */
 } key_id_global_t;
 
 typedef struct {

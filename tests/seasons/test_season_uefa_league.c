@@ -89,8 +89,75 @@ static void check_draw(const SeasonLeagueDraw *d, const int *nation, int days, c
     }
 }
 
+/* Decision L8 of the 0.7.3 spec: the pots of season_league_pots keep both nation rules in every draw. The clubs of
+ * the largest nations stand together at the top of the seed order, the worst case for one pot. A nation of 7 is the
+ * most that 8 matches can hold: k clubs play 8k matches against the 36 - k others, who each meet at most two. */
+static void check_pots(void)
+{
+    static const int CLUSTER[][6] = {{7, 0, 0, 0, 0, 0}, {7, 6, 0, 0, 0, 0}, {6, 5, 5, 4, 0, 0}, {5, 5, 4, 4, 4, 3}};
+    for (int days = 8; days >= 6; days -= 2) {
+        int s = days == 8 ? 9 : 6;
+        for (int c = 0; c < 4; c++)
+            for (unsigned seed = 1; seed <= 25; seed++) {
+                int seeds[36], n = 0, id = 0, order[36], nation[36], used[36] = {0};
+                for (int k = 0; k < 6; k++, id++)
+                    for (int j = 0; j < CLUSTER[c][k]; j++) seeds[n++] = id;
+                while (n < 36) seeds[n++] = id++;
+                season_league_pots(days, seeds, order);
+                for (int i = 0; i < 36; i++) {
+                    CHECK(order[i] >= 0 && order[i] < 36 && !used[order[i]], "days %d cluster %d: order is no permutation",
+                          days, c);
+                    if (order[i] >= 0 && order[i] < 36) used[order[i]] = 1, nation[i] = seeds[order[i]];
+                }
+                for (int p = 0; p < 36 / s; p++)
+                    for (int x = 0; x < 36; x++) {
+                        int k = 0, all = 0;
+                        for (int i = 0; i < 36; i++) all += nation[i] == x;
+                        for (int i = p * s; i < (p + 1) * s; i++) k += nation[i] == x;
+                        int limit = days == 8 ? (9 - all < 4 ? 9 - all : 4) : (6 - (all + 1) / 2 < 3 ? 6 - (all + 1) / 2 : 3);
+                        CHECK(!all || k <= limit, "days %d cluster %d: pot %d holds %d clubs of nation %d", days, c, p, k, x);
+                    }
+                SeasonLeagueDraw d;
+                unsigned r = seed;
+                CHECK(season_league_draw(days, nation, lcg, &r, &d), "days %d cluster %d seed %u: no draw", days, c, seed);
+                CHECK(d.relax == 0, "days %d cluster %d seed %u: draw rules %d", days, c, seed, d.relax);
+                check_draw(&d, nation, days, "pots");
+            }
+        /* Pots with no surplus stay in the game's seed order. */
+        int plain[36], order[36];
+        for (int i = 0; i < 36; i++) plain[i] = i / 2;
+        season_league_pots(days, plain, order);
+        for (int i = 0; i < 36; i++) CHECK(order[i] == i, "days %d: club %d moved with no surplus", days, i);
+    }
+}
+
+/* Decision L8: no club of a lower pot has a higher reputation than a club of the pot above, and clubs of equal
+ * reputation keep the seed order they come in. */
+static void check_reputation(void)
+{
+    for (unsigned seed = 1; seed <= 200; seed++) {
+        int rep[36], order[36], used[36] = {0};
+        unsigned r = seed;
+        for (int i = 0; i < 36; i++) rep[i] = 1000 + 500 * lcg(17, &r);
+        season_league_by_reputation(rep, order);
+        for (int i = 0; i < 36; i++) {
+            CHECK(order[i] >= 0 && order[i] < 36 && !used[order[i]], "seed %u: order is no permutation", seed);
+            if (order[i] >= 0 && order[i] < 36) used[order[i]] = 1;
+        }
+        for (int s = 9; s >= 6; s -= 3)
+            for (int i = 0; i < 36; i++)
+                for (int j = (i / s + 1) * s; j < 36; j++)
+                    CHECK(rep[order[i]] >= rep[order[j]], "seed %u: pot %d holds %d, a lower pot %d", seed, i / s,
+                          rep[order[i]], rep[order[j]]);
+        for (int i = 0; i < 35; i++)
+            CHECK(rep[order[i]] != rep[order[i + 1]] || order[i] < order[i + 1], "seed %u: a tie left the seed order", seed);
+    }
+}
+
 int main(void)
 {
+    check_reputation();
+    check_pots();
     int relaxed[2][3] = {{0}};
     for (int days = 8; days >= 6; days -= 2)
         for (int mix = 0; mix < 4; mix++)

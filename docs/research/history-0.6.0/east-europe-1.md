@@ -46,7 +46,7 @@ The Croatian Super Cup uses the year of the match, in July, which is also the st
 
 ## Points of doubt
 
-- Polish FA Cup 2005: Dyskobolia Grodzisk Wielkopolski won the final. On 2 September 2020 PZPN took the title away for match fixing, and the title stays unawarded. The row keeps the result on the day. Change it to `not held` if the game must follow the present official record.
+- Polish FA Cup 2005: Dyskobolia Grodzisk Wielkopolski won the final. On 2 September 2020 PZPN took the title away for match fixing, and the title stays unawarded. The row keeps the result on the day. Change it to `not held` if the game must follow the present official record. **Decided 3 November 2026 (0.6.2 item 108, Max: do what real life does):** the row follows today's official record (see docs/research/2026-10-17-competition-history-fill.md, Q355).
 - Croatian Second Division North 2005: RSSSF marks the runner-up, Graficar Vodovod Osijek, as "expelled". I kept it as runner-up because it finished second.
 - Croatian Second Division South 2004: Novalja and Hrvatski dragovoljac both had 59 points. RSSSF puts Novalja first on head-to-head.
 - Croatian Third Division East 2003: RSSSF prints "Vinjevac", which I read as Visnjevac with a lost letter (an inference).

@@ -8,14 +8,12 @@
 2007	clubs	european_cup (UEFA Champions League), row uefa-50: game 55, table 76 (76 (32 in the group stage))
 2007	clubs	ger_regional (Regionalliga Nord), row ger-82: game 18, table 19 (19)
 2007	clubs	intertoto_cup (UEFA Intertoto Cup), row uefa-55: game 60, table 50 (50)
-2007	clubs	oceania_nations (OFC Nations Cup), row int-continental-76: game 0/3, table 4 (4)
 2007	clubs	uefa_cup (UEFA Cup), row uefa-53: game 153, table 80 (80 in the first round; total not stated on the page)
-2007	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-78: game 50, table 53 (53 entrants)
+2007	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-78: game 42, table 53 (53 entrants)
 2007	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-79: game 0, table 43 (43 entrants)
 2007	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-77: game 24, table 35 (35 entrants)
 2007	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-80: game 5, table 11 (11 entrants)
 2007	clubs	world_club_champ (FIFA Club World Cup), row club-world-116: game 0, table 7 (7)
-2007	down	eng_third (Football League Two), row eng-91: game 1 (+0 play-off places), table 2 (2)
 2007	down	ger_regional (Regionalliga Nord), row ger-82: game 4 (+0 play-off places), table 9 (9)
 2007	no_row	friendly (Friendly): no table row
 2007	no_row	record_utils ('B' International): no table row
@@ -24,23 +22,21 @@
 2007	not_held	olympics (Football at the Summer Olympics), row int-world-83: the game holds 2008, the table says not held
 2007	not_held	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-75: the game holds 2008, the table says not held
 2007	not_in_game	eng-337 eng_fa_trophy 'FA Trophy' (England)
-2007	not_in_game	eng-339 new 'Conference League Cup (Setanta Shield)' (England)
 2007	not_in_game	eng-92 eng_conf 'Conference Premier' (England)
 2007	not_in_game	uefa-49 uefa_seeding 'UEFA access list and seeding' (UEFA)
+2007	rounds	ger_regional (Regionalliga Nord), row ger-82: game 34, table 38 (2 meetings, zones -, extra 0)
 2008	bench	world_club_champ (FIFA Club World Cup), row club-world-135: game 7/9, table 12 (12)
 2008	clubs	european_cup (UEFA Champions League), row uefa-58: game 55, table 76 (76 (32 in the group stage))
 2008	clubs	fifa_confed (FIFA Confederations Cup), row int-world-94: game 0/4, table 8 (8)
 2008	clubs	intertoto_cup (UEFA Intertoto Cup), row uefa-63: game 60, table 50 (50)
-2008	clubs	oceania_nations (OFC Nations Cup), row int-continental-87: game 0/3, table 4 (4)
 2008	clubs	olympics (Football at the Summer Olympics), row int-world-95: game 4, table 16 (16)
 2008	clubs	uefa_cup (UEFA Cup), row uefa-61: game 153, table 157 (157 in all, with the 24 Champions League clubs (the page labels it qualifying; i)
-2008	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-90: game 50, table 20 (20)
+2008	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-90: game 42, table 20 (20)
 2008	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-91: game 0/4, table 10 (10)
 2008	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-89: game 24, table 12 (12, then 6)
 2008	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-87: game 5, table 53 (53 entrants)
 2008	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-92: game 5, table 4 (4)
 2008	clubs	world_club_champ (FIFA Club World Cup), row club-world-135: game 0, table 7 (7)
-2008	down	eng_third (Football League Two), row eng-101: game 1 (+0 play-off places), table 2 (2)
 2008	down	ger_second (2. Bundesliga), row ger-93: game 3 (+0 play-off places), table 2 (2)
 2008	no_row	friendly (Friendly): no table row
 2008	no_row	record_utils ('B' International): no table row
@@ -48,11 +44,10 @@
 2008	no_row	record_utils (Under 21 International): no table row
 2008	not_held	african_nations (Africa Cup of Nations), row int-continental-84: the game holds 2008, the table says not held
 2008	not_held	euro_champ (UEFA European Championship), row int-continental-78: the game holds 2008, the table says not held
-2008	not_held	ger_lge_cup (DFL-Ligapokal), row ger-102: the game holds 2008, the table says not held
+2008	not_held	ger_lge_cup (DFL-Ligapokal), row ger-102: the game holds 2007, the table says not held
 2008	not_held	new_concacaf_gold_cup (CONCACAF Gold Cup), row int-continental-82: the game holds 2009, the table says not held
 2008	not_in_game	eng-102 eng_conf 'Conference Premier' (England)
 2008	not_in_game	eng-343 eng_fa_trophy 'FA Trophy' (England)
-2008	not_in_game	eng-345 new 'Conference League Cup (Setanta Shield)' (England)
 2008	not_in_game	ger-103 new 'T-Home Supercup' (Germany)
 2008	not_in_game	uefa-57 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2008	playoffs	ger_first (Bundesliga), row ger-92: game 0 up and 0 down play-off places, table 0 and 1 ('16th v 2. Bundesliga 3rd, two legs, away goals rule, extra time and penalties')

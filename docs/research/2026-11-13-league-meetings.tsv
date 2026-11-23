@@ -1,0 +1,256 @@
+# The meetings of the league rows whose texts do not give them (0.7.2 league sizes, slice 1), read by
+# tools/seasons/encode_leagues.py (MEETINGS_BY_HAND). One line per range of seasons (start years, inclusive).
+# meetings: 1 to 4; "-" keeps the class's meetings (unknown clubs, an unbalanced schedule); "?" no source settles it
+# (the class's meetings stay, and the gaps file lists it). Evidence: sizes-check-<group>.md are the notes of the
+# check of 13 November 2026 (docs/research/2026-11-13-league-sizes-check.md), the rules table cells, and the pages named.
+comp_file	first_season	last_season	meetings	evidence
+arg_prm	2026	2027	1	one round-robin of 30 plus a derby round (rows arg-usa-26 and arg-usa-27: LPF format of 29 October 2026, eleconomista.com.ar and diariopanorama.com)
+arg_second	2001	2001	1	sizes-check-americas.md line 95 (and line 72): Apertura one table of 25, one meeting, 24 MP, before the Clausura zones; first stage 24 / (25 - 1) = 1 (from matches)
+arg_second	2002	2006	1	sizes-check-americas.md lines 73 and 96: Apertura and Clausura of 19 rounds each, 20 clubs, 19 MP; halves, 19 / (20 - 1) = 1 per half (from matches)
+arg_second	2019	2019	2	sizes-check-americas.md line 102 (and line 82): 2 zones of 16, double round robin in the zone, stopped after 21 rounds (planned format counted)
+arg_second	2026	2027	-	unknown: clubs unknown (sizes-check-americas.md line 89)
+aus_nsl	2001	2003	2	sizes-check-asia.md lines 113-115 and 132: NSL 13 clubs, 24 games; 24 / (13 - 1) = 2 (from matches)
+aus_nsl	2005	2008	3	sizes-check-asia.md line 117: 8 clubs, 21 games; 21 / 7 = 3 (from matches)
+aus_nsl	2009	2009	3	sizes-check-asia.md line 118: 10 clubs, 27 games; 27 / 9 = 3 (from matches)
+aus_nsl	2010	2010	3	sizes-check-asia.md line 119: 11 clubs, 30 games; 30 / 10 = 3 (from matches)
+aus_nsl	2011	2018	3	sizes-check-asia.md line 120: 10 clubs, 27 games; 27 / 9 = 3 (from matches)
+aus_nsl	2019	2019	3	26 matches a club for 11 clubs (29 rounds, 3 byes; https://adelaideunited.com.au/?p=8968). The engine plays whole meetings: 3 gives 30, 2 gives 20, so 3 is nearest. Gap row 7, run-logs/0.7.2-sz01/gaps-research.md section 7
+aus_nsl	2020	2022	2	26 matches a club for 12 clubs: each pair twice (22) plus 4 third meetings (https://adelaideunited.com.au/?p=10645, https://aleagues.com.au/?p=95355). Nearest whole count: 2 (22), 3 gives 33. Gap row 7, run-logs/0.7.2-sz01/gaps-research.md section 7
+aus_nsl	2023	2023	2	26 rounds for 12 clubs ("The Isuzu UTE A-League season will have 26 rounds", https://aleagues.com.au/?p=97912), while https://en.wikipedia.org/wiki/2023%E2%80%9324_A-League_Men gives 27 games a club. 22 plus 4 or 5 third meetings. Nearest whole count: 2 (3 gives 33). Gap row 7, run-logs/0.7.2-sz01/gaps-research.md section 7
+aus_nsl	2024	2024	2	26 matches a club for 13 clubs: 24 home and away plus 2 third meetings (https://aleagues.com.au/news/a-league-men-fixtures-2024-25-every-team-kick-off-times-venues-details/). Nearest whole count: 2. Gap row 7, run-logs/0.7.2-sz01/gaps-research.md section 7
+aus_nsl	2025	2026	2	26 matches a club for 12 clubs: 22 home and away plus 4 third meetings (https://aleagues.com.au/news/a-league-men-fixtures-2025-26-every-team-kick-off-times-venues-details/, https://aleagues.com.au/news/aleague-men-2026-2027-fixture-list-revealed-key-dates-fixture-information/). Nearest whole count: 2. Gap row 7, run-logs/0.7.2-sz01/gaps-research.md section 7
+aus_nsl	2027	2027	-	unknown: clubs unknown (row aus-jap-kor-50; sizes-check-asia.md line 127)
+bel_first	2001	2008	2	sizes-check-north.md lines 117-124 and 205: 18 clubs, 34 rounds, double round robin; 34 / 17 = 2 (from rounds)
+bel_first	2019	2019	2	sizes-check-north.md lines 135 and 211: 16 clubs, 30 rounds scheduled (29 played, COVID-19); planned 30 / 15 = 2 (from rounds)
+bel_first	2027	2027	-	unknown: clubs unknown (sizes-check-north.md lines 143 and 216)
+bel_second	2015	2015	2	sizes-check-north.md lines 163 and 229: 17 clubs, 32 rounds, no periods; 32 / 16 = 2 (from matches)
+bel_second	2016	2019	2	sizes-check-north.md line 230 (and lines 164-167): 8 clubs, two periods of 14 rounds, double round robin in each period; halves, 14 / 7 = 2 per period (2019/20 stopped by COVID-19, planned format counted)
+bel_second	2023	2024	2	sizes-check-north.md lines 171-172 and 233: 16 clubs, 30 rounds, two meetings; 30 / 15 = 2 (from rounds)
+bel_second	2025	2025	2	sizes-check-north.md lines 173 and 234: 17 clubs, 32 matches each; 32 / 16 = 2 (from matches)
+bel_second	2026	2026	2	sizes-check-north.md lines 174 and 235: 15 clubs, double round robin, 28 matches each; 28 / 14 = 2 (from matches)
+bel_second	2027	2027	-	unknown: clubs unknown (sizes-check-north.md line 175)
+bel_third	2001	2015	2	sizes-check-north.md line 242: Third Division A and B, both groups a double round robin (30 matches for 16, 28 for 15, 34 for 18, 36 for 19); group sizes lines 181-195; meetings inside a group
+bel_third	2016	2018	2	https://en.wikipedia.org/wiki/2016–17_Belgian_First_Amateur_Division to 2018–19: 16 clubs, pld 30; 30 / 15 = 2 (from matches)
+bel_third	2019	2019	2	https://en.wikipedia.org/wiki/2019–20_Belgian_First_Amateur_Division: 16 clubs, pld 23 to 24 when stopped (COVID-19, row hol-bel-244); planned as 2018–19 (pld 30 for 16) = 2
+bel_third	2021	2021	2	https://en.wikipedia.org/wiki/2021–22_Belgian_National_Division_1: 15 clubs, pld 28; 28 / 14 = 2 (from matches)
+bel_third	2022	2022	2	https://en.wikipedia.org/wiki/2022–23_Belgian_National_Division_1: "These twenty teams will play each other twice", pld 38; 38 / 19 = 2
+bel_third	2023	2023	2	https://en.wikipedia.org/wiki/2023–24_Belgian_National_Division_1: 18 clubs, pld 34; 34 / 17 = 2 (from matches)
+bel_third	2024	2025	2	https://en.wikipedia.org/wiki/2024–25_Belgian_Division_1 and 2025–26: VV 16 clubs pld 30, ACFF 12 clubs pld 22 before the play-offs; 30 / 15 = 22 / 11 = 2 inside each group
+bel_third	2026	2026	2	inference: https://en.wikipedia.org/wiki/2026–27_Belgian_Division_1 in progress (VV 16, FFA 12, pld 10 to 11); format carried from 2024–25 and 2025–26 (same group sizes, 30 and 22 matches)
+bel_third	2027	2027	-	unknown: clubs unknown (row hol-bel-348)
+bra_nat_third	2001	2001	2	https://en.wikipedia.org/wiki/2002_Campeonato_Brasileiro_Série_C: first-stage groups of 3 to 5, pld 4 for 3, 6 for 4, 8 for 5 (double round robin); meetings inside a group = 2
+bra_nat_third	2002	2003	2	https://en.wikipedia.org/wiki/2003_Campeonato_Brasileiro_Série_C and 2004_Campeonato_Brasileiro_Série_C: first-stage groups of 2 to 4, pld 2, 4 and 6; meetings inside a group = 2
+bra_nat_third	2005	2007	2	https://en.wikipedia.org/wiki/2006_Campeonato_Brasileiro_Série_C, 2007 and 2008 pages: first stage groups of four, "the four teams play a double round robin" (six matchdays) = 2
+bra_nat_third	2012	2012	2	https://en.wikipedia.org/wiki/2013_Campeonato_Brasileiro_Série_C: groups of 11 and 10, pld 20 and 18; 20 / 10 = 18 / 9 = 2 inside a group
+den_first	2001	2010	2	https://en.wikipedia.org/wiki/YYYY–YY_Danish_1st_Division pages 2001–02 to 2010–11: 16 clubs, pld 30 (infobox 240 in 2005–06 and 2010–11); 30 / 15 = 2 (from matches)
+den_first	2011	2011	2	https://en.wikipedia.org/wiki/2011–12_Danish_1st_Division: 14 clubs, pld 26; 26 / 13 = 2 (from matches)
+den_first	2015	2019	3	https://en.wikipedia.org/wiki/2015–16_Danish_1st_Division to 2019–20_Danish_1st_Division: 12 clubs, pld 33 (infobox 198); 33 / 11 = 3 (from matches)
+den_prm	2015	2015	3	sizes-check-north.md lines 349 and 364: 12 clubs, 33 rounds, three meetings per pair; 33 / 11 = 3 (from rounds)
+den_second	2001	2004	2	sizes-check-north.md line 403: one division of 16, 30 rounds, two meetings; 30 / 15 = 2 (from rounds)
+den_second	2005	2006	2	sizes-check-north.md line 404: two groups of 14, 26 rounds, two meetings; meetings inside a group 26 / 13 = 2
+den_second	2007	2014	2	sizes-check-north.md line 405: two groups of 16, 30 rounds, two meetings; meetings inside a group 30 / 15 = 2
+den_second	2015	2017	2	sizes-check-north.md line 406: three autumn groups of 8, 14 rounds, two meetings, then spring groups of 12; first stage 14 / 7 = 2 inside a group
+den_second	2018	2019	2	sizes-check-north.md line 407: two autumn groups of 12, 22 rounds, two meetings, then spring groups of 12; first stage 22 / 11 = 2 (2019/20 stopped after 17 of 22 rounds, planned format counted)
+den_second	2020	2020	2	sizes-check-north.md line 408: two groups of 14, 26 rounds, two meetings; 26 / 13 = 2 inside a group
+fin_first	2001	2001	2	sizes-check-north.md line 592: 2002 two zones of 9, 16 matches each, 2 meetings in a zone, then later groups; first stage 16 / 8 = 2
+fin_prm	2001	2001	2	sizes-check-north.md line 576: 2002 preliminary stage of 12 clubs, 22 rounds, 2 meetings, then championship and promotion/relegation groups; first stage 22 / 11 = 2
+fra_cfa	2001	2006	2	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_quatrième_division_2001-2002 to 2006-2007 (redirect targets of Championnat_de_France_amateur_de_football_YYYY-YYYY): four groups of 18, J 34 in every group table; 34 / 17 = 2 inside a group
+fra_cfa	2007	2008	2	https://en.wikipedia.org/wiki/2007–08_Championnat_de_France_Amateur and 2008–09: groups of 18, pld 34; 34 / 17 = 2 inside a group
+fra_cfa	2009	2009	2	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_quatrième_division_2009-2010: group tables of 19 (J 36) and 18 (J 34); 36 / 18 = 34 / 17 = 2 inside a group
+fra_cfa	2010	2012	2	https://en.wikipedia.org/wiki/2010–11_Championnat_de_France_Amateur to 2012–13: groups of 17 and 18, pld 32 and 34; 2 inside a group (from matches)
+fra_cfa	2013	2013	2	https://en.wikipedia.org/wiki/2013–14_Championnat_de_France_Amateur: groups of 15 and 16, pld 28 and 30; 28 / 14 = 30 / 15 = 2 inside a group
+fra_cfa	2014	2018	2	https://en.wikipedia.org/wiki/2014–15_Championnat_de_France_Amateur to 2016–17 and https://en.wikipedia.org/wiki/2017–18_Championnat_National_2, 2018–19: groups of 16, pld 30 (a few groups of 15, pld 28); 30 / 15 = 2 inside a group
+fra_cfa	2019	2019	2	https://en.wikipedia.org/wiki/2019–20_Championnat_National_2: stopped at pld 20 to 21 (COVID-19); planned as 2018–19 and 2021–22 (groups of 16, pld 30) = 2
+fra_cfa	2020	2020	2	planned format at the season start: groups of 16, double round robin as 2021–22 (https://en.wikipedia.org/wiki/2021–22_Championnat_National_2, pld 30); the FFF changed it on 22 February 2021 to a single round robin then groups of 8, and voided the season (row fra-176 notes; https://en.wikipedia.org/wiki/2020–21_Championnat_National_2)
+fra_cfa	2021	2022	2	https://en.wikipedia.org/wiki/2021–22_Championnat_National_2 and 2022–23: groups of 16, pld 30; 30 / 15 = 2 inside a group
+fra_cfa	2023	2023	2	https://en.wikipedia.org/wiki/2023–24_Championnat_National_2: four groups of 14, pld 26; 26 / 13 = 2 inside a group
+fra_cfa	2024	2025	2	https://en.wikipedia.org/wiki/2024–25_Championnat_National_2 and 2025–26: three groups of 16, pld 30; 30 / 15 = 2 inside a group
+fra_cfa	2026	2027	2	inference: no 2026/27 or 2027/28 page read (the tier is renamed National 1, row fra-230; 2027/28 carried, row fra-239); meetings carried from 2025–26 (groups of 16, pld 30) and https://en.wikipedia.org/wiki/Championnat_National_2 (each club plays the others in its group twice)
+fra_first	2001	2001	2	https://en.wikipedia.org/wiki/2001–02_French_Division_1: infobox 306 matches, table 18 clubs, pld 34; 34 / 17 = 2 (from matches)
+fra_first	2002	2018	2	https://en.wikipedia.org/wiki/YYYY–YY_Ligue_1 season pages 2002–03 to 2018–19: infobox 380 matches for 20 clubs; 380 / 190 = 2 (from matches)
+fra_first	2019	2019	2	https://en.wikipedia.org/wiki/2019–20_Ligue_1: 279 matches played, stopped by COVID-19 (row fra-164); planned format from https://en.wikipedia.org/wiki/Ligue_1 (format: each club plays the others twice) = 2
+fra_first	2020	2022	2	https://en.wikipedia.org/wiki/2020–21_Ligue_1 to 2022–23_Ligue_1: infobox 380 matches for 20 clubs; 380 / 190 = 2 (from matches)
+fra_first	2023	2025	2	https://en.wikipedia.org/wiki/2023–24_Ligue_1 to 2025–26_Ligue_1: infobox 306 matches for 18 clubs; 306 / 153 = 2 (from matches)
+fra_first	2026	2026	2	https://en.wikipedia.org/wiki/Ligue_1 (format: 18 clubs, each club plays the others twice, 34 games); 2026–27 page in progress (90 matches so far)
+fra_first	2027	2027	2	inference: no 2027/28 source; clubs 18 carried from 2026/27 (row fra-236 notes) and meetings carried with it (https://en.wikipedia.org/wiki/Ligue_1 format: each club plays the others twice)
+fra_lower	2001	2008	2	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2001-2002 to 2008-2009 (redirect targets of Championnat_de_France_amateur_2_de_football_YYYY-YYYY): groups of 16 J 30, groups of 17 J 32, group of 18 J 34; 2 inside a group (from matches)
+fra_lower	2009	2011	2	https://en.wikipedia.org/wiki/2009–10_Championnat_de_France_Amateur_2 to 2011–12: groups of 16 pld 30, groups of 17 pld 32; 2 inside a group (from matches)
+fra_lower	2012	2014	2	https://fr.wikipedia.org/wiki/Championnat_de_France_de_football_de_cinquième_division_2012-2013 to 2014-2015: groups of 14, J 26; 26 / 13 = 2 inside a group
+fra_lower	2015	2016	2	https://en.wikipedia.org/wiki/2015–16_Championnat_de_France_Amateur_2 and 2016–17: groups of 14, pld 26; 26 / 13 = 2 inside a group
+fra_lower	2017	2018	2	https://en.wikipedia.org/wiki/2017–18_Championnat_National_3 and 2018–19: groups of 14 pld 26 (16 pld 30, 15 pld 28); 2 inside a group (from matches)
+fra_lower	2019	2020	2	https://en.wikipedia.org/wiki/2019–20_Championnat_National_3 and 2020–21: both stopped (COVID-19, row fra-177 notes); planned as 2018–19 and 2021–22 (groups of 14, pld 26) = 2
+fra_lower	2021	2025	2	https://en.wikipedia.org/wiki/2021–22_Championnat_National_3 to 2025–26: groups of 14 pld 26 (15 pld 28, 13 pld 24); 2 inside a group (from matches); https://en.wikipedia.org/wiki/Championnat_National_2 article describes the same 14-club groups, twice, 26 games
+fra_lower	2026	2027	2	inference: no 2026/27 or 2027/28 page read (renamed National 2, row fra-231; 2027/28 carried, row fra-240); meetings carried from 2025–26 (groups of 14, pld 26)
+fra_second	2001	2001	2	https://en.wikipedia.org/wiki/2001–02_French_Division_2: table 20 clubs, pld 38; 38 / 19 = 2 (from matches)
+fra_second	2002	2018	2	https://en.wikipedia.org/wiki/YYYY–YY_Ligue_2 season pages 2002–03 to 2018–19: 20 clubs, pld 38 (infobox 380 from 2009–10); 38 / 19 = 2 (from matches)
+fra_second	2019	2019	2	https://en.wikipedia.org/wiki/2019–20_Ligue_2: 280 matches, pld 28 when stopped (COVID-19); planned format from https://en.wikipedia.org/wiki/Ligue_2 (each club plays the others twice) = 2
+fra_second	2020	2023	2	https://en.wikipedia.org/wiki/2020–21_Ligue_2 to 2023–24_Ligue_2: 20 clubs, pld 38; 38 / 19 = 2 (from matches)
+fra_second	2024	2025	2	https://en.wikipedia.org/wiki/2024–25_Ligue_2 and 2025–26_Ligue_2: 18 clubs, pld 34; 34 / 17 = 2 (from matches)
+fra_second	2026	2026	2	https://en.wikipedia.org/wiki/Ligue_2 (format: each club plays the others twice, 34 games, 306 in the season); 2026–27 page in progress
+fra_second	2027	2027	2	inference: no 2027/28 source; clubs 18 carried from 2026/27 (row fra-237 notes) and meetings carried with it (https://en.wikipedia.org/wiki/Ligue_2 format)
+fra_third	2001	2026	2	sizes-check-west.md line 126: one table, two meetings, every season; pld per season lines 114-123 (38 for 20, 40 for 21, 34 for 18, 32 for 17)
+fra_third	2027	2027	2	inference: no source for 2027/28 (sizes-check-west.md line 124); the clubs cell 18 is carried from 2026/27 (row fra-238 notes), and the meetings are carried with it from sizes-check-west.md line 126
+ger_first	2001	2025	2	https://en.wikipedia.org/wiki/YYYY–YY_Bundesliga season pages 2001–02 to 2025–26: infobox 306 matches for 18 clubs (tables pld 34); 306 / 153 = 2 (from matches)
+ger_first	2026	2026	2	https://en.wikipedia.org/wiki/Bundesliga (each club plays every other club once at home and once away, 34 matchdays); 2026–27 page in progress (81 matches so far)
+ger_first	2027	2027	2	inference: 2027/28 page not published; row ger-339 assumes the structure unchanged; meetings carried (https://en.wikipedia.org/wiki/Bundesliga format)
+ger_regional	2001	2007	2	https://en.wikipedia.org/wiki/YYYY–YY_Regionalliga pages 2001–02 to 2007–08: Nord and Süd tables, pld 34 for groups of 18 and 36 for groups of 19; 34 / 17 = 36 / 18 = 2 (from matches)
+ger_regional	2008	2020	2	https://en.wikipedia.org/wiki/YYYY–YY_3._Liga pages 2008–09 to 2020–21: infobox 380 matches, pld 38 for 20 clubs; 38 / 19 = 2 (from matches)
+ger_regional	2021	2021	2	https://en.wikipedia.org/wiki/2021–22_3._Liga: 20 clubs, pld 36 in the parsed table and 373 matches (Türkgücü München withdrew during the season, results annulled); scheduled 38 / 19 = 2
+ger_regional	2022	2025	2	https://en.wikipedia.org/wiki/2022–23_3._Liga to 2025–26_3._Liga: infobox 379 to 380 matches, 20 clubs, pld 38; 38 / 19 = 2 (from matches)
+ger_regional	2026	2026	2	inference: 2026–27 3. Liga page in progress (https://en.wikipedia.org/wiki/2026–27_3._Liga, 130 matches so far, 20 clubs); 2025–26 had 380 matches for 20 clubs = 2; row ger-328 holds the same 20 clubs
+ger_regional	2027	2027	2	inference: 2027/28 page not published; row ger-341 assumes the structure unchanged; meetings carried from 2025–26 (380 / 190 = 2)
+ger_second	2001	2025	2	https://en.wikipedia.org/wiki/YYYY–YY_2._Bundesliga season pages 2001–02 to 2025–26: 18 clubs, pld 34 (infobox 306 matches from 2004–05); 34 / 17 = 2 (from matches)
+ger_second	2026	2026	2	inference: 2026–27 page in progress (https://en.wikipedia.org/wiki/2026–27_2._Bundesliga, 99 matches so far, 18 clubs); row ger-327 says it agrees with that page and the structure is unchanged; 2025–26 had 306 matches for 18 clubs = 2
+ger_second	2027	2027	2	inference: 2027/28 page not published; row ger-340 assumes the structure unchanged; meetings carried from 2025–26 (306 / 153 = 2)
+hol_first	2001	2026	2	sizes-check-north.md line 317: all seasons two meetings per pair, 34 rounds for 18, 36 for 19, 38 for 20 (RSSSF games counts); counts lines 288-313
+hol_first	2027	2027	-	unknown: clubs unknown (sizes-check-north.md lines 314 and 329)
+hol_prm	2001	2018	2	https://en.wikipedia.org/wiki/YYYY–YY_Eredivisie season pages 2001–02 to 2018–19: 18 clubs, pld 34 (infobox 306 from 2009–10); 34 / 17 = 2 (from matches; the extra pld 6 rows to 2004–05 are the nacompetitie groups)
+hol_prm	2019	2019	2	https://en.wikipedia.org/wiki/2019–20_Eredivisie: 232 matches, pld 25 or 26 when abandoned (COVID-19, row hol-bel-236); planned 2 as in https://en.wikipedia.org/wiki/2018–19_Eredivisie (306 matches for 18 clubs)
+hol_prm	2020	2025	2	https://en.wikipedia.org/wiki/2020–21_Eredivisie to 2025–26_Eredivisie: infobox 306 matches, pld 34 for 18 clubs; 34 / 17 = 2 (from matches)
+hol_prm	2026	2026	2	https://en.wikipedia.org/wiki/Eredivisie (each club meets every other club twice, once at home and once away); https://en.wikipedia.org/wiki/2026–27_Eredivisie in progress, 18 clubs, pld 12
+hol_prm	2027	2027	-	unknown: clubs unknown (row hol-bel-340)
+ire_first	2001	2001	4	sizes-check-west.md line 150: 2001/02, 9 clubs, pld 32; 32 / 8 = 4 (from matches)
+ire_first	2002	2002	2	https://en.wikipedia.org/wiki/2002%E2%80%9303_League_of_Ireland_First_Division: "It used a round-robin format which saw each team play 22 games", 12 clubs; 22 / 11 = 2. The game plays the short 2002-03 season in this row (August 2002 to January 2003, gap row 2 of 0.7.2) and the 2003 season in row wal-nir-irl-42b. The two groups of six were the First Division Cup.
+ire_first	2003	2003	3	sizes-check-west.md line 152: 2004, 12 clubs, pld 33; 33 / 11 = 3 (from matches)
+ire_first	2004	2007	4	sizes-check-west.md line 153: 2005 to 2008, 10 clubs, pld 36; 36 / 9 = 4 (from matches)
+ire_first	2008	2009	3	sizes-check-west.md line 154: 2009 and 2010, 12 clubs, pld 33; 33 / 11 = 3 (from matches)
+ire_first	2010	2010	3	sizes-check-west.md line 155: 2011, 11 clubs, pld 30; 30 / 10 = 3 (from matches)
+ire_first	2011	2016	4	sizes-check-west.md lines 156-157: 2012 to 2017, 8 clubs, pld 28; 28 / 7 = 4 (from matches)
+ire_first	2017	2018	3	sizes-check-west.md line 158: 2018 and 2019, 10 clubs, pld 27; 27 / 9 = 3 (from matches)
+ire_first	2019	2019	3	https://en.wikipedia.org/wiki/2020_League_of_Ireland_First_Division: "Each team plays each other three times for a total of 27 matches", changed to twice (18) for COVID-19; planned format counted = 3
+ire_first	2020	2020	3	sizes-check-west.md line 158: 2021, 10 clubs, pld 27; 27 / 9 = 3 (from matches)
+ire_first	2021	2021	4	sizes-check-west.md line 159: 2022, 9 clubs, pld 32; 32 / 8 = 4 (from matches)
+ire_first	2022	2025	4	sizes-check-west.md line 160: 2023 to 2026, 10 clubs, pld 36; 36 / 9 = 4 (from matches)
+ire_first	2026	2027	-	unknown: clubs unknown (rows wal-nir-irl-642 and 667; sizes-check-west.md line 161)
+ire_prm	2001	2001	3	sizes-check-west.md line 150: 2001/02, 12 clubs, pld 33; 33 / 11 = 3 (from matches)
+ire_prm	2003	2003	4	sizes-check-west.md line 152: 2004, 10 clubs, pld 36; 36 / 9 = 4 (from matches)
+ire_prm	2004	2007	3	sizes-check-west.md line 153: 2005 to 2008, 12 clubs, pld 33 (2006 pld 30 after a club left during the season); 33 / 11 = 3
+ire_prm	2008	2010	4	sizes-check-west.md lines 154-155: 2009 to 2011, 10 clubs, pld 36; 36 / 9 = 4 (from matches)
+ire_prm	2011	2011	3	sizes-check-west.md line 156: 2012, 12 at the start, pld 30 after Monaghan withdrew (11 clubs); 30 / 10 = 3 (33 / 11 = 3 for the planned 12)
+ire_prm	2012	2016	3	sizes-check-west.md line 157: 2013 to 2017, 12 clubs, pld 33; 33 / 11 = 3 (from matches)
+ire_prm	2017	2018	4	sizes-check-west.md line 158: 2018 and 2019, 10 clubs, pld 36; 36 / 9 = 4 (from matches)
+ire_prm	2019	2019	4	https://en.wikipedia.org/wiki/2020_League_of_Ireland_Premier_Division: "Ordinarily each team plays each other four times for a total of 36 matches"; cut to 18 matches (twice) for COVID-19; planned format counted = 4
+ire_prm	2020	2025	4	sizes-check-west.md lines 158-160: 2021 to 2026, 10 clubs, pld 36; 36 / 9 = 4 (from matches)
+ire_prm	2026	2027	-	unknown: clubs unknown (rows wal-nir-irl-641 and 666; sizes-check-west.md line 161)
+ita_ser_a	2001	2026	2	sizes-check-italy.md lines 17 and 96: one table, two meetings a pair in every season (18 clubs to 2003/04, 20 from 2004/05)
+ita_ser_a	2027	2027	2	inference: clubs cell is "20 (inference: no announced change)" (row ita-444; sizes-check-italy.md lines 6 and 130 say the real format is unknown); meetings carried from 2026/27 (sizes-check-italy.md line 96)
+ita_ser_b	2001	2026	2	sizes-check-italy.md lines 17 and 97: one table, two meetings in every season
+ita_ser_b	2027	2027	2	inference: clubs cell is "20 (inference: no announced change)" (row ita-445; sizes-check-italy.md lines 6 and 162 say unknown); meetings carried from 2026/27 (line 97)
+ita_ser_c1a	2001	2026	2	sizes-check-italy.md lines 17 and 98: Serie C1 groups to 2013/14 and Serie C groups from 2014/15, two meetings inside a group
+ita_ser_c1a	2027	2027	2	inference: clubs cell is "20 (inference: no announced change)" (row ita-451; sizes-check-italy.md lines 6 and 194 say unknown); meetings carried from 2026/27 (line 98)
+ita_ser_c1b	2001	2026	2	sizes-check-italy.md lines 17 and 98: Serie C1 groups to 2013/14 and Serie C groups from 2014/15, two meetings inside a group
+ita_ser_c1b	2027	2027	2	inference: clubs cell is "20 (inference: no announced change)" (row ita-452; sizes-check-italy.md lines 6 and 226 say unknown); meetings carried from 2026/27 (line 98)
+ita_ser_c2a	2001	2002	2	https://it.wikipedia.org/wiki/Serie_C2_2001-2002 and Serie_C2_2002-2003: infobox formula "3 gironi all'italiana A/R" (home and away round robin in each group) = 2 inside a group
+ita_ser_c2a	2003	2003	2	https://en.wikipedia.org/wiki/2003–04_Serie_C2: group tables of 18 clubs, G 34; 34 / 17 = 2 (from matches)
+ita_ser_c2a	2004	2004	2	https://it.wikipedia.org/wiki/Serie_C2_2004-2005: infobox formula "3 gironi all'italiana A/R" = 2 inside a group
+ita_ser_c2a	2005	2009	2	https://en.wikipedia.org/wiki/2005–06_Serie_C2 to 2007–08_Serie_C2 and https://en.wikipedia.org/wiki/2008–09_Lega_Pro_Seconda_Divisione, 2009–10: groups of 18, pld 34; 34 / 17 = 2 (from matches)
+ita_ser_c2a	2010	2010	2	https://en.wikipedia.org/wiki/2010–11_Lega_Pro_Seconda_Divisione: groups of 17 and 16, pld 32 and 30; 32 / 16 = 30 / 15 = 2 (from matches)
+ita_ser_c2a	2011	2011	2	https://en.wikipedia.org/wiki/2011–12_Lega_Pro_Seconda_Divisione: groups of 20 and 21, pld 38 and 40; 38 / 19 = 40 / 20 = 2 (from matches)
+ita_ser_c2a	2012	2013	2	https://en.wikipedia.org/wiki/2012–13_Lega_Pro_Seconda_Divisione and 2013–14: groups of 18, pld 34; 34 / 17 = 2 (from matches)
+ita_ser_c2a	2014	2026	2	sizes-check-italy.md line 98: from 2014/15 three Serie C groups, two meetings inside a group (the group plays in ita_ser_c2a, rows ita-232 to ita-436 notes)
+ita_ser_c2a	2027	2027	-	unknown: clubs unknown (row ita-453)
+ita_ser_c2b	2001	2002	2	https://it.wikipedia.org/wiki/Serie_C2_2001-2002 and Serie_C2_2002-2003: infobox formula "3 gironi all'italiana A/R" (home and away round robin in each group) = 2 inside a group
+ita_ser_c2b	2003	2003	2	https://en.wikipedia.org/wiki/2003–04_Serie_C2: group tables of 18 clubs, G 34; 34 / 17 = 2 (from matches)
+ita_ser_c2b	2004	2004	2	https://it.wikipedia.org/wiki/Serie_C2_2004-2005: infobox formula "3 gironi all'italiana A/R" = 2 inside a group
+ita_ser_c2b	2005	2009	2	https://en.wikipedia.org/wiki/2005–06_Serie_C2 to 2007–08_Serie_C2 and https://en.wikipedia.org/wiki/2008–09_Lega_Pro_Seconda_Divisione, 2009–10: groups of 18, pld 34; 34 / 17 = 2 (from matches)
+ita_ser_c2b	2010	2010	2	https://en.wikipedia.org/wiki/2010–11_Lega_Pro_Seconda_Divisione: groups of 17 and 16, pld 32 and 30; 32 / 16 = 30 / 15 = 2 (from matches)
+ita_ser_c2b	2011	2011	2	https://en.wikipedia.org/wiki/2011–12_Lega_Pro_Seconda_Divisione: groups of 20 and 21, pld 38 and 40; 38 / 19 = 40 / 20 = 2 (from matches)
+ita_ser_c2b	2012	2013	2	https://en.wikipedia.org/wiki/2012–13_Lega_Pro_Seconda_Divisione and 2013–14: groups of 18, pld 34; 34 / 17 = 2 (from matches)
+ita_ser_c2c	2001	2002	2	https://it.wikipedia.org/wiki/Serie_C2_2001-2002 and Serie_C2_2002-2003: infobox formula "3 gironi all'italiana A/R" (home and away round robin in each group) = 2 inside a group
+ita_ser_c2c	2003	2003	2	https://en.wikipedia.org/wiki/2003–04_Serie_C2: group tables of 18 clubs, G 34; 34 / 17 = 2 (from matches)
+ita_ser_c2c	2004	2004	2	https://it.wikipedia.org/wiki/Serie_C2_2004-2005: infobox formula "3 gironi all'italiana A/R" = 2 inside a group
+ita_ser_c2c	2005	2009	2	https://en.wikipedia.org/wiki/2005–06_Serie_C2 to 2007–08_Serie_C2 and https://en.wikipedia.org/wiki/2008–09_Lega_Pro_Seconda_Divisione, 2009–10: groups of 18, pld 34; 34 / 17 = 2 (from matches)
+ita_ser_c2c	2010	2010	2	https://en.wikipedia.org/wiki/2010–11_Lega_Pro_Seconda_Divisione: groups of 17 and 16, pld 32 and 30; 32 / 16 = 30 / 15 = 2 (from matches)
+jap_j1	2001	2003	1	sizes-check-asia.md lines 20-22 and 34: 2002 to 2004 two halves of 15 games for 16 clubs, single round robin each; halves, 15 / 15 = 1 per half
+jap_j1	2004	2013	2	sizes-check-asia.md lines 23 and 35: 18 clubs, 34 games, double round robin; 34 / 17 = 2 (from matches)
+jap_j1	2014	2015	1	sizes-check-asia.md lines 24 and 36: 2015 and 2016 two stages of 17 games for 18 clubs; halves, 17 / 17 = 1 per stage
+jap_j1	2016	2019	2	sizes-check-asia.md lines 25 and 35: 18 clubs, 34 games; 34 / 17 = 2 (from matches)
+jap_j1	2020	2020	2	sizes-check-asia.md line 26: 2021, 20 clubs, 38 games; 38 / 19 = 2 (from matches)
+jap_j1	2021	2022	2	sizes-check-asia.md line 27: 18 clubs, 34 games; 34 / 17 = 2 (from matches)
+jap_j1	2023	2024	2	sizes-check-asia.md line 28: 20 clubs, 38 games; 38 / 19 = 2 (from matches)
+jap_j1	2026	2026	2	sizes-check-asia.md lines 30 and 9 (J.League outline: double round robin, 38 match days, 380 matches for 20 clubs); 38 / 19 = 2
+jap_j1	2027	2027	-	unknown: clubs unknown (row aus-jap-kor-216; sizes-check-asia.md line 31)
+jap_j2	2001	2004	4	sizes-check-asia.md lines 51 and 64: 12 clubs, 44 games; 44 / 11 = 4 (from matches)
+jap_j2	2005	2006	4	sizes-check-asia.md lines 52 and 64: 13 clubs, 48 games (bye each round); rounds 4 x 13 = 52, 48 / 12 = 4 (from matches)
+jap_j2	2007	2007	3	sizes-check-asia.md lines 53 and 64: 15 clubs, 42 games; 42 / 14 = 3 (from matches)
+jap_j2	2008	2008	3	sizes-check-asia.md lines 54 and 64: 18 clubs, 51 games; 51 / 17 = 3 (from matches)
+jap_j2	2009	2009	2	sizes-check-asia.md lines 55 and 64: 19 clubs, 36 games; 36 / 18 = 2 (from matches)
+jap_j2	2010	2010	2	sizes-check-asia.md line 56: 20 clubs, 38 games; 38 / 19 = 2 (from matches)
+jap_j2	2011	2022	2	sizes-check-asia.md line 57: 22 clubs, 42 games; 42 / 21 = 2 (from matches)
+jap_j2	2023	2024	2	sizes-check-asia.md line 58: 20 clubs, 38 games; 38 / 19 = 2 (from matches)
+jap_j2	2026	2026	2	sizes-check-asia.md line 60 and line 9 (J.League 2026/27: double round robin, 38 match days); 38 / 19 = 2
+jap_j2	2027	2027	-	unknown: clubs unknown (row aus-jap-kor-243; sizes-check-asia.md line 61)
+kor_league	2001	2001	3	sizes-check-asia.md lines 78 and 96: 2002, 10 clubs, 27 games, triple round robin; 27 / 9 = 3 (from matches)
+kor_league	2002	2002	4	sizes-check-asia.md lines 79 and 96: 2003, 12 clubs, 44 games, quadruple; 44 / 11 = 4 (from matches)
+kor_league	2003	2004	1	sizes-check-asia.md lines 80-81 and 97: 2004 and 2005, 13 clubs, two stages of 12 games, single round robin each; halves, 12 / 12 = 1 per stage
+kor_league	2005	2005	1	sizes-check-asia.md lines 82 and 97: 2006, 14 clubs, two stages of 13 games, single round robin each; halves, 13 / 13 = 1 per stage
+kor_league	2006	2007	2	sizes-check-asia.md lines 83 and 98: 2007 and 2008, 14 clubs, 26 games; 26 / 13 = 2 (from matches)
+kor_league	2008	2009	2	sizes-check-asia.md lines 84 and 98: 2009 and 2010, 15 clubs, 28 games; 28 / 14 = 2 (from matches)
+kor_league	2010	2010	2	sizes-check-asia.md lines 85 and 98: 2011, 16 clubs, 30 games; 30 / 15 = 2 (from matches)
+kor_league	2012	2012	2	sizes-check-asia.md lines 87 and 99: 2013, 14 clubs, 26 rounds before the split; 26 / 13 = 2 (from rounds)
+kor_league	2027	2027	-	unknown: clubs unknown (row aus-jap-kor-351; sizes-check-asia.md line 93)
+nir_first	2001	2001	4	sizes-check-west.md lines 77 and 95: 10 clubs, pld 36; 36 / 9 = 4 (from matches)
+nir_first	2002	2002	4	sizes-check-west.md lines 78 and 95: 8 clubs, pld 28; 28 / 7 = 4 (from matches)
+nir_first	2003	2007	2	sizes-check-west.md lines 79 and 96: 12 clubs, pld 22; 22 / 11 = 2 (from matches)
+nir_first	2008	2008	2	sizes-check-west.md lines 80 and 96: 17 clubs, pld 32; 32 / 16 = 2 (from matches)
+nir_first	2009	2011	2	sizes-check-west.md lines 81 and 96: 14 clubs, pld 26; 26 / 13 = 2 (from matches)
+nir_first	2012	2012	2	sizes-check-west.md lines 82 and 96: 13 clubs, pld 24; 24 / 12 = 2 (from matches)
+nir_first	2013	2015	2	sizes-check-west.md lines 83 and 96: 14 clubs, pld 26; 26 / 13 = 2 (from matches)
+nir_first	2019	2019	2	sizes-check-west.md lines 85 and 97: 12 clubs, two meetings (22 rounds) before the split; curtailed at pld 31, planned format counted; 22 / 11 = 2
+nir_first	2020	2020	2	gap 42 (15 November 2026): the NIFL announced 22 matches for 12 clubs, 28 November 2020 to 22 May 2021 (wal-nir-irl-486 sources); cancelled before any match; 22 / 11 = 2, no split
+nir_first	2021	2021	3	sizes-check-west.md lines 87 and 98: 12 clubs, three meetings (33 rounds) before the split of 6 and 6; 33 / 11 = 3
+nir_first	2024	2025	3	sizes-check-west.md lines 87 and 98: 12 clubs, three meetings (33 rounds) before the split; 33 / 11 = 3
+nir_prm	2001	2001	4	sizes-check-west.md lines 49 and 62: 10 clubs, pld 36, four meetings; 36 / 9 = 4
+nir_prm	2003	2007	2	sizes-check-west.md lines 51 and 64: 16 clubs, pld 30, two meetings, no split; 30 / 15 = 2
+nir_prm	2027	2027	-	unknown: clubs unknown (row wal-nir-irl-660; sizes-check-west.md line 56)
+por_second_b	2014	2014	2	https://en.wikipedia.org/wiki/2014–15_Campeonato_Nacional_de_Seniores: first stage "home-and-away system", 8 series of 10, pld 18; 18 / 9 = 2 inside a series
+por_second_b	2020	2020	2	https://en.wikipedia.org/wiki/2020–21_Campeonato_de_Portugal: "In each series, teams played against each other in a home-and-away double round-robin", 8 series of 12 (pld 22); 22 / 11 = 2
+rus_first	2011	2011	2	sizes-check-east.md lines 175 and 315: 2011-12, 20 clubs, first stage 38 rounds, then a promotion group of 8 and a relegation group; first stage 38 / 19 = 2
+rus_first	2027	2027	-	unknown: clubs unknown (sizes-check-east.md line 191)
+rus_prm	2027	2027	-	unknown: clubs unknown (row rus-tur-27)
+sco_prm	2019	2019	3	row sco-146 (format "38 matches planned", season curtailed) with sizes-check-west.md line 63 (12 clubs, three meetings in 33 rounds, then the split, same as the Scottish Premier); planned first stage 33 / 11 = 3
+spa_second_b	2019	2019	2	https://en.wikipedia.org/wiki/2019–20_Segunda_División_B: 4 groups of 20, pld 28 when suspended on 11 March 2020 (COVID-19); planned format as https://en.wikipedia.org/wiki/2018–19_Segunda_División_B (4 groups of 20, pld 38); 38 / 19 = 2 inside a group
+swe_first	2001	2025	2	https://en.wikipedia.org/wiki/YYYY_Superettan pages 2002 to 2026 (row seasons 2001 to 2025): 16 clubs, pld 30 (infobox 240); 30 / 15 = 2 (from matches)
+swe_first	2026	2027	2	inference: no 2027 or 2028 Superettan page; clubs 16 carried from 2026 (rows den-swe-315 and den-swe-321 notes); meetings carried with them (https://en.wikipedia.org/wiki/Superettan: each club plays the other twice, 30 games)
+swe_prm	2001	2005	2	sizes-check-north.md line 620: 2002 to 2006, 14 clubs, 26 matches, 2 meetings; 26 / 13 = 2
+swe_prm	2006	2006	2	sizes-check-north.md line 621: 2007, 14 clubs, 26 matches, 2 meetings
+swe_prm	2007	2024	2	sizes-check-north.md line 622: 2008 to 2025, 16 clubs, 30 matches, 2 meetings; 30 / 15 = 2
+swe_prm	2025	2025	2	sizes-check-north.md line 623: 2026, 16 clubs, 30 matches, 2 meetings
+swe_prm	2026	2027	2	inference: real 2027 and 2028 are unknown (sizes-check-north.md line 624); clubs 16 carried from 2026 (rows den-swe-314 and den-swe-320 notes), meetings carried with them (line 623)
+swe_second	2001	2004	2	https://en.wikipedia.org/wiki/2002_Division_2_(Swedish_football) to 2005_Division_2_(Swedish_football): groups of 12, pld 22; 22 / 11 = 2 inside a group
+swe_second	2005	2016	2	https://en.wikipedia.org/wiki/2006_Division_1_(Swedish_football) to 2017_Division_1_(Swedish_football): groups of 14, pld 26; 26 / 13 = 2 inside a group
+swe_second	2017	2019	2	https://en.wikipedia.org/wiki/2018_Division_1_(Swedish_football), 2019 and https://en.wikipedia.org/wiki/2020_Ettan: groups of 16, pld 30; 30 / 15 = 2 inside a group
+swe_second	2020	2022	2	https://sv.wikipedia.org/wiki/Ettan_i_fotboll_för_herrar_2021, 2022 and 2023: infobox matcher 240 per group of 16; 240 / 120 = 2 inside a group
+swe_second	2023	2024	2	https://en.wikipedia.org/wiki/2024_Ettan and https://en.wikipedia.org/wiki/2025_Ettan: groups of 16, pld 30; 30 / 15 = 2 inside a group
+swe_second	2025	2025	2	https://sv.wikipedia.org/wiki/Ettan_i_fotboll_för_herrar_2026: Södra matcher 8 x 30 = 240 for 16 clubs (Norra 8 x 28 so far); 240 / 120 = 2 inside a group
+swe_second	2026	2027	2	inference: no 2027 or 2028 page; groups of 16 carried from 2026 (rows den-swe-316 and den-swe-322 notes); meetings carried with them
+tur_first	2027	2027	-	unknown: clubs unknown (row rus-tur-189; sizes-check-east.md line 223)
+tur_second	2027	2027	-	unknown: clubs unknown (row rus-tur-216; sizes-check-east.md line 255)
+tur_second_b	2001	2001	2	https://tr.wikipedia.org/wiki/2001-02_2._Futbol_Ligi_B_Kategorisi: first-stage groups of 10, pld 18; 18 / 9 = 2 inside a group
+tur_second_b	2005	2005	2	https://www.rsssf.org/tablest/tur06.html (2. Lig B): first-stage group of 11 pld 20 and groups of 10 pld 18; 2 inside a group
+tur_second_b	2006	2006	2	https://tr.wikipedia.org/wiki/2006-07_Lig_B: first-stage groups of 10, pld 18; 18 / 9 = 2 inside a group
+tur_second_b	2007	2007	2	https://en.wikipedia.org/wiki/2007–08_TFF_2._Lig: first-stage groups of 10, pld 18; 18 / 9 = 2 inside a group
+tur_second_b	2008	2008	2	https://tr.wikipedia.org/wiki/2008-09_2._Lig: first-stage groups of 11 pld 20 and 10 pld 18; 2 inside a group
+tur_second_b	2009	2009	2	https://en.wikipedia.org/wiki/2009–10_TFF_2._Lig: first-stage groups of 11 pld 20 and 12 pld 22; 2 inside a group
+tur_second_b	2024	2024	2	https://tr.wikipedia.org/wiki/2024-25_2._Lig: "Çift devreli lig" (double round) in two groups of 18, 612 matches = 2 x 18 x 17; 2 inside a group
+tur_second_b	2027	2027	-	unknown: clubs unknown (row rus-tur-243)
+usa_mls	2008	2008	-	unbalanced: 30 games for 15 clubs, 30 / 14 is not whole (sizes-check-americas.md line 193; row arg-usa-224 notes)
+usa_mls	2001	2001	-	unbalanced: 28 games a club for 10 clubs (sizes-check-americas.md lines 186 and 212)
+usa_mls	2002	2003	-	unbalanced: 30 games a club for 10 clubs (sizes-check-americas.md lines 187-188 and 212)
+usa_mls	2004	2005	-	unbalanced: 32 games a club for 12 clubs (sizes-check-americas.md lines 189-190 and 212)
+usa_mls	2006	2006	-	unbalanced: 30 games a club for 13 clubs (sizes-check-americas.md lines 191 and 212)
+usa_mls	2007	2007	-	unbalanced: 30 games a club for 14 clubs (sizes-check-americas.md lines 192 and 212)
+usa_mls	2011	2013	-	unbalanced: 34 games a club for 19 clubs (sizes-check-americas.md lines 196 and 212)
+usa_mls	2014	2015	-	unbalanced: 34 games a club for 20 clubs (sizes-check-americas.md lines 197 and 212)
+usa_mls	2016	2016	-	unbalanced: 34 games a club for 22 clubs (sizes-check-americas.md lines 198 and 212)
+usa_mls	2017	2017	-	unbalanced: 34 games a club for 23 clubs (sizes-check-americas.md lines 199 and 212)
+usa_mls	2018	2018	-	unbalanced: 34 games a club for 24 clubs (sizes-check-americas.md lines 200 and 212)
+usa_mls	2019	2019	-	unbalanced: 34 games a club planned for 26 clubs (24 in the conference plus 10 against the other one, cut to 23 by COVID-19; sizes-check-americas.md lines 201 and 212)
+usa_mls	2020	2020	-	unbalanced: 34 games a club for 27 clubs (sizes-check-americas.md lines 202 and 212)
+usa_mls	2021	2021	-	unbalanced: 34 games a club for 28 clubs (sizes-check-americas.md lines 203 and 212)
+usa_mls	2022	2023	-	unbalanced: 34 games a club for 29 clubs (sizes-check-americas.md lines 204 and 212)
+usa_mls	2024	2025	-	unbalanced: 34 games a club for 30 clubs (sizes-check-americas.md lines 205-206 and 212)
+usa_mls	2026	2026	1	sizes-check-americas.md lines 207 and 212: 2027 Sprint, single round robin inside each conference of 15, 14 games; meetings inside a group 14 / 14 = 1
+usa_mls	2027	2027	?	2027/28 schedule not announced: games unknown (sizes-check-americas.md lines 208 and 231); clubs 30 rest on one source
+wel_first	2001	2001	2	https://en.wikipedia.org/wiki/2001–02_League_of_Wales: infobox 306 matches for 18 clubs; 306 / 153 = 2 (from matches)
+wel_first	2002	2009	2	https://en.wikipedia.org/wiki/YYYY–YY_Welsh_Premier_League pages 2002–03 to 2009–10: 18 clubs pld 34 (306 matches), 17 clubs pld 32 (272 matches, 2003–04 and 2006–07); 34 / 17 = 32 / 16 = 2 (from matches)

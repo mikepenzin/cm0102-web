@@ -2,16 +2,16 @@
 # tests/seasons/rules_report_check.py --update-expected. Columns: season, kind, text.
 2013	bench	world_club_champ (FIFA Club World Cup), row club-world-230: game 7/9, table 12 (12)
 2013	bench	world_cup (FIFA World Cup), row int-world-146: game 7/9, table 12 (12 (all squad members not in the starting team))
+2013	club_list	Greek National A Division: 14 of 18 listed clubs that the database holds (18 listed), 0 other clubs, 14 in all; not in it: AEL Kalloni, Apollon Smirnis, Diethnis Enosis Ergotelis, Panetolikos; others: -
 2013	clubs	gre_cup (Greek Football Cup), row gre-pol-cro-13: game 4, table 46 (46)
 2013	clubs	gre_prm (Super League Greece), row gre-pol-cro-40: game 14, table 18 (18)
-2013	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-150: game 50, table 10 (10)
+2013	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-150: game 44, table 10 (10)
 2013	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-151: game 4, table 2 (2)
 2013	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-149: game 24, table 6 (6)
 2013	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-147: game 0, table 53 (53 entrants)
 2013	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-152: game 5, table 1 (1)
 2013	clubs	world_club_champ (FIFA Club World Cup), row club-world-230: game 0, table 7 (7)
 2013	clubs	world_cup (FIFA World Cup), row int-world-146: game 0/4, table 32 (32)
-2013	down	eng_third (Football League Two), row eng-151: game 1 (+0 play-off places), table 2 (2)
 2013	down	gre_second (Football League North), row gre-pol-cro-67: game 2 (+0 play-off places), table 3 (3 per group (bottom three))
 2013	idle	new_concacaf_gold_cup (2013 CONCACAF Gold Cup), row int-continental-137: the game waits for 2015, the table holds it
 2013	no_row	friendly (Friendly): no table row
@@ -19,13 +19,13 @@
 2013	no_row	record_utils (Reserve): no table row
 2013	no_row	record_utils (Under 21 International): no table row
 2013	not_held	euro_champ_qual (UEFA European Championship qualifying), row int-continental-134: the game holds 2014, the table says not held
-2013	not_held	gre_super (Greek Super Cup), row gre-pol-cro-94: the game holds 2013, the table says not held
 2013	not_in_game	eng-152 eng_conf 'Conference Premier' (England)
 2013	not_in_game	eng-373 eng_fa_trophy 'FA Trophy' (England)
 2013	not_in_game	uefa-97 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2013	playoffs	gre_prm (Super League Greece), row gre-pol-cro-40: game 0 up and 0 down play-off places, table 0 and 1 ('2nd-5th: European play-off mini-league; 16th: relegation play-off')
 2013	playoffs	gre_second (Football League North), row gre-pol-cro-67: game 0 up and 0 down play-off places, table 4 and 0 ('top 4 of each group: promotion play-off round of 8 for 3 places (2 direct, 3rd v')
 2013	playoffs	gre_second (Football League South), row gre-pol-cro-121: game 0 up and 0 down play-off places, table 4 and 0 ('top 4 of each group: promotion play-off round of 8 for 3 places (2 direct, 3rd v')
+2013	rounds	gre_prm (Super League Greece), row gre-pol-cro-40: game 26, table 34 (2 meetings, zones -, extra 0)
 2013	up	gre_cup (Greek Football Cup), row gre-pol-cro-13: game 2 (+0 play-off places), table na (n/a)
 2013	up	gre_second (Football League North), row gre-pol-cro-67: game 1 (+0 play-off places), table 0 (0)
 2013	up	gre_second (Football League South), row gre-pol-cro-121: game 1 (+0 play-off places), table 0 (0 (promotion via joint play-off round, see group 1 row))
@@ -42,7 +42,6 @@
 2014	clubs	gre_second (Football League South), row gre-pol-cro-122: game 14, table 13 (13)
 2014	clubs	uefa_cup (UEFA Europa League), row uefa-109: game 161/194, table 195 (195 (162 entered + 33 from the Champions League); 48 in the group stage (+8 Cham)
 2014	clubs	world_club_champ (FIFA Club World Cup), row club-world-249: game 0, table 7 (7)
-2014	down	eng_third (Football League Two), row eng-161: game 1 (+0 play-off places), table 2 (2)
 2014	down	gre_prm (Super League Greece), row gre-pol-cro-41: game 2 (+0 play-off places), table 4 (4 (15th-18th))
 2014	down	gre_second (Football League North), row gre-pol-cro-68: game 2 (+0 play-off places), table 3 (3 per group (bottom three))
 2014	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-163: the game waits for 2016, the table holds it
@@ -52,13 +51,13 @@
 2014	no_row	record_utils ('B' International): no table row
 2014	no_row	record_utils (Reserve): no table row
 2014	no_row	record_utils (Under 21 International): no table row
-2014	not_held	gre_super (Greek Super Cup), row gre-pol-cro-95: the game holds 2014, the table says not held
 2014	not_held	new_concacaf_gold_cup (2013 CONCACAF Gold Cup), row int-continental-148: the game holds 2015, the table says not held
 2014	not_in_game	eng-162 eng_conf 'Conference Premier' (England)
 2014	not_in_game	eng-379 eng_fa_trophy 'FA Trophy' (England)
 2014	not_in_game	uefa-105 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2014	playoffs	gre_second (Football League North), row gre-pol-cro-68: game 0 up and 0 down play-off places, table 3 and 6 ('top 3 of each group: promotion play-off round of 6 for 2 places; 5th-10th: releg')
 2014	playoffs	gre_second (Football League South), row gre-pol-cro-122: game 0 up and 0 down play-off places, table 3 and 6 ('top 3 of each group: promotion play-off round of 6 for 2 places; 5th-10th: releg')
+2014	rounds	gre_prm (Super League Greece), row gre-pol-cro-41: game 26, table 34 (2 meetings, zones -, extra 0)
 2014	up	gre_cup (Greek Football Cup), row gre-pol-cro-14: game 2 (+0 play-off places), table na (n/a)
 2014	up	gre_second (Football League North), row gre-pol-cro-68: game 1 (+0 play-off places), table 0 (0)
 2014	up	gre_second (Football League South), row gre-pol-cro-122: game 1 (+0 play-off places), table 0 (0 (promotion via joint play-off round, see group 1 row))

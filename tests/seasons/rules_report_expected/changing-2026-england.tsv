@@ -1,0 +1,54 @@
+# Differences between the rules report and the rules table that the check accepts. Made by
+# tests/seasons/rules_report_check.py --update-expected. Columns: season, kind, text.
+2026	bench	asia_nations (AFC Asian Cup), row int-continental-284: game 7, table 15 (15)
+2026	bench	eur_super_cup (UEFA Super Cup), row uefa-208: game 9, table 12 (12 (23 players on the match sheet, Art. 40.01))
+2026	bench	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 9, table 12 (12)
+2026	bench	european_cup (UEFA Champions League), row uefa-202: game 9, table 12 (12)
+2026	bench	new_conference_league (UEFA Conference League), row uefa-206: game 9, table 12 (12)
+2026	bench	uefa_cup (UEFA Europa League), row uefa-205: game 9, table 12 (12)
+2026	clubs	african_nations (Africa Cup of Nations), row int-continental-282: game 0/4, table 24 (24)
+2026	clubs	asia_nations (AFC Asian Cup), row int-continental-284: game 0/4, table 24 (24)
+2026	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 6, table 54 (54 (scheduled))
+2026	clubs	new_concacaf_gold_cup (2027 CONCACAF Gold Cup), row int-continental-280: game 4, table 16 (16)
+2026	clubs	new_concacaf_nations_league (2026-27 CONCACAF Nations League), row int-continental-281: game 4, table 41 (41)
+2026	clubs	new_uefa_nations_league (2026-27 UEFA Nations League), row int-continental-278: game 4, table 54 (54)
+2026	idle	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-306: the game waits for 2028, the table holds it
+2026	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-307: the game waits for 2028, the table holds it
+2026	idle	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-308: the game waits for 2028, the table holds it
+2026	idle	wc_south_american_league (FIFA World Cup qualification (CONMEBOL)), row int-world-304: the game waits for 2028, the table holds it
+2026	no_row	friendly (Friendly): no table row
+2026	no_row	record_utils ('B' International): no table row
+2026	no_row	record_utils (Reserve): no table row
+2026	no_row	record_utils (Under 21 International): no table row
+2026	not_in_game	eng-282 eng_conf 'National League' (England)
+2026	not_in_game	eng-451 eng_fa_trophy 'FA Trophy' (England)
+2026	not_in_game	uefa-201 uefa_seeding 'UEFA access list and seeding' (UEFA)
+2026	playoffs	eng_first (EFL Championship), row eng-279: game 4 up and 0 down play-off places, table 6 and 0 ('3rd-8th: 5v8 and 6v7 single-leg eliminators (higher club at home), then semi-fin')
+2026	subs_used	asia_nations (AFC Asian Cup), row int-continental-284: game 3, table 5 (5)
+2027	clubs	african_nations (Africa Cup of Nations), row int-continental-293: game 0/4, table 24 (24)
+2027	clubs	euro_champ (UEFA European Championship), row int-continental-287: game 0/4, table 24 (24)
+2027	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-288: game 6, table 54 (54 (scheduled))
+2027	clubs	european_cup (UEFA Champions League), row uefa-210: game 82, table 83 (83 (36 in the league phase))
+2027	clubs	new_conference_league (UEFA Conference League), row uefa-214: game 139/164, table 36 (36 in the league phase; total unknown)
+2027	clubs	uefa_cup (UEFA Europa League), row uefa-213: game 59/76, table 36 (36 in the league phase; total unknown)
+2027	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-317: game 10, table 35 (35 (22 in round 1))
+2027	format	uefa_cup, row uefa-213: game 36 clubs in the group stage and 24 in the knockout round after it, table 0 and 0
+2027	name	new_concacaf_gold_cup (2027 CONCACAF Gold Cup), row int-continental-291: game '2027 CONCACAF Gold Cup', table 'CONCACAF Gold Cup'
+2027	name	new_concacaf_nations_league (2026-27 CONCACAF Nations League), row int-continental-292: game '2026-27 CONCACAF Nations League', table 'CONCACAF Nations League'
+2027	name	new_uefa_nations_league (2026-27 UEFA Nations League), row int-continental-289: game '2026-27 UEFA Nations League', table 'UEFA Nations League'
+2027	name	oceania_nations (OFC Nations Cup), row int-continental-296: game 'OFC Nations Cup', table "2028 OFC Men's Nations Cup"
+2027	no_row	friendly (Friendly): no table row
+2027	no_row	record_utils ('B' International): no table row
+2027	no_row	record_utils (Reserve): no table row
+2027	no_row	record_utils (Under 21 International): no table row
+2027	not_held	asia_nations (AFC Asian Cup), row int-continental-295: the game holds 2027, the table says not held
+2027	not_held	new_concacaf_gold_cup (2027 CONCACAF Gold Cup), row int-continental-291: the game holds 2027, the table says not held
+2027	not_held	new_concacaf_nations_league (2026-27 CONCACAF Nations League), row int-continental-292: the game holds 2027, the table says not held
+2027	not_held	new_uefa_nations_league (2026-27 UEFA Nations League), row int-continental-289: the game holds 2028, the table says not held
+2027	not_held	olympics (Football at the Summer Olympics), row int-world-323: the game holds 2028, the table says not held
+2027	not_held	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-315: the game holds 2028, the table says not held
+2027	not_held	world_club_champ (FIFA Club World Cup), row club-world-496: the game holds 2028, the table says not held
+2027	not_in_game	eng-292 eng_conf 'National League' (England)
+2027	not_in_game	eng-457 eng_fa_trophy 'FA Trophy' (England)
+2027	not_in_game	uefa-209 uefa_seeding 'UEFA access list and seeding' (UEFA)
+2027	playoffs	eng_first (EFL Championship), row eng-289: game 4 up and 0 down play-off places, table 6 and 0 ('3rd-8th: 5v8 and 6v7 single-leg eliminators (higher club at home), then semi-fin')

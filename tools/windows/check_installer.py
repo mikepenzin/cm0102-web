@@ -43,6 +43,7 @@ SYSTEM_DLLS = {
     "bcrypt.dll", "cfgmgr32.dll", "combase.dll", "rpcrt4.dll", "dwmapi.dll", "uxtheme.dll",
     "hid.dll", "opengl32.dll", "winhttp.dll", "wininet.dll", "crypt32.dll", "d3d9.dll",
     "dxgi.dll", "shcore.dll", "dinput8.dll", "xinput1_4.dll",
+    "iphlpapi.dll",                       # 0.7.0: the computer's own addresses for network games (net_win32.c)
 }
 
 

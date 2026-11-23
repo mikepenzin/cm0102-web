@@ -34,8 +34,11 @@
 #include "win.h"
 #include "season.h"
 #include "season_change.h"
+#include "season_club_editions.h"
+#include "season_liber_guest.h"
 #include "season_comps.h"
 #include "season_rules.h"
+#include "season_uefa_days.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -80,13 +83,10 @@ static int season_game(void)
     return season_code_on() && (season_start_year() != SEASON_FIRST_YEAR || season_changing_rules());
 }
 
-/* The row of a class in season s. After the last row of the table the rule stays (Q248): the last row. */
-static const SeasonRule *row_of(const char *file, int s)
-{
-    const SeasonRule *r = NULL;
-    for (int y = s; y >= SEASON_RULE_FIRST && !r; y--) r = season_rules_find(y, file, 0);
-    return r;
-}
+/* The row of a class in season s. After the last row of the table the rule stays (Q248): the last row. The Club
+ * World Cup, whose last rows do not hold it, plays every 4 years after the table with its last held row (Q3,
+ * season_club_editions.h): the seasons 2028/29, 2032/33 and on with the 32 clubs of 2024/25. */
+static const SeasonRule *row_of(const char *file, int s) { return season_club_world_row(file, s); }
 
 /* -1: no row (the kind changes nothing), 1: the table holds the competition in season s, 0: not held. */
 static int held(const char *file, int s)
@@ -106,14 +106,15 @@ static int last_row_season(const char *file)
 }
 
 /* The year of the next edition from season s on: s when the table holds it, else the next season that holds
- * it, else NEVER. 0 when the table has no row of the class (nothing changes). */
+ * it (after the table by the rule of row_of), else NEVER. 0 when the table has no row of the class (nothing
+ * changes). */
 static int next_edition(const char *file, int s)
 {
     int h = held(file, s);
     if (h < 0) return 0;
     if (h) return s;
     int last = last_row_season(file);
-    for (int y = s + 1; y <= last; y++)
+    for (int y = s + 1; y <= (last > s ? last : s) + SEASON_CWC_CYCLE; y++)
         if (held(file, y) == 1) return y;
     return NEVER;
 }
@@ -411,9 +412,258 @@ static int edition_dates(int edition, KnockoutDates *d)
         d->first = day_of_year(d1, m1, d->year);
         d->last = day_of_year(d2, m2, d->year);
         if (d->first >= d->last) continue;
+        /* After the June FIFA window (open item 201, season_cwc_after_window), with changing rules on: the whole
+         * edition moves, so its rounds keep their gaps. A December edition does not move. */
+        int later = season_changing_rules() ? season_cwc_after_window(d->year, d->first) - d->first : 0;
+        d->first += later;
+        d->last += later;
         return 1;
     }
     return 0;
+}
+
+/* The real host (0.6.2 open item 125). The original gives the host row of the Club World Championship (key id
+ * [0x9cf7bc], year 0, so it answers every year) a random nation at each new edition
+ * (HostCountry::redraw_world_club_and_confed_hosts 0x5fab70, 0x5fac7e..0x5facc3), and pick_entrants 0x92a8b0 takes
+ * place 11 from that nation (find_hosts 0x5fa730 at 0x92a944..0x92a961, pick_entrant 0x92ae60 at 0x92ab7c). In a
+ * 2023 game that drew Spain, Barcelona played the play-off on 12 December, the clash check moved its Champions
+ * League match of 13 December to the 20th (add_fixture 0x5aa680, find_new_fixture_date 0x5ab510), and the
+ * Europa League knockout draw waited a week for the Champions League thirds. Here the edition takes its real host
+ * from the format text of its row in club-world.tsv ("; host Saudi Arabia"; with changing rules off the start
+ * season's row, as edition_dates), and the host row gives that nation, which the venue code reads too
+ * (find_hosts at 0x85c5ff..0x85c61c, season_gold_cup.c). In the knockout, when the continent's winner is a club of
+ * the host nation, the host place goes to that continent's runner-up, as in 2007 (Urawa Red Diamonds won the AFC
+ * Champions League, Sepahan took the host place), 2008 (Gamba Osaka, Adelaide United) and 2022 (Wydad
+ * Casablanca, Al Ahly) (club-world.tsv rows club-world-116, 135 and 401). The game cannot give 2022: it has no
+ * African club competition, so the CAF pick is a random club of the top reputations (no African record at
+ * 0x92aeb4..0x92aee5). The 32-club edition of 2024/25 keeps the host's own club. */
+#define HOST_TABLE 0xb5e134u            /* HostCountry *: +0 the rows, +4 the count (word) */
+#define HOST_ROW 0x22u                  /* +0 key id, +4 year (word), +6 host pairs of 8 bytes, +0x1e the choice */
+#define KEY_CLUB_WORLD 0x9cf7bcu
+#define NATIONS 0xae23a8u
+#define NATION_COUNT 0xae2350u
+#define NATION_SIZE 0x122u
+#define CLUBS 0xae23b4u
+#define CLUB_RECORDS 0xae235cu          /* clubs = [0xae235c] - 2 x nations, as pick_entrant (0x92b180) */
+#define CLUB_SIZE 0x245u
+#define CLUB_NATION 0x53u
+
+static int in_game(uint32_t p) { return rt_readable(p); }
+
+/* The nation id of the edition's host in the table, -1 when the row names none, -2 when the data has no such
+ * nation (with a log line). */
+static int edition_host(int edition)
+{
+    const SeasonRule *r = row_of("world_club_champ", season_changing_rules() ? edition : season_start_year());
+    const char *p = r && r->format_text ? strstr(r->format_text, "; host ") : NULL;
+    if (!p) return -1;
+    p += 7;
+    size_t n = strcspn(p, ";(");
+    while (n && p[n - 1] == ' ') n--;
+    uint32_t nations = rd32(g_mem, NATIONS);
+    int count = (int32_t)rd32(g_mem, NATION_COUNT);
+    for (int id = 0; in_game(nations) && id < count && id < 10000; id++) {
+        const char *name = win_str(nations + (uint32_t)id * NATION_SIZE + 4u);
+        if (strlen(name) == n && !strncmp(name, p, n)) return id;
+    }
+    fprintf(stderr, "recomp: club world %d: no nation %.*s in the data, so the drawn host stays\n", edition, (int)n, p);
+    return -2;
+}
+
+/* The clubs of a nation. pick_entrant with a nation and no league of it in the game looks for 6 of them with a
+ * reputation bar that falls by 1500 a turn and has no floor (0x92b173..0x92b1d2), so it needs 6. Every host of the
+ * table has 17 or more in each database (club.dat +0x53). */
+static int nation_clubs(int nation)
+{
+    uint32_t clubs = rd32(g_mem, CLUBS);
+    int count = (int32_t)rd32(g_mem, CLUB_RECORDS) - 2 * (int32_t)rd32(g_mem, NATION_COUNT), n = 0;
+    for (int i = 0; in_game(clubs) && i < count && i < 100000; i++) {
+        uint32_t nat = rd32(g_mem, clubs + (uint32_t)i * CLUB_SIZE + CLUB_NATION);
+        if (in_game(nat) && (int32_t)rd32(g_mem, nat) == nation) n++;
+    }
+    return n;
+}
+
+/* The winner places of the picks with the arguments of their pick_entrant calls in pick_entrants 0x92a8b0
+ * (0x92a9e3..0x92ab5a): the continent global and, for Asia, the record of the AFC re-pick in build_knockout.
+ * The place after each winner holds the original's second pick of that continent, which the knockout does not use
+ * (Oceania has one place). */
+static const struct { int place; uint32_t continent; int second; } WINNERS[] = {
+    {PICK_CAF, 0x9cfa08u, 1}, {PICK_AFC, 0x9cfa0cu, 1}, {PICK_UEFA, 0x9cfa10u, 1},
+    {PICK_CONCACAF, 0x9cfa14u, 1}, {PICK_OFC, 0x9cfa18u, 0}, {PICK_CONMEBOL, 0x9cfa1cu, 1}};
+
+static int club_nation(uint32_t club)
+{
+    uint32_t nat = in_game(club) ? rd32(g_mem, club + CLUB_NATION) : 0;
+    return in_game(nat) ? (int32_t)rd32(g_mem, nat) : -1;
+}
+
+/* The record that pick_entrant 0x92ae60 reads for a continent (0x92ae86..0x92af0e): entry +0x1e of the continent's
+ * league table entry, else the Asian Super Cup [0x9cf7d0], the Oceania Club Championship [0x9cf7cc] or the CONCACAF
+ * Champions Cup [0x9cf72c] for those continents; `record` (argument 5) when not -1. 0 when none. */
+static uint32_t continent_record(int32_t continent, int32_t record)
+{
+    uint32_t comps = rd32(g_mem, 0xae23d0u), rec = 0;
+    if (record != -1) return in_game(comps) ? comps + (uint32_t)record * 0x6bu : 0;
+    for (uint32_t e = 0xb63d60u; e < 0xb64738u; e += 0x48u) {
+        uint32_t nat = rd32(g_mem, e + 4u);
+        if (in_game(nat) && (int32_t)rd32(g_mem, nat) == continent && !rd32(g_mem, e)) {
+            rec = rd32(g_mem, e + 0x1eu);
+            break;
+        }
+    }
+    if (rec) return rec;
+    uint32_t key = continent == (int32_t)rd32(g_mem, 0x9cfa0cu) ? 0x9cf7d0u
+                 : continent == (int32_t)rd32(g_mem, 0x9cfa18u) ? 0x9cf7ccu
+                 : continent == (int32_t)rd32(g_mem, 0x9cfa14u) ? 0x9cf72cu : 0;
+    return key && in_game(comps) ? comps + rd32(g_mem, key) * 0x6bu : 0;
+}
+
+/* Place `place` of the record's latest history row (0x4afd80, cdecl), or 0. */
+static uint32_t history_place(uint32_t rec, int place)
+{
+    uint32_t a[2] = {rec, (uint32_t)place};
+    uint32_t club = call_cdecl(0x4afd80u, 2, a);
+    return rt_unwinding || !in_game(club) ? 0 : club;
+}
+
+/* Item 219 (season_liber_guest.h): CONMEBOL's place does not go to a Libertadores winner from outside CONMEBOL.
+ * pick_entrant 0x92ae60 is thiscall (continent, nation, Club **picked, short count, record), ret 0x14. For South
+ * America it takes place 0 of the latest history row of the record (0x92af59) when 0x6699d0 accepts the continent
+ * or +0x40 is 2001 (0x92af42..0x92af54), and place 1 when place 0 is in the picked list (0x92af6c..0x92af80); when
+ * place 1 is in the list too it draws from the top reputations (0x92afb1..), and when the row has no place 1 it
+ * returns 0 (0x92af88..0x92afac). When place 0 is a guest, the original runs with a copy of the picked list that
+ * also holds the guest (and place 1 when that is a guest too), so its own steps give the runner-up, else a drawn
+ * club. A 0 (no place 1) becomes the South American club of the highest reputation not yet picked. The caller's
+ * list does not change. The history is read with no sort (season_liber_latest). pick_entrants 0x92a8b0 picks South
+ * America twice (places 9 and 10), so the log line comes once an edition. */
+void o_0092ae60(void);
+
+RT_WRAP(0092ae60, pick_entrant_liber_guest)
+{
+    int32_t continent = (int32_t)rt_arg(0), record = (int32_t)rt_arg(4);
+    uint32_t obj = cpu.ecx, picked = rt_arg(2);
+    int count = (int16_t)rt_arg(3);
+    if (!season_liber_rule_on() || continent != (int32_t)rd32(g_mem, 0x9cfa1cu) || count < 0 || count > 12 ||
+        (count && !in_game(picked))) {
+        o_0092ae60();
+        return;
+    }
+    Cpu saved = cpu;
+    uint32_t rec = continent_record(continent, record), nations = rd32(g_mem, 0xae23a4u);
+    uint32_t a[1] = {nations + (uint32_t)continent * 0xc6u};
+    int live = in_game(nations) && call_cdecl(0x6699d0u, 1, a);
+    if (rt_unwinding) return;
+    cpu = saved;
+    int year = (int16_t)rd16(g_mem, obj + YEAR_AT);
+    uint32_t guest = rec && (live || year == 2001) ? season_liber_latest(rec, 0) : 0;
+    if (!guest || !season_liber_guest(guest)) {
+        o_0092ae60();
+        return;
+    }
+    uint32_t second = season_liber_latest(rec, 1);
+    static uint32_t list;
+    if (!list) list = win_static_alloc(4u * 16u);
+    uint32_t skip[16];
+    int n = 0;
+    for (int i = 0; i < count; i++) skip[n++] = rd32(g_mem, picked + 4u * (uint32_t)i);
+    skip[n++] = guest;
+    if (second && season_liber_guest(second)) skip[n++] = second;
+    for (int i = 0; i < n; i++) wr32(g_mem, list + 4u * (uint32_t)i, skip[i]);
+    wr32(g_mem, cpu.esp + 12u, list);
+    wr32(g_mem, cpu.esp + 16u, (uint32_t)n);
+    o_0092ae60();
+    if (rt_unwinding) return;
+    if (!in_game(cpu.eax)) cpu.eax = season_comps_top_club(0x9cfa1cu, skip, n);
+    static uint32_t logged_obj, logged_guest;
+    static int logged_year;
+    if (logged_obj == obj && logged_guest == guest && logged_year == year) return;
+    logged_obj = obj, logged_guest = guest, logged_year = year;
+    season_liber_guest_log("FIFA Club World Championship", year, guest, in_game(cpu.eax) ? cpu.eax : 0);
+}
+
+/* The knockout's host place when a continent's winner is a club of the host: that continent's runner-up, place 1
+ * of the latest history row of the record that gave the winner. The rule holds only for a real winner: pick_entrant
+ * reads the history when 0x6699d0 accepts the continent or +0x40 is 2001 (0x92af42..0x92af54), else it takes a
+ * random club of the top reputations, and then the slot club must also be place 0 of the row. A runner-up that is
+ * missing or already picked gives 0, and the host nation's own club stays. The second place of the continent is
+ * not a bar: the knockout does not use it. 0 when no winner is of the host. */
+static uint32_t runner_up(uint32_t obj, uint32_t picks, int host, const char **winner)
+{
+    for (size_t i = 0; i < sizeof WINNERS / sizeof WINNERS[0]; i++) {
+        uint32_t club = rd32(g_mem, picks + 4u * (uint32_t)WINNERS[i].place);
+        if (club_nation(club) != host) continue;
+        int32_t continent = (int32_t)rd32(g_mem, WINNERS[i].continent);
+        uint32_t nations = rd32(g_mem, 0xae23a4u), a[1] = {nations + (uint32_t)continent * 0xc6u};
+        int live = in_game(nations) && call_cdecl(0x6699d0u, 1, a);
+        if (rt_unwinding) return 0;
+        if (!live && (int16_t)rd16(g_mem, obj + YEAR_AT) != 2001) return 0;
+        int32_t record = WINNERS[i].place == PICK_AFC ? (int32_t)rd32(g_mem, 0x9cf64cu) : -1;
+        uint32_t rec = continent_record(continent, record < 0 ? -1 : record);
+        if (!rec || history_place(rec, 0) != club) return 0;
+        uint32_t got = history_place(rec, 1);
+        if (rt_unwinding || !got) return 0;
+        for (int k = 0; k < 12; k++)
+            if (k != PICK_HOST && !(WINNERS[i].second && k == WINNERS[i].place + 1) &&
+                rd32(g_mem, picks + 4u * (uint32_t)k) == got)
+                return 0;
+        *winner = win_str(club + 4u);
+        return got;
+    }
+    return 0;
+}
+
+/* Place 11 of the picks from the real host, and the host row of the edition: the first row of the key with the
+ * edition's year or year 0, as find_hosts 0x5fa730 reads it (0x5fa74b..0x5fa7a9). The host goes into all three
+ * pairs, so a later choice of a pair (0x5faaae) gives it too. A host with fewer than 6 clubs keeps the drawn host.
+ * knockout: 1 for a knockout that plays the host place (7 clubs, or 6 with the host for Oceania): the runner-up rule
+ * above. */
+static void real_host(uint32_t obj, uint32_t picks, int edition, int knockout)
+{
+    int host = edition_host(edition);
+    if (host < 0) return;
+    const char *name = win_str(rd32(g_mem, NATIONS) + (uint32_t)host * NATION_SIZE + 4u);
+    int have = nation_clubs(host);
+    if (have < 6) {
+        fprintf(stderr, "recomp: club world %d: the host %s has %d clubs, so the drawn host stays\n", edition, name,
+                have);
+        return;
+    }
+    uint32_t old = rd32(g_mem, picks + 4u * PICK_HOST);
+    wr32(g_mem, picks + 4u * PICK_HOST, 0);
+    const char *winner = NULL;
+    uint32_t club = knockout ? runner_up(obj, picks, host, &winner) : 0;
+    if (rt_unwinding) return;
+    if (!in_game(club)) {
+        winner = NULL;
+        uint32_t pa[5] = {0xffffffffu, (uint32_t)host, picks, 12, 0xffffffffu};
+        club = call_this(0x92ae60u, obj, 5, pa);
+        if (rt_unwinding) return;
+    }
+    if (!in_game(club)) {
+        wr32(g_mem, picks + 4u * PICK_HOST, old);
+        fprintf(stderr, "recomp: club world %d: no club of the host %s, so the drawn host stays\n", edition, name);
+        return;
+    }
+    wr32(g_mem, picks + 4u * PICK_HOST, club);
+    uint32_t table = rd32(g_mem, HOST_TABLE), key = rd32(g_mem, KEY_CLUB_WORLD);
+    uint32_t rows = in_game(table) ? rd32(g_mem, table) : 0;
+    int count = in_game(table) ? (int16_t)rd16(g_mem, table + 4u) : 0;
+    for (int i = 0; in_game(rows) && i < count && i < 1000; i++) {
+        uint32_t row = rows + (uint32_t)i * HOST_ROW;
+        int year = (int16_t)rd16(g_mem, row + 4u);
+        if (rd32(g_mem, row) != key || (year != edition && year != 0)) continue;
+        for (uint32_t pair = 0; pair < 3; pair++) {
+            wr32(g_mem, row + 6u + 8u * pair, (uint32_t)host);
+            wr32(g_mem, row + 10u + 8u * pair, 0xffffffffu);
+        }
+        break;
+    }
+    if (winner)
+        fprintf(stderr, "recomp: club world %d: host %s, host place %s (runner-up: the winner %s is of the host)\n",
+                edition, name, win_str(club + 4u), winner);
+    else
+        fprintf(stderr, "recomp: club world %d: host %s, host place %s\n", edition, name, win_str(club + 4u));
 }
 
 /* The start date (the picks and the draw): one week before the first match (formats doc 5.4). The original's
@@ -468,6 +718,8 @@ static int build_knockout(uint32_t obj, int clubs, int host_for_ofc)
         if (rt_unwinding) return 0;
         wr32(g_mem, picks + 4u * PICK_AFC, club);
     }
+    real_host(obj, picks, (int16_t)rd16(g_mem, obj + YEAR_AT), clubs == 7 || host_for_ofc);
+    if (rt_unwinding) return 0;
     static uint32_t list;
     if (!list) list = win_static_alloc(4u * 8u);
     for (int i = 0; i < clubs; i++) {
@@ -677,6 +929,8 @@ static int pick_groups(uint32_t obj)
         if (rt_unwinding) { game_free(all); return 0; }
         wr32(g_mem, all + 4u * PICK_AFC, club);
     }
+    real_host(obj, all, (int16_t)rd16(g_mem, obj + YEAR_AT), 0);
+    if (rt_unwinding) { game_free(all); return 0; }
     /* 20 more: indexes 12 to 21 UEFA, 22 to 25 CONMEBOL, 26 and 27 AFC, 28 and 29 CAF, 30 and 31 CONCACAF, the
      * clubs of the highest reputation of the continent not yet picked (season_comps_top_club: pick_entrant gives
      * at most about 6 clubs of a continent, then its error box 0x92b0fd). The continent globals are those of
@@ -732,6 +986,39 @@ static int pick_groups(uint32_t obj)
     return 1;
 }
 
+/* The days of a group's 3 rounds in a create_schedule table (rows of 0x41: +0 day, +2 years after +0x40, as
+ * League reads them at 0x68a1a5 and 0x68a1ac): the edition's first day, 4 and 9 days later. */
+static const int group_day[3] = {0, 4, 9};
+
+static void group_days(uint32_t table, const KnockoutDates *kd)
+{
+    for (uint32_t i = 0; i < 3; i++) {
+        wr16(g_mem, table + i * 0x41u, (uint16_t)(kd->first + group_day[i]));
+        wr16(g_mem, table + i * 0x41u + 2, (uint16_t)kd->offset);
+    }
+}
+
+/* Group A's template: set_up_rules 0x929bb0 makes it once (create_schedule stage -1 at 0x929c29, its round count at
+ * +0xa9) and keeps it at +0xba (0x929c2c); League::create_fixtures 0x6835c0 reads it for the parent. No later
+ * edition makes it again, so group A kept the days of the edition of the set_up_rules call while groups B to H took
+ * their edition's days at the draw (create_schedule stages 0 to 6, the wrap below): in a 2021 start (pass 4
+ * a2021s1, replay of 2031 to July 2033, open item 201) group A was dated 14, 18 and 23 June 2033, the others 18, 22
+ * and 27 June, and group A's ties moved a CONMEBOL and a CONCACAF qualifier off their FIFA day of 12 June
+ * (add_fixture 0x5aa680 moves the weaker stored fixture, 0x5aaa25). The draw now gives the template its edition's
+ * days, as the wrap gives groups B to H theirs. */
+#define CWC_GROUP_A_ROUNDS 0xbau        /* group A's template (0x929c2c) */
+#define CWC_GROUP_A_COUNT 0xa9u         /* s16, its round count */
+
+static void group_a_days(uint32_t obj)
+{
+    uint32_t table = rd32(g_mem, obj + CWC_GROUP_A_ROUNDS);
+    KnockoutDates kd;
+    if (!rt_readable(table) || (int16_t)rd16(g_mem, obj + CWC_GROUP_A_COUNT) != 3 ||
+        !edition_dates((int16_t)rd16(g_mem, obj + YEAR_AT), &kd))
+        return;
+    group_days(table, &kd);
+}
+
 /* The groups on the start date, in the order of the Libertadores update 0x4c447d..0x4c45e7: group A (the parent,
  * 0x4c37a0), its fixtures (League::create_fixtures 0x6835c0), its table sort (0x6827d0 with 0), groups B to H
  * (0x4c3b10 with 0 to 6). No set_predicted_positions (vtable +0x5c, 0x92aba0): it reads 12 entrants and shuffles
@@ -741,6 +1028,7 @@ static int build_groups(uint32_t obj)
     if (!stage_array(obj, GROUP_STAGES)) return 0;
     g_mem[obj + CWC_ADVANCE_TO] = 2;
     if (!pick_groups(obj)) return 0;
+    group_a_days(obj);
     if (!call_this(0x4c37a0u, obj, 0, NULL) || rt_unwinding) return 0;
     call_this(0x6835c0u, obj, 0, NULL);
     if (rt_unwinding) return 0;
@@ -794,11 +1082,7 @@ RT_WRAP(00929390, world_club_champ_schedule)
         o_00929390();
         uint32_t table = cpu.eax;
         if (rt_unwinding || !table) return;
-        static const int day[3] = {0, 4, 9};
-        for (uint32_t i = 0; i < 3; i++) {
-            wr16(g_mem, table + i * 0x41u, (uint16_t)(kd.first + day[i]));   /* League round: +0 day, +2 year */
-            wr16(g_mem, table + i * 0x41u + 2, (uint16_t)kd.offset);         /* offset (0x68a1a5, 0x68a1ac) */
-        }
+        group_days(table, &kd);
         wr16(g_mem, code_at, (uint16_t)(0x3e9 + stage));
         return;
     }

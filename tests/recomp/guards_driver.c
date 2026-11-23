@@ -36,6 +36,9 @@ static uint32_t next(void)
 static struct { uint32_t addr, count, pos; uint32_t *values; } queues[MAX_QUEUES];
 static uint32_t nqueues;
 
+/* The crash guards of issue 132 log their first hit (win/original_faults.c). The test needs no line. */
+void rt_crash_site(uint32_t site) { (void)site; }
+
 void guard_stub(uint32_t addr, uint32_t pop)
 {
     uint32_t n = rd32(g_mem, GUARD_LOG);

@@ -33,6 +33,7 @@
 #include "draw.h"
 #include "views.h"
 #include "compare_layout.h"
+#include "groups_layout.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +52,7 @@
 #define NO_DRAW 0xaebe0cu           /* not 0: the draw functions of the original draw nothing */
 #define DRAW_SURFACE 0xaebde4u      /* the surface that the draw functions of the original draw on */
 #define ATTRIBUTE_NAME 0x5428a0u    /* cdecl (attribute 1..31, text, size, 0): the attribute's name */
-#define POSITIONS 0x53ee50u         /* cdecl (player data, text, size, 1): the positions text, "GK" first */
+#define POSITIONS 0x53ee50u         /* cdecl (player data, text, size, 1): the positions text */
 #define CLUB_NAME 0x542100u         /* cdecl (club, team, buffer, size >= 0x47, mode, flag); mode 1: short */
 #define TEXT_WIDTH 0x5e5ad0u        /* cdecl (font, text): the width in screen pixels */
 #define POPUP_COLOUR 0xae31aau      /* u16 colours of the popup items (best_xi.c) */
@@ -257,7 +258,10 @@ static void load(Player *p, uint32_t staff)
     if (!p->data) return;
     char pos[64];
     positions(p->data, pos, sizeof pos);
-    p->keeper = !strncmp(pos, "GK", 2);
+    /* From the position ratings, as the attribute groups do: the positions text is in the chosen language. */
+    signed char ratings[GROUP_RATINGS];
+    for (int i = 0; i < GROUP_RATINGS; i++) ratings[i] = (signed char)rd8(g_mem, p->data + 0x0f + (uint32_t)i);
+    p->keeper = groups_is_keeper(ratings);
     /* The one masking rule of best XI, squad depth and the comparison (picker_shown_attribute): the value
      * that the player's screens show, 0 when the game hides it from the viewer. */
     uint32_t viewer = human_manager();

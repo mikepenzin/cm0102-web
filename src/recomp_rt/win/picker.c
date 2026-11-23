@@ -25,7 +25,12 @@
  * Candidates: the players of the squad (club +0xd7, reserve-team players too, Q134) whom the squad
  * screen shows as able to play the next match. 0x45cbe0 is the screen's own test (0x459b3d): not
  * injured, not loaned out, not banned, not away with a national team and eligible for the competition.
- * A slot of a player who fails it shows red.
+ * A slot of a player who fails it shows red. The virtual players are never candidates: a staff id at or
+ * above the staff count [0xae2364] is a temporary row that VIRTUAL_STAFF tops up a short squad with
+ * (0x90d4f0 for the club a human views, 0x90d2f0 for a fixture) and takes away again (0x90d6b0, 0x90d860).
+ * The squad list shows him grey (0x45b984) and a match counts only the real players of a side (0x6dbaa1).
+ * 0.6.0 picked them: on a new game as Barnsley the virtual "Cooper, J" took ML, and Continue Game then
+ * said "You have only selected ten outfield players" (0.6.1 item 7).
  * - best: all candidates.
  * - match_fit: the candidates with condition 90% or more. When too few, the fittest of the others join.
  * - under_21: first the candidates under 21. The empty slots then get the best older players.
@@ -56,6 +61,7 @@
 #define FIXTURES 0xae2a58u       /* this of 0x5acbe0 */
 #define PLAYER_MANAGER 0xb74c26u /* per player slot, 0x300 bytes apart: the manager */
 #define PLAYER_SLOT 0xb77c7au    /* s16: the current player slot */
+#define STAFF_COUNT 0xae2364u    /* g_staff_count: a staff id at or above it is a virtual player */
 #define TODAY 0xae2c90u          /* the game date: s16 day of year, s16 year; this of 0x54c5b0 */
 #define AVAILABLE 0x45cbe0u      /* cdecl (staff, fixture, club, date): 0 when the player cannot play */
 #define SQUAD 0xd7u              /* club: 50 staff pointers */
@@ -124,12 +130,13 @@ static uint32_t next_fixture(uint32_t club)
 static int picking;
 
 void o_0062c680(void);
+int playersearch_holds_update(uint32_t staff);     /* playersearch.c: an extra player of the full search */
 
 /* The daily fitness update of one player, thiscall (staff), ret 4. It draws random numbers and changes
  * the player (0x62c680 pseudocode). */
 RT_WRAP(0062c680, daily_update)
 {
-    if (picking) {
+    if (picking || playersearch_holds_update(rt_arg(0))) {
         rt_ret_stdcall(cpu.eax, 1);
         return;
     }
@@ -413,6 +420,7 @@ static int load(uint32_t club, uint32_t fixture, uint32_t viewer, Candidate *c, 
     for (uint32_t i = 0; i < 50; i++) {
         uint32_t staff = rd32(g_mem, club + SQUAD + 4 * i);
         if (!staff || !rd32(g_mem, staff + PLAYER_DATA)) continue;
+        if (rd32(g_mem, staff) >= rd32(g_mem, STAFF_COUNT)) continue;     /* a virtual player */
         uint32_t s1[1] = {staff}, s2[2] = {staff, 1};
         /* Without a fixture 0x45cbe0 answers yes at once, so test injury and national duty here too. */
         uint32_t intl[5] = {staff, TODAY, club, 0, 0};
@@ -496,7 +504,7 @@ static int compute(uint32_t club, uint32_t team_index, int kind, const uint16_t 
             fprintf(dump_to, "\t%d\t%d\t%d\t%d", c[i].ability, c[i].age, c[i].condition, first[i]);
             for (int s = 0; s < slots; s++) fprintf(dump_to, "\t%d", fit(&c[i], masks[s]));
             for (int s = 0; s < slots; s++) fprintf(dump_to, "\t%d", value(&c[i], masks[s]));
-            fprintf(dump_to, "\n");
+            fprintf(dump_to, "\nstaff\t%d\t%u\t%u\n", i, rd32(g_mem, c[i].staff), rd32(g_mem, STAFF_COUNT));
         }
         fprintf(dump_to, "team\t");
         for (int s = 0; s < slots; s++) fprintf(dump_to, "%s%d", s ? " " : "", team[s]);

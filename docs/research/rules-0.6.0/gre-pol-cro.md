@@ -61,7 +61,15 @@ Out of scope: the third tiers (Gamma Ethniki, Polish II liga from 2008/09, Croat
 - Croatia tier 1: 16 (2001/02), 12 with a split after 22 rounds (2002/03 to 2005/06), 12 with 33 rounds (2006/07 to 2008/09), 16 (2009/10 to 2011/12), 12 (2012/13), 10 with 36 rounds from 2013/14.
 - Croatian tier 2: two groups to 2005/06, one league from 2006/07, Prva NL of 12 from 2022/23, 16 in 2026/27.
 - Croatian Cup: final two legs to 2013/14 and in 2023/24 and 2024/25; quarter-finals single from 2015/16; semi-finals single from 2017/18.
-- Foreign players: Greece Super League 5 non-EU (2007/08), HFF limit of 8 non-EU (5 over 23, 5 on the match sheet) in 2020/21 to 2022/23, 7 over 23 and 5 on the field from 2026/27. Poland: no Ekstraklasa limit to 2014/15, 3 non-EU on the pitch in 2015/16, 2 from 2016/17 to 2018/19, no limit from 2019/20 with a youth-player rule (one on the pitch 2019/20 to 2021/22, 3000 minutes 2022/23 to 2024/25, no penalty from 2025/26). Croatia: 4 foreigners fielded (2007/08), 6 then 8 foreigners (2016/17), 6 (2020/21), 6 non-EU (2025/26), 5 non-EU from 2026/27.
+- Foreign players: Greece Super League 5 non-EU (2007/08), HFF limit of 8 non-EU (5 over 23, 5 on the match sheet) in 2020/21 to 2022/23, 7 over 23 and 5 on the field from 2026/27. Poland: no Ekstraklasa limit to 2014/15, 3 non-EU on the pitch in 2015/16, 2 from 2016/17 to 2018/19, no limit from 2019/20 with a youth-player rule (one on the pitch 2019/20 to 2021/22, 3000 minutes 2022/23 to 2024/25, no penalty from 2025/26). Croatia: 4 foreigners fielded (2007/08); from 2013/14 only players not of the EU or EEA count: 6 (2013/14 to 2015/16), 8 from 18 October 2016, 8 (2017/18, 2018/19), 6 (2019/20 to 2025/26), 5 from 2026/27 (section below).
+
+## Croatian foreign players (GitHub issue 135, 13 November 2026)
+
+- 2001/02 to 2012/13: every foreign player counts. Croatia joined the EU on 1 July 2013. The rdes.it study (2007/08) gives "no quota on foreigners, but max 4 may be fielded". The other seasons have no source.
+- 2013/14: HNS Glasnik 28/2013, 10 July 2013 (hns-cff.hr). Article 16 of the Prva HNL propozicije 2013/14 allows 6 players of foreign nationality in a match. Players with Croatian dual nationality and nationals of the EU and EEA do not count. A player on the match sheet who does not come on does not count. The Pravilnik o nogometnim natjecanjima (article 51), the Pravilnik o registraciji klubova i igrača (article 69) and the Pravilnik o statusu igrača (article 4) got the same exemption in the same Glasnik.
+- 2013/14 to 2019/20: Mikulec and Globan, 2021 (hrcak.srce.hr/file/390640): 6 from 2013/14, 8 from the decision of 18 October 2016 (Glasnik 51/2016; hnl.hr, 8 November 2016; index.hr, 24 November 2016), then 6 again in 2019/20. The 8 of 2017/18 and 2018/19 comes from this paper only. No HNS text of the 2019/20 cut was found.
+- 2020/21: HNS Pravilnik 2020, 6 in the HNL, EU/EEA nationals not counted. 2021/22 to 2024/25: no rule text; the index.hr report of 2026 calls the earlier limit 6 non-EU.
+- The game: CROATIA_RULES::fill_squad_restrictions 0x518620 writes 4 foreign players at +0 of the restriction record for every Croatian competition. Under season rules from 2013/14 the kind moves that limit to the non-EU slot and gives the first division the table's number. Lower divisions and the cup keep the game's 4, as non-EU.
 
 ## Missing clubs (Q244)
 
@@ -103,7 +111,7 @@ Other points for Max:
 ## Unknowns
 
 - Greek, Polish and Croatian bench sizes in nearly all seasons.
-- Foreign-player rules for Greece 2001/02 to 2006/07 and 2009/10 to 2019/20, Poland 2001/02 to 2006/07, Croatia 2001/02 to 2006/07, 2008/09 to 2014/15, 2017/18 to 2019/20 and 2021/22 to 2024/25. The original game's values (Greece 4 non-EU, Poland 5, Croatia 4) come from the repo doc `docs/research/2026-10-16-season-change-points.md`, not from a web source.
+- Foreign-player rules for Greece 2001/02 to 2006/07 and 2009/10 to 2019/20, Poland 2001/02 to 2006/07, Croatia 2001/02 to 2006/07, 2008/09 to 2012/13 and 2021/22 to 2024/25 (2017/18 to 2019/20 from one paper only). The original game's values (Greece 4 non-EU, Poland 5, Croatia 4) come from the repo doc `docs/research/2026-10-16-season-change-points.md`, not from a web source.
 - Work permits and squad registration: no source found, except the Greek non-EU declaration dates (2020/21 to 2022/23).
 - National transfer window dates, except Greece 2025/26 and Poland (Ekstraklasa) 2023/24 winter to 2025/26.
 - Cup entrant counts for the Polish Cup except 2014/15 (86) and 2015/16 (68).

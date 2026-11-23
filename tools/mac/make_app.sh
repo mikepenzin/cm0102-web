@@ -161,6 +161,9 @@ fi
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
 rsync -a --exclude .DS_Store "$GAME/" "$APP/Contents/Resources/game/"
+# The licences of the libraries in the program (mbedTLS, the secure connection of online play).
+mkdir -p "$APP/Contents/Resources/licences"
+cp "$REPO/packaging/licences/"*.txt "$APP/Contents/Resources/licences/"
 
 # 4. Ad hoc signature, inside out.
 for f in "$APP"/Contents/Frameworks/*.dylib; do codesign --force --sign - "$f"; done

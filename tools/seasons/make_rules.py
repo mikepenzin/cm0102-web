@@ -51,6 +51,7 @@ ROOT = os.path.normpath(os.path.join(HERE, "..", ".."))
 PARTS = os.path.join(ROOT, "docs", "research", "rules-0.6.0")
 NOT_PARTS = ("-clubs.tsv", "-academy.tsv", ".check.tsv", ".check2.tsv", ".reconcile.tsv", "databases-signatures.tsv",
              "databases-date-shifts.tsv", "databases-date-shifts-last-rows.tsv", "databases-date-shifts-careers.tsv",  # slice 11b
+             "databases-date-shifts-nation-comps.tsv",  # 0.6.2 slice 7
              "uefa-access.tsv",  # slice 23: the UEFA access list by rank (tools/seasons/make_uefa_table.py)
              "nations-league-tiers.tsv", "nations-league-dates.tsv",  # slice 28
              "uefa-ko-dates.tsv")  # O259: the UEFA knockout dates (tools/seasons/make_uefa_dates.py)

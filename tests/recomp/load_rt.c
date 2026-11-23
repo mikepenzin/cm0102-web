@@ -18,6 +18,10 @@
 
 const char *rt_data_dir = ".";
 
+/* The staff reserve of the load (staff_reserve.c): the original's 23,000 rows, as the Unicorn run of the
+ * original has them. Without it the load program does not link (since b6926660, 17 October 2026). */
+uint32_t rt_staff_reserve_size(void) { return 0x59d8u; }
+
 #define MAX_COUNTS 64
 static struct { const char *name; uint32_t n; } counts[MAX_COUNTS];
 

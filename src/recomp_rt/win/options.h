@@ -28,13 +28,16 @@ typedef enum {
     OPT_REMEMBER_WINDOW,       /* switch, on */
     OPT_SAVE_BACKUPS,          /* switch, on */
     OPT_CONDITION_COLOURS,     /* switch, on */
-    OPT_DATABASE,              /* enum: 3.9.68 (default), 3.9.60, 3.9.65, or folder:<name>: the data set of a new game */
+    OPT_DATABASE,              /* enum: 3.9.68, 3.9.60 (default since 0.6.1), 3.9.65, or folder:<name>: the data set of a new game */
     OPT_SQUAD_VIEWS,           /* switch, on: the Team views screen (views.c) */
     OPT_ATTRIBUTE_GROUPS,      /* switch, on */
     OPT_FOREIGN_COLOURS,       /* switch, on: foreign player colour (foreign.c) */
     OPT_FULL_PLAYER_SEARCH,    /* switch, off: the player search lists every player (playersearch.c) */
     OPT_CHANGING_RULES,        /* switch, on: the default of changing rules for a new game (season.c) */
-    OPT_SEASON,                /* enum: 2001/02 (default) to 2025/26: the season of a new game (season_screen.c) */
+    OPT_SEASON,                /* enum: 2001/02 (default) to 2026/27: the season of a new game (season_screen.c) */
+    OPT_ONLINE_PLAY,           /* switch, on: online games in the game list and a host in the lobby (net_lobby.c) */
+    OPT_GAME_PASSWORD,         /* text, empty: the password of a network game that this computer hosts (net_lobby.c) */
+    OPT_SQUAD_NUMBERS_99,      /* switch, off: squad numbers up to 99 (squad_numbers.c) */
     OPT_COUNT
 } OptionId;
 

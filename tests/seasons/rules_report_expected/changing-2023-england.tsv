@@ -1,8 +1,10 @@
 # Differences between the rules report and the rules table that the check accepts. Made by
 # tests/seasons/rules_report_check.py --update-expected. Columns: season, kind, text.
 2023	bench	eur_super_cup (UEFA Super Cup), row uefa-184: game 9, table 12 (12)
+2023	bench	euro_champ (UEFA European Championship), row int-continental-243: game 7, table 15 (15)
 2023	bench	european_cup (UEFA Champions League), row uefa-178: game 9, table 12 (12)
 2023	bench	new_conference_league (UEFA Europa Conference League), row uefa-182: game 9, table 12 (12)
+2023	bench	oceania_nations (OFC Men's Nations Cup), row int-continental-252: game 7, table 12 (12)
 2023	bench	uefa_cup (UEFA Europa League), row uefa-181: game 7/9, table 12 (12)
 2023	bench	world_club_champ (FIFA Club World Cup), row club-world-420: game 7/9, table 12 (12)
 2023	clubs	euro_champ (UEFA European Championship), row int-continental-243: game 0/4, table 24 (24)
@@ -10,12 +12,11 @@
 2023	clubs	goldcup (Copa América), row int-continental-253: game 0/4, table 16 (16)
 2023	clubs	new_concacaf_nations_league (2023-24 CONCACAF Nations League), row int-continental-248: game 4, table 41 (41)
 2023	clubs	new_uefa_nations_league (2022-23 UEFA Nations League (play-out)), row int-continental-245: game 4, table 2 (2)
-2023	clubs	oceania_nations (OFC Men's Nations Cup), row int-continental-252: game 0/3, table 8 (8 (7 played))
-2023	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-270: game 10, table 53 (53 entrants)
+2023	clubs	oceania_nations (OFC Men's Nations Cup), row int-continental-252: game 0/4, table 8 (8 (7 played))
+2023	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-270: game 18, table 53 (53 entrants)
 2023	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-271: game 0, table 46 (46 entrants)
-2023	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-269: game 24, table 32 (32 entrants (hosts exempt))
+2023	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-269: game 4, table 32 (32 entrants (hosts exempt))
 2023	clubs	world_club_champ (FIFA Club World Cup), row club-world-420: game 0, table 7 (7)
-2023	down	eng_third (EFL League Two), row eng-251: game 1 (+0 play-off places), table 2 (2)
 2023	no_row	friendly (Friendly): no table row
 2023	no_row	record_utils ('B' International): no table row
 2023	no_row	record_utils (Reserve): no table row
@@ -26,21 +27,23 @@
 2023	not_in_game	eng-252 eng_conf 'National League' (England)
 2023	not_in_game	eng-433 eng_fa_trophy 'FA Trophy' (England)
 2023	not_in_game	uefa-177 uefa_seeding 'UEFA access list and seeding' (UEFA)
+2023	subs_used	euro_champ (UEFA European Championship), row int-continental-243: game 3, table 5 (5)
+2023	subs_used	oceania_nations (OFC Men's Nations Cup), row int-continental-252: game 3, table 5 (5)
 2024	bench	eur_super_cup (UEFA Super Cup), row uefa-192: game 9, table 12 (12)
 2024	bench	european_cup (UEFA Champions League), row uefa-186: game 9, table 12 (12)
 2024	bench	new_conference_league (UEFA Conference League), row uefa-190: game 9, table 12 (12)
 2024	bench	uefa_cup (UEFA Europa League), row uefa-189: game 9, table 12 (12)
+2024	bench	world_club_champ (FIFA Club World Cup), row club-world-439: game 7, table 15 (15)
 2024	clubs	new_concacaf_gold_cup (CONCACAF Gold Cup), row int-continental-258: game 0/4, table 16 (16)
 2024	clubs	new_concacaf_nations_league (2023-24 CONCACAF Nations League), row int-continental-259: game 4, table 41 (41)
 2024	clubs	new_uefa_nations_league (2022-23 UEFA Nations League (play-out)), row int-continental-256: game 4, table 54 (54)
 2024	clubs	olympics (Football at the Summer Olympics), row int-world-287: game 0/4, table 16 (16)
-2024	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-282: game 10, table 53 (53 in groups (Eritrea withdrew; group E has 5 teams))
+2024	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-282: game 18, table 53 (53 in groups (Eritrea withdrew; group E has 5 teams))
 2024	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-283: game 0/4, table 18 (18)
-2024	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-281: game 24, table 30 (30)
+2024	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-281: game 4, table 30 (30)
 2024	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-279: game 4, table 54 (54 entrants)
 2024	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-284: game 5, table 11 (11 entrants)
 2024	clubs	world_club_champ (FIFA Club World Cup), row club-world-439: game 0, table 32 (32)
-2024	down	eng_third (EFL League Two), row eng-261: game 1 (+0 play-off places), table 2 (2)
 2024	name	new_concacaf_nations_league (2023-24 CONCACAF Nations League), row int-continental-259: game '2023-24 CONCACAF Nations League', table '2024-25 CONCACAF Nations League'
 2024	name	new_uefa_nations_league (2022-23 UEFA Nations League (play-out)), row int-continental-256: game '2022-23 UEFA Nations League (play-out)', table '2024-25 UEFA Nations League'
 2024	name	oceania_nations (OFC Men's Nations Cup), row int-continental-263: game "OFC Men's Nations Cup", table 'OFC Nations Cup'
@@ -54,18 +57,21 @@
 2024	not_in_game	eng-262 eng_conf 'National League' (England)
 2024	not_in_game	eng-439 eng_fa_trophy 'FA Trophy' (England)
 2024	not_in_game	uefa-185 uefa_seeding 'UEFA access list and seeding' (UEFA)
+2024	subs_used	world_club_champ (FIFA Club World Cup), row club-world-439: game 3, table 5 (5)
+2025	bench	african_nations (Africa Cup of Nations), row int-continental-271: game 7/9, table 12 (12)
 2025	bench	eur_super_cup (UEFA Super Cup), row uefa-200: game 9, table 12 (12)
 2025	bench	european_cup (UEFA Champions League), row uefa-194: game 9, table 12 (12)
 2025	bench	new_conference_league (UEFA Conference League), row uefa-198: game 9, table 12 (12)
 2025	bench	uefa_cup (UEFA Europa League), row uefa-197: game 9, table 12 (12)
+2025	bench	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-291: game 7, table 12 (12)
+2025	bench	world_cup (FIFA World Cup), row int-world-290: game 7, table 15 (15)
 2025	clubs	african_nations (Africa Cup of Nations), row int-continental-271: game 0/4, table 24 (24)
-2025	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-294: game 10, table 53 (53 in groups (Eritrea withdrew; group E has 5 teams))
+2025	clubs	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-294: game 18, table 53 (53 in groups (Eritrea withdrew; group E has 5 teams))
 2025	clubs	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-295: game 4, table 6 (6, then 2)
-2025	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-293: game 24, table 12 (12)
+2025	clubs	wc_concacaf_cup (FIFA World Cup qualification (CONCACAF)), row int-world-293: game 4, table 12 (12)
 2025	clubs	wc_europe_league (FIFA World Cup qualification (UEFA)), row int-world-291: game 4, table 54 (54 entrants)
 2025	clubs	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-296: game 5, table 1 (1)
 2025	clubs	world_cup (FIFA World Cup), row int-world-290: game 0/4, table 48 (48)
-2025	down	eng_third (EFL League Two), row eng-271: game 1 (+0 play-off places), table 2 (2)
 2025	name	new_concacaf_gold_cup (2025 CONCACAF Gold Cup), row int-continental-269: game '2025 CONCACAF Gold Cup', table 'CONCACAF Gold Cup'
 2025	name	new_concacaf_nations_league (2024-25 CONCACAF Nations League), row int-continental-270: game '2024-25 CONCACAF Nations League', table 'CONCACAF Nations League'
 2025	name	new_uefa_nations_league (2024-25 UEFA Nations League), row int-continental-267: game '2024-25 UEFA Nations League', table '2024-25 UEFA Nations League (C/D play-offs)'
@@ -74,7 +80,6 @@
 2025	no_row	record_utils (Reserve): no table row
 2025	no_row	record_utils (Under 21 International): no table row
 2025	not_held	euro_champ_qual (UEFA European Championship qualifying), row int-continental-266: the game holds 2026, the table says not held
-2025	not_held	goldcup (Copa América), row int-continental-275: the game holds 2024, the table says not held
 2025	not_held	new_concacaf_gold_cup (2025 CONCACAF Gold Cup), row int-continental-269: the game holds 2025, the table says not held
 2025	not_held	new_concacaf_nations_league (2024-25 CONCACAF Nations League), row int-continental-270: the game holds 2026, the table says not held
 2025	not_held	world_club_champ (FIFA Club World Cup), row club-world-458: the game holds 2024, the table says not held
@@ -82,17 +87,19 @@
 2025	not_in_game	eng-445 eng_fa_trophy 'FA Trophy' (England)
 2025	not_in_game	uefa-193 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2025	subs_used	world_cup (FIFA World Cup), row int-world-290: game 3, table 5 (5 in normal time, a sixth in extra time)
+2026	bench	asia_nations (AFC Asian Cup), row int-continental-284: game 7, table 15 (15)
 2026	bench	eur_super_cup (UEFA Super Cup), row uefa-208: game 9, table 12 (12 (23 players on the match sheet, Art. 40.01))
+2026	bench	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 9, table 12 (12)
 2026	bench	european_cup (UEFA Champions League), row uefa-202: game 9, table 12 (12)
 2026	bench	new_conference_league (UEFA Conference League), row uefa-206: game 9, table 12 (12)
 2026	bench	uefa_cup (UEFA Europa League), row uefa-205: game 9, table 12 (12)
 2026	clubs	african_nations (Africa Cup of Nations), row int-continental-282: game 4, table 24 (24)
 2026	clubs	asia_nations (AFC Asian Cup), row int-continental-284: game 0/4, table 24 (24)
-2026	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 5, table 54 (54 (scheduled))
-2026	clubs	new_concacaf_gold_cup (CONCACAF Gold Cup), row int-continental-280: game 4, table 16 (16)
+2026	clubs	euro_champ_qual (UEFA European Championship qualifying), row int-continental-277: game 6, table 54 (54 (scheduled))
+2026	clubs	new_concacaf_gold_cup (CONCACAF Gold Cup), row int-continental-280: game 0/4, table 16 (16)
 2026	clubs	new_concacaf_nations_league (CONCACAF Nations League), row int-continental-281: game 4, table 41 (41)
+2026	clubs	new_conference_league (UEFA Conference League), row uefa-206: game 139/164, table 165 (165 (111 entered + 54 from the Champions League and Europa League); 36 in the le)
 2026	clubs	new_uefa_nations_league (2024-25 UEFA Nations League (C/D play-offs)), row int-continental-278: game 4, table 54 (54)
-2026	down	eng_third (EFL League Two), row eng-281: game 1 (+0 play-off places), table 2 (2)
 2026	idle	wc_african_cup (FIFA World Cup qualification (CAF)), row int-world-306: the game waits for 2028, the table holds it
 2026	idle	wc_asia_league (FIFA World Cup qualification (AFC)), row int-world-307: the game waits for 2028, the table holds it
 2026	idle	wc_oceania_league (FIFA World Cup qualification (OFC)), row int-world-308: the game waits for 2028, the table holds it
@@ -106,3 +113,4 @@
 2026	not_in_game	eng-451 eng_fa_trophy 'FA Trophy' (England)
 2026	not_in_game	uefa-201 uefa_seeding 'UEFA access list and seeding' (UEFA)
 2026	playoffs	eng_first (EFL Championship), row eng-279: game 4 up and 0 down play-off places, table 6 and 0 ('3rd-8th: 5v8 and 6v7 single-leg eliminators (higher club at home), then semi-fin')
+2026	subs_used	asia_nations (AFC Asian Cup), row int-continental-284: game 3, table 5 (5)

@@ -47,6 +47,7 @@
 2001	clubs	world_cup (FIFA World Cup), row int-world-2: game 0, table 32 (32)
 2001	down	arg_prm (Argentine Premier Division), row arg-usa-1: game 0 (+0 play-off places), table 2 (2 (19th and 20th of the three-season average table, promedios))
 2001	down	arg_second (Argentine Second Division), row arg-usa-28: game 0 (+0 play-off places), table 7 (7 (worst coefficients: 2 per affiliation zone, 3 more regardless of affiliation))
+2001	down	bel_second (Belgian Second Division), row hol-bel-9: game 2 (+1 play-off places), table 0 (0 (no sporting relegation; clubs went down for licence reasons only: Zuid-West-V)
 2001	down	bra_nat_second (Brazilian National Second Division), row bra-55: game 4 (+0 play-off places), table 6 (6)
 2001	down	bra_nat_third (Brazilian National Third Division), row bra-82: game 2 (+0 play-off places), table na (n/a)
 2001	down	cro_a1 (Croatian First Division), row gre-pol-cro-325: game 2 (+0 play-off places), table 4 (4 (13th-16th))
@@ -73,6 +74,9 @@
 2001	idle	wc_asia_league (World Cup Asian Qualifying Section), row int-world-7: the game waits for 2004, the table holds it
 2001	idle	wc_europe_league (World Cup European Qualifying Section), row int-world-3: the game waits for 2004, the table holds it
 2001	idle	wc_south_american_league (World Cup South American Qualifying Section), row int-world-4: the game waits for 2004, the table holds it
+2001	meetings	aus_nsl (Australian National Soccer League), row aus-jap-kor-105: game 3, table 2
+2001	meetings	fin_first (Finnish First Division), row nor-fin-8: game 3, table 2
+2001	meetings	fin_prm (Finnish Premier Division), row nor-fin-7: game 3, table 2
 2001	name	arg_prm (Argentine Premier Division), row arg-usa-1: game 'Argentine Premier Division', table 'Primera División (Apertura 2001, Clausura 2002)'
 2001	name	arg_second (Argentine Second Division), row arg-usa-28: game 'Argentine Second Division', table 'Primera B Nacional'
 2001	name	aus_nsl (Australian National Soccer League), row aus-jap-kor-105: game 'Australian National Soccer League', table 'National Soccer League'
@@ -260,6 +264,7 @@
 2001	playoffs	cro_a2a (Croatian Second Division North), row gre-pol-cro-352: game 0 up and 0 down play-off places, table 1 and 1 ('1st: promotion play-off; 10th: relegation play-off')
 2001	playoffs	cro_a2b (Croatian Second Division South), row gre-pol-cro-379: game 0 up and 0 down play-off places, table 1 and 1 ('1st: promotion play-off; 10th: relegation play-off')
 2001	playoffs	fin_prm (Finnish Premier Division), row nor-fin-7: game 0 up and 1 down play-off places, table 0 and 0 ('none: promotion/relegation group decides places')
+2001	playoffs	hol_first (Dutch First Division), row hol-bel-3: game 0 up and 0 down play-off places, table 6 and 0 ('2nd to 7th join the Eredivisie 16th and 17th in two groups of four (no period wi')
 2001	playoffs	ita_ser_c1a (Italian Serie C1/A), row ita-4: game 4 up and 4 down play-off places, table 4 and 0 ('2nd to 5th: semi-finals and final over two legs, winner promoted to Serie B')
 2001	playoffs	ita_ser_c1b (Italian Serie C1/B), row ita-5: game 4 up and 4 down play-off places, table 4 and 0 ('2nd to 5th: semi-finals and final over two legs, winner promoted to Serie B')
 2001	playoffs	ita_ser_c2a (Italian Serie C2/A), row ita-6: game 4 up and 4 down play-off places, table 4 and 0 ('2nd to 5th, winner promoted')
@@ -269,6 +274,9 @@
 2001	playoffs	nir_prm (Northern Irish League Premier Division), row wal-nir-irl-10: game 0 up and 1 down play-off places, table 0 and 0 ('none')
 2001	playoffs	pol_first (Polish First Division), row gre-pol-cro-190: game 0 up and 0 down play-off places, table 0 and 2 ('5th-6th of relegation group: relegation play-offs')
 2001	playoffs	tur_second_b (Turkish 2. Division Category B), row rus-tur-217: game 2 up and 0 down play-off places, table 0 and 0 ('see format')
+2001	rounds	aus_nsl (Australian National Soccer League), row aus-jap-kor-105: game 39, table 26 (2 meetings, zones -, extra 0)
+2001	rounds	bra_nat_first (Brazilian National First Division), row bra-28: game 27, table 25 (1 meetings, zones -, extra 0)
+2001	rounds	bra_nat_second (Brazilian National Second Division), row bra-55: game 27, table 25 (1 meetings, zones -, extra 0)
 2001	up	arg_second (Argentine Second Division), row arg-usa-28: game 1 (+0 play-off places), table 2 (2 (Apertura/Clausura champion; Torneo Reducido winner))
 2001	up	aus_nsl (Australian National Soccer League), row aus-jap-kor-105: game 6 (+0 play-off places), table na (n/a)
 2001	up	bel_third (Belgian Third Division), row hol-bel-10: game 1 (+0 play-off places), table 2 (2 (group champions))

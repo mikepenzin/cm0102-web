@@ -31,7 +31,7 @@ def smallest(err):
 
 def classic(user):
     with open(os.path.join(user, "settings.txt"), "w") as f:
-        f.write("display = classic\n")
+        f.write("display = classic\ndatabase = 3.9.68\n")
 
 
 def now_line(user):
