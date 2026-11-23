@@ -20,14 +20,13 @@
   table { border-collapse: collapse; width: 100%; margin: 8px 0; }
   td { border-top: 1px solid var(--line); padding: 7px 8px 7px 0; vertical-align: top; color: var(--muted); }
   td:first-child { color: var(--text); white-space: nowrap; padding-right: 16px; }
-  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }   /* the three in a row on a laptop, one under the other on a phone */
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 18px 0; }
   .plan { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
   .plan.on { border-color: var(--accent); }        /* the free game: what everybody has */
   .plan .tag { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
   .plan.on .tag { color: var(--accent); }
   .plan h3 { margin: 0; font-size: 16px; }
   .plan .price { color: var(--text); font-size: 22px; font-weight: 650; margin: 4px 0 8px; }
-  .plan .price.words { font-size: 15px; line-height: 35.2px; }   /* a price in words, not an amount: on one line, as tall as an amount's */
   .plan ul { margin: 0; padding-left: 18px; }
   .updated { font-size: 13px; }
   .made { margin-top: 18px; text-align: center; color: var(--muted); font-size: 13px; }
@@ -55,23 +54,15 @@
     <div class="plan pro">
       <span class="tag">Optional add-on</span>
       <h3>Membership</h3>
-      <div class="price">{{PRICE}}</div>
+      <div class="price">From {{PRICE}}</div>
       <ul>
+        <li>Paid levels on Buy Me a Coffee, each with its benefits: Squad Player is Membership, Club Legend adds early access</li>
         <li>Cloud Saves: your saves on every computer, laptop and iPad</li>
         <li>Each save backed up right after you save</li>
         <li>Play on two devices: both versions are kept</li>
         <li>Up to 30 saved games in the cloud</li>
         <li>The Scout: the players of your saved games by age, potential and attributes, the best 100 that match</li>
         <li>Sign in with your Google account</li>
-      </ul>
-    </div>
-    <div class="plan pro">
-      <span class="tag">Optional add-on</span>
-      <h3>Club Legend</h3>
-      <div class="price words">Price on Buy Me a Coffee</div>
-      <ul>
-        <li>Everything in Membership</li>
-        <li>Early access: new seasons in the database library and new features of the site, usually 14 days before everyone else</li>
       </ul>
     </div>
   </div>
