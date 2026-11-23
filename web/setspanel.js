@@ -22,7 +22,7 @@ const why = (e) => t(e.key ?? e.message, e.vars);   // an error in the page's la
 // database library (library.mjs): Get a database lists it. early(): { signedIn, offer } for a database still in early
 // access (early.js), signIn(): the account's way in.
 export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () => null, edit, create, changed = () => {}, library = false,
-  early = () => ({ signedIn: true, offer: null }), signIn = () => {} }) {
+  early = () => ({ signedIn: true, offer: null }), signIn = () => {}, joining = () => {} }) {
   const box = $('sets-list'), note = $('sets-note'), input = $('sets-file'), lib = $('sets-lib');
   const say = (text, bad = false) => { note.textContent = text; note.className = bad ? 'small bad' : 'small'; };
   let shown = [], using = null, watched = null;
@@ -230,6 +230,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
   }
   lib.addEventListener('click', async (ev) => {
     if (ev.target.closest('[data-early-signin]')) { signIn(); return; }
+    if (ev.target.closest('.early-join')) { joining(); return; }       // the link opens the membership page itself
     const b = ev.target.closest('button[data-lib-get]');
     if (!b) return;
     const e = entries[Number(b.dataset.libGet)];

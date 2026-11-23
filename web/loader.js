@@ -996,7 +996,8 @@ function runEngine(files, info) {
       $('editor-open').onclick = () => editor.open();
       const sets = mountSetsPanel({ FS, root: SAVE_DIR, sync, log, toast, module: () => window.Module, cloud: () => setSync,
         edit: (name) => editor.openSet(name), create: () => editor.open(), changed: () => setSync?.run(), library: Boolean(info.library),
-        early: () => ({ signedIn: Boolean(account.me?.user), offer: account.me?.offer ?? null }), signIn: () => account.open() });
+        early: () => ({ signedIn: Boolean(account.me?.user), offer: account.me?.offer ?? null }), signIn: () => account.open(),
+        joining: () => account.waitForLegend() });
       account.onAccountChange(() => sets.refresh());       // a new Club Legend: an early database unlocks
       $('sets').hidden = false;
       $('saves-open').addEventListener('click', () => sets.render());

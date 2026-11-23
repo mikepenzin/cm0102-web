@@ -119,8 +119,14 @@ try {
     && /Become a Club Legend/.test(locked) && await lockedRow.locator('button[data-lib-get]').count() === 0, locked);
   check('the other databases are as before', await p.locator('#sets-lib button[data-lib-get]').count() === 2);
   await shot(p, 'locked');
-  // Becomes a Club Legend while the dialog is open (a gift): the row unlocks without a reload.
-  await fetch(`${BASE}/api/admin/cloud`, { method: 'POST', body: JSON.stringify({ id: 'g:7100002', level: 'legend' }), headers: { ...auth, 'content-type': 'application/json', 'x-cm': '1' } });
+  const giveLevel = (id, level) => fetch(`${BASE}/api/admin/cloud`, { method: 'POST', body: JSON.stringify({ id, level }), headers: { ...auth, 'content-type': 'application/json', 'x-cm': '1' } });
+  // A Squad Player first (Membership: the row stays locked), then a Club Legend while the dialog is open: the row
+  // unlocks without a reload, though Membership was on already.
+  await giveLevel('g:7100002', 'squad');
+  await p.evaluate(() => new BroadcastChannel('cm-account').postMessage({ ok: true }));
+  await p.waitForTimeout(2500);
+  check('a Squad Player: the early database stays locked', await lockedRow.locator('button[data-lib-get]').count() === 0);
+  await giveLevel('g:7100002', 'legend');
   await p.evaluate(() => new BroadcastChannel('cm-account').postMessage({ ok: true }));
   await p.waitForSelector(`#sets-lib tr:has-text("${early.name}") button[data-lib-get]`, { timeout: 20000 });
   const open = (await lockedRow.textContent()).replace(/\s+/g, ' ');
@@ -134,6 +140,26 @@ try {
   const dialog = (await p.innerText('#account-body')).replace(/\s+/g, ' ');
   check('the account dialog names the level', /Club Legend: early access/.test(dialog), dialog.slice(0, 200));
   await pctx.close();
+
+  // Joining from the locked row: Become a Club Legend opens the membership page, and the page asks again by itself
+  // until the player is one (here an admin's gift stands for Buy Me a Coffee's notification).
+  await account('7100003', 'joiner@example.com');
+  google.user = { sub: '7100003', email: 'joiner@example.com', email_verified: true, name: 'Joiner' };
+  const jctx = await browser.newContext({ viewport: { width: 1200, height: 800 } });
+  const j = await jctx.newPage();
+  await j.goto(`${BASE}/auth/google/start?mode=page`);
+  await j.waitForSelector('#go');
+  await j.click('#go');
+  await j.waitForFunction(() => window.__fake, null, { timeout: 30000 });
+  await j.click('#saves-open');
+  await j.click('#saves .tabs [data-tab="sets"]');
+  await j.waitForSelector('#sets-lib .early-join', { timeout: 20000 });
+  const [popup] = await Promise.all([jctx.waitForEvent('page').catch(() => null), j.click('#sets-lib .early-join')]);
+  await popup?.close().catch(() => {});
+  await giveLevel('g:7100003', 'legend');
+  const unlocked = await j.waitForSelector(`#sets-lib tr:has-text("${early.name}") button[data-lib-get]`, { timeout: 30000 }).then(() => true, () => false);
+  check('joined from Become a Club Legend: the row unlocks without a reload', unlocked);
+  await jctx.close();
 } finally {
   await browser.close();
   await site.close();

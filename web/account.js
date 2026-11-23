@@ -506,25 +506,27 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
   }
 
   // While the player joins on Buy Me a Coffee (another tab): Buy Me a Coffee tells the server, and the page asks every
-  // few seconds for 20 minutes, and at once when the player comes back to this tab.
+  // few seconds for 20 minutes, and at once when the player comes back to this tab. legend: the player joins as a Club
+  // Legend (an early thing's Become a Club Legend, early.js): the wait ends at that level, not at Membership.
   let memberWait = null;
-  function waitForMember() {
-    if (memberWait) return;
+  function waitForMember(legend = false) {
+    if (memberWait) { if (legend) memberWait.legend = true; return; }
     const until = Date.now() + 20 * 60e3;
     const check = async () => {
       if (!memberWait) return;
+      const had = Boolean(me?.user?.cloud);
       await refresh();
-      if (me?.user?.cloud) {
+      if (memberWait.legend ? me?.user?.level === 'legend' : me?.user?.cloud) {
         stop();
-        toast(t('Thank you for joining! You are a member: Cloud Saves are on, and the Scout shows all its matches.'), { ms: 8000 });
-        log('page: Cloud Saves on after joining');
+        if (!had) toast(t('Thank you for joining! You are a member: Cloud Saves are on, and the Scout shows all its matches.'), { ms: 8000 });
+        log(`page: ${me.user.level === 'legend' ? 'Club Legend' : 'Cloud Saves on'} after joining`);
       } else if (Date.now() > until) stop();
     };
     const seen = () => { if (document.visibilityState === 'visible') check(); };
     const timer = setInterval(check, 5000);
     const stop = () => { clearInterval(timer); document.removeEventListener('visibilitychange', seen); memberWait = null; };
     document.addEventListener('visibilitychange', seen);
-    memberWait = { stop };
+    memberWait = { stop, legend };
   }
 
   async function buy() {
@@ -585,7 +587,9 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     log('page: account deleted');
   }
 
-  const key = (m) => `${m?.user?.email ?? ''}|${Boolean(m?.user?.cloud)}`;
+  // What the listeners follow: the account, Membership, and the level (a Squad Player who becomes a Club Legend keeps
+  // Membership, and an early thing unlocks).
+  const key = (m) => `${m?.user?.email ?? ''}|${Boolean(m?.user?.cloud)}|${m?.user?.level ?? ''}|${Boolean(m?.early?.legend)}`;
   async function refresh() {
     const before = key(me);
     me = (await fetchMe()) ?? me;
@@ -632,5 +636,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
     },
     setCloud(c) { cloud = c; c?.onChange(() => { if (dialog.open) render(); }); render(); },
     onAccountChange(f) { listeners.add(f); },
+    // The player opened Become a Club Legend (early.js): ask the server until the level comes.
+    waitForLegend() { waitForMember(true); },
   };
 }
