@@ -198,3 +198,18 @@ test('the legal pages: pricing, terms, refunds, privacy, with the seller, the co
   assert.equal((await fetch(`${base}/terms.html`)).status, 200);
   assert.equal((await (await fetch(`${base}/files.json`)).json()).maker, 'A. Seller', 'the page\'s footer names the seller');
 });
+
+// Squad Player and Club Legend both give Membership, at prices of their own on Buy Me a Coffee; the site knows one,
+// the Squad Player level's (CM_PRICE). No sentence gives it as the price of every level.
+test('the legal pages and the levels: the price is the level\'s own, and the terms say what a Club Legend gets', async () => {
+  const text = async (page) => (await (await fetch(`${base}/${page}`)).text()).replace(/\s+/g, ' ');
+  const terms = await text('terms'), pricing = await text('pricing');
+  assert.doesNotMatch(terms, /[$€£]\s?\d|\d\s?(dollars|euros|pounds)/i, 'the terms name no amount');
+  assert.match(terms, /at the Squad Player or the Club Legend level, at the price of that level \(<a href="\/pricing">Pricing<\/a>\), paid in advance/);
+  assert.match(pricing, /Each level has its own price: the Squad Player level is \$5 a month, the Club Legend level costs more, and Buy Me a Coffee shows every level's price before you join\./);
+  assert.deepEqual(pricing.match(/[^.>]*\$5 a month[^.<]*/g).map((s) => s.trim()),
+    ['$5 a month', 'Each level has its own price: the Squad Player level is $5 a month, the Club Legend level costs more, and Buy Me a Coffee shows every level\'s price before you join'],
+    'the price: on the Membership card, and as the Squad Player level\'s');
+  assert.match(terms, /The Club Legend level adds early access: [^.]* come to Club Legends first, usually 14 days before everyone else\. We do not promise how many there will be, or when\./);
+  assert.match(pricing, /new features of the site come to Club Legends first, usually 14 days before everyone else\. After that, what is free is free for everyone, and what is part of Membership is for every member\./);
+});
