@@ -342,6 +342,18 @@ _Avoid_: pack, bundle, archive part
 The paid plan of the browser game: Cloud Saves and the Scout. A member is an account that has it.
 _Avoid_: Cloud Saves (for the plan), subscription, premium, sponsor
 
+**Level**:
+What an account has on the browser game, lowest first: Free, Supporter, Squad Player, Club Legend; each includes everything below it. Squad Player and up have Membership. A paid level is the Buy Me a Coffee level of the account's email; an admin can give Squad Player or Club Legend.
+_Avoid_: tier, plan (for the level), rank
+
+**Club Legend**:
+The highest level: Membership and early access.
+_Avoid_: VIP, top tier
+
+**Early access**:
+A new feature or a new Library database that only Club Legends have until its day; then everyone has it under its usual rules.
+_Avoid_: beta, preview
+
 **Cloud Saves**:
 The saved games of a member kept in the cloud and the same on every device where the member signs in. One part of Membership.
 _Avoid_: cloud sync, backup

@@ -109,7 +109,7 @@ signing secret, the levels that give Cloud Saves, their price, and the seller's 
 refunds, privacy and pricing pages show:
 
 ```bash
-fly secrets set BMC_WEBHOOK_SECRET=<signing secret> BMC_CLOUD_LEVELS="Squad Player,Club Legend" CM_PRICE='$5 a month' \
+fly secrets set BMC_WEBHOOK_SECRET=<signing secret> CM_LEVELS="Supporter,Squad Player,Club Legend" CM_PRICE='$5 a month' \
   CM_COFFEE_URL=https://buymeacoffee.com/<your name> CM_SELLER="<your name>" CM_CONTACT=<your email>
 ```
 
@@ -124,6 +124,11 @@ The admin page's **Members** tab lists every membership the webhook told the ser
 gives Membership, whether that email has signed in here) and the last notification with what came of it. A supporter
 missing there sent no membership event: a one-off coffee is not a membership, or the webhook is not set up. One listed
 but "not seen" has Membership waiting until they sign in with Google using that same email.
+
+The levels: `CM_LEVELS` lists the Buy Me a Coffee level names lowest first (Supporter, Squad Player, Club Legend by
+default); it replaces `BMC_CLOUD_LEVELS`, which still works alone (`fly logs` says so; `fly secrets unset
+BMC_CLOUD_LEVELS` once `CM_LEVELS` is set). Club Legends get new features and Library databases early: the admin page's
+**Early access** tab and the library form's day (`web/README.md`, "Levels and early access").
 
 Paddle, the first way (subscriptions bought through it keep working while its settings stay):
 
@@ -294,7 +299,7 @@ vault off and lists none of the player's saves. So do not deploy a commit from b
 | Google says `redirect_uri_mismatch` | The client's Authorized redirect URI must be exactly `https://<your-app>.fly.dev/auth/google/callback` |
 | Only some Google accounts can sign in | The Google app is still "Testing": Audience, Publish app |
 | The checkout says "Something went wrong" | Paddle has not approved the domain yet (Website approval), or there is no Default payment link (Checkout settings: `https://<your-app>.fly.dev/`), or the token and the price are of different environments (`test_` is the sandbox) |
-| Joined, but Cloud Saves stay off | `fly logs`: `Buy Me a Coffee notification refused` means `BMC_WEBHOOK_SECRET` is not the webhook's signing secret; `membership … Cloud Saves off` with a level means `BMC_CLOUD_LEVELS` leaves that level out; a `membership … on` line but the player is still off: they joined with another email than their Google account's (give Cloud Saves on the admin page) |
+| Joined, but Cloud Saves stay off | the admin page's Members tab: the last notification says what came of it. `refused` means `BMC_WEBHOOK_SECRET` is not the webhook's signing secret; `not in CM_LEVELS` means `CM_LEVELS` lacks that level's name (it counts as Supporter); a Supporter has no Membership by design; a membership listed but "not seen": they joined with another email than their Google account's (Give Squad Player or Club Legend on the admin page) |
 | Paid with Paddle, but Cloud Saves stay off | `fly logs`: a `Paddle notification refused` line means `PADDLE_WEBHOOK_SECRET` is not the destination's secret; `price … is not one of PADDLE_PRICE_ID` names the price to add |
 
 The first visit after a quiet time wakes the machine, which takes a few seconds.

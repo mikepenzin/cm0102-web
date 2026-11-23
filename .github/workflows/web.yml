@@ -43,6 +43,8 @@ jobs:
         run: NODE_PATH="$(npm root -g)" node web/test/editor-check.mjs
       - name: Scout check (the Editor's Scout tab, free and member)
         run: NODE_PATH="$(npm root -g)" node web/test/scout-check.mjs
+      - name: Early check (levels, gifts, early access on the admin page and the game page)
+        run: NODE_PATH="$(npm root -g)" node web/test/early-check.mjs
       - name: Cloud check (sign-in, cloud saves, the purchase)
         run: NODE_PATH="$(npm root -g)" node web/test/cloud-check.mjs
       - name: Tour check (the first-visit tour on a laptop and a phone)

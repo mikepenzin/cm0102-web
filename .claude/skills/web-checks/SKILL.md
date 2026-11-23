@@ -1,12 +1,12 @@
 ---
 name: web-checks
-description: Which checks to run for a change to the browser page and server (web/), how to run them, how long they take, and the traps they hide. Use before pushing web/ changes, when CI ("Web", .github/workflows/web.yml) fails, for "run the tests", "page-check", "cloud-check", "editor-check", "scout-check", "tour-check", "i18n-check", "screens", "Playwright", or a red run on main.
+description: Which checks to run for a change to the browser page and server (web/), how to run them, how long they take, and the traps they hide. Use before pushing web/ changes, when CI ("Web", .github/workflows/web.yml) fails, for "run the tests", "page-check", "cloud-check", "editor-check", "scout-check", "early-check", "tour-check", "i18n-check", "screens", "Playwright", or a red run on main.
 ---
 
 # Checks of the page (web/)
 
 CI (.github/workflows/web.yml) runs, in order: `cd web && npm test`, vault-check.cjs, page-check.cjs, editor-check.mjs,
-scout-check.mjs, cloud-check.mjs, tour-check.mjs, i18n-check.mjs. Push to main only when the ones a change touches pass
+scout-check.mjs, early-check.mjs, cloud-check.mjs, tour-check.mjs, i18n-check.mjs. Push to main only when the ones a change touches pass
 here; run the whole list before a push that touches shared code or wording. web/README.md, "Tests", says what each one
 covers.
 
@@ -20,6 +20,7 @@ lines and the last line ("… check: all ok").
 | page-check.cjs | ~10 min | loader.js, the start, Saved games, stats.js, report.js, the bar |
 | editor-check.mjs | ~2 min | Squad Hub (editor.js, savedit.js, dataset.js), data sets |
 | scout-check.mjs | ~2 min | the Scout (scout.js, editor.js), the Membership gate |
+| early-check.mjs | ~1 min | levels (levels.mjs, cloud.mjs planOf), Give on the admin page, early access (early.mjs, early.js, library.mjs, setspanel.js), admin.html |
 | cloud-check.mjs | ~4 min | account.js, cloud.mjs, billing.mjs, payments, wording of the plans |
 | tour-check.mjs | ~1 min | tour.js, the bar's buttons |
 | i18n-check.mjs | ~1 min | any text a player reads (see the web-languages skill) |

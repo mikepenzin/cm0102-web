@@ -495,8 +495,8 @@ secret, `billing.mjs`) names the supporter's email; the server keeps the members
 (`members/<sha256 of the email>.json`: the email, the membership's id, level, state and the end of its period; no
 name, no amount), so a player may join before signing in. The account whose Google email is that email has Cloud
 Saves while the membership runs: an active one to the end of its period plus three days (for the renewal's webhook),
-one canceled for the period's end until then, a paused or canceled one none. `BMC_CLOUD_LEVELS` names the levels that
-give them (all, unset). An older event of the same membership than the last one (a retry) changes nothing; a test
+one canceled for the period's end until then, a paused or canceled one none. Its level counts as a site level
+(`CM_LEVELS`, "Levels and early access" below): Squad Player and up have Cloud Saves. An older event of the same membership than the last one (a retry) changes nothing; a test
 event of the dashboard (`live_mode` false) is only logged. A player who joined with another email: give Cloud Saves on
 the admin page. An account with a running membership cannot be deleted until it is canceled. In Buy Me a Coffee:
 
@@ -559,7 +559,8 @@ deleted until the subscription is canceled. In Paddle (start in the sandbox, `sa
 | `CM_UPGRADE_URL` | without Buy Me a Coffee and Paddle: where "Get Cloud Saves" leads |
 | `BMC_WEBHOOK_SECRET` | the signing secret of the Buy Me a Coffee webhook; with it (and a membership page) Cloud Saves are sold as a membership |
 | `BMC_MEMBERSHIP_URL` | the membership page (`https://`); default `CM_COFFEE_URL` + `/membership` |
-| `BMC_CLOUD_LEVELS` | the membership levels that give Cloud Saves, names or ids, comma-separated (case does not matter); unset: every level |
+| `CM_LEVELS` | the Buy Me a Coffee level names (or ids), lowest first, comma separated, any case: the first is Supporter, the second Squad Player, any later one Club Legend (default `Supporter,Squad Player,Club Legend`); a level not in it counts as Supporter |
+| `BMC_CLOUD_LEVELS` | the older setting, read only without `CM_LEVELS`: its levels are Squad Player, any other Supporter (the log says `CM_LEVELS` replaces it) |
 | `CM_CLOUD_MAX_SAVES` | the most saves an account keeps in the cloud (default 30) |
 | `CM_CLOUD_MAX_SETS` | the most data sets an account keeps in the cloud (default 5) |
 | `CM_DIRECT` | `off`: saves and data sets go through the server, not straight to the store; `on`: straight, with the bucket's CORS rules set in the store's console (the server does not set them) |
@@ -612,6 +613,38 @@ is open, the title is the save's name and Players and Scout are its tabs):
 
 Contracts, clubs, names and reputations are not edited, and a saved game gets no new players. The facts, with the
 game's code addresses: `docs/research/2026-11-10-save-editor.md`.
+
+## Levels and early access
+
+Every account has a level (`levels.mjs`), each with everything below it: **Free** (what everyone gets), **Supporter**
+(the same, as a thank-you), **Squad Player** (Membership: Cloud Saves and the full Scout) and **Club Legend** (Squad
+Player, and early access). A player with no account is Free. The level is the highest of: the running Buy Me a Coffee
+membership of the account's email (its level through `CM_LEVELS`), a Paddle subscription (Squad Player), a gift of the
+admin page (Squad Player or Club Legend; `grants/<id>.json`, one kept before levels is Squad Player), the server's
+lists (`CM_CLOUD_FOR`, `CM_CLOUD_USERS`, a plan set by hand: Squad Player) and being an admin (Club Legend, so the
+admin sees what Club Legends see). `/api/me` says `user.level` (`free`, `supporter`, `squad`, `legend`); `user.cloud`
+is Squad Player and up. The account dialog names the level. The admin page's People shows it and where it comes from
+(paid, gift, admin, server list), with Give Squad Player, Give Club Legend and Take back; Members shows the level each
+membership counts as; Overview splits the members by level.
+
+**Early access** (`early.mjs`, `early.js`): a new feature or a new Library database is for Club Legends only until its
+day, then for everyone under its usual rules. A day is a calendar day and opens at its 00:00 UTC. Until then everyone
+else sees the thing dimmed where it would be, with "Club Legends have it now · everyone from {date}", Sign in (signed
+out) and Become a Club Legend (the membership page); a Club Legend sees an **Early access** badge. `/api/me` says
+`early: { legend, features: { key: day } }` (only what is still early) to everyone, a server with no accounts too.
+
+- **A Library database**: the admin page's library form has "Club Legends only until", 14 days ahead by default, empty
+  for everyone at once. Until that day `/api/library` lists it with `early` and, for a player below Club Legend,
+  `locked`; its zip and its download link answer 403 with the day. Its picture stays public.
+- **A feature of the page**: building one adds its line to `web/features.js` (`{ key, name }`), and its entry point asks
+  `earlyState(account.me, key)` (`early.js`): `open`, `early` (draw `badgeHtml()` beside it) or `locked` (draw
+  `lockedHtml(day, { signedIn, offer })` in its place). A feature with a route of its own checks the level there too
+  (`cloud.planOf(user).level === 'legend'` while `isEarly(day)`); one that lives only in the page is gated in the page
+  only: early access is a perk, not a secret. The server gives a key it sees for the first time 14 days
+  (`early/features.json`), so no feature waits for someone to remember it; a key whose day cannot be read counts as open.
+- The admin page's **Early access** tab lists the features and the databases still early with their day: change it
+  (Save) or **Open now**; those already open are listed below. The routes: `GET /api/admin/early`, `PUT
+  /api/admin/early { key, day | null }`.
 
 ## The Scout
 
@@ -1033,6 +1066,11 @@ What to know about the Asyncify engine:
   New data set, an edit with a move to another club, Add a player, an unknown club refused, Save, Delete; the Data sets
   of Saved games: Use (through settings.txt and through the runtime call), Download, Upload of a zip and of the 20
   files, Delete. The cloud check adds a data set uploaded on one device that comes to the other.
+- `NODE_PATH=$(npm root -g) node web/test/early-check.mjs [screenshot folder]`: levels and early access in Chromium on
+  the demo site: People's levels (paid, a gift and both), Give Club Legend and Take back, the level chips, Members'
+  levels and an unknown one, the Early access tab and Open now, the library form's day, the Overview split; then a free
+  player's locked database (its day, no Get), unlocked without a reload when the player becomes a Club Legend (the
+  badge, Get), and the account dialog's level.
 - `NODE_PATH=$(npm root -g) node web/test/scout-check.mjs [screenshot folder]`: the Scout in Chromium on a saved game
   of ten players, with `/api/me` played by Playwright: a free player (3 matches, the rest held back and nowhere in the
   page, the invitation that opens the Account dialog), a filter, a match opened (and Back on a phone), a member (every
