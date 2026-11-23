@@ -488,7 +488,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   if (stats) console.log(notify.on ? 'report notices: on (CM_REPORT_WEBHOOK)' : 'report notices: off (CM_REPORT_WEBHOOK, web/deploy/README.md)');
   // The database library: in the same bucket; its links name the address the pages reach (cloud.mjs presign).
   const library = store ? createLibrary({ s3: store, presign: (m, k, o) => (cloud?.presign ?? store.presign)(m, k, o),
-    isDirect: () => Boolean(cloud?.isDirect?.()), log: (t) => console.log(t) }) : null;
+    isDirect: () => Boolean(cloud?.isDirect?.()), log: (t) => console.log(t),
+    // The asker's level: a database still early is for Club Legends (early.mjs, levels.mjs).
+    levelOf: async (req) => { const u = cloud?.userOf(req); return u ? (await cloud.planOf(u)).level : 'free'; } }) : null;
   console.log(library ? 'database library: on (admin page, Library; players: Saved games, Data sets, Get a database)' : 'database library: off (it needs the bucket)');
   const server = createApp({ gameDir, buildDir, asyncifyDir, cloud, site, stats, statsMode: process.env.CM_STATS === 'optout' ? 'optout' : 'optin', admins,
     adminToken: process.env.CM_ADMIN_TOKEN ?? null, library, early });

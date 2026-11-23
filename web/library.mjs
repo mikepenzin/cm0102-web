@@ -3,7 +3,8 @@
 // Saved games, Data sets, Get a database (setspanel.js), and Use starts the next new game with it in its season.
 //
 // The store holds:
-//   library/index.json             { entries: [{ id, name, season, note, size, rawSize, added }] }
+//   library/index.json             { entries: [{ id, name, season, note, early, size, rawSize, added }] }; early: the day
+//                                  (YYYY-MM-DD) before which only Club Legends get it (early.mjs), or null
 //   library/<id>.zip               the data set: its 20 database files (and the Data files it brings), as a zip
 //   library/<id>.png               its title card (rgn.mjs): the release's intro picture, small, for the page only
 //   library/incoming/<id>.zip      an upload of the admin page, until it is checked
@@ -13,6 +14,7 @@
 import { randomBytes } from 'node:crypto';
 import { inspectSetZip, validSetName } from './cloud.mjs';
 import { cardOfZip } from './rgn.mjs';
+import { isEarly, validDay } from './early.mjs';
 
 export const MAX_LIBRARY_ZIP = 128 << 20;
 export const CARDS_AT_ONCE = 6;                     // zips read by one call of the admin's Make their pictures            // a data set with its extra files, zipped (the 2001/02 data: some 20 MB)
@@ -47,12 +49,15 @@ export function entryFields(body) {
   const season = Number(body?.season);
   if (!Number.isInteger(season) || season < FIRST_SEASON || season > LAST_SEASON) return { why: `a season from ${FIRST_SEASON} to ${LAST_SEASON} (its first year)` };
   const note = String(body?.note ?? '').replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '').trim().slice(0, 500);
-  return { why: null, fields: { name, season, note } };
+  const early = body?.early == null || body.early === '' ? null : body.early;
+  if (early !== null && !validDay(early)) return { why: 'early: a day YYYY-MM-DD, or none' };
+  return { why: null, fields: { name, season, note, early } };
 }
 
 // presign(method, key, opts): a link of the store at the address the pages reach (cloud.mjs presign); isDirect():
 // whether the pages go straight to the store now.
-export function createLibrary({ s3, presign = (m, k, o) => s3.presign?.(m, k, o), isDirect = () => false, log = () => {} }) {
+// levelOf(req): the level of the player who asks (levels.mjs): a database still early is a Club Legend's only.
+export function createLibrary({ s3, presign = (m, k, o) => s3.presign?.(m, k, o), isDirect = () => false, log = () => {}, levelOf = async () => 'free' }) {
   let cache = null, cachedAt = 0;
   async function index(fresh = false) {
     if (!fresh && cache && Date.now() - cachedAt < 30000) return cache;
@@ -78,7 +83,17 @@ export function createLibrary({ s3, presign = (m, k, o) => s3.presign?.(m, k, o)
   async function handle(req, res, url) {
     const path = url.pathname;
     if (req.method !== 'GET' && req.method !== 'HEAD') { req.resume(); send(res, 405, { error: 'GET only' }); return; }
-    if (path === '/api/library') { send(res, 200, { entries: listed(await index()) }); return; }
+    // A database still early: its day for everyone, and locked for a player below Club Legend.
+    const legend = async () => (await levelOf(req).catch(() => 'free')) === 'legend';
+    const shown = (e, isLegend) => {
+      const { early, ...rest } = e;
+      return isEarly(early) ? { ...rest, early, ...(isLegend ? {} : { locked: true }) } : rest;
+    };
+    if (path === '/api/library') {
+      const entries = listed(await index()), isLegend = entries.some((e) => isEarly(e.early)) && await legend();
+      send(res, 200, { entries: entries.map((e) => shown(e, isLegend)) });
+      return;
+    }
     const [id, part] = path.slice('/api/library/'.length).split('/');
     const entry = validId(id) ? (await index()).entries.find((e) => e.id === id) : null;
     if (!entry) { send(res, 404, { error: 'no such database in the library' }); return; }
@@ -91,6 +106,10 @@ export function createLibrary({ s3, presign = (m, k, o) => s3.presign?.(m, k, o)
       return;
     }
     if (part !== undefined) { send(res, 404, { error: 'not found' }); return; }
+    if (isEarly(entry.early) && !await legend()) {
+      send(res, 403, { error: `Club Legends get this database until ${entry.early}`, key: 'Club Legends get this database until {date}', vars: { date: entry.early } });
+      return;
+    }
     if (url.searchParams.get('direct') === 'get') {
       send(res, 200, isDirect() ? { direct: true, url: presign('GET', zipKey(id)).url, size: entry.size } : { direct: false });
       return;

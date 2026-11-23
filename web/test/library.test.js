@@ -8,13 +8,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CARDS_AT_ONCE, createLibrary, entryFields } from '../library.mjs';
 import { createS3 } from '../s3.mjs';
+import { addDays, todayUTC } from '../early.mjs';
 import { createStats } from '../stats.mjs';
 import { createApp } from '../server.mjs';
 import { writeZip } from '../zip.js';
 import { fakeDataSet, fakeRgn as rgn, fakeS3 } from './fakes.mjs';
 
 const TOKEN = 't'.repeat(24);
-let tmp, s3fake, s3, server, base, direct = false;
+let tmp, s3fake, s3, server, base, direct = false, level = 'free';
 const logs = [];
 
 before(async () => {
@@ -23,7 +24,7 @@ before(async () => {
   writeFileSync(join(tmp, 'manifest.tsv'), '');
   s3fake = await fakeS3();
   s3 = createS3({ endpoint: s3fake.endpoint, bucket: s3fake.bucket, accessKeyId: 'tid_test', secretAccessKey: 'tsec_test', pathStyle: true });
-  const library = createLibrary({ s3, presign: (m, k, o) => s3.presign(m, k, o), isDirect: () => direct, log: (t) => logs.push(t) });
+  const library = createLibrary({ s3, presign: (m, k, o) => s3.presign(m, k, o), isDirect: () => direct, log: (t) => logs.push(t), levelOf: async () => level });
   server = createApp({ gameDir: join(tmp, 'game'), buildDir: join(tmp, 'build'), manifestPath: join(tmp, 'manifest.tsv'),
     stats: createStats({ store: null }), adminToken: TOKEN, library });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -37,13 +38,17 @@ const dataSetZip = async (folder = '2011 update', extra = []) => writeZip([...Ob
 const list = async () => (await (await fetch(`${base}/api/library`)).json()).entries;
 
 test('the fields of an entry: a folder name, a season of the game, a short note', () => {
-  assert.deepEqual(entryFields({ name: ' 2011 update ', season: '2011', note: 'From the forum\u0007, by A.' }).fields, { name: '2011 update', season: 2011, note: 'From the forum, by A.' });
+  assert.deepEqual(entryFields({ name: ' 2011 update ', season: '2011', note: 'From the forum\u0007, by A.' }).fields, { name: '2011 update', season: 2011, note: 'From the forum, by A.', early: null });
   assert.match(entryFields({ name: 'a/b', season: 2011 }).why, /a name of 1 to 60/);
   assert.match(entryFields({ name: 'ok', season: 1999 }).why, /a season from 2001 to 2026/);
   assert.equal(entryFields({ name: 'ok', season: 2026 }).fields.season, 2026, '2026/27: a database after the game\'s last season');
   assert.match(entryFields({ name: 'ok', season: 2027 }).why, /a season/);
   assert.match(entryFields({ name: 'ok', season: 2011.5 }).why, /a season/);
   assert.equal(entryFields({ name: 'ok', season: 2025, note: 'x'.repeat(900) }).fields.note.length, 500);
+  assert.equal(entryFields({ name: 'ok', season: 2025 }).fields.early, null, 'no day: open to all');
+  assert.equal(entryFields({ name: 'ok', season: 2025, early: '' }).fields.early, null);
+  assert.equal(entryFields({ name: 'ok', season: 2025, early: '2027-01-01' }).fields.early, '2027-01-01');
+  assert.match(entryFields({ name: 'ok', season: 2025, early: 'soon' }).why, /early: a day YYYY-MM-DD, or none/);
 });
 
 test('an empty library; only an admin adds to it, and the page knows there is one', async () => {
@@ -168,4 +173,49 @@ test('the title card: made when a database comes, given to everyone, made later 
   assert.equal((await admin(`/api/admin/library/${withCard.id}`, { method: 'DELETE' })).status, 204);
   assert.ok(!s3fake.objects.has(`library/${withCard.id}.png`), 'the card goes with its database');
   await admin(`/api/admin/library/${without.id}`, { method: 'DELETE' });
+});
+
+async function addDb(name, early) {
+  const zip = await dataSetZip(name);
+  const start = await (await admin('/api/admin/library', { method: 'POST', body: { size: zip.length } })).json();
+  await admin(`/api/admin/library/${start.id}/body`, { method: 'PUT', body: zip, headers: { 'content-type': 'application/zip' } });
+  const done = await admin(`/api/admin/library/${start.id}/done`, { method: 'POST', body: { name, season: 2026, note: '', early } });
+  assert.equal(done.status, 201);
+  return start.id;
+}
+
+test('an early database: listed, locked for a player below Club Legend, open for a Club Legend', async () => {
+  direct = false;
+  const day = addDays(todayUTC(), 3);
+  const id = await addDb('Season 2026-27', day);
+  level = 'squad';
+  let e = (await list()).find((x) => x.id === id);
+  assert.deepEqual([e.early, e.locked], [day, true]);
+  const zip = await fetch(`${base}/api/library/${id}`);
+  assert.equal(zip.status, 403);
+  assert.deepEqual(await zip.json(), { error: `Club Legends get this database until ${day}`, key: 'Club Legends get this database until {date}', vars: { date: day } });
+  assert.equal((await fetch(`${base}/api/library/${id}?direct=get`)).status, 403);
+  level = 'legend';
+  e = (await list()).find((x) => x.id === id);
+  assert.deepEqual([e.early, e.locked], [day, undefined]);
+  assert.equal((await fetch(`${base}/api/library/${id}`)).status, 200);
+  assert.equal((await (await admin('/api/admin/library')).json()).entries.find((x) => x.id === id).early, day, 'the admin sees the day');
+  level = 'free';
+});
+
+test('its day opens it to all; the admin sets and clears the day', async () => {
+  const id = await addDb('Opens today', todayUTC());
+  let e = (await list()).find((x) => x.id === id);
+  assert.deepEqual([e.early, e.locked], [undefined, undefined]);
+  assert.equal((await fetch(`${base}/api/library/${id}`)).status, 200, 'a free player, on its day');
+  assert.equal((await admin(`/api/admin/library/${id}`, { method: 'PATCH', body: { early: '2099-01-01' } })).status, 200);
+  e = (await list()).find((x) => x.id === id);
+  assert.deepEqual([e.early, e.locked], ['2099-01-01', true]);
+  assert.equal((await admin(`/api/admin/library/${id}`, { method: 'PATCH', body: { early: 'soon' } })).status, 400);
+  assert.equal((await admin(`/api/admin/library/${id}`, { method: 'PATCH', body: { early: null } })).status, 200);
+  e = (await list()).find((x) => x.id === id);
+  assert.deepEqual([e.early, e.locked], [undefined, undefined]);
+  // The picture of a locked database stays public: the page shows it on the locked row (no card here: 404, not 403).
+  await admin(`/api/admin/library/${id}`, { method: 'PATCH', body: { early: '2099-01-01' } });
+  assert.notEqual((await fetch(`${base}/api/library/${id}/card`)).status, 403);
 });
