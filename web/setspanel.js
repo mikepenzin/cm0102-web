@@ -3,6 +3,7 @@
 // Cloud Saves, a Cloud column and Remove, as for the saves. The work is in datasets.js.
 import { whenCell } from './saves.js';
 import { onLanguage, t, tn } from './i18n.js';
+import { badgeHtml, entryState, lockedHtml } from './early.js';
 import { DATA_SET_FILES } from './dataset.js';
 import { FIRST_SEASON, LAST_SEASON, chooseForNextGame, cleanName, dataSetZip, dataSetsInZip, deleteDataSet, fromLibrary, listDataSets,
   markFromLibrary, seasonText, uniqueName, writeDataSet } from './datasets.js';
@@ -18,8 +19,10 @@ const why = (e) => t(e.key ?? e.message, e.vars);   // an error in the page's la
 
 // root: the user folder; module(): the engine's Module; cloud(): the data sets' sync (datasets.js) or null; edit(name),
 // create(): the editor; changed(): after a data set came or went (the cloud sync runs). library: the server has the
-// database library (library.mjs): Get a database lists it.
-export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () => null, edit, create, changed = () => {}, library = false }) {
+// database library (library.mjs): Get a database lists it. early(): { signedIn, offer } for a database still in early
+// access (early.js), signIn(): the account's way in.
+export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () => null, edit, create, changed = () => {}, library = false,
+  early = () => ({ signedIn: true, offer: null }), signIn = () => {} }) {
   const box = $('sets-list'), note = $('sets-note'), input = $('sets-file'), lib = $('sets-lib');
   const say = (text, bad = false) => { note.textContent = text; note.className = bad ? 'small bad' : 'small'; };
   let shown = [], using = null, watched = null;
@@ -170,8 +173,11 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
     head.innerHTML = `${esc(t('Available to download'))} <span>${esc(t('· {databases}, free', { databases: tn(entries.length, { one: '{n} database', other: '{n} databases' }) }))}</span>`;
     drawStep();
     lib.innerHTML = entries.length ? `<table><tr><th>${esc(t('Database'))}</th><th>${esc(t('Season'))}</th><th class="num">${esc(t('Size'))}</th><th></th></tr>
-      ${entries.map((e, i) => `<tr><td><div class="lib-db">${card(e)}<div data-raw>${esc(e.name)}${e.note ? `<div class="small">${esc(e.note)}</div>` : ''}</div></div></td><td>${seasonText(e.season)}</td>
-        <td class="num">${MB(e.size)}</td><td class="acts"><div class="btns"><button class="primary" data-lib-get="${i}">${esc(have.has(e.id) ? t('Get again') : t('Get'))}</button></div></td></tr>`).join('')}</table>` : '';
+      ${entries.map((e, i) => { const state = entryState(e);      // early access (early.js): locked, or a Club Legend's badge
+        return `<tr${state === 'locked' ? ' class="lib-locked"' : ''}><td><div class="lib-db">${card(e)}<div><span data-raw>${esc(e.name)}</span>${state === 'early' ? ` ${badgeHtml()}` : ''}${e.note ? `<div class="small" data-raw>${esc(e.note)}</div>` : ''}
+          ${state === 'locked' ? lockedHtml(e.early, early()) : ''}</div></div></td><td>${seasonText(e.season)}</td>
+        <td class="num">${MB(e.size)}</td><td class="acts"><div class="btns">${state === 'locked' ? ''
+          : `<button class="primary" data-lib-get="${i}">${esc(have.has(e.id) ? t('Get again') : t('Get'))}</button>`}</div></td></tr>`; }).join('')}</table>` : '';
   }
   async function showLibrary() {
     if (!library) return;
@@ -192,6 +198,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
     const show = (got) => say(t('Getting {name}: {pct}%', { name: e.name, pct: Math.min(100, Math.floor((100 * got) / Math.max(1, e.size))) }));
     show(0);
     const read = async (r) => {
+      if (r.status === 403) { const j = await r.json().catch(() => ({})); throw Object.assign(new Error(j.error ?? 'HTTP 403'), { key: j.key, vars: j.vars }); }
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const out = new Uint8Array(e.size), reader = r.body.getReader();
       let at = 0;
@@ -222,6 +229,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
     return name;
   }
   lib.addEventListener('click', async (ev) => {
+    if (ev.target.closest('[data-early-signin]')) { signIn(); return; }
     const b = ev.target.closest('button[data-lib-get]');
     if (!b) return;
     const e = entries[Number(b.dataset.libGet)];
@@ -245,5 +253,7 @@ export function mountSetsPanel({ FS, root, sync, log, toast, module, cloud = () 
   input.onchange = async () => { const files = [...input.files]; input.value = ''; await upload(files); };
   drawStep();
   onLanguage(() => { drawOwn(); if (library) drawLibrary(); else drawStep(); });   // the lists in the new language (no new ask of the library)
-  return { render, say };
+  // The account changed (signed in, joined, became a Club Legend): the library's list again, its locks are the asker's.
+  const refresh = () => { if (!library) return; askedAt = 0; showLibrary(); };
+  return { render, say, refresh };
 }

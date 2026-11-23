@@ -676,4 +676,10 @@ export default {
   "For example: I loaded my save and the game stopped.": "Bijvoorbeeld: ik laadde mijn save en het spel stopte.",
   "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Nu in het spel geladen? Sla hier op en laad hem daarna opnieuw in het spel: eerst in het spel opslaan zou deze wijzigingen ongedaan maken.",
   "{name} is as he was.": "{name} is weer zoals hij was.",
+  "Club Legend: early access to new seasons and features, Cloud Saves and the full Scout.": "Club Legend: vroege toegang tot nieuwe seizoenen en functies, Cloudsaves en de volledige Scout.",
+  "Squad Player: Cloud Saves and the full Scout.": "Squad Player: Cloudsaves en de volledige Scout.",
+  "Supporter: thank you for the support.": "Supporter: bedankt voor je steun.",
+  "Early access": "Vroege toegang",
+  "Become a Club Legend": "Word Club Legend",
+  "Club Legends have it now · everyone from {date}": "Club Legends hebben het al · voor iedereen vanaf {date}",
 };

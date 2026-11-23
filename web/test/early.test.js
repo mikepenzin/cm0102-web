@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { addDays, createEarly, isEarly, todayUTC, validDay } from '../early.mjs';
 import { createCloud } from '../cloud.mjs';
+import { badgeHtml, earlyDate, earlyState, entryState, lockedHtml } from '../early.js';
 import { createS3 } from '../s3.mjs';
 import { createStats } from '../stats.mjs';
 import { createApp } from '../server.mjs';
@@ -100,4 +101,21 @@ test('/api/me says what is early, signed in or not; the admin routes change a da
     server.close();
     bare.close();
   }
+});
+
+test('the page helper: open, early for a Club Legend, locked for everyone else', () => {
+  assert.equal(earlyState(null, 'x'), 'open');
+  assert.equal(earlyState({ auth: false }, 'x'), 'open');
+  assert.equal(earlyState({ early: { legend: false, features: { x: '2099-01-01' } } }, 'x'), 'locked');
+  assert.equal(earlyState({ early: { legend: true, features: { x: '2099-01-01' } } }, 'x'), 'early');
+  assert.equal(earlyState({ early: { legend: false, features: { x: '2099-01-01' } } }, 'y'), 'open');
+  assert.equal(entryState({ locked: true, early: '2099-01-01' }), 'locked');
+  assert.equal(entryState({ early: '2099-01-01' }), 'early');
+  assert.equal(entryState({}), 'open');
+  assert.match(earlyDate('2026-12-07'), /7/);
+  const out = lockedHtml('2026-12-07', { signedIn: false, offer: { url: 'https://b/m' } });
+  for (const want of ['Club Legends have it now', 'everyone from', 'Become a Club Legend', 'Sign in', 'https://b/m']) assert.ok(out.includes(want), want);
+  assert.ok(!lockedHtml('2026-12-07', { signedIn: true, offer: { url: 'https://b/m' } }).includes('Sign in'), 'signed in: no Sign in');
+  assert.ok(!lockedHtml('2026-12-07', { signedIn: true, offer: null }).includes('Become a Club Legend'), 'nothing to buy: no link');
+  assert.match(badgeHtml(), /Early access/);
 });

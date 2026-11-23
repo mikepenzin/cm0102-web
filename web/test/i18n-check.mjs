@@ -11,6 +11,12 @@ const { chromium } = require('playwright');
 let ok = true;
 const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}${detail ? `: ${detail}` : ''}`); ok &&= Boolean(cond); };
 const site = await startDemoSite({});
+// A database in early access (early.js): the sweep reads its locked line, its day and its links on the Databases tab.
+{
+  const ix = JSON.parse((await site.s3.getBuffer('library/index.json')).toString());
+  ix.entries[0].early = new Date(Date.now() + 3 * 86400e3).toISOString().slice(0, 10);
+  await site.s3.put('library/index.json', Buffer.from(JSON.stringify(ix)), { type: 'application/json' });
+}
 const browser = await chromium.launch();
 const errors = [];
 const GERMAN = { 'How to play here': 'So spielst du hier', 'Saved games': 'Gespeicherte Spiele' };
@@ -135,6 +141,7 @@ try {
     const saves = await english();
     for (const tab of ['tactics', 'sets']) { await p.locator(`#saves .tabs [data-tab="${tab}"]`).click(); await p.waitForTimeout(300); }
     const tabs = await english();
+    const lockedSeen = await p.locator('#sets-lib .early-locked').count();
     await p.locator('#saves-close').click();
     await p.locator('#account-open').click();
     const account = await english();
@@ -162,6 +169,7 @@ try {
     check('the toasts and the refusal were seen: saved, the cloud hint, and junk.sav refused in Saved games', toastsSeen >= 2 && /junk\.sav/.test(refusal),
       `${await p.evaluate(() => window.__toasts.join(' | '))} || ${refusal}`);
     check('the Scout was swept as a free player (its invitation showed)', invited);
+    check('an early database was swept locked (its day and links)', lockedSeen === 1, String(lockedSeen));
     check('the engine log stays English', !/DE:/.test(log));
     await ctx.close();
   }

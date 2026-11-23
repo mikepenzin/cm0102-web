@@ -676,4 +676,10 @@ export default {
   "For example: I loaded my save and the game stopped.": "Zum Beispiel: Ich habe meinen Spielstand geladen und das Spiel ist stehen geblieben.",
   "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Gerade im Spiel geladen? Speichere hier und lade den Spielstand dann im Spiel neu: Speicherst du zuerst im Spiel, sind diese Änderungen weg.",
   "{name} is as he was.": "{name} ist wieder wie vorher.",
+  "Club Legend: early access to new seasons and features, Cloud Saves and the full Scout.": "Club Legend: früher Zugang zu neuen Saisons und Funktionen, Cloud-Speicher und der volle Scout.",
+  "Squad Player: Cloud Saves and the full Scout.": "Squad Player: Cloud-Speicher und der volle Scout.",
+  "Supporter: thank you for the support.": "Supporter: danke für deine Unterstützung.",
+  "Early access": "Früher Zugang",
+  "Become a Club Legend": "Club Legend werden",
+  "Club Legends have it now · everyone from {date}": "Club Legends haben es schon · für alle ab {date}",
 };

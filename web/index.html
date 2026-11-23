@@ -206,6 +206,12 @@
     linear-gradient(transparent, rgba(0, 0, 0, .55)) bottom / 100% 12px no-repeat scroll; }
   /* A library database: its title card (or its season in a box of the same size), then its name and note. */
   #sets-lib .lib-db { display: flex; align-items: center; gap: 12px; }
+  /* Early access (early.js): a Club Legend's badge, and a database still early for everyone else, dimmed with its day */
+  .early-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--accent); vertical-align: 1px; white-space: nowrap; }
+  #sets-lib tr.lib-locked .lib-card, #sets-lib tr.lib-locked [data-raw], #sets-lib tr.lib-locked td:not(:first-child) { opacity: .55; }
+  .early-locked { margin-top: 4px; }
+  .early-links { display: inline-flex; gap: 8px; align-items: center; margin-left: 4px; white-space: nowrap; }
   #sets-lib .lib-card { flex: none; width: 64px; height: 48px; border-radius: var(--r-sm); border: 1px solid var(--line);
     background: var(--raised); object-fit: cover; }
   #sets-lib .lib-card.none { display: grid; place-items: center; color: var(--muted); font-size: 11px; font-weight: 600; }

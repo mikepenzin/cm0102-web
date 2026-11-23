@@ -97,6 +97,43 @@ try {
   const cards = (await a.textContent('#view-overview .cards')).replace(/\s+/g, ' ');
   check('Overview: the members card by level', /1 Squad Player/.test(cards), cards.slice(0, 400));
   await ctx.close();
+
+  // ---- The game page: an early database (the demo library's newest, early for three days). ----
+  google.user = { sub: '7100002', email: 'free@example.com', email_verified: true, name: 'Free' };
+  const pctx = await browser.newContext({ viewport: { width: 1200, height: 800 } });
+  const p = await pctx.newPage();
+  p.on('pageerror', (e) => check('no page error on the game page', false, e.message));
+  await p.goto(`${BASE}/auth/google/start?mode=page`);
+  await p.waitForSelector('#go');
+  await p.click('#go');
+  await p.waitForFunction(() => window.__fake, null, { timeout: 30000 });
+  const openSets = async () => {
+    await p.click('#saves-open');
+    await p.click('#saves .tabs [data-tab="sets"]');
+    await p.waitForSelector('#sets-lib tr + tr', { timeout: 20000 });
+  };
+  await openSets();
+  const lockedRow = p.locator('#sets-lib tr', { hasText: early.name });
+  const locked = (await lockedRow.textContent()).replace(/\s+/g, ' ');
+  check('a free player: the early database shows, with its day, and no Get', /Club Legends have it now · everyone from/.test(locked)
+    && /Become a Club Legend/.test(locked) && await lockedRow.locator('button[data-lib-get]').count() === 0, locked);
+  check('the other databases are as before', await p.locator('#sets-lib button[data-lib-get]').count() === 2);
+  await shot(p, 'locked');
+  // Becomes a Club Legend while the dialog is open (a gift): the row unlocks without a reload.
+  await fetch(`${BASE}/api/admin/cloud`, { method: 'POST', body: JSON.stringify({ id: 'g:7100002', level: 'legend' }), headers: { ...auth, 'content-type': 'application/json', 'x-cm': '1' } });
+  await p.evaluate(() => new BroadcastChannel('cm-account').postMessage({ ok: true }));
+  await p.waitForSelector(`#sets-lib tr:has-text("${early.name}") button[data-lib-get]`, { timeout: 20000 });
+  const open = (await lockedRow.textContent()).replace(/\s+/g, ' ');
+  check('a Club Legend: Get, and the Early access badge', /Early access/.test(open) && !/everyone from/.test(open), open);
+  await shot(p, 'legend');
+  await lockedRow.locator('button[data-lib-get]').click();
+  await p.waitForFunction((name) => new RegExp(`${name} is here`).test(document.getElementById('sets-note').textContent), early.name, { timeout: 30000 });
+  check('a Club Legend gets the early database', true);
+  await p.click('#saves-close').catch(() => p.keyboard.press('Escape'));
+  await p.click('#account-open');
+  const dialog = (await p.innerText('#account-body')).replace(/\s+/g, ' ');
+  check('the account dialog names the level', /Club Legend: early access/.test(dialog), dialog.slice(0, 200));
+  await pctx.close();
 } finally {
   await browser.close();
   await site.close();

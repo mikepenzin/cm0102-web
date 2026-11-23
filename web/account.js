@@ -428,6 +428,10 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       return;
     }
     const signedIn = `<p>${u.cloud ? t('Signed in as <b>{email}</b> · Member', { email: esc(u.email) }) : t('Signed in as <b>{email}</b> · Free plan', { email: esc(u.email) })}</p>`;
+    // The account's level (levels.mjs) and what it gives.
+    const levelText = { legend: t('Club Legend: early access to new seasons and features, Cloud Saves and the full Scout.'),
+      squad: t('Squad Player: Cloud Saves and the full Scout.'), supporter: t('Supporter: thank you for the support.') }[u.level];
+    const level = levelText ? `<p class="small"><b>${esc(levelText)}</b></p>` : '';
     const own = `<div class="row"><button id="account-signout">${esc(t('Sign out'))}</button><button id="account-delete">${esc(t('Delete account…'))}</button>
       ${u.admin ? `<button id="account-admin">${esc(t('Admin panel'))}</button>` : ''}</div>`;
     if (u.cloud) {
@@ -445,7 +449,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       const member = u.cloudFrom === 'membership' && offer?.url
         ? `<div class="row"><button id="account-member">${esc(t('Your membership'))}</button>
           <span class="small">${esc(t('on Buy Me a Coffee: change, pause or cancel it there'))}</span></div>` : '';
-      body.innerHTML = `${signedIn}<p class="small">${esc(info?.count != null
+      body.innerHTML = `${signedIn}${level}<p class="small">${esc(info?.count != null
         ? t('Cloud Saves are on. Each save you make here goes to the cloud, and when the game starts, this browser gets the saves you made elsewhere. {count} of {max} saves are in the cloud.', { count: info.count, max: info.max })
         : t('Cloud Saves are on. Each save you make here goes to the cloud, and when the game starts, this browser gets the saves you made elsewhere.'))}</p>
         <p class="small">${term} ${cloud?.stopped ? esc(t('Cloud saves stopped: sign in again.')) : info?.last ? esc(t('Last sync: {when}.', { when: when(info.last) })) : ''}</p>
@@ -462,7 +466,7 @@ export function mountAccount({ log, toast, isRunning, isStandalone, leave }) {
       };
       if (member) $('account-member').onclick = () => window.open(offer.url, '_blank', 'noopener');
     } else {
-      body.innerHTML = `${signedIn}<p class="small">${esc(t('Your saves stay in this browser, and Saved games downloads them as files.'))}</p>
+      body.innerHTML = `${signedIn}${level}<p class="small">${esc(t('Your saves stay in this browser, and Saved games downloads them as files.'))}</p>
         ${plansHtml(offer, me.maxSaves)}
         ${u.member && !u.member.on && u.member.level && offer?.coffee
           ? `<p class="small bad">${esc(t('Your Buy Me a Coffee membership ({level}) is not a level that gives Membership here: change its level on Buy Me a Coffee.', { level: u.member.level }))}</p>` : ''}

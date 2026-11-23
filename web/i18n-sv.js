@@ -676,4 +676,10 @@ export default {
   "For example: I loaded my save and the game stopped.": "Till exempel: Jag laddade min sparfil och spelet stannade.",
   "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Laddad i spelet nu? Spara här och ladda den sedan igen i spelet: sparar du först i spelet går ändringarna förlorade.",
   "{name} is as he was.": "{name} är som förut.",
+  "Club Legend: early access to new seasons and features, Cloud Saves and the full Scout.": "Club Legend: tidig tillgång till nya säsonger och funktioner, Molnsparning och hela Scouten.",
+  "Squad Player: Cloud Saves and the full Scout.": "Squad Player: Molnsparning och hela Scouten.",
+  "Supporter: thank you for the support.": "Supporter: tack för ditt stöd.",
+  "Early access": "Tidig tillgång",
+  "Become a Club Legend": "Bli Club Legend",
+  "Club Legends have it now · everyone from {date}": "Club Legends har det redan · för alla från {date}",
 };

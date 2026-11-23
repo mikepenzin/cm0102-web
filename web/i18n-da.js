@@ -676,4 +676,10 @@ export default {
   "For example: I loaded my save and the game stopped.": "For eksempel: Jeg indlæste mit gemte spil, og spillet stoppede.",
   "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Indlæst i spillet nu? Gem her, og indlæs det igen i spillet: gemmer du først i spillet, går disse ændringer tabt.",
   "{name} is as he was.": "{name} er som før.",
+  "Club Legend: early access to new seasons and features, Cloud Saves and the full Scout.": "Club Legend: tidlig adgang til nye sæsoner og funktioner, Skylagring og den fulde Scout.",
+  "Squad Player: Cloud Saves and the full Scout.": "Squad Player: Skylagring og den fulde Scout.",
+  "Supporter: thank you for the support.": "Supporter: tak for din støtte.",
+  "Early access": "Tidlig adgang",
+  "Become a Club Legend": "Bliv Club Legend",
+  "Club Legends have it now · everyone from {date}": "Club Legends har det allerede · for alle fra {date}",
 };

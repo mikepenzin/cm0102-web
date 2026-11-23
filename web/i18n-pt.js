@@ -676,4 +676,10 @@ export default {
   "Membership holds Cloud Saves (each save goes to the cloud, and the game started on another computer or iPad gets it) and the Scout (in Squad Hub, a saved game's players by age, potential and attributes). Sign in with Google (Sign in, in the bar) to become a member.": "O Plano de Membro inclui os Saves na Nuvem (cada save vai para a nuvem, e o jogo iniciado em outro computador ou iPad o recebe) e o Olheiro (no Plantel, os jogadores de um jogo salvo por idade, potencial e atributos). Entre com o Google (Entrar, na barra) para se tornar membro.",
   "Loaded in the game now? Save here, then load it again in the game: saving in the game first would undo these changes.": "Aberto no jogo agora? Salve aqui e depois abra-o de novo no jogo: salvar primeiro no jogo desfaria estas alterações.",
   "{name} is as he was.": "{name} está como antes.",
+  "Club Legend: early access to new seasons and features, Cloud Saves and the full Scout.": "Club Legend: acesso antecipado a novas temporadas e funcionalidades, Saves na Nuvem e o Olheiro completo.",
+  "Squad Player: Cloud Saves and the full Scout.": "Squad Player: Saves na Nuvem e o Olheiro completo.",
+  "Supporter: thank you for the support.": "Supporter: obrigado pelo apoio.",
+  "Early access": "Acesso antecipado",
+  "Become a Club Legend": "Torne-se Club Legend",
+  "Club Legends have it now · everyone from {date}": "Os Club Legends já o têm · para todos a partir de {date}",
 };
