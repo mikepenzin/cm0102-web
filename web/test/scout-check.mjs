@@ -283,6 +283,28 @@ try {
     await ctx.close();
   }
   {
+    // A phone: each star sits in the middle of its button, the button as tall as its row.
+    const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+    const p = await editorOn(ctx, ME.member);
+    await scoutTab(p);
+    await p.waitForSelector('#scout-results .sl-star');
+    const off = await p.$$eval('#scout-results .scout-item', (items) => items.map((it) => {
+      const b = it.querySelector('.sl-star'), r = it.querySelector('.ed-row').getBoundingClientRect(), s = b.getBoundingClientRect();
+      const range = document.createRange(); range.selectNodeContents(b);
+      const g = range.getBoundingClientRect();
+      return Math.max(Math.abs((g.left + g.right) / 2 - (s.left + s.right) / 2), Math.abs((g.top + g.bottom) / 2 - (s.top + s.bottom) / 2),
+        Math.abs(s.top - r.top), Math.abs(s.bottom - r.bottom));
+    }));
+    check('phone: every star centred in its button, the button as tall as its row', off.length > 0 && Math.max(...off) <= 1.5, JSON.stringify(off));
+    const labels = await p.$$eval('#scout-filters > span:not(.pair):not(.small)', (spans) => spans.filter((x) => x.textContent.trim()).map((x) => {
+      const ctl = x.nextElementSibling.firstElementChild ?? x.nextElementSibling, a = x.getBoundingClientRect(), b = ctl.getBoundingClientRect();
+      return [x.textContent.trim(), Math.round(Math.abs((a.top + a.bottom) / 2 - (b.top + b.bottom) / 2))];
+    }));
+    check('phone: each filter label level with its first control', labels.length > 0 && labels.every(([, d]) => d <= 2), JSON.stringify(labels));
+    await shot(p, 'shortlist-phone');
+    await ctx.close();
+  }
+  {
     // A free player: the star invites to Membership. A member while the feature is early and he is no Club Legend:
     // the locked line, no stars.
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });

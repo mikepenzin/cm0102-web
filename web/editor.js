@@ -347,8 +347,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const pick = many ? `<span>${esc(t('Shortlist for'))}</span><span class="pair"><select data-sl-manager aria-label="${esc(t('Shortlist for'))}">
         ${lists.managers.map((m) => `<option value="${m.id}"${m.id === manager ? ' selected' : ''} data-raw>${esc(m.name)}</option>`).join('')}</select>${shortlistAccess().badge}</span>` : '';
     // The Wonderkids preset (scout.js): John Locke's School search, 19 or younger with potential 180 or more.
-    filtersBox.innerHTML = `${pick}<span>${esc(t('Presets'))}</span><span class="pair"><button type="button" class="small" data-preset="wonderkids">${esc(t('Wonderkids'))}</button>
-        <span class="small">${esc(t('19 or younger, potential 180 or more'))}</span></span>
+    filtersBox.innerHTML = `${pick}<span>${esc(t('Presets'))}</span><span class="pair"><button type="button" class="small" data-preset="wonderkids">${esc(t('Wonderkids'))}</button></span>
+      <span></span><span class="small">${esc(t('19 or younger, potential 180 or more'))}</span>
       <span>${esc(t('Age'))}</span><span class="pair">${box('ageMin', filters.ageMin, 60, t('Age from'))} – ${box('ageMax', filters.ageMax, 60, t('Age to'))}</span>
       <span>${esc(t('Position'))}</span><span class="pair"><select data-k="position" aria-label="${esc(t('Position'))}"><option value="">${esc(t('Any position'))}</option>
         ${POSITIONS.map((p, i) => `<option value="${i}"${String(i) === String(filters.position) ? ' selected' : ''}>${esc(posName[p] ?? p)}</option>`).join('')}</select></span>
