@@ -43,8 +43,19 @@ function textOf(m, t = englishT, tn = englishTn) {
   const vars = m.vars && Object.fromEntries(Object.entries(m.vars).map(([k, v]) => [k, v && typeof v === 'object' && 'key' in v ? textOf(v, t, tn) : v]));
   return 'other' in m ? tn(m.n, { one: m.key, other: m.other }, vars) : t(m.key, vars);
 }
-// An error as a text: its key and vars (zip.js, upload.js, dataset.js), else its English message as it is.
-const errText = (e) => ({ key: e?.key ?? String(e?.message ?? e), vars: e?.vars });
+// An error as a text: its key and vars (zip.js, upload.js, dataset.js), else its English message as it is. An error
+// with an empty message (a DOMException of the browser's storage; the engine's FS.ErrnoError has none) gives its name
+// and errno: an upload on Windows was refused with "it was not stored: " and nothing after it (24 November 2026).
+export function errorDetail(e) {
+  if (e === null || typeof e !== 'object') return String(e);
+  const message = typeof e.message === 'string' ? e.message.trim() : '';
+  const name = e.name && e.name !== 'Error' ? String(e.name) : '';
+  const errno = Number.isInteger(e.errno) ? `errno ${e.errno}` : '';
+  const text = [name, message, errno].filter(Boolean).join(': ');
+  return text || e.constructor?.name || 'an error with no message';
+}
+const errText = (e) => ({ key: e?.key ?? (typeof e?.message === 'string' && e.message.trim() ? e.message : errorDetail(e)),
+  vars: e?.vars });
 // A reason a file is refused: its English (message), key and vars.
 const reason = (m) => ({ message: textOf(m), key: m.key, vars: m.vars });
 
@@ -485,7 +496,10 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
         const label = one.name === file.name ? file.name : { key: '{name} (in {zip})', vars: { name: one.name, zip: file.name } };
         if (one.size > 50 << 20) say({ key: 'Storing {name} ({size})…', vars: { name: label, size: mb(one.size) } });
         let why;
-        try { why = await storeSaveProblem(FS, name, await one.blob()); } catch (err) { why = { key: 'it was not stored: {why}', vars: { why: errText(err) } }; }
+        try { why = await storeSaveProblem(FS, name, await one.blob()); } catch (err) {
+          why = { key: 'it was not stored: {why}', vars: { why: errText(err) } };
+          log(`page: the upload of ${one.name} (${mb(one.size)}) was not stored: ${errorDetail(err)}`);
+        }
         if (why) { refused.push({ key: '{file}: {why}', vars: { file: label, why } }); refusedFiles.push(file); continue; }
         done.push(name);
         log(`page: uploaded the save ${name} (${mb(one.size)})${one.name === file.name ? '' : ` from ${file.name}`}`);
