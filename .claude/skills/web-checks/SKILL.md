@@ -24,7 +24,7 @@ lines and the last line ("… check: all ok").
 | cloud-check.mjs | ~4 min | account.js, cloud.mjs, billing.mjs, payments, wording of the plans |
 | tour-check.mjs | ~1 min | tour.js, the bar's buttons |
 | i18n-check.mjs | ~1 min | any text a player reads (see the web-languages skill) |
-| screens.mjs `<folder> [code]` | ~2 min | the look; with a language it fails on a cut or off-window label |
+| screens.mjs `<folder> [code]` | ~2 min | the look: it lists a button whose text is off its middle and a row (flex or grid line) whose items are not level; with a language, a cut or off-window label |
 
 Unit tests alone: `ls web/test/*.test.js | xargs node --test`.
 

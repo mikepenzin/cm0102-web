@@ -1065,7 +1065,8 @@ What to know about the Asyncify engine:
   (1280x800), a phone (an iPhone 13) and a phone held sideways, for a review of the look: the start, the tour, the bar
   over the game, Saved games and its three tabs, Squad Hub (a save, its Scout, a player, its start), the account, Help,
   Send to the developer, the legal pages and the admin page. With a language code, the page in it. It fails when a
-  label, a tab, a dialog button or the tour card is cut or leaves the window.
+  label, a tab, a dialog button or the tour card is cut or leaves the window, and when a button's text is off its
+  middle or the items of a row (a flex or grid line: a label and its box) are not level.
 - `NODE_PATH=$(npm root -g) node web/test/tour-check.mjs`: the first-visit tour on a laptop, a phone upright and
   sideways: its steps, the cards beside their buttons and over none, Escape, the Membership step's words.
 - `NODE_PATH=$(npm root -g) node web/test/i18n-check.mjs`: the languages: `?lang=`, the browser's, Help's choice with a
