@@ -284,9 +284,15 @@ void rt_call(uint32_t target)
 {
     rt_call_target = target;
     RtFn fn = rt_lookup(target);
-    if (!fn) rt_fatal("call to %#x, which is not a recompiled function (from %#x)", target, rd32(g_mem, cpu.esp));
+    if (!fn) {
+        uint32_t from = rd32(g_mem, cpu.esp);
+        if (rt_on_bad_call) rt_on_bad_call(target, from);
+        rt_fatal("call to %#x, which is not a recompiled function (from %#x)", target, from);
+    }
     fn();
 }
+
+void (*rt_on_bad_call)(uint32_t target, uint32_t from);
 
 void rt_jump(uint32_t target)
 {
