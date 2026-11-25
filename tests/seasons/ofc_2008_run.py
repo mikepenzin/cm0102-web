@@ -3,7 +3,7 @@
 src/recomp_rt/win/season_intl_ofc.c).
 
 Usage:
-    python3 tests/seasons/ofc_2008_run.py <cm0102_recomp> <game folder> [--keep <folder>] [--only 2007|2008]
+    python3 tests/seasons/ofc_2008_run.py <cm0102_recomp> <game folder> [--keep <folder>] [--only 2007|2008|crossed]
 
 The real edition (https://www.rsssf.org/tables/08oc.html, int-continental-87): New Zealand, New Caledonia, Fiji and
 Vanuatu in one group, home and away, 17 October 2007 to 19 November 2008, also the second stage of the OFC World Cup
@@ -18,7 +18,16 @@ Two new games, Tier A, the 3.9.68 database, seed 1, changing rules on:
   come (from 14 June to 19 November 2008). A 2008/09 start with all nations stops at "ire_prm..cpp 82" with or without
   this change, with the 3.9.68 and the February 2008 database (0.6.2 open item 123).
 
-The checks for each game: the program ends with code 0 and shows no message box; the edition of 2008 has 4 teams with
+And one loaded game:
+- crossed: a save that crossed builds (the browser's report of 25 November 2026, season_intl_ofc.c one_group_unstaged):
+  a 2001/02 game with changing rules on, saved on 19 April 2008, whose 2008 edition an older build set up (two stages,
+  one meeting, +0xa7 2) and this build drew (one group of 4, no group B). It stopped on 18 June 2008 with "call to 0".
+  Loaded, holiday, 240 days. The save: RECOMP_OFC_CROSSED_SAVE, else test-fixtures/ofc-2008-crossed.sav; with neither
+  the run fails. The checks: code 0, no message box, the log names the repair at the load and the edition's end
+  with 3 matches each, and the edition has 4 teams, 6 matches (each pair once: the older build's one meeting) and a
+  history row with a winner and a runner-up of the 4.
+
+The checks for each new game: the program ends with code 0 and shows no message box; the edition of 2008 has 4 teams with
 New Zealand among them, 12 matches, each team at home once against each other team (home and away), no other match
 (no knockout), its first and last match in the window of the game's calendar, and a history row with a winner and a
 runner-up of the 4.
@@ -26,6 +35,8 @@ runner-up of the 4.
 import collections
 import datetime
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -44,6 +55,8 @@ GAMES = {
     2008: {"start": 2008, "days": 170, "first": D(2008, 6, 14), "last": D(2008, 11, 19), "nations": ["England"]},
 }
 LATE = 21
+CROSSED_SAVE = os.environ.get("RECOMP_OFC_CROSSED_SAVE") or "/Users/max/Projects/cm0102/test-fixtures/ofc-2008-crossed.sav"
+CROSSED_DAYS = 240
 
 
 def edition(save, year):
@@ -105,15 +118,69 @@ def run(program, game_folder, keep, year):
     return fails
 
 
+def crossed(program, game_folder, keep):
+    """The save that crossed builds: loaded, holiday, CROSSED_DAYS days, then the checks of the docstring."""
+    sys.path.insert(0, os.path.join(HERE, "..", "smoke"))
+    import big_save_run
+    import smoke_run
+    if not os.path.isfile(CROSSED_SAVE):
+        return [f"crossed: no save {CROSSED_SAVE} (RECOMP_OFC_CROSSED_SAVE)"]
+    work = os.path.join(keep, "crossed")
+    user, home, shots = (os.path.join(work, d) for d in ("user", "home", "shots"))
+    for d in (user, home, shots):
+        os.makedirs(d, exist_ok=True)
+    shutil.copyfile(CROSSED_SAVE, os.path.join(user, os.path.basename(CROSSED_SAVE)))
+    with open(os.path.join(user, "settings.txt"), "w") as f:
+        f.write("display = classic\ndatabase = 3.9.68\nchanging_rules = on\n")
+    # As big_save_run.play, with the log in a file: the game writes the data's names in Latin-1, not UTF-8.
+    steps = big_save_run.load_steps() + ["3000000 quit"]
+    env = dict(os.environ, HOME=home, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", RECOMP_NO_BOX="1",
+               RECOMP_USER_DIR=user, RECOMP_FIXED_CLOCK="1", RECOMP_SAVE_AFTER_DAYS=str(CROSSED_DAYS),
+               RECOMP_SEASON_INTL_LOG="1", RECOMP_SCRIPT="; ".join(smoke_run.scaled_steps("classic", shots, steps)))
+    log_path = os.path.join(work, "stderr.txt")
+    with open(log_path, "w") as log:
+        try:
+            code = subprocess.run([program, "--game", game_folder, "-seed", "1"], env=env, stdout=subprocess.DEVNULL,
+                                  stderr=log, timeout=7200).returncode
+        except subprocess.TimeoutExpired:
+            code = "timeout"
+    with open(log_path, encoding="latin-1") as f:
+        err = f.read()
+    fails = []
+    if code != 0 or "recomp: message box from" in err:
+        fails.append(f"crossed: the run ended with code {code} or showed a box ({work})")
+    if "oceania_nations 2008: one group with two stages and no group B (a save of an older build): no stage, " \
+       "3 matches each (load)" not in err:
+        fails.append("crossed: the log names no repair of the 2008 edition at the load")
+    if "oceania_nations 2008: group A 4 rows, 1 meetings, 3 matches each" not in err:
+        fails.append("crossed: the 2008 edition did not end with its group of 4 rows and 3 matches each")
+    save = os.path.join(work, "user", "samesave.sav")
+    if not os.path.exists(save):
+        return fails + ["crossed: no save after the days"]
+    teams, fx, row, names = edition(save, 2008)
+    pairs = collections.Counter(frozenset((home, away)) for _, home, away in fx)
+    print(f"      crossed: {len(teams)} teams ({', '.join(sorted(names))}), {len(fx)} matches, row {row}")
+    if len(teams) != 4 or len(fx) != 6 or sorted(pairs.values()) != [1] * 6:
+        fails.append(f"crossed: {len(teams)} teams and {len(fx)} matches, a group of 4 that meets once gives 6")
+    if not row or min(row) < 0 or not set(row) <= teams:
+        fails.append(f"crossed: no history row with a winner and a runner-up of the 4: {row}")
+    if not fails:
+        print("ok    crossed: the 2008 edition ends with its group of 4")
+    return fails
+
+
 def main(argv):
     if len(argv) < 3:
         print(__doc__)
         return 2
     program, game = os.path.abspath(argv[1]), os.path.abspath(argv[2])
     keep = argv[argv.index("--keep") + 1] if "--keep" in argv else tempfile.mkdtemp(prefix="cm0102-ofc2008-")
-    years = [int(argv[argv.index("--only") + 1])] if "--only" in argv else sorted(GAMES)
-    os.environ["RECOMP_TIER_A"] = "1"
+    only = argv[argv.index("--only") + 1] if "--only" in argv else None
+    years = [] if only == "crossed" else [int(only)] if only else sorted(GAMES)
     fails = []
+    if only in (None, "crossed"):
+        fails += crossed(program, game, keep)
+    os.environ["RECOMP_TIER_A"] = "1"
     for year in years:
         fails += run(program, game, keep, year)
     for f in fails:

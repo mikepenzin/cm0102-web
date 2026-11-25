@@ -719,6 +719,56 @@ static uint32_t table_club(uint32_t self, int row)
     return !rt_unwinding && readable(r) ? rd32(g_mem, r) : 0;
 }
 
+/* A save that crossed builds (the browser's report of 25 November 2026: a 2001 game with changing rules on, saved in
+ * April 2008). The 2008 edition was set up (set_up_rules, when the 2004 edition ended) by a build without the edition
+ * of one group, so it kept +0x2c 2, the original's draw date (5 March), one meeting and the +0xa7 of the groups of 3
+ * of 2004 (2, the fault season_intl_ofc_rules mends for a new edition), and drawn by this build, which drew the group
+ * of 4 and made no group B (ofc_group_b). With +0xa7 2 the group was complete after two of its three rounds (16 and
+ * 18 June 2008); update_for_date then called the original's advance (+0x30 < +0x2c - 1, 0x6849d1..0x6849e0), which
+ * steps +0x30 from -1 to 0, group B's place (0x799a4b..0x799a4c), and on its next pass called stage[0], a null
+ * pointer, through vtable +0x14 (0x6848ee..0x6848f8): "call to 0, which is not a recompiled function (from 0x6848fb)".
+ * So the edition of one group with +0x2c above 0, +0x30 -1 and no stage in slot 0 takes the stage count 0 that
+ * season_intl_ofc_rules gives it, and +0xa7 the group's own count, (rows +0x3e - 1) x meetings +0x3c (the League's
+ * rule, 0x684817..0x684830), or -1 before the draw so that the draw works it out (init_table_row 0x687453). The League
+ * then ends the edition after the group's last round (0x6849e8..0x684a9e) with the group's honours
+ * (season_intl_ofc_honours). It runs at the load (season_intl_ofc_loaded), and in advance_stage for an object the load
+ * did not reach. The meetings and the draw date stay the older build's: the group plays once each, on the days it has.
+ * A save whose older build drew the original's two groups of 3 has group B in slot 0 and keeps the original's path. */
+static int one_group_unstaged(uint32_t self)
+{
+    uint32_t stages = rd32(g_mem, self + STAGES);
+    return one_group(self) && (int32_t)rd32(g_mem, self + STAGE_COUNT) > 0 &&
+           (int32_t)rd32(g_mem, self + CURRENT_STAGE) == -1 && (!readable(stages) || !rd32(g_mem, stages));
+}
+
+static void one_group_repair(uint32_t self, const char *when)
+{
+    int rows = (int16_t)rd16(g_mem, self + GROUP_ROWS), meetings = (int16_t)rd16(g_mem, self + MEETINGS);
+    int drawn = rd32(g_mem, self + 0x45u) != 0 && rows > 1 && meetings > 0;
+    wr32(g_mem, self + STAGE_COUNT, 0);
+    wr16(g_mem, self + TEAM_MATCHES, (uint16_t)(drawn ? (rows - 1) * meetings : -1));
+    fprintf(stderr, "recomp: season intl: oceania_nations %d: one group with two stages and no group B (a save of an "
+                    "older build): no stage, %d matches each (%s)\n", year_of(self),
+            (int16_t)rd16(g_mem, self + TEAM_MATCHES), when);
+}
+
+#define ENTRIES 0x00b63d60u             /* league table entries, 0x48 bytes: +0xc the count, +0x10 the competitions */
+#define ENTRY_SIZE 0x48u
+#define ENTRY_COUNT 35
+
+void season_intl_ofc_loaded(void)
+{
+    if (!season_intl_on()) return;
+    for (uint32_t e = 0; e < ENTRY_COUNT; e++) {
+        uint32_t at = ENTRIES + e * ENTRY_SIZE, arr = rd32(g_mem, at + 0x10u);
+        int32_t n = (int32_t)rd32(g_mem, at + 0xcu);
+        for (int32_t k = 0; readable(arr) && k < n && k < 256; k++) {
+            uint32_t obj = rd32(g_mem, arr + 4u * (uint32_t)k);
+            if (is_ofc(obj) && one_group_unstaged(obj)) one_group_repair(obj, "load");
+        }
+    }
+}
+
 void o_007999d0(void);
 
 /* advance_stage 0x7999d0 (vtable +0x28), thiscall (), ret 0: League::update_for_date 0x6847c0 calls it when the group
@@ -733,10 +783,16 @@ void o_007999d0(void);
  * (0x685dd0..0x685e5e). The class's callbacks read a stage number below 1 as a group (set_club_progress 0x79a49e,
  * build_fate_news_text 0x799306, update_staff_records_for_status 0x799765), so in this edition, which has no group B
  * (stage 0 in the original), their wraps give them 1 for stage 0. The final's first leg is on 9 October of the edition
- * year, or a week after today when that comes later. */
+ * year, or a week after today when that comes later. The edition of one group set up by an older build: see
+ * one_group_unstaged. */
 RT_WRAP(007999d0, ofc_advance)
 {
     uint32_t self = cpu.ecx;
+    if (one_group_unstaged(self)) {         /* not repaired at the load (season_intl_ofc_loaded) */
+        one_group_repair(self, "advance");
+        rt_ret_cdecl(0);
+        return;
+    }
     if (!six_staged(self) || (int32_t)rd32(g_mem, self + CURRENT_STAGE) != -1) {
         o_007999d0();
         return;

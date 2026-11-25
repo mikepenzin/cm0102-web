@@ -2145,6 +2145,7 @@ static void intl_loaded(int start_year)
     intl_sides(start_year);
     if (!rt_unwinding) repair_idle();
     if (!rt_unwinding) repair_ofc_club();
+    if (!rt_unwinding) season_intl_ofc_loaded();
     for (int i = 0; i < season_intl_marks_count() && !rt_unwinding; i++) {
         uint32_t obj = season_intl_mark_object(i);
         if (obj && rd32(g_mem, obj) == EUROQ_VTABLE) rt_euroq_rules(obj);

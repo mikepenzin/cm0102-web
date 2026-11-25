@@ -309,6 +309,9 @@ void season_intl_ofc_template(void (*original)(void));
  * edition of one group, home and away (2008), the stage count of the group of 6 and its final (2004), and the stage
  * count of 2 again after them. */
 void season_intl_ofc_rules(uint32_t self);
+/* A load (intl_loaded): the edition of one group that an older build set up with two stages takes the stage count 0
+ * and its group's matches of each team (+0xa7), so it ends with its group. */
+void season_intl_ofc_loaded(void);
 /* Slot +0x30 0x595160 of the OFC Nations Cup's edition of one group: League::record_season_honours 0x684640 in place
  * of the knockout's; of the group of 6: the final's in stage[0]; then the return. 1 when it ran
  * (season_cup_groups.c). */
