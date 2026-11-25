@@ -11,7 +11,7 @@ browser stopped in its match day of late September 2026 with "memory access out 
 OfficialsManager::choose_match_official 0x79c7b0. The script reads the bad ranges of the save first and stops when
 there is none (nothing to test).
 
-Two runs, each loads the save, goes on holiday and plays --days days (fixtures.play):
+Two runs, each loads the save, goes on holiday and plays --days days:
 - default: the load gives each such nation the range of its continent ("recomp: referees: X takes the referees of
   Y"), the picker's test never acts, and the new save holds no range past the table;
 - RECOMP_REFEREES=guard (no repair): the picker's test acts ("recomp: referees: the range from slot ...") and the
@@ -25,8 +25,9 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-sys.path[:0] = [os.path.join(ROOT, "tests", "fixtures"), os.path.join(ROOT, "tools", "save")]
+sys.path[:0] = [os.path.join(ROOT, "tests", "fixtures"), os.path.join(ROOT, "tests", "smoke"), os.path.join(ROOT, "tools", "save")]
 import fixtures  # noqa: E402
+import smoke_run  # noqa: E402
 import savfile  # noqa: E402
 
 HOLIDAY_STEPS = ["2500 click 45 165", "4500 click 150 427 | 199 474", "7000 click 705 572"]
@@ -52,28 +53,33 @@ def bad_ranges(path):
 
 
 def one_run(program, game, keep, save, days, guard):
+    """Loads the save, goes on holiday and plays days days (RECOMP_SAVE_AFTER_DAYS, testrun.c). The save is not at its
+    first news, as a save of tests/fixtures is, so the load waits for the main screen instead (screen 0x454900)."""
     work = os.path.join(keep, "guard" if guard else "repair")
-    os.makedirs(work, exist_ok=True)
-    name = os.path.basename(save)
-    dest = os.path.join(work, name)
-    if not os.path.exists(dest):
-        shutil.copyfile(save, dest)
-    steps = os.path.join(work, "steps.txt")
-    with open(steps, "w") as f:
-        f.write("\n".join(HOLIDAY_STEPS) + "\n")
+    user = os.path.join(work, "user")
+    shutil.rmtree(work, ignore_errors=True)
+    os.makedirs(user)
+    shutil.copyfile(save, os.path.join(user, os.path.basename(save)))
+    fixtures.write_settings(user, "classic", [])
+    load = [x if x != "wait first-news" else "wait screen:0x454900" for x in fixtures.LOAD_STEPS]
+    steps = smoke_run.scaled_steps("classic", work, load + HOLIDAY_STEPS) + ["2400000 quit"]
+    env = {"RECOMP_SAVE_AFTER_DAYS": str(days)}
     if guard:
-        os.environ["RECOMP_REFEREES"] = "guard"
-    else:
-        os.environ.pop("RECOMP_REFEREES", None)
-    out = os.path.join(work, "out")
-    code = fixtures.play(program, game, work, name, steps, out, "classic", [], days)
-    with open(os.path.join(out, "stderr.txt"), encoding="latin-1") as f:
-        lines = [ln.rstrip("\n") for ln in f if ln.startswith(TAKES)]
-    fails = [] if code == 0 else [f"{os.path.basename(work)}: the run failed (code {code})"]
+        env["RECOMP_REFEREES"] = "guard"
+    r, took = fixtures.run(program, game, "classic", user, steps, env, 2700)
+    with open(os.path.join(work, "stderr.txt"), "w") as f:
+        f.write(r.stderr)
+    lines = [ln for ln in r.stderr.splitlines() if ln.startswith(TAKES)]
+    result = os.path.join(user, smoke_run.SAVE_NAME)
+    name = os.path.basename(work)
+    print(f"  {name}: code {r.returncode} after {took:.0f} s, log {os.path.join(work, 'stderr.txt')}")
+    fails = [] if r.returncode == 0 else [f"{name}: the run failed (code {r.returncode})"]
+    if not os.path.exists(result):
+        fails.append(f"{name}: no save after {days} days")
     guarded = [ln for ln in lines if ln.startswith(GUARD)]
     taken = [ln for ln in lines if not ln.startswith(GUARD)]
-    for ln in lines:
-        print(f"  {os.path.basename(work)}: {ln}")
+    for ln in sorted(set(lines)):
+        print(f"  {name}: {ln}")
     if guard and not guarded:
         fails.append("guard: the picker's test never acted")
     if not guard:
@@ -81,7 +87,6 @@ def one_run(program, game, keep, save, days, guard):
             fails.append("repair: no nation took a range at the load")
         if guarded:
             fails.append("repair: the picker's test acted after the repair")
-        result = os.path.join(out, "samesave.sav")
         if os.path.exists(result) and bad_ranges(result):
             fails.append(f"repair: the new save still has ranges past the table: {bad_ranges(result)}")
     return fails
