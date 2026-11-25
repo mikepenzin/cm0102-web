@@ -742,29 +742,31 @@ static uint32_t table_club(uint32_t self, int row)
  * 18 June 2008); update_for_date then called the original's advance (+0x30 < +0x2c - 1, 0x6849d1..0x6849e0), which
  * steps +0x30 from -1 to 0, group B's place (0x799a4b..0x799a4c), and on its next pass called stage[0], a null
  * pointer, through vtable +0x14 (0x6848ee..0x6848f8): "call to 0, which is not a recompiled function (from 0x6848fb)".
- * So the edition of one group with +0x2c above 0, +0x30 -1 and no stage in slot 0 takes the stage count 0 that
+ * A draw by this build of an edition set up so now keeps the original's two groups of 3 (one_group_staged,
+ * season_intl_ofc_draw). A save drawn before that change holds the group of 4 already: the edition of one group that is
+ * drawn (+0x45, its fixtures made) with +0x2c above 0, +0x30 -1 and no stage in slot 0 takes the stage count 0 that
  * season_intl_ofc_rules gives it, and +0xa7 the group's own count, (rows +0x3e - 1) x meetings +0x3c (the League's
- * rule, 0x684817..0x684830), or -1 before the draw so that the draw works it out (init_table_row 0x687453). The League
- * then ends the edition after the group's last round (0x6849e8..0x684a9e) with the group's honours
- * (season_intl_ofc_honours). It runs at the load (season_intl_ofc_loaded), and in advance_stage for an object the load
- * did not reach. The meetings and the draw date stay the older build's: the group plays once each, on the days it has.
- * A save whose older build drew the original's two groups of 3 has group B in slot 0 and keeps the original's path. */
+ * rule, 0x684817..0x684830). The League then ends the edition after the group's last round (0x6849e8..0x684a9e) with
+ * the group's honours (season_intl_ofc_honours). It runs at the load (season_intl_ofc_loaded), and in advance_stage for
+ * an object the load did not reach. The meetings and the draw date stay the older build's: the group plays once each,
+ * on the days it has. Before the draw, and in a save whose draw made the original's two groups of 3 (group B in slot
+ * 0), nothing changes. */
 static int one_group_unstaged(uint32_t self)
 {
     uint32_t stages = rd32(g_mem, self + STAGES);
-    return one_group(self) && (int32_t)rd32(g_mem, self + STAGE_COUNT) > 0 &&
-           (int32_t)rd32(g_mem, self + CURRENT_STAGE) == -1 && (!readable(stages) || !rd32(g_mem, stages));
+    int rows = (int16_t)rd16(g_mem, self + GROUP_ROWS), meetings = (int16_t)rd16(g_mem, self + MEETINGS);
+    return one_group(self) && rd32(g_mem, self + 0x45u) && rows > 1 && meetings > 0 &&
+           (int32_t)rd32(g_mem, self + STAGE_COUNT) > 0 && (int32_t)rd32(g_mem, self + CURRENT_STAGE) == -1 &&
+           (!readable(stages) || !rd32(g_mem, stages));
 }
 
 static void one_group_repair(uint32_t self, const char *when)
 {
     int rows = (int16_t)rd16(g_mem, self + GROUP_ROWS), meetings = (int16_t)rd16(g_mem, self + MEETINGS);
-    int drawn = rd32(g_mem, self + 0x45u) != 0 && rows > 1 && meetings > 0;
     wr32(g_mem, self + STAGE_COUNT, 0);
-    wr16(g_mem, self + TEAM_MATCHES, (uint16_t)(drawn ? (rows - 1) * meetings : -1));
+    wr16(g_mem, self + TEAM_MATCHES, (uint16_t)((rows - 1) * meetings));
     fprintf(stderr, "recomp: season intl: oceania_nations %d: one group with two stages and no group B (a save of an "
-                    "older build): no stage, %d matches each (%s)\n", year_of(self),
-            (int16_t)rd16(g_mem, self + TEAM_MATCHES), when);
+                    "older build): no stage, %d matches each (%s)\n", year_of(self), (rows - 1) * meetings, when);
 }
 
 #define ENTRIES 0x00b63d60u             /* league table entries, 0x48 bytes: +0xc the count, +0x10 the competitions */
