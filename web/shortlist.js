@@ -3,6 +3,9 @@
 // of a manager is his Short List (scout_manager_write_list_name 0x7fc150). It is read and changed as the game does:
 // an entry as PLAYER_SEARCH::add_player 0x7af720 builds it, kept sorted by staff id, the capacity at least the count
 // (PLAYER_SEARCH::load 0x7b17e0 allocates capacity entries), a removal by the removed bit (contains_player 0x7af600).
+// The scout requests come after the searches (docs/research/2026-11-25-scout-request-in-save.md): an int32 count, 17-byte
+// records as SCOUT_MANAGER::add_scout_request 0x7f9290 builds them (club id, player id, the day asked, reports sent),
+// kept in the order of the comparator 0x7fc270 (player id, then club id), then the 16 bytes of the managers' last lists.
 // It runs in the page and in Node (the tests); it uses no DOM.
 import { readDate, writeDate, STAFF_SIZE } from './savedit.js';
 
@@ -10,7 +13,7 @@ export const MEMBER = 'scout_manager.dat';
 const RESULT = 45;
 // The fields of one search as PLAYER_SEARCH::save 0x7b2360 writes them before the count: 490 bytes, the capacity last.
 const HEAD = 494, CAPACITY_AT = 490, TAIL = 0x99 + 0x11 + 12, CLUB_AT = 4 + 1 + 0x16b + 0x18, CLUB_TABLE = 0x51a8;
-const REMOVED = 1, GROW = 250, GAME_DATE = 0xf85;          // general.dat: the game's date (save_game_data 0x82e430)
+const REMOVED = 1, GROW = 250, GAME_DATE = 0xf85, REQUEST = 17, CLUB = 0x39;   // CLUB: a staff row's club id          // general.dat: the game's date (save_game_data 0x82e430)
 
 const i32 = (b, o) => new DataView(b.buffer, b.byteOffset, b.byteLength).getInt32(o, true);
 const set32 = (b, o, v) => new DataView(b.buffer, b.byteOffset, b.byteLength).setInt32(o, v, true);
@@ -62,9 +65,22 @@ export function scoutManager(game) {
   // A place is a human manager when his staff row has a name; the reserved places have none.
   const managers = [...new Set(parsed.searches.map((x) => x.manager))].map((id) => ({ id, name: nameOf(id) })).filter((m) => m.name);
   if (!managers.length) return null;
+  // The requests: the records, and the bytes after them (the last-list bytes), kept as they are.
+  const reqCount = i32(parsed.rest, 0);
+  if (reqCount < 0 || 4 + reqCount * REQUEST > parsed.rest.length) throw Object.assign(new Error('the scout lists of the saved game are damaged'), { key: 'the scout lists of the saved game are damaged' });
+  const requests = Array.from({ length: reqCount }, (_, k) => parsed.rest.slice(4 + k * REQUEST, 4 + (k + 1) * REQUEST));
+  const afterRequests = parsed.rest.slice(4 + reqCount * REQUEST);
+  const clubOfRow = (id) => (id >= 0 && id < s.count ? s.dv.getInt32(id * STAFF_SIZE + CLUB, true) : -1);
+  const clubOf = (manager) => { const c = clubOfRow(manager); return c >= 0 ? c : null; };
+  const findRequest = (club, staffId) => requests.findIndex((r) => i32(r, 0) === club && i32(r, 4) === staffId);
   const list = (manager) => parsed.searches.find((x) => x.manager === manager && x.slot === 0) ?? null;
   const find = (l, staffId) => l.results.findIndex((r) => i32(r, 0x0c) === staffId);
   const save = () => {
+    const rest = new Uint8Array(4 + requests.length * REQUEST + afterRequests.length);
+    set32(rest, 0, requests.length);
+    requests.forEach((r, k) => rest.set(r, 4 + k * REQUEST));
+    rest.set(afterRequests, 4 + requests.length * REQUEST);
+    parsed.rest = rest;
     const m = game.file.member(MEMBER);
     m.data = writeSearches(parsed);
     game.file.changed(MEMBER);
@@ -96,6 +112,32 @@ export function scoutManager(game) {
       l.results.splice(at < 0 ? l.results.length : at, 0, r);
       if (l.results.length > l.capacity) l.capacity += GROW;
       l.count = l.results.length;
+      save();
+      return true;
+    },
+    // The scout requests of the manager's club (a club, not a manager, asks: add_scout_request 0x7f9290).
+    clubOf,
+    requested(manager, staffId) { const c = clubOf(manager); return c !== null && findRequest(c, staffId) >= 0; },
+    // Whether the club can ask: it has a club, and the player is not at it (daily_update 0x7f8750 drops that request).
+    canRequest(manager, staffId) { const c = clubOf(manager); return c !== null && staffId >= 0 && staffId < s.count && clubOfRow(staffId) !== c; },
+    // Asks the manager's club to scout a player: false when it asked already or cannot ask.
+    request(manager, staffId) {
+      if (!this.canRequest(manager, staffId) || this.requested(manager, staffId)) return false;
+      const c = clubOf(manager), r = new Uint8Array(REQUEST);
+      set32(r, 0, c); set32(r, 4, staffId);
+      const today = readDate(game.file.read('general.dat'), GAME_DATE);
+      if (today) writeDate(r, 8, today);
+      const after = (x) => i32(x, 4) > staffId || (i32(x, 4) === staffId && i32(x, 0) > c);
+      const at = requests.findIndex(after);
+      requests.splice(at < 0 ? requests.length : at, 0, r);
+      save();
+      return true;
+    },
+    // Takes the club's request back, as remove_scout_request 0x7f8ee0: the record goes, the order kept.
+    unrequest(manager, staffId) {
+      const c = clubOf(manager), i = c === null ? -1 : findRequest(c, staffId);
+      if (i < 0) return false;
+      requests.splice(i, 1);
       save();
       return true;
     },

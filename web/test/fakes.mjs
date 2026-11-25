@@ -196,12 +196,14 @@ export function paddleEvent(type, { ref, at = new Date().toISOString(), status =
 // coach. players: [{ first, second, common, club, ca, pa, gk, born: [y, m, d], attrs: byte of each attribute }].
 // managers (optional): human managers and their lists in scout_manager.dat, as the game saves them
 // (docs/research/2026-11-25-shortlist-in-save.md): [{ first, second, shortlist: [player index], capacity, removed:
-// [player index], clubTable }], then one reserved place with no name; general.dat then holds the game date, 14 July
-// 2001, at 0xf85.
+// [player index], clubTable, club (his club id, 100 + his place when not given; null for none) }], then one reserved
+// place with no name; general.dat then holds the game date, 14 July 2001, at 0xf85. requests: the scout requests after
+// the searches (docs/research/2026-11-25-scout-request-in-save.md), [{ club, player: staff id, reports, date }], written
+// in the order given.
 export async function fakeSaveGame(players = [
   { first: 'Alessandro', second: 'Del Piero', ca: 181, pa: 190, gk: 1, born: [1974, 11, 9], club: 0, fill: 15 },
   { first: 'Gianluigi', second: 'Buffon', ca: 187, pa: 194, gk: 20, born: [1978, 1, 28], club: 0, fill: 12 },
-], { managers = null } = {}) {
+], { managers = null, requests = [] } = {}) {
   const { encodeRuns, writeDate } = await import('../savedit.js');
   const names = (list) => { const b = Buffer.alloc(list.length * 60); list.forEach((n, i) => { b.write(n, i * 60, 'latin1'); b.writeInt32LE(i, i * 60 + 0x33); b.writeInt32LE(-1, i * 60 + 0x37); b[i * 60 + 0x3b] = 1; }); return b; };
   const first = ['', ...players.map((p) => p.first), 'Marcello'], second = ['', ...players.map((p) => p.second), 'Lippi'];
@@ -231,7 +233,7 @@ export async function fakeSaveGame(players = [
     managers.forEach((m, k) => {
       const o = k * 110; first.push(m.first); second.push(m.second);
       rows.writeInt32LE(firstId + k, o); rows.writeInt32LE(first.length - 1, o + 4); rows.writeInt32LE(second.length - 1, o + 8);
-      rows.writeInt32LE(0, o + 0x39); rows[o + 0x5f] = 1; rows.writeInt32LE(-1, o + 0x61); rows.writeInt32LE(-1, o + 0x65);
+      rows.writeInt32LE(m.club === null ? -1 : m.club ?? 100 + k, o + 0x39); rows[o + 0x5f] = 1; rows.writeInt32LE(-1, o + 0x61); rows.writeInt32LE(-1, o + 0x65);
     });
     const e = managers.length * 110;
     rows.writeInt32LE(firstId + managers.length, e); rows.writeInt32LE(-1, e + 0x39); rows.writeInt32LE(-1, e + 0x61);
@@ -260,7 +262,13 @@ export async function fakeSaveGame(players = [
       ? search(id, 0, m.shortlist ?? [], m.removed ?? [], m.capacity ?? ((m.shortlist ?? []).length ? 250 : 0), m.clubTable)
       : search(id, slot)));
     const count = Buffer.alloc(4); count.writeInt32LE(searches.length, 0);
-    scoutManager = Buffer.concat([count, ...searches, Buffer.from('the scout requests, as they were')]);
+    // The scout requests (add_scout_request 0x7f9290: club, player, the day asked, reports), then the 16 last-list bytes.
+    const reqs = Buffer.alloc(4 + requests.length * 17); reqs.writeInt32LE(requests.length, 0);
+    requests.forEach((q, k) => {
+      const o = 4 + k * 17; reqs.writeInt32LE(q.club, o); reqs.writeInt32LE(q.player, o + 4);
+      writeDate(reqs, o + 8, q.date ?? { year: 2001, month: 7, day: 1 }); reqs[o + 16] = q.reports ?? 0;
+    });
+    scoutManager = Buffer.concat([count, ...searches, reqs, Buffer.from([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 2])]);
   }
   const club = Buffer.alloc(581); club.writeInt32LE(0, 0); club.write('Juventus', 4, 'latin1');
   const natClub = Buffer.alloc(581); natClub.writeInt32LE(1, 0); natClub.write('Italy', 4, 'latin1');
