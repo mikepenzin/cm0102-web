@@ -120,7 +120,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // Scout a player: the manager's club asks its scouts to watch him (shortlist.js, the scout requests). No button for a
   // player at that club, or a manager without one: the game would drop the request.
   const asked = (row) => Boolean(lists && lists.requested(manager, row));
-  const canAsk = (row) => Boolean(lists && requestAccess().state !== 'locked' && lists.canRequest(manager, row));
+  // A request already there can always be taken back (a player who has since joined the club included).
+  const canAsk = (row) => Boolean(lists && requestAccess().state !== 'locked' && (lists.canRequest(manager, row) || asked(row)));
   const EYE = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
   const eyeHtml = (row) => (!lists || requestAccess().state === 'locked' ? '' : !canAsk(row) ? '<span class="sr-gap" aria-hidden="true"></span>'
     : `<button type="button" class="sr-eye" data-sr="${row}" aria-pressed="${asked(row)}"
@@ -130,8 +131,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     if (!canAsk(row)) return;
     if (access() !== 'full') { invite(); return; }    // a part of Membership, as the shortlist
     const x = model.players().find((p) => p.row === row), was = asked(row);
-    if (was) lists.unrequest(manager, row); else lists.request(manager, row);
-    const key = `sr:${manager}:${row}`;              // a change to save; back as it was, none
+    if (!(was ? lists.unrequest(manager, row) : lists.request(manager, row))) return;
+    const key = `sr:${lists.clubOf(manager)}:${row}`;   // a change to save, the club's (a club asks); back as it was, none
     if (edited.has(key)) edited.delete(key); else edited.add(key);
     dirty();
     const who = managerName(), player = x ? playerName(x) : '';
@@ -388,8 +389,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       <span>${esc(t('Age'))}</span><span class="pair">${box('ageMin', filters.ageMin, 60, t('Age from'))} – ${box('ageMax', filters.ageMax, 60, t('Age to'))}</span>
       <span>${esc(t('Position'))}</span><span class="pair"><select data-k="position" aria-label="${esc(t('Position'))}"><option value="">${esc(t('Any position'))}</option>
         ${POSITIONS.map((p, i) => `<option value="${i}"${String(i) === String(filters.position) ? ' selected' : ''}>${esc(posName[p] ?? p)}</option>`).join('')}</select></span>
-      <span>${esc(t('Potential ≥'))}</span><span class="pair">${box('paMin', filters.paMin, 200, t('Lowest potential ability'))}
-        <span>${esc(t('Ability ≥'))}</span>${box('caMin', filters.caMin, 200, t('Lowest current ability'))}</span>
+      <span>${esc(t('Potential ≥'))}</span><span class="pair">${box('paMin', filters.paMin, 200, t('Lowest potential ability'))}</span>
+      <span>${esc(t('Ability ≥'))}</span><span class="pair">${box('caMin', filters.caMin, 200, t('Lowest current ability'))}</span>
       ${filters.attrs.map((a, i) => `<span>${i === 0 ? esc(t('Attributes')) : ''}</span><span class="pair"><select data-attr="${i}" aria-label="${esc(t('An attribute'))}">${attrOptions(a.name)}</select>
         ≥ <input type="number" inputmode="numeric" min="1" max="20" data-min="${i}" value="${esc(a.min)}" aria-label="${esc(t('Lowest value'))}"></span>`).join('')}`;
   }

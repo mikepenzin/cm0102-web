@@ -139,3 +139,26 @@ test('unrequest: the record goes, the order kept; written and read again', async
   assert.equal(scoutManager(again).requested(MIKE, 1), true);
   assert.equal(scoutManager(again).requested(KLAUS, 1), false);
 });
+
+test('a request taken back and asked again is the one it was: its day and reports kept', async () => {
+  const g = await withReqs([{ club: 100, player: 1, reports: 1, date: { year: 2001, month: 6, day: 2 } }]);
+  const before = Buffer.from(g.file.read('scout_manager.dat'));
+  const sm = scoutManager(g);
+  assert.equal(sm.unrequest(KLAUS, 1), true);
+  assert.equal(sm.request(KLAUS, 1), true);
+  assert.deepEqual(Buffer.from(g.file.read('scout_manager.dat')), before);
+});
+
+test('a shortlist add and a request in one session: both kept, written and read again', async () => {
+  const g = await withReqs([]);
+  const sm = scoutManager(g);
+  sm.add(KLAUS, 0); sm.request(MIKE, 1); sm.add(MIKE, 1);
+  const again = scoutManager(new SaveGame(g.file.toBytes()));
+  assert.deepEqual([[...again.ids(KLAUS)], [...again.ids(MIKE)], again.requested(MIKE, 1), again.requested(KLAUS, 1)], [[0], [1], true, false]);
+});
+
+test('no request without the game date (it would look a year old and be dropped)', async () => {
+  const g = await withReqs([]);
+  g.file.member('general.dat').data = new Uint8Array(4000);              // the date at 0xf85 blank
+  assert.equal(scoutManager(g).request(KLAUS, 1), false);
+});
