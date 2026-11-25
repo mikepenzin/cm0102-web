@@ -169,6 +169,7 @@ int main(int argc, char **argv)
     rt_heap_bump = 0;
     rt_init(win_exe_path);
     rt_on_fatal = at_end;
+    rt_bad_call_hook();
 
     /* The current folder starts as the game folder, as for a shortcut to the game. */
     win_windows_path(win_game_dir, win_cwd, sizeof win_cwd);
