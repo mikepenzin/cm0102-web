@@ -1892,6 +1892,7 @@ static void intl_season(int season)
     uefa_members(season, 1);
     concacaf_members(season, 1);
     afc_members(season, 1);
+    rt_referee_ranges_repair();         /* a new member's referees (referees.c) */
     host_news(season);
     /* The host rows of the table in a game that started in 2001/02: at its first season change, for the
      * editions from 2002/03 (host_init). The table is sorted as the constructor sorts it. */
@@ -2143,6 +2144,7 @@ static void repair_ofc_club(void)
 static void intl_loaded(int start_year)
 {
     intl_sides(start_year);
+    rt_referee_ranges_repair();         /* a save whose members joined after their referees were made (referees.c) */
     if (!rt_unwinding) repair_idle();
     if (!rt_unwinding) repair_ofc_club();
     for (int i = 0; i < season_intl_marks_count() && !rt_unwinding; i++) {
