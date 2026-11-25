@@ -65,7 +65,8 @@ export function dataSetNameProblem(name, taken) {
 // guard keeps the page's keys from the elements' own listeners).
 export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data', isRunning, onSaved = () => {}, onSetChange = () => {},
   access = () => 'full', inviteKind = () => 'signin', invite = () => {}, onPageKey = null,
-  shortlistAccess = () => ({ state: 'open', locked: '', badge: '' }), joining = () => {} }) {
+  shortlistAccess = () => ({ state: 'open', locked: '', badge: '' }), requestAccess = () => ({ state: 'open', locked: '', badge: '' }),
+  joining = () => {} }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
   const home = $('editor-home'), title = $('editor-title'), fileLabel = $('editor-file');
@@ -77,7 +78,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   let pane = 'players', index = null;
   // A saved game's Short Lists (shortlist.js): undefined until read, null when the save has none; the manager whose
   // list the buttons change (kept for the save in localStorage). shortlistAccess(): early access (early.js) of the
-  // feature 'shortlist': { state 'open' | 'early' | 'locked', locked: its line, badge }.
+  // feature 'shortlist': { state 'open' | 'early' | 'locked', locked: its line, badge }; requestAccess() the same for
+  // 'scout-request' (the manager's club asks its scouts to watch a player).
   let lists, manager = null;
   const LIST_KEY = (save) => `cm0102-shortlist-manager:${save}`;
   async function readLists() {
@@ -114,6 +116,37 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       : t('{player} is on the shortlist of {manager}. Save the game file to keep the changes.', { player, manager: who })));
     if (pane === 'scout') runScout();
     if (current === row) drawListedButton(row);
+  }
+  // Scout a player: the manager's club asks its scouts to watch him (shortlist.js, the scout requests). No button for a
+  // player at that club, or a manager without one: the game would drop the request.
+  const asked = (row) => Boolean(lists && lists.requested(manager, row));
+  const canAsk = (row) => Boolean(lists && requestAccess().state !== 'locked' && lists.canRequest(manager, row));
+  const EYE = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
+  const eyeHtml = (row) => (!lists || requestAccess().state === 'locked' ? '' : !canAsk(row) ? '<span class="sr-gap" aria-hidden="true"></span>'
+    : `<button type="button" class="sr-eye" data-sr="${row}" aria-pressed="${asked(row)}"
+    title="${esc(asked(row) ? t('Scouting him: take the request back') : t('Ask the scouts to watch him'))}"
+    aria-label="${esc(asked(row) ? t('Scouting him: take the request back') : t('Ask the scouts to watch him'))}">${EYE}</button>`);
+  function toggleAsked(row) {
+    if (!canAsk(row)) return;
+    if (access() !== 'full') { invite(); return; }    // a part of Membership, as the shortlist
+    const x = model.players().find((p) => p.row === row), was = asked(row);
+    if (was) lists.unrequest(manager, row); else lists.request(manager, row);
+    const key = `sr:${manager}:${row}`;              // a change to save; back as it was, none
+    if (edited.has(key)) edited.delete(key); else edited.add(key);
+    dirty();
+    const who = managerName(), player = x ? playerName(x) : '';
+    say(() => (was ? t('The scouts of {manager} will not watch {player}. Save the game file to keep the changes.', { player, manager: who })
+      : t('The scouts of {manager} will watch {player}. Save the game file to keep the changes.', { player, manager: who })));
+    if (pane === 'scout') runScout();
+    if (current === row) drawAskedButton(row);
+  }
+  function drawAskedButton(row) {
+    const b = $('editor-scoutreq');
+    if (!b) return;
+    b.hidden = !canAsk(row);
+    b.textContent = asked(row) ? t('Scouting ✓') : t('+ Scout');
+    b.setAttribute('aria-pressed', String(asked(row)));
+    b.title = lists ? t('The scouts of {manager}', { manager: managerName() }) : '';
   }
   function drawListedButton(row) {
     const b = $('editor-shortlist');
@@ -343,9 +376,12 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const posName = positionNames(), attrName = attributeNames();
     const attrOptions = (chosen) => `<option value="">${esc(t('An attribute'))}</option>${ATTRIBUTES.map((a) => `<option value="${esc(a.name)}"${a.name === chosen ? ' selected' : ''}>${esc(attrName[a.name] ?? a.name)}</option>`).join('')}`;
     // The manager whose Short List the stars change, when the save has two or more (shortlist.js).
-    const many = lists && lists.managers.length > 1 && shortlistAccess().state !== 'locked';
-    const pick = many ? `<span>${esc(t('Shortlist for'))}</span><span class="pair"><select data-sl-manager aria-label="${esc(t('Shortlist for'))}">
-        ${lists.managers.map((m) => `<option value="${m.id}"${m.id === manager ? ' selected' : ''} data-raw>${esc(m.name)}</option>`).join('')}</select>${shortlistAccess().badge}</span>` : '';
+    // The same manager for the Scout buttons (his club asks).
+    const listOpen = shortlistAccess().state !== 'locked', askOpen = requestAccess().state !== 'locked';
+    const many = lists && lists.managers.length > 1 && (listOpen || askOpen);
+    const badge = (listOpen ? shortlistAccess().badge : '') || (askOpen ? requestAccess().badge : '');
+    const pick = many ? `<span>${esc(t('Manager'))}</span><span class="pair"><select data-sl-manager aria-label="${esc(t('Manager'))}">
+        ${lists.managers.map((m) => `<option value="${m.id}"${m.id === manager ? ' selected' : ''} data-raw>${esc(m.name)}</option>`).join('')}</select>${badge}</span>` : '';
     // The Wonderkids preset (scout.js): John Locke's School search, 19 or younger with potential 180 or more.
     filtersBox.innerHTML = `${pick}<span>${esc(t('Presets'))}</span><span class="pair"><button type="button" class="small" data-preset="wonderkids">${esc(t('Wonderkids'))}</button></span>
       <span></span><span class="small">${esc(t('19 or younger, potential 180 or more'))}</span>
@@ -372,8 +408,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const r = scout(index, { ...filters, attrs: filters.attrs.filter((a) => a.name) });
     const level = access(), cut = freeCut(r, level), attrName = attributeNames();
     // The player's name, club and position codes are the save's own (data-raw: the language check leaves them).
-    const rows = (lists && shortlistAccess().state === 'locked' ? shortlistAccess().locked : '') + cut.rows.map((x) => `<div class="scout-item"><button class="ed-row${current === x.row ? ' on' : ''}" data-row="${x.row}"><b data-raw>${esc(playerName(x))}</b>
-      <span>${esc(t('{age} years', { age: x.age }))} · ${x.club ? `<bdi data-raw>${esc(x.club)}</bdi>` : esc(t('No club'))} · <bdi data-raw>${esc(x.pos)}</bdi>${Object.entries(x.values).map(([k, v]) => ` · ${esc(attrName[k] ?? k)} ${v}`).join('')}</span><i>${x.ca}/${x.pa}</i></button>${starHtml(x.row)}</div>`).join('');
+    // One locked line (early.js) when a feature is early and the player is no Club Legend: the shortlist's, else Scout's.
+    const lockedLine = !lists ? '' : shortlistAccess().state === 'locked' ? shortlistAccess().locked : requestAccess().state === 'locked' ? requestAccess().locked : '';
+    const rows = lockedLine + cut.rows.map((x) => `<div class="scout-item"><button class="ed-row${current === x.row ? ' on' : ''}" data-row="${x.row}"><b data-raw>${esc(playerName(x))}</b>
+      <span>${esc(t('{age} years', { age: x.age }))} · ${x.club ? `<bdi data-raw>${esc(x.club)}</bdi>` : esc(t('No club'))} · <bdi data-raw>${esc(x.pos)}</bdi>${Object.entries(x.values).map(([k, v]) => ` · ${esc(attrName[k] ?? k)} ${v}`).join('')}</span><i>${x.ca}/${x.pa}</i></button>${starHtml(x.row)}${eyeHtml(x.row)}</div>`).join('');
     let after = '';
     if (!r.total) after = `<p class="small">${esc(t('No player matches these filters.'))}</p>`;
     else if (level === 'free' && cut.held) {
@@ -405,7 +443,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const head = row === null
       ? `<div class="ed-name"><h3>${esc(t('A new player'))}</h3><span class="spacer"></span><button class="primary" id="editor-apply" type="button">${esc(t('Add this player'))}</button>
         <button id="editor-reset" type="button">${esc(t('Clear'))}</button></div><p class="small">${esc(t('Attributes left at 0 are random: the game sets them when a new game starts.'))}</p>`
-      : `<div class="ed-name"><h3 id="editor-player">${esc(playerName(x))}</h3><span class="spacer"></span>${set ? '' : '<button id="editor-shortlist" type="button" hidden></button>'}<button id="editor-reset" type="button" hidden>${esc(t('Undo changes'))}</button></div>
+      : `<div class="ed-name"><h3 id="editor-player">${esc(playerName(x))}</h3><span class="spacer"></span>${set ? '' : '<button id="editor-shortlist" type="button" hidden></button><button id="editor-scoutreq" type="button" hidden></button>'}<button id="editor-reset" type="button" hidden>${esc(t('Undo changes'))}</button></div>
         <p class="small" id="editor-player-from">${esc(x.club || t('No club'))} · ${esc(x.nation)}</p>`;
     const clubNow = set ? clubs.find((c) => c.id === f.club) : null;
     const who = set ? `<section><h4>${esc(t('Name and club'))}</h4><div class="ed-grid">
@@ -436,7 +474,12 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       $('editor-reset').onclick = () => show(null);
       $('editor-apply').onclick = () => apply(null);
     } else {
-      if (!set) { drawListedButton(row); readLists().then(() => { if (current === row) drawListedButton(row); }); $('editor-shortlist').onclick = () => toggleListed(row); }
+      if (!set) {
+        const draw = () => { drawListedButton(row); drawAskedButton(row); };
+        draw(); readLists().then(() => { if (current === row) draw(); });
+        $('editor-shortlist').onclick = () => toggleListed(row);
+        $('editor-scoutreq').onclick = () => toggleAsked(row);
+      }
       const was = f, wasEdited = edited.has(row);
       $('editor-reset').onclick = () => {
         try { model.write(row, was); } catch { /* as it was read: it writes */ }
@@ -623,6 +666,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     if (e.target.closest('.early-join')) { joining(); return; }               // its link opens the membership page
     const star = e.target.closest('[data-sl]');
     if (star) { toggleListed(Number(star.dataset.sl)); return; }
+    const eye = e.target.closest('[data-sr]');
+    if (eye) { toggleAsked(Number(eye.dataset.sr)); return; }
     const b = e.target.closest('[data-row]');
     if (b) show(Number(b.dataset.row));
   };
@@ -642,7 +687,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       manager = Number(el.value);
       try { localStorage.setItem(LIST_KEY(name), String(manager)); } catch { /* not kept */ }
       runScout();
-      if (current !== null) drawListedButton(current);
+      if (current !== null) { drawListedButton(current); drawAskedButton(current); }
       return;
     }
     if (el.dataset.k) filters[el.dataset.k] = el.value;
