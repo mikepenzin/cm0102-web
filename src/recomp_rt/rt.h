@@ -300,6 +300,10 @@ void rt_fell_off(uint32_t at) __attribute__((noreturn));
 void rt_bad_jump(uint32_t at, uint32_t target) __attribute__((noreturn));
 void rt_missing_import(const char *name) __attribute__((noreturn));
 void rt_fatal(const char *fmt, ...) __attribute__((noreturn, format(printf, 1, 2)));
+/* Called by rt_call just before it stops on a call to an address that is not a recompiled function (the return
+ * address in from), so that the log can say what the game was doing (win/original_faults.c). It must only read
+ * memory and print: it runs no game code. */
+extern void (*rt_on_bad_call)(uint32_t target, uint32_t from);
 
 /* Replacement functions. RT_REPLACE marks a function of the original that the runtime replaces; the
  * recompiler reads these lines to leave it out. RT_IMPORT is the same for an import, by name. */
@@ -382,6 +386,8 @@ void rt_link_marks(uint32_t nt, uint32_t fixture, uint32_t on);
 /* Issue 132 (win/original_faults.c): a crash site of the original was reached. One stderr line per site and run,
  * "recomp: crash site <addr> reached", so that the run set's logs show whether a site can happen in the port. */
 void rt_crash_site(uint32_t site);
+/* Sets rt_on_bad_call to the report of win/original_faults.c: the competitions whose stages cannot be called. */
+void rt_bad_call_hook(void);
 void rt_squad_move_set(uint32_t manager, uint32_t staff, int down);
 void rt_squad_move_test(void);
 /* Test runs at the first start report (season_report.c): RECOMP_SQUAD_LOAN_TEST=1, a human move of a loanee of a linked
