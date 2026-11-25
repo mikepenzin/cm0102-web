@@ -46,7 +46,7 @@ const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAI
 
 // Ten players with names found nowhere else, PA 190 down to 181 (the order the Scout shows), Finishing apart.
 const FIRST = ['Aurelio', 'Benedikt', 'Cassiano', 'Dorotheus', 'Eustachio', 'Florentin', 'Gaspard', 'Hilarion', 'Isidoro', 'Jovanni'];
-const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i }));
+const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [i < 2 ? 1983 : 1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i }));   // the first two are 18: Wonderkids
 const saveBytes = await fakeSaveGame(players);
 const g = new SaveGame(saveBytes);
 const finishing = g.players().map((p) => g.read(p.row).attrs.Finishing);
@@ -153,10 +153,10 @@ try {
     check('Apply in the Scout: the matches follow at once, the save not read again', !(await p.evaluate(() => window.__reread)) && after.length > 0,
       `${after.join()} reread=${await p.evaluate(() => window.__reread)}`);
     // A language chosen with a player open: the Scout's filters in it too.
-    const ageBefore = await p.textContent('#scout-filters span');
+    const ageBefore = await p.textContent('#scout-filters > span:nth-child(3)');   // after the Presets row
     await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('de', { keep: false }); });
     await p.waitForTimeout(300);
-    const ageAfter = await p.evaluate(async () => [document.querySelector('#scout-filters span').textContent, (await import('/i18n.js')).t('Age')]);
+    const ageAfter = await p.evaluate(async () => [document.querySelector('#scout-filters > span:nth-child(3)').textContent, (await import('/i18n.js')).t('Age')]);
     check('a language chosen with a player open: the Scout\'s filters change too', ageBefore === 'Age' && ageAfter[0] === ageAfter[1] && ageAfter[0] !== 'Age', JSON.stringify(ageAfter));
     await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('en', { keep: false }); });
     await p.click('#scout-invite');
@@ -168,6 +168,15 @@ try {
     await p.waitForFunction(() => document.querySelectorAll('#scout-results .ed-row').length > 3, null, { timeout: 8000 }).catch(() => {});
     check('the account becomes a member while the Scout is open: it shows every match at once, no invitation',
       (await rowNames(p)).length === fifteenPlus && !(await p.$('#scout-invite')), (await rowNames(p)).join());
+    // The Wonderkids preset: 19 or younger, potential 180 or more, the other filters cleared, and it searches at once.
+    if (await p.isVisible('#account[open]')) await p.click('#account-close');          // the invitation's dialog, from above
+    await p.click('#scout-filters [data-preset="wonderkids"]');
+    await p.waitForFunction(() => document.querySelectorAll('#scout-results .ed-row').length === 2, null, { timeout: 5000 }).catch(() => {});
+    const preset = await p.evaluate(() => ({ age: document.querySelector('#scout-filters [data-k="ageMax"]').value,
+      pa: document.querySelector('#scout-filters [data-k="paMin"]').value, attr: document.querySelector('#scout-filters [data-attr="0"]').value }));
+    check('Wonderkids: 19 or younger with potential 180+, the other filters cleared, its two players',
+      preset.age === '19' && preset.pa === '180' && preset.attr === '' && (await rowNames(p)).join() === NAMES.slice(0, 2).join(), JSON.stringify({ preset, rows: await rowNames(p) }));
+    await shot(p, 'wonderkids');
     await ctx.close();
   }
   {

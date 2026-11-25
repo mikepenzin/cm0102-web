@@ -9,7 +9,7 @@ import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } fro
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
 import { onLanguage, t, tn } from './i18n.js';
-import { freeCut, scout, scoutIndex, scoutUpdate } from './scout.js';
+import { freeCut, presetFilters, scout, scoutIndex, scoutUpdate } from './scout.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -292,7 +292,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   function drawFilters() {
     const posName = positionNames(), attrName = attributeNames();
     const attrOptions = (chosen) => `<option value="">${esc(t('An attribute'))}</option>${ATTRIBUTES.map((a) => `<option value="${esc(a.name)}"${a.name === chosen ? ' selected' : ''}>${esc(attrName[a.name] ?? a.name)}</option>`).join('')}`;
-    filtersBox.innerHTML = `<span>${esc(t('Age'))}</span><span class="pair">${box('ageMin', filters.ageMin, 60, t('Age from'))} – ${box('ageMax', filters.ageMax, 60, t('Age to'))}</span>
+    // The Wonderkids preset (scout.js): John Locke's School search, 19 or younger with potential 180 or more.
+    filtersBox.innerHTML = `<span>${esc(t('Presets'))}</span><span class="pair"><button type="button" class="small" data-preset="wonderkids">${esc(t('Wonderkids'))}</button>
+        <span class="small">${esc(t('19 or younger, potential 180 or more'))}</span></span>
+      <span>${esc(t('Age'))}</span><span class="pair">${box('ageMin', filters.ageMin, 60, t('Age from'))} – ${box('ageMax', filters.ageMax, 60, t('Age to'))}</span>
       <span>${esc(t('Position'))}</span><span class="pair"><select data-k="position" aria-label="${esc(t('Position'))}"><option value="">${esc(t('Any position'))}</option>
         ${POSITIONS.map((p, i) => `<option value="${i}"${String(i) === String(filters.position) ? ' selected' : ''}>${esc(posName[p] ?? p)}</option>`).join('')}</select></span>
       <span>${esc(t('Potential ≥'))}</span><span class="pair">${box('paMin', filters.paMin, 200, t('Lowest potential ability'))}
@@ -562,6 +565,15 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     if (e.target.closest('#scout-invite')) { invite(); return; }
     const b = e.target.closest('[data-row]');
     if (b) show(Number(b.dataset.row));
+  };
+  // A preset: its filters in place of the ones set, and the Scout searches at once.
+  filtersBox.onclick = (e) => {
+    const b = e.target.closest('[data-preset]'), f = b && presetFilters(b.dataset.preset);
+    if (!f) return;
+    Object.assign(filters, f);
+    clearTimeout(scoutTimer);
+    drawFilters();
+    runScout();
   };
   // A filter changed: the Scout searches again after a pause in the typing.
   filtersBox.oninput = (e) => {

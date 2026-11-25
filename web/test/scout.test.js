@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SaveGame } from '../savedit.js';
-import { scoutIndex, scoutUpdate, scout, scoutAccess, keptAccess, freeCut, inviteKind } from '../scout.js';
+import { scoutIndex, scoutUpdate, scout, scoutAccess, keptAccess, freeCut, inviteKind, WONDERKIDS, presetFilters } from '../scout.js';
 import { fakeSaveGame } from './fakes.mjs';
 
 // A player of the fake save: born on 1 January of the year that gives this age on the save's date (14 July 2001).
@@ -108,4 +108,13 @@ test('the page\'s words: the Scout promises no more than the best 100, and Membe
   const texts = [...pageStrings().keys()];
   assert.deepEqual(texts.filter((s) => /Scout/.test(s) && /every (player|match)/.test(s)), [], 'the Scout shows the best 100, not every player');
   assert.deepEqual(texts.filter((s) => /Membership is an? (monthly )?(Buy Me a Coffee )?membership/i.test(s)), [], 'no sentence that says Membership is a membership');
+});
+
+test('the Wonderkids preset: 19 or younger with potential 180 or more (John Locke\'s School search), every other filter cleared', async () => {
+  assert.deepEqual(WONDERKIDS, { ageMax: 19, paMin: 180 });
+  const f = presetFilters('wonderkids');
+  assert.deepEqual(f, { ageMin: '', ageMax: '19', position: '', paMin: '180', caMin: '', attrs: [{ name: '', min: '' }, { name: '', min: '' }, { name: '', min: '' }] });
+  assert.equal(presetFilters('nonsense'), null);
+  const g = await open([P('Kid', 19, 100, 180), P('Old', 20, 120, 199), P('Low', 18, 110, 179), P('Top', 17, 90, 195)]);
+  assert.deepEqual(names(scout(scoutIndex(g), { ...f, attrs: [] })), ['Top Test', 'Kid Test'], '19 and 180 count; 20, and 179, do not');
 });

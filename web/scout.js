@@ -62,6 +62,15 @@ export function scout(index, filters = {}) {
   return { rows, total: hit.length };
 }
 
+// The Wonderkids preset (John Locke's "School search" patch of CM 01/02): players aged 19 or younger with potential
+// ability 180 or more. presetFilters(name): the Scout's filters for a preset, the others cleared; null for no such preset.
+export const WONDERKIDS = Object.freeze({ ageMax: 19, paMin: 180 });
+export function presetFilters(name) {
+  if (name !== 'wonderkids') return null;
+  return { ageMin: '', ageMax: String(WONDERKIDS.ageMax), position: '', paMin: String(WONDERKIDS.paMin), caMin: '',
+    attrs: [0, 1, 2].map(() => ({ name: '', min: '' })) };
+}
+
 // Whether anything can be bought here: an offer free with an account, or one sold (Buy Me a Coffee, Paddle, a link).
 const buyable = (offer) => Boolean(offer && (offer.free || offer.coffee || offer.paddle || offer.url));
 

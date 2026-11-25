@@ -682,4 +682,7 @@ export default {
   "Early access": "Acceso anticipado",
   "Become a Club Legend": "Hazte Club Legend",
   "Club Legends have it now · everyone from {date}": "Los Club Legends ya lo tienen · para todos desde el {date}",
+  "Presets": "Búsquedas rápidas",
+  "Wonderkids": "Jóvenes promesas",
+  "19 or younger, potential 180 or more": "19 años o menos, potencial 180 o más",
 };

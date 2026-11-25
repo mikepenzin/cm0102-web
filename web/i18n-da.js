@@ -682,4 +682,7 @@ export default {
   "Early access": "Tidlig adgang",
   "Become a Club Legend": "Bliv Club Legend",
   "Club Legends have it now · everyone from {date}": "Club Legends har det allerede · for alle fra {date}",
+  "Presets": "Hurtigsøgninger",
+  "Wonderkids": "Vidunderbørn",
+  "19 or younger, potential 180 or more": "19 år eller yngre, potentiale 180 eller mere",
 };

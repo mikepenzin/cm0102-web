@@ -682,4 +682,7 @@ export default {
   "Early access": "Vroege toegang",
   "Become a Club Legend": "Word Club Legend",
   "Club Legends have it now · everyone from {date}": "Club Legends hebben het al · voor iedereen vanaf {date}",
+  "Presets": "Snelzoeken",
+  "Wonderkids": "Wonderkinderen",
+  "19 or younger, potential 180 or more": "19 of jonger, potentieel 180 of meer",
 };

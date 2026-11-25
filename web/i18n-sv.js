@@ -682,4 +682,7 @@ export default {
   "Early access": "Tidig tillgång",
   "Become a Club Legend": "Bli Club Legend",
   "Club Legends have it now · everyone from {date}": "Club Legends har det redan · för alla från {date}",
+  "Presets": "Snabbsökningar",
+  "Wonderkids": "Underbarn",
+  "19 or younger, potential 180 or more": "19 år eller yngre, potential 180 eller mer",
 };
