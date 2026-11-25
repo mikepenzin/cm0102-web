@@ -30,7 +30,10 @@ import fixtures  # noqa: E402
 import smoke_run  # noqa: E402
 import savfile  # noqa: E402
 
-HOLIDAY_STEPS = ["2500 click 45 165", "4500 click 150 427 | 199 474", "7000 click 705 572"]
+# The manager menu, Go on Holiday and Please Confirm (smoke_run.STEPS), each after a wait for its screen. A manager of
+# a game that has gone on has a longer menu than at the first news (Board Confidence, Resign from Club, Retire), so Go
+# on Holiday sits at y 385, not 427. Classic mode only.
+HOLIDAY_STEPS = ["2500 click 45 165", "wait popup", "1000 click 150 385", "wait screen:0x6b2d80", "1000 click 705 572"]
 TAKES = "recomp: referees: "
 GUARD = "recomp: referees: the range from slot"
 
