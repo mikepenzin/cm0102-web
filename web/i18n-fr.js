@@ -685,4 +685,13 @@ export default {
   "Presets": "Recherches rapides",
   "Wonderkids": "Jeunes prodiges",
   "19 or younger, potential 180 or more": "19 ans ou moins, potentiel de 180 ou plus",
+  "On the shortlist: take him off": "Dans la liste de suivi : le retirer",
+  "Add to the shortlist": "Ajouter à la liste de suivi",
+  "{player} is off the shortlist of {manager}. Save the game file to keep the changes.": "{player} n'est plus dans la liste de suivi de {manager}. Enregistrez la partie pour garder les changements.",
+  "{player} is on the shortlist of {manager}. Save the game file to keep the changes.": "{player} est dans la liste de suivi de {manager}. Enregistrez la partie pour garder les changements.",
+  "On shortlist ✓": "Suivi ✓",
+  "+ Shortlist": "+ Suivi",
+  "The shortlist of {manager}": "La liste de suivi de {manager}",
+  "Shortlist for": "Liste de suivi de",
+  "the scout lists of the saved game are damaged": "les listes de recrutement de la sauvegarde sont endommagées",
 };

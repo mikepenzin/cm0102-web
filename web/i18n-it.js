@@ -685,4 +685,13 @@ export default {
   "Presets": "Ricerche rapide",
   "Wonderkids": "Giovani talenti",
   "19 or younger, potential 180 or more": "19 anni o meno, potenziale 180 o più",
+  "On the shortlist: take him off": "Nella lista dei preferiti: toglilo",
+  "Add to the shortlist": "Aggiungi alla lista dei preferiti",
+  "{player} is off the shortlist of {manager}. Save the game file to keep the changes.": "{player} non è più nella lista dei preferiti di {manager}. Salva la partita per mantenere le modifiche.",
+  "{player} is on the shortlist of {manager}. Save the game file to keep the changes.": "{player} è nella lista dei preferiti di {manager}. Salva la partita per mantenere le modifiche.",
+  "On shortlist ✓": "Nei preferiti ✓",
+  "+ Shortlist": "+ Preferiti",
+  "The shortlist of {manager}": "La lista dei preferiti di {manager}",
+  "Shortlist for": "Preferiti di",
+  "the scout lists of the saved game are damaged": "le liste degli osservatori della partita salvata sono danneggiate",
 };

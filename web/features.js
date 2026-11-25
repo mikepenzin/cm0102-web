@@ -2,4 +2,6 @@
 // when it is built, { key, name } (key: a-z, 0-9 and -, the name in English for the admin page), and gates its entry
 // point with early.js (earlyState, lockedHtml). The server (early.mjs) gives a key it sees for the first time 14 days
 // of Club Legends only; the admin page's Early access tab changes the day. Features already out are not listed.
-export const FEATURES = [];
+export const FEATURES = [
+  { key: 'shortlist', name: 'Scout to shortlist' },   // Squad Hub: a Scout player onto a manager's Short List (shortlist.js)
+];

@@ -685,4 +685,13 @@ export default {
   "Presets": "Búsquedas rápidas",
   "Wonderkids": "Jóvenes promesas",
   "19 or younger, potential 180 or more": "19 años o menos, potencial 180 o más",
+  "On the shortlist: take him off": "En la lista de seguimiento: quitarlo",
+  "Add to the shortlist": "Añadir a la lista de seguimiento",
+  "{player} is off the shortlist of {manager}. Save the game file to keep the changes.": "{player} ya no está en la lista de seguimiento de {manager}. Guarda la partida para conservar los cambios.",
+  "{player} is on the shortlist of {manager}. Save the game file to keep the changes.": "{player} está en la lista de seguimiento de {manager}. Guarda la partida para conservar los cambios.",
+  "On shortlist ✓": "En seguimiento ✓",
+  "+ Shortlist": "+ Seguimiento",
+  "The shortlist of {manager}": "La lista de seguimiento de {manager}",
+  "Shortlist for": "Seguimiento de",
+  "the scout lists of the saved game are damaged": "las listas de ojeadores de la partida están dañadas",
 };

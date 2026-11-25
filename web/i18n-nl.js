@@ -685,4 +685,13 @@ export default {
   "Presets": "Snelzoeken",
   "Wonderkids": "Wonderkinderen",
   "19 or younger, potential 180 or more": "19 of jonger, potentieel 180 of meer",
+  "On the shortlist: take him off": "Op de shortlist: haal hem eraf",
+  "Add to the shortlist": "Op de shortlist zetten",
+  "{player} is off the shortlist of {manager}. Save the game file to keep the changes.": "{player} staat niet meer op de shortlist van {manager}. Sla het spelbestand op om de wijzigingen te bewaren.",
+  "{player} is on the shortlist of {manager}. Save the game file to keep the changes.": "{player} staat op de shortlist van {manager}. Sla het spelbestand op om de wijzigingen te bewaren.",
+  "On shortlist ✓": "Op shortlist ✓",
+  "+ Shortlist": "+ Shortlist",
+  "The shortlist of {manager}": "De shortlist van {manager}",
+  "Shortlist for": "Shortlist van",
+  "the scout lists of the saved game are damaged": "de scoutlijsten van het spelbestand zijn beschadigd",
 };

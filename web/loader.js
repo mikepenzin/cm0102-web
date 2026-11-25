@@ -15,6 +15,7 @@ import { mountTacticsPanel } from './tactics.js';
 import { createSetSync, listDataSets } from './datasets.js';
 import { createCloudSync, keepInCloud, legalLinks, mountAccount, plansHtml } from './account.js';
 import { inviteKind, keptAccess, scoutAccess } from './scout.js';
+import { badgeHtml, earlyState, lockedHtml } from './early.js';
 import { guardKeys, hasTouch, mountKeyboard, onPageKey } from './keyboard.js';
 import { TOUR_STEPS, cloudStepText, mountTour } from './tour.js';
 import { mountLayout } from './layout.js';
@@ -990,6 +991,13 @@ function runEngine(files, info) {
       }, 2000);
       const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running,
         access: () => scoutAccess(account.me, keptMember()), inviteKind: () => inviteKind(account.me), invite: () => account.open(), onPageKey,
+        // Scout to shortlist: a feature in early access (features.js 'shortlist', early.js).
+        shortlistAccess: () => {
+          const state = earlyState(account.me, 'shortlist');
+          return { state, badge: state === 'early' ? ` ${badgeHtml()}` : '',
+            locked: state === 'locked' ? lockedHtml(account.me.early.features.shortlist, { signedIn: Boolean(account.me?.user), offer: account.me?.offer ?? null }) : '' };
+        },
+        joining: () => account.waitForLegend(),
         onSetChange: (name, what) => (what === 'deleted' ? setSync?.deleted(name) : setSync?.run()) });
       account.onAccountChange(() => editor.redraw());      // joined or signed out: the open Scout follows
       $('editor-open').hidden = false;

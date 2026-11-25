@@ -685,4 +685,13 @@ export default {
   "Presets": "Schnellsuchen",
   "Wonderkids": "Wunderkinder",
   "19 or younger, potential 180 or more": "19 oder jünger, Potenzial 180 oder mehr",
+  "On the shortlist: take him off": "Auf der Beobachtungsliste: herunternehmen",
+  "Add to the shortlist": "Auf die Beobachtungsliste",
+  "{player} is off the shortlist of {manager}. Save the game file to keep the changes.": "{player} ist nicht mehr auf der Beobachtungsliste von {manager}. Speichere die Spieldatei, um die Änderungen zu behalten.",
+  "{player} is on the shortlist of {manager}. Save the game file to keep the changes.": "{player} ist auf der Beobachtungsliste von {manager}. Speichere die Spieldatei, um die Änderungen zu behalten.",
+  "On shortlist ✓": "Auf der Liste ✓",
+  "+ Shortlist": "+ Beobachten",
+  "The shortlist of {manager}": "Die Beobachtungsliste von {manager}",
+  "Shortlist for": "Liste von",
+  "the scout lists of the saved game are damaged": "die Scoutlisten des Spielstands sind beschädigt",
 };

@@ -685,4 +685,13 @@ export default {
   "Presets": "Snabbsökningar",
   "Wonderkids": "Underbarn",
   "19 or younger, potential 180 or more": "19 år eller yngre, potential 180 eller mer",
+  "On the shortlist: take him off": "På önskelistan: ta bort honom",
+  "Add to the shortlist": "Sätt på önskelistan",
+  "{player} is off the shortlist of {manager}. Save the game file to keep the changes.": "{player} är inte längre på {manager}s önskelista. Spara spelfilen för att behålla ändringarna.",
+  "{player} is on the shortlist of {manager}. Save the game file to keep the changes.": "{player} är på {manager}s önskelista. Spara spelfilen för att behålla ändringarna.",
+  "On shortlist ✓": "På listan ✓",
+  "+ Shortlist": "+ Önskelista",
+  "The shortlist of {manager}": "{manager}s önskelista",
+  "Shortlist for": "Önskelista för",
+  "the scout lists of the saved game are damaged": "scoutlistorna i det sparade spelet är skadade",
 };

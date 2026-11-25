@@ -685,4 +685,13 @@ export default {
   "Presets": "Hurtigsøgninger",
   "Wonderkids": "Vidunderbørn",
   "19 or younger, potential 180 or more": "19 år eller yngre, potentiale 180 eller mere",
+  "On the shortlist: take him off": "På ønskelisten: fjern ham",
+  "Add to the shortlist": "Sæt på ønskelisten",
+  "{player} is off the shortlist of {manager}. Save the game file to keep the changes.": "{player} er ikke længere på {manager}s ønskeliste. Gem spilfilen for at beholde ændringerne.",
+  "{player} is on the shortlist of {manager}. Save the game file to keep the changes.": "{player} er på {manager}s ønskeliste. Gem spilfilen for at beholde ændringerne.",
+  "On shortlist ✓": "På listen ✓",
+  "+ Shortlist": "+ Ønskeliste",
+  "The shortlist of {manager}": "{manager}s ønskeliste",
+  "Shortlist for": "Ønskeliste for",
+  "the scout lists of the saved game are damaged": "spejderlisterne i den gemte kamp er beskadigede",
 };

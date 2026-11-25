@@ -57,7 +57,7 @@ export function htmlStrings(html) {
 
 // The modules the server imports too: their thrown errors' key: '…' only.
 const SHARED = new Set(['zip.js', 'savedit.js', 'dataset.js', 'saves.js', 'upload.js']);
-const NOT_PAGE = new Set(['sw.js']);
+const NOT_PAGE = new Set(['sw.js', 'features.js']);   // features.js: its key is a feature's id, not a text
 
 // Every English text of the page: Map english -> Set of files.
 export function pageStrings(web = WEB) {

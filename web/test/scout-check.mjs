@@ -47,7 +47,8 @@ const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAI
 // Ten players with names found nowhere else, PA 190 down to 181 (the order the Scout shows), Finishing apart.
 const FIRST = ['Aurelio', 'Benedikt', 'Cassiano', 'Dorotheus', 'Eustachio', 'Florentin', 'Gaspard', 'Hilarion', 'Isidoro', 'Jovanni'];
 const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [i < 2 ? 1983 : 1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i }));   // the first two are 18: Wonderkids
-const saveBytes = await fakeSaveGame(players);
+// Two human managers, Klaus and Mike, with empty Short Lists (shortlist.js).
+const saveBytes = await fakeSaveGame(players, { managers: [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }] });
 const g = new SaveGame(saveBytes);
 const finishing = g.players().map((p) => g.read(p.row).attrs.Finishing);
 const MIN = [...finishing].sort((a, b) => b - a)[4];                       // five players reach it
@@ -153,10 +154,11 @@ try {
     check('Apply in the Scout: the matches follow at once, the save not read again', !(await p.evaluate(() => window.__reread)) && after.length > 0,
       `${after.join()} reread=${await p.evaluate(() => window.__reread)}`);
     // A language chosen with a player open: the Scout's filters in it too.
-    const ageBefore = await p.textContent('#scout-filters > span:nth-child(3)');   // after the Presets row
+    const ageLabel = () => p.evaluate(() => document.querySelector('#scout-filters [data-k="ageMin"]').closest('.pair').previousElementSibling.textContent);
+    const ageBefore = await ageLabel();   // the label of the age fields, wherever the rows above it are
     await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('de', { keep: false }); });
     await p.waitForTimeout(300);
-    const ageAfter = await p.evaluate(async () => [document.querySelector('#scout-filters > span:nth-child(3)').textContent, (await import('/i18n.js')).t('Age')]);
+    const ageAfter = [await ageLabel(), await p.evaluate(async () => (await import('/i18n.js')).t('Age'))];
     check('a language chosen with a player open: the Scout\'s filters change too', ageBefore === 'Age' && ageAfter[0] === ageAfter[1] && ageAfter[0] !== 'Age', JSON.stringify(ageAfter));
     await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('en', { keep: false }); });
     await p.click('#scout-invite');
@@ -244,6 +246,60 @@ try {
     check('the account not known, nothing kept: 3 matches, the count, no button', (await rowNames(p)).length === 3
       && /7 more players match/.test(await p.textContent('#scout-results')) && !(await p.$('#scout-invite')));
     await ctx.close();
+  }
+  // ---- Scout to shortlist (shortlist.js): a member puts a found player on a manager's Short List. ----
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await editorOn(ctx, ME.member);
+    await scoutTab(p);
+    await p.waitForSelector('#scout-filters [data-sl-manager]', { timeout: 10000 }).catch(() => {});
+    const options = await p.$$eval('#scout-filters [data-sl-manager] option', (o) => o.map((x) => x.textContent));
+    check('two managers: "Shortlist for" names them both', options.join() === 'Klaus Kastelmann,Mike Penzin', options.join());
+    const star = (i) => p.locator('#scout-results .scout-item').nth(i).locator('.sl-star');
+    await star(0).click();
+    check('a star puts the player on Klaus\'s shortlist, a change to save', await star(0).getAttribute('aria-pressed') === 'true'
+      && /\(1 changed\)/.test(await p.textContent('#editor-save')), `${await star(0).getAttribute('aria-pressed')} ${await p.textContent('#editor-save')}`);
+    await p.selectOption('#scout-filters [data-sl-manager]', { label: 'Mike Penzin' });
+    await p.waitForTimeout(300);
+    check('Mike\'s shortlist is his own: the star is off', await star(0).getAttribute('aria-pressed') === 'false');
+    await star(1).click();
+    await star(1).click();
+    check('a second click takes him off again: no change left for Mike', await star(1).getAttribute('aria-pressed') === 'false'
+      && /\(1 changed\)/.test(await p.textContent('#editor-save')), await p.textContent('#editor-save'));
+    // The player's panel says it too.
+    await p.locator('#scout-results .scout-item').nth(0).locator('.ed-row').click();
+    await p.waitForSelector('#editor-shortlist:not([hidden])');
+    check('the panel, for Mike: + Shortlist', (await p.textContent('#editor-shortlist')).trim() === '+ Shortlist', await p.textContent('#editor-shortlist'));
+    // Saved, then read from the file: it holds Klaus's list.
+    await p.click('#editor-save');
+    await p.waitForFunction(() => /Saved/.test(document.getElementById('editor-note').textContent), null, { timeout: 15000 });
+    const bytes = await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')));
+    const { scoutManager } = await import('../shortlist.js');
+    const lists = scoutManager(new SaveGame(new Uint8Array(bytes)));
+    const first = g.players().find((x) => x.name === NAMES[0]);
+    check('saved: the file has him on Klaus\'s Short List, none on Mike\'s', [...lists.ids(lists.managers[0].id)].join() === String(first.row)
+      && lists.ids(lists.managers[1].id).size === 0, JSON.stringify([[...lists.ids(lists.managers[0].id)], [...lists.ids(lists.managers[1].id)]]));
+    await shot(p, 'shortlist');
+    await ctx.close();
+  }
+  {
+    // A free player: the star invites to Membership. A member while the feature is early and he is no Club Legend:
+    // the locked line, no stars.
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await editorOn(ctx, ME.free);
+    await scoutTab(p);
+    await p.locator('#scout-results .scout-item').nth(0).locator('.sl-star').click();
+    check('free: the star opens the Account dialog (Membership), nothing changes', await p.isVisible('#account[open]')
+      && !/changed/.test(await p.textContent('#editor-save')));
+    await ctx.close();
+    const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const day = new Date(Date.now() + 5 * 86400e3).toISOString().slice(0, 10);
+    const p2 = await editorOn(ctx2, { ...ME.member, early: { legend: false, features: { shortlist: day } } });
+    await scoutTab(p2);
+    await p2.waitForSelector('#scout-results .early-locked', { timeout: 10000 }).catch(() => {});
+    check('early access: a member who is no Club Legend sees the locked line and no stars', await p2.locator('#scout-results .early-locked').count() === 1
+      && await p2.locator('#scout-results .sl-star').count() === 0 && await p2.locator('#scout-filters [data-sl-manager]').count() === 0);
+    await ctx2.close();
   }
   check('no page errors', errors.length === 0, errors.join(' | '));
 } finally {
