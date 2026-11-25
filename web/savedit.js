@@ -131,6 +131,7 @@ export class SaveFile {
     for (const m of [...this.members].sort((a, b) => a.offset - b.offset)) {
       const raw = m.changed ? (this.compressed ? encodeRuns(m.data) : m.data) : m.raw;
       dv.setUint32(12 + m.index * ENTRY, at, true);
+      if (m.changed) dv.setUint32(16 + m.index * ENTRY, m.data.length, true);   // a member may change its size (shortlist.js)
       parts.push(raw);
       at += raw.length ?? raw.size;
     }
