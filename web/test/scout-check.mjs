@@ -282,6 +282,41 @@ try {
     await shot(p, 'shortlist');
     await ctx.close();
   }
+  // ---- Scout a player (shortlist.js, scout requests): the manager's club asks its scouts to watch him. ----
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await editorOn(ctx, ME.member);
+    await scoutTab(p);
+    await p.waitForSelector('#scout-results .sr-eye', { timeout: 10000 }).catch(() => {});
+    check('the manager\'s choice is labelled Manager', /Manager/.test(await p.textContent('#scout-filters')) && !/Shortlist for/.test(await p.textContent('#scout-filters')));
+    const eye = (i) => p.locator('#scout-results .scout-item').nth(i).locator('.sr-eye');
+    check('each row has a Scout button after the star', await p.locator('#scout-results .sr-eye').count() === await p.locator('#scout-results .sl-star').count()
+      && await p.locator('#scout-results .sr-eye').count() > 0);
+    await eye(0).click();
+    check('Scout asks Klaus\'s club, a change to save', await eye(0).getAttribute('aria-pressed') === 'true'
+      && /\(1 changed\)/.test(await p.textContent('#editor-save')) && /scouts? of|scouting/i.test(await p.textContent('#editor-note')), await p.textContent('#editor-note'));
+    await p.selectOption('#scout-filters [data-sl-manager]', { label: 'Mike Penzin' });
+    await p.waitForTimeout(300);
+    check('Mike\'s club has not asked: the button is off', await eye(0).getAttribute('aria-pressed') === 'false');
+    await eye(1).click();
+    await eye(1).click();
+    check('a second tap takes the request back: no change left for Mike', await eye(1).getAttribute('aria-pressed') === 'false'
+      && /\(1 changed\)/.test(await p.textContent('#editor-save')), await p.textContent('#editor-save'));
+    await p.locator('#scout-results .scout-item').nth(0).locator('.ed-row').click();
+    await p.waitForSelector('#editor-scoutreq:not([hidden])');
+    check('the panel, for Mike: + Scout', (await p.textContent('#editor-scoutreq')).trim() === '+ Scout', await p.textContent('#editor-scoutreq'));
+    await p.click('#editor-scoutreq');
+    check('the panel\'s button asks, and says so', (await p.textContent('#editor-scoutreq')).trim() === 'Scouting ✓' && await eye(0).getAttribute('aria-pressed') === 'true');
+    await p.click('#editor-scoutreq');
+    await p.click('#editor-save');
+    await p.waitForFunction(() => /Saved/.test(document.getElementById('editor-note').textContent), null, { timeout: 15000 });
+    const bytes = await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')));
+    const { scoutManager } = await import('../shortlist.js');
+    const lists = scoutManager(new SaveGame(new Uint8Array(bytes)));
+    const first = g.players().find((x) => x.name === NAMES[0]);
+    check('saved: Klaus\'s club asked for him, Mike\'s did not', lists.requested(lists.managers[0].id, first.row) && !lists.requested(lists.managers[1].id, first.row));
+    await ctx.close();
+  }
   {
     // A phone: each star sits in the middle of its button, the button as tall as its row.
     const ctx = await browser.newContext({ ...devices['iPhone 13'] });
@@ -289,13 +324,14 @@ try {
     await scoutTab(p);
     await p.waitForSelector('#scout-results .sl-star');
     const off = await p.$$eval('#scout-results .scout-item', (items) => items.map((it) => {
-      const b = it.querySelector('.sl-star'), r = it.querySelector('.ed-row').getBoundingClientRect(), s = b.getBoundingClientRect();
+      const r = it.querySelector('.ed-row').getBoundingClientRect();
+      return Math.max(...[...it.querySelectorAll('.sl-star, .sr-eye')].map((b) => { const s = b.getBoundingClientRect();
       const range = document.createRange(); range.selectNodeContents(b);
       const g = range.getBoundingClientRect();
       return Math.max(Math.abs((g.left + g.right) / 2 - (s.left + s.right) / 2), Math.abs((g.top + g.bottom) / 2 - (s.top + s.bottom) / 2),
-        Math.abs(s.top - r.top), Math.abs(s.bottom - r.bottom));
+        Math.abs(s.top - r.top), Math.abs(s.bottom - r.bottom)); }));
     }));
-    check('phone: every star centred in its button, the button as tall as its row', off.length > 0 && Math.max(...off) <= 1.5, JSON.stringify(off));
+    check('phone: every star and Scout button centred in its button, the button as tall as its row', off.length > 0 && off.every(Number.isFinite) && Math.max(...off) <= 1.5, JSON.stringify(off));
     const labels = await p.$$eval('#scout-filters > span:not(.pair):not(.small)', (spans) => spans.filter((x) => x.textContent.trim()).map((x) => {
       const ctl = x.nextElementSibling.firstElementChild ?? x.nextElementSibling, a = x.getBoundingClientRect(), b = ctl.getBoundingClientRect();
       return [x.textContent.trim(), Math.round(Math.abs((a.top + a.bottom) / 2 - (b.top + b.bottom) / 2))];
@@ -313,15 +349,27 @@ try {
     await p.locator('#scout-results .scout-item').nth(0).locator('.sl-star').click();
     check('free: the star opens the Account dialog (Membership), nothing changes', await p.isVisible('#account[open]')
       && !/changed/.test(await p.textContent('#editor-save')));
+    await p.keyboard.press('Escape');
+    await p.locator('#scout-results .scout-item').nth(0).locator('.sr-eye').click();
+    check('free: Scout opens the Account dialog too, nothing changes', await p.isVisible('#account[open]')
+      && !/changed/.test(await p.textContent('#editor-save')));
     await ctx.close();
     const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const day = new Date(Date.now() + 5 * 86400e3).toISOString().slice(0, 10);
-    const p2 = await editorOn(ctx2, { ...ME.member, early: { legend: false, features: { shortlist: day } } });
+    const p2 = await editorOn(ctx2, { ...ME.member, early: { legend: false, features: { shortlist: day, 'scout-request': day } } });
     await scoutTab(p2);
     await p2.waitForSelector('#scout-results .early-locked', { timeout: 10000 }).catch(() => {});
-    check('early access: a member who is no Club Legend sees the locked line and no stars', await p2.locator('#scout-results .early-locked').count() === 1
-      && await p2.locator('#scout-results .sl-star').count() === 0 && await p2.locator('#scout-filters [data-sl-manager]').count() === 0);
+    check('early access: a member who is no Club Legend sees one locked line, no stars, no Scout buttons', await p2.locator('#scout-results .early-locked').count() === 1
+      && await p2.locator('#scout-results .sl-star').count() === 0 && await p2.locator('#scout-results .sr-eye').count() === 0
+      && await p2.locator('#scout-filters [data-sl-manager]').count() === 0);
     await ctx2.close();
+    const ctx3 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p3 = await editorOn(ctx3, { ...ME.member, early: { legend: false, features: { 'scout-request': day } } });
+    await scoutTab(p3);
+    await p3.waitForSelector('#scout-results .early-locked', { timeout: 10000 }).catch(() => {});
+    check('only Scout early: the stars and the manager stay, no Scout buttons', await p3.locator('#scout-results .sl-star').count() > 0
+      && await p3.locator('#scout-results .sr-eye').count() === 0 && await p3.locator('#scout-filters [data-sl-manager]').count() === 1);
+    await ctx3.close();
   }
   check('no page errors', errors.length === 0, errors.join(' | '));
 } finally {

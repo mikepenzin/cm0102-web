@@ -4,4 +4,5 @@
 // of Club Legends only; the admin page's Early access tab changes the day. Features already out are not listed.
 export const FEATURES = [
   { key: 'shortlist', name: 'Scout to shortlist' },   // Squad Hub: a Scout player onto a manager's Short List (shortlist.js)
+  { key: 'scout-request', name: 'Scout a player' },   // Squad Hub: the manager's club asks its scouts to watch him (shortlist.js)
 ];

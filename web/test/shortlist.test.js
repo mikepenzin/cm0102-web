@@ -82,3 +82,60 @@ test('the save written and read again keeps the change', async () => {
   assert.deepEqual(Buffer.from(again.file.read('scout_manager.dat')), Buffer.from(g.file.read('scout_manager.dat')),
     'the member whole, to its last byte: the header names its new size, which the game reads');
 });
+
+// ---- Scout requests (docs/research/2026-11-25-scout-request-in-save.md): Klaus's club 100, Mike's 101. ----
+const reqs = (g) => {
+  const { rest } = parseSearches(g.file.read('scout_manager.dat')), dv = new DataView(rest.buffer, rest.byteOffset, rest.byteLength);
+  const n = dv.getInt32(0, true);
+  return { n, list: Array.from({ length: n }, (_, k) => [dv.getInt32(4 + k * 17, true), dv.getInt32(8 + k * 17, true), rest[20 + k * 17]]),
+    last: [...rest.subarray(4 + n * 17)], at: (k) => rest.subarray(4 + k * 17, 21 + k * 17) };
+};
+const withReqs = (requests, managers = [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }]) =>
+  fakeSaveGame(PLAYERS, { managers, requests }).then((b) => new SaveGame(b));
+
+test('requests: read, their club, the member written back byte for byte', async () => {
+  const g = await withReqs([{ club: 100, player: 1, reports: 2 }]);
+  const sm = scoutManager(g);
+  assert.equal(sm.clubOf(KLAUS), 100);
+  assert.equal(sm.clubOf(MIKE), 101);
+  assert.equal(sm.requested(KLAUS, 1), true);
+  assert.equal(sm.requested(MIKE, 1), false, 'another club asked, not Mike\'s');
+  assert.deepEqual(Buffer.from(writeSearches(parseSearches(g.file.read('scout_manager.dat')))), Buffer.from(g.file.read('scout_manager.dat')));
+});
+
+test('request: the record as add_scout_request builds it, in order of player then club, the last-list bytes kept', async () => {
+  const g = await withReqs([{ club: 100, player: 1 }]);
+  const sm = scoutManager(g);
+  assert.equal(sm.request(MIKE, 1), true);
+  assert.equal(sm.request(KLAUS, 0), true);
+  const r = reqs(g);
+  assert.deepEqual(r.list, [[100, 0, 0], [100, 1, 0], [101, 1, 0]], 'player 0 first; for player 1, club 100 before 101');
+  assert.deepEqual(readDate(r.at(0), 8), { year: 2001, month: 7, day: 14 }, 'the day asked: the game date');
+  assert.deepEqual(r.last, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 2]);
+  assert.equal(sm.request(KLAUS, 0), false, 'asked already');
+  assert.equal(g.file.member('scout_manager.dat').changed, true);
+});
+
+test('request: none for a player at the manager\'s own club, none for a manager without a club; the first in a save with none', async () => {
+  const g = await withReqs([], [{ first: 'Klaus', second: 'Kastelmann', club: 0 }, { first: 'Mike', second: 'Penzin', club: null }]);
+  const sm = scoutManager(g);
+  assert.equal(sm.canRequest(KLAUS, 0), false, 'Del Piero plays for club 0, Klaus\'s');
+  assert.equal(sm.request(KLAUS, 0), false);
+  assert.equal(sm.canRequest(MIKE, 0), false, 'Mike has no club');
+  assert.equal(sm.request(MIKE, 0), false);
+  assert.equal(reqs(g).n, 0);
+  const h = await withReqs([]);
+  assert.equal(scoutManager(h).request(KLAUS, 1), true);
+  assert.deepEqual(reqs(h).list, [[100, 1, 0]]);
+});
+
+test('unrequest: the record goes, the order kept; written and read again', async () => {
+  const g = await withReqs([{ club: 100, player: 0 }, { club: 100, player: 1 }, { club: 101, player: 1 }]);
+  const sm = scoutManager(g);
+  assert.equal(sm.unrequest(KLAUS, 1), true);
+  assert.equal(sm.unrequest(KLAUS, 1), false, 'not there any more');
+  assert.deepEqual(reqs(g).list, [[100, 0, 0], [101, 1, 0]]);
+  const again = new SaveGame(g.file.toBytes());
+  assert.equal(scoutManager(again).requested(MIKE, 1), true);
+  assert.equal(scoutManager(again).requested(KLAUS, 1), false);
+});

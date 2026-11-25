@@ -989,14 +989,18 @@ function runEngine(files, info) {
         }
         seen = now;
       }, 2000);
+      // A feature of features.js for the editor: its early-access state, its badge and its locked line (early.js).
+      const featureAccess = (key) => {
+        const state = earlyState(account.me, key);
+        return { state, badge: state === 'early' ? ` ${badgeHtml()}` : '',
+          locked: state === 'locked' ? lockedHtml(account.me.early.features[key], { signedIn: Boolean(account.me?.user), offer: account.me?.offer ?? null }) : '' };
+      };
       const editor = mountEditor({ FS, sync, log, toast, dir: SAVE_DIR, isRunning: () => running,
         access: () => scoutAccess(account.me, keptMember()), inviteKind: () => inviteKind(account.me), invite: () => account.open(), onPageKey,
         // Scout to shortlist: a feature in early access (features.js 'shortlist', early.js).
-        shortlistAccess: () => {
-          const state = earlyState(account.me, 'shortlist');
-          return { state, badge: state === 'early' ? ` ${badgeHtml()}` : '',
-            locked: state === 'locked' ? lockedHtml(account.me.early.features.shortlist, { signedIn: Boolean(account.me?.user), offer: account.me?.offer ?? null }) : '' };
-        },
+        // Scout a player: the same, 'scout-request'.
+        shortlistAccess: () => featureAccess('shortlist'),
+        requestAccess: () => featureAccess('scout-request'),
         joining: () => account.waitForLegend(),
         onSetChange: (name, what) => (what === 'deleted' ? setSync?.deleted(name) : setSync?.run()) });
       account.onAccountChange(() => editor.redraw());      // joined or signed out: the open Scout follows

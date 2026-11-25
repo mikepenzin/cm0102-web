@@ -67,3 +67,10 @@ Each day, for each request (0x7f8806 onward):
 Taking a request back is `remove_scout_request` 0x7f8ee0: the record goes and the gap closes, order kept.
 
 A player at the manager's own club: the game drops that request the next day (0x7f886d), so the page does not offer it.
+
+## As built
+
+`web/shortlist.js` (`clubOf`, `requested`, `canRequest`, `request`, `unrequest`), its tests in
+`web/test/shortlist.test.js`, the page in `web/editor.js` (the eye button and "+ Scout"). On the Hertha save: the 21
+requests read, Klaus's club 4232 and Mike's 5583, the member written back byte for byte, a request added and taken back
+leaves it as it was.

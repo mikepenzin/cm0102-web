@@ -664,13 +664,21 @@ Scout.
 
 **To the shortlist** (`shortlist.js`; docs/research/2026-11-25-shortlist-in-save.md). A star beside each Scout result,
 and "+ Shortlist" in the player's panel, put the player on a human manager's Short List in the saved game, or take him
-off. "Shortlist for" chooses the manager when the save has two or more; the choice is kept for the save
+off. "Manager" chooses the manager when the save has two or more (for both buttons, the shortlist's and Scout's); the choice is kept for the save
 (localStorage `cm0102-shortlist-manager:<save>`). The save's `scout_manager.dat` holds ten lists for each of 16 human
 manager places, list 0 the Short List; the entry is built as the game's `add_player` 0x7af720 builds it, the list kept
 in staff id order with its capacity at least its count, and a removal sets the removed bit as the game does. A change
 counts as a change of the save and goes with Save the game file (the writer then records the member's new size).
 Members only, as the full Scout; a free player's star opens the Account dialog. A feature of `features.js`
 (`shortlist`): Club Legends first.
+
+**Scout a player** (`shortlist.js`; docs/research/2026-11-25-scout-request-in-save.md). An eye beside the star, and
+"+ Scout" in the player's panel, ask the chosen manager's club to scout the player, as the game's own "scout him" does;
+a second tap takes the request back. The requests follow the searches in `scout_manager.dat`: 17-byte records (club,
+player, the day asked, reports sent) as `add_scout_request` 0x7f9290 builds them, kept in the game's order (player, then
+club), which its binary search needs. The game then waits 30 days and has the club's scouts send up to three reports
+as news. No button for a player already at that club, or for a manager without a club: the game would drop the
+request the next day. Members only; a feature of `features.js` (`scout-request`): Club Legends first.
 
 The Scout is part of Membership. A member sees the best 100 matches; a free player the first 3, then blank shapes, the count
 ("The Scout is part of Membership: 44 more players match.") and the Account dialog's own button (Sign in, Become a
