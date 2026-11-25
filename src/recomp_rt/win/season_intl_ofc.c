@@ -68,6 +68,8 @@
  * - the honours: slot +0x30 of the class is 0x595160, a jump to stage 1's (the knockout's Cup::record_season_honours
  *   0x519a90). With no stage the class takes League::record_season_honours 0x684640: the group's first is the winner,
  *   the second the runner-up (rows 0 and 1 of +0xb1, 0x68465b..0x68465d).
+ * A game that passed the season change before the edition in a build before 0.7.0 holds it with +0x2c 2 and the
+ * original's draw date: it keeps the original's two groups of 3 and their path (one_group_staged).
  *
  * The edition of 6 (2004, int-continental-32 and -43; https://www.rsssf.org/tables/04oc.html and
  * https://en.wikipedia.org/wiki/2004_OFC_Nations_Cup, read 5 November 2026): Australia and New Zealand with the four
@@ -208,6 +210,14 @@ static int one_group(uint32_t self)
     return e && e->teams == ONE_GROUP;
 }
 
+/* 1 when the class holds that edition as this build sets it up (+0x2c 0, season_intl_ofc_rules, which runs from
+ * set_up_rules 0x799690 at the start_new_season of the edition before). A game that passed that season change in a
+ * build before 0.7.0 keeps the original's two groups (+0x2c 2, the draw on 5 March of the edition year), and the
+ * original's path then goes on: a draw of one group of 4 there left group B (stage[0]) unbuilt while +0x2c stayed 2,
+ * and League::update_for_date 0x6847c0 called the empty slot every day (0x6848f8; a player's 2001 game, loaded in
+ * January 2008, stopped on 19 June 2008: "call to 0 ... from 0x6848fb"). */
+static int one_group_staged(uint32_t self) { return one_group(self) && rd32(g_mem, self + STAGE_COUNT) == 0; }
+
 /* 1 for the edition of one group of 6 and a final of two legs, in a season game (the table's 2004). */
 static int six_group(uint32_t self)
 {
@@ -288,7 +298,12 @@ void season_intl_ofc_draw(uint32_t self)
     uint32_t six = rd32(g_mem, self + TEAMS_OF);
     n_kept = 0;
     if (e && e->teams == ONE_GROUP && readable(six) && (int16_t)rd16(g_mem, self + TEAM_COUNT) == 6) {
-        draw_one_group(self, six);
+        if (one_group_staged(self)) {
+            draw_one_group(self, six);
+            return;
+        }
+        fprintf(stderr, "recomp: season intl: oceania_nations %d: set up by an older build (%d stages), the "
+                        "original's two groups of 3\n", year_of(self), (int32_t)rd32(g_mem, self + STAGE_COUNT));
         return;
     }
     if (!e || e->teams != TEAMS || !readable(six) || (int16_t)rd16(g_mem, self + TEAM_COUNT) != 6) return;

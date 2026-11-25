@@ -7,6 +7,7 @@
 #include "season.h"
 #include "season_intl.h"
 #include "season_names.h"
+#include "season_change.h"
 #include "../rt.h"
 
 #include <stdio.h>
@@ -807,6 +808,72 @@ void rt_crash_site(uint32_t site)
     fprintf(stderr, "recomp: crash site %#x reached, day %d, year %d (issue 132)\n", site, (int16_t)rd16(g_mem, 0xae2c90u),
             (int16_t)rd16(g_mem, 0xae2c92u));
 }
+
+/* A call to an address that is not a recompiled function stops the game (rt_call). The commonest is the League's
+ * daily update League::update_for_date 0x6847c0, which calls vtable +0x14 of every stage 0 to +0x30 with no null test
+ * (0x6848e5..0x684901, the return address 0x6848fb): an empty or stale slot there gives "call to 0" or "call to 0x1".
+ * A player's report of 25 November 2026 (Everton, a 2001/02 game with changing rules on, 19 June 2008) gave only the
+ * address. So before the stop the log names the competitions: each register that holds a competition object, and each
+ * competition object whose stage slots 0 to +0x30 hold a null or a stage with no recompiled +0x14. Reads only. */
+#define BAD_CALL_MAX_OBJECTS 4096
+
+static const char *comp_label(uint32_t obj)
+{
+    uint32_t rec = rt_readable(obj) ? rd32(g_mem, obj + 4u) : 0;
+    return rt_readable(rec) ? season_change_data_name(rec) : NULL;
+}
+
+/* 1 when the stage slots of obj look like a League's (+0xc the array, +0x2c the count, +0x30 the stage in play) and
+ * one of 0 to +0x30 cannot be called. */
+static int stage_fault(uint32_t obj, int print)
+{
+    uint32_t stages = rd32(g_mem, obj + 0xcu);
+    int32_t count = (int32_t)rd32(g_mem, obj + 0x2cu), current = (int32_t)rd32(g_mem, obj + 0x30u);
+    if (count < 0 || count > 64 || current < -1 || current > 64) return 0;
+    int bad = 0;
+    for (int32_t i = 0; i <= current; i++) {
+        uint32_t stage = rt_readable(stages) ? rd32(g_mem, stages + 4u * (uint32_t)i) : 0;
+        uint32_t vt = rt_readable(stage) ? rd32(g_mem, stage) : 0;
+        uint32_t fn = rt_readable(vt) ? rd32(g_mem, vt + 0x14u) : 0;
+        int ok = fn && rt_lookup(fn);
+        if (!ok) bad = 1;
+        if (print)
+            fprintf(stderr, "recomp:   stage[%d] %#x vtable %#x +0x14 %#x%s\n", (int)i, stage, vt, fn,
+                    ok ? "" : " (cannot be called)");
+    }
+    return bad;
+}
+
+static void comp_report(const char *why, uint32_t obj)
+{
+    fprintf(stderr, "recomp: %s: %s (%s) at %#x, vtable %#x, stages %d (+0x2c), in play %d (+0x30), drawn %d "
+                    "(+0x45), year %d (+0x40), array %#x\n", why, comp_label(obj), season_change_file(obj), obj,
+            rd32(g_mem, obj), (int32_t)rd32(g_mem, obj + 0x2cu), (int32_t)rd32(g_mem, obj + 0x30u),
+            (int8_t)rd8(g_mem, obj + 0x45u), (int16_t)rd16(g_mem, obj + 0x40u), rd32(g_mem, obj + 0xcu));
+    stage_fault(obj, 1);
+}
+
+static void bad_call_report(uint32_t target, uint32_t from)
+{
+    fprintf(stderr, "recomp: bad call to %#x from %#x, day %d of %d; ecx %#x esi %#x edi %#x ebx %#x ebp %#x\n",
+            target, from, (int16_t)rd16(g_mem, 0xae2c90u), (int16_t)rd16(g_mem, 0xae2c92u), cpu.ecx,
+            cpu.esi, cpu.edi, cpu.ebx, cpu.ebp);
+    const uint32_t regs[4] = {cpu.esi, cpu.edi, cpu.ebx, cpu.ebp};
+    const char *names[4] = {"esi", "edi", "ebx", "ebp"};
+    for (int r = 0; r < 4; r++)
+        if (comp_label(regs[r])) {
+            char why[32];
+            snprintf(why, sizeof why, "competition in %s", names[r]);
+            comp_report(why, regs[r]);
+        }
+    static uint32_t all[BAD_CALL_MAX_OBJECTS];
+    int n = season_change_comps(all, BAD_CALL_MAX_OBJECTS);
+    for (int i = 0; i < n; i++)
+        if (comp_label(all[i]) && stage_fault(all[i], 0)) comp_report("competition with a stage that cannot be called",
+                                                                      all[i]);
+}
+
+void rt_bad_call_hook(void) { rt_on_bad_call = bad_call_report; }
 
 /* The move of a one-contract player to or from the linked side (open item 187, tools/recomp/original_faults.py at
  * 0x4cc03d). CONTRACT_MANAGER::get_squad_placement 0x4cbb60 reads bit 0x40 of the player's contract +0x35 (0x4cbcb8):

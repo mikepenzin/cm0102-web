@@ -280,3 +280,9 @@ from player_setup import INSNS as PLAYER_SETUP_INSNS  # noqa: E402
 
 assert not set(PLAYER_SETUP_INSNS) & (set(INSNS) | set(PATCHES))
 INSNS.update(PLAYER_SETUP_INSNS)
+
+# Referee ranges outside the officials table (referees.py): the picker takes the whole table.
+from referees import INSNS as REFEREE_INSNS  # noqa: E402
+
+assert not set(REFEREE_INSNS) & (set(INSNS) | set(PATCHES))
+INSNS.update(REFEREE_INSNS)

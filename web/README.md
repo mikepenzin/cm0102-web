@@ -397,7 +397,11 @@ request's Host, which a sender could set). The note, the log and the save stay o
 reached the other machine counts. At most 30 a day, then one that says more came.
 
 **Tactics (`tactics.js`).** The game keeps a player's tactics as it does on a PC: Tactics, Save As on the tactics screen
-writes `<name>.tct` in the folder `tactics` of the user folder, and Tactics, Load lists that folder. Saved games has a
+writes `<name>.tct` in the folder `tactics` of the user folder, and Tactics, Load lists that folder. A saved game
+keeps the tactics folder of the computer where the game began (`E:\tactics` from the Bosman Edition on a PC,
+`C:\Program Files (x86)\Championship Manager 01-02\tactics` from the original): the engine takes such a path as the
+game folder's `tactics` (`src/recomp_rt/win/tactics_path.h`, in `win_host_path`), so an uploaded save saves its tactics
+here too (before, Save As said "could not be saved", or wrote where Saved games does not look). Saved games has a
 Tactics section to download them, upload others (from the PC game or a friend; several at once) and delete them, and
 Download all takes them too (`tactics/` in the zip). An upload must be a tactic of the game: a version word of
 0x98EC54 to 0x98EC5E at offset 0, in either byte order (big-endian when the file ends with 0xF1FFFFF1, as the loader

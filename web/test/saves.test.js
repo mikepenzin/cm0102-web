@@ -1,7 +1,7 @@
 // Tests of the Saved games logic (web/saves.js): which files are saves, the check of an upload, its name.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkSave, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
+import { checkSave, errorDetail, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
 
 // A save container as tools/save/savfile.py reads it: version, count, the entries, then the parts.
 function save(parts = 1, extra = 16) {
@@ -127,4 +127,16 @@ test('space: what the saves take, the room left, and when it is low', () => {
   assert.equal(lowOnSpace({ usage: 3.3 * GB, quota: 15 * GB }, 690 * MB), false);
   assert.equal(lowOnSpace({ usage: 9.9 * GB, quota: 10 * GB }, 1 * MB), true, 'under 300 MB left');
   assert.equal(lowOnSpace(null, 690 * MB), false, 'not told: no warning');
+});
+
+test('errorDetail: an error with no message still says what it was', () => {
+  assert.equal(errorDetail(new Error('the disk is full')), 'the disk is full');
+  const dom = new Error('');
+  dom.name = 'UnknownError';
+  assert.equal(errorDetail(dom), 'UnknownError');
+  assert.equal(errorDetail(Object.assign(new Error('Failed to fetch'), { name: 'TypeError' })), 'TypeError: Failed to fetch');
+  class ErrnoError { constructor(errno) { this.name = 'ErrnoError'; this.errno = errno; } }
+  assert.equal(errorDetail(new ErrnoError(28)), 'ErrnoError: errno 28');
+  assert.equal(errorDetail(new Error('')), 'Error');
+  assert.equal(errorDetail(undefined), 'undefined');
 });

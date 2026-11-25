@@ -72,6 +72,8 @@ export function scoutManager(game) {
   const afterRequests = parsed.rest.slice(4 + reqCount * REQUEST);
   const clubOfRow = (id) => (id >= 0 && id < s.count ? s.dv.getInt32(id * STAFF_SIZE + CLUB, true) : -1);
   const clubOf = (manager) => { const c = clubOfRow(manager); return c >= 0 ? c : null; };
+  // Requests taken back in this session, by club and player: asked again, the same record returns (its day and reports).
+  const takenBack = new Map();
   const findRequest = (club, staffId) => requests.findIndex((r) => i32(r, 0) === club && i32(r, 4) === staffId);
   const list = (manager) => parsed.searches.find((x) => x.manager === manager && x.slot === 0) ?? null;
   const find = (l, staffId) => l.results.findIndex((r) => i32(r, 0x0c) === staffId);
@@ -123,10 +125,17 @@ export function scoutManager(game) {
     // Asks the manager's club to scout a player: false when it asked already or cannot ask.
     request(manager, staffId) {
       if (!this.canRequest(manager, staffId) || this.requested(manager, staffId)) return false;
-      const c = clubOf(manager), r = new Uint8Array(REQUEST);
-      set32(r, 0, c); set32(r, 4, staffId);
-      const today = readDate(game.file.read('general.dat'), GAME_DATE);
-      if (today) writeDate(r, 8, today);
+      const c = clubOf(manager);
+      let r = takenBack.get(`${c}:${staffId}`);
+      if (!r) {
+        // Without the game's date the request would look a year old and be dropped the next day (0x7f88c1).
+        const today = readDate(game.file.read('general.dat'), GAME_DATE);
+        if (!today || today.year < 1900) return false;
+        r = new Uint8Array(REQUEST);
+        set32(r, 0, c); set32(r, 4, staffId);
+        writeDate(r, 8, today);
+      }
+      takenBack.delete(`${c}:${staffId}`);
       const after = (x) => i32(x, 4) > staffId || (i32(x, 4) === staffId && i32(x, 0) > c);
       const at = requests.findIndex(after);
       requests.splice(at < 0 ? requests.length : at, 0, r);
@@ -137,6 +146,7 @@ export function scoutManager(game) {
     unrequest(manager, staffId) {
       const c = clubOf(manager), i = c === null ? -1 : findRequest(c, staffId);
       if (i < 0) return false;
+      takenBack.set(`${c}:${staffId}`, requests[i]);
       requests.splice(i, 1);
       save();
       return true;

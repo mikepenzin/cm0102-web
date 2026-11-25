@@ -554,6 +554,10 @@ if(NOT WIN32)
         src/recomp_rt/win/season_nl_rules.c src/recomp_rt/win/season_nl_table.c)
     target_include_directories(season_side_busy_test PRIVATE src/recomp_rt/win src/recomp_rt)
     add_test(NAME season_side_busy COMMAND season_side_busy_test)
+    # Referee ranges outside the officials table (report of 25 November 2026): the picker's test and the repair.
+    add_executable(referees_test tests/recomp/heap_top_stub.c tests/recomp/test_referees.c src/recomp_rt/win/referees.c)
+    target_include_directories(referees_test PRIVATE src/recomp_rt/win src/recomp_rt)
+    add_test(NAME referees COMMAND referees_test)
     # The snap of a qualifier to a FIFA day (open item 79): no two matches of a side on one day.
     add_executable(season_fifa_snap_test tests/recomp/heap_top_stub.c tests/seasons/test_season_fifa_snap.c src/recomp_rt/win/season_friendly_dates.c
         src/recomp_rt/win/season_stage_plan.c src/recomp_rt/win/season_tie_legs.c
@@ -606,6 +610,10 @@ if(NOT WIN32)
     add_executable(path_utf8_test tests/pathutf8/test_path_utf8.c)
     target_include_directories(path_utf8_test PRIVATE src/recomp_rt/win)
     add_test(NAME path_utf8 COMMAND path_utf8_test)
+    # A saved game's tactics folder of another computer: the game folder's (tactics_path.h, files.c win_host_path).
+    add_executable(tactics_path_test tests/tacticspath/test_tactics_path.c)
+    target_include_directories(tactics_path_test PRIVATE src/recomp_rt/win)
+    add_test(NAME tactics_path COMMAND tactics_path_test)
     add_executable(draw_test tests/recomp/heap_top_stub.c tests/draw/test_draw.c src/recomp_rt/win/draw.c)
     if(NOT APPLE)
         target_link_libraries(draw_test PRIVATE m)
