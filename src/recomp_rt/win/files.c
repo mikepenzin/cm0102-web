@@ -27,6 +27,7 @@
 #include "dbfolders.h"
 #include "cp1252.h"
 #include "folder_names.h"
+#include "tactics_path.h"
 
 #include <ctype.h>
 #include <errno.h>
@@ -312,6 +313,14 @@ int win_host_path(const char *winpath, char *out, size_t room)
 {
     char full[2048], rootbuf[1024];
     full_path(winpath, full, sizeof full);
+    /* The tactics folder of the computer where the game began (tactics_path.h): the game folder's tactics folder.
+     * On Windows a drive that exists keeps its own (C:\Program Files may hold the original game there). */
+    {
+        char here[2048];
+        if ((!HOST_FOLDS_CASE || !drive_root(full[0], rootbuf, sizeof rootbuf))
+            && tactics_path_of_other_machine(full, host_cd_drive(), here, sizeof here))
+            snprintf(full, sizeof full, "%s", here);
+    }
     const char *root = drive_root(full[0], rootbuf, sizeof rootbuf);
     if (!root) return 0;
     size_t len = (size_t)snprintf(out, room, "%s", root);
