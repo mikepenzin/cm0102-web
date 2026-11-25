@@ -659,6 +659,19 @@ milliseconds; it runs 250 ms after the last change of a filter. A change of a pl
 keyboard.js's `onPageKey`, since its guard keeps the page's keys from the elements' own listeners). A data set has no
 Scout.
 
+**Presets.** Wonderkids (`scout.js`, `WONDERKIDS`): 19 or younger with potential 180 or more, the other filters cleared
+(John Locke's School search of CM 01/02).
+
+**To the shortlist** (`shortlist.js`; docs/research/2026-11-25-shortlist-in-save.md). A star beside each Scout result,
+and "+ Shortlist" in the player's panel, put the player on a human manager's Short List in the saved game, or take him
+off. "Shortlist for" chooses the manager when the save has two or more; the choice is kept for the save
+(localStorage `cm0102-shortlist-manager:<save>`). The save's `scout_manager.dat` holds ten lists for each of 16 human
+manager places, list 0 the Short List; the entry is built as the game's `add_player` 0x7af720 builds it, the list kept
+in staff id order with its capacity at least its count, and a removal sets the removed bit as the game does. A change
+counts as a change of the save and goes with Save the game file (the writer then records the member's new size).
+Members only, as the full Scout; a free player's star opens the Account dialog. A feature of `features.js`
+(`shortlist`): Club Legends first.
+
 The Scout is part of Membership. A member sees the best 100 matches; a free player the first 3, then blank shapes, the count
 ("The Scout is part of Membership: 44 more players match.") and the Account dialog's own button (Sign in, Become a
 member, or Sign in with Google, free; none when the account is not known, offline at a first visit, where the
