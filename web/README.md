@@ -301,7 +301,12 @@ Saved games says what the saves and older copies take and what the browser allow
 saves of the largest size, or than 300 MB, the line says so, the bar's Saved games button gets a mark and the player is
 told once a visit, before a save fails for it. The list keeps room for about six rows. Older copies show their total
 (the game keeps three of each save: 2 GB for one save of 690 MB), and Remove all older copies removes them at one
-press; the page removes none by itself.
+press. Delete of a save takes its older copies with it (the question says how many), and each start removes the older
+copies of saves that are gone (deleted in the game, on another device, or before this rule: a player had 18 copies,
+1.3 GB, of saves he had deleted; `removeOrphanCopies`, `saves.js`). A copy belongs to a save by its name (the engine's
+`<save>.1.sav` to `.3.sav`, the editor's `<save> (before edit).sav`); a copy of a save the cloud keeps stays, a copy with
+another name stays, and none goes while a save is in progress (`temp_save_file.sav`: the old save is then a copy and the
+new one not named yet).
 
 Delete removes a save or an older copy (with Cloud Saves, a save in the cloud goes there too). Download all gives one
 zip of every save, older copy and data set, as the save folder holds them, or, when that is more than a zip holds (4 GB:

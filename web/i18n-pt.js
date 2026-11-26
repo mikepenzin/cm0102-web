@@ -444,6 +444,8 @@ export default {
   "{name} was not removed: {why}": "{name} não foi removido: {why}",
   "Delete this older copy of {name}? This cannot be undone; Download keeps a copy first.": "Excluir esta cópia antiga de {name}? Isso não pode ser desfeito; Baixar guarda uma cópia antes.",
   "Delete {name} here and in the cloud? This cannot be undone; Download keeps a copy first.": "Excluir {name} aqui e na nuvem? Isso não pode ser desfeito; Baixar guarda uma cópia antes.",
+  "Delete {name} with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "Excluir {name} com as suas cópias antigas ({n})? Isso não pode ser desfeito; Baixar guarda uma cópia antes.",
+  "Delete {name} here and in the cloud, with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "Excluir {name} aqui e na nuvem, com as suas cópias antigas ({n})? Isso não pode ser desfeito; Baixar guarda uma cópia antes.",
   "Delete {name}? This cannot be undone; Download keeps a copy first.": "Excluir {name}? Isso não pode ser desfeito; Baixar guarda uma cópia antes.",
   "The older copy of {name} is deleted.": "A cópia antiga de {name} foi excluída.",
   "Downloaded {name}.": "{name} baixado.",

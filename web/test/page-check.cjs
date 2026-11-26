@@ -1184,6 +1184,46 @@ const PORT = 8097;
       await ctx.close();
     }
 
+    // Older copies of saves that are gone (saves.js removeOrphanCopies): the next start removes them; a copy of a save
+    // that is here, one in progress, and a copy the player named stay. Delete of a save takes its older copies with it.
+    {
+      const ctx = await b.newContext({ viewport: { width: 1100, height: 760 } });
+      const pg = await ctx.newPage();
+      pg.on('dialog', (d) => d.accept().catch(() => {}));
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await pg.waitForSelector('#go');
+      await pg.click('#go');
+      await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      await pg.evaluate(() => {
+        const FS = window.Module.FS, s = FS.readFile('/user/Harbour City 2001-07-14.sav');
+        FS.mkdirTree('/user/backups');
+        for (const n of ['Harbour City 2001-07-14.1.sav', 'Harbour City 2001-07-14 (before edit).sav', 'Gone 2001-06-30.1.sav',
+          'Gone 2001-06-30.2.sav', 'Gone 2001-06-30 (before edit).sav', 'my own copy.sav']) FS.writeFile(`/user/backups/${n}`, s);
+      });
+      await pg.waitForTimeout(4000);                    // the folder watcher stores them
+      await pg.reload();
+      await pg.waitForFunction(() => window.__fake || document.getElementById('go'), null, { timeout: 60000 });
+      if (await pg.locator('#go').isVisible().catch(() => false)) await pg.click('#go');
+      await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      const left = await pg.evaluate(() => window.Module.FS.readdir('/user/backups').filter((n) => /\.sav$/.test(n)).sort());
+      const logText = await pg.textContent('#log');
+      check('the next start removes the older copies of a save that is gone, and keeps the others',
+        JSON.stringify(left) === JSON.stringify(['Harbour City 2001-07-14 (before edit).sav', 'Harbour City 2001-07-14.1.sav', 'my own copy.sav'])
+          && /removed 3 older copies of saves that are gone/.test(logText), JSON.stringify(left));
+      await pg.click('#saves-open');
+      await pg.waitForSelector('#saves-list button[data-delete="save"]');
+      const i = await pg.$$eval('#saves-list button[data-delete="save"]', (bs) => bs.findIndex((x) => x.closest('tr').textContent.includes('Harbour City 2001-07-14.sav')));
+      const asked = [];
+      pg.removeAllListeners('dialog');
+      pg.on('dialog', (d) => { asked.push(d.message()); d.accept().catch(() => {}); });
+      await pg.locator('#saves-list button[data-delete="save"]').nth(i).click();
+      await pg.waitForFunction(() => /is deleted/.test(document.getElementById('saves-note').textContent), null, { timeout: 5000 }).catch(() => {});
+      const after = await pg.evaluate(() => window.Module.FS.readdir('/user/backups').filter((n) => /\.sav$/.test(n)));
+      check('Delete of a save says it takes its older copies, and takes them; the player\'s own copy stays',
+        /with its older copies \(2\)\?/.test(asked[0] ?? '') && JSON.stringify(after) === JSON.stringify(['my own copy.sav']), `${asked[0]} | ${JSON.stringify(after)}`);
+      await ctx.close();
+    }
+
     // A flight: one start with a connection, then none. The service worker gives the page, files.json and the engine,
     // the browser's cache the game files, and the saves are there (checked with the real engine too, 14 November 2026:
     // the start took 4 s offline).

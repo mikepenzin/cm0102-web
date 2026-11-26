@@ -1,7 +1,7 @@
 // Tests of the Saved games logic (web/saves.js): which files are saves, the check of an upload, its name.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkSave, errorDetail, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
+import { checkSave, copiesOf, errorDetail, ownerOfCopy, removeOrphanCopies, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
 
 // A save container as tools/save/savfile.py reads it: version, count, the entries, then the parts.
 function save(parts = 1, extra = 16) {
@@ -28,6 +28,7 @@ function fakeFS(entries) {
       throw new Error('ENOENT');
     },
     isFile: (mode) => (mode & 0o170000) === 0o100000,
+    unlink(p) { if (!entries[p]) throw new Error('ENOENT'); delete entries[p]; },
   };
 }
 
@@ -139,4 +140,43 @@ test('errorDetail: an error with no message still says what it was', () => {
   assert.equal(errorDetail(new ErrnoError(28)), 'ErrnoError: errno 28');
   assert.equal(errorDetail(new Error('')), 'Error');
   assert.equal(errorDetail(undefined), 'undefined');
+});
+
+test('ownerOfCopy: the save an older copy belongs to (the engine\'s .1 to .3, the editor\'s "before edit")', () => {
+  assert.equal(ownerOfCopy('Leeds.1.sav'), 'Leeds.sav');
+  assert.equal(ownerOfCopy('Chelsea 2014-07-12.3.sav'), 'Chelsea 2014-07-12.sav');
+  assert.equal(ownerOfCopy('Leeds (before edit).sav'), 'Leeds.sav');
+  assert.equal(ownerOfCopy('Leeds.sav'), null, 'not a name the engine or the editor gives a copy');
+  assert.equal(ownerOfCopy('notes.txt'), null);
+});
+
+const withCopies = (extra = {}) => fakeFS({
+  '/user/Chelsea 2014-07-12.sav': { size: 67, mtime: new Date(9) },
+  '/user/backups/Chelsea 2014-07-12.1.sav': { size: 66, mtime: new Date(8) },
+  '/user/backups/chelsea 2014-07-12 (before edit).sav': { size: 66, mtime: new Date(8) },
+  '/user/backups/Chelsea 2014-06-30.1.sav': { size: 60, mtime: new Date(5) },
+  '/user/backups/Chelsea 2014-06-30.2.sav': { size: 60, mtime: new Date(4) },
+  '/user/backups/Arsenal.1.sav': { size: 50, mtime: new Date(3) },
+  '/user/backups/a copy the player named.sav': { size: 40, mtime: new Date(2) },
+  ...extra,
+});
+
+test('copiesOf: the older copies of one save, any case', () => {
+  const FS = withCopies();
+  assert.deepEqual(copiesOf(FS, 'Chelsea 2014-07-12.sav').map((f) => f.name).sort(), ['Chelsea 2014-07-12.1.sav', 'chelsea 2014-07-12 (before edit).sav']);
+  assert.deepEqual(copiesOf(FS, 'Wolves.sav'), []);
+});
+
+test('removeOrphanCopies: the copies of saves that are gone go; the others, and copies of saves in the cloud, stay', () => {
+  const FS = withCopies();
+  const r = removeOrphanCopies(FS, { inCloud: (name) => name === 'Arsenal.sav' });
+  assert.deepEqual([r.n, r.bytes], [2, 120]);
+  assert.deepEqual(listSaves(FS).backups.map((f) => f.name).sort(),
+    ['Arsenal.1.sav', 'Chelsea 2014-07-12.1.sav', 'a copy the player named.sav', 'chelsea 2014-07-12 (before edit).sav']);
+});
+
+test('removeOrphanCopies: nothing while a save is in progress (the old save is a copy, the new one not named yet)', () => {
+  const FS = withCopies({ '/user/temp_save_file.sav': { size: 67, mtime: new Date(10) } });
+  assert.deepEqual(removeOrphanCopies(FS).n, 0);
+  assert.equal(listSaves(FS).backups.length, 6);
 });

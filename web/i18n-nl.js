@@ -483,6 +483,8 @@ export default {
   "{name} was not removed: {why}": "{name} is niet weggehaald: {why}",
   "Delete this older copy of {name}? This cannot be undone; Download keeps a copy first.": "Deze oudere kopie van {name} verwijderen? Dit kan niet ongedaan worden gemaakt; Downloaden bewaart eerst een kopie.",
   "Delete {name} here and in the cloud? This cannot be undone; Download keeps a copy first.": "{name} hier en in de cloud verwijderen? Dit kan niet ongedaan worden gemaakt; Downloaden bewaart eerst een kopie.",
+  "Delete {name} with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "{name} met zijn oudere kopieën ({n}) verwijderen? Dit kan niet ongedaan worden gemaakt; Downloaden bewaart eerst een kopie.",
+  "Delete {name} here and in the cloud, with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "{name} hier en in de cloud verwijderen, met zijn oudere kopieën ({n})? Dit kan niet ongedaan worden gemaakt; Downloaden bewaart eerst een kopie.",
   "Delete {name}? This cannot be undone; Download keeps a copy first.": "{name} verwijderen? Dit kan niet ongedaan worden gemaakt; Downloaden bewaart eerst een kopie.",
   "The older copy of {name} is deleted.": "De oudere kopie van {name} is verwijderd.",
   "Downloaded {name}.": "{name} gedownload.",

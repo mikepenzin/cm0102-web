@@ -5,7 +5,7 @@
 // Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
-import { SAVE_DIR, listSaves, mountSavesPanel, savesSignature, setStorageKept, skipWorkFiles, spaceState, storageWarning, useVault } from './saves.js';
+import { SAVE_DIR, listSaves, mountSavesPanel, removeOrphanCopies, savesSignature, setStorageKept, skipWorkFiles, spaceState, storageWarning, useVault } from './saves.js';
 import { needsChoice, setStatsAllowed, startStats, statsAllowed } from './stats.js';
 import { createVault, isAway } from './vault.js';
 import { engineUrl, hasJspi, pickEngine } from './engine.js';
@@ -950,6 +950,11 @@ function runEngine(files, info) {
           clearTimeout(skip);
           overlay(startingBox);
           status(() => t('Starting the engine…'));
+        }
+        // The older copies of saves that are gone (saves.js): they only took room. Not when the folder was not read.
+        if (folderRead) {
+          const gone = removeOrphanCopies(FS, { inCloud: (name) => Boolean(cloud?.keeps(name)), log });
+          if (gone.n) { log(`page: removed ${gone.n} older copies of saves that are gone (${gone.bytes} bytes)`); sync(); }
         }
         log(`page: ${userFolderSizes(FS)}`);
         M.removeRunDependency('user-folder');

@@ -483,6 +483,8 @@ export default {
   "{name} was not removed: {why}": "{name} togs inte bort: {why}",
   "Delete this older copy of {name}? This cannot be undone; Download keeps a copy first.": "Radera den här äldre kopian av {name}? Det går inte att ångra; Ladda ner ger dig en kopia först.",
   "Delete {name} here and in the cloud? This cannot be undone; Download keeps a copy first.": "Radera {name} här och i molnet? Det går inte att ångra; Ladda ner ger dig en kopia först.",
+  "Delete {name} with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "Radera {name} med dess äldre kopior ({n})? Det går inte att ångra; Ladda ner ger dig en kopia först.",
+  "Delete {name} here and in the cloud, with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "Radera {name} här och i molnet, med dess äldre kopior ({n})? Det går inte att ångra; Ladda ner ger dig en kopia först.",
   "Delete {name}? This cannot be undone; Download keeps a copy first.": "Radera {name}? Det går inte att ångra; Ladda ner ger dig en kopia först.",
   "The older copy of {name} is deleted.": "Den äldre kopian av {name} har raderats.",
   "Downloaded {name}.": "Laddade ner {name}.",

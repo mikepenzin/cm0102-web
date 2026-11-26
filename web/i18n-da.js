@@ -483,6 +483,8 @@ export default {
   "{name} was not removed: {why}": "{name} blev ikke fjernet: {why}",
   "Delete this older copy of {name}? This cannot be undone; Download keeps a copy first.": "Slet denne ældre kopi af {name}? Dette kan ikke fortrydes; Hent gemmer en kopi først.",
   "Delete {name} here and in the cloud? This cannot be undone; Download keeps a copy first.": "Slet {name} her og i skyen? Dette kan ikke fortrydes; Hent gemmer en kopi først.",
+  "Delete {name} with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "Slet {name} med dens ældre kopier ({n})? Dette kan ikke fortrydes; Hent gemmer en kopi først.",
+  "Delete {name} here and in the cloud, with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "Slet {name} her og i skyen, med dens ældre kopier ({n})? Dette kan ikke fortrydes; Hent gemmer en kopi først.",
   "Delete {name}? This cannot be undone; Download keeps a copy first.": "Slet {name}? Dette kan ikke fortrydes; Hent gemmer en kopi først.",
   "The older copy of {name} is deleted.": "Den ældre kopi af {name} er slettet.",
   "Downloaded {name}.": "Hentede {name}.",

@@ -111,6 +111,36 @@ function files(FS, dir) {
 
 export function listSaves(FS) { return { saves: files(FS, SAVE_DIR), backups: files(FS, `${SAVE_DIR}/backups`) }; }
 
+// The save an older copy belongs to: the engine names its copies <save>.1.sav to .3.sav (option save_backups,
+// save_backup in src/recomp_rt/win/files.c), the save editor <save> (before edit).sav (editor.js). null for a name of
+// neither kind (a copy the player put there, say), which nothing here ever removes.
+export function ownerOfCopy(name) {
+  const m = /^(.+?)(?:\.\d| \(before edit\))\.sav$/i.exec(name);
+  return m ? `${m[1]}.sav` : null;
+}
+
+// The older copies of one save (names compared without case, as the engine finds files).
+export function copiesOf(FS, save) {
+  const want = save.toLowerCase();
+  return listSaves(FS).backups.filter((f) => ownerOfCopy(f.name)?.toLowerCase() === want);
+}
+
+// Removes the older copies whose save is gone (deleted here, in the game or on another device), at the start: they took
+// gigabytes nobody used (a player had 18 copies, 1.3 GB, of saves he had deleted). Kept: the copies of a save of the
+// folder or of the cloud (inCloud: a save another device keeps, not here yet), and every copy while a save is in
+// progress (temp_save_file.sav: the game has moved the old save to backups/ and not yet named the new one). { n, bytes }.
+export function removeOrphanCopies(FS, { inCloud = () => false, log = () => {} } = {}) {
+  try { FS.stat(`${SAVE_DIR}/temp_save_file.sav`); return { n: 0, bytes: 0 }; } catch { /* no save in progress */ }
+  const { saves, backups } = listSaves(FS), here = new Set(saves.map((f) => f.name.toLowerCase()));
+  let n = 0, bytes = 0;
+  for (const f of backups) {
+    const owner = ownerOfCopy(f.name);
+    if (!owner || here.has(owner.toLowerCase()) || inCloud(owner)) continue;
+    try { FS.unlink(f.path); n++; bytes += f.size; } catch (err) { log(`page: ${f.path} was not removed: ${err.message}`); }
+  }
+  return { n, bytes };
+}
+
 // The game's working files: the parts of the game in play (*.tmp, written at a load and at each save, tens of MB in a
 // big game) live only while the game runs, and a save packs them into its .sav. IDBFS would copy each changed one into
 // IndexedDB at every sync, all of them in one transaction that holds the copies in memory until it ends. That also
@@ -458,13 +488,18 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
     if (d) {
       const backup = d.dataset.delete === 'backup', f = (backup ? shown.backups : shown.saves)[Number(d.dataset.i)];
       const inCloud = !backup && cloud()?.status(f.name, f) === 'cloud';
+      // A save goes with its older copies: nothing else would ever use them.
+      const copies = backup ? [] : copiesOf(FS, f.name), n = copies.length;
       const ask = backup ? { key: 'Delete this older copy of {name}? This cannot be undone; Download keeps a copy first.', vars: { name: f.name } }
-        : inCloud ? { key: 'Delete {name} here and in the cloud? This cannot be undone; Download keeps a copy first.', vars: { name: f.name } }
-          : { key: 'Delete {name}? This cannot be undone; Download keeps a copy first.', vars: { name: f.name } };
+        : inCloud && n ? { key: 'Delete {name} here and in the cloud, with its older copies ({n})? This cannot be undone; Download keeps a copy first.', vars: { name: f.name, n } }
+          : inCloud ? { key: 'Delete {name} here and in the cloud? This cannot be undone; Download keeps a copy first.', vars: { name: f.name } }
+            : n ? { key: 'Delete {name} with its older copies ({n})? This cannot be undone; Download keeps a copy first.', vars: { name: f.name, n } }
+              : { key: 'Delete {name}? This cannot be undone; Download keeps a copy first.', vars: { name: f.name } };
       if (!confirm(tx(ask))) return;
       try {
         if (inCloud) await cloud().remove(f.name);
         FS.unlink(f.path);
+        for (const c of copies) { try { FS.unlink(c.path); } catch (err) { log(`page: ${c.path} was not removed: ${err.message}`); } }
         sync();
         say(backup ? { key: 'The older copy of {name} is deleted.', vars: { name: f.name } } : { key: '{name} is deleted.', vars: { name: f.name } });
         log(`page: deleted the ${backup ? 'older copy' : 'save'} ${f.name}`);

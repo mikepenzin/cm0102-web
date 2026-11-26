@@ -349,6 +349,8 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
       if (e.removed) return 'here';
       return e.size === file.size && e.mtime === +file.mtime ? 'cloud' : 'waiting';
     },
+    // Whether the cloud keeps a save of this name (from this device or another): its older copies here stay.
+    keeps(name) { const e = state.saves[name]; return Boolean(e && !e.removed); },
     async remove(name) {
       const r = await fetch(at(name), { method: 'DELETE', headers: CHANGE });
       if (!r.ok && r.status !== 404) throw fail(`${name} remove`, r);

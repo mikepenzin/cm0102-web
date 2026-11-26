@@ -483,6 +483,8 @@ export default {
   "{name} was not removed: {why}": "{name} wurde nicht entfernt: {why}",
   "Delete this older copy of {name}? This cannot be undone; Download keeps a copy first.": "Diese ältere Kopie von {name} löschen? Das kann nicht rückgängig gemacht werden; Herunterladen legt vorher eine Kopie an.",
   "Delete {name} here and in the cloud? This cannot be undone; Download keeps a copy first.": "{name} hier und in der Cloud löschen? Das kann nicht rückgängig gemacht werden; Herunterladen legt vorher eine Kopie an.",
+  "Delete {name} with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "{name} samt seinen älteren Kopien ({n}) löschen? Das kann nicht rückgängig gemacht werden; Herunterladen legt vorher eine Kopie an.",
+  "Delete {name} here and in the cloud, with its older copies ({n})? This cannot be undone; Download keeps a copy first.": "{name} hier und in der Cloud löschen, samt seinen älteren Kopien ({n})? Das kann nicht rückgängig gemacht werden; Herunterladen legt vorher eine Kopie an.",
   "Delete {name}? This cannot be undone; Download keeps a copy first.": "{name} löschen? Das kann nicht rückgängig gemacht werden; Herunterladen legt vorher eine Kopie an.",
   "The older copy of {name} is deleted.": "Die ältere Kopie von {name} ist gelöscht.",
   "Downloaded {name}.": "{name} heruntergeladen.",
