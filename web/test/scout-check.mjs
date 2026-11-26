@@ -305,14 +305,27 @@ try {
       await p.fill(`#editor-form [data-cf="${k}"]`, v);
       await p.locator(`#editor-form [data-cf="${k}"]`).dispatchEvent('change');
     }
+    await p.selectOption('#editor-form [data-cf="matchDay"]', '3');
+    await p.selectOption('#editor-form [data-kit="awayBack"]', '0');
+    await p.fill('#editor-form [data-cf="capacity"]', '70000');
+    await p.locator('#editor-form [data-cf="capacity"]').dispatchEvent('change');
+    await p.fill('#editor-form [data-pick="rivals:0"]', 'ital');
+    check('Clubs: a rival\'s box offers the clubs that match', (await p.$$eval('#club-picks option', (o) => o.map((x) => x.value))).join() === 'Italy (Italy)',
+      await p.$$eval('#club-picks option', (o) => o.map((x) => x.value).join()));
+    await p.fill('#editor-form [data-pick="rivals:0"]', 'Italy (Italy)');
+    await p.locator('#editor-form [data-pick="rivals:0"]').dispatchEvent('change');
+    check('Clubs: the favourite shown by name, the stadium and its city', await p.inputValue('#editor-form [data-pick="favourites:0"]') === `${g.players().find((x) => x.row === 1).name} (Juventus)`
+      && /Stadio delle Alpi/.test(await p.textContent('#editor-form')) && /Turin/.test(await p.textContent('#editor-form')), await p.inputValue('#editor-form [data-pick="favourites:0"]'));
     check('Clubs: the new balance in the finances, one change of the save', (await p.textContent('#editor-form [data-fin="balance"]')).replace(/[^0-9-]/g, '') === '90000000'
       && /\(1 changed\)/.test(await p.textContent('#editor-save')), await p.textContent('#editor-save'));
     await p.click('#editor-save');
     await p.waitForFunction(() => /Saved/.test(document.getElementById('editor-note').textContent), null, { timeout: 15000 });
     const saved = new SaveGame(new Uint8Array(await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')))));
     const { clubInfo, clubFinances } = await import('../savedit.js');
-    check('Clubs: saved, the file has the new balance and reputation', clubFinances(saved, 0)?.balance === 90000000 && clubInfo(saved, 0)?.reputation === 9900,
-      JSON.stringify([clubFinances(saved, 0)?.balance, clubInfo(saved, 0)?.reputation]));
+    const j = clubInfo(saved, 0);
+    check('Clubs: saved, the file has the new balance, reputation, match day, kit, rival and capacity', clubFinances(saved, 0)?.balance === 90000000
+      && j?.reputation === 9900 && j.matchDay === 3 && j.kit.awayBack === 0 && j.rivals[0] === 1 && j.stadium.capacity === 70000,
+      JSON.stringify([clubFinances(saved, 0)?.balance, j?.reputation, j?.matchDay, j?.kit, j?.rivals, j?.stadium?.capacity]));
     await ctx.close();
     const c2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const free = await editorOn(c2, ME.free);

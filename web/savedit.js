@@ -279,11 +279,19 @@ export function clubFinances(game, clubId) {
   const year = (at) => Object.fromEntries(Object.entries(FINANCE_FIELDS).map(([k, [o, n]]) =>
     [k, n === 8 ? Number(dv.getBigInt64(q + at + o, true)) : dv.getInt32(q + at + o, true)]));
   return { balance: Number(dv.getBigInt64(q, true)), wageBill: dv.getInt32(q + 0x0c, true), topWage: dv.getInt32(q + 0x10, true),
+    wageLimit: dv.getInt32(q + 0x14, true), bankrupt: f[q + 0x165],       // docs/research/2026-11-26-club-editor-fields.md
     thisYear: year(0x110), lastYear: year(0xc0) };
 }
 
-// A club's record of club.dat or nat_club.dat (581 bytes; docs/research/2026-11-26-club-finances.md, "The club
-// record"): { id, name, nation, attendance, training, reputation }, or null (no such club).
+// ---- A club as Squad Hub edits it (docs/research/2026-11-26-club-editor-fields.md): club.dat or nat_club.dat
+// (581 bytes), finance.dat (359), stadium.dat (78), city.dat (56), colour.dat (58). A record's id is its row; a link is
+// a 4-byte id, -1 for none. ----
+
+const KIT = ['homeText', 'homeBack', 'awayText', 'awayBack', 'thirdText', 'thirdBack'];   // club +0x83.. (0x53b640)
+const STADIUM_SIZE = 78, CITY_SIZE = 56, COLOUR_SIZE = 58;
+export const CLUB_MATCH_DAYS = [0, 1, 2, 3, 4, 5, 6];       // Monday .. Sunday (0x54a3f0); 255: none
+export const CLUB_STATUS = [1, 2, 3];                       // Professional, Semi-Professional, Amateur (0x460ec6)
+
 function clubRow(game, clubId) {
   for (const t of game.clubTables) {
     const first = t.count ? t.dv.getInt32(0, true) : 0, i = clubId - first;       // the ids follow the rows
@@ -291,29 +299,99 @@ function clubRow(game, clubId) {
   }
   return null;
 }
-export function clubInfo(game, clubId) {
+// A member's record of `size` bytes by id (= row), or null: { b, dv, o }.
+function rowOf(game, name, size, id) {
+  if (id < 0 || !game.file.has(name)) return null;
+  const b = game.file.read(name);
+  if ((id + 1) * size > b.length) return null;
+  return { b, dv: new DataView(b.buffer, b.byteOffset, b.byteLength), o: id * size };
+}
+const ids = (dv, o, n) => Array.from({ length: n }, (_, k) => dv.getInt32(o + 4 * k, true));
+
+// Everything Squad Hub shows of a club, or null (no such club). { colours: true } adds colour.dat's list
+// [{ id, name, rgb }]. The finance fields are absent when the save keeps no finances for the club; stadium and its
+// city are null when the club names none.
+export function clubInfo(game, clubId, { colours = false } = {}) {
   const r = clubRow(game, clubId);
   if (!r) return null;
-  const { t, o } = r;
-  return { id: clubId, name: latin1(t.b, o + 4, 51), nation: game.nations.get(t.dv.getInt32(o + 0x53, true)) ?? '',
-    attendance: t.dv.getInt32(o + 0x73, true), training: t.b[o + 0x7f], reputation: t.dv.getInt16(o + 0x80, true) };
+  const { t, o } = r, dv = t.dv, b = t.b;
+  const st = rowOf(game, 'stadium.dat', STADIUM_SIZE, dv.getInt32(o + 0x69, true));
+  const city = st && rowOf(game, 'city.dat', CITY_SIZE, st.dv.getInt32(st.o + 0x38, true));
+  const f = clubFinances(game, clubId);
+  const out = { id: clubId, name: latin1(b, o + 4, 51), nation: game.nations.get(dv.getInt32(o + 0x53, true)) ?? '',
+    status: b[o + 0x64], training: b[o + 0x7f], reputation: dv.getInt16(o + 0x80, true), plc: b[o + 0x82] !== 0,
+    linked: b[o + 0x244] !== 0, euroSeeding: dv.getInt8(o + 0x1df), attendance: dv.getInt32(o + 0x73, true),
+    minAttendance: dv.getInt32(o + 0x77, true), maxAttendance: dv.getInt32(o + 0x7b, true), matchDay: b[o + 0x72],
+    owns: b[o + 0x6d] !== 0, favourites: ids(dv, o + 0x9b, 3), disliked: ids(dv, o + 0xa7, 3), rivals: ids(dv, o + 0xb3, 3),
+    ...(f ? { balance: f.balance, topWage: f.topWage, wageLimit: f.wageLimit, bankrupt: f.bankrupt } : {}),
+    kit: Object.fromEntries(KIT.map((k, n) => [k, dv.getInt32(o + 0x83 + 4 * n, true)])),
+    stadium: st ? { id: dv.getInt32(o + 0x69, true), name: latin1(st.b, st.o + 4, 51), capacity: st.dv.getInt32(st.o + 0x3c, true),
+      seating: st.dv.getInt32(st.o + 0x40, true), expansion: st.dv.getInt32(st.o + 0x44, true), roof: st.b[st.o + 0x4c] !== 0,
+      heating: st.b[st.o + 0x4d] !== 0,
+      city: city ? { id: st.dv.getInt32(st.o + 0x38, true), name: latin1(city.b, city.o + 4, 26), attraction: city.dv.getInt8(city.o + 0x33) } : null } : null };
+  if (colours) {
+    const c = game.file.has('colour.dat') ? game.file.read('colour.dat') : new Uint8Array(0);
+    out.colours = Array.from({ length: Math.floor(c.length / COLOUR_SIZE) }, (_, k) => ({ id: k, name: latin1(c, k * COLOUR_SIZE + 4, 51),
+      rgb: [c[k * COLOUR_SIZE + 0x37], c[k * COLOUR_SIZE + 0x38], c[k * COLOUR_SIZE + 0x39]] }));
+  }
+  return out;
 }
 
-// Changes a club: { balance } (finance.dat +0, the game's cash figure is a signed 32-bit number: 0x5986e3),
-// { reputation } (club +0x80, 1..10000), { training } (club +0x7f, 1..20). Each one given is written.
-export function writeClub(game, clubId, { balance, reputation, training } = {}) {
+// Changes a club: each field of `patch` given is written, cut to the game's range. clubInfo's names: status (1..3),
+// training (1..20), reputation (1..10000), plc, euroSeeding (-1..127), attendance, minAttendance, maxAttendance
+// (0..250000), matchDay (0..6, 255 none), owns, favourites, disliked (3 staff ids), rivals (3 club ids), kit ({ homeText,
+// ... }: colour ids), balance (-2e9..2e9, a signed 32-bit cash figure: 0x5986e3), wageLimit, bankrupt (0..2); of the
+// club's stadium (shared by the clubs that name it): capacity, seating, expansion, roof, heating; of its city (shared):
+// attraction (0..20). An id that names nothing is an error, and nothing is written.
+export function writeClub(game, clubId, patch = {}) {
   const r = clubRow(game, clubId);
-  if (!r) throw Object.assign(new Error('no such club'), { key: 'no such club' });
+  const fail = ({ key }) => { throw Object.assign(new Error(key), { key }); };   // key: the English, a text of the tables
+  if (!r) fail({ key: 'no such club' });
+  const { t, o } = r, dv = t.dv, b = t.b;
   const cut = (v, lo, hi) => Math.min(hi, Math.max(lo, Math.round(Number(v) || 0)));
-  if (reputation !== undefined) r.t.dv.setInt16(r.o + 0x80, cut(reputation, 1, 10000), true);
-  if (training !== undefined) r.t.b[r.o + 0x7f] = cut(training, 1, 20);
-  if (reputation !== undefined || training !== undefined) game.file.changed(r.t.name);
-  if (balance !== undefined) {
-    if (!clubFinances(game, clubId)) throw Object.assign(new Error('the game keeps no finances for this club'), { key: 'the game keeps no finances for this club' });
-    const f = game.file.read('finance.dat');
-    new DataView(f.buffer, f.byteOffset, f.byteLength).setBigInt64(clubId * FINANCE_SIZE, BigInt(cut(balance, -2000000000, 2000000000)), true);
+  const p = patch, has = (k) => p[k] !== undefined;
+  // Checks first, so a bad id writes nothing.
+  if (has('matchDay') && !CLUB_MATCH_DAYS.includes(Number(p.matchDay)) && Number(p.matchDay) !== 255) fail({ key: 'no such match day' });
+  if (has('status') && !CLUB_STATUS.includes(Number(p.status))) fail({ key: 'no such professional status' });
+  for (const k of ['favourites', 'disliked']) if (has(k) && p[k].some((id) => id !== -1 && !(id >= 0 && id < game.staff.count))) fail({ key: 'no such person' });
+  if (has('rivals') && p.rivals.some((id) => id !== -1 && (id === clubId || !clubRow(game, id)))) fail({ key: 'no such club' });
+  const nColours = game.file.has('colour.dat') ? Math.floor(game.file.read('colour.dat').length / COLOUR_SIZE) : 0;
+  if (has('kit') && Object.entries(p.kit).some(([k, id]) => !KIT.includes(k) || (id !== -1 && !(id >= 0 && id < nColours)))) fail({ key: 'no such colour' });
+  const fin = ['balance', 'wageLimit', 'bankrupt'].some(has);
+  if (fin && !clubFinances(game, clubId)) fail({ key: 'the game keeps no finances for this club' });
+  const st = rowOf(game, 'stadium.dat', STADIUM_SIZE, dv.getInt32(o + 0x69, true));
+  if (['capacity', 'seating', 'expansion', 'roof', 'heating', 'attraction'].some(has) && !st) fail({ key: 'the club has no stadium' });
+  const city = st && rowOf(game, 'city.dat', CITY_SIZE, st.dv.getInt32(st.o + 0x38, true));
+  if (has('attraction') && !city) fail({ key: 'the stadium has no city' });
+
+  let club = false;
+  const byte = (off, v) => { b[o + off] = v; club = true; };
+  const int = (off, v) => { dv.setInt32(o + off, v, true); club = true; };
+  if (has('status')) byte(0x64, Number(p.status));
+  if (has('training')) byte(0x7f, cut(p.training, 1, 20));
+  if (has('reputation')) { dv.setInt16(o + 0x80, cut(p.reputation, 1, 10000), true); club = true; }
+  if (has('plc')) byte(0x82, p.plc ? 1 : 0);
+  if (has('euroSeeding')) { dv.setInt8(o + 0x1df, cut(p.euroSeeding, -1, 127)); club = true; }
+  if (has('owns')) byte(0x6d, p.owns ? 1 : 0);
+  if (has('matchDay')) byte(0x72, Number(p.matchDay));
+  for (const [k, off] of [['attendance', 0x73], ['minAttendance', 0x77], ['maxAttendance', 0x7b]]) if (has(k)) int(off, cut(p[k], 0, 250000));
+  for (const [k, off] of [['favourites', 0x9b], ['disliked', 0xa7], ['rivals', 0xb3]]) if (has(k)) p[k].slice(0, 3).forEach((id, n) => int(off + 4 * n, id));
+  if (has('kit')) for (const [k, id] of Object.entries(p.kit)) int(0x83 + 4 * KIT.indexOf(k), id);
+  if (club) game.file.changed(t.name);
+  if (fin) {
+    const f = rowOf(game, 'finance.dat', FINANCE_SIZE, clubId);
+    if (has('balance')) f.dv.setBigInt64(f.o, BigInt(cut(p.balance, -2000000000, 2000000000)), true);
+    if (has('wageLimit')) f.dv.setInt32(f.o + 0x14, cut(p.wageLimit, 0, 10000000), true);
+    if (has('bankrupt')) f.b[f.o + 0x165] = cut(p.bankrupt, 0, 2);
     game.file.changed('finance.dat');
   }
+  if (['capacity', 'seating', 'expansion', 'roof', 'heating'].some(has)) {
+    for (const [k, off] of [['capacity', 0x3c], ['seating', 0x40], ['expansion', 0x44]]) if (has(k)) st.dv.setInt32(st.o + off, cut(p[k], 0, 250000), true);
+    if (has('roof')) st.b[st.o + 0x4c] = p.roof ? 1 : 0;
+    if (has('heating')) st.b[st.o + 0x4d] = p.heating ? 1 : 0;
+    game.file.changed('stadium.dat');
+  }
+  if (has('attraction')) { city.dv.setInt8(city.o + 0x33, cut(p.attraction, 0, 20)); game.file.changed('city.dat'); }
 }
 
 // kind: raw (the byte is the rating), rel (0x544380), gk20 (0x5442f0's tenth when the goalkeeper rating is 20),

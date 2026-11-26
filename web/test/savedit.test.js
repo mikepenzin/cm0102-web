@@ -185,18 +185,32 @@ test('club finances: the balance, the wage bill and the year blocks of finance.d
   assert.equal(clubFinances(new SaveGame(await fakeSaveGame()), 0), null, 'no finance.dat');
 });
 
-test('a club: nation, attendance, training and reputation of club.dat; balance, reputation and training written back', async () => {
+test('a club: what Squad Hub edits of club.dat, finance.dat, stadium.dat, city.dat and colour.dat; changes written back', async () => {
   const { clubInfo, writeClub, clubFinances } = await import('../savedit.js');
-  const g = new SaveGame(await fakeSaveGame(undefined, { finance: { balance: 1000000 } }));
-  assert.deepEqual(clubInfo(g, 0), { id: 0, name: 'Juventus', nation: 'Italy', attendance: 41000, training: 18, reputation: 9200 });
+  const g = new SaveGame(await fakeSaveGame(undefined, { finance: { balance: 1000000, topWage: 40000, wageLimit: 60000, bankrupt: 0 } }));
+  const c = clubInfo(g, 0);
+  assert.deepEqual({ ...c, kit: undefined, stadium: undefined, favourites: undefined }, { id: 0, name: 'Juventus', nation: 'Italy', status: 1, training: 18,
+    reputation: 9200, plc: true, linked: false, euroSeeding: 2, attendance: 41000, minAttendance: 20000, maxAttendance: 67000, matchDay: 6,
+    owns: true, disliked: [-1, -1, -1], rivals: [-1, -1, -1], balance: 1000000, topWage: 40000, wageLimit: 60000, bankrupt: 0,
+    kit: undefined, stadium: undefined, favourites: undefined });
+  assert.deepEqual(c.favourites, [1, -1, -1]);
+  assert.deepEqual(c.kit, { homeText: 0, homeBack: 1, awayText: -1, awayBack: -1, thirdText: -1, thirdBack: -1 });
+  assert.deepEqual(c.stadium, { id: 0, name: 'Stadio delle Alpi', capacity: 69000, seating: 67000, expansion: 71000, roof: false, heating: true,
+    city: { id: 0, name: 'Turin', attraction: 15 } });
+  assert.deepEqual(clubInfo(g, 0, { colours: true }).colours, [{ id: 0, name: 'White', rgb: [255, 255, 255] }, { id: 1, name: 'Black', rgb: [0, 0, 0] }]);
   assert.equal(clubInfo(g, 1).name, 'Italy', 'a national team: nat_club.dat');
   assert.equal(clubInfo(g, 7), null, 'no such club');
-  writeClub(g, 0, { balance: 25000000, reputation: 12000, training: 0 });
-  const back = new SaveGame(await g.toBytes());
-  assert.equal(clubFinances(back, 0).balance, 25000000, 'the balance in finance.dat');
-  assert.deepEqual([clubInfo(back, 0).reputation, clubInfo(back, 0).training], [10000, 1], 'cut to the game\'s ranges: 1..10000, 1..20');
+  writeClub(g, 0, { balance: 25000000, reputation: 12000, training: 0, status: 3, plc: false, matchDay: 5, minAttendance: 15000,
+    favourites: [-1, 2, -1], rivals: [1, -1, -1], kit: { awayBack: 1 }, capacity: 70000, roof: true, attraction: 30, wageLimit: 75000, bankrupt: 1 });
+  const back = clubInfo(new SaveGame(await g.toBytes()), 0);
+  assert.equal(back.balance, 25000000, 'the balance in finance.dat');
+  assert.deepEqual([back.reputation, back.training, back.status, back.plc, back.matchDay, back.minAttendance], [10000, 1, 3, false, 5, 15000],
+    'cut to the game\'s ranges: 1..10000, 1..20');
+  assert.deepEqual([back.favourites, back.rivals, back.kit.awayBack], [[-1, 2, -1], [1, -1, -1], 1]);
+  assert.deepEqual([back.stadium.capacity, back.stadium.roof, back.stadium.city.attraction, back.wageLimit, back.bankrupt], [70000, true, 20, 75000, 1]);
   writeClub(g, 0, { balance: -5e9 });
   assert.equal(clubFinances(g, 0).balance, -2000000000, 'the balance within a signed 32-bit cash figure');
+  assert.throws(() => writeClub(g, 0, { matchDay: 9 }), /match day/);
 });
 
 test('non-players: the staff with a non-player record, by name and club; edits written as the game rates them', async () => {

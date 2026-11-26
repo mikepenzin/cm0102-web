@@ -7,5 +7,5 @@ export const FEATURES = [
   { key: 'scout-request', name: 'Scout a player' },          // Squad Hub: the manager's club asks its scouts to watch him (shortlist.js)
   { key: 'nationality', name: 'Nationality filter' },        // Squad Hub: the Players list and the Scout by a player's nation
   { key: 'manager-attributes', name: 'Manager attributes' }, // Squad Hub, Managers tab: any manager's or coach's attributes, changed
-  { key: 'club-finances', name: 'Club finances' },           // Squad Hub, Clubs tab: any club's record and finances; balance, reputation, training changed
+  { key: 'club-finances', name: 'Club finances' },           // Squad Hub, Clubs tab: any club's record, stadium and finances, changed as the GK editor does
 ];

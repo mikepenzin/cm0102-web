@@ -388,8 +388,17 @@
   .ed-grid input[type=text], .ed-grid select { width: 100%; max-width: 260px; text-align: left; font: inherit; font-size: 16px;
     color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 4px 6px; }
   .ed-grid label.wide { grid-column: span 2; }
-  .ed-grid.club { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); max-width: 560px; }
-  .ed-grid.club input[data-cf="balance"] { width: 140px; } .ed-grid.club input[data-cf="reputation"] { width: 90px; }
+  .ed-grid.club { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); max-width: 560px; }
+  .ed-grid.club input[type=number] { width: 104px; } .ed-grid.club input[data-cf="balance"] { width: 140px; }
+  .ed-grid.club input[data-cf="training"], .ed-grid.club input[data-cf="attraction"] { width: 64px; }
+  .ed-grid.club input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
+  .ed-grid.club select { width: auto; max-width: 150px; }
+  .ed-grid.kits label { justify-content: flex-start; } .ed-grid.kits label span { flex: 1; }
+  .swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); flex: none; }
+  .prefs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-width: 680px; }
+  .pref h5 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .pref input { display: block; width: 100%; box-sizing: border-box; margin: 0 0 4px; font: inherit; font-size: 15px; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
   .ed-grid select.changed { border-color: var(--accent); }
   .ed-search { display: flex; gap: 6px; } .ed-search input { flex: 1; min-width: 0; }
   #editor-nation { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);

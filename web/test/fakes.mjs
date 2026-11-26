@@ -201,17 +201,32 @@ export function paddleEvent(type, { ref, at = new Date().toISOString(), status =
 // the searches (docs/research/2026-11-25-scout-request-in-save.md), [{ club, player: staff id, reports, date }], written
 // in the order given.
 // finance.dat (docs/research/2026-11-26-club-finances.md): a 359-byte record for Juventus (0) and Italy (1); finance:
-// { balance, wageBill, topWage, thisYear: { offset: value }, lastYear: { offset: value } } for Juventus.
+// { balance, wageBill, topWage, wageLimit, bankrupt, thisYear: { offset: value }, lastYear: { offset: value } } for Juventus.
 function financeDat(f) {
   const b = Buffer.alloc(2 * 359);
   for (const k of [0, 1]) b.writeInt32LE(k, k * 359 + 8);
   b.writeBigInt64LE(BigInt(f.balance ?? 0), 0); b.writeInt32LE(f.wageBill ?? 0, 0x0c); b.writeInt32LE(f.topWage ?? 0, 0x10);
+  b.writeInt32LE(f.wageLimit ?? 0, 0x14); b[0x165] = f.bankrupt ?? 0;
   for (const [block, at] of [['thisYear', 0x110], ['lastYear', 0xc0]]) {
     for (const [off, v] of Object.entries(f[block] ?? {})) {
       const o = at + Number(off);
       if (Number(off) <= 0x08) b.writeBigInt64LE(BigInt(v), o); else b.writeInt32LE(v, o);
     }
   }
+  return b;
+}
+
+// With finance: Juventus's ground (stadium 0, Stadio delle Alpi in Turin, city 0) and two colours (White, Black), as
+// stadium.dat (78 bytes), city.dat (56) and colour.dat (58) keep them (docs/research/2026-11-26-club-editor-fields.md).
+function stadiumDat() {
+  const b = Buffer.alloc(78); b.writeInt32LE(0, 0); b.write('Stadio delle Alpi', 4, 'latin1'); b.writeInt32LE(0, 0x38);
+  b.writeInt32LE(69000, 0x3c); b.writeInt32LE(67000, 0x40); b.writeInt32LE(71000, 0x44); b[0x4c] = 0; b[0x4d] = 1;
+  return b;
+}
+function cityDat() { const b = Buffer.alloc(56); b.writeInt32LE(0, 0); b.write('Turin', 4, 'latin1'); b.writeInt8(15, 0x33); return b; }
+function colourDat() {
+  const b = Buffer.alloc(2 * 58);
+  [['White', 255, 255, 255], ['Black', 0, 0, 0]].forEach(([n, r, g, bl], k) => { const o = k * 58; b.writeInt32LE(k, o); b.write(n, o + 4, 'latin1'); b[o + 0x37] = r; b[o + 0x38] = g; b[o + 0x39] = bl; });
   return b;
 }
 
@@ -297,6 +312,13 @@ export async function fakeSaveGame(players = [
   // Juventus's record (docs/research/2026-11-26-club-finances.md, "The club record"): nation, attendance, training, reputation.
   const club = Buffer.alloc(581); club.writeInt32LE(0, 0); club.write('Juventus', 4, 'latin1');
   club.writeInt32LE(0, 0x53); club.writeInt32LE(41000, 0x73); club[0x7f] = 18; club.writeInt16LE(9200, 0x80);
+  // and the rest of what Squad Hub edits (docs/research/2026-11-26-club-editor-fields.md): professional, a PLC, owns
+  // stadium 0, home day Sunday, crowds 20,000..67,000, euro seeding 2, kit White on Black (away and third -1), Del
+  // Piero (staff 1) a favourite, no dislikes, no rivals.
+  club[0x64] = 1; club[0x82] = 1; club.writeInt32LE(0, 0x69); club[0x6d] = 1; club[0x72] = 6;
+  club.writeInt32LE(20000, 0x77); club.writeInt32LE(67000, 0x7b); club.writeInt8(2, 0x1df); club.writeInt32LE(326, 0x1db);
+  [0, 1, -1, -1, -1, -1].forEach((c, k) => club.writeInt32LE(c, 0x83 + 4 * k));
+  [1, -1, -1, -1, -1, -1, -1, -1, -1].forEach((v, k) => club.writeInt32LE(v, 0x9b + 4 * k));
   const natClub = Buffer.alloc(581); natClub.writeInt32LE(1, 0); natClub.write('Italy', 4, 'latin1');
   const nation = Buffer.alloc(2 * 290); nation.writeInt32LE(0, 0); nation.write('Italy', 4, 'latin1'); nation.writeInt32LE(1, 290); nation.write('France', 294, 'latin1');
   const tables = [['first_names.dat', 13, names(first)], ['second_names.dat', 14, names(second)], ['common_names.dat', 15, names(common)],
@@ -312,7 +334,7 @@ export async function fakeSaveGame(players = [
   }
   const members = [['continent.dat', Buffer.from('stays as it is, byte for byte')], ...tables.map((t) => [t[0], t[2]]),
     ['index.dat', index], ['general.dat', general], ...(scoutManager ? [['scout_manager.dat', scoutManager], ['nonplayer.dat', nonPlayer]] : []),
-    ...(finance ? [['finance.dat', financeDat(finance)]] : [])];
+    ...(finance ? [['finance.dat', financeDat(finance)], ['stadium.dat', stadiumDat()], ['city.dat', cityDat()], ['colour.dat', colourDat()]] : [])];
   const HEADER = 0x416ec, header = Buffer.alloc(HEADER);
   header.writeInt32LE(4, 0); header.writeInt32LE(0, 4); header.writeInt32LE(members.length, 8);
   const body = [];

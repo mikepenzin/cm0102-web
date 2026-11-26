@@ -686,15 +686,22 @@ counts as a change of the save and goes with Save the game file (the writer then
 Members only, as the full Scout; a free player's star opens the Account dialog. A feature of `features.js`
 (`shortlist`): Club Legends first.
 
-**Clubs** (`savedit.js` `clubInfo`, `clubFinances`, `writeClub`; docs/research/2026-11-26-club-finances.md). A fourth tab of
-a saved game: search a club, pick it, and in the right-hand panel its record (nation, attendance, reputation, training
-facilities) and its finances as the game keeps them in `finance.dat` (359 bytes a club): the balance, the weekly
-wage bill and top wage, and this year's and last year's players sold, prize money, TV money, players bought, wages,
-bonuses, signing-on fees, other costs and league fines. The game shows them for the player's own club only. The
-balance (-2,000,000,000..2,000,000,000), the reputation (1..10,000) and the training facilities (1..20) can be changed
-and are saved with the game file; the game keeps no transfer budget but works it out from the balance
-(`Finance::get_transfer_budget` 0x598800), so a larger balance is a larger budget. A member's (a free player sees the Membership invitation). A feature of `features.js` (`club-finances`): Club
-Legends first.
+**Clubs** (`savedit.js` `clubInfo`, `clubFinances`, `writeClub`; docs/research/2026-11-26-club-finances.md,
+docs/research/2026-11-26-club-editor-fields.md). A fourth tab of a saved game: search a club, pick it, and the
+right-hand panel shows and changes what the GK Save Game Editor changes of a club, in its groups: General
+(professional status, training facilities, reputation, Euro seeding, public limited company; a linked club shown, as
+the game sets it), Preferences (three favourite and three disliked players or staff, three rival clubs: a box offers
+the names that match what is typed), Kits (the six colours of colour.dat, with their colour), Finances (balance,
+highest wage allowed, bankrupt), Stadium (capacity, seating, expansion, owns stadium, roof, undersoil heating, city
+attraction, average, minimum and maximum attendance, home match day). Below, the club's finances as `finance.dat` keeps
+them (359 bytes a club): the balance, the weekly wage bill and top wage, and this year's and last year's players sold,
+prize money, TV money, players bought, wages, bonuses, signing-on fees, other costs and league fines. The game shows
+them for the player's own club only. Each change is written at once (`writeClub`, cut to the game's ranges; an id that
+names nothing changes nothing) and saved with the game file. The game keeps no transfer budget: it works it out from
+the balance (`Finance::get_transfer_budget` 0x598800), so a larger balance is a larger budget; it works out the
+highest wage allowed and bankruptcy again in its own finance runs, and the Euro seeding at each season. A stadium and
+a city can be shared by clubs: a change applies to all of them. A member's (a free player sees the Membership
+invitation). A feature of `features.js` (`club-finances`): Club Legends first.
 
 **Managers** (`savedit.js` `managerAttributes`; docs/research/2026-11-26-manager-attributes.md). A third tab of a saved
 game: each human manager (the named places of `scout_manager.dat`) with the twelve attributes the game keeps for a

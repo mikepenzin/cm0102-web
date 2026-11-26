@@ -378,10 +378,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       return;
     }
     const m = model;
-    try { await m.file.load(['finance.dat']); } catch { /* none: no figures */ }
+    try { await m.file.load(['finance.dat', 'stadium.dat', 'city.dat', 'colour.dat', 'nonplayer.dat']); } catch { /* none: no figures */ }
     if (model !== m || pane !== 'clubs') return;
     if (!m.file.has('finance.dat')) { clubsBox.innerHTML = `<p class="small">${esc(t('This save holds no club finances.'))}</p>`; return; }
-    clubsBox.innerHTML = `<p class="small">${esc(t('Any club of this save: its record and finances as the game keeps them, which the game shows for your own club only. Its balance, reputation and training facilities can be changed.'))}${acc.badge}</p>
+    clubsBox.innerHTML = `<p class="small">${esc(t('Any club of this save: what the game keeps of it, and its finances, which the game shows for your own club only. Each value can be changed.'))}${acc.badge}</p>
       <input id="clubs-search" type="search" placeholder="${esc(t('Search a club'))}" aria-label="${esc(t('Search a club'))}" autocomplete="off" spellcheck="false">
       <div id="clubs-results"></div>`;
     const input = $('clubs-search');
@@ -396,39 +396,103 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     out.innerHTML = hit.length ? hit.map(([id, n]) => `<button type="button" class="ed-row" data-club="${id}"><b data-raw>${esc(n)}</b></button>`).join('')
       : `<p class="small">${esc(t('No club of that name.'))}</p>`;
   }
-  // A club in the right-hand panel, as a player's (a phone: the panel alone, with its way back to the list): its record
-  // and finances; the balance (from which the game works out the transfer budget, 0x598800), the reputation and the
-  // training facilities can be changed (writeClub) and count as a change of the save.
+  // A club in the right-hand panel, as a player's (a phone: the panel alone, with its way back to the list): what the
+  // GK Save Game Editor changes of a club (docs/research/2026-11-26-club-editor-fields.md), in its groups, then the
+  // finances. A change is written at once (writeClub) and counts as a change of the save.
+  const DAYS = () => [t('Monday'), t('Tuesday'), t('Wednesday'), t('Thursday'), t('Friday'), t('Saturday'), t('Sunday')];
+  const STATUS = () => ({ 1: t('Professional'), 2: t('Semi-professional'), 3: t('Amateur') });
+  const BANKRUPT = () => [t('No'), t('Receivers in'), t('Still in debt')];
+  let picks = new Map();                              // the labels of the last people or clubs offered → id
+  function people() {
+    if (!model.people) model.people = new Map([...model.players().map((p) => [p.row, p]), ...nonPlayers(model).map((p) => [p.id, p])]);
+    return model.people;
+  }
+  const personLabel = (id) => { const p = people().get(id); return p ? `${p.name}${p.club ? ` (${p.club})` : ''}` : ''; };
+  const clubPick = (id) => { const c = clubInfo(model, id); return c ? `${c.name}${c.nation ? ` (${c.nation})` : ''}` : ''; };
+  // The choices for a person's or a club's box: the first 20 that hold every word typed.
+  function offer(kind, text) {
+    const words = fold(text).split(/\s+/).filter(Boolean), list = $('club-picks');
+    picks = new Map();
+    if (words.length && kind === 'person') {
+      for (const p of people().values()) {
+        if (!words.every((w) => p.key.includes(w))) continue;
+        picks.set(personLabel(p.row ?? p.id), p.row ?? p.id);
+        if (picks.size >= 20) break;
+      }
+    } else if (words.length) {
+      for (const [id, n] of model.clubs) {
+        if (!words.every((w) => fold(n).includes(w))) continue;
+        picks.set(clubPick(id), id);
+        if (picks.size >= 20) break;
+      }
+    }
+    list.innerHTML = [...picks.keys()].map((l) => `<option value="${esc(l)}">`).join('');
+  }
   function showClub(id) {
     clubShown = id;
-    const c = clubInfo(model, id), f = clubFinances(model, id);
+    const c = clubInfo(model, id, { colours: true }), f = clubFinances(model, id);
     current = null;
     for (const b of clubsBox.querySelectorAll('[data-club]')) b.classList.toggle('on', Number(b.dataset.club) === id);
     const name = c?.name ?? model.clubs.get(id) ?? '';
     const head = `<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Clubs'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>`;
-    const box = (key, value, min, max, label) => `<label><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" step="1" data-cf="${key}" value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
-    const club = c ? `<section><h4>${esc(t('Club'))}</h4>
-      <table class="fin"><tr><td>${esc(t('Nation'))}</td><td data-raw>${esc(c.nation || '–')}</td></tr><tr><td>${esc(t('Attendance'))}</td><td>${esc(money(c.attendance))}</td></tr></table>
-      <div class="ed-grid club">${f ? box('balance', f.balance, -2000000000, 2000000000, t('Balance')) : ''}${box('reputation', c.reputation, 1, 10000, t('Reputation'))}${box('training', c.training, 1, 20, t('Training facilities'))}</div>
-      <p class="small">${esc(t('The game works out the transfer budget from the balance: a larger balance, a larger budget. A change is saved with the game file.'))}</p></section>` : '';
-    detailPanel(head + club + (f ? '' : `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`));
-    if (c) {
-      form.onchange = (e) => {
-        const i = e.target.closest('[data-cf]');
-        if (!i) return;
-        try { writeClub(model, id, { [i.dataset.cf]: Number(i.value) }); } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: err.message }), true); return; }
-        edited.add(`club:${id}`);
-        dirty();
-        showClub(id);
-        say(() => t('{name} changed. Save the game file to keep the changes.', { name }));
-      };
-    }
+    if (!c) { detailPanel(head); return; }
+    const num = (key, value, min, max, label) => `<label><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" step="1" data-cf="${key}" value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
+    const tick = (key, on, label, off = false) => `<label><span>${esc(label)}</span><input type="checkbox" data-cf="${key}"${on ? ' checked' : ''}${off ? ' disabled' : ''}></label>`;
+    const pick = (key, opts, value, label) => `<label><span>${esc(label)}</span><select data-cf="${key}">${opts.map(([v, l]) => `<option value="${v}"${Number(v) === value ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
+    const who = (key, ids, label, kind) => `<div class="pref"><h5>${esc(label)}</h5>${ids.map((x, n) => `<input type="text" list="club-picks" data-pick="${key}:${n}" data-kind="${kind}"
+      value="${esc(kind === 'club' ? (x >= 0 ? clubPick(x) : '') : personLabel(x))}" placeholder="${esc(t('None'))}" autocomplete="off" spellcheck="false" data-raw>`).join('')}</div>`;
+    const swatch = (cid) => { const k = c.colours[cid]; return k ? `rgb(${k.rgb.join(',')})` : 'transparent'; };
+    const kit = (key, label) => `<label><span>${esc(label)}</span><select data-kit="${key}"><option value="-1">${esc(t('None'))}</option>${c.colours.map((k) =>
+      `<option value="${k.id}"${k.id === c.kit[key] ? ' selected' : ''} data-raw>${esc(k.name)}</option>`).join('')}</select><i class="swatch" style="background:${swatch(c.kit[key])}"></i></label>`;
+    const st = c.stadium;
+    detailPanel(`${head}<datalist id="club-picks"></datalist>
+      <section><h4>${esc(t('General'))}</h4>
+        <table class="fin"><tr><td>${esc(t('Nation'))}</td><td data-raw>${esc(c.nation || '–')}</td></tr></table>
+        <div class="ed-grid club">${pick('status', Object.entries(STATUS()), c.status, t('Professional status'))}${num('training', c.training, 1, 20, t('Training facilities'))}
+          ${num('reputation', c.reputation, 1, 10000, t('Reputation'))}${num('euroSeeding', c.euroSeeding, -1, 127, t('Euro seeding'))}
+          ${tick('plc', c.plc, t('Public limited company'))}${tick('linked', c.linked, t('Has a linked club'), true)}</div></section>
+      <section><h4>${esc(t('Preferences'))}</h4><div class="prefs">${who('favourites', c.favourites, t('Favourite players and staff'), 'person')}
+        ${who('disliked', c.disliked, t('Disliked players and staff'), 'person')}${who('rivals', c.rivals, t('Rival clubs'), 'club')}</div></section>
+      <section><h4>${esc(t('Kits'))}</h4><div class="ed-grid club kits">${kit('homeText', t('Home text'))}${kit('homeBack', t('Home shirt'))}${kit('awayText', t('Away text'))}
+        ${kit('awayBack', t('Away shirt'))}${kit('thirdText', t('Third text'))}${kit('thirdBack', t('Third shirt'))}</div></section>
+      ${f ? `<section><h4>${esc(t('Finances'))}</h4>
+        <table class="fin"><tr><td>${esc(t('Top wage a week'))}</td><td>${esc(money(f.topWage))}</td></tr></table>
+        <div class="ed-grid club">${num('balance', f.balance, -2000000000, 2000000000, t('Bank balance'))}${num('wageLimit', f.wageLimit, 0, 10000000, t('Highest wage allowed'))}
+          ${pick('bankrupt', BANKRUPT().map((l, k) => [k, l]), f.bankrupt, t('Bankrupt'))}</div>
+        <p class="small">${esc(t('The game works out the transfer budget from the balance: a larger balance, a larger budget. It works out the highest wage allowed and bankruptcy again in its own finance runs.'))}</p></section>` : `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`}
+      <section><h4>${esc(t('Stadium'))}</h4>
+        ${st ? `<table class="fin"><tr><td>${esc(t('Stadium'))}</td><td data-raw>${esc(st.name)}</td></tr>${st.city ? `<tr><td>${esc(t('City'))}</td><td data-raw>${esc(st.city.name)}</td></tr>` : ''}</table>` : ''}
+        <div class="ed-grid club">${st ? `${num('capacity', st.capacity, 0, 250000, t('Capacity'))}${num('seating', st.seating, 0, 250000, t('Seating'))}${num('expansion', st.expansion, 0, 250000, t('Expansion'))}` : ''}
+          ${tick('owns', c.owns, t('Club owns stadium'))}${st ? `${tick('roof', st.roof, t('Retractable roof'))}${tick('heating', st.heating, t('Undersoil heating'))}` : ''}
+          ${st?.city ? num('attraction', st.city.attraction, 0, 20, t('City attraction')) : ''}
+          ${num('attendance', c.attendance, 0, 250000, t('Average attendance'))}${num('minAttendance', c.minAttendance, 0, 250000, t('Minimum attendance'))}
+          ${num('maxAttendance', c.maxAttendance, 0, 250000, t('Maximum attendance'))}${pick('matchDay', [...DAYS().map((d, k) => [k, d]), [255, t('None')]], c.matchDay, t('Home match day'))}</div>
+        ${st ? `<p class="small">${esc(t('A stadium and its city can be shared: a change here changes them for every club that plays there.'))}</p>` : ''}</section>`);
+    form.oninput = (e) => { const i = e.target.closest('[data-pick]'); if (i && !picks.has(i.value.trim())) offer(i.dataset.kind, i.value); };   // a choice made keeps its list
+    form.onchange = (e) => {
+      const i = e.target.closest('[data-cf], [data-kit], [data-pick]');
+      if (!i) return;
+      let patch;
+      if (i.dataset.kit) patch = { kit: { [i.dataset.kit]: Number(i.value) } };
+      else if (i.dataset.pick) {
+        const [key, n] = i.dataset.pick.split(':'), now = [...c[key]];
+        const v = i.value.trim(), got = v ? picks.get(v) : -1;
+        if (got === undefined) { say(() => t('{name} was not changed: {why}', { name, why: t('pick a name from the list') }), true); return; }
+        now[Number(n)] = got;
+        patch = { [key]: now };
+      } else patch = { [i.dataset.cf]: i.type === 'checkbox' ? i.checked : Number(i.value) };
+      try { writeClub(model, id, patch); } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: reason(err) }), true); showClub(id); return; }
+      edited.add(`club:${id}`);
+      dirty();
+      showClub(id);
+      say(() => t('{name} changed. Save the game file to keep the changes.', { name }));
+    };
     if (!f) return;
     const v = (key, n) => `<td data-fin="${key}"${n < 0 ? ' class="neg"' : ''}>${esc(money(n))}</td>`;
     const LINES = [['sold', t('Players sold')], ['prize', t('Prize money')], ['tv', t('TV money')], ['bought', t('Players bought')],
       ['wages', t('Wages')], ['bonuses', t('Bonuses')], ['signOn', t('Signing-on fees')], ['otherCosts', t('Other costs')], ['fines', t('League fines')]];
     form.insertAdjacentHTML('beforeend', `<section class="fin">
-      <table><tr><td>${esc(t('Balance'))}</td>${v('balance', f.balance)}</tr><tr><td>${esc(t('Wage bill a week'))}</td>${v('wageBill', f.wageBill)}</tr>
+      <table><tr><td>${esc(t('Bank balance'))}</td>${v('balance', f.balance)}</tr><tr><td>${esc(t('Wage bill a week'))}</td>${v('wageBill', f.wageBill)}</tr>
         <tr><td>${esc(t('Top wage a week'))}</td>${v('topWage', f.topWage)}</tr></table>
       <table><tr><th></th><th>${esc(t('This year'))}</th><th>${esc(t('Last year'))}</th></tr>
         ${LINES.map(([k, label]) => `<tr><td>${esc(label)}</td>${v(`thisYear.${k}`, f.thisYear[k])}${v(`lastYear.${k}`, f.lastYear[k])}</tr>`).join('')}</table></section>`);
@@ -496,7 +560,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       const values = Object.fromEntries([...form.querySelectorAll('[data-attr]')].map((i) => [i.dataset.attr, Number(i.value)]));
       try {
         writeManagerAttributes(model, id, { ca: form.querySelector('[data-mf="ca"]').value, pa: form.querySelector('[data-mf="pa"]').value, values });
-      } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: err.message }), true); return; }
+      } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: reason(err) }), true); return; }
       const now = managerAttributes(model, id);
       for (const y of now.attrs) { const i = form.querySelector(`[data-attr="${CSS.escape(y.name)}"]`); if (i) { i.value = y.value; i.dataset.band = band(y.value); } }
       form.querySelector('[data-mf="ca"]').value = now.ca; form.querySelector('[data-mf="pa"]').value = now.pa;
