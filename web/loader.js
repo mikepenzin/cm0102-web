@@ -5,7 +5,7 @@
 // Around the game: layout.js sizes the canvas, touch.js turns touches into the mouse, keyboard.js routes the keys and
 // runs the on-screen keyboard, saves.js is the Saved games panel, account.js the account and the cloud saves, ui.js
 // has the messages and the small helpers.
-import { SAVE_DIR, listSaves, mountSavesPanel, removeOrphanCopies, savesSignature, setStorageKept, skipWorkFiles, spaceState, storageWarning, useVault } from './saves.js';
+import { SAVE_DIR, backupsOffOnce, listSaves, mountSavesPanel, removeOrphanCopies, savesSignature, setStorageKept, skipWorkFiles, spaceState, storageWarning, useVault } from './saves.js';
 import { needsChoice, setStatsAllowed, startStats, statsAllowed } from './stats.js';
 import { createVault, isAway } from './vault.js';
 import { engineUrl, hasJspi, pickEngine } from './engine.js';
@@ -955,6 +955,14 @@ function runEngine(files, info) {
         if (folderRead) {
           const gone = removeOrphanCopies(FS, { inCloud: (name) => Boolean(cloud?.keeps(name)), log });
           if (gone.n) { log(`page: removed ${gone.n} older copies of saves that are gone (${gone.bytes} bytes)`); sync(); }
+          // Older copies off in the browser, once (saves.js backupsOffOnce), before the engine reads its settings.
+          let settings = null;
+          try { settings = FS.readFile('/user/settings.txt', { encoding: 'utf8' }); } catch { /* none yet */ }
+          const off = backupsOffOnce(settings);
+          if (off.changed) {
+            try { FS.writeFile('/user/settings.txt', off.text); sync(); log('page: older copies (save_backups) turned off in settings.txt, once'); }
+            catch (e) { log(`page: settings.txt not written (${e?.message ?? e})`); }
+          }
         }
         log(`page: ${userFolderSizes(FS)}`);
         M.removeRunDependency('user-folder');

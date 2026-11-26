@@ -1,7 +1,7 @@
 // Tests of the Saved games logic (web/saves.js): which files are saves, the check of an upload, its name.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkSave, copiesOf, errorDetail, ownerOfCopy, removeOrphanCopies, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
+import { backupsOffOnce, checkSave, copiesOf, errorDetail, ownerOfCopy, removeOrphanCopies, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
 
 // A save container as tools/save/savfile.py reads it: version, count, the entries, then the parts.
 function save(parts = 1, extra = 16) {
@@ -179,4 +179,21 @@ test('removeOrphanCopies: nothing while a save is in progress (the old save is a
   const FS = withCopies({ '/user/temp_save_file.sav': { size: 67, mtime: new Date(10) } });
   assert.deepEqual(removeOrphanCopies(FS).n, 0);
   assert.equal(listSaves(FS).backups.length, 6);
+});
+
+test('backupsOffOnce: the browser turns save_backups off once; the player\'s later choice stays', () => {
+  const { text: fresh, changed: c1 } = backupsOffOnce(null);
+  assert.equal(c1, true);
+  assert.match(fresh, /^save_backups = off$/m, 'no file yet: the engine adds the other lines to it');
+  const theirs = '# CM 01/02: Bosman Edition settings.\ndisplay = widescreen\nsave_backups = on\nmusic = off\n';
+  const { text, changed } = backupsOffOnce(theirs);
+  assert.equal(changed, true);
+  assert.match(text, /^save_backups = off$/m);
+  assert.match(text, /^display = widescreen$/m);
+  assert.match(text, /^music = off$/m);
+  assert.equal(text.match(/save_backups/g).length, 1 + 1, 'one option line, and the marker that names it');
+  assert.deepEqual(backupsOffOnce(text), { text, changed: false }, 'done once');
+  const onAgain = text.replace('save_backups = off', 'save_backups = on');
+  assert.deepEqual(backupsOffOnce(onAgain), { text: onAgain, changed: false }, 'turned on again in Options: it stays on');
+  assert.match(backupsOffOnce('save_backups=yes\n').text, /^save_backups = off$/m, 'any spelling of the line');
 });

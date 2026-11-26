@@ -111,6 +111,21 @@ function files(FS, dir) {
 
 export function listSaves(FS) { return { saves: files(FS, SAVE_DIR), backups: files(FS, `${SAVE_DIR}/backups`) }; }
 
+// Older copies are off in the browser (save_backups of the engine's settings.txt, on by default for the Bosman Edition
+// on a PC): three copies of each save took gigabytes of the browser's storage, and players keep their own copies
+// (Download, Cloud Saves). The page turns the option off once, and a marker line says it did: a player who turns
+// "Save backups" on again in the game's Options keeps it on. text: settings.txt, or null when there is none yet (the
+// engine then adds its other lines to this one). { text, changed }.
+export const BACKUPS_OFF_MARK = '# The browser turned save_backups off once (older copies took the browser\'s storage).';
+export function backupsOffOnce(text) {
+  if (text !== null && text.includes(BACKUPS_OFF_MARK)) return { text, changed: false };
+  const line = 'save_backups = off', mark = `${BACKUPS_OFF_MARK}\n`;
+  if (text === null) return { text: `${mark}${line}\n`, changed: true };
+  const re = /^[ \t]*save_backups[ \t]*=.*$/m;
+  const body = re.test(text) ? text.replace(re, line) : `${text}${text.endsWith('\n') || !text ? '' : '\n'}${line}\n`;
+  return { text: `${body}${body.endsWith('\n') ? '' : '\n'}${mark}`, changed: true };
+}
+
 // The save an older copy belongs to: the engine names its copies <save>.1.sav to .3.sav (option save_backups,
 // save_backup in src/recomp_rt/win/files.c), the save editor <save> (before edit).sav (editor.js). null for a name of
 // neither kind (a copy the player put there, say), which nothing here ever removes.

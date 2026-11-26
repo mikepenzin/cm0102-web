@@ -1210,6 +1210,9 @@ const PORT = 8097;
       check('the next start removes the older copies of a save that is gone, and keeps the others',
         JSON.stringify(left) === JSON.stringify(['Harbour City 2001-07-14 (before edit).sav', 'Harbour City 2001-07-14.1.sav', 'my own copy.sav'])
           && /removed 3 older copies of saves that are gone/.test(logText), JSON.stringify(left));
+      const settings = await pg.evaluate(() => window.Module.FS.readFile('/user/settings.txt', { encoding: 'utf8' }));
+      check('older copies are off in the browser: settings.txt says save_backups = off, once', /^save_backups = off$/m.test(settings)
+        && (settings.match(/^save_backups/gm) ?? []).length === 1, settings.slice(0, 200));
       await pg.click('#saves-open');
       await pg.waitForSelector('#saves-list button[data-delete="save"]');
       const i = await pg.$$eval('#saves-list button[data-delete="save"]', (bs) => bs.findIndex((x) => x.closest('tr').textContent.includes('Harbour City 2001-07-14.sav')));
