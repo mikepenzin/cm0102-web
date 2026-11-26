@@ -245,6 +245,8 @@ export default {
   "Club": "Club",
   "Contract ends": "Contract tot",
   "← Players": "← Spelers",
+  "← Clubs": "← Clubs",
+  "← Managers": "← Managers",
   "Ability and age": "Kwaliteit en leeftijd",
   "Current ability": "Huidige kwaliteit",
   "Potential ability": "Potentiële kwaliteit",

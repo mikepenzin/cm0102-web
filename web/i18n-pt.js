@@ -212,6 +212,8 @@ export default {
   "Club": "Clube",
   "Contract ends": "Fim do contrato",
   "← Players": "← Jogadores",
+  "← Clubs": "← Clubes",
+  "← Managers": "← Treinadores",
   "Ability and age": "Habilidade e idade",
   "Current ability": "Habilidade atual",
   "Potential ability": "Habilidade potencial",

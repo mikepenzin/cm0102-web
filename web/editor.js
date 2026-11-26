@@ -358,6 +358,14 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   let clubShown = null;
   const money = (n) => n.toLocaleString(language() || 'en');
   const fold = (x) => x.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();   // as savedit.js's search
+  // The right-hand panel with a club's or a manager's details (the Clubs and Managers tabs): on a phone the panel alone,
+  // its link back to the list.
+  function detailPanel(html) {
+    form.innerHTML = html;
+    body.classList.add('detail');
+    const back = form.querySelector('.ed-back');
+    if (back) back.onclick = () => { body.classList.remove('detail'); form.innerHTML = ''; };
+  }
   async function drawClubs() {
     if (!model || kind !== 'save') return;
     const acc = clubAccess();
@@ -374,7 +382,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     if (!m.file.has('finance.dat')) { clubsBox.innerHTML = `<p class="small">${esc(t('This save holds no club finances.'))}</p>`; return; }
     clubsBox.innerHTML = `<p class="small">${esc(t('Any club\'s finances in this save, as the game keeps them. The game shows them for your own club only.'))}${acc.badge}</p>
       <input id="clubs-search" type="search" placeholder="${esc(t('Search a club'))}" aria-label="${esc(t('Search a club'))}" autocomplete="off" spellcheck="false">
-      <div id="clubs-results"></div><div id="clubs-card"></div>`;
+      <div id="clubs-results"></div>`;
     const input = $('clubs-search');
     input.oninput = () => listClubs(input.value);
     $('clubs-results').onclick = (e) => { const b = e.target.closest('[data-club]'); if (b) showClub(Number(b.dataset.club)); };
@@ -389,18 +397,21 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   }
   function showClub(id) {
     clubShown = id;
-    const f = clubFinances(model, id), card = $('clubs-card');
-    if (!card) return;
-    if (!f) { card.innerHTML = `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`; return; }
-    $('clubs-results').innerHTML = '';
+    // In the right-hand panel, as a player's (a phone: the panel alone, with its way back to the list).
+    const f = clubFinances(model, id);
+    current = null;
+    for (const b of clubsBox.querySelectorAll('[data-club]')) b.classList.toggle('on', Number(b.dataset.club) === id);
+    const head = `<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Clubs'))}</button><div class="ed-name"><h3 data-raw>${esc(model.clubs.get(id) ?? '')}</h3></div></div>`;
+    detailPanel(head + (f ? '' : `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`));
+    if (!f) return;
     const v = (key, n) => `<td data-fin="${key}"${n < 0 ? ' class="neg"' : ''}>${esc(money(n))}</td>`;
     const LINES = [['sold', t('Players sold')], ['prize', t('Prize money')], ['tv', t('TV money')], ['bought', t('Players bought')],
       ['wages', t('Wages')], ['bonuses', t('Bonuses')], ['signOn', t('Signing-on fees')], ['otherCosts', t('Other costs')], ['fines', t('League fines')]];
-    card.innerHTML = `<section class="mgr fin"><h3 data-raw>${esc(model.clubs.get(id) ?? '')}</h3>
+    form.insertAdjacentHTML('beforeend', `<section class="fin">
       <table><tr><td>${esc(t('Balance'))}</td>${v('balance', f.balance)}</tr><tr><td>${esc(t('Wage bill a week'))}</td>${v('wageBill', f.wageBill)}</tr>
         <tr><td>${esc(t('Top wage a week'))}</td>${v('topWage', f.topWage)}</tr></table>
       <table><tr><th></th><th>${esc(t('This year'))}</th><th>${esc(t('Last year'))}</th></tr>
-        ${LINES.map(([k, label]) => `<tr><td>${esc(label)}</td>${v(`thisYear.${k}`, f.thisYear[k])}${v(`lastYear.${k}`, f.lastYear[k])}</tr>`).join('')}</table></section>`;
+        ${LINES.map(([k, label]) => `<tr><td>${esc(label)}</td>${v(`thisYear.${k}`, f.thisYear[k])}${v(`lastYear.${k}`, f.lastYear[k])}</tr>`).join('')}</table></section>`);
   }
 
   // ---- Managers (savedit.js managerAttributes; docs/research/2026-11-26-manager-attributes.md): each human manager of a
@@ -434,9 +445,19 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const rows = people.map((p) => ({ p, a: managerAttributes(m, p.id) })).filter((x) => x.a);
     const nm = mgrNames();
     managersBox.innerHTML = rows.length ? `<p class="small">${esc(t('The attributes the game keeps for each human manager of this save, as it rates them (1 to 20). The game does not show them.'))}${access_.badge}</p>`
-      + rows.map(({ p, a }) => `<section class="mgr"><h3 data-raw>${esc(p.name)}</h3>${MGR_GROUPS.map((g) => `<h4>${esc(nm[g])}</h4><dl>${a.attrs.filter((x) => x.group === g)
-        .map((x) => `<dt>${esc(nm[x.name])}</dt><dd data-attr="${esc(x.name)}" data-band="${band(x.value)}">${x.value}</dd>`).join('')}</dl>`).join('')}</section>`).join('')
+      + rows.map(({ p }) => `<button type="button" class="ed-row" data-mgr="${p.id}"><b data-raw>${esc(p.name)}</b></button>`).join('')
       : `<p class="small">${esc(t('This save has no human manager whose attributes it keeps.'))}</p>`;
+    // A manager's attributes in the right-hand panel, as a player's.
+    const showManager = (id) => {
+      const x = rows.find((r) => r.p.id === id);
+      if (!x) return;
+      current = null;
+      for (const b of managersBox.querySelectorAll('[data-mgr]')) b.classList.toggle('on', Number(b.dataset.mgr) === id);
+      detailPanel(`<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Managers'))}</button><div class="ed-name"><h3 data-raw>${esc(x.p.name)}</h3></div></div>
+        <div class="ed-attrs">${MGR_GROUPS.map((g) => `<section class="mgr"><h4>${esc(nm[g])}</h4><dl>${x.a.attrs.filter((y) => y.group === g)
+          .map((y) => `<dt>${esc(nm[y.name])}</dt><dd data-attr="${esc(y.name)}" data-band="${band(y.value)}">${y.value}</dd>`).join('')}</dl></section>`).join('')}</div>`);
+    };
+    managersBox.onclick = (e) => { const b = e.target.closest('[data-mgr]'); if (b) showManager(Number(b.dataset.mgr)); };
   }
 
   // The Nationality list (features.js 'nationality'): the nations of the open save's or data set's players, built once

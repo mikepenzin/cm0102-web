@@ -245,6 +245,8 @@ export default {
   "Club": "Klubb",
   "Contract ends": "Kontraktet går ut",
   "← Players": "← Spelare",
+  "← Clubs": "← Klubbar",
+  "← Managers": "← Managers",
   "Ability and age": "Förmåga och ålder",
   "Current ability": "Nuvarande förmåga",
   "Potential ability": "Potentiell förmåga",

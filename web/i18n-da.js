@@ -245,6 +245,8 @@ export default {
   "Club": "Klub",
   "Contract ends": "Kontrakt udløber",
   "← Players": "← Spillere",
+  "← Clubs": "← Klubber",
+  "← Managers": "← Managere",
   "Ability and age": "Evne og alder",
   "Current ability": "Nuværende evne",
   "Potential ability": "Potentiel evne",

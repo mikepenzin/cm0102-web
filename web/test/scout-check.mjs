@@ -292,8 +292,10 @@ try {
     await p.waitForSelector('#clubs-results [data-club]', { timeout: 10000 }).catch(() => {});
     check('Clubs: a search finds the club', (await p.$$eval('#clubs-results [data-club]', (b) => b.map((x) => x.textContent.trim()))).join() === 'Juventus');
     await p.click('#clubs-results [data-club]');
-    await p.waitForSelector('#clubs-card [data-fin]', { timeout: 10000 }).catch(() => {});
-    const fin = await p.$$eval('#clubs-card [data-fin]', (v) => Object.fromEntries(v.map((x) => [x.dataset.fin, x.textContent.replace(/[^0-9-]/g, '')])));
+    await p.waitForSelector('#editor-form [data-fin]', { timeout: 10000 }).catch(() => {});
+    check('Clubs: the finances open in the right-hand panel, the club list stays', /Juventus/.test(await p.textContent('#editor-form h3'))
+      && await p.locator('#clubs-results [data-club]').count() === 1);
+    const fin = await p.$$eval('#editor-form [data-fin]', (v) => Object.fromEntries(v.map((x) => [x.dataset.fin, x.textContent.replace(/[^0-9-]/g, '')])));
     check('Clubs: the balance, the wage bill, the top wage, and this and last year\'s lines', fin.balance === '59516431' && fin.wageBill === '889495'
       && fin.topWage === '65497' && fin['thisYear.sold'] === '19491130' && fin['thisYear.wages'] === '33094379' && fin['lastYear.wages'] === '51520409', JSON.stringify(fin));
     await ctx.close();
@@ -310,10 +312,13 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const p = await editorOn(ctx, ME.member);
     await p.click('#editor-tabs [data-pane="managers"]');
-    await p.waitForSelector('#editor-managers .mgr', { timeout: 10000 }).catch(() => {});
-    const names = await p.$$eval('#editor-managers .mgr h3', (h) => h.map((x) => x.textContent.trim()));
-    check('Managers: one block for each human manager', names.join() === 'Klaus Kastelmann,Mike Penzin', names.join());
-    const klaus = await p.$$eval('#editor-managers .mgr:first-of-type [data-attr]', (v) => Object.fromEntries(v.map((x) => [x.dataset.attr, x.textContent.trim()])));
+    await p.waitForSelector('#editor-managers [data-mgr]', { timeout: 10000 }).catch(() => {});
+    const names = await p.$$eval('#editor-managers [data-mgr] b', (h) => h.map((x) => x.textContent.trim()));
+    check('Managers: a row for each human manager on the left', names.join() === 'Klaus Kastelmann,Mike Penzin', names.join());
+    await p.locator('#editor-managers [data-mgr]').first().click();
+    await p.waitForSelector('#editor-form [data-attr]', { timeout: 10000 }).catch(() => {});
+    check('Managers: his attributes open in the right-hand panel', /Klaus Kastelmann/.test(await p.textContent('#editor-form h3')));
+    const klaus = await p.$$eval('#editor-form [data-attr]', (v) => Object.fromEntries(v.map((x) => [x.dataset.attr, x.textContent.trim()])));
     check('Managers: the twelve attributes, Adaptability and Determination from the staff row, a relative one rated',
       Object.keys(klaus).length === 12 && klaus.Adaptability === '12' && klaus.Determination === '14' && klaus['Tactical Knowledge'] === '20', JSON.stringify(klaus));
     check('Managers: the search and the Players list are hidden', !(await p.isVisible('#editor-search')) && !(await p.isVisible('#editor-results')));
