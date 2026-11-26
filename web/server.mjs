@@ -268,6 +268,14 @@ async function statsRoute(req, res, url, { stats, cloud, admins, adminToken, lib
     json(res, 200, cloud?.memberships ? await cloud.memberships() : { on: false, levels: [], members: [], last: null });
     return;
   }
+  if (path === '/api/admin/account' && req.method === 'GET') {
+    // An account by its email (People lists only the accounts that send statistics): { id, email, name, plan }.
+    if (!cloud?.findAccount) { json(res, 404, { error: 'accounts are not set up on this server' }); return; }
+    const a = await cloud.findAccount(url.searchParams.get('email'));
+    if (!a) { json(res, 404, { error: 'no account with that email: the player signs in once first' }); return; }
+    json(res, 200, { id: `g:${a.sub}`, email: a.email, name: a.name, plan: await cloud.planOfSub(a.sub).catch(() => null) });
+    return;
+  }
   if (path === '/api/admin/cloud' && req.method === 'POST') {
     // Gives an account a level (Squad Player or Club Legend), or takes the gift back. Only from the admin page.
     const from = req.headers.origin;

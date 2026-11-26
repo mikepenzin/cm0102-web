@@ -549,6 +549,21 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
   }
 
   // The admin page (server.mjs): every membership the server was told of, newest first, and the last notification.
+  // The account of an email (any case), for the admin page: People lists only the accounts that send statistics, so an
+  // account that said No to them is found here, its record read from the store. { sub, email, name } or null.
+  async function findAccount(email) {
+    const want = String(email ?? '').trim().toLowerCase();
+    if (!want) return null;
+    const keys = (await s3.list('accounts/')).filter((o) => o.key.endsWith('.json')).map((o) => o.key);
+    for (let i = 0; i < keys.length; i += 8) {                     // 8 records at a time
+      const found = (await Promise.all(keys.slice(i, i + 8).map(async (k) => {
+        try { const b = await s3.getBuffer(k); return b ? JSON.parse(b.toString()) : null; } catch { return null; }
+      }))).find((r) => r && String(r.email ?? '').toLowerCase() === want && r.sub);
+      if (found) return { sub: found.sub, email: found.email, name: found.name ?? '' };
+    }
+    return null;
+  }
+
   async function memberships() {
     if (!coffee) return { on: false, levels: null, members: [], last: null };
     const keys = (await s3.list('members/')).filter((o) => o.key.endsWith('.json')).map((o) => o.key);
@@ -948,6 +963,7 @@ export function createCloud({ s3, clientId, clientSecret, sessionSecret, publicU
     planOf,
     planOfSub,
     give,
+    findAccount,
     memberships,
     async handle(req, res, url) {
       try {

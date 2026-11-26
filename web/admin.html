@@ -242,6 +242,9 @@
         <span class="spacer"></span>
         <label class="check"><input type="checkbox" id="linked"> Browsers that signed in</label>
       </div>
+      <form class="tools" id="find-form" autocomplete="off"><input id="find-email" type="search" placeholder="Find an account by email" aria-label="Find an account by email">
+        <button id="find-go" class="small">Find</button><span class="muted small">for a player People does not list (one who said No to the statistics)</span></form>
+      <div id="find-result"></div>
       <p class="status" id="people-status"></p>
       <table class="stack people-table"><thead><tr id="people-head"></tr></thead><tbody id="people"></tbody></table>
       <div class="more-row" id="people-more"></div>
@@ -522,6 +525,37 @@ $('people').onclick = (e) => {
 
 // The account's level (the server reads each account record; cloud.mjs planOfSub): where it comes from (paid, a gift,
 // an admin, the server's list), and the buttons that give Squad Player or Club Legend, or take a gift back.
+// An account by its email (/api/admin/account): People lists only the accounts that send statistics, so a player who
+// said No to them is found here, with the same level line and Give buttons.
+let found = null;
+function drawFound(msg = '') {
+  $('find-result').innerHTML = msg ? `<p class="status">${esc(msg)}</p>` : found
+    ? `<table class="stack people-table"><tbody><tr class="person"><td class="who"><div class="main">${esc(found.email)}</div><div class="sub">${esc(found.name ?? '')}</div></td>
+       <td class="plan">${planCell(found)}</td></tr></tbody></table>` : '';
+}
+$('find-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const email = $('find-email').value.trim();
+  if (!email) return;
+  const r = await fetch(`/api/admin/account?email=${encodeURIComponent(email)}`, { credentials: 'same-origin' }).catch(() => null);
+  const j = r ? await r.json().catch(() => ({})) : {};
+  if (!r?.ok) { found = null; drawFound(j.error ?? 'The server did not answer.'); return; }
+  found = { ...j, kind: 'account' };
+  drawFound();
+};
+$('find-result').onclick = async (e) => {
+  const b = e.target.closest('[data-give], [data-take-back]');
+  if (!b || !found) return;
+  const level = b.dataset.giveLevel ?? null;
+  if (!confirm(`${level ? `Give ${LEVEL_NAME[level]} to` : 'Take back the gift of'} ${found.email}? It counts from the player's next page load.`)) return;
+  const r = await fetch('/api/admin/cloud', { method: 'POST', credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', 'x-cm': '1' }, body: JSON.stringify({ id: found.id, level }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { alert(`Not changed: ${j.error ?? `the server answered ${r.status}`}`); return; }
+  found.plan = j.plan;
+  drawFound();
+};
+
 function planCell(p) {
   if (p.kind !== 'account') return '';
   const pl = p.plan;

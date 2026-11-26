@@ -42,6 +42,16 @@ await hook(coffeeEvent('membership.started', { email: 'squad@example.com', id: 8
 await hook(coffeeEvent('membership.started', { email: 'gold@example.com', id: 802, level: 'Gold', levelId: 9, created: t }));
 const squadCookie = await account('7100001', 'squad@example.com');
 await account('7100002', 'free@example.com');
+// An account that said No to the statistics: signed in, no visit counted, so People does not list it (a player, 26
+// November 2026: the admin could not find him to give him a level).
+async function quietAccount(sub, email) {
+  google.user = { sub, email, email_verified: true, name: email.split('@')[0] };
+  const start = await fetch(`${BASE}/auth/google/start`, { redirect: 'manual' });
+  const oauth = start.headers.getSetCookie()[0].split(';')[0];
+  const atGoogle = await fetch(start.headers.get('location'), { redirect: 'manual' });
+  await fetch(atGoogle.headers.get('location'), { redirect: 'manual', headers: { cookie: oauth } });
+}
+await quietAccount('7100009', 'quiet@example.com');
 // A database early for three days (the demo library's newest), as the admin page would set it.
 const lib = await (await fetch(`${BASE}/api/admin/library`, { headers: auth })).json();
 const early = lib.entries[0], DAY = addDays(todayUTC(), 3);
@@ -179,6 +189,25 @@ try {
   const unlocked = await j.waitForSelector(`#sets-lib tr:has-text("${early.name}") button[data-lib-get]`, { timeout: 30000 }).then(() => true, () => false);
   check('joined from Become a Club Legend: the row unlocks without a reload', unlocked);
   await jctx.close();
+  // ---- An account People does not list (no statistics): found by its email, given a level ----
+  {
+    check('the admin API finds no account for an unknown email', (await fetch(`${BASE}/api/admin/account?email=nobody%40example.com`, { headers: auth })).status === 404);
+    const c = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: auth });
+    const a = await c.newPage();
+    a.on('dialog', (d) => d.accept());
+    await a.goto(`${BASE}/admin#people`);
+    await a.waitForSelector('#people tr.person');
+    check('People does not list an account that sent no statistics', !(await a.textContent('#people')).includes('quiet@example.com'));
+    await a.fill('#find-email', ' QUIET@example.com ');
+    await a.click('#find-go');
+    await a.waitForSelector('#find-result [data-give-level="legend"]', { timeout: 10000 }).catch(() => {});
+    check('Find an account by email: found, with its level and the Give buttons', /quiet@example\.com/.test(await a.textContent('#find-result'))
+      && await a.locator('#find-result [data-give-level="legend"]').count() === 1, (await a.textContent('#find-result')).slice(0, 120));
+    await a.click('#find-result [data-give-level="legend"]');
+    await a.waitForFunction(() => /Club Legend · gift/.test(document.getElementById('find-result').textContent), null, { timeout: 10000 }).catch(() => {});
+    check('Give Club Legend there: the account has the gift', /Club Legend · gift/.test(await a.textContent('#find-result')), (await a.textContent('#find-result')).slice(0, 160));
+    await c.close();
+  }
 } finally {
   await browser.close();
   await site.close();
