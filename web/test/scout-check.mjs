@@ -318,10 +318,25 @@ try {
     await p.locator('#editor-managers [data-mgr]').first().click();
     await p.waitForSelector('#editor-form [data-attr]', { timeout: 10000 }).catch(() => {});
     check('Managers: his attributes open in the right-hand panel', /Klaus Kastelmann/.test(await p.textContent('#editor-form h3')));
-    const klaus = await p.$$eval('#editor-form [data-attr]', (v) => Object.fromEntries(v.map((x) => [x.dataset.attr, x.textContent.trim()])));
+    const klaus = await p.$$eval('#editor-form [data-attr]', (v) => Object.fromEntries(v.map((x) => [x.dataset.attr, x.value])));
     check('Managers: the twelve attributes, Adaptability and Determination from the staff row, a relative one rated',
       Object.keys(klaus).length === 12 && klaus.Adaptability === '12' && klaus.Determination === '14' && klaus['Tactical Knowledge'] === '20', JSON.stringify(klaus));
     check('Managers: the search and the Players list are hidden', !(await p.isVisible('#editor-search')) && !(await p.isVisible('#editor-results')));
+    // A search finds a manager; a change of an attribute is saved with the game file, as the game rates it.
+    await p.fill('#managers-search', 'penzin');
+    await p.waitForTimeout(300);
+    check('Managers: a search finds any manager', (await p.$$eval('#managers-results [data-mgr] b', (b) => b.map((x) => x.textContent))).join() === 'Mike Penzin');
+    await p.click('#managers-results [data-mgr]');
+    await p.waitForSelector('#editor-form [data-attr="Motivating"]');
+    await p.fill('#editor-form [data-attr="Motivating"]', '7');
+    await p.locator('#editor-form [data-attr="Motivating"]').dispatchEvent('change');
+    check('Managers: a change counts as a change of the save', /\(1 changed\)/.test(await p.textContent('#editor-save')), await p.textContent('#editor-save'));
+    await p.click('#editor-save');
+    await p.waitForFunction(() => /Saved/.test(document.getElementById('editor-note').textContent), null, { timeout: 15000 });
+    const bytes = await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')));
+    const { managerAttributes } = await import('../savedit.js');
+    const saved = new SaveGame(new Uint8Array(bytes));
+    check('Managers: saved, the file has the new Motivating', managerAttributes(saved, players.length + 2)?.attrs.find((x) => x.name === 'Motivating')?.value === 7);
     await ctx.close();
     const c2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const free = await editorOn(c2, ME.free);

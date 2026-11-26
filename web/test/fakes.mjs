@@ -240,7 +240,7 @@ export async function fakeSaveGame(players = [
   });
   const c = players.length * 110;                         // the coach: no player data
   staff.writeInt32LE(players.length, c); staff.writeInt32LE(first.length - 1, c + 4); staff.writeInt32LE(second.length - 1, c + 8);
-  staff.writeInt32LE(-1, c + 0x61); staff.writeInt32LE(-1, c + 0x65); staff.writeInt32LE(0, c + 0x69); staff.writeInt32LE(0, c + 0x39);
+  staff.writeInt32LE(-1, c + 0x61); staff.writeInt32LE(-1, c + 0x65); staff.writeInt32LE(-1, c + 0x69); staff.writeInt32LE(0, c + 0x39);
   // The human managers' places: each manager's staff row (kind 1, no player data), then one reserved place with no name.
   let scoutManager = null, nonPlayer = null, general = Buffer.alloc(3000, 7);
   if (managers) {

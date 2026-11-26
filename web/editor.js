@@ -4,7 +4,7 @@
 //   backups/ first, so Load Game lists the edited save and Saved games the old one.
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
-import { ATTRIBUTES, POSITIONS, SaveGame, clubFinances, managerAttributes } from './savedit.js';
+import { ATTRIBUTES, POSITIONS, SaveGame, clubFinances, managerAttributes, nonPlayers, writeManagerAttributes } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
@@ -361,6 +361,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // The right-hand panel with a club's or a manager's details (the Clubs and Managers tabs): on a phone the panel alone,
   // its link back to the list.
   function detailPanel(html) {
+    form.onchange = null; form.oninput = null;      // not the player form's any more
     form.innerHTML = html;
     body.classList.add('detail');
     const back = form.querySelector('.ed-back');
@@ -441,24 +442,51 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     await readLists();
     try { await m.file.load(['nonplayer.dat']); } catch { /* none: no values */ }
     if (model !== m || pane !== 'managers') return;
-    const people = lists?.managers ?? [];
-    const rows = people.map((p) => ({ p, a: managerAttributes(m, p.id) })).filter((x) => x.a);
-    const nm = mgrNames();
-    managersBox.innerHTML = rows.length ? `<p class="small">${esc(t('The attributes the game keeps for each human manager of this save, as it rates them (1 to 20). The game does not show them.'))}${access_.badge}</p>`
-      + rows.map(({ p }) => `<button type="button" class="ed-row" data-mgr="${p.id}"><b data-raw>${esc(p.name)}</b></button>`).join('')
-      : `<p class="small">${esc(t('This save has no human manager whose attributes it keeps.'))}</p>`;
-    // A manager's attributes in the right-hand panel, as a player's.
-    const showManager = (id) => {
-      const x = rows.find((r) => r.p.id === id);
-      if (!x) return;
-      current = null;
-      for (const b of managersBox.querySelectorAll('[data-mgr]')) b.classList.toggle('on', Number(b.dataset.mgr) === id);
-      detailPanel(`<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Managers'))}</button><div class="ed-name"><h3 data-raw>${esc(x.p.name)}</h3></div></div>
-        <div class="ed-attrs">${MGR_GROUPS.map((g) => `<section class="mgr"><h4>${esc(nm[g])}</h4><dl>${x.a.attrs.filter((y) => y.group === g)
-          .map((y) => `<dt>${esc(nm[y.name])}</dt><dd data-attr="${esc(y.name)}" data-band="${band(y.value)}">${y.value}</dd>`).join('')}</dl></section>`).join('')}</div>`);
+    if (!m.file.has('nonplayer.dat')) { managersBox.innerHTML = `<p class="small">${esc(t('This save has no human manager whose attributes it keeps.'))}</p>`; return; }
+    // The save's human managers first; a search finds any manager, coach or scout (nonPlayers).
+    const humans = (lists?.managers ?? []).filter((p) => managerAttributes(m, p.id));
+    managersBox.innerHTML = `<p class="small">${esc(t('The attributes the game keeps for each manager and coach of this save, as it rates them (1 to 20). The game does not show them for your own manager. A change is saved with the game file.'))}${access_.badge}</p>
+      <input id="managers-search" type="search" placeholder="${esc(t('Search a manager or coach'))}" aria-label="${esc(t('Search a manager or coach'))}" autocomplete="off" spellcheck="false">
+      <div id="managers-results"></div>`;
+    const out = $('managers-results');
+    const rowsHtml = (list) => list.map((p) => `<button type="button" class="ed-row${edited.has(`mgr:${p.id}`) ? ' edited' : ''}" data-mgr="${p.id}"><b data-raw>${esc(p.name)}</b>${p.club ? `<span data-raw>${esc(p.club)}</span>` : ''}</button>`).join('');
+    const listFor = (text) => {
+      const words = fold(text).split(/\s+/).filter(Boolean);
+      if (!words.length) { out.innerHTML = humans.length ? rowsHtml(humans) : ''; return; }
+      const hit = nonPlayers(m).filter((p) => words.every((w) => p.key.includes(w) || fold(p.club).includes(w))).slice(0, 60);
+      out.innerHTML = hit.length ? rowsHtml(hit) : `<p class="small">${esc(t('No manager or coach of that name.'))}</p>`;
     };
-    managersBox.onclick = (e) => { const b = e.target.closest('[data-mgr]'); if (b) showManager(Number(b.dataset.mgr)); };
+    $('managers-search').oninput = (e) => listFor(e.target.value);
+    listFor('');
+    managersBox.onclick = (e) => { const b = e.target.closest('[data-mgr]'); if (b) showManager(Number(b.dataset.mgr), b.querySelector('b').textContent); };
   }
+  // A manager's ability and attributes in the right-hand panel, editable as a player's: a change is written at once
+  // (writeManagerAttributes) and counts as a change of the save.
+  function showManager(id, name) {
+    const nm = mgrNames(), a = managerAttributes(model, id);
+    if (!a) return;
+    current = null;
+    for (const b of managersBox.querySelectorAll('[data-mgr]')) b.classList.toggle('on', Number(b.dataset.mgr) === id);
+    const box = (key, value, min, max, label, attr = '') => `<label><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" ${attr} value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
+    detailPanel(`<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Managers'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>
+      <section><h4>${esc(t('Ability'))}</h4><div class="ed-grid">${box('ca', a.ca, 1, 200, t('Current ability'), 'data-mf="ca"')}${box('pa', a.pa, 1, 200, t('Potential ability'), 'data-mf="pa"')}</div></section>
+      <div class="ed-attrs">${MGR_GROUPS.map((g) => `<section><h4>${esc(nm[g])}</h4><div class="ed-grid">${a.attrs.filter((y) => y.group === g)
+        .map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-attr="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>`);
+    form.onchange = (e) => {
+      if (!e.target.matches('[data-mf], [data-attr]')) return;
+      const values = Object.fromEntries([...form.querySelectorAll('[data-attr]')].map((i) => [i.dataset.attr, Number(i.value)]));
+      try {
+        writeManagerAttributes(model, id, { ca: form.querySelector('[data-mf="ca"]').value, pa: form.querySelector('[data-mf="pa"]').value, values });
+      } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: err.message }), true); return; }
+      const now = managerAttributes(model, id);
+      for (const y of now.attrs) { const i = form.querySelector(`[data-attr="${CSS.escape(y.name)}"]`); if (i) { i.value = y.value; i.dataset.band = band(y.value); } }
+      form.querySelector('[data-mf="ca"]').value = now.ca; form.querySelector('[data-mf="pa"]').value = now.pa;
+      edited.add(`mgr:${id}`);
+      dirty();
+      say(() => t('{name} changed. Save the game file to keep the changes.', { name }));
+    };
+  }
+
 
   // The Nationality list (features.js 'nationality'): the nations of the open save's or data set's players, built once
   // for each; hidden while the feature is early and the player is no Club Legend. Its names are the data's own.

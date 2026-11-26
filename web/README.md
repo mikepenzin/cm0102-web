@@ -698,7 +698,11 @@ game: each human manager (the named places of `scout_manager.dat`) with the twel
 non-player and hides for the human managers (the HumanManagerAttributes patch of CM 01/02 showed them): Coaching
 Goalkeepers, Coaching Outfield Players, Physiotherapy, Working With Youngsters; Adaptability, Determination, Level of
 Discipline, Man Management, Motivating; Judging Player Ability, Judging Player Potential, Tactical Knowledge. Rated
-as the game rates them (0x543fd0: as stored, or relative to the manager's current ability). Read only. A member's,
+as the game rates them (0x543fd0: as stored, or relative to the manager's current ability). The list starts with
+the human managers; its search finds any manager or coach of the save (`nonPlayers`: every staff row with a
+non-player record). The details open in the right-hand panel and can be changed: current and potential ability
+(1..200) and each attribute (1..20), stored back as the game reads them (`writeManagerAttributes`, the inverse of the
+relative rating) and saved with the game file. A member's,
 as the Scout's potential; a free player sees the Membership invitation. A feature of `features.js`
 (`manager-attributes`): Club Legends first.
 

@@ -222,6 +222,45 @@ export function managerAttributes(game, staffId) {
   return { ca, pa: dv.getInt16(q + 6, true), attrs };
 }
 
+// Every staff member with a non-player record (managers, coaches, scouts and the rest): { id, name, key (to search),
+// club }, read once for a SaveGame whose nonplayer.dat is loaded.
+const nonPlayerLists = new WeakMap();
+export function nonPlayers(game) {
+  if (nonPlayerLists.has(game)) return nonPlayerLists.get(game);
+  const s = game.staff, out = [];
+  const records = game.file.has('nonplayer.dat') ? game.file.read('nonplayer.dat').length / NON_PLAYER_SIZE : 0;
+  for (let i = 0; i < s.count; i++) {
+    const o = i * STAFF_SIZE, k = s.dv.getInt32(o + NON_PLAYER_LINK, true);
+    if (k < 0 || k >= records) continue;
+    const name = (at, list) => { const id = s.dv.getInt32(o + at, true); return id >= 0 && id < list.length ? list[id] : ''; };
+    const common = name(0x0c, game.commonNames), both = `${name(0x04, game.firstNames)} ${name(0x08, game.secondNames)}`.trim();
+    if (!common && !both) continue;
+    out.push({ id: i, name: common || both, key: fold(`${both} ${common}`), club: game.clubs.get(s.dv.getInt32(o + 0x39, true)) ?? '' });
+  }
+  nonPlayerLists.set(game, out);
+  return out;
+}
+
+// Writes a non-player's ability (ca, pa: the record's +0x04 and +0x06) and his twelve attributes as the game shows them
+// (values: { name: 1..20 }): an attribute as it is gets its byte, a relative one the byte that shows that number at
+// the new ability (storedFor), so a change of ability keeps the numbers. Marks staff.dat and nonplayer.dat changed.
+export function writeManagerAttributes(game, staffId, { ca, pa, values }) {
+  const s = game.staff, o = staffId * STAFF_SIZE, k = s.dv.getInt32(o + NON_PLAYER_LINK, true);
+  const np = game.file.read('nonplayer.dat'), q = k * NON_PLAYER_SIZE;
+  if (k < 0 || q + NON_PLAYER_SIZE > np.length) throw Object.assign(new Error('no non-player record'), { key: 'no non-player record' });
+  const dv = new DataView(np.buffer, np.byteOffset, np.byteLength);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v)) || lo));
+  const a = clamp(ca, 1, 200);
+  dv.setInt16(q + 4, a, true); dv.setInt16(q + 6, clamp(pa, 1, 200), true);
+  for (const attr of MANAGER_ATTRIBUTES) {
+    if (!(attr.name in values)) continue;
+    const byte = storedFor({ kind: attr.kind }, clamp(values[attr.name], 1, 20), a).byte;
+    if (attr.from === 'staff') s.b[o + attr.off] = byte; else np[q + attr.off] = byte;
+  }
+  game.file.changed('nonplayer.dat');
+  game.file.changed(s.name);
+}
+
 // ---- A club's finances (docs/research/2026-11-26-club-finances.md) ----
 
 const FINANCE_SIZE = 0x167;                     // FinanceTable::save_finance_dat 0x59b3b0: 359 bytes a club

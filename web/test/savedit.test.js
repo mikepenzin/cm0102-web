@@ -184,3 +184,23 @@ test('club finances: the balance, the wage bill and the year blocks of finance.d
   assert.equal(clubFinances(g, 7), null, 'no such club');
   assert.equal(clubFinances(new SaveGame(await fakeSaveGame()), 0), null, 'no finance.dat');
 });
+
+test('non-players: the staff with a non-player record, by name and club; edits written as the game rates them', async () => {
+  const { nonPlayers, managerAttributes, writeManagerAttributes } = await import('../savedit.js');
+  const g = new SaveGame(await fakeSaveGame(undefined, { managers: [
+    { first: 'Klaus', second: 'Kastelmann', adaptability: 13, determination: 8, np: { 0x10: -11, 0x14: 5 } },
+    { first: 'Mike', second: 'Penzin', ca: 150 }] }));
+  assert.deepEqual(nonPlayers(g).map((p) => [p.id, p.name]), [[3, 'Klaus Kastelmann'], [4, 'Mike Penzin']]);
+  const before = managerAttributes(g, 3);
+  const values = Object.fromEntries(before.attrs.map((a) => [a.name, a.value]));
+  writeManagerAttributes(g, 3, { ca: 120, pa: 150, values: { ...values, Motivating: 7, Adaptability: 19, 'Level of Discipline': 16 } });
+  const after = managerAttributes(g, 3), by = Object.fromEntries(after.attrs.map((a) => [a.name, a.value]));
+  assert.deepEqual([after.ca, after.pa], [120, 150]);
+  assert.deepEqual([by.Motivating, by.Adaptability, by['Level of Discipline']], [7, 19, 16], 'the new values');
+  assert.equal(by['Coaching Outfield Players'], values['Coaching Outfield Players'], 'a relative one keeps its number at the new ability');
+  assert.equal(by.Determination, 8);
+  assert.equal(g.file.member('nonplayer.dat').changed && g.file.member('staff.dat').changed, true);
+  const again = new SaveGame(g.file.toBytes());
+  await again.file.load?.(['nonplayer.dat']);
+  assert.equal(managerAttributes(again, 3).attrs.find((a) => a.name === 'Motivating').value, 7, 'saved and read again');
+});
