@@ -464,7 +464,7 @@ export default {
   "Cloud": "Sky",
   "No saved games yet. Save in the game (Game Options, Save Game), or upload one.": "Ingen gemte spil endnu. Gem i spillet (Game Options, Save Game), eller upload et.",
   "Older copies ({n}, {size})": "Ældre kopier ({n}, {size})",
-  "The game keeps the last three copies of each save here, in case a save goes wrong.": "Spillet beholder de sidste tre kopier af hvert gemt spil her, hvis en gemning går galt.",
+  "Copies of earlier saves, kept while Save backups was on. The game makes no new ones unless you turn Save backups on in its Options.": "Kopier af tidligere gemte spil, gemt mens Save backups var slået til. Spillet laver ikke flere, medmindre du slår Save backups til i dets indstillinger.",
   "Remove all older copies": "Fjern alle ældre kopier",
   "{space}. That is little: a save may not fit. Download the saves you want to keep, then delete some here or remove the older copies.": "{space}. Det er ikke meget: der er måske ikke plads til et gemt spil. Hent de gemte spil, du vil beholde, og slet så nogle her eller fjern de ældre kopier.",
   "Download part {part} of {parts}": "Hent del {part} af {parts}",

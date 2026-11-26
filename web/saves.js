@@ -140,6 +140,10 @@ export function copiesOf(FS, save) {
   return listSaves(FS).backups.filter((f) => ownerOfCopy(f.name)?.toLowerCase() === want);
 }
 
+// Whether the cloud holds a save, from the cloud sync's record of it (account.js): only when the cloud got a version of
+// it (an etag). A save too big for the cloud, removed from it, or still on its way is not there.
+export const heldInCloud = (e) => Boolean(e && !e.removed && e.etag);
+
 // Removes the older copies whose save is gone (deleted here, in the game or on another device), at the start: they took
 // gigabytes nobody used (a player had 18 copies, 1.3 GB, of saves he had deleted). Kept: the copies of a save of the
 // folder or of the cloud (inCloud: a save another device keeps, not here yet), and every copy while a save is in
@@ -408,7 +412,7 @@ export function mountSavesPanel({ FS, sync, log, cloud = () => null, promo = () 
       : `<p class="small">${esc(tx({ key: 'No saved games yet. Save in the game (Game Options, Save Game), or upload one.' }))}</p>`;
     // The older copies with what they take: the game keeps three of each save, 2 GB for one save of 690 MB.
     if (shown.backups.length) list.innerHTML += `<details><summary>${esc(tx({ key: 'Older copies ({n}, {size})', vars: { n: shown.backups.length, size: size(shown.backups.reduce((a, f) => a + f.size, 0)) } }))}</summary>
-      <p class="small">${esc(tx({ key: 'The game keeps the last three copies of each save here, in case a save goes wrong.' }))}
+      <p class="small">${esc(tx({ key: 'Copies of earlier saves, kept while Save backups was on. The game makes no new ones unless you turn Save backups on in its Options.' }))}
       <button class="link" id="backups-remove">${esc(tx({ key: 'Remove all older copies' }))}</button></p><table>
       ${shown.backups.map((f, i) => row(f, i, 'backup')).join('')}</table></details>`;
     spaceState(FS).then((sp) => {

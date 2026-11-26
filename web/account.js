@@ -11,7 +11,7 @@
 //
 // What was last the same is kept in the user folder itself (.cloud-sync.json): per save, the cloud's ETag and the size
 // and time of the local file at that moment.
-import { SAVE_DIR, listSaves, readBlobNow, saveName, storeSaveStream, storedFirst } from './saves.js';
+import { SAVE_DIR, heldInCloud, listSaves, readBlobNow, saveName, storeSaveStream, storedFirst } from './saves.js';
 import { downDirect, upDirect } from './direct.js';
 import { toDisk } from './disk.js';
 import { language, onLanguage, priceText, t } from './i18n.js';
@@ -350,7 +350,7 @@ export function createCloudSync({ FS, sync, log, toast, account, onWrote = () =>
       return e.size === file.size && e.mtime === +file.mtime ? 'cloud' : 'waiting';
     },
     // Whether the cloud keeps a save of this name (from this device or another): its older copies here stay.
-    keeps(name) { const e = state.saves[name]; return Boolean(e && !e.removed); },
+    keeps(name) { return heldInCloud(state.saves[name]); },
     async remove(name) {
       const r = await fetch(at(name), { method: 'DELETE', headers: CHANGE });
       if (!r.ok && r.status !== 404) throw fail(`${name} remove`, r);

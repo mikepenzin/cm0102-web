@@ -1,7 +1,7 @@
 // Tests of the Saved games logic (web/saves.js): which files are saves, the check of an upload, its name.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { backupsOffOnce, checkSave, copiesOf, errorDetail, ownerOfCopy, removeOrphanCopies, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
+import { backupsOffOnce, checkSave, heldInCloud, copiesOf, errorDetail, ownerOfCopy, removeOrphanCopies, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
 
 // A save container as tools/save/savfile.py reads it: version, count, the entries, then the parts.
 function save(parts = 1, extra = 16) {
@@ -196,4 +196,13 @@ test('backupsOffOnce: the browser turns save_backups off once; the player\'s lat
   const onAgain = text.replace('save_backups = off', 'save_backups = on');
   assert.deepEqual(backupsOffOnce(onAgain), { text: onAgain, changed: false }, 'turned on again in Options: it stays on');
   assert.match(backupsOffOnce('save_backups=yes\n').text, /^save_backups = off$/m, 'any spelling of the line');
+});
+
+test('heldInCloud: only a save the cloud got (an etag), not one too big for it, removed, or still on its way', () => {
+  assert.equal(heldInCloud({ etag: '"abc"', size: 1, mtime: 1 }), true);
+  assert.equal(heldInCloud({ etag: null, size: 446e6, mtime: 1, tooBig: true }), false, 'a 446 MB save the cloud refused');
+  assert.equal(heldInCloud({ etag: '"old"', size: 446e6, mtime: 2, tooBig: true }), true, 'an earlier version is there');
+  assert.equal(heldInCloud({ etag: null, size: 1, mtime: 1, removed: true }), false);
+  assert.equal(heldInCloud({ sending: { size: 1, mtime: 1 } }), false);
+  assert.equal(heldInCloud(undefined), false);
 });

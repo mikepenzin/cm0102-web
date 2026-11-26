@@ -464,7 +464,7 @@ export default {
   "Cloud": "Sky",
   "No saved games yet. Save in the game (Game Options, Save Game), or upload one.": "Ingen lagrede spill ennå. Lagre i spillet (Game Options, Save Game), eller last opp et.",
   "Older copies ({n}, {size})": "Eldre kopier ({n}, {size})",
-  "The game keeps the last three copies of each save here, in case a save goes wrong.": "Spillet beholder de tre siste kopiene av hver lagring her, i tilfelle en lagring går galt.",
+  "Copies of earlier saves, kept while Save backups was on. The game makes no new ones unless you turn Save backups on in its Options.": "Kopier av tidligere lagringer, tatt vare på mens Save backups var på. Spillet lager ingen nye, med mindre du slår på Save backups i innstillingene.",
   "Remove all older copies": "Fjern alle eldre kopier",
   "{space}. That is little: a save may not fit. Download the saves you want to keep, then delete some here or remove the older copies.": "{space}. Det er lite: en lagring får kanskje ikke plass. Last ned lagringene du vil beholde, og slett så noen her eller fjern de eldre kopiene.",
   "Download part {part} of {parts}": "Last ned del {part} av {parts}",

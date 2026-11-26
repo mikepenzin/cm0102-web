@@ -464,7 +464,7 @@ export default {
   "Cloud": "Moln",
   "No saved games yet. Save in the game (Game Options, Save Game), or upload one.": "Inga sparade spel än. Spara i spelet (Game Options, Save Game), eller ladda upp ett.",
   "Older copies ({n}, {size})": "Äldre kopior ({n}, {size})",
-  "The game keeps the last three copies of each save here, in case a save goes wrong.": "Spelet behåller de tre senaste kopiorna av varje sparfil här, ifall en sparning går fel.",
+  "Copies of earlier saves, kept while Save backups was on. The game makes no new ones unless you turn Save backups on in its Options.": "Kopior av tidigare sparningar, sparade medan Save backups var på. Spelet gör inga nya, om du inte slår på Save backups i dess inställningar.",
   "Remove all older copies": "Ta bort alla äldre kopior",
   "{space}. That is little: a save may not fit. Download the saves you want to keep, then delete some here or remove the older copies.": "{space}. Det är lite: en sparfil kanske inte får plats. Ladda ner sparfilerna du vill behålla, radera sedan några här eller ta bort de äldre kopiorna.",
   "Download part {part} of {parts}": "Ladda ner del {part} av {parts}",

@@ -425,7 +425,7 @@ export default {
   "Cloud": "Cloud",
   "No saved games yet. Save in the game (Game Options, Save Game), or upload one.": "Ancora nessuna partita salvata. Salva nel gioco (Game Options, Save Game), o caricane una.",
   "Older copies ({n}, {size})": "Copie precedenti ({n}, {size})",
-  "The game keeps the last three copies of each save here, in case a save goes wrong.": "Il gioco tiene qui le ultime tre copie di ogni salvataggio, nel caso un salvataggio vada storto.",
+  "Copies of earlier saves, kept while Save backups was on. The game makes no new ones unless you turn Save backups on in its Options.": "Copie di salvataggi precedenti, tenute mentre Save backups era attivo. Il gioco non ne crea di nuove, a meno che tu non attivi Save backups nelle sue opzioni.",
   "Remove all older copies": "Rimuovi tutte le copie precedenti",
   "{space}. That is little: a save may not fit. Download the saves you want to keep, then delete some here or remove the older copies.": "{space}. È poco: un salvataggio potrebbe non entrarci. Scarica i salvataggi che vuoi tenere, poi eliminane alcuni qui o rimuovi le copie precedenti.",
   "Download part {part} of {parts}": "Scarica la parte {part} di {parts}",

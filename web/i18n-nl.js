@@ -464,7 +464,7 @@ export default {
   "Cloud": "Cloud",
   "No saved games yet. Save in the game (Game Options, Save Game), or upload one.": "Nog geen savegames. Sla op in het spel (Game Options, Save Game), of upload er een.",
   "Older copies ({n}, {size})": "Oudere kopieën ({n}, {size})",
-  "The game keeps the last three copies of each save here, in case a save goes wrong.": "Het spel bewaart hier de laatste drie kopieën van elke save, voor het geval een save misgaat.",
+  "Copies of earlier saves, kept while Save backups was on. The game makes no new ones unless you turn Save backups on in its Options.": "Kopieën van eerdere opslagen, bewaard toen Save backups aan stond. Het spel maakt er geen nieuwe meer, tenzij je Save backups aanzet in de opties.",
   "Remove all older copies": "Alle oudere kopieën weghalen",
   "{space}. That is little: a save may not fit. Download the saves you want to keep, then delete some here or remove the older copies.": "{space}. Dat is weinig: een save past misschien niet. Download de saves die je wilt bewaren, en verwijder er dan hier een paar of haal de oudere kopieën weg.",
   "Download part {part} of {parts}": "Deel {part} van {parts} downloaden",
