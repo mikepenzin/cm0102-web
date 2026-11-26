@@ -116,6 +116,11 @@ export function listSaves(FS) { return { saves: files(FS, SAVE_DIR), backups: fi
 // (Download, Cloud Saves). The page turns the option off once, and a marker line says it did: a player who turns
 // "Save backups" on again in the game's Options keeps it on. text: settings.txt, or null when there is none yet (the
 // engine then adds its other lines to this one). { text, changed }.
+// Whether settings.txt has Save backups on: its line says on (yes, true), or there is no line (the engine's default).
+export function backupsOn(text) {
+  const m = /^[ \t]*save_backups[ \t]*=[ \t]*(\S*)/mi.exec(text ?? '');
+  return !m || /^(on|yes|true)$/i.test(m[1]);
+}
 export const BACKUPS_OFF_MARK = '# The browser turned save_backups off once (older copies took the browser\'s storage).';
 export function backupsOffOnce(text) {
   if (text !== null && text.includes(BACKUPS_OFF_MARK)) return { text, changed: false };
@@ -148,13 +153,15 @@ export const heldInCloud = (e) => Boolean(e && !e.removed && e.etag);
 // gigabytes nobody used (a player had 18 copies, 1.3 GB, of saves he had deleted). Kept: the copies of a save of the
 // folder or of the cloud (inCloud: a save another device keeps, not here yet), and every copy while a save is in
 // progress (temp_save_file.sav: the game has moved the old save to backups/ and not yet named the new one). { n, bytes }.
-export function removeOrphanCopies(FS, { inCloud = () => false, log = () => {} } = {}) {
+// all: Save backups is off (backupsOn), so every older copy goes, of a save that is here too: the browser makes no
+// more of them, and the ones of earlier visits only took room.
+export function removeOrphanCopies(FS, { inCloud = () => false, log = () => {}, all = false } = {}) {
   try { FS.stat(`${SAVE_DIR}/temp_save_file.sav`); return { n: 0, bytes: 0 }; } catch { /* no save in progress */ }
   const { saves, backups } = listSaves(FS), here = new Set(saves.map((f) => f.name.toLowerCase()));
   let n = 0, bytes = 0;
   for (const f of backups) {
     const owner = ownerOfCopy(f.name);
-    if (!owner || here.has(owner.toLowerCase()) || inCloud(owner)) continue;
+    if (!owner || (!all && (here.has(owner.toLowerCase()) || inCloud(owner)))) continue;
     try { FS.unlink(f.path); n++; bytes += f.size; } catch (err) { log(`page: ${f.path} was not removed: ${err.message}`); }
   }
   return { n, bytes };

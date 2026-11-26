@@ -1193,6 +1193,7 @@ const PORT = 8097;
         window.__userSeed = Object.fromEntries(['Harbour City 2001-07-14.1.sav', 'Harbour City 2001-07-14 (before edit).sav', 'Gone 2001-06-30.1.sav',
           'Gone 2001-06-30.2.sav', 'Gone 2001-06-30 (before edit).sav', 'my own copy.sav'].map((n) => [`/user/backups/${n}`, 1000]));
         window.__userSeed['/user/Harbour City 2001-07-14.sav'] = 0x416ec + 32;
+        window.__seedSettings = true;                    // the player turned Save backups on again in Options
       });
       const pg = await ctx.newPage();
       pg.on('dialog', (d) => d.accept().catch(() => {}));
@@ -1205,9 +1206,6 @@ const PORT = 8097;
       check('the start removes the older copies of a save that is gone, and keeps the others',
         JSON.stringify(left) === JSON.stringify(['Harbour City 2001-07-14 (before edit).sav', 'Harbour City 2001-07-14.1.sav', 'my own copy.sav'])
           && /removed 3 older copies of saves that are gone/.test(logText), JSON.stringify(left));
-      const settings = String(await pg.evaluate(() => window.Module.FS.readFile('/user/settings.txt', { encoding: 'utf8' })));
-      check('older copies are off in the browser: settings.txt says save_backups = off, once', /^save_backups = off$/m.test(settings)
-        && (settings.match(/^save_backups/gm) ?? []).length === 1, settings.slice(0, 200));
       await pg.click('#saves-open');
       await pg.waitForSelector('#saves-list button[data-delete="save"]');
       const i = await pg.$$eval('#saves-list button[data-delete="save"]', (bs) => bs.findIndex((x) => x.closest('tr').textContent.includes('Harbour City 2001-07-14.sav')));
@@ -1219,6 +1217,29 @@ const PORT = 8097;
       const after = await pg.evaluate(() => window.Module.FS.readdir('/user/backups').filter((n) => /\.sav$/.test(n)));
       check('Delete of a save says it takes its older copies, and takes them; the player\'s own copy stays',
         /with its older copies \(2\)\?/.test(asked[0] ?? '') && JSON.stringify(after) === JSON.stringify(['my own copy.sav']), `${asked[0]} | ${JSON.stringify(after)}`);
+      await ctx.close();
+    }
+
+    // Save backups off (the browser's default, backupsOffOnce): the start turns it off once and removes every older
+    // copy, of a save that is here too; a copy the player named stays.
+    {
+      const ctx = await b.newContext({ viewport: { width: 1100, height: 760 } });
+      await ctx.addInitScript(() => {
+        window.__userSeed = Object.fromEntries(['Harbour City 2001-07-14.1.sav', 'Harbour City 2001-07-14 (before edit).sav', 'Gone 2001-06-30.1.sav',
+          'my own copy.sav'].map((n) => [`/user/backups/${n}`, 1000]));
+        window.__userSeed['/user/Harbour City 2001-07-14.sav'] = 0x416ec + 32;
+      });
+      const pg = await ctx.newPage();
+      await pg.goto(`http://127.0.0.1:${PORT}/`);
+      await pg.waitForSelector('#go');
+      await pg.click('#go');
+      await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
+      const left = await pg.evaluate(() => window.Module.FS.readdir('/user/backups').filter((n) => /\.sav$/.test(n)));
+      const settings = String(await pg.evaluate(() => window.Module.FS.readFile('/user/settings.txt', { encoding: 'utf8' })));
+      check('Save backups off in the browser: settings.txt says so once, and the start removes every older copy but the player\'s own',
+        /^save_backups = off$/m.test(settings) && (settings.match(/^save_backups/gm) ?? []).length === 1
+          && JSON.stringify(left) === JSON.stringify(['my own copy.sav']) && /removed 3 older copies \(Save backups is off\)/.test(await pg.textContent('#log')),
+        `${JSON.stringify(left)} | ${settings.slice(0, 120)}`);
       await ctx.close();
     }
 

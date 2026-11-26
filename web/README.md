@@ -304,7 +304,9 @@ told once a visit, before a save fails for it. The list keeps room for about six
 press. In the browser the game makes none by default: the page turns the engine's option
 `save_backups` off once in `settings.txt` (`backupsOffOnce`, `saves.js`; a marker line says it did, so a player who
 turns Save backups on again in the game's Options keeps it on). Three copies of each save took gigabytes, and players
-keep their own copies (Download, Cloud Saves). Delete of a save takes its older copies with it (the question says how many), and each start removes the older
+keep their own copies (Download, Cloud Saves). With Save backups off, each start removes every older copy (those of
+earlier visits, and the save editor's "before edit" copy of the visit before), except a copy the player named and
+none while a save is in progress. Delete of a save takes its older copies with it (the question says how many), and with Save backups on, each start removes the older
 copies of saves that are gone (deleted in the game, on another device, or before this rule: a player had 18 copies,
 1.3 GB, of saves he had deleted; `removeOrphanCopies`, `saves.js`). A copy belongs to a save by its name (the engine's
 `<save>.1.sav` to `.3.sav`, the editor's `<save> (before edit).sav`); a copy of a save the cloud keeps stays, a copy with

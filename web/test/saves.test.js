@@ -1,7 +1,7 @@
 // Tests of the Saved games logic (web/saves.js): which files are saves, the check of an upload, its name.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { backupsOffOnce, checkSave, heldInCloud, copiesOf, errorDetail, ownerOfCopy, removeOrphanCopies, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
+import { backupsOffOnce, backupsOn, checkSave, heldInCloud, copiesOf, errorDetail, ownerOfCopy, removeOrphanCopies, fileView, isWorkFile, listSaves, lowOnSpace, saveName, savesSignature, skipWorkFiles, spaceText, zipParts } from '../saves.js';
 
 // A save container as tools/save/savfile.py reads it: version, count, the entries, then the parts.
 function save(parts = 1, extra = 16) {
@@ -205,4 +205,21 @@ test('heldInCloud: only a save the cloud got (an etag), not one too big for it, 
   assert.equal(heldInCloud({ etag: null, size: 1, mtime: 1, removed: true }), false);
   assert.equal(heldInCloud({ sending: { size: 1, mtime: 1 } }), false);
   assert.equal(heldInCloud(undefined), false);
+});
+
+test('removeOrphanCopies with all: with Save backups off every older copy goes, a copy the player named stays', () => {
+  const FS = withCopies();
+  const r = removeOrphanCopies(FS, { all: true });
+  assert.equal(r.n, 5);
+  assert.deepEqual(listSaves(FS).backups.map((f) => f.name), ['a copy the player named.sav']);
+  const busy = withCopies({ '/user/temp_save_file.sav': { size: 67, mtime: new Date(10) } });
+  assert.equal(removeOrphanCopies(busy, { all: true }).n, 0, 'not while a save is in progress');
+});
+
+test('backupsOn: whether settings.txt has Save backups on', () => {
+  assert.equal(backupsOn('save_backups = off\n'), false);
+  assert.equal(backupsOn('a = b\nsave_backups = on\n'), true);
+  assert.equal(backupsOn('save_backups=Yes'), true);
+  assert.equal(backupsOn(null), true, 'no file: the engine\'s default, on');
+  assert.equal(backupsOn('display = classic\n'), true);
 });

@@ -64,6 +64,8 @@
             mkdirTree(path.slice(0, path.lastIndexOf('/')));
             files.set(path, { data: new Uint8Array(size), size, own: false, mtime: new Date() });
           }
+          // window.__seedSettings: a settings.txt where the player turned Save backups on again after the page's turn.
+          if (window.__seedSettings) files.set('/user/settings.txt', { data: '# The browser turned save_backups off once (older copies took the browser\'s storage).\nsave_backups = on\n', size: 120, own: false, mtime: new Date() });
           window.__syncLog.push('read done'); cb(null);
         }, window.__slowRead ?? 5);
         return;
