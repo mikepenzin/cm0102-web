@@ -201,6 +201,7 @@ export default {
   "Surname": "Etternavn",
   "Known as (optional)": "Kjent som (valgfritt)",
   "Nationality": "Nasjonalitet",
+  "Any nationality": "Alle nasjonaliteter",
   "None": "Ingen",
   "Second nationality": "Andre nasjonalitet",
   "Club": "Klubb",

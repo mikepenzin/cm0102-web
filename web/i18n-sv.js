@@ -201,6 +201,7 @@ export default {
   "Surname": "Efternamn",
   "Known as (optional)": "Kallas (valfritt)",
   "Nationality": "Nationalitet",
+  "Any nationality": "Alla nationaliteter",
   "None": "Ingen",
   "Second nationality": "Andra nationalitet",
   "Club": "Klubb",

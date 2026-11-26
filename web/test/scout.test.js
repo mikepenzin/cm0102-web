@@ -113,8 +113,19 @@ test('the page\'s words: the Scout promises no more than the best 100, and Membe
 test('the Wonderkids preset: 19 or younger with potential 180 or more (John Locke\'s School search), every other filter cleared', async () => {
   assert.deepEqual(WONDERKIDS, { ageMax: 19, paMin: 180 });
   const f = presetFilters('wonderkids');
-  assert.deepEqual(f, { ageMin: '', ageMax: '19', position: '', paMin: '180', caMin: '', attrs: [{ name: '', min: '' }, { name: '', min: '' }, { name: '', min: '' }] });
+  assert.deepEqual(f, { ageMin: '', ageMax: '19', position: '', nation: '', paMin: '180', caMin: '', attrs: [{ name: '', min: '' }, { name: '', min: '' }, { name: '', min: '' }] });
   assert.equal(presetFilters('nonsense'), null);
   const g = await open([P('Kid', 19, 100, 180), P('Old', 20, 120, 199), P('Low', 18, 110, 179), P('Top', 17, 90, 195)]);
   assert.deepEqual(names(scout(scoutIndex(g), { ...f, attrs: [] })), ['Top Test', 'Kid Test'], '19 and 180 count; 20, and 179, do not');
+});
+
+test('nationality: the Scout finds the players of one nation only', async () => {
+  const g = new SaveGame(await fakeSaveGame([
+    { first: 'Alessandro', second: 'Del Piero', ca: 181, pa: 190, gk: 1, born: [1974, 11, 9], club: 0, fill: 15 },
+    { first: 'Thierry', second: 'Henry', ca: 185, pa: 192, gk: 1, born: [1977, 8, 17], club: 0, fill: 15, nation: 1 },
+  ]));
+  const index = scoutIndex(g);
+  assert.deepEqual(scout(index, { nation: 'France' }).rows.map((r) => r.name), ['Thierry Henry']);
+  assert.equal(scout(index, { nation: '' }).total, 2);
+  assert.equal(scout(index, { nation: 'Brazil' }).total, 0);
 });

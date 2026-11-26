@@ -38,12 +38,13 @@ export function scoutUpdate(index, game, row) {
 const set = (v) => v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v));
 
 // The players that match: { rows (at most SCOUT_LIMIT, sorted), total }. filters: { ageMin, ageMax, position (0..11
-// into savedit's POSITIONS), paMin, caMin, attrs: [{ name, min }] }; a blank one leaves that out.
+// into savedit's POSITIONS), paMin, caMin, nation (a nation's name, savedit's nationNames()), attrs: [{ name, min }] }; a
+// blank one leaves that out.
 export function scout(index, filters = {}) {
   const { list, age, ca, pa, pos, values } = index;
   const ageMin = set(filters.ageMin) ? Number(filters.ageMin) : null, ageMax = set(filters.ageMax) ? Number(filters.ageMax) : null;
   const paMin = set(filters.paMin) ? Number(filters.paMin) : null, caMin = set(filters.caMin) ? Number(filters.caMin) : null;
-  const position = set(filters.position) ? Number(filters.position) : null;
+  const position = set(filters.position) ? Number(filters.position) : null, nation = filters.nation || null;
   const attrs = (filters.attrs ?? []).filter((a) => a && NAMES.includes(a.name)).slice(0, 3)
     .map((a) => ({ name: a.name, k: NAMES.indexOf(a.name), min: set(a.min) ? Number(a.min) : null }));
   const hit = [];
@@ -53,6 +54,7 @@ export function scout(index, filters = {}) {
     if (paMin !== null && pa[i] < paMin) continue;
     if (caMin !== null && ca[i] < caMin) continue;
     if (position !== null && pos[i * 12 + position] < RATED) continue;
+    if (nation !== null && list[i].nation !== nation) continue;
     if (attrs.some((a) => a.min !== null && values[i * A + a.k] < a.min)) continue;
     hit.push(i);
   }
@@ -67,7 +69,7 @@ export function scout(index, filters = {}) {
 export const WONDERKIDS = Object.freeze({ ageMax: 19, paMin: 180 });
 export function presetFilters(name) {
   if (name !== 'wonderkids') return null;
-  return { ageMin: '', ageMax: String(WONDERKIDS.ageMax), position: '', paMin: String(WONDERKIDS.paMin), caMin: '',
+  return { ageMin: '', ageMax: String(WONDERKIDS.ageMax), position: '', nation: '', paMin: String(WONDERKIDS.paMin), caMin: '',
     attrs: [0, 1, 2].map(() => ({ name: '', min: '' })) };
 }
 

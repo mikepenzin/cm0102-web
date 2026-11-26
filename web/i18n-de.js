@@ -201,6 +201,7 @@ export default {
   "Surname": "Nachname",
   "Known as (optional)": "Rufname (optional)",
   "Nationality": "Nationalität",
+  "Any nationality": "Alle Nationalitäten",
   "None": "Keine",
   "Second nationality": "Zweite Nationalität",
   "Club": "Verein",

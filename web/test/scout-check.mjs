@@ -46,7 +46,7 @@ const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAI
 
 // Ten players with names found nowhere else, PA 190 down to 181 (the order the Scout shows), Finishing apart.
 const FIRST = ['Aurelio', 'Benedikt', 'Cassiano', 'Dorotheus', 'Eustachio', 'Florentin', 'Gaspard', 'Hilarion', 'Isidoro', 'Jovanni'];
-const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [i < 2 ? 1983 : 1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i }));   // the first two are 18: Wonderkids
+const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [i < 2 ? 1983 : 1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i, nation: i === 3 || i === 7 ? 1 : 0 }));   // the first two are 18: Wonderkids; Dorotheus and Hilarion are French
 // Two human managers, Klaus and Mike, with empty Short Lists (shortlist.js).
 const saveBytes = await fakeSaveGame(players, { managers: [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }] });
 const g = new SaveGame(saveBytes);
@@ -281,6 +281,36 @@ try {
       && lists.ids(lists.managers[1].id).size === 0, JSON.stringify([[...lists.ids(lists.managers[0].id)], [...lists.ids(lists.managers[1].id)]]));
     await shot(p, 'shortlist');
     await ctx.close();
+  }
+  // ---- Nationality (savedit.js nationNames, search; scout.js nation): in the Players list and in the Scout ----
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await editorOn(ctx, ME.member);
+    await p.waitForSelector('#editor-nation:not([hidden])', { timeout: 10000 }).catch(() => {});
+    const options = await p.$$eval('#editor-nation option', (o) => o.map((x) => x.textContent));
+    check('Players: a Nationality list of the save\'s nations, Any nationality first', options.join() === 'Any nationality,France,Italy', options.join());
+    await p.selectOption('#editor-nation', 'France');
+    await p.waitForTimeout(400);
+    const french = await p.$$eval('#editor-results .ed-row b', (b) => b.map((x) => x.textContent));
+    check('Players: France lists only the French players', french.join() === 'Hilarion Scoutson,Dorotheus Scoutson' || french.join() === 'Dorotheus Scoutson,Hilarion Scoutson', french.join());
+    await p.fill('#editor-search', 'Hilarion');
+    await p.waitForTimeout(400);
+    check('Players: a name and a nation together', (await p.$$eval('#editor-results .ed-row b', (b) => b.map((x) => x.textContent))).join() === 'Hilarion Scoutson');
+    await scoutTab(p);
+    await p.waitForSelector('#scout-filters [data-k="nation"]', { timeout: 10000 }).catch(() => {});
+    await p.selectOption('#scout-filters [data-k="nation"]', 'France');
+    await p.waitForTimeout(600);
+    const scouted = await rowNames(p);
+    check('Scout: Nationality France finds only the French players, best first', scouted.join() === 'Dorotheus Scoutson,Hilarion Scoutson', scouted.join());
+    await ctx.close();
+    const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const day = new Date(Date.now() + 5 * 86400e3).toISOString().slice(0, 10);
+    const p2 = await editorOn(ctx2, { ...ME.member, early: { legend: false, features: { nationality: day } } });
+    await p2.waitForTimeout(800);
+    check('early access: no Nationality list for a member who is no Club Legend yet', !(await p2.isVisible('#editor-nation')));
+    await scoutTab(p2);
+    check('early access: no Nationality filter in the Scout either', await p2.locator('#scout-filters [data-k="nation"]').count() === 0);
+    await ctx2.close();
   }
   // ---- Scout a player (shortlist.js, scout requests): the manager's club asks its scouts to watch him. ----
   {

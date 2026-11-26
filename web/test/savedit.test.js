@@ -144,3 +144,14 @@ test('the saved game\'s search: every name of a player, accents aside, though th
   assert.deepEqual(names('Paulo Mendonca'), ['Mendonça'], 'his first name and his common name');
   assert.deepEqual(names('paulo silva'), ['Mendonça'], 'his first and second names');
 });
+
+test('nationality: the nations of the players, and a search of one nation (with or without a name)', async () => {
+  const g = new SaveGame(await fakeSaveGame([
+    { first: 'Alessandro', second: 'Del Piero', ca: 181, pa: 190, gk: 1, born: [1974, 11, 9], club: 0, fill: 15 },
+    { first: 'Thierry', second: 'Henry', ca: 185, pa: 192, gk: 1, born: [1977, 8, 17], club: 0, fill: 15, nation: 1 },
+  ]));
+  assert.deepEqual(g.nationNames(), ['France', 'Italy']);
+  assert.deepEqual(g.search('', 60, 'France').map((p) => p.name), ['Thierry Henry']);
+  assert.deepEqual(g.search('del', 60, 'France'), []);
+  assert.equal(g.search('', 60).length, 2, 'no nation: every player');
+});

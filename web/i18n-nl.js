@@ -201,6 +201,7 @@ export default {
   "Surname": "Achternaam",
   "Known as (optional)": "Roepnaam (optioneel)",
   "Nationality": "Nationaliteit",
+  "Any nationality": "Elke nationaliteit",
   "None": "Geen",
   "Second nationality": "Tweede nationaliteit",
   "Club": "Club",

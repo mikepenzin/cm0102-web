@@ -324,9 +324,13 @@ export class SaveGame {
   }
 
   // Players whose name has every word of the text (accents and case aside), the best known first.
-  search(text, limit = 60) {
+  // The nations of the players, by name, sorted (the Nationality filter; nations is the id map).
+  nationNames() { return [...new Set(this.players().map((x) => x.nation).filter(Boolean))].sort((a, b) => a.localeCompare(b)); }
+
+  // nation: only the players of that nation (its name as nations() gives it); '' every nation.
+  search(text, limit = 60, nation = '') {
     const words = fold(text).split(/\s+/).filter(Boolean);
-    const all = this.players();
+    const all = nation ? this.players().filter((x) => x.nation === nation) : this.players();
     const hit = words.length ? all.filter((x) => words.every((w) => x.key.includes(w) || fold(x.club).includes(w))) : all;
     // A player whose name as the list shows it has the words comes first ("Mendonca": Mendonça before Marcelo Mattos,
     // who is Marcelo Mendonça de Mattos), then the best known.

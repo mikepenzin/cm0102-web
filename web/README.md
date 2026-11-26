@@ -686,6 +686,11 @@ counts as a change of the save and goes with Save the game file (the writer then
 Members only, as the full Scout; a free player's star opens the Account dialog. A feature of `features.js`
 (`shortlist`): Club Legends first.
 
+**Nationality** (`savedit.js` and `dataset.js` `nationNames()` and `search(text, limit, nation)`, `scout.js` `nation`). A
+Nationality list beside the Players search (of a save and of a data set) and a Nationality filter in the Scout: the
+nations of the data's players, by the names the data has. A feature of `features.js` (`nationality`): Club Legends
+first; while it is early for a player, neither list shows. On a phone the list takes its own line.
+
 **Scout a player** (`shortlist.js`; docs/research/2026-11-25-scout-request-in-save.md). An eye beside the star, and
 "+ Scout" in the player's panel, ask the chosen manager's club to scout the player, as the game's own "scout him" does;
 a second tap takes the request back. The requests follow the searches in `scout_manager.dat`: 17-byte records (club,

@@ -390,6 +390,9 @@
   .ed-grid label.wide { grid-column: span 2; }
   .ed-grid select.changed { border-color: var(--accent); }
   .ed-search { display: flex; gap: 6px; } .ed-search input { flex: 1; min-width: 0; }
+  #editor-nation { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 8px 6px; max-width: 42%; min-width: 0; }
+  @media (max-width: 600px) { .ed-search { flex-wrap: wrap; } #editor-nation { flex: 1 1 100%; max-width: 100%; } }
   /* The Editor's two tabs over the list of a saved game: Players and the Scout (scout.js). */
   .ed-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
   .ed-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; height: 34px; padding: 0 12px; color: var(--muted); }
@@ -628,6 +631,7 @@
           <button type="button" role="tab" id="editor-tab-players" data-pane="players" aria-selected="true" aria-controls="editor-results" data-t>Players</button>
           <button type="button" role="tab" id="editor-tab-scout" data-pane="scout" aria-selected="false" aria-controls="editor-scout" tabindex="-1" data-t>Scout</button></div>
         <div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" aria-label="Search a player or a club" data-t-attr="placeholder,aria-label" autocomplete="off" spellcheck="false">
+        <select id="editor-nation" hidden aria-label="Nationality" data-t-attr="aria-label"></select>
         <button id="editor-add" type="button" hidden data-t>Add a player</button></div>
         <div id="editor-results" role="tabpanel" aria-labelledby="editor-tab-players"></div>
         <div id="editor-scout" role="tabpanel" aria-labelledby="editor-tab-scout" hidden><div id="scout-filters" class="scout-filters"></div><div id="scout-results"></div></div></div>

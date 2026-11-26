@@ -168,6 +168,7 @@ export default {
   "Surname": "Cognome",
   "Known as (optional)": "Noto come (facoltativo)",
   "Nationality": "Nazionalità",
+  "Any nationality": "Qualsiasi nazionalità",
   "None": "Nessuna",
   "Second nationality": "Seconda nazionalità",
   "Club": "Club",

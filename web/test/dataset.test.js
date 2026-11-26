@@ -15,7 +15,7 @@ const fields = (over = {}) => ({ first: 'Marco', second: 'Testa', common: '', bo
 test('the players of a data set: names, clubs, nations, the coach left out', () => {
   const ds = new DataSet(fakeDataSet());
   assert.deepEqual(ds.players().map((p) => [p.name, p.club, p.nation, p.born, p.ca]),
-    [['Alessandro Del Piero', 'Juventus', 'Italy', 1974, 183], ['Gianluigi Buffon', 'Juventus', 'Italy', 1978, 187], ['Mario Rossi', '', 'Italy', 1980, 60]]);
+    [['Alessandro Del Piero', 'Juventus', 'Italy', 1974, 183], ['Gianluigi Buffon', 'Juventus', 'Italy', 1978, 187], ['Mario Rossi', '', 'Argentina', 1980, 60]]);
   const f = ds.read(0);
   assert.deepEqual([f.first, f.second, f.common, f.club, f.ca, f.attrs.Pace, f.attrs.Determination, f.contractEnd], ['Alessandro', 'Del Piero', '', 0, 183, 12, 14, null]);
   assert.deepEqual(ds.clubs().map((c) => c.name), ['AC Milan', 'Juventus']);
@@ -138,4 +138,13 @@ test('search: every name of a player, accents aside, though the list shows his c
   assert.deepEqual(names('mendonca'), ['Mendonça', 'Marcelo Mattos'], 'the name as the list shows it first, then the better player');
   assert.deepEqual(names('Paulo Mendonca'), ['Mendonça'], 'his first name and his common name');
   assert.deepEqual(names('paulo silva'), ['Mendonça'], 'his first and second names');
+});
+
+test('nationality: the nations of the players, and a search of one nation (with or without a name)', () => {
+  const ds = new DataSet(fakeDataSet());
+  assert.deepEqual(ds.nationNames(), ['Argentina', 'Italy']);
+  assert.deepEqual(ds.search('', 60, 'Argentina').map((p) => p.name), ['Mario Rossi']);
+  assert.deepEqual(ds.search('buffon', 60, 'Italy').map((p) => p.name), ['Gianluigi Buffon']);
+  assert.deepEqual(ds.search('buffon', 60, 'Argentina'), []);
+  assert.equal(ds.search('', 60, '').length, 3, 'no nation: every player');
 });

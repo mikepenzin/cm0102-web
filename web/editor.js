@@ -66,6 +66,7 @@ export function dataSetNameProblem(name, taken) {
 export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data', isRunning, onSaved = () => {}, onSetChange = () => {},
   access = () => 'full', inviteKind = () => 'signin', invite = () => {}, onPageKey = null,
   shortlistAccess = () => ({ state: 'open', locked: '', badge: '' }), requestAccess = () => ({ state: 'open', locked: '', badge: '' }),
+  nationAccess = () => ({ state: 'open', locked: '', badge: '' }),
   joining = () => {} }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
@@ -157,7 +158,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     b.setAttribute('aria-pressed', String(listed(row)));
     b.title = lists ? t('The shortlist of {manager}', { manager: managerName() }) : '';
   }
-  const filters = { ageMin: '', ageMax: '', position: '', paMin: '', caMin: '', attrs: [0, 1, 2].map(() => ({ name: '', min: '' })) };
+  const filters = { ageMin: '', ageMax: '', position: '', nation: '', paMin: '', caMin: '', attrs: [0, 1, 2].map(() => ({ name: '', min: '' })) };
   // text: the message, or a function that gives it (said again in a new language).
   let said = null;
   const say = (text, bad = false) => {
@@ -266,6 +267,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     fileLabel.textContent = '';
     form.innerHTML = '';
     search.value = '';
+    nationsOf = null; nationBox.innerHTML = ''; nationBox.hidden = true;
     $('editor-add').hidden = kind !== 'set';
     index = null;
     tabs.hidden = kind !== 'save';                  // the Scout is a saved game's only
@@ -349,8 +351,20 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // The list of the pane shown: the players (search) or the Scout's matches.
   const redrawList = () => (pane === 'scout' && model ? runScout() : results());
 
+  // The Nationality list (features.js 'nationality'): the nations of the open save's or data set's players, built once
+  // for each; hidden while the feature is early and the player is no Club Legend. Its names are the data's own.
+  const nationBox = $('editor-nation');
+  let nationsOf = null;
+  const nationOpen = () => nationAccess().state !== 'locked';
+  function drawNations() {
+    nationBox.hidden = !model || !nationOpen();
+    if (!model || nationsOf === model) return;
+    nationsOf = model;
+    nationBox.innerHTML = `<option value="">${esc(t('Any nationality'))}</option>${model.nationNames().map((n) => `<option value="${esc(n)}" data-raw>${esc(n)}</option>`).join('')}`;
+  }
   function results() {
-    const found = model.search(search.value, 80);
+    drawNations();
+    const found = model.search(search.value, 80, nationOpen() ? nationBox.value : '');
     list.innerHTML = found.length ? found.map((x) => `<button class="ed-row${edited.has(x.row) ? ' edited' : ''}${current === x.row ? ' on' : ''}" data-row="${x.row}">
         <b>${esc(playerName(x))}</b><span>${esc(x.club || t('No club'))} · ${esc(x.pos)} · ${x.born || ''}</span><i>${x.ca}/${x.pa}</i></button>`).join('')
       : `<p class="small">${esc(t('No player of that name.'))}</p>`;
@@ -387,6 +401,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     filtersBox.innerHTML = `${pick}<span>${esc(t('Presets'))}</span><span class="pair"><button type="button" class="small" data-preset="wonderkids">${esc(t('Wonderkids'))}</button></span>
       <span></span><span class="small">${esc(t('19 or younger, potential 180 or more'))}</span>
       <span>${esc(t('Age'))}</span><span class="pair">${box('ageMin', filters.ageMin, 60, t('Age from'))} – ${box('ageMax', filters.ageMax, 60, t('Age to'))}</span>
+      ${nationOpen() ? `<span>${esc(t('Nationality'))}</span><span class="pair"><select data-k="nation" aria-label="${esc(t('Nationality'))}"><option value="">${esc(t('Any nationality'))}</option>
+        ${(model ? model.nationNames() : []).map((n) => `<option value="${esc(n)}"${n === filters.nation ? ' selected' : ''} data-raw>${esc(n)}</option>`).join('')}</select></span>` : ''}
       <span>${esc(t('Position'))}</span><span class="pair"><select data-k="position" aria-label="${esc(t('Position'))}"><option value="">${esc(t('Any position'))}</option>
         ${POSITIONS.map((p, i) => `<option value="${i}"${String(i) === String(filters.position) ? ' selected' : ''}>${esc(posName[p] ?? p)}</option>`).join('')}</select></span>
       <span>${esc(t('Potential ≥'))}</span><span class="pair">${box('paMin', filters.paMin, 200, t('Lowest potential ability'))}</span>
@@ -406,7 +422,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       if (!index || pane !== 'scout') return;
     }
     if (lists === undefined) { await readLists(); if (pane !== 'scout' || !model) return; drawFilters(); }
-    const r = scout(index, { ...filters, attrs: filters.attrs.filter((a) => a.name) });
+    const r = scout(index, { ...filters, nation: nationOpen() ? filters.nation : '', attrs: filters.attrs.filter((a) => a.name) });
     const level = access(), cut = freeCut(r, level), attrName = attributeNames();
     // The player's name, club and position codes are the save's own (data-raw: the language check leaves them).
     // One locked line (early.js) when a feature is early and the player is no Club Legend: the shortlist's, else Scout's.
@@ -647,6 +663,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // ---- Wiring ----
 
   let timer = 0;
+  nationBox.onchange = () => { if (model && pane === 'players') results(); };
   search.oninput = () => { clearTimeout(timer); timer = setTimeout(() => model && pane === 'players' && results(), 120); };
   list.onclick = (e) => { const b = e.target.closest('[data-row]'); if (b) show(Number(b.dataset.row)); };
   tabs.onclick = (e) => { const b = e.target.closest('[data-pane]'); if (b && b.dataset.pane !== pane) setPane(b.dataset.pane); };

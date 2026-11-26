@@ -215,7 +215,7 @@ export async function fakeSaveGame(players = [
     writeDate(staff, o + 0x10, { year: p.born[0], month: p.born[1], day: p.born[2] });
     // In a save +0x18 is the age on the game's date (a game of 14 July 2001 here), not the year of birth.
     staff.writeUInt16LE(2001 - p.born[0] - (p.born[1] > 7 || (p.born[1] === 7 && p.born[2] > 14) ? 1 : 0), o + 0x18);
-    staff.writeInt32LE(0, o + 0x1a); staff.writeInt32LE(p.club, o + 0x39); staff[o + 0x3d] = 11;
+    staff.writeInt32LE(p.nation ?? 0, o + 0x1a); staff.writeInt32LE(p.club, o + 0x39); staff[o + 0x3d] = 11;
     staff[o + 0x58] = 16; staff[o + 0x5f] = 2; staff.writeInt32LE(i, o + 0x61); staff.writeInt32LE(-1, o + 0x65); staff.writeInt32LE(-1, o + 0x69);
     const q = i * 70;
     player.writeInt32LE(i, q); player.writeInt16LE(p.ca, q + 5); player.writeInt16LE(p.pa, q + 7);
@@ -272,7 +272,7 @@ export async function fakeSaveGame(players = [
   }
   const club = Buffer.alloc(581); club.writeInt32LE(0, 0); club.write('Juventus', 4, 'latin1');
   const natClub = Buffer.alloc(581); natClub.writeInt32LE(1, 0); natClub.write('Italy', 4, 'latin1');
-  const nation = Buffer.alloc(290); nation.writeInt32LE(0, 0); nation.write('Italy', 4, 'latin1');
+  const nation = Buffer.alloc(2 * 290); nation.writeInt32LE(0, 0); nation.write('Italy', 4, 'latin1'); nation.writeInt32LE(1, 290); nation.write('France', 294, 'latin1');
   const tables = [['first_names.dat', 13, names(first)], ['second_names.dat', 14, names(second)], ['common_names.dat', 15, names(common)],
     ['club.dat', 0, club], ['nat_club.dat', 1, natClub], ['nation.dat', 4, nation], ['staff.dat', 6, staff], ['player.dat', 10, player]];
   const sizes = { 13: 60, 14: 60, 15: 60, 0: 581, 1: 581, 4: 290, 6: 110, 10: 70 };
@@ -310,7 +310,7 @@ export function fakeDataSet() {
     { f: 1, s: 1, club: 0, player: 0, born: [1974, 11, 9], ca: 183, pa: 190, gk: 1 },
     { f: 2, s: 2, club: 0, player: 1, born: [1978, 1, 28], ca: 187, pa: 194, gk: 20 },
     { f: 3, s: 3, club: 1, nonPlayer: 0, born: [1959, 6, 10] },
-    { f: 4, s: 4, club: -1, player: 2, born: [1980, 3, 3], ca: 60, pa: 120, gk: 1 },
+    { f: 4, s: 4, club: -1, player: 2, born: [1980, 3, 3], ca: 60, pa: 120, gk: 1, nation: 1 },
   ];
   const staff = Buffer.alloc(people.length * 157), nonPlayers = Buffer.alloc(68), players = Buffer.alloc(3 * 70);
   const date = (b, o, [y, m, d]) => { const leap = y % 4 === 0; const t = leap ? [-1, 30, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334] : [-1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333]; b.writeInt16LE(t[m - 1] + d, o); b.writeUInt16LE(y, o + 2); b.writeUInt32LE(leap ? 1 : 0, o + 4); };
@@ -318,7 +318,7 @@ export function fakeDataSet() {
   people.forEach((p, i) => {
     const o = i * 157;
     staff.writeInt32LE(i, o); staff.writeInt32LE(p.f, o + 4); staff.writeInt32LE(p.s, o + 8); staff.writeInt32LE(0, o + 12);
-    date(staff, o + 0x10, p.born); staff.writeUInt16LE(p.born[0], o + 0x18); staff.writeInt32LE(0, o + 0x1a); staff.writeInt32LE(-2, o + 0x1e);
+    date(staff, o + 0x10, p.born); staff.writeUInt16LE(p.born[0], o + 0x18); staff.writeInt32LE(p.nation ?? 0, o + 0x1a); staff.writeInt32LE(-2, o + 0x1e);
     staff.writeInt32LE(-2, o + 0x24); none(staff, o + 0x31); staff.writeInt32LE(p.club, o + 0x39); staff[o + 0x3d] = p.player !== undefined ? 11 : 9;
     date(staff, o + 0x3e, [1996, 1, 2]); none(staff, o + 0x46); staff[o + 0x5e] = 1; staff[o + 0x5f] = p.player !== undefined ? 2 : 1; staff[o + 0x58] = 14;
     for (let k = 0; k < 12; k++) staff.writeInt32LE(-1, o + 0x61 + 4 * k);
