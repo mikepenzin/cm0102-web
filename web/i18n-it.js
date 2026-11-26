@@ -872,4 +872,7 @@ export default {
   "Resources": "Risorse",
   "Preferred formation": "Modulo preferito",
   "no such formation": "nessun modulo così",
+  "Colours": "Colori",
+  "Green for the best": "Verde per i migliori",
+  "Red for the best": "Rosso per i migliori",
 };

@@ -872,4 +872,7 @@ export default {
   "Resources": "Middelen",
   "Preferred formation": "Voorkeursformatie",
   "no such formation": "geen zulke formatie",
+  "Colours": "Kleuren",
+  "Green for the best": "Groen voor de beste",
+  "Red for the best": "Rood voor de beste",
 };

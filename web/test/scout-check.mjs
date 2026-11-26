@@ -297,6 +297,12 @@ try {
     check('a player: his contract, personality and details in the form', await p.inputValue('#editor-form [data-f="c:wage"]') === String(g.read(him.row).more.contract.wage)
       && await p.inputValue('#editor-form [data-f="p:Ambition"]') === String(g.read(him.row).more.personality.Ambition)
       && await p.inputValue('#editor-form [data-f="m:caps"]') === '5');
+    const highColour = () => p.$eval('#editor-form .ed-attrs input[data-band="high"]', (i) => getComputedStyle(i).color);
+    const green = await highColour();
+    await p.selectOption('#ed-colours', 'red');
+    check('a player: Red for the best paints the high values red, and stays chosen', await highColour() === 'rgb(255, 90, 79)' && green !== 'rgb(255, 90, 79)'
+      && await p.evaluate(() => localStorage.getItem('cm0102-attribute-colours')) === 'red', `${green} -> ${await highColour()}`);
+    await p.selectOption('#ed-colours', 'green');
     await p.selectOption('#editor-form [data-f="m:nation"]', '1');
     await p.fill('#editor-form [data-f="p:Ambition"]', '20');
     await p.locator('#editor-form [data-f="p:Ambition"]').dispatchEvent('change');

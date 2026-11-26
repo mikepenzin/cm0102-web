@@ -1021,6 +1021,7 @@ function runEngine(files, info) {
         managerAccess: () => featureAccess('manager-attributes'),
         clubAccess: () => featureAccess('club-finances'),
         playerAccess: () => featureAccess('player-details'),
+        coloursAccess: () => featureAccess('attribute-colours'),
         joining: () => account.waitForLegend(),
         onSetChange: (name, what) => (what === 'deleted' ? setSync?.deleted(name) : setSync?.run()) });
       account.onAccountChange(() => editor.redraw());      // joined or signed out: the open Scout follows

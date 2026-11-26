@@ -872,4 +872,7 @@ export default {
   "Resources": "Mittel",
   "Preferred formation": "Bevorzugtes System",
   "no such formation": "kein solches System",
+  "Colours": "Farben",
+  "Green for the best": "Grün für die besten",
+  "Red for the best": "Rot für die besten",
 };

@@ -616,7 +616,9 @@ is open, the title is the save's name and Players and Scout are its tabs):
   Only what changed is written; the wage and the contract end go to the contract and to the staff row's copies; a new
   nationality takes the player out of his national team. The game moves morale, reputations, value and squad
   numbers itself as the season goes on. A member's; a feature of `features.js` (`player-details`): Club Legends first.
-- The values are coloured on the game's 1–20 scale (low, middling, good, high; a position only where he plays), and
+- The values are coloured on the game's 1–20 scale (low, middling, good, high; a position only where he plays): green
+  for the best, or, by the viewer's choice above the attributes (kept in the browser; `features.js` `attribute-colours`,
+  Club Legends first), red for the best with the low end grey. And
   the attribute groups stand side by side on a computer, as on the game's profile screen. On a phone the head is one
   line (the file's name, Save, Close) and a player's form has one way back, to the list.
 - The numbers are those of the game's player profile. The game keeps 18 attributes relative to current ability (the

@@ -9,4 +9,5 @@ export const FEATURES = [
   { key: 'manager-attributes', name: 'Manager attributes' }, // Squad Hub, Managers tab: any manager's or coach's attributes, changed
   { key: 'club-finances', name: 'Club finances' },           // Squad Hub, Clubs tab: any club's record, stadium and finances, changed as the GK editor does
   { key: 'player-details', name: 'Player details' },        // Squad Hub, a player: details, reputation, personality, contract (GK editor's)
+  { key: 'attribute-colours', name: 'Attribute colours' },  // Squad Hub: green or red for the best 1-20 values (the viewer's choice)
 ];

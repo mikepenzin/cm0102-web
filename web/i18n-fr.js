@@ -872,4 +872,7 @@ export default {
   "Resources": "Ressources",
   "Preferred formation": "Schéma préféré",
   "no such formation": "aucun schéma de ce genre",
+  "Colours": "Couleurs",
+  "Green for the best": "Vert pour les meilleurs",
+  "Red for the best": "Rouge pour les meilleurs",
 };

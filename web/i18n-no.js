@@ -872,4 +872,7 @@ export default {
   "Resources": "Ressurser",
   "Preferred formation": "Foretrukket formasjon",
   "no such formation": "ingen slik formasjon",
+  "Colours": "Farger",
+  "Green for the best": "Grønn for de beste",
+  "Red for the best": "Rød for de beste",
 };

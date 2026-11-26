@@ -872,4 +872,7 @@ export default {
   "Resources": "Recursos",
   "Preferred formation": "Formación preferida",
   "no such formation": "no existe esa formación",
+  "Colours": "Colores",
+  "Green for the best": "Verde para los mejores",
+  "Red for the best": "Rojo para los mejores",
 };

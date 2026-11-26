@@ -69,8 +69,24 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   nationAccess = () => ({ state: 'open', locked: '', badge: '' }), managerAccess = () => ({ state: 'open', locked: '', badge: '' }),
   clubAccess = () => ({ state: 'open', locked: '', badge: '' }),
   playerAccess = () => ({ state: 'open', locked: '', badge: '' }),
+  coloursAccess = () => ({ state: 'open', locked: '', badge: '' }),
   joining = () => {} }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
+  // The colours of the 1-20 values (features.js 'attribute-colours'): green for the best (the page's own), or red for
+  // the best with the low end grey (a player asked: too much green). The viewer's choice, kept in this browser.
+  const COLOURS_KEY = 'cm0102-attribute-colours';
+  const coloursNow = () => { try { return localStorage.getItem(COLOURS_KEY) === 'red' ? 'red' : 'green'; } catch { return 'green'; } };
+  const paintColours = () => dialog.classList.toggle('bands-red', coloursAccess().state !== 'locked' && coloursNow() === 'red');
+  const coloursHtml = () => (paintColours(), coloursAccess().state === 'locked') ? '' : `<p class="small ed-colours"><label>${esc(t('Colours'))}
+    <select id="ed-colours"><option value="green"${coloursNow() === 'green' ? ' selected' : ''}>${esc(t('Green for the best'))}</option>
+    <option value="red"${coloursNow() === 'red' ? ' selected' : ''}>${esc(t('Red for the best'))}</option></select></label>${coloursAccess().badge}</p>`;
+  form.addEventListener('change', (e) => {
+    if (e.target.id !== 'ed-colours') return;
+    e.stopImmediatePropagation();
+    try { localStorage.setItem(COLOURS_KEY, e.target.value); } catch { /* this visit only */ }
+    paintColours();
+  }, true);
+  paintColours();
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
   const home = $('editor-home'), title = $('editor-title'), fileLabel = $('editor-file');
   const tabs = $('editor-tabs'), scoutBox = $('editor-scout'), filtersBox = $('scout-filters'), found = $('scout-results');
@@ -559,7 +575,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       <section><h4>${esc(t('Ability'))}</h4><div class="ed-grid">${box('ca', a.ca, 1, 200, t('Current ability'), 'data-mf="ca"')}${box('pa', a.pa, 1, 200, t('Potential ability'), 'data-mf="pa"')}
         ${['homeRep', 'currentRep', 'worldRep'].map((k, n) => box(k, a[k], 0, 10000, [t('Home reputation'), t('Current reputation'), t('World reputation')][n], `data-mf="${k}"`).replace('<label>', '<label class="big">')).join('')}
         <label class="wide"><span>${esc(t('Preferred formation'))}</span><select data-mf="formation">${[t('None'), ...FORMATIONS].map((l, k) => `<option value="${k}"${k === a.formation ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div></section>
-      <div class="ed-attrs">${MGR_GROUPS.map((g) => `<section><h4>${esc(nm[g])}</h4><div class="ed-grid">${a.attrs.filter((y) => y.group === g)
+      ${coloursHtml()}<div class="ed-attrs">${MGR_GROUPS.map((g) => `<section><h4>${esc(nm[g])}</h4><div class="ed-grid">${a.attrs.filter((y) => y.group === g)
         .map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-attr="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>
       <div class="ed-attrs">${['Style', 'Chairman'].map((g) => `<section><h4>${esc(nm[g])} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">${a.hidden
         .filter((y) => y.group === g).map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-hid="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>
@@ -784,7 +800,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       <section><h4>${esc(t('Positions'))} <span class="small">${esc(t('0 to 20; 20 is natural'))}</span></h4><div class="ed-grid pos">
         ${f.positions.map((v, i) => num(`pos${i}`, v, 0, 20, SHORT_POS[i]).replace('<span>', `<span title="${esc(posName[POSITIONS[i]] ?? POSITIONS[i])}">`)).join('')}
       </div></section>
-      <div class="ed-attrs">${GROUPS.map((g) => `<section><h4>${esc(groupName[g])}${g === 'Hidden' ? ` <span class="small">${esc(t('the game does not show these'))}</span>` : ''}${set && g === 'Technical' ? ` <span class="small">${esc(t('0 is random'))}</span>` : ''}</h4><div class="ed-grid">
+      ${coloursHtml()}<div class="ed-attrs">${GROUPS.map((g) => `<section><h4>${esc(groupName[g])}${g === 'Hidden' ? ` <span class="small">${esc(t('the game does not show these'))}</span>` : ''}${set && g === 'Technical' ? ` <span class="small">${esc(t('0 is random'))}</span>` : ''}</h4><div class="ed-grid">
         ${attrs.filter((a) => a.group === g).map((a) => num(a.name, f.attrs[a.name], set ? 0 : 1, 20, attrName[a.name] ?? a.name)).join('')}</div></section>`).join('')}</div>`;
     body.classList.add('detail');
     form.scrollTop = 0;
