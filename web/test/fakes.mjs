@@ -200,10 +200,25 @@ export function paddleEvent(type, { ref, at = new Date().toISOString(), status =
 // place with no name; general.dat then holds the game date, 14 July 2001, at 0xf85. requests: the scout requests after
 // the searches (docs/research/2026-11-25-scout-request-in-save.md), [{ club, player: staff id, reports, date }], written
 // in the order given.
+// finance.dat (docs/research/2026-11-26-club-finances.md): a 359-byte record for Juventus (0) and Italy (1); finance:
+// { balance, wageBill, topWage, thisYear: { offset: value }, lastYear: { offset: value } } for Juventus.
+function financeDat(f) {
+  const b = Buffer.alloc(2 * 359);
+  for (const k of [0, 1]) b.writeInt32LE(k, k * 359 + 8);
+  b.writeBigInt64LE(BigInt(f.balance ?? 0), 0); b.writeInt32LE(f.wageBill ?? 0, 0x0c); b.writeInt32LE(f.topWage ?? 0, 0x10);
+  for (const [block, at] of [['thisYear', 0x110], ['lastYear', 0xc0]]) {
+    for (const [off, v] of Object.entries(f[block] ?? {})) {
+      const o = at + Number(off);
+      if (Number(off) <= 0x08) b.writeBigInt64LE(BigInt(v), o); else b.writeInt32LE(v, o);
+    }
+  }
+  return b;
+}
+
 export async function fakeSaveGame(players = [
   { first: 'Alessandro', second: 'Del Piero', ca: 181, pa: 190, gk: 1, born: [1974, 11, 9], club: 0, fill: 15 },
   { first: 'Gianluigi', second: 'Buffon', ca: 187, pa: 194, gk: 20, born: [1978, 1, 28], club: 0, fill: 12 },
-], { managers = null, requests = [] } = {}) {
+], { managers = null, requests = [], finance = null } = {}) {
   const { encodeRuns, writeDate } = await import('../savedit.js');
   const names = (list) => { const b = Buffer.alloc(list.length * 60); list.forEach((n, i) => { b.write(n, i * 60, 'latin1'); b.writeInt32LE(i, i * 60 + 0x33); b.writeInt32LE(-1, i * 60 + 0x37); b[i * 60 + 0x3b] = 1; }); return b; };
   const first = ['', ...players.map((p) => p.first), 'Marcello'], second = ['', ...players.map((p) => p.second), 'Lippi'];
@@ -294,7 +309,8 @@ export async function fakeSaveGame(players = [
     else index.writeInt32LE(100 + k, o + 0x33);
   }
   const members = [['continent.dat', Buffer.from('stays as it is, byte for byte')], ...tables.map((t) => [t[0], t[2]]),
-    ['index.dat', index], ['general.dat', general], ...(scoutManager ? [['scout_manager.dat', scoutManager], ['nonplayer.dat', nonPlayer]] : [])];
+    ['index.dat', index], ['general.dat', general], ...(scoutManager ? [['scout_manager.dat', scoutManager], ['nonplayer.dat', nonPlayer]] : []),
+    ...(finance ? [['finance.dat', financeDat(finance)]] : [])];
   const HEADER = 0x416ec, header = Buffer.alloc(HEADER);
   header.writeInt32LE(4, 0); header.writeInt32LE(0, 4); header.writeInt32LE(members.length, 8);
   const body = [];

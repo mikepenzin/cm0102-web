@@ -686,6 +686,13 @@ counts as a change of the save and goes with Save the game file (the writer then
 Members only, as the full Scout; a free player's star opens the Account dialog. A feature of `features.js`
 (`shortlist`): Club Legends first.
 
+**Clubs** (`savedit.js` `clubFinances`; docs/research/2026-11-26-club-finances.md). A fourth tab of a saved game: search a
+club, pick it, and its finances as the game keeps them in `finance.dat` (359 bytes a club): the balance, the weekly
+wage bill and top wage, and this year's and last year's players sold, prize money, TV money, players bought, wages,
+bonuses, signing-on fees, other costs and league fines. The game shows them for the player's own club only. Read
+only; a member's (a free player sees the Membership invitation). A feature of `features.js` (`club-finances`): Club
+Legends first.
+
 **Managers** (`savedit.js` `managerAttributes`; docs/research/2026-11-26-manager-attributes.md). A third tab of a saved
 game: each human manager (the named places of `scout_manager.dat`) with the twelve attributes the game keeps for a
 non-player and hides for the human managers (the HumanManagerAttributes patch of CM 01/02 showed them): Coaching

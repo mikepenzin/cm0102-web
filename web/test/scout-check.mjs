@@ -48,7 +48,8 @@ const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAI
 const FIRST = ['Aurelio', 'Benedikt', 'Cassiano', 'Dorotheus', 'Eustachio', 'Florentin', 'Gaspard', 'Hilarion', 'Isidoro', 'Jovanni'];
 const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [i < 2 ? 1983 : 1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i, nation: i === 3 || i === 7 ? 1 : 0 }));   // the first two are 18: Wonderkids; Dorotheus and Hilarion are French
 // Two human managers, Klaus and Mike, with empty Short Lists (shortlist.js).
-const saveBytes = await fakeSaveGame(players, { managers: [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }] });
+const saveBytes = await fakeSaveGame(players, { managers: [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }],
+  finance: { balance: 59516431, wageBill: 889495, topWage: 65497, thisYear: { 0x08: 19491130, 0x20: 33094379, 0x48: 5985625 }, lastYear: { 0x20: 51520409 } } });
 const g = new SaveGame(saveBytes);
 const finishing = g.players().map((p) => g.read(p.row).attrs.Finishing);
 const MIN = [...finishing].sort((a, b) => b - a)[4];                       // five players reach it
@@ -100,7 +101,7 @@ try {
   {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const p = await editorOn(ctx, ME.free);
-    check('a saved game in the Editor: tabs Players, Scout and Managers', (await p.$$eval('#editor-tabs [data-pane]', (b) => b.map((x) => x.dataset.pane))).join() === 'players,scout,managers');
+    check('a saved game in the Editor: tabs Players, Scout, Managers and Clubs', (await p.$$eval('#editor-tabs [data-pane]', (b) => b.map((x) => x.dataset.pane))).join() === 'players,scout,managers,clubs');
     await scoutTab(p);
     const shown = await rowNames(p), html = await pageHtml(p);
     check('free: the first 3 by potential, in full', shown.join() === NAMES.slice(0, 3).join(), shown.join());
@@ -281,6 +282,28 @@ try {
       && lists.ids(lists.managers[1].id).size === 0, JSON.stringify([[...lists.ids(lists.managers[0].id)], [...lists.ids(lists.managers[1].id)]]));
     await shot(p, 'shortlist');
     await ctx.close();
+  }
+  // ---- Clubs (savedit.js clubFinances): a club's finances, a member's ----
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await editorOn(ctx, ME.member);
+    await p.click('#editor-tabs [data-pane="clubs"]');
+    await p.fill('#clubs-search', 'juv');
+    await p.waitForSelector('#clubs-results [data-club]', { timeout: 10000 }).catch(() => {});
+    check('Clubs: a search finds the club', (await p.$$eval('#clubs-results [data-club]', (b) => b.map((x) => x.textContent.trim()))).join() === 'Juventus');
+    await p.click('#clubs-results [data-club]');
+    await p.waitForSelector('#clubs-card [data-fin]', { timeout: 10000 }).catch(() => {});
+    const fin = await p.$$eval('#clubs-card [data-fin]', (v) => Object.fromEntries(v.map((x) => [x.dataset.fin, x.textContent.replace(/[^0-9-]/g, '')])));
+    check('Clubs: the balance, the wage bill, the top wage, and this and last year\'s lines', fin.balance === '59516431' && fin.wageBill === '889495'
+      && fin.topWage === '65497' && fin['thisYear.sold'] === '19491130' && fin['thisYear.wages'] === '33094379' && fin['lastYear.wages'] === '51520409', JSON.stringify(fin));
+    await ctx.close();
+    const c2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const free = await editorOn(c2, ME.free);
+    await free.click('#editor-tabs [data-pane="clubs"]');
+    await free.waitForTimeout(400);
+    check('Clubs, a free player: no figures, the Membership invitation', await free.locator('#clubs-invite').count() === 1
+      && await free.locator('#clubs-search').count() === 0);
+    await c2.close();
   }
   // ---- Managers (savedit.js managerAttributes): each human manager's twelve attributes, a member's ----
   {

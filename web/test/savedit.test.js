@@ -170,3 +170,17 @@ test('manager attributes: the twelve the game shows, from the staff row and the 
   assert.equal(managerAttributes(g, 4).attrs.find((a) => a.name === 'Motivating').value, rating(0, 100), 'ability 100: the relative formula');
   assert.equal(managerAttributes(g, 0), null, 'a player has no non-player record');
 });
+
+test('club finances: the balance, the wage bill and the year blocks of finance.dat (0x59b3b0, 359 bytes a club)', async () => {
+  const { clubFinances } = await import('../savedit.js');
+  const g = new SaveGame(await fakeSaveGame(undefined, { finance: { balance: 59516431, wageBill: 889495, topWage: 65497,
+    thisYear: { 0x00: 3000000, 0x08: 19491130, 0x20: 9000000, 0x38: 250000, 0x48: 5985625, 0x10: 120000, 0x18: 5000, 0x28: 40000, 0x2c: 60000 },
+    lastYear: { 0x48: 4000000 } } }));
+  const f = clubFinances(g, 0);
+  assert.deepEqual([f.balance, f.wageBill, f.topWage], [59516431, 889495, 65497]);
+  assert.deepEqual(f.thisYear, { bought: 3000000, sold: 19491130, otherCosts: 120000, fines: 5000, wages: 9000000, bonuses: 40000,
+    signOn: 60000, prize: 250000, tv: 5985625 });
+  assert.equal(f.lastYear.tv, 4000000);
+  assert.equal(clubFinances(g, 7), null, 'no such club');
+  assert.equal(clubFinances(new SaveGame(await fakeSaveGame()), 0), null, 'no finance.dat');
+});

@@ -222,6 +222,27 @@ export function managerAttributes(game, staffId) {
   return { ca, pa: dv.getInt16(q + 6, true), attrs };
 }
 
+// ---- A club's finances (docs/research/2026-11-26-club-finances.md) ----
+
+const FINANCE_SIZE = 0x167;                     // FinanceTable::save_finance_dat 0x59b3b0: 359 bytes a club
+// A year block (0x50 bytes): the fields the Finance functions add to (players bought and sold are 8 bytes).
+const FINANCE_FIELDS = { bought: [0x00, 8], sold: [0x08, 8], otherCosts: [0x10, 4], fines: [0x18, 4], wages: [0x20, 4],
+  bonuses: [0x28, 4], signOn: [0x2c, 4], prize: [0x38, 4], tv: [0x48, 4] };
+
+// A club's finances in a SaveGame whose member finance.dat is loaded: { balance, wageBill, topWage, thisYear,
+// lastYear } (a year: FINANCE_FIELDS' names), or null (no such club, no finance.dat).
+export function clubFinances(game, clubId) {
+  if (!game.file.has('finance.dat')) return null;
+  const f = game.file.read('finance.dat'), q = clubId * FINANCE_SIZE;
+  if (clubId < 0 || q + FINANCE_SIZE > f.length) return null;
+  const dv = new DataView(f.buffer, f.byteOffset, f.byteLength);
+  if (dv.getInt32(q + 0x08, true) !== clubId) return null;
+  const year = (at) => Object.fromEntries(Object.entries(FINANCE_FIELDS).map(([k, [o, n]]) =>
+    [k, n === 8 ? Number(dv.getBigInt64(q + at + o, true)) : dv.getInt32(q + at + o, true)]));
+  return { balance: Number(dv.getBigInt64(q, true)), wageBill: dv.getInt32(q + 0x0c, true), topWage: dv.getInt32(q + 0x10, true),
+    thisYear: year(0x110), lastYear: year(0xc0) };
+}
+
 // kind: raw (the byte is the rating), rel (0x544380), gk20 (0x5442f0's tenth when the goalkeeper rating is 20),
 // gk15 (the tenth when it is below 15). from: 'player' (the player data) or 'staff' (the staff row).
 // The 31 shown attributes in the game's numbering (the case of the jump table 0x543a94), then the bytes that the

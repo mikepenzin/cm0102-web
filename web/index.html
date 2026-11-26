@@ -440,6 +440,12 @@
   .ed-grid input[data-band="good"] { color: #a9d68f; }
   .ed-grid input[data-band="high"] { color: #4fd18b; font-weight: 650; }
   .ed-grid input[data-band="none"] { color: var(--muted); }
+  #editor-clubs { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+  #clubs-search { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; }
+  #clubs-results { display: flex; flex-direction: column; gap: 4px; }
+  .fin table { width: 100%; border-collapse: collapse; } .fin td, .fin th { padding: 3px 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .fin td:first-child, .fin th:first-child { text-align: left; color: var(--muted); font-weight: 400; }
+  .fin .neg { color: #e0806e; }
   #editor-managers { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
   .mgr { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; }
   .mgr h3 { margin: 0 0 6px; font-size: 15px; }
@@ -638,13 +644,15 @@
       <div class="ed-list"><div id="editor-tabs" class="ed-tabs" role="tablist" hidden>
           <button type="button" role="tab" id="editor-tab-players" data-pane="players" aria-selected="true" aria-controls="editor-results" data-t>Players</button>
           <button type="button" role="tab" id="editor-tab-scout" data-pane="scout" aria-selected="false" aria-controls="editor-scout" tabindex="-1" data-t>Scout</button>
-          <button type="button" role="tab" id="editor-tab-managers" data-pane="managers" aria-selected="false" aria-controls="editor-managers" tabindex="-1" data-t>Managers</button></div>
+          <button type="button" role="tab" id="editor-tab-managers" data-pane="managers" aria-selected="false" aria-controls="editor-managers" tabindex="-1" data-t>Managers</button>
+          <button type="button" role="tab" id="editor-tab-clubs" data-pane="clubs" aria-selected="false" aria-controls="editor-clubs" tabindex="-1" data-t>Clubs</button></div>
         <div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" aria-label="Search a player or a club" data-t-attr="placeholder,aria-label" autocomplete="off" spellcheck="false">
         <select id="editor-nation" hidden aria-label="Nationality" data-t-attr="aria-label"></select>
         <button id="editor-add" type="button" hidden data-t>Add a player</button></div>
         <div id="editor-results" role="tabpanel" aria-labelledby="editor-tab-players"></div>
         <div id="editor-scout" role="tabpanel" aria-labelledby="editor-tab-scout" hidden><div id="scout-filters" class="scout-filters"></div><div id="scout-results"></div></div>
-        <div id="editor-managers" role="tabpanel" aria-labelledby="editor-tab-managers" hidden></div></div>
+        <div id="editor-managers" role="tabpanel" aria-labelledby="editor-tab-managers" hidden></div>
+        <div id="editor-clubs" role="tabpanel" aria-labelledby="editor-tab-clubs" hidden></div></div>
       <div class="ed-form" id="editor-form" data-t-attr="data-empty" data-empty="Pick a player from the list to change him."></div>
     </div>
     <datalist id="editor-clubs"></datalist>

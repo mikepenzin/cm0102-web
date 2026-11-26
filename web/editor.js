@@ -4,11 +4,11 @@
 //   backups/ first, so Load Game lists the edited save and Saved games the old one.
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
-import { ATTRIBUTES, POSITIONS, SaveGame, managerAttributes } from './savedit.js';
+import { ATTRIBUTES, POSITIONS, SaveGame, clubFinances, managerAttributes } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
-import { onLanguage, t, tn } from './i18n.js';
+import { language, onLanguage, t, tn } from './i18n.js';
 import { freeCut, presetFilters, scout, scoutIndex, scoutUpdate } from './scout.js';
 import { scoutManager } from './shortlist.js';
 
@@ -67,6 +67,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   access = () => 'full', inviteKind = () => 'signin', invite = () => {}, onPageKey = null,
   shortlistAccess = () => ({ state: 'open', locked: '', badge: '' }), requestAccess = () => ({ state: 'open', locked: '', badge: '' }),
   nationAccess = () => ({ state: 'open', locked: '', badge: '' }), managerAccess = () => ({ state: 'open', locked: '', badge: '' }),
+  clubAccess = () => ({ state: 'open', locked: '', badge: '' }),
   joining = () => {} }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
@@ -349,7 +350,58 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // ---- The players ----
 
   // The list of the pane shown: the players (search) or the Scout's matches.
-  const redrawList = () => (pane === 'managers' && model ? drawManagers() : pane === 'scout' && model ? runScout() : results());
+  const redrawList = () => (pane === 'clubs' && model ? drawClubs() : pane === 'managers' && model ? drawManagers() : pane === 'scout' && model ? runScout() : results());
+
+  // ---- Clubs (savedit.js clubFinances; docs/research/2026-11-26-club-finances.md): a club's finances, which the game
+  // shows for the player's own club only: a member's, as the Scout's potential; features.js 'club-finances'. Read only. ----
+  const clubsBox = $('editor-clubs');
+  let clubShown = null;
+  const money = (n) => n.toLocaleString(language() || 'en');
+  const fold = (x) => x.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();   // as savedit.js's search
+  async function drawClubs() {
+    if (!model || kind !== 'save') return;
+    const acc = clubAccess();
+    if (acc.state === 'locked') { clubsBox.innerHTML = acc.locked; return; }
+    if (access() !== 'full') {
+      clubsBox.innerHTML = `<p class="small">${esc(t('A member sees any club\'s finances here: its balance, its wage bill, and this year\'s and last year\'s money in and out, which the game shows for your own club only.'))}</p>
+        <p><button type="button" id="clubs-invite" class="primary">${esc(t('Become a member'))}</button></p>`;
+      $('clubs-invite').onclick = () => invite();
+      return;
+    }
+    const m = model;
+    try { await m.file.load(['finance.dat']); } catch { /* none: no figures */ }
+    if (model !== m || pane !== 'clubs') return;
+    if (!m.file.has('finance.dat')) { clubsBox.innerHTML = `<p class="small">${esc(t('This save holds no club finances.'))}</p>`; return; }
+    clubsBox.innerHTML = `<p class="small">${esc(t('Any club\'s finances in this save, as the game keeps them. The game shows them for your own club only.'))}${acc.badge}</p>
+      <input id="clubs-search" type="search" placeholder="${esc(t('Search a club'))}" aria-label="${esc(t('Search a club'))}" autocomplete="off" spellcheck="false">
+      <div id="clubs-results"></div><div id="clubs-card"></div>`;
+    const input = $('clubs-search');
+    input.oninput = () => listClubs(input.value);
+    $('clubs-results').onclick = (e) => { const b = e.target.closest('[data-club]'); if (b) showClub(Number(b.dataset.club)); };
+    if (clubShown !== null) showClub(clubShown);
+  }
+  function listClubs(text) {
+    const words = fold(text).split(/\s+/).filter(Boolean), out = $('clubs-results');
+    if (!words.length) { out.innerHTML = ''; return; }
+    const hit = [...model.clubs].filter(([, n]) => words.every((w) => fold(n).includes(w))).sort((a, b) => a[1].localeCompare(b[1])).slice(0, 20);
+    out.innerHTML = hit.length ? hit.map(([id, n]) => `<button type="button" class="ed-row" data-club="${id}"><b data-raw>${esc(n)}</b></button>`).join('')
+      : `<p class="small">${esc(t('No club of that name.'))}</p>`;
+  }
+  function showClub(id) {
+    clubShown = id;
+    const f = clubFinances(model, id), card = $('clubs-card');
+    if (!card) return;
+    if (!f) { card.innerHTML = `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`; return; }
+    $('clubs-results').innerHTML = '';
+    const v = (key, n) => `<td data-fin="${key}"${n < 0 ? ' class="neg"' : ''}>${esc(money(n))}</td>`;
+    const LINES = [['sold', t('Players sold')], ['prize', t('Prize money')], ['tv', t('TV money')], ['bought', t('Players bought')],
+      ['wages', t('Wages')], ['bonuses', t('Bonuses')], ['signOn', t('Signing-on fees')], ['otherCosts', t('Other costs')], ['fines', t('League fines')]];
+    card.innerHTML = `<section class="mgr fin"><h3 data-raw>${esc(model.clubs.get(id) ?? '')}</h3>
+      <table><tr><td>${esc(t('Balance'))}</td>${v('balance', f.balance)}</tr><tr><td>${esc(t('Wage bill a week'))}</td>${v('wageBill', f.wageBill)}</tr>
+        <tr><td>${esc(t('Top wage a week'))}</td>${v('topWage', f.topWage)}</tr></table>
+      <table><tr><th></th><th>${esc(t('This year'))}</th><th>${esc(t('Last year'))}</th></tr>
+        ${LINES.map(([k, label]) => `<tr><td>${esc(label)}</td>${v(`thisYear.${k}`, f.thisYear[k])}${v(`lastYear.${k}`, f.lastYear[k])}</tr>`).join('')}</table></section>`;
+  }
 
   // ---- Managers (savedit.js managerAttributes; docs/research/2026-11-26-manager-attributes.md): each human manager of a
   // saved game with the twelve attributes the game keeps (hidden for the human managers): a member's, as the Scout's
@@ -413,12 +465,14 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     pane = which;
     clearTimeout(timer);                              // a search typed in Players does not fill the list behind the Scout
     for (const b of tabs.querySelectorAll('[data-pane]')) { b.setAttribute('aria-selected', String(b.dataset.pane === pane)); b.tabIndex = b.dataset.pane === pane ? 0 : -1; }
-    const scouting = pane === 'scout', managing = pane === 'managers';
-    dialog.querySelector('.ed-search').hidden = scouting || managing;
-    list.hidden = scouting || managing;
+    const scouting = pane === 'scout', managing = pane === 'managers', clubbing = pane === 'clubs';
+    dialog.querySelector('.ed-search').hidden = scouting || managing || clubbing;
+    list.hidden = scouting || managing || clubbing;
     scoutBox.hidden = !scouting;
     managersBox.hidden = !managing;
+    clubsBox.hidden = !clubbing;
     if (managing) { list.innerHTML = ''; found.innerHTML = ''; if (show && model) drawManagers(); return; }
+    if (clubbing) { list.innerHTML = ''; found.innerHTML = ''; if (show && model) drawClubs(); return; }
     if (scouting) { list.innerHTML = ''; drawFilters(); }      // no list of players in the page while the Scout shows
     else found.innerHTML = '';
     if (show && model) redrawList();
@@ -801,7 +855,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     openSave,
     openSet,
     // The account changed (account.js): the Scout's matches for the account as it is now.
-    redraw() { if (dialog.open && model && pane === 'scout') runScout(); else if (dialog.open && model && pane === 'managers') drawManagers(); },
+    redraw() { if (dialog.open && model && pane === 'scout') runScout(); else if (dialog.open && model && pane === 'managers') drawManagers(); else if (dialog.open && model && pane === 'clubs') drawClubs(); },
     open() { if (!dialog.open) dialog.showModal(); say(''); showHome(); },
   };
 }
