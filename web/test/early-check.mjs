@@ -49,6 +49,25 @@ await fetch(`${BASE}/api/admin/library/${early.id}`, { method: 'PATCH', body: JS
 
 const browser = await chromium.launch();
 try {
+  // ---- The admin page left open: no work while its tab is hidden (Chrome flagged it as a tab slowing the browser) ----
+  {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: auth });
+    const p = await c.newPage();
+    await p.clock.install();
+    let asked = 0;
+    p.on('request', (r) => { if (r.url().includes('/api/admin/stats')) asked++; });
+    await p.goto(`${BASE}/admin#people`);
+    await p.waitForSelector('#people tr.person');
+    const first = asked;
+    await p.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); document.dispatchEvent(new Event('visibilitychange')); });
+    await p.clock.runFor(5 * 60e3);
+    const whileHidden = asked - first;
+    await p.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange')); });
+    await p.waitForTimeout(300);
+    check('the admin page asks the server nothing while its tab is hidden, and refreshes when it shows again', whileHidden === 0 && asked - first === 1,
+      `hidden ${whileHidden}, after ${asked - first}`);
+    await c.close();
+  }
   // ---- The admin page ----
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: auth });
   const a = await ctx.newPage();

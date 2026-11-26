@@ -306,6 +306,10 @@ const go = (tab) => { if (location.hash !== `#${tab}`) location.hash = tab; else
 window.addEventListener('hashchange', showTab);
 showTab();
 
+let lastStats = '';
+// The people by id (emailOf and whoOf ran a search of the whole list for each report row).
+let peopleById = new Map();
+const indexPeople = () => { peopleById = new Map((data.people ?? []).map((p) => [p.id, p])); };
 async function load() {
   let r;
   try { r = await fetch('/api/admin/stats', { credentials: 'same-origin' }); } catch {
@@ -315,7 +319,11 @@ async function load() {
   if (r.status === 401) { gate('<p class="msg">Sign in with Google <a href="/">on the game\'s page</a> with an admin account (CM_ADMIN_EMAILS), then come back here.</p>'); return; }
   if (r.status === 403) { gate('<p class="msg">This account is not an admin. The server\'s CM_ADMIN_EMAILS lists the admins.</p>'); return; }
   if (!r.ok) { if (data) oops(`Not refreshed: the server answered ${r.status}.`); else gate(`<p class="msg bad">The server answered ${r.status}.</p>`); return; }
-  data = await r.json();
+  const text = await r.text();
+  if (data && text === lastStats) { oops(''); return; }      // nothing changed: no redraw
+  lastStats = text;
+  data = JSON.parse(text);
+  indexPeople();
   oops('');
   $('main').innerHTML = '';
   document.body.classList.remove('gated');
@@ -610,8 +618,8 @@ const groups = (reports) => {
   }
   return [...by.values()].sort((a, b) => b.n - a.n || (a.last < b.last ? 1 : -1));
 };
-const emailOf = (id) => data.people.find((p) => p.id === id)?.email;
-const whoOf = (id) => { const p = data.people.find((x) => x.id === id); return p?.email ?? (p?.account ? emailOf(p.account) : null) ?? `anonymous ${id.slice(2, 10)}`; };
+const emailOf = (id) => peopleById.get(id)?.email;
+const whoOf = (id) => { const p = peopleById.get(id); return p?.email ?? (p?.account ? emailOf(p.account) : null) ?? `anonymous ${id.slice(2, 10)}`; };
 function showErrorsOf(id) {
   const ids = new Set([id, ...data.people.filter((p) => p.account === id).map((p) => p.id)]);
   errState = { ...errState, kind: 'all', msg: null, who: { ids, label: whoOf(id) }, shown: 25 };
@@ -668,6 +676,7 @@ function renderErrors() {
 const reportCache = new Map();
 function fullReport(r) {
   if (!reportCache.has(r.key)) {
+    if (reportCache.size >= 5) reportCache.delete(reportCache.keys().next().value);   // the last five: a report's log is large
     reportCache.set(r.key, fetch(`/api/admin/report?key=${encodeURIComponent(r.key)}`, { credentials: 'same-origin' })
       .then((res) => (res.ok ? res.json() : null)).catch(() => null).then((f) => { if (!f) reportCache.delete(r.key); return f; }));
   }
@@ -978,7 +987,12 @@ $('refresh').onclick = () => { load(); loadLibrary().then(loadEarly); loadMember
 load();
 loadLibrary().then(loadEarly);
 loadMembers();
-setInterval(() => { load(); loadMembers(); }, 60000);
+// Every minute while the tab shows; nothing while it is hidden (a tab left open for hours fetched and drew everything
+// each minute, and Chrome flagged it as slowing the browser); back in view after a minute or more, at once.
+let refreshedAt = Date.now();
+const refresh = () => { refreshedAt = Date.now(); load(); loadMembers(); };
+setInterval(() => { if (!document.hidden) refresh(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - refreshedAt >= 60000) refresh(); });
 </script>
 </body>
 </html>
