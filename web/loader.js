@@ -16,6 +16,7 @@ import { createSetSync, listDataSets } from './datasets.js';
 import { createCloudSync, keepInCloud, legalLinks, mountAccount, plansHtml } from './account.js';
 import { inviteKind, keptAccess, scoutAccess } from './scout.js';
 import { badgeHtml, earlyState, lockedHtml } from './early.js';
+import { retryable } from './retry.js';
 import { guardKeys, hasTouch, mountKeyboard, onPageKey } from './keyboard.js';
 import { TOUR_STEPS, cloudStepText, mountTour } from './tour.js';
 import { mountLayout } from './layout.js';
@@ -538,7 +539,7 @@ async function download(files, cache, onBytes, counts, signal, { lazy = false } 
             break;
           } catch (e) {
             if (got) onBytes(-got, false);
-            const again = e.name !== 'AbortError' && (e instanceof TypeError || e.again);
+            const again = retryable(e);
             if (!again || i >= FILE_TRIES.length || signal?.aborted) throw e;
             log(`page: ${f.path}: ${e.message}; asked for again in ${FILE_TRIES[i] / 1000} s`);
             await new Promise((ok) => setTimeout(ok, FILE_TRIES[i]));
@@ -556,7 +557,7 @@ async function download(files, cache, onBytes, counts, signal, { lazy = false } 
             break;
           } catch (e) {
             if (got) onBytes(-got, false);                 // the bytes of the try that failed come again
-            const again = e.name !== 'AbortError' && (e instanceof TypeError || e.again);
+            const again = retryable(e);
             if (!again || i >= FILE_TRIES.length || signal?.aborted) throw e;
             log(`page: ${f.path}: ${e.message}; asked for again in ${FILE_TRIES[i] / 1000} s`);
             await new Promise((ok) => setTimeout(ok, FILE_TRIES[i]));
