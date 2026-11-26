@@ -388,6 +388,26 @@ uint32_t rt_wcq26_africa_groups(uint32_t self, uint32_t original)
     return africa_on(self) ? (uint32_t)africa_groups(self) : original;
 }
 
+/* 0x910a4a (the group count of the group builder 0x9109e0, esi): never more groups than the teams in the pool fill.
+ * The first round was sized from the group count of its day (2 x (pool - 5 x groups)); the builder reads it again
+ * months later. When the hosts read differently in between (a game in Spanish lost Morocco as a 2030 host when the
+ * host rows were written again, season_intl.c nation_by_names), the builder dealt 9 groups to the 40 teams of an
+ * 8-group first round, and the empty places stopped the game at the first fixture (Database.cpp 13471,
+ * fix_man.cpp 3272). The pool's teams are the slots less the first round's losers: +0xb6 - +0x3e / 2. An empty slot
+ * sorts last (0x4b07d0), so the groups dealt from the first slots hold teams only. */
+uint32_t rt_wcq26_africa_groups_dealt(uint32_t self, uint32_t original)
+{
+    uint32_t groups = rt_wcq26_africa_groups(self, original);
+    if (!africa_on(self)) return groups;
+    int first = (int16_t)rd16(g_mem, self + 0x3eu), teams = (int)rd32(g_mem, self + 0xb6u) - first / 2;
+    if (first <= 0 || teams < 5 || teams >= 5 * (int)groups) return groups;
+    uint32_t fit = (uint32_t)(teams / 5);
+    if (logging())
+        fprintf(stderr, "recomp: season intl: wc qualifying %d: Africa deals %u groups to %d teams, not %u\n",
+                year_of(self) + 2, fit, teams, groups);
+    return fit;
+}
+
 /* After the pool (slice 27's F1 site 0x9108d8): in the gate the shape of no exempt nation (+0xba 0). The pool
  * count +0xb6 stays the real count. */
 void rt_wcq26_africa_format(uint32_t self)

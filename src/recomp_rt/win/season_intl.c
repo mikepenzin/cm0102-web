@@ -18,6 +18,7 @@
  * day from 1 January 2006. The fixed Oceania lists of the original then get New Zealand or another Oceania
  * nation in its place. */
 #include "win.h"
+#include "host.h"
 #include "season.h"
 #include "season_change.h"
 #include "season_intl.h"
@@ -121,18 +122,52 @@ static uint32_t nation_at(int id) { return rd32(g_mem, NATIONS) + (uint32_t)id *
 
 static int nation_valid(int id) { return id >= 0 && id < nation_count() && readable(rd32(g_mem, NATIONS)); }
 
-/* The id of the first nation with one of the names ("China PR/China"), or -1. */
+/* The English names of the game folder's own nation table (Data/nation.dat of the clean files: 0x122-byte records,
+ * the id at +0, the name at +4), read once; NULL when the file cannot be read. The tables of this code name nations in
+ * English, and a game in another language has the names of its language in memory ("Marruecos", "España" in a
+ * Spanish game): a player's game of 2028 lost Morocco and Spain as hosts of the 2030 World Cup, so CAF qualifying
+ * counted no African host and planned 9 groups for the 40 teams of its first round (Database.cpp 13471,
+ * fix_man.cpp 3272). The ids are the same in every language's data of the release (Morocco 126, Spain 172). */
+#define ENGLISH_MAX 512
+static char english_names[ENGLISH_MAX][52];
+static int english_count = -1;
+static void english_load(void)
+{
+    english_count = 0;
+    char path[1200];
+    snprintf(path, sizeof path, "%s/Data/nation.dat", win_game_dir);
+    FILE *f = host_fopen(path, "rb");
+    if (!f) return;
+    unsigned char rec[NATION_SIZE];
+    while (english_count < ENGLISH_MAX && fread(rec, 1, sizeof rec, f) == sizeof rec) {
+        memcpy(english_names[english_count], rec + NATION_NAME, sizeof english_names[0] - 1);
+        english_names[english_count][sizeof english_names[0] - 1] = 0;
+        english_count++;
+    }
+    fclose(f);
+}
+
+/* The id of the first nation with one of the names ("China PR/China"), or -1: by the names in memory, else by the
+ * English names of the game folder's data (a game in another language). */
 static int nation_by_names(const char *names)
 {
     char one[64];
-    const char *p = names;
-    while (*p) {
-        size_t n = strcspn(p, "/");
-        snprintf(one, sizeof one, "%.*s", (int)n, p);
-        for (int id = 0; id < nation_count(); id++)
-            if (!strcmp(win_str(nation_at(id) + NATION_NAME), one)) return id;
-        p += n;
-        if (*p == '/') p++;
+    for (int english = 0; english < 2; english++) {
+        if (english && english_count < 0) english_load();
+        const char *p = names;
+        while (*p) {
+            size_t n = strcspn(p, "/");
+            snprintf(one, sizeof one, "%.*s", (int)n, p);
+            if (!english) {
+                for (int id = 0; id < nation_count(); id++)
+                    if (!strcmp(win_str(nation_at(id) + NATION_NAME), one)) return id;
+            } else {
+                for (int id = 0; id < english_count && id < nation_count(); id++)
+                    if (!strcmp(english_names[id], one)) return id;
+            }
+            p += n;
+            if (*p == '/') p++;
+        }
     }
     return -1;
 }

@@ -385,7 +385,7 @@ INSNS = {
     # sub are not read: 0x91785e..0x917882 only move, `sub bl, 3` at 0x917887 sets them.
     0x919F90: ("mov dword ptr [esi + 0xf2], eax", "W32(esi + 0xf2u, eax); rt_wcq26_europe_format(esi);"),
     0x91785C: ("sub al, cl", "t0 = (eax & 0xffu); t1 = rt_wcq26_concacaf_hosts(esi, ecx & 0xffu) & 0xffu; t2 = ((t0 - t1) & 0xffu); SETF(K_SUB | SZ1, t0, t1, t2, 0); eax = (eax & 0xffffff00u) | t2;"),
-    0x910A4A: ("mov byte ptr [esp + 0x13], al", "W8(esp + 0x13u, rt_wcq26_africa_groups(esi, eax & 0xffu));"),
+    0x910A4A: ("mov byte ptr [esp + 0x13], al", "W8(esp + 0x13u, rt_wcq26_africa_groups_dealt(esi, eax & 0xffu));"),
     0x910A4E: ("mov dword ptr [esp + 0x18], eax", "W32(esp + 0x18u, rt_caf_group_size(esi, eax));"),  # item 199
     # item 199: set_club_progress 0x9115a0 (this in esi), group position 6 of a group of 6 (season_caf_pool.c)
     0x911600: ("mov bl, byte ptr [esp + 0x18]", "ebx = (ebx & 0xffffff00u) | (rt_caf_band(esi, R8(esp + 0x10u), R8(esp + 0x18u)) & 0xffu);"),
