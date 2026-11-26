@@ -1184,33 +1184,28 @@ const PORT = 8097;
       await ctx.close();
     }
 
-    // Older copies of saves that are gone (saves.js removeOrphanCopies): the next start removes them; a copy of a save
-    // that is here, one in progress, and a copy the player named stay. Delete of a save takes its older copies with it.
+    // Older copies of saves that are gone (saves.js removeOrphanCopies): the start removes them; a copy of a save that
+    // is here and a copy the player named stay. Older copies are off in the browser (backupsOffOnce). Delete of a save
+    // takes its older copies with it.
     {
       const ctx = await b.newContext({ viewport: { width: 1100, height: 760 } });
+      await ctx.addInitScript(() => {
+        window.__userSeed = Object.fromEntries(['Harbour City 2001-07-14.1.sav', 'Harbour City 2001-07-14 (before edit).sav', 'Gone 2001-06-30.1.sav',
+          'Gone 2001-06-30.2.sav', 'Gone 2001-06-30 (before edit).sav', 'my own copy.sav'].map((n) => [`/user/backups/${n}`, 1000]));
+        window.__userSeed['/user/Harbour City 2001-07-14.sav'] = 0x416ec + 32;
+      });
       const pg = await ctx.newPage();
       pg.on('dialog', (d) => d.accept().catch(() => {}));
       await pg.goto(`http://127.0.0.1:${PORT}/`);
       await pg.waitForSelector('#go');
       await pg.click('#go');
       await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
-      await pg.evaluate(() => {
-        const FS = window.Module.FS, s = FS.readFile('/user/Harbour City 2001-07-14.sav');
-        FS.mkdirTree('/user/backups');
-        for (const n of ['Harbour City 2001-07-14.1.sav', 'Harbour City 2001-07-14 (before edit).sav', 'Gone 2001-06-30.1.sav',
-          'Gone 2001-06-30.2.sav', 'Gone 2001-06-30 (before edit).sav', 'my own copy.sav']) FS.writeFile(`/user/backups/${n}`, s);
-      });
-      await pg.waitForTimeout(4000);                    // the folder watcher stores them
-      await pg.reload();
-      await pg.waitForFunction(() => window.__fake || document.getElementById('go'), null, { timeout: 60000 });
-      if (await pg.locator('#go').isVisible().catch(() => false)) await pg.click('#go');
-      await pg.waitForFunction(() => window.__fake, null, { timeout: 120000 });
       const left = await pg.evaluate(() => window.Module.FS.readdir('/user/backups').filter((n) => /\.sav$/.test(n)).sort());
       const logText = await pg.textContent('#log');
-      check('the next start removes the older copies of a save that is gone, and keeps the others',
+      check('the start removes the older copies of a save that is gone, and keeps the others',
         JSON.stringify(left) === JSON.stringify(['Harbour City 2001-07-14 (before edit).sav', 'Harbour City 2001-07-14.1.sav', 'my own copy.sav'])
           && /removed 3 older copies of saves that are gone/.test(logText), JSON.stringify(left));
-      const settings = await pg.evaluate(() => window.Module.FS.readFile('/user/settings.txt', { encoding: 'utf8' }));
+      const settings = String(await pg.evaluate(() => window.Module.FS.readFile('/user/settings.txt', { encoding: 'utf8' })));
       check('older copies are off in the browser: settings.txt says save_backups = off, once', /^save_backups = off$/m.test(settings)
         && (settings.match(/^save_backups/gm) ?? []).length === 1, settings.slice(0, 200));
       await pg.click('#saves-open');

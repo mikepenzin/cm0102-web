@@ -57,7 +57,17 @@
     syncfs(populate, cb) {
       window.__syncs[populate ? 'load' : 'store']++;
       (window.__syncLog ??= []).push(populate ? 'read' : 'store');
-      if (populate) { setTimeout(() => { window.__syncLog.push('read done'); cb(null); }, window.__slowRead ?? 5); return; }
+      // window.__userSeed: { path: bytes } of files the stored user folder holds (a visit before this one).
+      if (populate) {
+        setTimeout(() => {
+          for (const [path, size] of Object.entries(window.__userSeed ?? {})) {
+            mkdirTree(path.slice(0, path.lastIndexOf('/')));
+            files.set(path, { data: new Uint8Array(size), size, own: false, mtime: new Date() });
+          }
+          window.__syncLog.push('read done'); cb(null);
+        }, window.__slowRead ?? 5);
+        return;
+      }
       const dbs = M.IDBFS.dbs;
       if (!populate && dbs['/user']?.closed) {
         setTimeout(() => cb(new DOMException("Failed to execute 'transaction' on 'IDBDatabase': The database connection is closing.", 'InvalidStateError')), 5);
@@ -76,9 +86,9 @@
   M.removeRunDependency = () => { if (--deps === 0) init(); };
   M.callMain = (args) => {
     window.__fakeAt = Date.now();
-    const all = [...files.values()];
+    const all = [...files].filter(([p]) => p.startsWith('/game/')).map(([, f]) => f);   // the game files (the user folder has the page's own)
     window.__fake = {
-      args, files: files.size, bytes: all.reduce((a, f) => a + f.size, 0), owned: all.every((f) => f.own),
+      args, files: all.length, bytes: all.reduce((a, f) => a + f.size, 0), owned: all.every((f) => f.own),
       mounts, env: { ...M.ENV }, exe: files.has('/game/cm0102.exe'), rules: files.has('/game/Seasons/rules.tsv'),
       wasmType: window.__wasmType,
     };
