@@ -204,6 +204,16 @@ export const MANAGER_ATTRIBUTES = [
   ['Motivating', 'np', 0x1b, 'rel', 'Mental'], ['Physiotherapy', 'np', 0x1e, 'rel', 'Coaching'],
   ['Tactical Knowledge', 'np', 0x21, 'rel', 'Knowledge'], ['Working With Youngsters', 'np', 0x22, 'raw', 'Coaching'],
 ].map(([name, from, off, kind, group]) => ({ name, from, off, kind, group }));
+// The bytes the game keeps hidden (docs/research/2026-11-26-manager-editor-fields.md), raw 1..20: the playing style
+// the staff profile puts in words (0x87ba8b..), and a chairman's (0x87b1eb..).
+export const MANAGER_HIDDEN = [
+  ['Attacking', 0x0e, 'Style'], ['Directness', 0x13, 'Style'], ['Free Roles', 0x15, 'Style'], ['Marking', 0x1a, 'Style'],
+  ['Offsides', 0x1c, 'Style'], ['Pressing', 0x1f, 'Style'], ['Coaching Technique', 0x12, 'Style'],
+  ['Business', 0x0f, 'Chairman'], ['Interference', 0x16, 'Chairman'], ['Patience', 0x1d, 'Chairman'], ['Resources', 0x20, 'Chairman'],
+].map(([name, off, group]) => ({ name, off, group }));
+// The preferred formation (+0x43, shown at 0x87b90d): 0 none, then these.
+export const FORMATIONS = ['5-3-2 Sweeper', '5-3-2', '4-4-2', '4-3-3', '4-2-4', '3-5-2', '4-1-2-1-2', '4-5-1', '3-4-3'];
+const NON_PLAYER_REPS = [['homeRep', 0x08], ['currentRep', 0x0a], ['worldRep', 0x0c]];   // int16 0..10000 (0x540810..)
 const NON_PLAYER_SIZE = 68, NON_PLAYER_LINK = 0x69;   // a save's records (nonplayer.dat); a staff row's link to one
 
 // A non-player's attributes in a SaveGame whose member nonplayer.dat is loaded: { ca, pa, attrs: [{ name, group,
@@ -219,7 +229,8 @@ export function managerAttributes(game, staffId) {
     const b = a.from === 'staff' ? s.b[o + a.off] : np[q + a.off];
     return { name: a.name, group: a.group, value: a.kind === 'rel' ? rating((b << 24) >> 24, ca) : b };
   });
-  return { ca, pa: dv.getInt16(q + 6, true), attrs };
+  return { ca, pa: dv.getInt16(q + 6, true), attrs, hidden: MANAGER_HIDDEN.map((a) => ({ name: a.name, group: a.group, value: np[q + a.off] })),
+    ...Object.fromEntries(NON_PLAYER_REPS.map(([k, off]) => [k, dv.getInt16(q + off, true)])), formation: np[q + 0x43] };
 }
 
 // Every staff member with a non-player record (managers, coaches, scouts and the rest): { id, name, key (to search),
@@ -244,19 +255,33 @@ export function nonPlayers(game) {
 // Writes a non-player's ability (ca, pa: the record's +0x04 and +0x06) and his twelve attributes as the game shows them
 // (values: { name: 1..20 }): an attribute as it is gets its byte, a relative one the byte that shows that number at
 // the new ability (storedFor), so a change of ability keeps the numbers. Marks staff.dat and nonplayer.dat changed.
-export function writeManagerAttributes(game, staffId, { ca, pa, values }) {
+// Also { hidden: { name: 1..20 }, homeRep, currentRep, worldRep (0..10000), formation (0..9) }. Only a value that
+// differs from what the game shows now is written, so a byte out of range that is not changed keeps its value.
+export function writeManagerAttributes(game, staffId, { ca, pa, values, hidden = {}, formation, ...reps }) {
   const s = game.staff, o = staffId * STAFF_SIZE, k = s.dv.getInt32(o + NON_PLAYER_LINK, true);
   const np = game.file.read('nonplayer.dat'), q = k * NON_PLAYER_SIZE;
   if (k < 0 || q + NON_PLAYER_SIZE > np.length) throw Object.assign(new Error('no non-player record'), { key: 'no non-player record' });
   const dv = new DataView(np.buffer, np.byteOffset, np.byteLength);
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v)) || lo));
+  if (formation !== undefined && !(Number.isInteger(Number(formation)) && formation >= 0 && formation <= FORMATIONS.length))
+    throw Object.assign(new Error('no such formation'), { key: 'no such formation' });
+  const was = managerAttributes(game, staffId), shownNow = Object.fromEntries(was.attrs.map((x) => [x.name, x.value]));
   const a = clamp(ca, 1, 200);
-  dv.setInt16(q + 4, a, true); dv.setInt16(q + 6, clamp(pa, 1, 200), true);
+  if (Number(ca) !== was.ca) dv.setInt16(q + 4, a, true);
+  if (Number(pa) !== was.pa) dv.setInt16(q + 6, clamp(pa, 1, 200), true);
   for (const attr of MANAGER_ATTRIBUTES) {
     if (!(attr.name in values)) continue;
+    // A relative one shows another number at a new ability: it is written again then, to keep the number shown.
+    if (Number(values[attr.name]) === shownNow[attr.name] && (attr.kind !== 'rel' || a === was.ca)) continue;
     const byte = storedFor({ kind: attr.kind }, clamp(values[attr.name], 1, 20), a).byte;
     if (attr.from === 'staff') s.b[o + attr.off] = byte; else np[q + attr.off] = byte;
   }
+  for (const h of MANAGER_HIDDEN) {
+    const v = hidden[h.name];
+    if (v !== undefined && Number(v) !== np[q + h.off]) np[q + h.off] = clamp(v, 1, 20);
+  }
+  for (const [k, off] of NON_PLAYER_REPS) if (reps[k] !== undefined && Number(reps[k]) !== was[k]) dv.setInt16(q + off, clamp(reps[k], 0, 10000), true);
+  if (formation !== undefined) np[q + 0x43] = Number(formation);
   game.file.changed('nonplayer.dat');
   game.file.changed(s.name);
 }

@@ -392,6 +392,9 @@ try {
       && await p.locator('#editor-form [data-f="p:Ambition"]').count() === 1 && await p.locator('#editor-form [data-f="m:morale"]').count() === 0);
     await p.fill('#editor-form [data-attr="Motivating"]', '7');
     await p.locator('#editor-form [data-attr="Motivating"]').dispatchEvent('change');
+    await p.fill('#editor-form [data-hid="Attacking"]', '18');
+    await p.locator('#editor-form [data-hid="Attacking"]').dispatchEvent('change');
+    await p.selectOption('#editor-form [data-mf="formation"]', '6');
     check('Managers: a change counts as a change of the save', /\(1 changed\)/.test(await p.textContent('#editor-save')), await p.textContent('#editor-save'));
     await p.click('#editor-save');
     await p.waitForFunction(() => /Saved/.test(document.getElementById('editor-note').textContent), null, { timeout: 15000 });
@@ -399,6 +402,8 @@ try {
     const { managerAttributes } = await import('../savedit.js');
     const saved = new SaveGame(new Uint8Array(bytes));
     check('Managers: saved, the file has the new Motivating', managerAttributes(saved, players.length + 2)?.attrs.find((x) => x.name === 'Motivating')?.value === 7);
+    check('Managers: and his hidden Attacking and preferred formation', managerAttributes(saved, players.length + 2)?.hidden.find((x) => x.name === 'Attacking')?.value === 18
+      && managerAttributes(saved, players.length + 2)?.formation === 6);
     await ctx.close();
     const c2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const free = await editorOn(c2, ME.free);

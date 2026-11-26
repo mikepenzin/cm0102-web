@@ -245,6 +245,27 @@ test('a player as the GK editor shows him: nations, caps, value, squads, morale,
   assert.equal(new SaveGame(await fakeSaveGame()).read(0).more.contract, null, 'no contract.dat: no contract');
 });
 
+test('a manager as the GK editor shows him: reputations, the hidden style and chairman bytes, the formation; only changes written', async () => {
+  const { managerAttributes, writeManagerAttributes } = await import('../savedit.js');
+  const g = new SaveGame(await fakeSaveGame(undefined, { managers: [
+    { first: 'Klaus', second: 'Kastelmann', np: { 0x08: 0, 0x0e: 14, 0x0f: 6, 0x13: 9, 0x1d: 18, 0x43: 3 } }] }));
+  const np = g.file.read('nonplayer.dat'), q = 0;
+  new DataView(np.buffer, np.byteOffset).setInt16(q + 0x08, 8752, true); new DataView(np.buffer, np.byteOffset).setInt16(q + 0x0a, 7576, true);
+  new DataView(np.buffer, np.byteOffset).setInt16(q + 0x0c, 8491, true);
+  const m = managerAttributes(g, 3);
+  assert.deepEqual([m.homeRep, m.currentRep, m.worldRep, m.formation], [8752, 7576, 8491, 3]);
+  const h = Object.fromEntries(m.hidden.map((a) => [a.name, a.value]));
+  assert.deepEqual([h.Attacking, h.Business, h.Directness, h.Patience, h.Pressing], [14, 6, 9, 18, 0]);
+  assert.deepEqual([...new Set(m.hidden.map((a) => a.group))], ['Style', 'Chairman']);
+  const values = Object.fromEntries(m.attrs.map((a) => [a.name, a.value]));
+  writeManagerAttributes(g, 3, { ca: m.ca, pa: m.pa, values, hidden: { ...h, Attacking: 20, Resources: 25 }, homeRep: 9000, worldRep: 12000, formation: 6 });
+  const b = managerAttributes(g, 3), bh = Object.fromEntries(b.hidden.map((a) => [a.name, a.value]));
+  assert.deepEqual([bh.Attacking, bh.Resources, bh.Pressing, b.homeRep, b.currentRep, b.worldRep, b.formation], [20, 20, 0, 9000, 7576, 10000, 6],
+    'the changes, cut to 1..20 and 0..10000; Pressing left at 0 as it was');
+  assert.equal(np[q + 0x14], 0, 'an attribute not changed keeps its byte, even one out of range');
+  assert.throws(() => writeManagerAttributes(g, 3, { ca: m.ca, pa: m.pa, values, formation: 12 }), /formation/);
+});
+
 test('non-players: the staff with a non-player record, by name and club; edits written as the game rates them', async () => {
   const { nonPlayers, managerAttributes, writeManagerAttributes } = await import('../savedit.js');
   const g = new SaveGame(await fakeSaveGame(undefined, { managers: [

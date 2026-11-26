@@ -726,6 +726,13 @@ relative rating) and saved with the game file. A member's,
 as the Scout's potential; a free player sees the Membership invitation. A feature of `features.js`
 (`manager-attributes`): Club Legends first.
 
+Like GK's Edit Player/Staff screen for a non-player (docs/research/2026-11-26-manager-editor-fields.md): his home,
+current and world reputation (nonplayer.dat +0x08, +0x0a, +0x0c) and preferred formation (+0x43); the bytes the game
+keeps hidden, as a playing style (Attacking, Directness, Free Roles, Marking, Offsides, Pressing, Coaching Technique)
+and as a chairman (Business, Interference, Patience, Resources); and the player form's Details, Personality and
+Contract (a contract only where the save holds one: most database managers and chairmen have none). Only a value that
+changed is written. The game lowers reputations day by day and gives a new chairman new board values.
+
 **Nationality** (`savedit.js` and `dataset.js` `nationNames()` and `search(text, limit, nation)`, `scout.js` `nation`). A
 Nationality list beside the Players search (of a save and of a data set) and a Nationality filter in the Scout: the
 nations of the data's players, by the names the data has. A feature of `features.js` (`nationality`): Club Legends

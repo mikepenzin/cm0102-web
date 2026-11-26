@@ -4,7 +4,7 @@
 //   backups/ first, so Load Game lists the edited save and Saved games the old one.
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
-import { ATTRIBUTES, PERSONALITY, POSITIONS, SaveGame, clubFinances, clubInfo, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
+import { ATTRIBUTES, FORMATIONS, MANAGER_HIDDEN, PERSONALITY, POSITIONS, SaveGame, clubFinances, clubInfo, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
@@ -510,7 +510,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     'Judging Player Ability': t('Judging Player Ability'), 'Judging Player Potential': t('Judging Player Potential'),
     'Level of Discipline': t('Level of Discipline'), 'Man Management': t('Man Management'), Motivating: t('Motivating'),
     Physiotherapy: t('Physiotherapy'), 'Tactical Knowledge': t('Tactical Knowledge'), 'Working With Youngsters': t('Working With Youngsters'),
-    Coaching: t('Coaching'), Mental: t('Mental'), Knowledge: t('Knowledge') });
+    Coaching: t('Coaching'), Mental: t('Mental'), Knowledge: t('Knowledge'), Style: t('Playing style'), Chairman: t('As a chairman'),
+    Attacking: t('Attacking'), Directness: t('Directness'), 'Free Roles': t('Free Roles'), Marking: t('Marking'), Offsides: t('Offsides'),
+    Pressing: t('Pressing'), 'Coaching Technique': t('Coaching Technique'), Business: t('Business'), Interference: t('Interference'),
+    Patience: t('Patience'), Resources: t('Resources') });
   async function drawManagers() {
     if (!model || kind !== 'save') return;
     const access_ = managerAccess();
@@ -553,10 +556,14 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     for (const b of managersBox.querySelectorAll('[data-mgr]')) b.classList.toggle('on', Number(b.dataset.mgr) === id);
     const box = (key, value, min, max, label, attr = '') => `<label><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" ${attr} value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
     detailPanel(`<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Managers'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>
-      <section><h4>${esc(t('Ability'))}</h4><div class="ed-grid">${box('ca', a.ca, 1, 200, t('Current ability'), 'data-mf="ca"')}${box('pa', a.pa, 1, 200, t('Potential ability'), 'data-mf="pa"')}</div></section>
+      <section><h4>${esc(t('Ability'))}</h4><div class="ed-grid">${box('ca', a.ca, 1, 200, t('Current ability'), 'data-mf="ca"')}${box('pa', a.pa, 1, 200, t('Potential ability'), 'data-mf="pa"')}
+        ${['homeRep', 'currentRep', 'worldRep'].map((k, n) => box(k, a[k], 0, 10000, [t('Home reputation'), t('Current reputation'), t('World reputation')][n], `data-mf="${k}"`).replace('<label>', '<label class="big">')).join('')}
+        <label class="wide"><span>${esc(t('Preferred formation'))}</span><select data-mf="formation">${[t('None'), ...FORMATIONS].map((l, k) => `<option value="${k}"${k === a.formation ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div></section>
       <div class="ed-attrs">${MGR_GROUPS.map((g) => `<section><h4>${esc(nm[g])}</h4><div class="ed-grid">${a.attrs.filter((y) => y.group === g)
         .map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-attr="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>
-      ${moreHtml(model.readMore(id))}`);
+      <div class="ed-attrs">${['Style', 'Chairman'].map((g) => `<section><h4>${esc(nm[g])} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">${a.hidden
+        .filter((y) => y.group === g).map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-hid="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>
+      ${moreHtml(model.readMore(id), ['Adaptability'])}`);
     form.onchange = (e) => {
       if (e.target.closest('[data-f]')) {               // details, personality, contract (savedit.js writeMore)
         try { model.writeMore(id, moreOf(model.readMore(id))); } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: reason(err) }), true); return; }
@@ -565,14 +572,19 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         say(() => t('{name} changed. Save the game file to keep the changes.', { name }));
         return;
       }
-      if (!e.target.matches('[data-mf], [data-attr]')) return;
+      if (!e.target.matches('[data-mf], [data-attr], [data-hid]')) return;
       const values = Object.fromEntries([...form.querySelectorAll('[data-attr]')].map((i) => [i.dataset.attr, Number(i.value)]));
+      const hidden = Object.fromEntries([...form.querySelectorAll('[data-hid]')].map((i) => [i.dataset.hid, Number(i.value)]));
+      const mf = (k) => form.querySelector(`[data-mf="${k}"]`).value;
       try {
-        writeManagerAttributes(model, id, { ca: form.querySelector('[data-mf="ca"]').value, pa: form.querySelector('[data-mf="pa"]').value, values });
+        writeManagerAttributes(model, id, { ca: mf('ca'), pa: mf('pa'), values, hidden, homeRep: Number(mf('homeRep')), currentRep: Number(mf('currentRep')),
+          worldRep: Number(mf('worldRep')), formation: Number(mf('formation')) });
       } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: reason(err) }), true); return; }
       const now = managerAttributes(model, id);
       for (const y of now.attrs) { const i = form.querySelector(`[data-attr="${CSS.escape(y.name)}"]`); if (i) { i.value = y.value; i.dataset.band = band(y.value); } }
       form.querySelector('[data-mf="ca"]').value = now.ca; form.querySelector('[data-mf="pa"]').value = now.pa;
+      for (const k of ['homeRep', 'currentRep', 'worldRep']) form.querySelector(`[data-mf="${k}"]`).value = now[k];
+      for (const y of now.hidden) { const i = form.querySelector(`[data-hid="${CSS.escape(y.name)}"]`); if (i) { i.value = y.value; i.dataset.band = band(y.value); } }
       edited.add(`mgr:${id}`);
       dirty();
       say(() => t('{name} changed. Save the game file to keep the changes.', { name }));
@@ -691,7 +703,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   const big = (key, value, max, label) => num(key, value, 0, max, label).replace('<label>', '<label class="big">');
   const CONTRACT_KEYS = ['wage', 'number', 'status', 'goalBonus', 'assistBonus', 'cleanSheetBonus', 'fee', 'nonPromotion', 'minFee', 'nonPlaying',
     'relegation', 'managerJob', 'listed', 'listedByRequest', 'loanListed'];
-  function moreHtml(m) {
+  // skip: personality names shown elsewhere (a manager's Adaptability is among his attributes).
+  function moreHtml(m, skip = []) {
     const badge = playerAccess().badge;
     const ns = [...model.nations].sort((a, b) => a[1].localeCompare(b[1]));
     const pn = personalityNames(), c = m.contract;
@@ -708,7 +721,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         ${big('m:worldRep', m.worldRep, 10000, t('World reputation'))}${num('m:morale', m.morale, 1, 20, t('Morale'))}
       </div></section>` : ''}
       <section><h4>${esc(t('Personality'))} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">
-        ${PERSONALITY.map(([n]) => num(`p:${n}`, m.personality[n], 1, 20, pn[n])).join('')}</div></section>
+        ${PERSONALITY.filter(([n]) => !skip.includes(n)).map(([n]) => num(`p:${n}`, m.personality[n], 1, 20, pn[n])).join('')}</div></section>
       ${c ? `<section><h4>${esc(t('Contract'))}</h4><div class="ed-grid">
         ${big('c:wage', c.wage, 10000000, t('Wage a week'))}${num('c:number', c.number, 0, 50, t('Squad number'))}
         <label class="when"><span>${esc(t('Contract starts'))}</span><input type="date" data-f="c:start" value="${isoDate(c.start)}" data-was="${isoDate(c.start)}" min="1960-01-01" max="2060-12-31"></label>
