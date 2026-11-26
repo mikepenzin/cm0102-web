@@ -155,3 +155,18 @@ test('nationality: the nations of the players, and a search of one nation (with 
   assert.deepEqual(g.search('del', 60, 'France'), []);
   assert.equal(g.search('', 60).length, 2, 'no nation: every player');
 });
+
+test('manager attributes: the twelve the game shows, from the staff row and the non-player record (0x543fd0)', async () => {
+  const { managerAttributes, MANAGER_ATTRIBUTES } = await import('../savedit.js');
+  // Klaus: ability 200, Coaching Outfield Players byte -11 (18), Discipline 5, Youngsters 7, Adaptability 13, Determination 8.
+  const g = new SaveGame(await fakeSaveGame(undefined, { managers: [
+    { first: 'Klaus', second: 'Kastelmann', adaptability: 13, determination: 8, np: { 0x10: -11, 0x14: 5, 0x22: 7, 0x21: 20, 0x17: -2 } },
+    { first: 'Mike', second: 'Penzin', ca: 100, np: { 0x1b: 0 } }] }));
+  assert.equal(MANAGER_ATTRIBUTES.length, 12);
+  const k = managerAttributes(g, 3), by = Object.fromEntries(k.attrs.map((a) => [a.name, a.value]));
+  assert.deepEqual([k.ca, k.pa], [200, 200]);
+  assert.deepEqual([by.Adaptability, by.Determination, by['Coaching Outfield Players'], by['Level of Discipline'], by['Working With Youngsters']], [13, 8, 18, 5, 7]);
+  assert.equal(by['Tactical Knowledge'], 20, 'a relative byte at ability 200');
+  assert.equal(managerAttributes(g, 4).attrs.find((a) => a.name === 'Motivating').value, rating(0, 100), 'ability 100: the relative formula');
+  assert.equal(managerAttributes(g, 0), null, 'a player has no non-player record');
+});

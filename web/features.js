@@ -5,5 +5,6 @@
 export const FEATURES = [
   { key: 'shortlist', name: 'Scout to shortlist' },   // Squad Hub: a Scout player onto a manager's Short List (shortlist.js)
   { key: 'scout-request', name: 'Scout a player' },
-  { key: 'nationality', name: 'Nationality filter' },   // Squad Hub: the Players list and the Scout by a player's nation   // Squad Hub: the manager's club asks its scouts to watch him (shortlist.js)
+  { key: 'nationality', name: 'Nationality filter' },
+  { key: 'manager-attributes', name: 'Manager attributes' },   // Squad Hub: the human managers' attributes (Managers tab)   // Squad Hub: the Players list and the Scout by a player's nation   // Squad Hub: the manager's club asks its scouts to watch him (shortlist.js)
 ];

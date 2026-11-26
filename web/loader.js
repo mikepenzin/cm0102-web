@@ -1018,6 +1018,7 @@ function runEngine(files, info) {
         shortlistAccess: () => featureAccess('shortlist'),
         requestAccess: () => featureAccess('scout-request'),
         nationAccess: () => featureAccess('nationality'),
+        managerAccess: () => featureAccess('manager-attributes'),
         joining: () => account.waitForLegend(),
         onSetChange: (name, what) => (what === 'deleted' ? setSync?.deleted(name) : setSync?.run()) });
       account.onAccountChange(() => editor.redraw());      // joined or signed out: the open Scout follows

@@ -4,7 +4,7 @@
 //   backups/ first, so Load Game lists the edited save and Saved games the old one.
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
-import { ATTRIBUTES, POSITIONS, SaveGame } from './savedit.js';
+import { ATTRIBUTES, POSITIONS, SaveGame, managerAttributes } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
@@ -66,7 +66,7 @@ export function dataSetNameProblem(name, taken) {
 export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data', isRunning, onSaved = () => {}, onSetChange = () => {},
   access = () => 'full', inviteKind = () => 'signin', invite = () => {}, onPageKey = null,
   shortlistAccess = () => ({ state: 'open', locked: '', badge: '' }), requestAccess = () => ({ state: 'open', locked: '', badge: '' }),
-  nationAccess = () => ({ state: 'open', locked: '', badge: '' }),
+  nationAccess = () => ({ state: 'open', locked: '', badge: '' }), managerAccess = () => ({ state: 'open', locked: '', badge: '' }),
   joining = () => {} }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
@@ -349,7 +349,43 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // ---- The players ----
 
   // The list of the pane shown: the players (search) or the Scout's matches.
-  const redrawList = () => (pane === 'scout' && model ? runScout() : results());
+  const redrawList = () => (pane === 'managers' && model ? drawManagers() : pane === 'scout' && model ? runScout() : results());
+
+  // ---- Managers (savedit.js managerAttributes; docs/research/2026-11-26-manager-attributes.md): each human manager of a
+  // saved game with the twelve attributes the game keeps (hidden for the human managers): a member's, as the Scout's
+  // potential; features.js 'manager-attributes', Club Legends first. Read only. ----
+  const managersBox = $('editor-managers');
+  const MGR_GROUPS = ['Coaching', 'Mental', 'Knowledge'];
+  // The names as the game's 0x543b10 gives them, each a text of its own (the tables find them here).
+  const mgrNames = () => ({ Adaptability: t('Adaptability'), 'Coaching Goalkeepers': t('Coaching Goalkeepers'),
+    'Coaching Outfield Players': t('Coaching Outfield Players'), Determination: t('Determination'),
+    'Judging Player Ability': t('Judging Player Ability'), 'Judging Player Potential': t('Judging Player Potential'),
+    'Level of Discipline': t('Level of Discipline'), 'Man Management': t('Man Management'), Motivating: t('Motivating'),
+    Physiotherapy: t('Physiotherapy'), 'Tactical Knowledge': t('Tactical Knowledge'), 'Working With Youngsters': t('Working With Youngsters'),
+    Coaching: t('Coaching'), Mental: t('Mental'), Knowledge: t('Knowledge') });
+  async function drawManagers() {
+    if (!model || kind !== 'save') return;
+    const access_ = managerAccess();
+    if (access_.state === 'locked') { managersBox.innerHTML = access_.locked; return; }
+    if (access() !== 'full') {
+      managersBox.innerHTML = `<p class="small">${esc(t('A member sees the attributes of the save\'s human managers here: coaching, judging players, motivating and the rest, which the game keeps hidden.'))}</p>
+        <p><button type="button" id="managers-invite" class="primary">${esc(t('Become a member'))}</button></p>`;
+      $('managers-invite').onclick = () => invite();
+      return;
+    }
+    managersBox.innerHTML = `<p class="small">${esc(t('Reading the managers of this save…'))}</p>`;
+    const m = model;
+    await readLists();
+    try { await m.file.load(['nonplayer.dat']); } catch { /* none: no values */ }
+    if (model !== m || pane !== 'managers') return;
+    const people = lists?.managers ?? [];
+    const rows = people.map((p) => ({ p, a: managerAttributes(m, p.id) })).filter((x) => x.a);
+    const nm = mgrNames();
+    managersBox.innerHTML = rows.length ? `<p class="small">${esc(t('The attributes the game keeps for each human manager of this save, as it rates them (1 to 20). The game does not show them.'))}${access_.badge}</p>`
+      + rows.map(({ p, a }) => `<section class="mgr"><h3 data-raw>${esc(p.name)}</h3>${MGR_GROUPS.map((g) => `<h4>${esc(nm[g])}</h4><dl>${a.attrs.filter((x) => x.group === g)
+        .map((x) => `<dt>${esc(nm[x.name])}</dt><dd data-attr="${esc(x.name)}" data-band="${band(x.value)}">${x.value}</dd>`).join('')}</dl>`).join('')}</section>`).join('')
+      : `<p class="small">${esc(t('This save has no human manager whose attributes it keeps.'))}</p>`;
+  }
 
   // The Nationality list (features.js 'nationality'): the nations of the open save's or data set's players, built once
   // for each; hidden while the feature is early and the player is no Club Legend. Its names are the data's own.
@@ -377,10 +413,12 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     pane = which;
     clearTimeout(timer);                              // a search typed in Players does not fill the list behind the Scout
     for (const b of tabs.querySelectorAll('[data-pane]')) { b.setAttribute('aria-selected', String(b.dataset.pane === pane)); b.tabIndex = b.dataset.pane === pane ? 0 : -1; }
-    const scouting = pane === 'scout';
-    dialog.querySelector('.ed-search').hidden = scouting;
-    list.hidden = scouting;
+    const scouting = pane === 'scout', managing = pane === 'managers';
+    dialog.querySelector('.ed-search').hidden = scouting || managing;
+    list.hidden = scouting || managing;
     scoutBox.hidden = !scouting;
+    managersBox.hidden = !managing;
+    if (managing) { list.innerHTML = ''; found.innerHTML = ''; if (show && model) drawManagers(); return; }
     if (scouting) { list.innerHTML = ''; drawFilters(); }      // no list of players in the page while the Scout shows
     else found.innerHTML = '';
     if (show && model) redrawList();
@@ -763,7 +801,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     openSave,
     openSet,
     // The account changed (account.js): the Scout's matches for the account as it is now.
-    redraw() { if (dialog.open && model && pane === 'scout') runScout(); },
+    redraw() { if (dialog.open && model && pane === 'scout') runScout(); else if (dialog.open && model && pane === 'managers') drawManagers(); },
     open() { if (!dialog.open) dialog.showModal(); say(''); showHome(); },
   };
 }

@@ -100,7 +100,7 @@ try {
   {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const p = await editorOn(ctx, ME.free);
-    check('a saved game in the Editor: tabs Players and Scout', (await p.$$eval('#editor-tabs [data-pane]', (b) => b.map((x) => x.dataset.pane))).join() === 'players,scout');
+    check('a saved game in the Editor: tabs Players, Scout and Managers', (await p.$$eval('#editor-tabs [data-pane]', (b) => b.map((x) => x.dataset.pane))).join() === 'players,scout,managers');
     await scoutTab(p);
     const shown = await rowNames(p), html = await pageHtml(p);
     check('free: the first 3 by potential, in full', shown.join() === NAMES.slice(0, 3).join(), shown.join());
@@ -281,6 +281,36 @@ try {
       && lists.ids(lists.managers[1].id).size === 0, JSON.stringify([[...lists.ids(lists.managers[0].id)], [...lists.ids(lists.managers[1].id)]]));
     await shot(p, 'shortlist');
     await ctx.close();
+  }
+  // ---- Managers (savedit.js managerAttributes): each human manager's twelve attributes, a member's ----
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await editorOn(ctx, ME.member);
+    await p.click('#editor-tabs [data-pane="managers"]');
+    await p.waitForSelector('#editor-managers .mgr', { timeout: 10000 }).catch(() => {});
+    const names = await p.$$eval('#editor-managers .mgr h3', (h) => h.map((x) => x.textContent.trim()));
+    check('Managers: one block for each human manager', names.join() === 'Klaus Kastelmann,Mike Penzin', names.join());
+    const klaus = await p.$$eval('#editor-managers .mgr:first-of-type [data-attr]', (v) => Object.fromEntries(v.map((x) => [x.dataset.attr, x.textContent.trim()])));
+    check('Managers: the twelve attributes, Adaptability and Determination from the staff row, a relative one rated',
+      Object.keys(klaus).length === 12 && klaus.Adaptability === '12' && klaus.Determination === '14' && klaus['Tactical Knowledge'] === '20', JSON.stringify(klaus));
+    check('Managers: the search and the Players list are hidden', !(await p.isVisible('#editor-search')) && !(await p.isVisible('#editor-results')));
+    await ctx.close();
+    const c2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const free = await editorOn(c2, ME.free);
+    await free.click('#editor-tabs [data-pane="managers"]');
+    await free.waitForSelector('#editor-managers', { state: 'visible' });
+    await free.waitForTimeout(400);
+    check('Managers, a free player: no values, the Membership invitation', await free.locator('#editor-managers [data-attr]').count() === 0
+      && await free.locator('#managers-invite').count() === 1);
+    await c2.close();
+    const c3 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const day = new Date(Date.now() + 5 * 86400e3).toISOString().slice(0, 10);
+    const early = await editorOn(c3, { ...ME.member, early: { legend: false, features: { 'manager-attributes': day } } });
+    await early.click('#editor-tabs [data-pane="managers"]');
+    await early.waitForTimeout(600);
+    check('Managers, early for a member who is no Club Legend: the locked line, no values', await early.locator('#editor-managers .early-locked').count() === 1
+      && await early.locator('#editor-managers [data-attr]').count() === 0);
+    await c3.close();
   }
   // ---- Nationality (savedit.js nationNames, search; scout.js nation): in the Players list and in the Scout ----
   {

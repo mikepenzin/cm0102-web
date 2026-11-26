@@ -192,6 +192,36 @@ export function rating(r, a) {
   return Math.trunc(y);
 }
 
+// ---- A manager's attributes (docs/research/2026-11-26-manager-attributes.md) ----
+
+// The twelve the game shows for a non-player (0x543b10 names them, 0x543fd0 rates them): from the staff row ('staff')
+// or the non-player record ('np'), the byte as it is ('raw') or relative to the non-player's current ability ('rel').
+export const MANAGER_ATTRIBUTES = [
+  ['Adaptability', 'staff', 0x56, 'raw', 'Mental'], ['Coaching Goalkeepers', 'np', 0x11, 'rel', 'Coaching'],
+  ['Coaching Outfield Players', 'np', 0x10, 'rel', 'Coaching'], ['Determination', 'staff', 0x58, 'raw', 'Mental'],
+  ['Judging Player Ability', 'np', 0x17, 'rel', 'Knowledge'], ['Judging Player Potential', 'np', 0x18, 'rel', 'Knowledge'],
+  ['Level of Discipline', 'np', 0x14, 'raw', 'Mental'], ['Man Management', 'np', 0x19, 'rel', 'Mental'],
+  ['Motivating', 'np', 0x1b, 'rel', 'Mental'], ['Physiotherapy', 'np', 0x1e, 'rel', 'Coaching'],
+  ['Tactical Knowledge', 'np', 0x21, 'rel', 'Knowledge'], ['Working With Youngsters', 'np', 0x22, 'raw', 'Coaching'],
+].map(([name, from, off, kind, group]) => ({ name, from, off, kind, group }));
+const NON_PLAYER_SIZE = 68, NON_PLAYER_LINK = 0x69;   // a save's records (nonplayer.dat); a staff row's link to one
+
+// A non-player's attributes in a SaveGame whose member nonplayer.dat is loaded: { ca, pa, attrs: [{ name, group,
+// value }] }, or null for a staff member with no non-player record (a player).
+export function managerAttributes(game, staffId) {
+  const s = game.staff;
+  if (staffId < 0 || staffId >= s.count || !game.file.has('nonplayer.dat')) return null;
+  const o = staffId * STAFF_SIZE, k = s.dv.getInt32(o + NON_PLAYER_LINK, true), np = game.file.read('nonplayer.dat');
+  const q = k * NON_PLAYER_SIZE;
+  if (k < 0 || q + NON_PLAYER_SIZE > np.length) return null;
+  const dv = new DataView(np.buffer, np.byteOffset, np.byteLength), ca = dv.getInt16(q + 4, true);
+  const attrs = MANAGER_ATTRIBUTES.map((a) => {
+    const b = a.from === 'staff' ? s.b[o + a.off] : np[q + a.off];
+    return { name: a.name, group: a.group, value: a.kind === 'rel' ? rating((b << 24) >> 24, ca) : b };
+  });
+  return { ca, pa: dv.getInt16(q + 6, true), attrs };
+}
+
 // kind: raw (the byte is the rating), rel (0x544380), gk20 (0x5442f0's tenth when the goalkeeper rating is 20),
 // gk15 (the tenth when it is below 15). from: 'player' (the player data) or 'staff' (the staff row).
 // The 31 shown attributes in the game's numbering (the case of the jump table 0x543a94), then the bytes that the

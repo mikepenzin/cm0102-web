@@ -686,6 +686,15 @@ counts as a change of the save and goes with Save the game file (the writer then
 Members only, as the full Scout; a free player's star opens the Account dialog. A feature of `features.js`
 (`shortlist`): Club Legends first.
 
+**Managers** (`savedit.js` `managerAttributes`; docs/research/2026-11-26-manager-attributes.md). A third tab of a saved
+game: each human manager (the named places of `scout_manager.dat`) with the twelve attributes the game keeps for a
+non-player and hides for the human managers (the HumanManagerAttributes patch of CM 01/02 showed them): Coaching
+Goalkeepers, Coaching Outfield Players, Physiotherapy, Working With Youngsters; Adaptability, Determination, Level of
+Discipline, Man Management, Motivating; Judging Player Ability, Judging Player Potential, Tactical Knowledge. Rated
+as the game rates them (0x543fd0: as stored, or relative to the manager's current ability). Read only. A member's,
+as the Scout's potential; a free player sees the Membership invitation. A feature of `features.js`
+(`manager-attributes`): Club Legends first.
+
 **Nationality** (`savedit.js` and `dataset.js` `nationNames()` and `search(text, limit, nation)`, `scout.js` `nation`). A
 Nationality list beside the Players search (of a save and of a data set) and a Nationality filter in the Scout: the
 nations of the data's players, by the names the data has. A feature of `features.js` (`nationality`): Club Legends
