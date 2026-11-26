@@ -4,7 +4,7 @@
 //   backups/ first, so Load Game lists the edited save and Saved games the old one.
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
-import { ATTRIBUTES, FORMATIONS, MANAGER_HIDDEN, PERSONALITY, POSITIONS, SaveGame, clubFinances, clubInfo, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
+import { ATTRIBUTES, FORMATIONS, MANAGER_HIDDEN, PERSONALITY, POSITIONS, STAFF_JOBS, SaveGame, clubFinances, clubInfo, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
@@ -521,6 +521,9 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   const managersBox = $('editor-managers');
   const MGR_GROUPS = ['Coaching', 'Mental', 'Knowledge'];
   // The names as the game's 0x543b10 gives them, each a text of its own (the tables find them here).
+  const staffJobNames = () => [t('Unemployed'), t('Chairman'), t('Managing Director'), t('General Manager'), t('Director of Football'), t('Manager'),
+    t('Assistant Manager'), t('Reserve Manager'), t('Coach'), t('Scout'), t('Physio'), t('Player'), t('Player/Manager'), t('Player/Assistant Manager'),
+    '', t('Player/Coach'), t('Retired Player'), t('Media Pundit')];
   const mgrNames = () => ({ Adaptability: t('Adaptability'), 'Coaching Goalkeepers': t('Coaching Goalkeepers'),
     'Coaching Outfield Players': t('Coaching Outfield Players'), Determination: t('Determination'),
     'Judging Player Ability': t('Judging Player Ability'), 'Judging Player Potential': t('Judging Player Potential'),
@@ -546,19 +549,25 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     try { await m.file.load(['nonplayer.dat']); } catch { /* none: no values */ }
     if (model !== m || pane !== 'managers') return;
     if (!m.file.has('nonplayer.dat')) { managersBox.innerHTML = `<p class="small">${esc(t('This save has no human manager whose attributes it keeps.'))}</p>`; return; }
-    // The save's human managers first; a search finds any manager, coach or scout (nonPlayers).
+    // The save's human managers first; a search, or a job, finds any member of staff (nonPlayers): with a job and no
+    // name, that job's staff best first (current ability), as a scout is chosen.
     const humans = (lists?.managers ?? []).filter((p) => managerAttributes(m, p.id));
-    managersBox.innerHTML = `<p class="small">${esc(t('The attributes the game keeps for each manager and coach of this save, as it rates them (1 to 20). The game does not show them for your own manager. A change is saved with the game file.'))}${access_.badge}</p>
-      <input id="managers-search" type="search" placeholder="${esc(t('Search a manager or coach'))}" aria-label="${esc(t('Search a manager or coach'))}" autocomplete="off" spellcheck="false">
+    const jn = staffJobNames(), all = nonPlayers(m);
+    const jobs = [...new Set(all.map((p) => p.job))].filter((k) => STAFF_JOBS[k]).sort((a, b) => a - b);
+    managersBox.innerHTML = `<p class="small">${esc(t('The attributes the game keeps for each member of staff of this save, as it rates them (1 to 20): managers, coaches, scouts, physios, chairmen. The game does not show them for your own manager. A change is saved with the game file.'))}${access_.badge}</p>
+      <input id="managers-search" type="search" placeholder="${esc(t('Search staff by name or club'))}" aria-label="${esc(t('Search staff by name or club'))}" autocomplete="off" spellcheck="false">
+      <label class="small staff-job">${esc(t('Job'))} <select id="managers-job"><option value="">${esc(t('Any job'))}</option>${jobs.map((k) => `<option value="${k}">${esc(jn[k])}</option>`).join('')}</select></label>
       <div id="managers-results"></div>`;
     const out = $('managers-results');
-    const rowsHtml = (list) => list.map((p) => `<button type="button" class="ed-row${edited.has(`mgr:${p.id}`) ? ' edited' : ''}" data-mgr="${p.id}"><b data-raw>${esc(p.name)}</b>${p.club ? `<span data-raw>${esc(p.club)}</span>` : ''}</button>`).join('');
+    const rowsHtml = (list) => list.map((p) => `<button type="button" class="ed-row${edited.has(`mgr:${p.id}`) ? ' edited' : ''}" data-mgr="${p.id}"><b data-raw>${esc(p.name)}</b><span>${[p.club ? `<i data-raw>${esc(p.club)}</i>` : '', p.job !== undefined && jn[p.job] ? esc(jn[p.job]) : ''].filter(Boolean).join(' · ')}</span></button>`).join('');
     const listFor = (text) => {
-      const words = fold(text).split(/\s+/).filter(Boolean);
-      if (!words.length) { out.innerHTML = humans.length ? rowsHtml(humans) : ''; return; }
-      const hit = nonPlayers(m).filter((p) => words.every((w) => p.key.includes(w) || fold(p.club).includes(w))).slice(0, 60);
-      out.innerHTML = hit.length ? rowsHtml(hit) : `<p class="small">${esc(t('No manager or coach of that name.'))}</p>`;
+      const words = fold(text).split(/\s+/).filter(Boolean), job = $('managers-job').value;
+      if (!words.length && job === '') { out.innerHTML = humans.length ? rowsHtml(humans) : ''; return; }
+      let hit = all.filter((p) => (job === '' || p.job === Number(job)) && words.every((w) => p.key.includes(w) || fold(p.club).includes(w)));
+      if (!words.length) hit = [...hit].sort((a, b) => b.ca - a.ca);
+      out.innerHTML = hit.length ? rowsHtml(hit.slice(0, 60)) : `<p class="small">${esc(t('No member of staff found.'))}</p>`;
     };
+    $('managers-job').onchange = () => listFor($('managers-search').value);
     $('managers-search').oninput = (e) => listFor(e.target.value);
     listFor('');
     managersBox.onclick = (e) => { const b = e.target.closest('[data-mgr]'); if (b) showManager(Number(b.dataset.mgr), b.querySelector('b').textContent); };
@@ -571,7 +580,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     current = null;
     for (const b of managersBox.querySelectorAll('[data-mgr]')) b.classList.toggle('on', Number(b.dataset.mgr) === id);
     const box = (key, value, min, max, label, attr = '') => `<label><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" ${attr} value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
-    detailPanel(`<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Managers'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>
+    detailPanel(`<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Staff'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>
       <section><h4>${esc(t('Ability'))}</h4><div class="ed-grid">${box('ca', a.ca, 1, 200, t('Current ability'), 'data-mf="ca"')}${box('pa', a.pa, 1, 200, t('Potential ability'), 'data-mf="pa"')}
         ${['homeRep', 'currentRep', 'worldRep'].map((k, n) => box(k, a[k], 0, 10000, [t('Home reputation'), t('Current reputation'), t('World reputation')][n], `data-mf="${k}"`).replace('<label>', '<label class="big">')).join('')}
         <label class="wide"><span>${esc(t('Preferred formation'))}</span><select data-mf="formation">${[t('None'), ...FORMATIONS].map((l, k) => `<option value="${k}"${k === a.formation ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div></section>

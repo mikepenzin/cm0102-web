@@ -389,6 +389,11 @@ try {
       Object.keys(klaus).length === 12 && klaus.Adaptability === '12' && klaus.Determination === '14' && klaus['Tactical Knowledge'] === '20', JSON.stringify(klaus));
     check('Managers: the search and the Players list are hidden', !(await p.isVisible('#editor-search')) && !(await p.isVisible('#editor-results')));
     // A search finds a manager; a change of an attribute is saved with the game file, as the game rates it.
+    await p.selectOption('#managers-job', '5');
+    await p.waitForTimeout(200);
+    check('Staff: a job lists its staff best first, with club and job', (await p.$$eval('#managers-results [data-mgr] b', (b) => b.length)) === 2
+      && /Manager$/.test((await p.textContent('#managers-results [data-mgr] span')).trim()), await p.textContent('#managers-results'));
+    await p.selectOption('#managers-job', '');
     await p.fill('#managers-search', 'penzin');
     await p.waitForTimeout(300);
     check('Managers: a search finds any manager', (await p.$$eval('#managers-results [data-mgr] b', (b) => b.map((x) => x.textContent))).join() === 'Mike Penzin');

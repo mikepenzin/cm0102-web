@@ -715,7 +715,7 @@ highest wage allowed and bankruptcy again in its own finance runs, and the Euro 
 a city can be shared by clubs: a change applies to all of them. A member's (a free player sees the Membership
 invitation). A feature of `features.js` (`club-finances`): Club Legends first.
 
-**Managers** (`savedit.js` `managerAttributes`; docs/research/2026-11-26-manager-attributes.md). A third tab of a saved
+**Staff** (the tab was Managers; `savedit.js` `managerAttributes`; docs/research/2026-11-26-manager-attributes.md). A third tab of a saved
 game: each human manager (the named places of `scout_manager.dat`) with the twelve attributes the game keeps for a
 non-player and hides for the human managers (the HumanManagerAttributes patch of CM 01/02 showed them): Coaching
 Goalkeepers, Coaching Outfield Players, Physiotherapy, Working With Youngsters; Adaptability, Determination, Level of
@@ -726,7 +726,9 @@ non-player record). The details open in the right-hand panel and can be changed:
 (1..200) and each attribute (1..20), stored back as the game reads them (`writeManagerAttributes`, the inverse of the
 relative rating) and saved with the game file. A member's,
 as the Scout's potential; a free player sees the Membership invitation. A feature of `features.js`
-(`manager-attributes`): Club Legends first.
+(`manager-attributes`): Club Legends first. The tab is called Staff: its search finds any member of staff of the save by name or club, and its Job list
+(`STAFF_JOBS`, the names of `database_get_job_name` 0x53ad0f) shows one job's staff, best first by current ability:
+the save's scouts, physios, chairmen and the rest; a row shows the club and the job.
 
 Like GK's Edit Player/Staff screen for a non-player (docs/research/2026-11-26-manager-editor-fields.md): his home,
 current and world reputation (nonplayer.dat +0x08, +0x0a, +0x0c) and preferred formation (+0x43); the bytes the game

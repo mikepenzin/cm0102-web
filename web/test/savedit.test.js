@@ -270,8 +270,11 @@ test('non-players: the staff with a non-player record, by name and club; edits w
   const { nonPlayers, managerAttributes, writeManagerAttributes } = await import('../savedit.js');
   const g = new SaveGame(await fakeSaveGame(undefined, { managers: [
     { first: 'Klaus', second: 'Kastelmann', adaptability: 13, determination: 8, np: { 0x10: -11, 0x14: 5 } },
-    { first: 'Mike', second: 'Penzin', ca: 150 }] }));
-  assert.deepEqual(nonPlayers(g).map((p) => [p.id, p.name]), [[3, 'Klaus Kastelmann'], [4, 'Mike Penzin']]);
+    { first: 'Mike', second: 'Penzin', ca: 150, job: 9 }] }));
+  assert.deepEqual(nonPlayers(g).map((p) => [p.id, p.name, p.job, p.ca]), [[3, 'Klaus Kastelmann', 5, 200], [4, 'Mike Penzin', 9, 150]],
+    'with the job (staff +0x3d) and the current ability (nonplayer.dat +0x04)');
+  const { STAFF_JOBS } = await import('../savedit.js');
+  assert.deepEqual([STAFF_JOBS[1], STAFF_JOBS[5], STAFF_JOBS[9], STAFF_JOBS[14]], ['Chairman', 'Manager', 'Scout', undefined]);
   const before = managerAttributes(g, 3);
   const values = Object.fromEntries(before.attrs.map((a) => [a.name, a.value]));
   writeManagerAttributes(g, 3, { ca: 120, pa: 150, values: { ...values, Motivating: 7, Adaptability: 19, 'Level of Discipline': 16 } });

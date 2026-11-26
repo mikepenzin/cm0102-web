@@ -285,7 +285,7 @@ export async function fakeSaveGame(players = [
       const o = k * 110; first.push(m.first); second.push(m.second);
       rows.writeInt32LE(firstId + k, o); rows.writeInt32LE(first.length - 1, o + 4); rows.writeInt32LE(second.length - 1, o + 8);
       rows.writeInt32LE(m.club === null ? -1 : m.club ?? 100 + k, o + 0x39); rows[o + 0x5f] = 1; rows.writeInt32LE(-1, o + 0x61); rows.writeInt32LE(-1, o + 0x65);
-      rows.writeInt32LE(k, o + 0x69); rows[o + 0x56] = m.adaptability ?? 12; rows[o + 0x58] = m.determination ?? 14;   // non-player record k
+      rows[o + 0x3d] = m.job ?? 5; rows.writeInt32LE(k, o + 0x69); rows[o + 0x56] = m.adaptability ?? 12; rows[o + 0x58] = m.determination ?? 14;   // non-player record k
     });
     const e = managers.length * 110;
     rows.writeInt32LE(firstId + managers.length, e); rows.writeInt32LE(-1, e + 0x39); rows.writeInt32LE(-1, e + 0x61);

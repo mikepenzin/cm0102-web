@@ -233,20 +233,27 @@ export function managerAttributes(game, staffId) {
     ...Object.fromEntries(NON_PLAYER_REPS.map(([k, off]) => [k, dv.getInt16(q + off, true)])), formation: np[q + 0x43] };
 }
 
+// The jobs of a staff row (+0x3d), as `database_get_job_name` 0x53ad0f names them (jump table 0x53b384; 14 none).
+export const STAFF_JOBS = ['Unemployed', 'Chairman', 'Managing Director', 'General Manager', 'Director of Football', 'Manager',
+  'Assistant Manager', 'Reserve Manager', 'Coach', 'Scout', 'Physio', 'Player', 'Player/Manager', 'Player/Assistant Manager',
+  undefined, 'Player/Coach', 'Retired Player', 'Media Pundit'];
+
 // Every staff member with a non-player record (managers, coaches, scouts and the rest): { id, name, key (to search),
-// club }, read once for a SaveGame whose nonplayer.dat is loaded.
+// club, job (STAFF_JOBS), ca (the record's current ability) }, read once for a SaveGame whose nonplayer.dat is loaded.
 const nonPlayerLists = new WeakMap();
 export function nonPlayers(game) {
   if (nonPlayerLists.has(game)) return nonPlayerLists.get(game);
   const s = game.staff, out = [];
-  const records = game.file.has('nonplayer.dat') ? game.file.read('nonplayer.dat').length / NON_PLAYER_SIZE : 0;
+  const np = game.file.has('nonplayer.dat') ? game.file.read('nonplayer.dat') : new Uint8Array(0);
+  const records = np.length / NON_PLAYER_SIZE, npv = new DataView(np.buffer, np.byteOffset, np.byteLength);
   for (let i = 0; i < s.count; i++) {
     const o = i * STAFF_SIZE, k = s.dv.getInt32(o + NON_PLAYER_LINK, true);
     if (k < 0 || k >= records) continue;
     const name = (at, list) => { const id = s.dv.getInt32(o + at, true); return id >= 0 && id < list.length ? list[id] : ''; };
     const common = name(0x0c, game.commonNames), both = `${name(0x04, game.firstNames)} ${name(0x08, game.secondNames)}`.trim();
     if (!common && !both) continue;
-    out.push({ id: i, name: common || both, key: fold(`${both} ${common}`), club: game.clubs.get(s.dv.getInt32(o + 0x39, true)) ?? '' });
+    out.push({ id: i, name: common || both, key: fold(`${both} ${common}`), club: game.clubs.get(s.dv.getInt32(o + 0x39, true)) ?? '',
+      job: s.b[o + 0x3d], ca: npv.getInt16(k * NON_PLAYER_SIZE + 4, true) });
   }
   nonPlayerLists.set(game, out);
   return out;

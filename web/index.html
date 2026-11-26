@@ -388,6 +388,7 @@
   .ed-grid input[type=text], .ed-grid select { width: 100%; max-width: 260px; text-align: left; font: inherit; font-size: 16px;
     color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 4px 6px; }
   .ed-grid label.wide { grid-column: span 2; }
+  .staff-job { display: flex; align-items: center; gap: 6px; margin: 6px 0; } .staff-job select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
   .ed-grid label.big input { width: 120px; } .ed-grid label.when { grid-column: span 2; } .ed-grid label.when input { width: auto; }
   .ed-grid input[type=checkbox] { width: 18px; height: 18px; padding: 0; accent-color: var(--accent); }
   .ed-grid.club { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); max-width: 560px; }
@@ -662,7 +663,7 @@
       <div class="ed-list"><div id="editor-tabs" class="ed-tabs" role="tablist" hidden>
           <button type="button" role="tab" id="editor-tab-players" data-pane="players" aria-selected="true" aria-controls="editor-results" data-t>Players</button>
           <button type="button" role="tab" id="editor-tab-scout" data-pane="scout" aria-selected="false" aria-controls="editor-scout" tabindex="-1" data-t>Scout</button>
-          <button type="button" role="tab" id="editor-tab-managers" data-pane="managers" aria-selected="false" aria-controls="editor-managers" tabindex="-1" data-t>Managers</button>
+          <button type="button" role="tab" id="editor-tab-managers" data-pane="managers" aria-selected="false" aria-controls="editor-managers" tabindex="-1" data-t>Staff</button>
           <button type="button" role="tab" id="editor-tab-clubs" data-pane="clubs" aria-selected="false" aria-controls="editor-clubs" tabindex="-1" data-t>Clubs</button></div>
         <div class="ed-search"><input id="editor-search" type="search" placeholder="Search a player or a club" aria-label="Search a player or a club" data-t-attr="placeholder,aria-label" autocomplete="off" spellcheck="false">
         <select id="editor-nation" hidden aria-label="Nationality" data-t-attr="aria-label"></select>
