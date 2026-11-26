@@ -8,4 +8,5 @@ export const FEATURES = [
   { key: 'nationality', name: 'Nationality filter' },        // Squad Hub: the Players list and the Scout by a player's nation
   { key: 'manager-attributes', name: 'Manager attributes' }, // Squad Hub, Managers tab: any manager's or coach's attributes, changed
   { key: 'club-finances', name: 'Club finances' },           // Squad Hub, Clubs tab: any club's record, stadium and finances, changed as the GK editor does
+  { key: 'player-details', name: 'Player details' },        // Squad Hub, a player: details, reputation, personality, contract (GK editor's)
 ];

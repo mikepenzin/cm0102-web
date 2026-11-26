@@ -606,6 +606,16 @@ is open, the title is the save's name and Players and Scout are its tabs):
   tap elsewhere), with no Apply to find at the end of the form; **Undo changes** beside the name puts the player back
   as he was shown, and **Save the game file**, shown once there is a change, writes them. A new player of a data set
   has **Add this player** and **Clear** beside his name instead.
+- In a saved game, also what the GK Save Game Editor changes of a player (`savedit.js` `readMore`, `writeMore`;
+  docs/research/2026-11-26-player-editor-fields.md): Player details (nationality, second nationality, caps,
+  international goals, transfer value, club first-team and reserve squads; the national squads and the European
+  registration shown, as the game sets them), Reputation and morale (home, current and world reputation, morale),
+  Personality (Adaptability, Ambition, Loyalty, Pressure, Professionalism, Sportsmanship, Temperament: staff +0x56..),
+  and Contract (`contract.dat`: weekly wage, squad number, start and end, goal, assist and clean-sheet bonuses, the
+  release fee and the five release clauses, transfer listed by club or by request, listed for loan, squad status).
+  Only what changed is written; the wage and the contract end go to the contract and to the staff row's copies; a new
+  nationality takes the player out of his national team. The game moves morale, reputations, value and squad
+  numbers itself as the season goes on. A member's; a feature of `features.js` (`player-details`): Club Legends first.
 - The values are coloured on the game's 1–20 scale (low, middling, good, high; a position only where he plays), and
   the attribute groups stand side by side on a computer, as on the game's profile screen. On a phone the head is one
   line (the file's name, Save, Close) and a player's form has one way back, to the list.

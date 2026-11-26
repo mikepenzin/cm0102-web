@@ -187,10 +187,10 @@ try {
     await p.waitForFunction(() => document.querySelectorAll('.ed-row').length === 1);
     await p.click('.ed-row');
     await p.waitForSelector('#editor-form [data-f="Pace"]');
-    check(`${label}: the player's fields: ability, positions, the attributes in groups, the hidden ones`,
+    check(`${label}: the player's fields: ability, positions, the attributes in groups, the hidden ones, details, reputation, personality`,
       (await p.inputValue('[data-f="ca"]')) === '181' && (await p.inputValue('[data-f="Pace"]')) === '15'
         && (await p.inputValue('[data-f="Determination"]')) === '16' && (await p.inputValue('[data-f="born"]')) === '1974-11-09'
-        && (await p.$$('#editor-form section')).length === 7);
+        && (await p.$$('#editor-form section')).length === 10);
     if (touch) check('phone: the list gives way to the player, with a way back', !(await p.isVisible('#editor-search')) && await p.isVisible('.ed-back'));
     check(`${label}: no Save button before a change`, !(await p.isVisible('#editor-save')));
     await p.fill('[data-f="Pace"]', '20');

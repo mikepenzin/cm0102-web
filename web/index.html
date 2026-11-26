@@ -388,6 +388,8 @@
   .ed-grid input[type=text], .ed-grid select { width: 100%; max-width: 260px; text-align: left; font: inherit; font-size: 16px;
     color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 4px 6px; }
   .ed-grid label.wide { grid-column: span 2; }
+  .ed-grid label.big input { width: 120px; } .ed-grid label.when { grid-column: span 2; } .ed-grid label.when input { width: auto; }
+  .ed-grid input[type=checkbox] { width: 18px; height: 18px; padding: 0; accent-color: var(--accent); }
   .ed-grid.club { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); max-width: 560px; }
   .ed-grid.club input[type=number] { width: 104px; } .ed-grid.club input[data-cf="balance"] { width: 140px; }
   .ed-grid.club input[data-cf="training"], .ed-grid.club input[data-cf="attraction"] { width: 64px; }
@@ -476,7 +478,7 @@
   .ed-attrs .ed-grid { grid-template-columns: 1fr; gap: 3px; }
   .ed-attrs .ed-grid input { width: 52px; padding: 3px 6px; }
   @media (max-width: 760px) {
-    .ed-grid label.wide { grid-column: 1 / -1; }
+    .ed-grid label.wide, .ed-grid label.big, .ed-grid label.when { grid-column: 1 / -1; }
     .ed-body { grid-template-columns: 1fr; }
     .ed-body.detail .ed-list { display: none; } .ed-body:not(.detail) .ed-form { display: none; }
     .ed-title .ed-back { display: inline-flex; }

@@ -48,7 +48,7 @@ const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAI
 const FIRST = ['Aurelio', 'Benedikt', 'Cassiano', 'Dorotheus', 'Eustachio', 'Florentin', 'Gaspard', 'Hilarion', 'Isidoro', 'Jovanni'];
 const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [i < 2 ? 1983 : 1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i, nation: i === 3 || i === 7 ? 1 : 0 }));   // the first two are 18: Wonderkids; Dorotheus and Hilarion are French
 // Two human managers, Klaus and Mike, with empty Short Lists (shortlist.js).
-const saveBytes = await fakeSaveGame(players, { managers: [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }],
+const saveBytes = await fakeSaveGame(players, { contracts: true, managers: [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }],
   finance: { balance: 59516431, wageBill: 889495, topWage: 65497, thisYear: { 0x08: 19491130, 0x20: 33094379, 0x48: 5985625 }, lastYear: { 0x20: 51520409 } } });
 const g = new SaveGame(saveBytes);
 const finishing = g.players().map((p) => g.read(p.row).attrs.Finishing);
@@ -283,6 +283,38 @@ try {
     await shot(p, 'shortlist');
     await ctx.close();
   }
+  // ---- A player as the GK editor shows him (savedit.js readMore/writeMore): details, personality, contract ----
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
+    const p = await editorOn(ctx, ME.member);
+    await p.click('#editor-tabs [data-pane="players"]');
+    await p.fill('#editor-search', g.players()[1].name);
+    await p.waitForSelector('#editor-results .ed-row', { timeout: 10000 });
+    await p.locator('#editor-results .ed-row').first().click();
+    await p.waitForSelector('#editor-form [data-f="c:wage"]', { timeout: 10000 }).catch(() => {});
+    const shownName = (await p.textContent('#editor-player')).trim();
+    const him = g.players().find((x) => x.name === shownName);
+    check('a player: his contract, personality and details in the form', await p.inputValue('#editor-form [data-f="c:wage"]') === String(g.read(him.row).more.contract.wage)
+      && await p.inputValue('#editor-form [data-f="p:Ambition"]') === String(g.read(him.row).more.personality.Ambition)
+      && await p.inputValue('#editor-form [data-f="m:caps"]') === '5');
+    await p.selectOption('#editor-form [data-f="m:nation"]', '1');
+    await p.fill('#editor-form [data-f="p:Ambition"]', '20');
+    await p.locator('#editor-form [data-f="p:Ambition"]').dispatchEvent('change');
+    await p.fill('#editor-form [data-f="c:wage"]', '75000');
+    await p.locator('#editor-form [data-f="c:wage"]').dispatchEvent('change');
+    await p.check('#editor-form [data-f="c:listed"]');
+    await p.fill('#editor-form [data-f="c:goalBonus"]', '3000');
+    await p.locator('#editor-form [data-f="c:goalBonus"]').dispatchEvent('change');
+    check('a player: the changes count as one changed player', /\(1 changed\)/.test(await p.textContent('#editor-save')), await p.textContent('#editor-save'));
+    await p.click('#editor-save');
+    await p.waitForFunction(() => /Saved/.test(document.getElementById('editor-note').textContent), null, { timeout: 15000 });
+    const saved = new SaveGame(new Uint8Array(await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')))));
+    const m = saved.read(him.row).more;
+    check('a player: saved, the file has his new nation, ambition, wage and listing', m.nation === 1 && m.personality.Ambition === 20
+      && m.contract.wage === 75000 && m.contract.listed === true && m.contract.goalBonus === 3000, JSON.stringify([m.nation, m.personality.Ambition, m.contract]));
+    await ctx.close();
+  }
+
   // ---- Clubs (savedit.js clubFinances): a club's finances, a member's ----
   {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });

@@ -230,10 +230,25 @@ function colourDat() {
   return b;
 }
 
+// With contracts: contract.dat as the game saves it (0x4dc3a0): one talk of 21 bytes, then a contract of 80 bytes for
+// each player (staff id, club 0, wage 20,000 + 1,000 x row, 30 June 2004, squad number -(row + 1), status First Team,
+// not listed), no decision dates, an int, two empty offer lists, a byte.
+function contractDat(n, writeDate) {
+  const head = Buffer.alloc(4 + 21); head.writeInt32LE(1, 0);
+  const list = Buffer.alloc(4 + n * 80); list.writeInt32LE(n, 0);
+  for (let i = 0; i < n; i++) {
+    const o = 4 + i * 80; list.writeInt32LE(i, o); list.writeInt32LE(0, o + 4); list.writeInt32LE(20000 + 1000 * i, o + 0x0c);
+    for (const k of [0x10, 0x14, 0x18]) list.writeInt32LE(-1, o + k);
+    writeDate(list, o + 0x2d, { year: 2004, month: 6, day: 30 });
+    list[o + 0x35] = 2; list.writeInt8(-(i + 1), o + 0x3a); list[o + 0x4f] = (2 << 4) | 3;
+  }
+  return Buffer.concat([head, list, Buffer.alloc(4), Buffer.alloc(4), Buffer.alloc(2), Buffer.alloc(2), Buffer.alloc(1)]);
+}
+
 export async function fakeSaveGame(players = [
   { first: 'Alessandro', second: 'Del Piero', ca: 181, pa: 190, gk: 1, born: [1974, 11, 9], club: 0, fill: 15 },
   { first: 'Gianluigi', second: 'Buffon', ca: 187, pa: 194, gk: 20, born: [1978, 1, 28], club: 0, fill: 12 },
-], { managers = null, requests = [], finance = null } = {}) {
+], { managers = null, requests = [], finance = null, contracts = false } = {}) {
   const { encodeRuns, writeDate } = await import('../savedit.js');
   const names = (list) => { const b = Buffer.alloc(list.length * 60); list.forEach((n, i) => { b.write(n, i * 60, 'latin1'); b.writeInt32LE(i, i * 60 + 0x33); b.writeInt32LE(-1, i * 60 + 0x37); b[i * 60 + 0x3b] = 1; }); return b; };
   const first = ['', ...players.map((p) => p.first), 'Marcello'], second = ['', ...players.map((p) => p.second), 'Lippi'];
@@ -252,6 +267,12 @@ export async function fakeSaveGame(players = [
     for (let k = 0; k < 12; k++) player[q + 0x0f + k] = 1;
     player[q + 0x0f] = p.gk; if (p.gk !== 20) { player[q + 0x0f + 6] = 20; player[q + 0x0f + 10] = 20; }
     for (let k = 0x1b; k <= 0x44; k++) player[q + k] = p.fill;
+    // The rest of what Squad Hub edits (docs/research/2026-11-26-player-editor-fields.md): second nation none, 5 caps
+    // and 2 goals, value, Club Main, morale 14, reputations, personality 10 + its place.
+    staff.writeInt32LE(-1, o + 0x1e); staff[o + 0x22] = 5; staff[o + 0x23] = 2; staff.writeInt32LE(-1, o + 0x24);
+    staff.writeInt32LE(4000000 + i, o + 0x52); staff[o + 0x5e] = 1;
+    for (let k = 0x56; k <= 0x5d; k++) if (k !== 0x58) staff[o + k] = 10 + (k - 0x56);
+    player[q + 0x45] = 14; player.writeInt16LE(7000, q + 0x09); player.writeInt16LE(7500, q + 0x0b); player.writeInt16LE(6800, q + 0x0d);
   });
   const c = players.length * 110;                         // the coach: no player data
   staff.writeInt32LE(players.length, c); staff.writeInt32LE(first.length - 1, c + 4); staff.writeInt32LE(second.length - 1, c + 8);
@@ -334,6 +355,7 @@ export async function fakeSaveGame(players = [
   }
   const members = [['continent.dat', Buffer.from('stays as it is, byte for byte')], ...tables.map((t) => [t[0], t[2]]),
     ['index.dat', index], ['general.dat', general], ...(scoutManager ? [['scout_manager.dat', scoutManager], ['nonplayer.dat', nonPlayer]] : []),
+    ...(contracts ? [['contract.dat', contractDat(players.length, writeDate)]] : []),
     ...(finance ? [['finance.dat', financeDat(finance)], ['stadium.dat', stadiumDat()], ['city.dat', cityDat()], ['colour.dat', colourDat()]] : [])];
   const HEADER = 0x416ec, header = Buffer.alloc(HEADER);
   header.writeInt32LE(4, 0); header.writeInt32LE(0, 4); header.writeInt32LE(members.length, 8);

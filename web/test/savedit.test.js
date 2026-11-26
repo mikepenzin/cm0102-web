@@ -213,6 +213,38 @@ test('a club: what Squad Hub edits of club.dat, finance.dat, stadium.dat, city.d
   assert.throws(() => writeClub(g, 0, { matchDay: 9 }), /match day/);
 });
 
+test('a player as the GK editor shows him: nations, caps, value, squads, morale, reputations, personality, contract', async () => {
+  const g = new SaveGame(await fakeSaveGame(undefined, { contracts: true }));
+  const m = g.read(1).more;
+  assert.deepEqual({ ...m, personality: undefined, contract: undefined }, { nation: 0, nation2: -1, caps: 5, goals: 2, value: 4000001,
+    clubMain: true, clubReserve: false, nationMain: false, nationU21: false, euro: 0, morale: 14, homeRep: 7000, currentRep: 7500, worldRep: 6800,
+    personality: undefined, contract: undefined });
+  assert.deepEqual(m.personality, { Adaptability: 10, Ambition: 11, Loyalty: 13, Pressure: 14, Professionalism: 15, Sportsmanship: 16, Temperament: 17 });
+  assert.deepEqual(m.contract, { wage: 21000, start: null, end: { year: 2004, month: 6, day: 30 }, number: 2, status: 2, goalBonus: 0, assistBonus: 0,
+    cleanSheetBonus: 0, listed: false, loanListed: false, listedByRequest: false, nonPromotion: false, minFee: false, nonPlaying: false,
+    relegation: false, managerJob: false, fee: 0 });
+  const f = g.read(1);
+  Object.assign(f.more, { nation: 1, caps: 40, value: 9000000, clubReserve: true, morale: 25, currentRep: 9000,
+    personality: { ...f.more.personality, Ambition: 20 },
+    contract: { ...f.more.contract, wage: 55000, start: { year: 2001, month: 7, day: 1 }, end: { year: 2007, month: 6, day: 30 }, number: 9, status: 1,
+      goalBonus: 2500, listed: true, minFee: true, relegation: true, fee: 30000000 } });
+  g.write(1, f);
+  const back = new SaveGame(await g.toBytes()), b = back.read(1).more;
+  assert.deepEqual([b.nation, b.caps, b.value, b.clubMain, b.clubReserve, b.morale, b.currentRep, b.personality.Ambition], [1, 40, 9000000, true, true, 20, 9000, 20]);
+  assert.deepEqual(b.contract, { wage: 55000, start: { year: 2001, month: 7, day: 1 }, end: { year: 2007, month: 6, day: 30 }, number: 9, status: 1,
+    goalBonus: 2500, assistBonus: 0, cleanSheetBonus: 0, listed: true, loanListed: false, listedByRequest: false, nonPromotion: false, minFee: true,
+    nonPlaying: false, relegation: true, managerJob: false, fee: 30000000 });
+  const st = back.staff, o = 1 * 110;
+  assert.equal(st.dv.getInt32(o + 0x4e, true), 55000, 'the staff row\'s copy of the wage');
+  assert.deepEqual(readDate(st.b, o + 0x46), { year: 2007, month: 6, day: 30 }, 'and of the contract end');
+  const c = back.file.read('contract.dat'), q = 4 + 21 + 4 + 80;
+  assert.equal(c.at(q + 0x3a) << 24 >> 24, -9, 'the squad number keeps the sign the game gave it');
+  assert.equal(c[q + 0x4f], (1 << 4) | 3, 'the squad status in the high nibble, the low nibble kept');
+  assert.equal(new DataView(c.buffer, c.byteOffset).getInt32(q + 0x14, true), -1, 'a bonus left at 0 stays none (-1)');
+  assert.equal(back.players().find((x) => x.row === 1).nation, 'France', 'the list follows the new nation');
+  assert.equal(new SaveGame(await fakeSaveGame()).read(0).more.contract, null, 'no contract.dat: no contract');
+});
+
 test('non-players: the staff with a non-player record, by name and club; edits written as the game rates them', async () => {
   const { nonPlayers, managerAttributes, writeManagerAttributes } = await import('../savedit.js');
   const g = new SaveGame(await fakeSaveGame(undefined, { managers: [

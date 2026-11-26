@@ -4,7 +4,7 @@
 //   backups/ first, so Load Game lists the edited save and Saved games the old one.
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
-import { ATTRIBUTES, POSITIONS, SaveGame, clubFinances, clubInfo, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
+import { ATTRIBUTES, PERSONALITY, POSITIONS, SaveGame, clubFinances, clubInfo, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
@@ -68,6 +68,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   shortlistAccess = () => ({ state: 'open', locked: '', badge: '' }), requestAccess = () => ({ state: 'open', locked: '', badge: '' }),
   nationAccess = () => ({ state: 'open', locked: '', badge: '' }), managerAccess = () => ({ state: 'open', locked: '', badge: '' }),
   clubAccess = () => ({ state: 'open', locked: '', badge: '' }),
+  playerAccess = () => ({ state: 'open', locked: '', badge: '' }),
   joining = () => {} }) {
   const dialog = $('editor'), list = $('editor-results'), form = $('editor-form'), note = $('editor-note');
   const search = $('editor-search'), saveButton = $('editor-save'), body = dialog.querySelector('.ed-body');
@@ -673,6 +674,60 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   const select = (key, value, options, label) => `<label class="wide"><span>${esc(label)}</span><select data-f="${key}" data-was="${value}">
     ${options.map(([v, shown]) => `<option value="${v}"${v === value ? ' selected' : ''}>${esc(shown)}</option>`).join('')}</select></label>`;
 
+  // What else a saved game keeps of a player, as the GK Save Game Editor shows it (savedit.js readMore;
+  // docs/research/2026-11-26-player-editor-fields.md): details, reputation and morale, personality, contract.
+  const STATUS_NAMES = () => [t('Undefined'), t('Key player'), t('First team'), t('Rotation'), t('Backup'), t('Hot prospect'), t('Youngster'), t('Not needed')];
+  const personalityNames = () => ({ Adaptability: t('Adaptability'), Ambition: t('Ambition'), Loyalty: t('Loyalty'), Pressure: t('Pressure'),
+    Professionalism: t('Professionalism'), Sportsmanship: t('Sportsmanship'), Temperament: t('Temperament') });
+  const tick = (key, on, label, off = false) => `<label><span>${esc(label)}</span><input type="checkbox" data-f="${esc(key)}"${on ? ' checked' : ''}${off ? ' disabled' : ''} data-was="${on}"></label>`;
+  const big = (key, value, max, label) => num(key, value, 0, max, label).replace('<label>', '<label class="big">');
+  const CONTRACT_KEYS = ['wage', 'number', 'status', 'goalBonus', 'assistBonus', 'cleanSheetBonus', 'fee', 'nonPromotion', 'minFee', 'nonPlaying',
+    'relegation', 'managerJob', 'listed', 'listedByRequest', 'loanListed'];
+  function moreHtml(m) {
+    const badge = playerAccess().badge;
+    const ns = [...model.nations].sort((a, b) => a[1].localeCompare(b[1]));
+    const pn = personalityNames(), c = m.contract;
+    return `<section><h4>${esc(t('Player details'))}${badge}</h4><div class="ed-grid">
+        ${select('m:nation', m.nation, ns, t('Nationality'))}${select('m:nation2', m.nation2, [[-1, t('None')], ...ns], t('Second nationality'))}
+        ${num('m:caps', m.caps, 0, 255, t('Caps'))}${num('m:goals', m.goals, 0, 255, t('International goals'))}${big('m:value', m.value, 2000000000, t('Transfer value'))}
+        ${tick('m:clubMain', m.clubMain, t('Club first team squad'))}${tick('m:clubReserve', m.clubReserve, t('Club reserve squad'))}
+        ${tick('m:nation-squad', m.nationMain || m.nationU21, t('National squad'), true)}${tick('m:euro', m.euro === 2, t('Registered for Europe'), true)}
+      </div></section>
+      <section><h4>${esc(t('Reputation and morale'))}</h4><div class="ed-grid">
+        ${big('m:homeRep', m.homeRep, 10000, t('Home reputation'))}${big('m:currentRep', m.currentRep, 10000, t('Current reputation'))}
+        ${big('m:worldRep', m.worldRep, 10000, t('World reputation'))}${num('m:morale', m.morale, 1, 20, t('Morale'))}
+      </div></section>
+      <section><h4>${esc(t('Personality'))} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">
+        ${PERSONALITY.map(([n]) => num(`p:${n}`, m.personality[n], 1, 20, pn[n])).join('')}</div></section>
+      ${c ? `<section><h4>${esc(t('Contract'))}</h4><div class="ed-grid">
+        ${big('c:wage', c.wage, 10000000, t('Wage a week'))}${num('c:number', c.number, 0, 50, t('Squad number'))}
+        <label class="when"><span>${esc(t('Contract starts'))}</span><input type="date" data-f="c:start" value="${isoDate(c.start)}" data-was="${isoDate(c.start)}" min="1960-01-01" max="2060-12-31"></label>
+        <label class="when"><span>${esc(t('Contract ends'))}</span><input type="date" data-f="c:end" value="${isoDate(c.end)}" data-was="${isoDate(c.end)}" min="1990-01-01" max="2060-12-31"></label>
+        ${big('c:goalBonus', c.goalBonus, 10000000, t('Goal bonus'))}${big('c:assistBonus', c.assistBonus, 10000000, t('Assist bonus'))}
+        ${big('c:cleanSheetBonus', c.cleanSheetBonus, 10000000, t('Clean sheet bonus'))}${big('c:fee', c.fee, 2000000000, t('Release fee'))}
+        ${tick('c:nonPromotion', c.nonPromotion, t('Non-promotion release clause'))}${tick('c:minFee', c.minFee, t('Minimum fee release clause'))}
+        ${tick('c:nonPlaying', c.nonPlaying, t('Non-playing release clause'))}${tick('c:relegation', c.relegation, t('Relegation release clause'))}
+        ${tick('c:managerJob', c.managerJob, t('Manager job release clause'))}
+        ${tick('c:listed', c.listed, t('Transfer listed by club'))}${tick('c:listedByRequest', c.listedByRequest, t('Transfer listed by request'))}
+        ${tick('c:loanListed', c.loanListed, t('Listed for loan'))}${select('c:status', c.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
+      </div><p class="small">${esc(t('A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.'))}</p></section>` : ''}`;
+  }
+  // The form's values of moreHtml, over what the save holds.
+  function moreOf(m) {
+    const el = (k) => form.querySelector(`[data-f="${CSS.escape(k)}"]`);
+    const val = (k) => { const i = el(k); return !i ? undefined : i.type === 'checkbox' ? i.checked : Number(i.value); };
+    const out = { ...m, personality: { ...m.personality }, contract: m.contract ? { ...m.contract } : null };
+    for (const k of ['nation', 'nation2', 'caps', 'goals', 'value', 'clubMain', 'clubReserve', 'homeRep', 'currentRep', 'worldRep', 'morale']) {
+      const v = val(`m:${k}`); if (v !== undefined) out[k] = v;
+    }
+    for (const [n] of PERSONALITY) { const v = val(`p:${n}`); if (v !== undefined) out.personality[n] = v; }
+    if (out.contract) {
+      for (const k of CONTRACT_KEYS) { const v = val(`c:${k}`); if (v !== undefined) out.contract[k] = v; }
+      for (const k of ['start', 'end']) { const d = el(`c:${k}`) && fromIso(el(`c:${k}`).value); if (d) out.contract[k] = d; }
+    }
+    return out;
+  }
+
   // row: a player's row, or null for a new player.
   function show(row) {
     current = row;
@@ -702,6 +757,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         ${date('born', isoDate(f.born), t('Born'))}
       </div><p class="small">${esc(set ? t('Ability is 1 to 200; 0, and for potential -1 and -2, are values the data has for players the game sets up itself.')
         : t('Ability is 1 to 200. Attributes keep the numbers you see when you change it.'))}</p></section>
+      ${!set && f.more && access() === 'full' && playerAccess().state !== 'locked' ? moreHtml(f.more) : ''}
       <section><h4>${esc(t('Positions'))} <span class="small">${esc(t('0 to 20; 20 is natural'))}</span></h4><div class="ed-grid pos">
         ${f.positions.map((v, i) => num(`pos${i}`, v, 0, 20, SHORT_POS[i]).replace('<span>', `<span title="${esc(posName[POSITIONS[i]] ?? POSITIONS[i])}">`)).join('')}
       </div></section>
@@ -736,7 +792,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     form.oninput = (e) => {
       const i = e.target.closest('[data-f]');
       if (!i) return;
-      i.classList.toggle('changed', i.value !== i.dataset.was);
+      i.classList.toggle('changed', (i.type === 'checkbox' ? String(i.checked) : i.value) !== i.dataset.was);
       if (i.dataset.band) i.dataset.band = band(i.value);
     };
     if (set && row === null) {                        // the club's nation is a good guess for a new player's
@@ -778,6 +834,16 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         if (i.dataset.band) i.dataset.band = band(i.value);
       }
     }
+    if (!set && f.more) {                               // the values as written (cut to the game's ranges)
+      const m = f.more, put = (k, v) => {
+        const i = form.querySelector(`[data-f="${CSS.escape(k)}"]`);
+        if (!i || document.activeElement === i || v === undefined) return;
+        if (i.type === 'checkbox') i.checked = v; else i.value = i.type === 'date' ? isoDate(v) : v;
+      };
+      for (const k of ['nation', 'nation2', 'caps', 'goals', 'value', 'clubMain', 'clubReserve', 'homeRep', 'currentRep', 'worldRep', 'morale']) put(`m:${k}`, m[k]);
+      for (const [n] of PERSONALITY) put(`p:${n}`, m.personality[n]);
+      if (m.contract) for (const k of [...CONTRACT_KEYS, 'start', 'end']) put(`c:${k}`, m.contract[k]);
+    }
     const x = model.players().find((p) => p.row === row);
     if (x) {
       $('editor-player').textContent = playerName(x);
@@ -815,6 +881,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         say(row === null ? () => t('Added. Save the data set to keep the changes.') : () => t('Applied. Save the data set to keep the changes.'));
         return;
       }
+      if (f.more) f.more = form.querySelector('[data-f="m:nation"]') ? moreOf(f.more) : undefined;   // shown only to whom it is open
       const missed = model.write(row, f);
       edited.add(row);
       if (index) scoutUpdate(index, model, row);      // the Scout reads him again, not the whole save

@@ -473,6 +473,39 @@ function tablesOf(index) {
 }
 const TABLES = [6, 10, 13, 14, 15, 0, 1, 4];       // staff, player, the three name tables, clubs, national clubs, nations
 
+// ---- A player as the GK Save Game Editor shows him (docs/research/2026-11-26-player-editor-fields.md) ----
+
+// The personality of the staff row (signed bytes 1..20); Determination (+0x58) is among ATTRIBUTES.
+export const PERSONALITY = [['Adaptability', 0x56], ['Ambition', 0x57], ['Loyalty', 0x59], ['Pressure', 0x5a],
+  ['Professionalism', 0x5b], ['Sportsmanship', 0x5c], ['Temperament', 0x5d]];
+// contract.dat (0x4dc3a0): int n + n talks of 21 bytes, int n + n contracts of 80 bytes (+0 staff id, +4 club), then
+// the rest. The contract of each staff id, the one with his club when he has two. Read once for a SaveGame.
+const CONTRACT_SIZE = 80;
+const contractLists = new WeakMap();
+function contractsOf(game) {
+  if (contractLists.has(game)) return contractLists.get(game);
+  let out = null;
+  if (game.file.has('contract.dat')) {
+    const b = game.file.read('contract.dat'), dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    const start = 4 + dv.getInt32(0, true) * 21 + 4, n = dv.getInt32(start - 4, true), at = new Map();
+    if (start + n * CONTRACT_SIZE <= b.length) {
+      for (let k = 0; k < n; k++) {
+        const o = start + k * CONTRACT_SIZE, id = dv.getInt32(o, true);
+        const club = id >= 0 && id < game.staff.count ? game.staff.dv.getInt32(id * STAFF_SIZE + 0x39, true) : -2;
+        if (!at.has(id) || dv.getInt32(o + 4, true) === club) at.set(id, o);
+      }
+      out = { b, dv, at };
+    }
+  }
+  contractLists.set(game, out);
+  return out;
+}
+// A contract's bonuses (int32, -1 none), its transfer bits (+0x4e: 0x5444f2, 0x8f6923) and its clause flags (+0x1c..).
+const BONUSES = [['goalBonus', 0x10], ['assistBonus', 0x14], ['cleanSheetBonus', 0x18]];
+const LIST_BITS = { listed: 1, loanListed: 2, listedByRequest: 8 };
+const CLAUSES = [['nonPromotion', 0x1c], ['minFee', 0x1d], ['nonPlaying', 0x1e], ['relegation', 0x1f], ['managerJob', 0x20]];
+const SQUAD_BITS = { clubMain: 1, clubReserve: 2, nationU21: 4, nationMain: 8 };   // staff +0x5e (0x7b0f30)
+
 export class SaveGame {
   // bytes: the whole file, or a SaveFile (SaveGame.open).
   constructor(bytes) {
@@ -551,7 +584,64 @@ export class SaveGame {
       attrs[a.name] = shown(a, b, ca, gk);
     }
     return { ca, pa: p.dv.getInt16(po + 7, true), positions: [...p.b.subarray(po + 0x0f, po + 0x1b)], attrs,
-      born: readDate(s.b, o + 0x10), age: s.dv.getUint16(o + 0x18, true) };
+      born: readDate(s.b, o + 0x10), age: s.dv.getUint16(o + 0x18, true), more: this.readMore(row) };
+  }
+
+  // What else the GK editor shows of a player: { nation, nation2 (-1 none), caps, goals, value, clubMain, clubReserve,
+  // nationU21, nationMain, euro (the registration state, +0x6d), morale, homeRep, currentRep, worldRep, personality
+  // { name: value }, contract: { wage, start, end, number, status (squad status 0..7), goalBonus, assistBonus,
+  // cleanSheetBonus (0: none), listed, loanListed, listedByRequest, nonPromotion, minFee, nonPlaying, relegation,
+  // managerJob (the release clauses), fee (the release fee) } or null }.
+  readMore(row) {
+    const s = this.staff, p = this.player, o = row * STAFF_SIZE, po = s.dv.getInt32(o + 0x61, true) * PLAYER_SIZE;
+    const c = contractsOf(this), q = c?.at.get(row);
+    return { nation: s.dv.getInt32(o + 0x1a, true), nation2: s.dv.getInt32(o + 0x1e, true), caps: s.b[o + 0x22], goals: s.b[o + 0x23],
+      value: s.dv.getInt32(o + 0x52, true), ...Object.fromEntries(Object.entries(SQUAD_BITS).map(([k, bit]) => [k, (s.b[o + 0x5e] & bit) !== 0])),
+      euro: s.b[o + 0x6d], morale: p.b[po + 0x45], homeRep: p.dv.getInt16(po + 0x09, true), currentRep: p.dv.getInt16(po + 0x0b, true),
+      worldRep: p.dv.getInt16(po + 0x0d, true), personality: Object.fromEntries(PERSONALITY.map(([n, off]) => [n, s.dv.getInt8(o + off)])),
+      contract: q === undefined ? null : { wage: c.dv.getInt32(q + 0x0c, true), start: readDate(c.b, q + 0x25), end: readDate(c.b, q + 0x2d),
+        number: Math.abs(c.dv.getInt8(q + 0x3a)), status: c.b[q + 0x4f] >> 4,
+        ...Object.fromEntries(BONUSES.map(([k, off]) => [k, Math.max(0, c.dv.getInt32(q + off, true))])),   // -1: none, shown 0
+        ...Object.fromEntries(Object.entries(LIST_BITS).map(([k, bit]) => [k, (c.b[q + 0x4e] & bit) !== 0])),
+        ...Object.fromEntries(CLAUSES.map(([k, off]) => [k, c.b[q + off] !== 0])), fee: c.dv.getInt32(q + 0x21, true) } };
+  }
+
+  // Writes what readMore gives, changed: only the fields that differ, as the game keeps them (the doc's "Must be changed
+  // together": the wage and the contract end in the contract and in the staff row; a new nation leaves the national
+  // team; the squad number keeps its sign; the squad status its low nibble). The nation squads are the game's.
+  writeMore(row, m) {
+    const s = this.staff, p = this.player, o = row * STAFF_SIZE, po = s.dv.getInt32(o + 0x61, true) * PLAYER_SIZE;
+    const was = this.readMore(row), cut = (v, lo, hi) => Math.min(hi, Math.max(lo, Math.round(Number(v) || 0)));
+    const differs = (k) => m[k] !== undefined && m[k] !== was[k];
+    for (const k of ['nation', 'nation2']) {
+      if (!differs(k)) continue;
+      const id = Number(m[k]);
+      if (!(this.nations.has(id) || (k === 'nation2' && id === -1))) throw Object.assign(new Error('no such nation'), { key: 'no such nation' });
+      s.dv.setInt32(o + (k === 'nation' ? 0x1a : 0x1e), id, true);
+      if (k === 'nation') { s.dv.setInt32(o + 0x24, -1, true); s.b[o + 0x28] = 0; s.b[o + 0x5e] &= ~(4 | 8); }
+    }
+    if (differs('caps')) s.b[o + 0x22] = cut(m.caps, 0, 255);
+    if (differs('goals')) s.b[o + 0x23] = cut(m.goals, 0, 255);
+    if (differs('value')) s.dv.setInt32(o + 0x52, cut(m.value, 0, 2000000000), true);
+    for (const k of ['clubMain', 'clubReserve']) if (differs(k)) s.b[o + 0x5e] = m[k] ? s.b[o + 0x5e] | SQUAD_BITS[k] : s.b[o + 0x5e] & ~SQUAD_BITS[k];
+    if (differs('morale')) p.b[po + 0x45] = cut(m.morale, 1, 20);
+    for (const [k, off] of [['homeRep', 0x09], ['currentRep', 0x0b], ['worldRep', 0x0d]]) if (differs(k)) p.dv.setInt16(po + off, cut(m[k], 0, 10000), true);
+    for (const [n, off] of PERSONALITY) if (m.personality && m.personality[n] !== undefined && m.personality[n] !== was.personality[n]) s.dv.setInt8(o + off, cut(m.personality[n], 1, 20));
+    const c = contractsOf(this), q = c?.at.get(row), k = m.contract, w = was.contract;
+    if (k && w && q !== undefined) {
+      let any = false;
+      if (k.wage !== w.wage) { const v = cut(k.wage, 0, 10000000); c.dv.setInt32(q + 0x0c, v, true); s.dv.setInt32(o + 0x4e, v, true); any = true; }
+      const moved = (a, b) => a && (!b || a.year !== b.year || a.month !== b.month || a.day !== b.day);
+      if (moved(k.end, w.end)) { writeDate(c.b, q + 0x2d, k.end); writeDate(s.b, o + 0x46, k.end); any = true; }
+      if (moved(k.start, w.start)) { writeDate(c.b, q + 0x25, k.start); any = true; }
+      for (const [f, off] of BONUSES) if (k[f] !== w[f]) { const v = cut(k[f], 0, 10000000); c.dv.setInt32(q + off, v > 0 ? v : -1, true); any = true; }
+      for (const [f, off] of CLAUSES) if (k[f] !== w[f]) { c.b[q + off] = k[f] ? 1 : 0; any = true; }
+      if (k.number !== w.number) { const sign = c.dv.getInt8(q + 0x3a) > 0 ? 1 : -1; c.dv.setInt8(q + 0x3a, sign * cut(k.number, 0, 50)); any = true; }
+      if (k.status !== w.status) { c.b[q + 0x4f] = (cut(k.status, 0, 7) << 4) | (c.b[q + 0x4f] & 15); any = true; }
+      for (const [f, bit] of Object.entries(LIST_BITS)) if (k[f] !== w[f]) { c.b[q + 0x4e] = k[f] ? c.b[q + 0x4e] | bit : c.b[q + 0x4e] & ~bit; any = true; }
+      if (k.fee !== w.fee) { c.dv.setInt32(q + 0x21, cut(k.fee, 0, 2000000000), true); any = true; }
+      if (any) this.file.changed('contract.dat');
+    }
   }
 
   // Writes the fields (as read gives them, changed). A relative attribute keeps its byte when it still shows the
@@ -583,6 +673,7 @@ export class SaveGame {
       writeDate(s.b, o + 0x10, f.born);
       if (was) s.dv.setUint16(o + 0x18, Math.max(0, s.dv.getUint16(o + 0x18, true) - (f.born.year - was.year)), true);
     }
+    if (f.more) this.writeMore(row, f.more);
     this.file.changed(this.staff.name);
     this.file.changed(this.player.name);
     this.list = null;
@@ -594,7 +685,7 @@ export class SaveGame {
     const file = await SaveFile.open(blob);
     await file.load(['index.dat']);
     const tables = tablesOf(file.read('index.dat'));
-    await file.load(TABLES.map((id) => tables[id]?.file).filter(Boolean));
+    await file.load([...TABLES.map((id) => tables[id]?.file).filter(Boolean), 'contract.dat']);
     return new SaveGame(file);
   }
 
