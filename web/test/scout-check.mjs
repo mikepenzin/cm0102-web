@@ -298,6 +298,21 @@ try {
     const fin = await p.$$eval('#editor-form [data-fin]', (v) => Object.fromEntries(v.map((x) => [x.dataset.fin, x.textContent.replace(/[^0-9-]/g, '')])));
     check('Clubs: the balance, the wage bill, the top wage, and this and last year\'s lines', fin.balance === '59516431' && fin.wageBill === '889495'
       && fin.topWage === '65497' && fin['thisYear.sold'] === '19491130' && fin['thisYear.wages'] === '33094379' && fin['lastYear.wages'] === '51520409', JSON.stringify(fin));
+    // The club's record, and a change of the balance and the reputation saved with the game file.
+    check('Clubs: the record: reputation and training facilities as the file has them', await p.inputValue('#editor-form [data-cf="reputation"]') === '9200'
+      && await p.inputValue('#editor-form [data-cf="training"]') === '18' && await p.inputValue('#editor-form [data-cf="balance"]') === '59516431');
+    for (const [k, v] of [['balance', '90000000'], ['reputation', '9900']]) {
+      await p.fill(`#editor-form [data-cf="${k}"]`, v);
+      await p.locator(`#editor-form [data-cf="${k}"]`).dispatchEvent('change');
+    }
+    check('Clubs: the new balance in the finances, one change of the save', (await p.textContent('#editor-form [data-fin="balance"]')).replace(/[^0-9-]/g, '') === '90000000'
+      && /\(1 changed\)/.test(await p.textContent('#editor-save')), await p.textContent('#editor-save'));
+    await p.click('#editor-save');
+    await p.waitForFunction(() => /Saved/.test(document.getElementById('editor-note').textContent), null, { timeout: 15000 });
+    const saved = new SaveGame(new Uint8Array(await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')))));
+    const { clubInfo, clubFinances } = await import('../savedit.js');
+    check('Clubs: saved, the file has the new balance and reputation', clubFinances(saved, 0)?.balance === 90000000 && clubInfo(saved, 0)?.reputation === 9900,
+      JSON.stringify([clubFinances(saved, 0)?.balance, clubInfo(saved, 0)?.reputation]));
     await ctx.close();
     const c2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const free = await editorOn(c2, ME.free);

@@ -185,6 +185,20 @@ test('club finances: the balance, the wage bill and the year blocks of finance.d
   assert.equal(clubFinances(new SaveGame(await fakeSaveGame()), 0), null, 'no finance.dat');
 });
 
+test('a club: nation, attendance, training and reputation of club.dat; balance, reputation and training written back', async () => {
+  const { clubInfo, writeClub, clubFinances } = await import('../savedit.js');
+  const g = new SaveGame(await fakeSaveGame(undefined, { finance: { balance: 1000000 } }));
+  assert.deepEqual(clubInfo(g, 0), { id: 0, name: 'Juventus', nation: 'Italy', attendance: 41000, training: 18, reputation: 9200 });
+  assert.equal(clubInfo(g, 1).name, 'Italy', 'a national team: nat_club.dat');
+  assert.equal(clubInfo(g, 7), null, 'no such club');
+  writeClub(g, 0, { balance: 25000000, reputation: 12000, training: 0 });
+  const back = new SaveGame(await g.toBytes());
+  assert.equal(clubFinances(back, 0).balance, 25000000, 'the balance in finance.dat');
+  assert.deepEqual([clubInfo(back, 0).reputation, clubInfo(back, 0).training], [10000, 1], 'cut to the game\'s ranges: 1..10000, 1..20');
+  writeClub(g, 0, { balance: -5e9 });
+  assert.equal(clubFinances(g, 0).balance, -2000000000, 'the balance within a signed 32-bit cash figure');
+});
+
 test('non-players: the staff with a non-player record, by name and club; edits written as the game rates them', async () => {
   const { nonPlayers, managerAttributes, writeManagerAttributes } = await import('../savedit.js');
   const g = new SaveGame(await fakeSaveGame(undefined, { managers: [

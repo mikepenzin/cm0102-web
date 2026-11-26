@@ -294,7 +294,9 @@ export async function fakeSaveGame(players = [
       for (const [off, v] of Object.entries(m.np ?? {})) nonPlayer.writeInt8(v, q + Number(off));
     });
   }
+  // Juventus's record (docs/research/2026-11-26-club-finances.md, "The club record"): nation, attendance, training, reputation.
   const club = Buffer.alloc(581); club.writeInt32LE(0, 0); club.write('Juventus', 4, 'latin1');
+  club.writeInt32LE(0, 0x53); club.writeInt32LE(41000, 0x73); club[0x7f] = 18; club.writeInt16LE(9200, 0x80);
   const natClub = Buffer.alloc(581); natClub.writeInt32LE(1, 0); natClub.write('Italy', 4, 'latin1');
   const nation = Buffer.alloc(2 * 290); nation.writeInt32LE(0, 0); nation.write('Italy', 4, 'latin1'); nation.writeInt32LE(1, 290); nation.write('France', 294, 'latin1');
   const tables = [['first_names.dat', 13, names(first)], ['second_names.dat', 14, names(second)], ['common_names.dat', 15, names(common)],

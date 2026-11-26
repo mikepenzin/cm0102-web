@@ -4,7 +4,7 @@
 //   backups/ first, so Load Game lists the edited save and Saved games the old one.
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
-import { ATTRIBUTES, POSITIONS, SaveGame, clubFinances, managerAttributes, nonPlayers, writeManagerAttributes } from './savedit.js';
+import { ATTRIBUTES, POSITIONS, SaveGame, clubFinances, clubInfo, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
@@ -381,7 +381,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     try { await m.file.load(['finance.dat']); } catch { /* none: no figures */ }
     if (model !== m || pane !== 'clubs') return;
     if (!m.file.has('finance.dat')) { clubsBox.innerHTML = `<p class="small">${esc(t('This save holds no club finances.'))}</p>`; return; }
-    clubsBox.innerHTML = `<p class="small">${esc(t('Any club\'s finances in this save, as the game keeps them. The game shows them for your own club only.'))}${acc.badge}</p>
+    clubsBox.innerHTML = `<p class="small">${esc(t('Any club of this save: its record and finances as the game keeps them, which the game shows for your own club only. Its balance, reputation and training facilities can be changed.'))}${acc.badge}</p>
       <input id="clubs-search" type="search" placeholder="${esc(t('Search a club'))}" aria-label="${esc(t('Search a club'))}" autocomplete="off" spellcheck="false">
       <div id="clubs-results"></div>`;
     const input = $('clubs-search');
@@ -396,14 +396,33 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     out.innerHTML = hit.length ? hit.map(([id, n]) => `<button type="button" class="ed-row" data-club="${id}"><b data-raw>${esc(n)}</b></button>`).join('')
       : `<p class="small">${esc(t('No club of that name.'))}</p>`;
   }
+  // A club in the right-hand panel, as a player's (a phone: the panel alone, with its way back to the list): its record
+  // and finances; the balance (from which the game works out the transfer budget, 0x598800), the reputation and the
+  // training facilities can be changed (writeClub) and count as a change of the save.
   function showClub(id) {
     clubShown = id;
-    // In the right-hand panel, as a player's (a phone: the panel alone, with its way back to the list).
-    const f = clubFinances(model, id);
+    const c = clubInfo(model, id), f = clubFinances(model, id);
     current = null;
     for (const b of clubsBox.querySelectorAll('[data-club]')) b.classList.toggle('on', Number(b.dataset.club) === id);
-    const head = `<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Clubs'))}</button><div class="ed-name"><h3 data-raw>${esc(model.clubs.get(id) ?? '')}</h3></div></div>`;
-    detailPanel(head + (f ? '' : `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`));
+    const name = c?.name ?? model.clubs.get(id) ?? '';
+    const head = `<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Clubs'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>`;
+    const box = (key, value, min, max, label) => `<label><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" step="1" data-cf="${key}" value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
+    const club = c ? `<section><h4>${esc(t('Club'))}</h4>
+      <table class="fin"><tr><td>${esc(t('Nation'))}</td><td data-raw>${esc(c.nation || '–')}</td></tr><tr><td>${esc(t('Attendance'))}</td><td>${esc(money(c.attendance))}</td></tr></table>
+      <div class="ed-grid club">${f ? box('balance', f.balance, -2000000000, 2000000000, t('Balance')) : ''}${box('reputation', c.reputation, 1, 10000, t('Reputation'))}${box('training', c.training, 1, 20, t('Training facilities'))}</div>
+      <p class="small">${esc(t('The game works out the transfer budget from the balance: a larger balance, a larger budget. A change is saved with the game file.'))}</p></section>` : '';
+    detailPanel(head + club + (f ? '' : `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`));
+    if (c) {
+      form.onchange = (e) => {
+        const i = e.target.closest('[data-cf]');
+        if (!i) return;
+        try { writeClub(model, id, { [i.dataset.cf]: Number(i.value) }); } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: err.message }), true); return; }
+        edited.add(`club:${id}`);
+        dirty();
+        showClub(id);
+        say(() => t('{name} changed. Save the game file to keep the changes.', { name }));
+      };
+    }
     if (!f) return;
     const v = (key, n) => `<td data-fin="${key}"${n < 0 ? ' class="neg"' : ''}>${esc(money(n))}</td>`;
     const LINES = [['sold', t('Players sold')], ['prize', t('Prize money')], ['tv', t('TV money')], ['bought', t('Players bought')],

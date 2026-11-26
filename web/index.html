@@ -388,6 +388,8 @@
   .ed-grid input[type=text], .ed-grid select { width: 100%; max-width: 260px; text-align: left; font: inherit; font-size: 16px;
     color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 4px 6px; }
   .ed-grid label.wide { grid-column: span 2; }
+  .ed-grid.club { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); max-width: 560px; }
+  .ed-grid.club input[data-cf="balance"] { width: 140px; } .ed-grid.club input[data-cf="reputation"] { width: 90px; }
   .ed-grid select.changed { border-color: var(--accent); }
   .ed-search { display: flex; gap: 6px; } .ed-search input { flex: 1; min-width: 0; }
   #editor-nation { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);

@@ -282,6 +282,40 @@ export function clubFinances(game, clubId) {
     thisYear: year(0x110), lastYear: year(0xc0) };
 }
 
+// A club's record of club.dat or nat_club.dat (581 bytes; docs/research/2026-11-26-club-finances.md, "The club
+// record"): { id, name, nation, attendance, training, reputation }, or null (no such club).
+function clubRow(game, clubId) {
+  for (const t of game.clubTables) {
+    const first = t.count ? t.dv.getInt32(0, true) : 0, i = clubId - first;       // the ids follow the rows
+    if (i >= 0 && i < t.count && t.dv.getInt32(i * CLUB_SIZE, true) === clubId) return { t, o: i * CLUB_SIZE };
+  }
+  return null;
+}
+export function clubInfo(game, clubId) {
+  const r = clubRow(game, clubId);
+  if (!r) return null;
+  const { t, o } = r;
+  return { id: clubId, name: latin1(t.b, o + 4, 51), nation: game.nations.get(t.dv.getInt32(o + 0x53, true)) ?? '',
+    attendance: t.dv.getInt32(o + 0x73, true), training: t.b[o + 0x7f], reputation: t.dv.getInt16(o + 0x80, true) };
+}
+
+// Changes a club: { balance } (finance.dat +0, the game's cash figure is a signed 32-bit number: 0x5986e3),
+// { reputation } (club +0x80, 1..10000), { training } (club +0x7f, 1..20). Each one given is written.
+export function writeClub(game, clubId, { balance, reputation, training } = {}) {
+  const r = clubRow(game, clubId);
+  if (!r) throw Object.assign(new Error('no such club'), { key: 'no such club' });
+  const cut = (v, lo, hi) => Math.min(hi, Math.max(lo, Math.round(Number(v) || 0)));
+  if (reputation !== undefined) r.t.dv.setInt16(r.o + 0x80, cut(reputation, 1, 10000), true);
+  if (training !== undefined) r.t.b[r.o + 0x7f] = cut(training, 1, 20);
+  if (reputation !== undefined || training !== undefined) game.file.changed(r.t.name);
+  if (balance !== undefined) {
+    if (!clubFinances(game, clubId)) throw Object.assign(new Error('the game keeps no finances for this club'), { key: 'the game keeps no finances for this club' });
+    const f = game.file.read('finance.dat');
+    new DataView(f.buffer, f.byteOffset, f.byteLength).setBigInt64(clubId * FINANCE_SIZE, BigInt(cut(balance, -2000000000, 2000000000)), true);
+    game.file.changed('finance.dat');
+  }
+}
+
 // kind: raw (the byte is the rating), rel (0x544380), gk20 (0x5442f0's tenth when the goalkeeper rating is 20),
 // gk15 (the tenth when it is below 15). from: 'player' (the player data) or 'staff' (the staff row).
 // The 31 shown attributes in the game's numbering (the case of the jump table 0x543a94), then the bytes that the
@@ -381,8 +415,8 @@ export class SaveGame {
     this.secondNames = names(14);
     this.commonNames = names(15);
     this.clubs = new Map();
-    for (const id of [0, 1]) {
-      const t = table(id, CLUB_SIZE);
+    this.clubTables = [0, 1].map((id) => table(id, CLUB_SIZE));
+    for (const t of this.clubTables) {
       for (let i = 0; i < t.count; i++) this.clubs.set(t.dv.getInt32(i * CLUB_SIZE, true), latin1(t.b, i * CLUB_SIZE + 4, 51));
     }
     const n = table(4, NATION_SIZE);
