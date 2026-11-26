@@ -857,4 +857,5 @@ export default {
   "Transfer listed by club": "In lista trasferimenti dal club",
   "Transfer listed by request": "In lista trasferimenti su richiesta",
   "A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.": "Un premio di 0 equivale a nessun premio. Il gioco modifica da solo morale, reputazioni, valore e numeri di maglia man mano che la stagione va avanti.",
+  "Details": "Dati",
 };

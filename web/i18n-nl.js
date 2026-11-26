@@ -857,4 +857,5 @@ export default {
   "Transfer listed by club": "Door club op transferlijst",
   "Transfer listed by request": "Op eigen verzoek op transferlijst",
   "A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.": "Een premie van 0 betekent geen premie. Het spel verandert moraal, reputaties, waarde en rugnummers zelf naarmate het seizoen vordert.",
+  "Details": "Gegevens",
 };

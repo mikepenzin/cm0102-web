@@ -857,4 +857,5 @@ export default {
   "Transfer listed by club": "Satt til salgs av klubben",
   "Transfer listed by request": "Satt til salgs etter ønske",
   "A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.": "En bonus på 0 betyr ingen bonus. Spillet endrer selv moral, omdømme, verdi og draktnumre etter hvert som sesongen går.",
+  "Details": "Opplysninger",
 };

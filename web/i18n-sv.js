@@ -857,4 +857,5 @@ export default {
   "Transfer listed by club": "Transferlistad av klubben",
   "Transfer listed by request": "Transferlistad på egen begäran",
   "A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.": "En bonus på 0 betyder ingen bonus. Spelet ändrar själv moral, rykte, värde och tröjnummer allteftersom säsongen går.",
+  "Details": "Uppgifter",
 };

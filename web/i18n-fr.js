@@ -857,4 +857,5 @@ export default {
   "Transfer listed by club": "Transférable par le club",
   "Transfer listed by request": "Transférable à sa demande",
   "A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.": "Une prime de 0 signifie aucune prime. Le jeu fait évoluer lui-même le moral, les réputations, la valeur et les numéros de maillot au fil de la saison.",
+  "Details": "Détails",
 };

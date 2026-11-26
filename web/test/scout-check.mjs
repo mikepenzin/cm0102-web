@@ -388,6 +388,8 @@ try {
     check('Managers: a search finds any manager', (await p.$$eval('#managers-results [data-mgr] b', (b) => b.map((x) => x.textContent))).join() === 'Mike Penzin');
     await p.click('#managers-results [data-mgr]');
     await p.waitForSelector('#editor-form [data-attr="Motivating"]');
+    check('Managers: his details and personality below the attributes, no player fields', await p.locator('#editor-form [data-f="m:nation"]').count() === 1
+      && await p.locator('#editor-form [data-f="p:Ambition"]').count() === 1 && await p.locator('#editor-form [data-f="m:morale"]').count() === 0);
     await p.fill('#editor-form [data-attr="Motivating"]', '7');
     await p.locator('#editor-form [data-attr="Motivating"]').dispatchEvent('change');
     check('Managers: a change counts as a change of the save', /\(1 changed\)/.test(await p.textContent('#editor-save')), await p.textContent('#editor-save'));

@@ -592,13 +592,15 @@ export class SaveGame {
   // { name: value }, contract: { wage, start, end, number, status (squad status 0..7), goalBonus, assistBonus,
   // cleanSheetBonus (0: none), listed, loanListed, listedByRequest, nonPromotion, minFee, nonPlaying, relegation,
   // managerJob (the release clauses), fee (the release fee) } or null }.
+  // A staff member with no player record (a manager, a coach) has only the staff row's and the contract's fields.
   readMore(row) {
-    const s = this.staff, p = this.player, o = row * STAFF_SIZE, po = s.dv.getInt32(o + 0x61, true) * PLAYER_SIZE;
-    const c = contractsOf(this), q = c?.at.get(row);
+    const s = this.staff, p = this.player, o = row * STAFF_SIZE, d = s.dv.getInt32(o + 0x61, true), po = d * PLAYER_SIZE;
+    const c = contractsOf(this), q = c?.at.get(row), player = d >= 0 && d < p.count;
     return { nation: s.dv.getInt32(o + 0x1a, true), nation2: s.dv.getInt32(o + 0x1e, true), caps: s.b[o + 0x22], goals: s.b[o + 0x23],
-      value: s.dv.getInt32(o + 0x52, true), ...Object.fromEntries(Object.entries(SQUAD_BITS).map(([k, bit]) => [k, (s.b[o + 0x5e] & bit) !== 0])),
-      euro: s.b[o + 0x6d], morale: p.b[po + 0x45], homeRep: p.dv.getInt16(po + 0x09, true), currentRep: p.dv.getInt16(po + 0x0b, true),
-      worldRep: p.dv.getInt16(po + 0x0d, true), personality: Object.fromEntries(PERSONALITY.map(([n, off]) => [n, s.dv.getInt8(o + off)])),
+      ...(player ? { value: s.dv.getInt32(o + 0x52, true), ...Object.fromEntries(Object.entries(SQUAD_BITS).map(([k, bit]) => [k, (s.b[o + 0x5e] & bit) !== 0])),
+        euro: s.b[o + 0x6d], morale: p.b[po + 0x45], homeRep: p.dv.getInt16(po + 0x09, true), currentRep: p.dv.getInt16(po + 0x0b, true),
+        worldRep: p.dv.getInt16(po + 0x0d, true) } : {}),
+      personality: Object.fromEntries(PERSONALITY.map(([n, off]) => [n, s.dv.getInt8(o + off)])),
       contract: q === undefined ? null : { wage: c.dv.getInt32(q + 0x0c, true), start: readDate(c.b, q + 0x25), end: readDate(c.b, q + 0x2d),
         number: Math.abs(c.dv.getInt8(q + 0x3a)), status: c.b[q + 0x4f] >> 4,
         ...Object.fromEntries(BONUSES.map(([k, off]) => [k, Math.max(0, c.dv.getInt32(q + off, true))])),   // -1: none, shown 0
@@ -612,7 +614,7 @@ export class SaveGame {
   writeMore(row, m) {
     const s = this.staff, p = this.player, o = row * STAFF_SIZE, po = s.dv.getInt32(o + 0x61, true) * PLAYER_SIZE;
     const was = this.readMore(row), cut = (v, lo, hi) => Math.min(hi, Math.max(lo, Math.round(Number(v) || 0)));
-    const differs = (k) => m[k] !== undefined && m[k] !== was[k];
+    const differs = (k) => m[k] !== undefined && was[k] !== undefined && m[k] !== was[k];   // a field this staff member has
     for (const k of ['nation', 'nation2']) {
       if (!differs(k)) continue;
       const id = Number(m[k]);
@@ -642,6 +644,9 @@ export class SaveGame {
       if (k.fee !== w.fee) { c.dv.setInt32(q + 0x21, cut(k.fee, 0, 2000000000), true); any = true; }
       if (any) this.file.changed('contract.dat');
     }
+    this.file.changed(this.staff.name);               // called alone for a staff member with no player record
+    if (was.morale !== undefined) this.file.changed(this.player.name);
+    this.list = null;
   }
 
   // Writes the fields (as read gives them, changed). A relative attribute keeps its byte when it still shows the

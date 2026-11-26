@@ -555,8 +555,16 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     detailPanel(`<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Managers'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>
       <section><h4>${esc(t('Ability'))}</h4><div class="ed-grid">${box('ca', a.ca, 1, 200, t('Current ability'), 'data-mf="ca"')}${box('pa', a.pa, 1, 200, t('Potential ability'), 'data-mf="pa"')}</div></section>
       <div class="ed-attrs">${MGR_GROUPS.map((g) => `<section><h4>${esc(nm[g])}</h4><div class="ed-grid">${a.attrs.filter((y) => y.group === g)
-        .map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-attr="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>`);
+        .map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-attr="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>
+      ${moreHtml(model.readMore(id))}`);
     form.onchange = (e) => {
+      if (e.target.closest('[data-f]')) {               // details, personality, contract (savedit.js writeMore)
+        try { model.writeMore(id, moreOf(model.readMore(id))); } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: reason(err) }), true); return; }
+        edited.add(`mgr:${id}`);
+        dirty();
+        say(() => t('{name} changed. Save the game file to keep the changes.', { name }));
+        return;
+      }
       if (!e.target.matches('[data-mf], [data-attr]')) return;
       const values = Object.fromEntries([...form.querySelectorAll('[data-attr]')].map((i) => [i.dataset.attr, Number(i.value)]));
       try {
@@ -687,16 +695,18 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const badge = playerAccess().badge;
     const ns = [...model.nations].sort((a, b) => a[1].localeCompare(b[1]));
     const pn = personalityNames(), c = m.contract;
-    return `<section><h4>${esc(t('Player details'))}${badge}</h4><div class="ed-grid">
+    const player = m.morale !== undefined;            // a staff member with no player record has no player fields
+    return `<section><h4>${esc(player ? t('Player details') : t('Details'))}${badge}</h4><div class="ed-grid">
         ${select('m:nation', m.nation, ns, t('Nationality'))}${select('m:nation2', m.nation2, [[-1, t('None')], ...ns], t('Second nationality'))}
-        ${num('m:caps', m.caps, 0, 255, t('Caps'))}${num('m:goals', m.goals, 0, 255, t('International goals'))}${big('m:value', m.value, 2000000000, t('Transfer value'))}
+        ${num('m:caps', m.caps, 0, 255, t('Caps'))}${num('m:goals', m.goals, 0, 255, t('International goals'))}
+        ${player ? `${big('m:value', m.value, 2000000000, t('Transfer value'))}
         ${tick('m:clubMain', m.clubMain, t('Club first team squad'))}${tick('m:clubReserve', m.clubReserve, t('Club reserve squad'))}
-        ${tick('m:nation-squad', m.nationMain || m.nationU21, t('National squad'), true)}${tick('m:euro', m.euro === 2, t('Registered for Europe'), true)}
+        ${tick('m:nation-squad', m.nationMain || m.nationU21, t('National squad'), true)}${tick('m:euro', m.euro === 2, t('Registered for Europe'), true)}` : ''}
       </div></section>
-      <section><h4>${esc(t('Reputation and morale'))}</h4><div class="ed-grid">
+      ${player ? `<section><h4>${esc(t('Reputation and morale'))}</h4><div class="ed-grid">
         ${big('m:homeRep', m.homeRep, 10000, t('Home reputation'))}${big('m:currentRep', m.currentRep, 10000, t('Current reputation'))}
         ${big('m:worldRep', m.worldRep, 10000, t('World reputation'))}${num('m:morale', m.morale, 1, 20, t('Morale'))}
-      </div></section>
+      </div></section>` : ''}
       <section><h4>${esc(t('Personality'))} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">
         ${PERSONALITY.map(([n]) => num(`p:${n}`, m.personality[n], 1, 20, pn[n])).join('')}</div></section>
       ${c ? `<section><h4>${esc(t('Contract'))}</h4><div class="ed-grid">
