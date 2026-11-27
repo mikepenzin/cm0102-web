@@ -233,15 +233,23 @@ function colourDat() {
 // With contracts: contract.dat as the game saves it (0x4dc3a0): one talk of 21 bytes, then a contract of 80 bytes for
 // each player (staff id, club 0, wage 20,000 + 1,000 x row, 30 June 2004, squad number -(row + 1), status First Team,
 // not listed), no decision dates, an int, two empty offer lists, a byte.
+// Player 0 also: the non-promotion clause active (2), played 3 in a row, two grievances (0x2 a new contract, 0x10
+// first team football) and one about the club (0x10 topping the table). Then a loan of player 1 to Italy (1), row n:
+// half his wage, 1 Aug 2001 to 30 May 2002, cup matches yes, against the parent no.
 function contractDat(n, writeDate) {
   const head = Buffer.alloc(4 + 21); head.writeInt32LE(1, 0);
-  const list = Buffer.alloc(4 + n * 80); list.writeInt32LE(n, 0);
+  const list = Buffer.alloc(4 + (n + 1) * 80); list.writeInt32LE(n + 1, 0);
   for (let i = 0; i < n; i++) {
     const o = 4 + i * 80; list.writeInt32LE(i, o); list.writeInt32LE(0, o + 4); list.writeInt32LE(20000 + 1000 * i, o + 0x0c);
     for (const k of [0x10, 0x14, 0x18]) list.writeInt32LE(-1, o + k);
     writeDate(list, o + 0x2d, { year: 2004, month: 6, day: 30 });
     list[o + 0x35] = 2; list.writeInt8(-(i + 1), o + 0x3a); list[o + 0x4f] = (2 << 4) | 3;
+    if (i === 0) { list[o + 0x1c] = 2; list[o + 0x3e] = 3; list.writeUInt32LE(0x12, o + 0x45); list.writeUInt32LE(0x10, o + 0x40); }
   }
+  const l = 4 + n * 80;
+  list.writeInt32LE(1, l); list.writeInt32LE(1, l + 4); list.writeInt32LE(10500, l + 0x0c); list[l + 0x1c] = 1; list[l + 0x1d] = 0;
+  writeDate(list, l + 0x25, { year: 2001, month: 8, day: 1 }); writeDate(list, l + 0x2d, { year: 2002, month: 5, day: 30 });
+  list[l + 0x35] = 6; list[l + 0x4f] = 3 << 4;
   return Buffer.concat([head, list, Buffer.alloc(4), Buffer.alloc(4), Buffer.alloc(2), Buffer.alloc(2), Buffer.alloc(1)]);
 }
 
@@ -362,9 +370,25 @@ export async function fakeSaveGame(players = [
     if (t) { index.write(t[0], o, 'latin1'); index.writeInt32LE(t[1], o + 0x33); index.writeInt32LE(t[2].length / sizes[t[1]], o + 0x37); index.writeInt32LE(2, o + 0x3f); }
     else index.writeInt32LE(100 + k, o + 0x33);
   }
+  // With contracts: general.dat's staff state table (count at +4003, 79 bytes a staff id from +4007: +0x00 the main
+  // contract row, +0x04 the loan row, +0x0b bits 4..5 the retirement state: the coach retiring), and injury.dat
+  // (31 bytes a staff id: fitness 10000, match condition 9000, fatigue 1300 for player 0 (exhausted), else 0).
+  let injury = null;
+  if (contracts) {
+    const count = staff.length / 110, g2 = Buffer.alloc(4007 + count * 79, 0);
+    general.copy(g2, 0, 0, Math.min(general.length, 4003)); g2.writeInt32LE(count, 4003);
+    for (let i = 0; i < count; i++) {
+      const o = 4007 + i * 79;
+      g2.writeInt32LE(i < players.length ? i : -1, o); g2.writeInt32LE(i === 1 ? players.length : -1, o + 4);
+      if (i === players.length) g2[o + 0x0b] = 1 << 4;
+    }
+    general = g2;
+    injury = Buffer.alloc(count * 31);
+    for (let i = 0; i < count; i++) { injury.writeInt16LE(10000, i * 31 + 8); injury.writeInt16LE(9000, i * 31 + 0x0a); injury.writeInt16LE(i === 0 ? 1300 : 0, i * 31 + 0x0c); injury.writeInt32LE(-1, i * 31 + 0x0e); }
+  }
   const members = [['continent.dat', Buffer.from('stays as it is, byte for byte')], ...tables.map((t) => [t[0], t[2]]),
     ['index.dat', index], ['general.dat', general], ...(scoutManager ? [['scout_manager.dat', scoutManager], ['nonplayer.dat', nonPlayer]] : []),
-    ...(contracts ? [['contract.dat', contractDat(players.length, writeDate)]] : []),
+    ...(contracts ? [['contract.dat', contractDat(players.length, writeDate)], ['injury.dat', injury]] : []),
     ...(prefs ? [['preferences.dat', prefsDat(players.length)]] : []),
     ...(finance ? [['finance.dat', financeDat(finance)], ['stadium.dat', stadiumDat()], ['city.dat', cityDat()], ['colour.dat', colourDat()]] : [])];
   const HEADER = 0x416ec, header = Buffer.alloc(HEADER);

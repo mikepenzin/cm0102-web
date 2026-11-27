@@ -615,6 +615,13 @@ is open, the title is the save's name and Players and Scout are its tabs):
   Sportsmanship, Temperament: staff +0x56..),
   and Contract (`contract.dat`: weekly wage, squad number, start and end, goal, assist and clean-sheet bonuses, the
   release fee and the five release clauses, transfer listed by club or by request, listed for loan, squad status).
+  Also, as GK's other tabs (docs/research/2026-11-26-condition-retirement-fields.md): the playing condition (`injury.dat`:
+  a percentage is full fitness and that match condition; Exhausted or Lacking match practice, words the game works
+  out from fatigue, set its fatigue), the retirement state shown (general.dat's staff state; not changed: retire.dat
+  would change length), Leaving on a Bosman, the release clauses' active state, played and missed in a row, the
+  grievances (contract +0x45) and those about the club (+0x40) bit by bit, and an existing loan (the staff state's
+  loan contract: wage share, dates, cup matches, against the parent club, status). These members are read when a
+  form first opens (`SaveGame.loadMore`), not when the save does, so a large save opens as quickly as before.
   Only what changed is written; the wage and the contract end go to the contract and to the staff row's copies; a new
   nationality takes the player out of his national team. The game moves morale, reputations, value and squad
   numbers itself as the season goes on. A member's; a feature of `features.js` (`player-details`): Club Legends first.

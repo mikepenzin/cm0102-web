@@ -575,6 +575,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // A manager's ability and attributes in the right-hand panel, editable as a player's: a change is written at once
   // (writeManagerAttributes) and counts as a change of the save.
   function showManager(id, name) {
+    needMore(() => { if (managersBox.querySelector(`[data-mgr="${id}"].on`)) showManager(id, name); });
     const nm = mgrNames(), a = managerAttributes(model, id);
     if (!a) return;
     current = null;
@@ -727,8 +728,32 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     Professionalism: t('Professionalism'), Sportsmanship: t('Sportsmanship'), Temperament: t('Temperament') });
   const tick = (key, on, label, off = false) => `<label><span>${esc(label)}</span><input type="checkbox" data-f="${esc(key)}"${on ? ' checked' : ''}${off ? ' disabled' : ''} data-was="${on}"></label>`;
   const big = (key, value, max, label) => num(key, value, 0, max, label).replace('<label>', '<label class="big">');
+  // The grievances of a contract (+0x45) and about the club (+0x40), bit by bit, as GK's Unhappiness tabs list them
+  // (docs/research/2026-11-26-condition-retirement-fields.md); a bit not listed is kept as it is.
+  const GRIEVANCES = () => [[0x1, t('Wants to move to a bigger club')], [0x2, t('Would like to negotiate a new contract')],
+    [0x4, t('Feels he should be a first team regular')], [0x8, t('Unhappy with his manager')], [0x10, t('Wants first team football')],
+    [0x20, t('Finding it hard to adjust, or feels he needs to move on')], [0x40, t('Has personal problems')],
+    [0x80, t('Frustrated at not being allowed to move clubs')], [0x100, t('Wants a new challenge')], [0x200, t('Feels he has been treated unfairly')],
+    [0x400, t('Unhappy at the treatment of a teammate')], [0x800, t('Dislikes a teammate')], [0x1000, t('Dislikes the club\'s assistant manager')],
+    [0x2000, t('Dislikes the manager, or doubts his ability')], [0x4000, t('Feels he deserves a more important role')], [0x8000, t('Unhappy with training')],
+    [0x10000, t('Wants to leave the club')], [0x20000, t('Is homesick')], [0x40000, t('Has vented his feelings publicly')],
+    [0x80000, t('Feels he has no support from his manager')], [0x100000, t('Worried about his future, or jaded')],
+    [0x200000, t('Unhappy about a teammate\'s remarks')], [0x400000, t('Upset by the financial upheaval')],
+    [0x800000, t('Feels the manager is blocking his move')], [0x1000000, t('Feels he deserves to be paid more')],
+    [0x2000000, t('Wants to play in another position')], [0x4000000, t('Unhappy at being substituted')],
+    [0x8000000, t('Can no longer trust his manager')], [0x10000000, t('Not convinced the new manager can turn the club around')],
+    [0x20000000, t('Unhappy at the sale of a teammate')], [0x40000000, t('Disappointed the club sold a promising youngster')]];
+  const CLUB_GRIEVANCES = () => [[0x1, t('Irritated by a disliked member of staff')], [0x2, t('Worried at the lack of managerial discipline')],
+    [0x4, t('Dismayed at the lack of harmony at the club')], [0x8, t('Thinks the club\'s valuation of him is unrealistic')],
+    [0x10, t('Thinks the club should be topping the table')], [0x20, t('Feels the referees are victimising him')],
+    [0x40, t('Feels his best position is another')], [0x80, t('Feels the manager doesn\'t listen to his players')],
+    [0x100, t('Thinks players should play in their strongest positions')], [0x200, t('Feels there is too much competition for a place')],
+    [0x400, t('Believes the club needs more squad depth')], [0x800, t('Worried the club is signing a replacement')],
+    [0x1000, t('Thinks the manager should accept his style of play')], [0x80000000, t('Unhappy the club signed another player for his position')]];
+  const bits = (list, value, prefix) => `<div class="griev">${list.map(([bit, label]) => `<label><input type="checkbox" data-f="${prefix}:${bit >>> 0}"${(value & bit) ? ' checked' : ''} data-was="${(value & bit) !== 0}"><span>${esc(label)}</span></label>`).join('')}</div>`;
   const CONTRACT_KEYS = ['wage', 'number', 'status', 'goalBonus', 'assistBonus', 'cleanSheetBonus', 'fee', 'nonPromotion', 'minFee', 'nonPlaying',
-    'relegation', 'managerJob', 'listed', 'listedByRequest', 'loanListed'];
+    'relegation', 'managerJob', 'listed', 'listedByRequest', 'loanListed', 'nonPromotionActive', 'nonPlayingActive', 'relegationActive', 'bosman',
+    'playedInRow', 'missedInRow'];
   // skip: personality names shown elsewhere (a manager's Adaptability is among his attributes).
   function moreHtml(m, skip = []) {
     const badge = playerAccess().badge;
@@ -741,7 +766,11 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         ${player ? `${big('m:value', m.value, 2000000000, t('Transfer value'))}
         ${tick('m:clubMain', m.clubMain, t('Club first team squad'))}${tick('m:clubReserve', m.clubReserve, t('Club reserve squad'))}
         ${tick('m:nation-squad', m.nationMain || m.nationU21, t('National squad'), true)}${tick('m:euro', m.euro === 2, t('Registered for Europe'), true)}` : ''}
-      </div></section>
+      </div>${m.retiring === 1 ? `<p class="small">${esc(t('Retiring at the end of the season.'))}</p>` : m.retiring === 2 ? `<p class="small">${esc(t('Retired.'))}</p>` : ''}</section>
+      ${m.condition ? `<section><h4>${esc(t('Playing condition'))}</h4><div class="ed-grid">
+        ${num('k:percent', m.condition.percent, 1, 100, t('Condition (%)'))}
+        ${select('k:state', m.condition.state, [['normal', t('Normal')], ['exhausted', t('Exhausted')], ['lacking', t('Lacking match practice')]], t('Fitness'))}
+      </div><p class="small">${esc(t('The game works out exhausted and lacking match practice from his fatigue (lacking match practice only after few games this season), and moves condition and fatigue every day.'))}</p></section>` : ''}
       ${player ? `<section><h4>${esc(t('Reputation and morale'))}</h4><div class="ed-grid">
         ${big('m:homeRep', m.homeRep, 10000, t('Home reputation'))}${big('m:currentRep', m.currentRep, 10000, t('Current reputation'))}
         ${big('m:worldRep', m.worldRep, 10000, t('World reputation'))}${num('m:morale', m.morale, 1, 20, t('Morale'))}
@@ -762,10 +791,22 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         ${big('c:cleanSheetBonus', c.cleanSheetBonus, 10000000, t('Clean sheet bonus'))}${big('c:fee', c.fee, 2000000000, t('Release fee'))}
         ${tick('c:nonPromotion', c.nonPromotion, t('Non-promotion release clause'))}${tick('c:minFee', c.minFee, t('Minimum fee release clause'))}
         ${tick('c:nonPlaying', c.nonPlaying, t('Non-playing release clause'))}${tick('c:relegation', c.relegation, t('Relegation release clause'))}
-        ${tick('c:managerJob', c.managerJob, t('Manager job release clause'))}
+        ${tick('c:nonPromotionActive', c.nonPromotionActive, t('Non-promotion clause active'))}${tick('c:nonPlayingActive', c.nonPlayingActive, t('Non-playing clause active'))}
+        ${tick('c:relegationActive', c.relegationActive, t('Relegation clause active'))}
+        ${tick('c:managerJob', c.managerJob, t('Manager job release clause'))}${tick('c:bosman', c.bosman, t('Leaving on a Bosman'))}
+        ${num('c:playedInRow', c.playedInRow, 0, 100, t('Played in a row'))}${num('c:missedInRow', c.missedInRow, 0, 100, t('Missed in a row'))}
         ${tick('c:listed', c.listed, t('Transfer listed by club'))}${tick('c:listedByRequest', c.listedByRequest, t('Transfer listed by request'))}
         ${tick('c:loanListed', c.loanListed, t('Listed for loan'))}${select('c:status', c.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
-      </div><p class="small">${esc(t('A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.'))}</p></section>` : ''}`;
+      </div><p class="small">${esc(t('A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.'))}</p></section>
+      <section><h4>${esc(t('Unhappiness'))}</h4>${bits(GRIEVANCES(), c.grievances, 'g')}</section>
+      <section><h4>${esc(t('Unhappy with the club'))}</h4>${bits(CLUB_GRIEVANCES(), c.clubGrievances, 'cg')}
+        <p class="small">${esc(t('Clearing a grievance does not withdraw a transfer request he has already made.'))}</p></section>` : ''}
+      ${m.loan ? `<section><h4>${esc(t('Loan'))} <span class="small" data-raw>${esc(m.loan.club)}</span></h4><div class="ed-grid">
+        ${big('l:wage', m.loan.wage, 10000000, t('Weekly wage contribution'))}${select('l:status', m.loan.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
+        <label class="when"><span>${esc(t('Loan starts'))}</span><input type="date" data-f="l:start" value="${isoDate(m.loan.start)}" data-was="${isoDate(m.loan.start)}" min="1960-01-01" max="2060-12-31"></label>
+        <label class="when"><span>${esc(t('Loan ends'))}</span><input type="date" data-f="l:end" value="${isoDate(m.loan.end)}" data-was="${isoDate(m.loan.end)}" min="1960-01-01" max="2060-12-31"></label>
+        ${tick('l:cup', m.loan.cup, t('Can play in cup matches'))}${tick('l:againstParent', m.loan.againstParent, t('Can play against his parent club'))}
+      </div></section>` : ''}`;
   }
   // The form's values of moreHtml, over what the save holds.
   function moreOf(m) {
@@ -788,16 +829,43 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         return id;
       })]));
     }
+    if (m.condition) {
+      out.condition = { ...m.condition };
+      const pc = val('k:percent'); if (pc !== undefined) out.condition.percent = pc;
+      if (el('k:state')) out.condition.state = el('k:state').value;
+    }
+    if (m.loan) {
+      out.loan = { ...m.loan };
+      for (const k of ['wage', 'status', 'cup', 'againstParent']) { const v = val(`l:${k}`); if (v !== undefined) out.loan[k] = v; }
+      for (const k of ['start', 'end']) { const d = el(`l:${k}`) && fromIso(el(`l:${k}`).value); if (d) out.loan[k] = d; }
+    }
     if (out.contract) {
+      for (const [k, list] of [['grievances', GRIEVANCES()], ['clubGrievances', CLUB_GRIEVANCES()]]) {
+        const prefix = k === 'grievances' ? 'g' : 'cg';
+        let v = m.contract[k];
+        for (const [bit] of list) { const on = val(`${prefix}:${bit >>> 0}`); if (on !== undefined) v = on ? (v | bit) : (v & ~bit); }
+        out.contract[k] = v >>> 0;
+      }
       for (const k of CONTRACT_KEYS) { const v = val(`c:${k}`); if (v !== undefined) out.contract[k] = v; }
       for (const k of ['start', 'end']) { const d = el(`c:${k}`) && fromIso(el(`c:${k}`).value); if (d) out.contract[k] = d; }
     }
     return out;
   }
 
+  // The members of a saved game the player and staff forms need beyond the list's tables, read once when a form first
+  // opens (SaveGame.loadMore); then: the form shown again.
+  const moreRead = new WeakSet();
+  function needMore(then) {
+    if (kind !== 'save' || !model || moreRead.has(model)) return false;
+    const m = model;
+    m.loadMore().then(() => { moreRead.add(m); if (model === m) then(); }, (e) => { moreRead.add(m); log(`page: the player details of the save were not read: ${e.message}`); });
+    return true;
+  }
+
   // row: a player's row, or null for a new player.
   function show(row) {
     current = row;
+    if (row !== null && needMore(() => { if (current === row) show(row); })) { /* drawn now without them, again when read */ }
     const set = kind === 'set';
     const attrs = set ? DATA_ATTRIBUTES : ATTRIBUTES;
     const groupName = groupNames(), attrName = attributeNames(), posName = positionNames();

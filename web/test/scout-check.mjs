@@ -312,6 +312,10 @@ try {
     check('a player: a preference box offers the clubs that match', (await p.$$eval('#club-picks option', (o) => o.map((x) => x.value))).join() === 'Italy (Italy)');
     await p.fill('#editor-form [data-f="pref:favClubs:1"]', 'Italy (Italy)');
     await p.locator('#editor-form [data-f="pref:favClubs:1"]').dispatchEvent('change');
+    await p.check('#editor-form [data-f="g:256"]');
+    await p.fill('#editor-form [data-f="k:percent"]', '100');
+    await p.locator('#editor-form [data-f="k:percent"]').dispatchEvent('change');
+    await p.selectOption('#editor-form [data-f="k:state"]', 'exhausted');
     await p.check('#editor-form [data-f="c:listed"]');
     await p.fill('#editor-form [data-f="c:goalBonus"]', '3000');
     await p.locator('#editor-form [data-f="c:goalBonus"]').dispatchEvent('change');
@@ -321,7 +325,8 @@ try {
     const saved = new SaveGame(new Uint8Array(await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')))));
     const m = saved.read(him.row).more;
     check('a player: saved, the file has his new nation, ambition, wage and listing', m.nation === 1 && m.personality.Ambition === 20
-      && m.contract.wage === 75000 && m.contract.listed === true && m.contract.goalBonus === 3000 && m.prefs.favClubs.join() === '0,1,-1', JSON.stringify([m.nation, m.personality.Ambition, m.contract]));
+      && m.contract.wage === 75000 && m.contract.listed === true && m.contract.goalBonus === 3000 && m.prefs.favClubs.join() === '0,1,-1'
+      && (m.contract.grievances & 0x100) !== 0 && m.condition.percent === 100 && m.condition.state === 'exhausted', JSON.stringify([m.nation, m.personality.Ambition, m.contract]));
     await ctx.close();
   }
 

@@ -216,13 +216,14 @@ test('a club: what Squad Hub edits of club.dat, finance.dat, stadium.dat, city.d
 test('a player as the GK editor shows him: nations, caps, value, squads, morale, reputations, personality, contract', async () => {
   const g = new SaveGame(await fakeSaveGame(undefined, { contracts: true }));
   const m = g.read(1).more;
-  assert.deepEqual({ ...m, personality: undefined, contract: undefined }, { nation: 0, nation2: -1, caps: 5, goals: 2, value: 4000001,
+  assert.deepEqual({ ...m, personality: undefined, contract: undefined, condition: undefined, loan: undefined, retiring: undefined }, { nation: 0, nation2: -1, caps: 5, goals: 2, value: 4000001,
     clubMain: true, clubReserve: false, nationMain: false, nationU21: false, euro: 0, morale: 14, homeRep: 7000, currentRep: 7500, worldRep: 6800, prefs: null,
-    personality: undefined, contract: undefined });
+    personality: undefined, contract: undefined, condition: undefined, loan: undefined, retiring: undefined });
   assert.deepEqual(m.personality, { Adaptability: 10, Ambition: 11, Loyalty: 13, Pressure: 14, Professionalism: 15, Sportsmanship: 16, Temperament: 17 });
   assert.deepEqual(m.contract, { wage: 21000, start: null, end: { year: 2004, month: 6, day: 30 }, number: 2, status: 2, goalBonus: 0, assistBonus: 0,
     cleanSheetBonus: 0, listed: false, loanListed: false, listedByRequest: false, nonPromotion: false, minFee: false, nonPlaying: false,
-    relegation: false, managerJob: false, fee: 0 });
+    relegation: false, managerJob: false, fee: 0, nonPromotionActive: false, nonPlayingActive: false, relegationActive: false, bosman: false,
+    playedInRow: 0, missedInRow: 0, grievances: 0, clubGrievances: 0 });
   const f = g.read(1);
   Object.assign(f.more, { nation: 1, caps: 40, value: 9000000, clubReserve: true, morale: 25, currentRep: 9000,
     personality: { ...f.more.personality, Ambition: 20 },
@@ -233,7 +234,8 @@ test('a player as the GK editor shows him: nations, caps, value, squads, morale,
   assert.deepEqual([b.nation, b.caps, b.value, b.clubMain, b.clubReserve, b.morale, b.currentRep, b.personality.Ambition], [1, 40, 9000000, true, true, 20, 9000, 20]);
   assert.deepEqual(b.contract, { wage: 55000, start: { year: 2001, month: 7, day: 1 }, end: { year: 2007, month: 6, day: 30 }, number: 9, status: 1,
     goalBonus: 2500, assistBonus: 0, cleanSheetBonus: 0, listed: true, loanListed: false, listedByRequest: false, nonPromotion: false, minFee: true,
-    nonPlaying: false, relegation: true, managerJob: false, fee: 30000000 });
+    nonPlaying: false, relegation: true, managerJob: false, fee: 30000000, nonPromotionActive: false, nonPlayingActive: false, relegationActive: false,
+    bosman: false, playedInRow: 0, missedInRow: 0, grievances: 0, clubGrievances: 0 });
   const st = back.staff, o = 1 * 110;
   assert.equal(st.dv.getInt32(o + 0x4e, true), 55000, 'the staff row\'s copy of the wage');
   assert.deepEqual(readDate(st.b, o + 0x46), { year: 2007, month: 6, day: 30 }, 'and of the contract end');
@@ -264,6 +266,43 @@ test('a manager as the GK editor shows him: reputations, the hidden style and ch
     'the changes, cut to 1..20 and 0..10000; Pressing left at 0 as it was');
   assert.equal(np[q + 0x14], 0, 'an attribute not changed keeps its byte, even one out of range');
   assert.throws(() => writeManagerAttributes(g, 3, { ca: m.ca, pa: m.pa, values, formation: 12 }), /formation/);
+});
+
+test('a player as GK\'s other tabs show him: condition, retirement, Bosman, clauses active, in a row, grievances, loan', async () => {
+  const g = new SaveGame(await fakeSaveGame(undefined, { contracts: true }));
+  const a = g.read(0).more, b = g.read(1).more;
+  assert.deepEqual(a.condition, { percent: 90, fitness: 10000, match: 9000, fatigue: 1300, state: 'exhausted' }, 'injury.dat: 10000 x 9000 / 10000 is 90 %');
+  assert.equal(b.condition.state, 'normal');
+  assert.equal(a.retiring, 0);
+  assert.deepEqual([a.contract.nonPromotion, a.contract.nonPromotionActive, a.contract.playedInRow, a.contract.missedInRow, a.contract.bosman],
+    [true, true, 3, 0, false]);
+  assert.deepEqual([a.contract.grievances, a.contract.clubGrievances], [0x12, 0x10]);
+  assert.equal(a.loan, null);
+  assert.deepEqual(b.loan, { club: 'Italy', wage: 10500, start: { year: 2001, month: 8, day: 1 }, end: { year: 2002, month: 5, day: 30 }, cup: true,
+    againstParent: false, status: 3 });
+  assert.equal(b.contract.wage, 21000, 'his main contract is the staff state\'s, not the loan');
+  const f = g.read(0);
+  Object.assign(f.more.condition, { percent: 100, state: 'normal' });
+  Object.assign(f.more.contract, { bosman: true, nonPromotionActive: false, playedInRow: 5, grievances: 0x2, clubGrievances: 0x80000010 });
+  g.write(0, f);
+  const f1 = g.read(1);
+  Object.assign(f1.more.loan, { wage: 20000, againstParent: true, end: { year: 2002, month: 6, day: 30 } });
+  g.write(1, f1);
+  const back = new SaveGame(await g.toBytes()), x = back.read(0).more, y = back.read(1).more;
+  assert.deepEqual(x.condition, { percent: 100, fitness: 10000, match: 10000, fatigue: 0, state: 'normal' });
+  assert.deepEqual([x.contract.bosman, x.contract.nonPromotion, x.contract.nonPromotionActive, x.contract.playedInRow, x.contract.grievances, x.contract.clubGrievances],
+    [true, true, false, 5, 0x2, 0x80000010]);
+  assert.deepEqual([y.loan.wage, y.loan.againstParent, y.loan.end.month, y.contract.wage], [20000, true, 6, 21000], 'the loan changed, the main contract not');
+  assert.equal(back.readMore(2).retiring, 1, 'the coach is retiring at the end of the season (general.dat state, any staff)');
+});
+
+test('a save from a Blob: the details members are read only by loadMore, then the details are there', async () => {
+  const g = await SaveGame.open(new Blob([await fakeSaveGame(undefined, { contracts: true, prefs: true })]));
+  const before = g.read(1).more;
+  assert.deepEqual([before.contract, before.loan, before.prefs, before.condition, before.retiring], [null, null, null, null, undefined], 'not read yet');
+  await g.loadMore();
+  const after = g.read(1).more;
+  assert.deepEqual([after.contract.wage, after.loan.wage, after.prefs.favClubs[0], after.condition.percent, after.retiring], [21000, 10500, 0, 90, 0]);
 });
 
 test('a player\'s preferences (preferences.dat, staff +0x65): favourite and disliked clubs and staff, written back', async () => {

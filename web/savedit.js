@@ -103,6 +103,9 @@ export class SaveFile {
 
   has(name) { return this.members.some((x) => x.name.toLowerCase() === name.toLowerCase()); }
 
+  // The member is in the file and its bytes are read (from a Blob: after load).
+  ready(name) { return this.has(name) && this.member(name).raw instanceof Uint8Array; }
+
   // The bytes of these members, from the Blob (SaveFile.open), before read.
   async load(names) {
     for (const n of names) {
@@ -243,8 +246,9 @@ export const STAFF_JOBS = ['Unemployed', 'Chairman', 'Managing Director', 'Gener
 const nonPlayerLists = new WeakMap();
 export function nonPlayers(game) {
   if (nonPlayerLists.has(game)) return nonPlayerLists.get(game);
+  if (game.file.has('nonplayer.dat') && !game.file.ready('nonplayer.dat')) return [];   // not read yet
   const s = game.staff, out = [];
-  const np = game.file.has('nonplayer.dat') ? game.file.read('nonplayer.dat') : new Uint8Array(0);
+  const np = game.file.ready('nonplayer.dat') ? game.file.read('nonplayer.dat') : new Uint8Array(0);
   const records = np.length / NON_PLAYER_SIZE, npv = new DataView(np.buffer, np.byteOffset, np.byteLength);
   for (let i = 0; i < s.count; i++) {
     const o = i * STAFF_SIZE, k = s.dv.getInt32(o + NON_PLAYER_LINK, true);
@@ -521,6 +525,7 @@ const CONTRACT_SIZE = 80;
 const contractLists = new WeakMap();
 function contractsOf(game) {
   if (contractLists.has(game)) return contractLists.get(game);
+  if (game.file.has('contract.dat') && !game.file.ready('contract.dat')) return null;   // not read yet: SaveGame.loadMore
   let out = null;
   if (game.file.has('contract.dat')) {
     const b = game.file.read('contract.dat'), dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
@@ -531,7 +536,7 @@ function contractsOf(game) {
         const club = id >= 0 && id < game.staff.count ? game.staff.dv.getInt32(id * STAFF_SIZE + 0x39, true) : -2;
         if (!at.has(id) || dv.getInt32(o + 4, true) === club) at.set(id, o);
       }
-      out = { b, dv, at };
+      out = { b, dv, at, start, n };
     }
   }
   contractLists.set(game, out);
@@ -547,11 +552,35 @@ const CLAUSES = [['nonPromotion', 0x1c], ['minFee', 0x1d], ['nonPlaying', 0x1e],
 const PREFS_SIZE = 52, PREFS = [['favClubs', 0x04, 'club'], ['dislikedClubs', 0x10, 'club'], ['favStaff', 0x1c, 'staff'], ['dislikedStaff', 0x28, 'staff']];
 function prefsRow(game, row) {
   const k = game.staff.dv.getInt32(row * STAFF_SIZE + 0x65, true);
-  if (k < 0 || !game.file.has('preferences.dat')) return null;
+  if (k < 0 || !game.file.ready('preferences.dat')) return null;
   const b = game.file.read('preferences.dat');
   if ((k + 1) * PREFS_SIZE > b.length) return null;
   return { b, dv: new DataView(b.buffer, b.byteOffset, b.byteLength), o: k * PREFS_SIZE };
 }
+// general.dat's staff state table (docs/research/2026-11-26-condition-retirement-fields.md): the count at +4003, then
+// 79 bytes a staff id: +0x00 the main contract's row, +0x04 the loan's (-1 none; 0x4cf5c9, 0x4cf6f9), +0x0b bits 4..5
+// the retirement state (0x7a7ec4).
+function staffState(game, row) {
+  if (!game.file.ready('general.dat')) return null;
+  const b = game.file.read('general.dat');
+  if (b.length < 4007) return null;
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength), o = 4007 + row * 79;
+  if (row >= dv.getInt32(4003, true) || o + 79 > b.length) return null;
+  return { main: dv.getInt32(o, true), loan: dv.getInt32(o + 4, true), retiring: (b[o + 0x0b] >> 4) & 3 };
+}
+// A contract's offset in contract.dat by its row, or undefined.
+const contractAt = (c, r) => (c && r >= 0 && r < c.n ? c.start + r * CONTRACT_SIZE : undefined);
+// injury.dat: 31 bytes a staff id; fitness +0x08, match condition +0x0a (0..10000), fatigue +0x0c (`Injury::get_condition`
+// 0x62c590; the words of the profile from fatigue, 0x875efc..: above 1,225 exhausted, below -750 lacking match practice
+// when he has played under 10 games).
+const INJURY_SIZE = 31, FATIGUE = { normal: 0, exhausted: 1300, lacking: -800 };
+function injuryRow(game, row) {
+  if (!game.file.ready('injury.dat')) return null;
+  const b = game.file.read('injury.dat'), o = row * INJURY_SIZE;
+  return o + INJURY_SIZE <= b.length ? { b, dv: new DataView(b.buffer, b.byteOffset, b.byteLength), o } : null;
+}
+// The release clauses that have an active state (0 none, 1 in the contract, 2 active: 0x4ccfdd, 0x867b50).
+const ACTIVE_CLAUSES = ['nonPromotion', 'nonPlaying', 'relegation'];
 const SQUAD_BITS = { clubMain: 1, clubReserve: 2, nationU21: 4, nationMain: 8 };   // staff +0x5e (0x7b0f30)
 
 export class SaveGame {
@@ -643,18 +672,28 @@ export class SaveGame {
   // A staff member with no player record (a manager, a coach) has only the staff row's and the contract's fields.
   readMore(row) {
     const s = this.staff, p = this.player, o = row * STAFF_SIZE, d = s.dv.getInt32(o + 0x61, true), po = d * PLAYER_SIZE;
-    const c = contractsOf(this), q = c?.at.get(row), player = d >= 0 && d < p.count;
+    const c = contractsOf(this), st = staffState(this, row), player = d >= 0 && d < p.count;
+    const q = st ? contractAt(c, st.main) : c?.at.get(row), lq = st ? contractAt(c, st.loan) : undefined, inj = player ? injuryRow(this, row) : null;
+    const fitness = inj?.dv.getInt16(inj.o + 0x08, true), match = inj?.dv.getInt16(inj.o + 0x0a, true), fatigue = inj?.dv.getInt16(inj.o + 0x0c, true);
     return { nation: s.dv.getInt32(o + 0x1a, true), nation2: s.dv.getInt32(o + 0x1e, true), caps: s.b[o + 0x22], goals: s.b[o + 0x23],
       ...(player ? { value: s.dv.getInt32(o + 0x52, true), ...Object.fromEntries(Object.entries(SQUAD_BITS).map(([k, bit]) => [k, (s.b[o + 0x5e] & bit) !== 0])),
         euro: s.b[o + 0x6d], morale: p.b[po + 0x45], homeRep: p.dv.getInt16(po + 0x09, true), currentRep: p.dv.getInt16(po + 0x0b, true),
-        worldRep: p.dv.getInt16(po + 0x0d, true) } : {}),
+        worldRep: p.dv.getInt16(po + 0x0d, true),
+        condition: inj ? { percent: Math.min(100, Math.round(Math.max(100, (fitness * match) / 10000) / 100)), fitness, match, fatigue,
+          state: fatigue > 1225 ? 'exhausted' : fatigue < -750 ? 'lacking' : 'normal' } : null,
+        loan: lq === undefined ? null : { club: this.clubs.get(c.dv.getInt32(lq + 4, true)) ?? '', wage: c.dv.getInt32(lq + 0x0c, true),
+          start: readDate(c.b, lq + 0x25), end: readDate(c.b, lq + 0x2d), cup: c.b[lq + 0x1c] !== 0, againstParent: c.b[lq + 0x1d] !== 0, status: c.b[lq + 0x4f] >> 4 } } : {}),
+      ...(st ? { retiring: st.retiring } : {}),
       prefs: (() => { const r = prefsRow(this, row); return r && Object.fromEntries(PREFS.map(([k, off]) => [k, [0, 1, 2].map((n) => r.dv.getInt32(r.o + off + 4 * n, true))])); })(),
       personality: Object.fromEntries(PERSONALITY.map(([n, off]) => [n, s.dv.getInt8(o + off)])),
       contract: q === undefined ? null : { wage: c.dv.getInt32(q + 0x0c, true), start: readDate(c.b, q + 0x25), end: readDate(c.b, q + 0x2d),
         number: Math.abs(c.dv.getInt8(q + 0x3a)), status: c.b[q + 0x4f] >> 4,
         ...Object.fromEntries(BONUSES.map(([k, off]) => [k, Math.max(0, c.dv.getInt32(q + off, true))])),   // -1: none, shown 0
         ...Object.fromEntries(Object.entries(LIST_BITS).map(([k, bit]) => [k, (c.b[q + 0x4e] & bit) !== 0])),
-        ...Object.fromEntries(CLAUSES.map(([k, off]) => [k, c.b[q + off] !== 0])), fee: c.dv.getInt32(q + 0x21, true) } };
+        ...Object.fromEntries(CLAUSES.map(([k, off]) => [k, c.b[q + off] !== 0])), fee: c.dv.getInt32(q + 0x21, true),
+        ...Object.fromEntries(CLAUSES.filter(([k]) => ACTIVE_CLAUSES.includes(k)).map(([k, off]) => [`${k}Active`, c.b[q + off] === 2])),
+        bosman: c.b[q + 0x49] !== 0, playedInRow: c.b[q + 0x3e], missedInRow: c.b[q + 0x3f],
+        grievances: c.dv.getUint32(q + 0x45, true), clubGrievances: c.dv.getUint32(q + 0x40, true) } };
   }
 
   // Writes what readMore gives, changed: only the fields that differ, as the game keeps them (the doc's "Must be changed
@@ -691,7 +730,7 @@ export class SaveGame {
       if (any) this.file.changed('preferences.dat');
     }
     for (const [n, off] of PERSONALITY) if (m.personality && m.personality[n] !== undefined && m.personality[n] !== was.personality[n]) s.dv.setInt8(o + off, cut(m.personality[n], 1, 20));
-    const c = contractsOf(this), q = c?.at.get(row), k = m.contract, w = was.contract;
+    const c = contractsOf(this), st = staffState(this, row), q = st ? contractAt(c, st.main) : c?.at.get(row), k = m.contract, w = was.contract;
     if (k && w && q !== undefined) {
       let any = false;
       if (k.wage !== w.wage) { const v = cut(k.wage, 0, 10000000); c.dv.setInt32(q + 0x0c, v, true); s.dv.setInt32(o + 0x4e, v, true); any = true; }
@@ -699,12 +738,39 @@ export class SaveGame {
       if (moved(k.end, w.end)) { writeDate(c.b, q + 0x2d, k.end); writeDate(s.b, o + 0x46, k.end); any = true; }
       if (moved(k.start, w.start)) { writeDate(c.b, q + 0x25, k.start); any = true; }
       for (const [f, off] of BONUSES) if (k[f] !== w[f]) { const v = cut(k[f], 0, 10000000); c.dv.setInt32(q + off, v > 0 ? v : -1, true); any = true; }
-      for (const [f, off] of CLAUSES) if (k[f] !== w[f]) { c.b[q + off] = k[f] ? 1 : 0; any = true; }
+      for (const [f, off] of CLAUSES) {
+        const act = ACTIVE_CLAUSES.includes(f);
+        if (k[f] === w[f] && (!act || k[`${f}Active`] === w[`${f}Active`])) continue;
+        c.b[q + off] = !k[f] ? 0 : act && k[`${f}Active`] ? 2 : 1; any = true;
+      }
+      if (k.bosman !== w.bosman) { c.b[q + 0x49] = k.bosman ? 1 : 0; any = true; }
+      for (const [f, off] of [['playedInRow', 0x3e], ['missedInRow', 0x3f]]) if (k[f] !== w[f]) { c.b[q + off] = cut(k[f], 0, 100); any = true; }
+      for (const [f, off] of [['grievances', 0x45], ['clubGrievances', 0x40]]) if (k[f] !== undefined && k[f] !== w[f]) { c.dv.setUint32(q + off, k[f] >>> 0, true); any = true; }
       if (k.number !== w.number) { const sign = c.dv.getInt8(q + 0x3a) > 0 ? 1 : -1; c.dv.setInt8(q + 0x3a, sign * cut(k.number, 0, 50)); any = true; }
       if (k.status !== w.status) { c.b[q + 0x4f] = (cut(k.status, 0, 7) << 4) | (c.b[q + 0x4f] & 15); any = true; }
       for (const [f, bit] of Object.entries(LIST_BITS)) if (k[f] !== w[f]) { c.b[q + 0x4e] = k[f] ? c.b[q + 0x4e] | bit : c.b[q + 0x4e] & ~bit; any = true; }
       if (k.fee !== w.fee) { c.dv.setInt32(q + 0x21, cut(k.fee, 0, 2000000000), true); any = true; }
       if (any) this.file.changed('contract.dat');
+    }
+    // The loan of an existing loan contract (staff state +0x04): its wage share, dates, the two permissions, status.
+    const lq = st ? contractAt(c, st.loan) : undefined, L = m.loan, WL = was.loan;
+    if (L && WL && lq !== undefined) {
+      let any = false;
+      const moved = (a, b) => a && (!b || a.year !== b.year || a.month !== b.month || a.day !== b.day);
+      if (L.wage !== WL.wage) { c.dv.setInt32(lq + 0x0c, cut(L.wage, 0, 10000000), true); any = true; }
+      if (moved(L.start, WL.start)) { writeDate(c.b, lq + 0x25, L.start); any = true; }
+      if (moved(L.end, WL.end)) { writeDate(c.b, lq + 0x2d, L.end); any = true; }
+      if (L.cup !== WL.cup) { c.b[lq + 0x1c] = L.cup ? 1 : 0; any = true; }
+      if (L.againstParent !== WL.againstParent) { c.b[lq + 0x1d] = L.againstParent ? 1 : 0; any = true; }
+      if (L.status !== WL.status) { c.b[lq + 0x4f] = (cut(L.status, 0, 7) << 4) | (c.b[lq + 0x4f] & 15); any = true; }
+      if (any) this.file.changed('contract.dat');
+    }
+    // Condition: a new percentage is full fitness and that match condition; a new state its fatigue (FATIGUE).
+    const inj = injuryRow(this, row), C = m.condition, WC = was.condition;
+    if (C && WC && inj) {
+      if (C.percent !== WC.percent) { inj.dv.setInt16(inj.o + 0x08, 10000, true); inj.dv.setInt16(inj.o + 0x0a, cut(C.percent, 1, 100) * 100, true); }
+      if (C.state !== WC.state && FATIGUE[C.state] !== undefined) inj.dv.setInt16(inj.o + 0x0c, FATIGUE[C.state], true);
+      if (C.percent !== WC.percent || C.state !== WC.state) this.file.changed('injury.dat');
     }
     this.file.changed(this.staff.name);               // called alone for a staff member with no player record
     if (was.morale !== undefined) this.file.changed(this.player.name);
@@ -752,9 +818,13 @@ export class SaveGame {
     const file = await SaveFile.open(blob);
     await file.load(['index.dat']);
     const tables = tablesOf(file.read('index.dat'));
-    await file.load([...TABLES.map((id) => tables[id]?.file).filter(Boolean), 'contract.dat', 'preferences.dat', 'nonplayer.dat']);
+    await file.load(TABLES.map((id) => tables[id]?.file).filter(Boolean));
     return new SaveGame(file);
   }
+
+  // The members readMore needs, read when a player's or staff member's form first opens, not when the save does (a
+  // large save is read in pieces: docs on big saves). Resolves when they are read.
+  async loadMore() { await this.file.load(['contract.dat', 'preferences.dat', 'nonplayer.dat', 'general.dat', 'injury.dat']); }
 
   toBytes() { return this.file.toBytes(); }
 
