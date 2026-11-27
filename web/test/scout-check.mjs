@@ -366,6 +366,19 @@ try {
     check('Clubs: the balance, the wage bill, the top wage, and this and last year\'s lines', fin.balance === '59516431' && fin.wageBill === '889495'
       && fin.topWage === '65497' && fin['thisYear.sold'] === '19491130' && fin['thisYear.wages'] === '33094379' && fin['lastYear.wages'] === '51520409', JSON.stringify(fin));
     // The club's record, and a change of the balance and the reputation saved with the game file.
+    // The field system: money right-aligned as every number; a Kits label clear of its colour box, in English and German.
+    check('Clubs: money right-aligned', await p.$eval('#editor-form [data-cf="balance"]', (i) => getComputedStyle(i).textAlign) === 'right');
+    const kitsClear = () => p.$$eval('#editor-form .kits label', (ls) => ls.every((l) => { const s = l.querySelector('span').getBoundingClientRect(), b = l.querySelector('select').getBoundingClientRect();
+      return s.right <= b.left + 0.5 && l.querySelector('span').scrollWidth <= l.querySelector('span').clientWidth + 1; }));
+    const kitsEn = await kitsClear();
+    await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('de', { keep: false }); });
+    await p.locator('#clubs-results [data-club]').first().click();
+    await p.waitForFunction(() => /Ausweich/.test(document.getElementById('editor-form').textContent));
+    check('Clubs: every Kits label clear of its colour box, in English and German', kitsEn && await kitsClear(),
+      JSON.stringify(await p.$$eval('#editor-form .kits label span', (s) => s.map((x) => [x.textContent, x.scrollWidth, x.clientWidth]))));
+    await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('en', { keep: false }); });
+    await p.locator('#clubs-results [data-club]').first().click();
+    await p.waitForFunction(() => /Third shirt/.test(document.getElementById('editor-form').textContent));
     check('Clubs: the record: reputation and training facilities as the file has them', await p.inputValue('#editor-form [data-cf="reputation"]') === '9200'
       && await p.inputValue('#editor-form [data-cf="training"]') === '18' && await p.inputValue('#editor-form [data-cf="balance"]') === '59,516,431', await p.inputValue('#editor-form [data-cf="balance"]'));
     for (const [k, v] of [['balance', '90000000'], ['reputation', '9900']]) {

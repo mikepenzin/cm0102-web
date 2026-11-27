@@ -103,3 +103,13 @@ test('an amount reads back as written in every language, a negative one too', ()
   assert.equal(parseAmount('12-34'), 1234, 'a hyphen inside a number is not a sign');
   assert.ok(Number.isNaN(parseAmount('')), 'nothing typed: no number');
 });
+
+// Two buttons side by side in a player's head (editor.js): the shortlist and the scouts. A language that names them
+// the same leaves the player to guess which is which.
+test('the shortlist button and the scout button have different words in every language', async () => {
+  for (const { code } of LANGUAGES.filter((l) => l.code !== 'en')) {
+    const table = (await import(`../i18n-${code}.js`)).default;
+    assert.notEqual(table['+ Shortlist'], table['+ Scout'], `${code}: both "${table['+ Scout']}"`);
+    assert.notEqual(table['On shortlist ✓'], table['Scouting ✓'], `${code}: the pressed buttons`);
+  }
+});

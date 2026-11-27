@@ -392,7 +392,7 @@
   .ed-grid input { flex: none; width: 64px; font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
     border-radius: var(--r-sm); padding: 4px 6px; text-align: right; font-variant-numeric: tabular-nums; }
   .ed-grid label.big input { width: 128px; }
-  .ed-grid input[data-money] { width: 128px; max-width: none; text-align: right; font-variant-numeric: tabular-nums; }
+  .ed-grid input[type=text][data-money] { width: 128px; max-width: none; text-align: right; font-variant-numeric: tabular-nums; }
   .ed-grid input[type=date] { width: 156px; text-align: left; }
   .ed-grid input[type=text], .ed-grid select { width: 100%; max-width: 260px; text-align: left; font: inherit; font-size: 16px;
     color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 4px 6px; }
@@ -407,7 +407,10 @@
   .ticks input:disabled + span { opacity: .7; }
   @media (pointer: coarse) { .ticks label, .ticks.long label { min-height: 44px; } .ticks input { width: 22px; height: 22px; } }
   .staff-job { display: flex; align-items: center; gap: 6px; margin: 6px 0; } .staff-job select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
-  .ed-grid.kits label { justify-content: flex-start; } .ed-grid.kits label span { flex: 1; }
+  /* Kits: the words, a colour list of a fixed width and its colour; the words keep the room the rest leaves. */
+  .ed-grid.kits { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .ed-grid.kits label { justify-content: flex-start; } .ed-grid.kits label span { flex: 1; min-width: 0; }
+  .ed-grid.kits select { flex: none; width: 150px; }
   .swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); flex: none; }
   .prefs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 10px 20px; }
   .prefs.four { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
