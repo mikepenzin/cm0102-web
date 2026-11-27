@@ -56,8 +56,18 @@ export function barPlace(box, availW, availH, length, thick = BAR_THICK) {
 // row, as before, the chip covered the column heads and the buttons there (a player's report). box: the picture's
 // place; the stage's top 28px stay clear (the chip's half height); 6px in from the picture's right edge.
 const TITLE_ROW = 54 / 800;
-export function chipPlace(box, availH) {
-  return { x: Math.round(box.left + box.cssW - 6), y: Math.round(Math.min(Math.max(box.top + TITLE_ROW * box.cssH, 28), availH - 28)) };
+// In full screen with no room beside the picture the page's buttons lie over its top right corner (barPlace 'over'):
+// chip { w, h } and avoid, their rectangle in the stage's pixels, keep the chip clear of them: beside them on the same
+// row when it fits over the picture, else below them. x: the chip's right edge, y: its middle.
+export function chipPlace(box, availH, chip = null, avoid = null) {
+  const at = { x: Math.round(box.left + box.cssW - 6), y: Math.round(Math.min(Math.max(box.top + TITLE_ROW * box.cssH, 28), availH - 28)) };
+  if (!chip || !avoid) return at;
+  const gap = 6, top = at.y - chip.h / 2, bottom = at.y + chip.h / 2, left = at.x - chip.w;
+  const under = left < avoid.right + gap && at.x > avoid.left - gap && top < avoid.bottom + gap && bottom > avoid.top - gap;
+  if (!under) return at;
+  const beside = Math.round(avoid.left - gap);
+  if (beside - chip.w >= box.left) return { x: beside, y: at.y };
+  return { x: at.x, y: Math.round(Math.min(avoid.bottom + gap + chip.h / 2, availH - chip.h / 2)) };
 }
 
 export function mountLayout({ app, bar, stage, canvas, chip, isTouch }) {
@@ -122,7 +132,13 @@ export function mountLayout({ app, bar, stage, canvas, chip, isTouch }) {
       const showChip = isTouch && state.typingRow >= 0 && !state.fieldFocused;
       chip.hidden = !showChip;
       if (showChip) {
-        const at = chipPlace({ left, top, cssW: fit.cssW, cssH: fit.cssH }, availH);
+        // The page's buttons over the corner (full screen, no room beside): their place in the stage's pixels.
+        let avoid = null;
+        if (app.dataset.bar === 'over' && bar && bar.offsetParent !== null) {
+          const b = bar.getBoundingClientRect(), st = stage.getBoundingClientRect();
+          avoid = { left: b.left - st.left, top: b.top - st.top, right: b.right - st.left, bottom: b.bottom - st.top };
+        }
+        const at = chipPlace({ left, top, cssW: fit.cssW, cssH: fit.cssH }, availH, { w: chip.offsetWidth, h: chip.offsetHeight }, avoid);
         s.setProperty('--chip-y', `${at.y}px`);
         s.setProperty('--chip-x', `${at.x}px`);
       }

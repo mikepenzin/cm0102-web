@@ -411,7 +411,8 @@ function setBarFolded(on, remember = true) {
   if (remember) try { if (on) localStorage.setItem(FOLD_KEY, '1'); else localStorage.removeItem(FOLD_KEY); } catch { /* storage off */ }
 }
 try { if (localStorage.getItem(FOLD_KEY)) setBarFolded(true, false); } catch { /* storage off: open */ }
-$('bar-fold').onclick = () => setBarFolded(!$('app').classList.contains('bar-folded'));
+// Folded or open, the buttons take another place: "Tap to type" is placed again clear of them (layout.js chipPlace).
+$('bar-fold').onclick = () => { setBarFolded(!$('app').classList.contains('bar-folded')); layout.layout(); };
 const fullscreenLabel = (on) => {
   $('fullscreen').setAttribute('aria-label', on ? t('Leave full screen') : t('Full screen'));
   $('fullscreen').querySelector('span').textContent = on ? t('Leave full screen') : t('Full screen');

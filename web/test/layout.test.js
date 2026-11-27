@@ -58,3 +58,17 @@ test('chipPlace: on the title bar\'s right end, whatever the typing row', () => 
   assert.deepEqual(chipPlace(box, 375), { x: 734, y: 47 }, 'x: 6px in from the right edge; y: 20 + 400 x 54/800');
   assert.deepEqual(chipPlace({ ...box, top: 0, cssH: 200 }, 375), { x: 734, y: 28 }, 'never closer than 28px to the stage\'s top');
 });
+
+// Full screen with no room beside the picture: the page's buttons lie over the picture's top right corner, where the
+// chip goes. The chip then goes beside them on the same row, else below them; it never lies under them (a tap at its
+// middle would reach a button).
+test('chipPlace: clear of the buttons over the corner, beside them, else below them', () => {
+  const box = { left: 0, top: 0, cssW: 1180, cssH: 737 }, chip = { w: 120, h: 32 };
+  const at = chipPlace(box, 820, chip);
+  assert.deepEqual(at, { x: 1174, y: 50 }, 'no buttons given: where it was');
+  const bar = { left: 820, top: 8, right: 1172, bottom: 56 };
+  assert.deepEqual(chipPlace(box, 820, chip, bar), { x: 814, y: 50 }, 'beside them: its right edge 6px left of theirs');
+  const wide = { left: 60, top: 8, right: 1172, bottom: 56 };
+  assert.deepEqual(chipPlace(box, 820, chip, wide), { x: 1174, y: 78 }, 'no room beside: below them, 6px under');
+  assert.deepEqual(chipPlace(box, 820, chip, { left: 1100, top: 300, right: 1180, bottom: 380 }), at, 'buttons elsewhere (a folded tab): where it was');
+});

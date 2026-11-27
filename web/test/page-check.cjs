@@ -843,6 +843,25 @@ const PORT = 8097;
     if (process.argv[2]) await phone.pg.screenshot({ path: process.argv[2].replace(/\.png$/, '-fs-phone.png') });
     check('no page errors in full screen on the phone', phone.errs.length === 0, phone.errs.join('; '));
     await phone.ctx.close();
+    // A text entry takes keys with the buttons open over the corner, on an iPad held sideways with little room above
+    // the picture (1180 x 760: its top 11px down, the chip's place on the title bar under the buttons): "Tap to type"
+    // is clear of them, and a tap at its middle is its own (not a button's): the keyboard opens.
+    const low = await fullScreenOn({ width: 1180, height: 760 });
+    await low.pg.evaluate(() => { window.__typingRow = 172; });
+    await low.pg.waitForSelector('#type-chip:not([hidden])', { timeout: 5000 }).catch(() => {});
+    await low.pg.waitForTimeout(300);
+    const chipBox = await low.pg.locator('#type-chip').boundingBox(), barBox = await low.pg.locator('#bar').boundingBox();
+    const middleIsChip = chipBox && await low.pg.evaluate(([x, y]) => Boolean(document.elementFromPoint(x, y)?.closest('#type-chip')), [chipBox.x + chipBox.width / 2, chipBox.y + chipBox.height / 2]);
+    check('full screen on an iPad, buttons open over the corner: "Tap to type" clear of them, its middle its own',
+      (await low.pg.evaluate(() => document.getElementById('app').dataset.bar)) === 'over' && chipBox && !overlap(chipBox, barBox) && middleIsChip,
+      `chip ${JSON.stringify(chipBox)} bar ${JSON.stringify(barBox)} middle ${middleIsChip}`);
+    if (process.argv[2]) await low.pg.screenshot({ path: process.argv[2].replace(/\.png$/, '-fs-chip.png') });
+    if (chipBox) await low.pg.touchscreen.tap(chipBox.x + chipBox.width / 2, chipBox.y + chipBox.height / 2);
+    await low.pg.waitForTimeout(200);
+    check('and a tap on it opens the keyboard (the text field has the focus)', (await low.pg.evaluate(() => document.activeElement?.id)) === 'kbd',
+      await low.pg.evaluate(() => document.activeElement?.id));
+    check('no page errors in full screen on the iPad with a text entry', low.errs.length === 0, low.errs.join('; '));
+    await low.ctx.close();
     const pad = await fullScreenOn({ width: 1180, height: 820 });
     const padOpen = await pad.pg.locator('#bar').boundingBox();
     check('the footer shows on an iPad before full screen, and goes in full screen', pad.bar.made === true && !(await pad.pg.isVisible('#made')),

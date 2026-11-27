@@ -141,6 +141,7 @@
     M._rt_web_type = M._rt_web_key = M._rt_web_play = () => {};
     M._rt_web_in_game = () => (window.__inGame ? 1 : 0);
     M._rt_web_progress = () => window.__progress ?? -1;          // display.c: the share done of a long job, -1: none
+    M._rt_web_typing_row = () => window.__typingRow ?? -1;     // user32.c: the row of a text entry that takes keys, -1: none
   }
   function init() {
     if (started) return;
