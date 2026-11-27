@@ -186,16 +186,19 @@ try {
     await p.fill('#editor-search', 'del pie');
     await p.waitForFunction(() => document.querySelectorAll('.ed-row').length === 1);
     await p.click('.ed-row');
-    await p.waitForSelector('#editor-form [data-f="Pace"]');
+    await p.waitForSelector('#editor-form [data-f="ca"]');
+    check(`${label}: a saved game's player in GK's tabs: Details, Attributes, Personality`, (await p.$$eval('#editor-form [data-ftab]', (b) => b.map((x) => x.dataset.ftab))).join() === 'details,attributes,personality'
+      && await p.isVisible('[data-f="ca"]') && !(await p.isVisible('[data-f="Pace"]')));
     check(`${label}: the player's fields: ability, positions, the attributes in groups, the hidden ones, details, reputation, personality`,
       (await p.inputValue('[data-f="ca"]')) === '181' && (await p.inputValue('[data-f="Pace"]')) === '15'
         && (await p.inputValue('[data-f="Determination"]')) === '16' && (await p.inputValue('[data-f="born"]')) === '1974-11-09'
         && (await p.$$('#editor-form section')).length === 10);
     if (touch) check('phone: the list gives way to the player, with a way back', !(await p.isVisible('#editor-search')) && await p.isVisible('.ed-back'));
     check(`${label}: no Save button before a change`, !(await p.isVisible('#editor-save')));
-    await p.fill('[data-f="Pace"]', '20');
     await p.fill('[data-f="ca"]', '195');
     await p.fill('[data-f="born"]', '1982-03-01');
+    await p.click('#editor-form [data-ftab="attributes"]');
+    await p.fill('[data-f="Pace"]', '20');
     await p.fill('[data-f="Heading"]', '1');
     await p.press('[data-f="Heading"]', 'Tab');
     check(`${label}: a changed field is marked, and the focus moves on as in any form`, await p.$eval('[data-f="Pace"]', (i) => i.classList.contains('changed'))

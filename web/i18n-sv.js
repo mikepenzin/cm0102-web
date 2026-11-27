@@ -963,4 +963,7 @@ export default {
   "Loan ends": "Lånet går ut",
   "Can play in cup matches": "Får spela cupmatcher",
   "Can play against his parent club": "Får spela mot sin moderklubb",
+  "Bonuses and release fee": "Bonusar och utköpsklausul",
+  "Release clauses": "Utköpsklausuler",
+  "Transfer status": "Övergångsstatus",
 };

@@ -963,4 +963,7 @@ export default {
   "Loan ends": "Huur tot",
   "Can play in cup matches": "Mag bekerwedstrijden spelen",
   "Can play against his parent club": "Mag tegen zijn moederclub spelen",
+  "Bonuses and release fee": "Premies en afkoopsom",
+  "Release clauses": "Afkoopclausules",
+  "Transfer status": "Transferstatus",
 };

@@ -453,9 +453,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     const name = c?.name ?? model.clubs.get(id) ?? '';
     const head = `<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Clubs'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>`;
     if (!c) { detailPanel(head); return; }
-    const num = (key, value, min, max, label) => `<label><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" step="1" data-cf="${key}" value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
-    const tick = (key, on, label, off = false) => `<label><span>${esc(label)}</span><input type="checkbox" data-cf="${key}"${on ? ' checked' : ''}${off ? ' disabled' : ''}></label>`;
-    const pick = (key, opts, value, label) => `<label><span>${esc(label)}</span><select data-cf="${key}">${opts.map(([v, l]) => `<option value="${v}"${Number(v) === value ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
+    // The one field system (index.html, "The fields"): money and counts above 255 are .big; ticks go in .ticks.
+    const num = (key, value, min, max, label) => `<label${max > 255 ? ' class="big"' : ''}><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" step="1" data-cf="${key}" value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
+    const tick = (key, on, label, off = false) => `<label><input type="checkbox" data-cf="${key}"${on ? ' checked' : ''}${off ? ' disabled' : ''}><span>${esc(label)}</span></label>`;
+    const pick = (key, opts, value, label) => `<label class="choice"><span>${esc(label)}</span><select data-cf="${key}">${opts.map(([v, l]) => `<option value="${v}"${Number(v) === value ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
     const who = (key, ids, label, kind) => `<div class="pref"><h5>${esc(label)}</h5>${ids.map((x, n) => `<input type="text" list="club-picks" data-pick="${key}:${n}" data-kind="${kind}"
       value="${esc(kind === 'club' ? (x >= 0 ? clubPick(x) : '') : personLabel(x))}" placeholder="${esc(t('None'))}" autocomplete="off" spellcheck="false" data-raw>`).join('')}</div>`;
     const swatch = (cid) => { const k = c.colours[cid]; return k ? `rgb(${k.rgb.join(',')})` : 'transparent'; };
@@ -465,25 +466,25 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     detailPanel(`${head}<datalist id="club-picks"></datalist>
       <section><h4>${esc(t('General'))}</h4>
         <table class="fin"><tr><td>${esc(t('Nation'))}</td><td data-raw>${esc(c.nation || '–')}</td></tr></table>
-        <div class="ed-grid club">${pick('status', Object.entries(STATUS()), c.status, t('Professional status'))}${num('training', c.training, 1, 20, t('Training facilities'))}
-          ${num('reputation', c.reputation, 1, 10000, t('Reputation'))}${num('euroSeeding', c.euroSeeding, -1, 127, t('Euro seeding'))}
-          ${tick('plc', c.plc, t('Public limited company'))}${tick('linked', c.linked, t('Has a linked club'), true)}</div></section>
+        <div class="ed-grid">${pick('status', Object.entries(STATUS()), c.status, t('Professional status'))}${num('training', c.training, 1, 20, t('Training facilities'))}
+          ${num('reputation', c.reputation, 1, 10000, t('Reputation'))}${num('euroSeeding', c.euroSeeding, -1, 127, t('Euro seeding'))}</div>
+        <div class="ticks">${tick('plc', c.plc, t('Public limited company'))}${tick('linked', c.linked, t('Has a linked club'), true)}</div></section>
       <section><h4>${esc(t('Preferences'))}</h4><div class="prefs">${who('favourites', c.favourites, t('Favourite players and staff'), 'person')}
         ${who('disliked', c.disliked, t('Disliked players and staff'), 'person')}${who('rivals', c.rivals, t('Rival clubs'), 'club')}</div></section>
-      <section><h4>${esc(t('Kits'))}</h4><div class="ed-grid club kits">${kit('homeText', t('Home text'))}${kit('homeBack', t('Home shirt'))}${kit('awayText', t('Away text'))}
+      <section><h4>${esc(t('Kits'))}</h4><div class="ed-grid kits">${kit('homeText', t('Home text'))}${kit('homeBack', t('Home shirt'))}${kit('awayText', t('Away text'))}
         ${kit('awayBack', t('Away shirt'))}${kit('thirdText', t('Third text'))}${kit('thirdBack', t('Third shirt'))}</div></section>
       ${f ? `<section><h4>${esc(t('Finances'))}</h4>
         <table class="fin"><tr><td>${esc(t('Top wage a week'))}</td><td>${esc(money(f.topWage))}</td></tr></table>
-        <div class="ed-grid club">${num('balance', f.balance, -2000000000, 2000000000, t('Bank balance'))}${num('wageLimit', f.wageLimit, 0, 10000000, t('Highest wage allowed'))}
+        <div class="ed-grid">${num('balance', f.balance, -2000000000, 2000000000, t('Bank balance'))}${num('wageLimit', f.wageLimit, 0, 10000000, t('Highest wage allowed'))}
           ${pick('bankrupt', BANKRUPT().map((l, k) => [k, l]), f.bankrupt, t('Bankrupt'))}</div>
         <p class="small">${esc(t('The game works out the transfer budget from the balance: a larger balance, a larger budget. It works out the highest wage allowed and bankruptcy again in its own finance runs.'))}</p></section>` : `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`}
       <section><h4>${esc(t('Stadium'))}</h4>
         ${st ? `<table class="fin"><tr><td>${esc(t('Stadium'))}</td><td data-raw>${esc(st.name)}</td></tr>${st.city ? `<tr><td>${esc(t('City'))}</td><td data-raw>${esc(st.city.name)}</td></tr>` : ''}</table>` : ''}
-        <div class="ed-grid club">${st ? `${num('capacity', st.capacity, 0, 250000, t('Capacity'))}${num('seating', st.seating, 0, 250000, t('Seating'))}${num('expansion', st.expansion, 0, 250000, t('Expansion'))}` : ''}
-          ${tick('owns', c.owns, t('Club owns stadium'))}${st ? `${tick('roof', st.roof, t('Retractable roof'))}${tick('heating', st.heating, t('Undersoil heating'))}` : ''}
+        <div class="ed-grid">${st ? `${num('capacity', st.capacity, 0, 250000, t('Capacity'))}${num('seating', st.seating, 0, 250000, t('Seating'))}${num('expansion', st.expansion, 0, 250000, t('Expansion'))}` : ''}
           ${st?.city ? num('attraction', st.city.attraction, 0, 20, t('City attraction')) : ''}
           ${num('attendance', c.attendance, 0, 250000, t('Average attendance'))}${num('minAttendance', c.minAttendance, 0, 250000, t('Minimum attendance'))}
           ${num('maxAttendance', c.maxAttendance, 0, 250000, t('Maximum attendance'))}${pick('matchDay', [...DAYS().map((d, k) => [k, d]), [255, t('None')]], c.matchDay, t('Home match day'))}</div>
+        <div class="ticks">${tick('owns', c.owns, t('Club owns stadium'))}${st ? `${tick('roof', st.roof, t('Retractable roof'))}${tick('heating', st.heating, t('Undersoil heating'))}` : ''}</div>
         ${st ? `<p class="small">${esc(t('A stadium and its city can be shared: a change here changes them for every club that plays there.'))}</p>` : ''}</section>`);
     form.oninput = (e) => { const i = e.target.closest('[data-pick]'); if (i && !picks.has(i.value.trim())) offer(i.dataset.kind, i.value); };   // a choice made keeps its list
     form.onchange = (e) => {
@@ -581,15 +582,17 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     current = null;
     for (const b of managersBox.querySelectorAll('[data-mgr]')) b.classList.toggle('on', Number(b.dataset.mgr) === id);
     const box = (key, value, min, max, label, attr = '') => `<label><span>${esc(label)}</span><input type="number" inputmode="numeric" min="${min}" max="${max}" ${attr} value="${value}"${max === 20 ? ` data-band="${band(value)}"` : ''}></label>`;
+    const more = moreHtml(model.readMore(id), ['Adaptability']);
     detailPanel(`<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Staff'))}</button><div class="ed-name"><h3 data-raw>${esc(name)}</h3></div></div>
-      <section><h4>${esc(t('Ability'))}</h4><div class="ed-grid">${box('ca', a.ca, 1, 200, t('Current ability'), 'data-mf="ca"')}${box('pa', a.pa, 1, 200, t('Potential ability'), 'data-mf="pa"')}
+      ${tabsHtml('staff', [['attributes', t('Attributes'), `<section><h4>${esc(t('Ability'))}</h4><div class="ed-grid">${box('ca', a.ca, 1, 200, t('Current ability'), 'data-mf="ca"')}${box('pa', a.pa, 1, 200, t('Potential ability'), 'data-mf="pa"')}
         ${['homeRep', 'currentRep', 'worldRep'].map((k, n) => box(k, a[k], 0, 10000, [t('Home reputation'), t('Current reputation'), t('World reputation')][n], `data-mf="${k}"`).replace('<label>', '<label class="big">')).join('')}
-        <label class="wide"><span>${esc(t('Preferred formation'))}</span><select data-mf="formation">${[t('None'), ...FORMATIONS].map((l, k) => `<option value="${k}"${k === a.formation ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div></section>
+        <label class="choice"><span>${esc(t('Preferred formation'))}</span><select data-mf="formation">${[t('None'), ...FORMATIONS].map((l, k) => `<option value="${k}"${k === a.formation ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div></section>
       ${coloursHtml()}<div class="ed-attrs">${MGR_GROUPS.map((g) => `<section><h4>${esc(nm[g])}</h4><div class="ed-grid">${a.attrs.filter((y) => y.group === g)
         .map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-attr="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>
       <div class="ed-attrs">${['Style', 'Chairman'].map((g) => `<section><h4>${esc(nm[g])} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">${a.hidden
-        .filter((y) => y.group === g).map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-hid="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>
-      ${moreHtml(model.readMore(id), ['Adaptability'])}`);
+        .filter((y) => y.group === g).map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-hid="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>`],
+        ['details', t('Details'), more.details], ['personality', t('Personality'), more.personality + more.preferences],
+        ['contract', t('Contract'), more.contract], ['unhappiness', t('Unhappiness'), more.unhappiness]])}`);
     form.oninput = (e) => { const i = e.target.closest('[data-kind]'); if (i && !picks.has(i.value.trim())) offer(i.dataset.kind, i.value); };
     form.onchange = (e) => {
       if (e.target.closest('[data-f]')) {               // details, personality, contract (savedit.js writeMore)
@@ -718,7 +721,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     <input type="text" maxlength="50" data-f="${esc(key)}" value="${esc(value)}" data-was="${esc(value)}" autocomplete="off" spellcheck="false"></label>`;
   const date = (key, value, label) => `<label><span>${esc(label)}</span><input type="date" data-f="${key}" value="${value}" data-was="${value}" min="1940-01-01" max="2015-12-31"></label>`;
   const clubLabel = (c) => `${c.name}${c.nation >= 0 && model.nationName(c.nation) ? ` (${model.nationName(c.nation)})` : ''}`;
-  const select = (key, value, options, label) => `<label class="wide"><span>${esc(label)}</span><select data-f="${key}" data-was="${value}">
+  const select = (key, value, options, label) => `<label class="choice"><span>${esc(label)}</span><select data-f="${key}" data-was="${value}">
     ${options.map(([v, shown]) => `<option value="${v}"${v === value ? ' selected' : ''}>${esc(shown)}</option>`).join('')}</select></label>`;
 
   // What else a saved game keeps of a player, as the GK Save Game Editor shows it (savedit.js readMore;
@@ -726,7 +729,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   const STATUS_NAMES = () => [t('Undefined'), t('Key player'), t('First team'), t('Rotation'), t('Backup'), t('Hot prospect'), t('Youngster'), t('Not needed')];
   const personalityNames = () => ({ Adaptability: t('Adaptability'), Ambition: t('Ambition'), Loyalty: t('Loyalty'), Pressure: t('Pressure'),
     Professionalism: t('Professionalism'), Sportsmanship: t('Sportsmanship'), Temperament: t('Temperament') });
-  const tick = (key, on, label, off = false) => `<label><span>${esc(label)}</span><input type="checkbox" data-f="${esc(key)}"${on ? ' checked' : ''}${off ? ' disabled' : ''} data-was="${on}"></label>`;
+  const tick = (key, on, label, off = false) => `<label><input type="checkbox" data-f="${esc(key)}"${on ? ' checked' : ''}${off ? ' disabled' : ''} data-was="${on}"><span>${esc(label)}</span></label>`;
   const big = (key, value, max, label) => num(key, value, 0, max, label).replace('<label>', '<label class="big">');
   // The grievances of a contract (+0x45) and about the club (+0x40), bit by bit, as GK's Unhappiness tabs list them
   // (docs/research/2026-11-26-condition-retirement-fields.md); a bit not listed is kept as it is.
@@ -750,64 +753,88 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     [0x100, t('Thinks players should play in their strongest positions')], [0x200, t('Feels there is too much competition for a place')],
     [0x400, t('Believes the club needs more squad depth')], [0x800, t('Worried the club is signing a replacement')],
     [0x1000, t('Thinks the manager should accept his style of play')], [0x80000000, t('Unhappy the club signed another player for his position')]];
-  const bits = (list, value, prefix) => `<div class="griev">${list.map(([bit, label]) => `<label><input type="checkbox" data-f="${prefix}:${bit >>> 0}"${(value & bit) ? ' checked' : ''} data-was="${(value & bit) !== 0}"><span>${esc(label)}</span></label>`).join('')}</div>`;
+  const bits = (list, value, prefix) => `<div class="ticks long">${list.map(([bit, label]) => `<label><input type="checkbox" data-f="${prefix}:${bit >>> 0}"${(value & bit) ? ' checked' : ''} data-was="${(value & bit) !== 0}"><span>${esc(label)}</span></label>`).join('')}</div>`;
   const CONTRACT_KEYS = ['wage', 'number', 'status', 'goalBonus', 'assistBonus', 'cleanSheetBonus', 'fee', 'nonPromotion', 'minFee', 'nonPlaying',
     'relegation', 'managerJob', 'listed', 'listedByRequest', 'loanListed', 'nonPromotionActive', 'nonPlayingActive', 'relegationActive', 'bosman',
     'playedInRow', 'missedInRow'];
   // skip: personality names shown elsewhere (a manager's Adaptability is among his attributes).
+  // What else a saved game keeps of a player or staff member, by the form's tabs (savedit.js readMore; GK's tabs):
+  // { details, condition, reputation, preferences, personality, contract, unhappiness, loan } (html, '' for none).
+  // Each group: its number and choice fields in an .ed-grid, its ticks apart in .ticks (the one form system).
   function moreHtml(m, skip = []) {
     const badge = playerAccess().badge;
     const ns = [...model.nations].sort((a, b) => a[1].localeCompare(b[1]));
     const pn = personalityNames(), c = m.contract;
     const player = m.morale !== undefined;            // a staff member with no player record has no player fields
-    return `<section><h4>${esc(player ? t('Player details') : t('Details'))}${badge}</h4><div class="ed-grid">
+    const when = (key, d, label, min) => `<label class="when"><span>${esc(label)}</span><input type="date" data-f="${key}" value="${isoDate(d)}" data-was="${isoDate(d)}" min="${min}" max="2060-12-31"></label>`;
+    return {
+      details: `<section><h4>${esc(player ? t('Player details') : t('Details'))}${badge}</h4><div class="ed-grid">
         ${select('m:nation', m.nation, ns, t('Nationality'))}${select('m:nation2', m.nation2, [[-1, t('None')], ...ns], t('Second nationality'))}
         ${num('m:caps', m.caps, 0, 255, t('Caps'))}${num('m:goals', m.goals, 0, 255, t('International goals'))}
-        ${player ? `${big('m:value', m.value, 2000000000, t('Transfer value'))}
-        ${tick('m:clubMain', m.clubMain, t('Club first team squad'))}${tick('m:clubReserve', m.clubReserve, t('Club reserve squad'))}
-        ${tick('m:nation-squad', m.nationMain || m.nationU21, t('National squad'), true)}${tick('m:euro', m.euro === 2, t('Registered for Europe'), true)}` : ''}
-      </div>${m.retiring === 1 ? `<p class="small">${esc(t('Retiring at the end of the season.'))}</p>` : m.retiring === 2 ? `<p class="small">${esc(t('Retired.'))}</p>` : ''}</section>
-      ${m.condition ? `<section><h4>${esc(t('Playing condition'))}</h4><div class="ed-grid">
+        ${player ? big('m:value', m.value, 2000000000, t('Transfer value')) : ''}</div>
+        ${player ? `<div class="ticks">${tick('m:clubMain', m.clubMain, t('Club first team squad'))}${tick('m:clubReserve', m.clubReserve, t('Club reserve squad'))}
+        ${tick('m:nation-squad', m.nationMain || m.nationU21, t('National squad'), true)}${tick('m:euro', m.euro === 2, t('Registered for Europe'), true)}</div>` : ''}
+        ${m.retiring === 1 ? `<p class="small">${esc(t('Retiring at the end of the season.'))}</p>` : m.retiring === 2 ? `<p class="small">${esc(t('Retired.'))}</p>` : ''}</section>`,
+      condition: m.condition ? `<section><h4>${esc(t('Playing condition'))}</h4><div class="ed-grid">
         ${num('k:percent', m.condition.percent, 1, 100, t('Condition (%)'))}
         ${select('k:state', m.condition.state, [['normal', t('Normal')], ['exhausted', t('Exhausted')], ['lacking', t('Lacking match practice')]], t('Fitness'))}
-      </div><p class="small">${esc(t('The game works out exhausted and lacking match practice from his fatigue (lacking match practice only after few games this season), and moves condition and fatigue every day.'))}</p></section>` : ''}
-      ${player ? `<section><h4>${esc(t('Reputation and morale'))}</h4><div class="ed-grid">
+      </div><p class="small">${esc(t('The game works out exhausted and lacking match practice from his fatigue (lacking match practice only after few games this season), and moves condition and fatigue every day.'))}</p></section>` : '',
+      reputation: player ? `<section><h4>${esc(t('Reputation and morale'))}</h4><div class="ed-grid">
         ${big('m:homeRep', m.homeRep, 10000, t('Home reputation'))}${big('m:currentRep', m.currentRep, 10000, t('Current reputation'))}
         ${big('m:worldRep', m.worldRep, 10000, t('World reputation'))}${num('m:morale', m.morale, 1, 20, t('Morale'))}
-      </div></section>` : ''}
-      ${m.prefs ? `<section><h4>${esc(t('Preferences'))}</h4><datalist id="club-picks"></datalist><div class="prefs">
+      </div></section>` : '',
+      preferences: m.prefs ? `<section><h4>${esc(t('Preferences'))}</h4><datalist id="club-picks"></datalist><div class="prefs four">
         ${[['favStaff', t('Favourite players and staff'), 'person'], ['dislikedStaff', t('Disliked players and staff'), 'person'],
           ['favClubs', t('Favourite clubs'), 'club'], ['dislikedClubs', t('Disliked clubs'), 'club']].map(([k, label, kind]) => `<div class="pref"><h5>${esc(label)}</h5>${m.prefs[k].map((x, n) => {
             const l = x < 0 ? '' : kind === 'club' ? clubPick(x) : personLabel(x);
             return `<input type="text" list="club-picks" data-f="pref:${k}:${n}" data-kind="${kind}" data-id="${x}" value="${esc(l)}" data-was="${esc(l)}" placeholder="${esc(t('None'))}" autocomplete="off" spellcheck="false" data-raw>`;
-          }).join('')}</div>`).join('')}</div></section>` : ''}
-      <section><h4>${esc(t('Personality'))} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">
-        ${PERSONALITY.filter(([n]) => !skip.includes(n)).map(([n]) => num(`p:${n}`, m.personality[n], 1, 20, pn[n])).join('')}</div></section>
-      ${c ? `<section><h4>${esc(t('Contract'))}</h4><div class="ed-grid">
+          }).join('')}</div>`).join('')}</div></section>` : '',
+      personality: `<section><h4>${esc(t('Personality'))} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">
+        ${PERSONALITY.filter(([n]) => !skip.includes(n)).map(([n]) => num(`p:${n}`, m.personality[n], 1, 20, pn[n])).join('')}</div></section>`,
+      contract: c ? `<section><h4>${esc(t('Contract'))}</h4><div class="ed-grid">
         ${big('c:wage', c.wage, 10000000, t('Wage a week'))}${num('c:number', c.number, 0, 50, t('Squad number'))}
-        <label class="when"><span>${esc(t('Contract starts'))}</span><input type="date" data-f="c:start" value="${isoDate(c.start)}" data-was="${isoDate(c.start)}" min="1960-01-01" max="2060-12-31"></label>
-        <label class="when"><span>${esc(t('Contract ends'))}</span><input type="date" data-f="c:end" value="${isoDate(c.end)}" data-was="${isoDate(c.end)}" min="1990-01-01" max="2060-12-31"></label>
+        ${when('c:start', c.start, t('Contract starts'), '1960-01-01')}${when('c:end', c.end, t('Contract ends'), '1990-01-01')}
+        ${select('c:status', c.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
+        ${num('c:playedInRow', c.playedInRow, 0, 100, t('Played in a row'))}${num('c:missedInRow', c.missedInRow, 0, 100, t('Missed in a row'))}</div>
+        <h5>${esc(t('Bonuses and release fee'))}</h5><div class="ed-grid">
         ${big('c:goalBonus', c.goalBonus, 10000000, t('Goal bonus'))}${big('c:assistBonus', c.assistBonus, 10000000, t('Assist bonus'))}
-        ${big('c:cleanSheetBonus', c.cleanSheetBonus, 10000000, t('Clean sheet bonus'))}${big('c:fee', c.fee, 2000000000, t('Release fee'))}
-        ${tick('c:nonPromotion', c.nonPromotion, t('Non-promotion release clause'))}${tick('c:minFee', c.minFee, t('Minimum fee release clause'))}
-        ${tick('c:nonPlaying', c.nonPlaying, t('Non-playing release clause'))}${tick('c:relegation', c.relegation, t('Relegation release clause'))}
-        ${tick('c:nonPromotionActive', c.nonPromotionActive, t('Non-promotion clause active'))}${tick('c:nonPlayingActive', c.nonPlayingActive, t('Non-playing clause active'))}
-        ${tick('c:relegationActive', c.relegationActive, t('Relegation clause active'))}
-        ${tick('c:managerJob', c.managerJob, t('Manager job release clause'))}${tick('c:bosman', c.bosman, t('Leaving on a Bosman'))}
-        ${num('c:playedInRow', c.playedInRow, 0, 100, t('Played in a row'))}${num('c:missedInRow', c.missedInRow, 0, 100, t('Missed in a row'))}
+        ${big('c:cleanSheetBonus', c.cleanSheetBonus, 10000000, t('Clean sheet bonus'))}${big('c:fee', c.fee, 2000000000, t('Release fee'))}</div>
+        <h5>${esc(t('Release clauses'))}</h5><div class="ticks">
+        ${tick('c:nonPromotion', c.nonPromotion, t('Non-promotion release clause'))}${tick('c:nonPromotionActive', c.nonPromotionActive, t('Non-promotion clause active'))}
+        ${tick('c:nonPlaying', c.nonPlaying, t('Non-playing release clause'))}${tick('c:nonPlayingActive', c.nonPlayingActive, t('Non-playing clause active'))}
+        ${tick('c:relegation', c.relegation, t('Relegation release clause'))}${tick('c:relegationActive', c.relegationActive, t('Relegation clause active'))}
+        ${tick('c:minFee', c.minFee, t('Minimum fee release clause'))}${tick('c:managerJob', c.managerJob, t('Manager job release clause'))}</div>
+        <h5>${esc(t('Transfer status'))}</h5><div class="ticks">
         ${tick('c:listed', c.listed, t('Transfer listed by club'))}${tick('c:listedByRequest', c.listedByRequest, t('Transfer listed by request'))}
-        ${tick('c:loanListed', c.loanListed, t('Listed for loan'))}${select('c:status', c.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
-      </div><p class="small">${esc(t('A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.'))}</p></section>
-      <section><h4>${esc(t('Unhappiness'))}</h4>${bits(GRIEVANCES(), c.grievances, 'g')}</section>
-      <section><h4>${esc(t('Unhappy with the club'))}</h4>${bits(CLUB_GRIEVANCES(), c.clubGrievances, 'cg')}
-        <p class="small">${esc(t('Clearing a grievance does not withdraw a transfer request he has already made.'))}</p></section>` : ''}
-      ${m.loan ? `<section><h4>${esc(t('Loan'))} <span class="small" data-raw>${esc(m.loan.club)}</span></h4><div class="ed-grid">
+        ${tick('c:loanListed', c.loanListed, t('Listed for loan'))}${tick('c:bosman', c.bosman, t('Leaving on a Bosman'))}</div>
+        <p class="small">${esc(t('A bonus of 0 is none. The game moves morale, reputations, value and squad numbers itself as the season goes on.'))}</p></section>` : '',
+      unhappiness: c ? `<section><h4>${esc(t('Unhappiness'))}</h4>${bits(GRIEVANCES(), c.grievances, 'g')}</section>
+        <section><h4>${esc(t('Unhappy with the club'))}</h4>${bits(CLUB_GRIEVANCES(), c.clubGrievances, 'cg')}
+        <p class="small">${esc(t('Clearing a grievance does not withdraw a transfer request he has already made.'))}</p></section>` : '',
+      loan: m.loan ? `<section><h4>${esc(t('Loan'))} <span class="small" data-raw>${esc(m.loan.club)}</span></h4><div class="ed-grid">
         ${big('l:wage', m.loan.wage, 10000000, t('Weekly wage contribution'))}${select('l:status', m.loan.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
-        <label class="when"><span>${esc(t('Loan starts'))}</span><input type="date" data-f="l:start" value="${isoDate(m.loan.start)}" data-was="${isoDate(m.loan.start)}" min="1960-01-01" max="2060-12-31"></label>
-        <label class="when"><span>${esc(t('Loan ends'))}</span><input type="date" data-f="l:end" value="${isoDate(m.loan.end)}" data-was="${isoDate(m.loan.end)}" min="1960-01-01" max="2060-12-31"></label>
-        ${tick('l:cup', m.loan.cup, t('Can play in cup matches'))}${tick('l:againstParent', m.loan.againstParent, t('Can play against his parent club'))}
-      </div></section>` : ''}`;
+        ${when('l:start', m.loan.start, t('Loan starts'), '1960-01-01')}${when('l:end', m.loan.end, t('Loan ends'), '1960-01-01')}</div>
+        <div class="ticks">${tick('l:cup', m.loan.cup, t('Can play in cup matches'))}${tick('l:againstParent', m.loan.againstParent, t('Can play against his parent club'))}</div></section>` : '',
+    };
   }
+  // A form in tabs, as GK's (players and staff): tabs [[key, label, html]] (an empty html: no such tab); the tab
+  // chosen last is kept from one player (or member of staff) to the next. One tab: no tab bar.
+  const formTabs = { player: 'details', staff: 'attributes' };
+  function tabsHtml(kind_, tabs) {
+    const shown = tabs.filter(([, , h]) => h && h.trim());
+    if (shown.length < 2) return shown.map(([, , h]) => h).join('');
+    const on = shown.some(([k]) => k === formTabs[kind_]) ? formTabs[kind_] : shown[0][0];
+    return `<div class="ed-tabs ed-ftabs" role="tablist" data-form="${kind_}">${shown.map(([k, label]) => `<button type="button" role="tab" data-ftab="${k}" aria-selected="${k === on}">${esc(label)}</button>`).join('')}</div>
+      ${shown.map(([k, , h]) => `<div class="ed-tab" role="tabpanel" data-tab="${k}"${k === on ? '' : ' hidden'}>${h}</div>`).join('')}`;
+  }
+  form.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-ftab]');
+    if (!b) return;
+    formTabs[b.closest('[data-form]').dataset.form] = b.dataset.ftab;
+    for (const x of form.querySelectorAll('[data-ftab]')) x.setAttribute('aria-selected', String(x === b));
+    for (const x of form.querySelectorAll('.ed-tab')) x.hidden = x.dataset.tab !== b.dataset.ftab;
+  });
+
   // The form's values of moreHtml, over what the save holds.
   function moreOf(m) {
     const el = (k) => form.querySelector(`[data-f="${CSS.escape(k)}"]`);
@@ -887,17 +914,25 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       </div></section>` : '';
     form.innerHTML = `<div class="ed-title"><button class="link ed-back" type="button">${esc(t('← Players'))}</button>${head}</div>
       ${who}
-      <section><h4>${esc(t('Ability and age'))}</h4><div class="ed-grid">
-        ${num('ca', f.ca, set ? 0 : 1, 200, t('Current ability'))}${num('pa', f.pa, set ? -2 : 1, 200, t('Potential ability'))}
-        ${date('born', isoDate(f.born), t('Born'))}
-      </div><p class="small">${esc(set ? t('Ability is 1 to 200; 0, and for potential -1 and -2, are values the data has for players the game sets up itself.')
-        : t('Ability is 1 to 200. Attributes keep the numbers you see when you change it.'))}</p></section>
-      ${!set && f.more && access() === 'full' && playerAccess().state !== 'locked' ? moreHtml(f.more) : ''}
-      <section><h4>${esc(t('Positions'))} <span class="small">${esc(t('0 to 20; 20 is natural'))}</span></h4><div class="ed-grid pos">
-        ${f.positions.map((v, i) => num(`pos${i}`, v, 0, 20, SHORT_POS[i]).replace('<span>', `<span title="${esc(posName[POSITIONS[i]] ?? POSITIONS[i])}">`)).join('')}
-      </div></section>
-      ${coloursHtml()}<div class="ed-attrs">${GROUPS.map((g) => `<section><h4>${esc(groupName[g])}${g === 'Hidden' ? ` <span class="small">${esc(t('the game does not show these'))}</span>` : ''}${set && g === 'Technical' ? ` <span class="small">${esc(t('0 is random'))}</span>` : ''}</h4><div class="ed-grid">
-        ${attrs.filter((a) => a.group === g).map((a) => num(a.name, f.attrs[a.name], set ? 0 : 1, 20, attrName[a.name] ?? a.name)).join('')}</div></section>`).join('')}</div>`;
+      ${(() => {
+        // A saved game's player, for a member: in tabs as GK's (Details, Attributes, Personality, Contract, Unhappiness,
+        // Loan); else (a data set, a new player) the one form.
+        const ability = `<section><h4>${esc(t('Ability and age'))}</h4><div class="ed-grid">
+          ${num('ca', f.ca, set ? 0 : 1, 200, t('Current ability'))}${num('pa', f.pa, set ? -2 : 1, 200, t('Potential ability'))}
+          ${date('born', isoDate(f.born), t('Born'))}
+        </div><p class="small">${esc(set ? t('Ability is 1 to 200; 0, and for potential -1 and -2, are values the data has for players the game sets up itself.')
+          : t('Ability is 1 to 200. Attributes keep the numbers you see when you change it.'))}</p></section>`;
+        const attributes = `${coloursHtml()}<section><h4>${esc(t('Positions'))} <span class="small">${esc(t('0 to 20; 20 is natural'))}</span></h4><div class="ed-grid pos">
+          ${f.positions.map((v, i) => num(`pos${i}`, v, 0, 20, SHORT_POS[i]).replace('<span>', `<span title="${esc(posName[POSITIONS[i]] ?? POSITIONS[i])}">`)).join('')}
+        </div></section>
+        <div class="ed-attrs">${GROUPS.map((g) => `<section><h4>${esc(groupName[g])}${g === 'Hidden' ? ` <span class="small">${esc(t('the game does not show these'))}</span>` : ''}${set && g === 'Technical' ? ` <span class="small">${esc(t('0 is random'))}</span>` : ''}</h4><div class="ed-grid">
+          ${attrs.filter((a) => a.group === g).map((a) => num(a.name, f.attrs[a.name], set ? 0 : 1, 20, attrName[a.name] ?? a.name)).join('')}</div></section>`).join('')}</div>`;
+        if (set || !f.more || access() !== 'full' || playerAccess().state === 'locked') return ability + attributes;
+        const p = moreHtml(f.more);
+        return tabsHtml('player', [['details', t('Details'), ability + p.details + p.condition], ['attributes', t('Attributes'), p.reputation + attributes],
+          ['personality', t('Personality'), p.personality + p.preferences], ['contract', t('Contract'), p.contract],
+          ['unhappiness', t('Unhappiness'), p.unhappiness], ['loan', t('Loan'), p.loan]]);
+      })()}`;
     body.classList.add('detail');
     form.scrollTop = 0;
     form.querySelector('.ed-back').onclick = () => { body.classList.remove('detail'); current = null; if (pane === 'scout') runScout(); else results(); };

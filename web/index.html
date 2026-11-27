@@ -378,32 +378,41 @@
     text-transform: uppercase; letter-spacing: .05em; }
   .ed-form h4 .small { text-transform: none; letter-spacing: 0; font-weight: 400; }
   .ed-title .ed-back { display: none; padding: 0; margin-bottom: 4px; }
-  .ed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 10px; }
-  .ed-grid.pos { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  /* The fields: one system for every form of Squad Hub (players, staff, clubs). A field is a row of its words and
+     its control; the columns are wide enough that the words seldom wrap. The control's width says its kind: a 1-20
+     rating or a small count (64px), money or a reputation (.big, 128px), a date (.when), a choice (.choice). Ticks
+     are apart, in .ticks: the box before its words. */
+  .ed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 6px 28px; align-items: center; }
+  .ed-grid.pos { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px 10px; }
   .ed-grid.pos input { width: 52px; }
-  .ed-grid label { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); }
-  .ed-grid input { width: 64px; font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+  .ed-grid label { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; color: var(--muted); }
+  .ed-grid label > span { min-width: 0; line-height: 1.25; }
+  .ed-grid input { flex: none; width: 64px; font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
     border-radius: var(--r-sm); padding: 4px 6px; text-align: right; font-variant-numeric: tabular-nums; }
-  .ed-grid input[type=date] { width: auto; text-align: left; }
+  .ed-grid label.big input { width: 128px; }
+  .ed-grid input[type=date] { width: 156px; text-align: left; }
   .ed-grid input[type=text], .ed-grid select { width: 100%; max-width: 260px; text-align: left; font: inherit; font-size: 16px;
     color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 4px 6px; }
+  .ed-grid label.choice select { flex: 0 1 180px; width: 180px; min-width: 0; }
   .ed-grid label.wide { grid-column: span 2; }
-  .griev { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 16px; }
-  .griev label { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 14px; } .griev input { margin-top: 2px; width: 16px; height: 16px; flex: none; accent-color: var(--accent); }
+  .ed-form h5 { margin: 12px 0 2px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .ticks { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 0 28px; margin-top: 4px; }
+  .ticks label { display: flex; align-items: center; gap: 10px; min-height: 34px; color: var(--muted); cursor: pointer; }
+  .ticks.long label { align-items: flex-start; min-height: 30px; padding: 4px 0; font-size: 14px; line-height: 1.3; }
+  .ticks input { flex: none; width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+  .ticks.long input { margin-top: 1px; }
+  .ticks input:disabled + span { opacity: .7; }
   .staff-job { display: flex; align-items: center; gap: 6px; margin: 6px 0; } .staff-job select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
-  .ed-grid label.big input { width: 120px; } .ed-grid label.when { grid-column: span 2; } .ed-grid label.when input { width: auto; }
-  .ed-grid input[type=checkbox] { width: 18px; height: 18px; padding: 0; accent-color: var(--accent); }
-  .ed-grid.club { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); max-width: 560px; }
-  .ed-grid.club input[type=number] { width: 104px; } .ed-grid.club input[data-cf="balance"] { width: 140px; }
-  .ed-grid.club input[data-cf="training"], .ed-grid.club input[data-cf="attraction"] { width: 64px; }
-  .ed-grid.club input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
-  .ed-grid.club select { width: auto; max-width: 150px; }
   .ed-grid.kits label { justify-content: flex-start; } .ed-grid.kits label span { flex: 1; }
   .swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid var(--line); flex: none; }
-  .prefs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-width: 680px; }
-  .pref h5 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .prefs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 10px 20px; }
+  .prefs.four { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+  .pref h5 { margin: 0 0 4px; }
   .pref input { display: block; width: 100%; box-sizing: border-box; margin: 0 0 4px; font: inherit; font-size: 15px; color: var(--text);
     background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+  /* A form in tabs (a player, a member of staff): GK's tabs, under the name. */
+  .ed-ftabs { margin: 8px 0 4px; overflow-x: auto; scrollbar-width: none; }
+  .ed-ftabs button { flex: none; white-space: nowrap; }
   .ed-grid select.changed { border-color: var(--accent); }
   .ed-search { display: flex; gap: 6px; } .ed-search input { flex: 1; min-width: 0; }
   #editor-nation { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line);
@@ -457,8 +466,8 @@
   .ed-grid input[data-band="high"] { color: #4fd18b; font-weight: 650; }
   .ed-grid input[data-band="none"] { color: var(--muted); }
   #editor-clubs { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
-  #clubs-search { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; }
-  #clubs-results { display: flex; flex-direction: column; gap: 4px; }
+  #clubs-search, #managers-search { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; }
+  #clubs-results, #managers-results { display: flex; flex-direction: column; gap: 4px; }
   .fin table { width: 100%; border-collapse: collapse; } .fin td, .fin th { padding: 3px 0; text-align: right; font-variant-numeric: tabular-nums; }
   .fin td:first-child, .fin th:first-child { text-align: left; color: var(--muted); font-weight: 400; }
   .fin .neg { color: #e0806e; }
@@ -485,7 +494,7 @@
   .ed-attrs .ed-grid { grid-template-columns: 1fr; gap: 3px; }
   .ed-attrs .ed-grid input { width: 52px; padding: 3px 6px; }
   @media (max-width: 760px) {
-    .ed-grid label.wide, .ed-grid label.big, .ed-grid label.when { grid-column: 1 / -1; }
+    .ed-grid label.wide { grid-column: 1 / -1; }
     .ed-body { grid-template-columns: 1fr; }
     .ed-body.detail .ed-list { display: none; } .ed-body:not(.detail) .ed-form { display: none; }
     .ed-title .ed-back { display: inline-flex; }

@@ -625,6 +625,12 @@ is open, the title is the save's name and Players and Scout are its tabs):
   Only what changed is written; the wage and the contract end go to the contract and to the staff row's copies; a new
   nationality takes the player out of his national team. The game moves morale, reputations, value and squad
   numbers itself as the season goes on. A member's; a feature of `features.js` (`player-details`): Club Legends first.
+- A saved game's player (for a member) and a member of staff are shown in tabs, as the GK Save Game Editor's: a
+  player's Details, Attributes, Personality, Contract, Unhappiness and Loan; a member of staff's Attributes, Details,
+  Personality, Contract and Unhappiness (a tab only when it has something). The tab chosen last stays chosen from
+  one player (or member of staff) to the next. Every form of Squad Hub (players, staff, clubs) uses one field system
+  (index.html, "The fields"): a field is its words and its control in a row, the control's width says its kind (a
+  1–20 rating, money, a date, a choice), and ticks are a group of their own, the box before its words.
 - The values are coloured on the game's 1–20 scale (low, middling, good, high; a position only where he plays): green
   for the best, or, by the viewer's choice above the attributes (kept in the browser; `features.js` `attribute-colours`,
   Club Legends first), red for the best with the low end grey. And

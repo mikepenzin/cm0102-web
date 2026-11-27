@@ -963,4 +963,7 @@ export default {
   "Loan ends": "Leihe bis",
   "Can play in cup matches": "Darf in Pokalspielen spielen",
   "Can play against his parent club": "Darf gegen seinen Stammverein spielen",
+  "Bonuses and release fee": "Prämien und Ausstiegsklausel",
+  "Release clauses": "Ausstiegsklauseln",
+  "Transfer status": "Transferstatus",
 };

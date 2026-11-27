@@ -288,34 +288,43 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const p = await editorOn(ctx, ME.member);
     await p.click('#editor-tabs [data-pane="players"]');
-    await p.fill('#editor-search', g.players()[1].name);
-    await p.waitForSelector('#editor-results .ed-row', { timeout: 10000 });
+    const him = g.players()[1];
+    await p.fill('#editor-search', him.name);
+    // The list follows the search: the row clicked is his once it is the only one.
+    await p.waitForFunction((n) => [...document.querySelectorAll('#editor-results .ed-row b')].map((b) => b.textContent).join() === n, him.name, { timeout: 10000 });
     await p.locator('#editor-results .ed-row').first().click();
-    await p.waitForSelector('#editor-form [data-f="c:wage"]', { timeout: 10000 }).catch(() => {});
-    const shownName = (await p.textContent('#editor-player')).trim();
-    const him = g.players().find((x) => x.name === shownName);
+    await p.waitForSelector('#editor-form [data-f="c:wage"]', { state: 'attached', timeout: 10000 }).catch(() => {});
+    check('a player: the row clicked opens his form', (await p.textContent('#editor-player')).trim() === him.name, await p.textContent('#editor-player'));
+    const tab = (k) => p.click(`#editor-form [data-ftab="${k}"]`);
+    check('a player: his form in GK\'s tabs, Details first, one tab shown', (await p.$$eval('#editor-form [data-ftab]', (b) => b.map((x) => x.dataset.ftab))).join() === 'details,attributes,personality,contract,unhappiness,loan'
+      && await p.isVisible('#editor-form [data-f="m:nation"]') && !(await p.isVisible('#editor-form [data-f="c:wage"]')));
     check('a player: his contract, personality and details in the form', await p.inputValue('#editor-form [data-f="c:wage"]') === String(g.read(him.row).more.contract.wage)
       && await p.inputValue('#editor-form [data-f="p:Ambition"]') === String(g.read(him.row).more.personality.Ambition)
       && await p.inputValue('#editor-form [data-f="m:caps"]') === '5');
+    await tab('attributes');
     const highColour = () => p.$eval('#editor-form .ed-attrs input[data-band="high"]', (i) => getComputedStyle(i).color);
     const green = await highColour();
     await p.selectOption('#ed-colours', 'red');
     check('a player: Red for the best paints the high values red, and stays chosen', await highColour() === 'rgb(255, 90, 79)' && green !== 'rgb(255, 90, 79)'
       && await p.evaluate(() => localStorage.getItem('cm0102-attribute-colours')) === 'red', `${green} -> ${await highColour()}`);
     await p.selectOption('#ed-colours', 'green');
+    await tab('details');
     await p.selectOption('#editor-form [data-f="m:nation"]', '1');
+    await p.fill('#editor-form [data-f="k:percent"]', '100');
+    await p.locator('#editor-form [data-f="k:percent"]').dispatchEvent('change');
+    await p.selectOption('#editor-form [data-f="k:state"]', 'exhausted');
+    await tab('personality');
     await p.fill('#editor-form [data-f="p:Ambition"]', '20');
     await p.locator('#editor-form [data-f="p:Ambition"]').dispatchEvent('change');
-    await p.fill('#editor-form [data-f="c:wage"]', '75000');
-    await p.locator('#editor-form [data-f="c:wage"]').dispatchEvent('change');
     await p.fill('#editor-form [data-f="pref:favClubs:1"]', 'ital');
     check('a player: a preference box offers the clubs that match', (await p.$$eval('#club-picks option', (o) => o.map((x) => x.value))).join() === 'Italy (Italy)');
     await p.fill('#editor-form [data-f="pref:favClubs:1"]', 'Italy (Italy)');
     await p.locator('#editor-form [data-f="pref:favClubs:1"]').dispatchEvent('change');
+    await tab('unhappiness');
     await p.check('#editor-form [data-f="g:256"]');
-    await p.fill('#editor-form [data-f="k:percent"]', '100');
-    await p.locator('#editor-form [data-f="k:percent"]').dispatchEvent('change');
-    await p.selectOption('#editor-form [data-f="k:state"]', 'exhausted');
+    await tab('contract');
+    await p.fill('#editor-form [data-f="c:wage"]', '75000');
+    await p.locator('#editor-form [data-f="c:wage"]').dispatchEvent('change');
     await p.check('#editor-form [data-f="c:listed"]');
     await p.fill('#editor-form [data-f="c:goalBonus"]', '3000');
     await p.locator('#editor-form [data-f="c:goalBonus"]').dispatchEvent('change');
