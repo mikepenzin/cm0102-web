@@ -8,7 +8,7 @@ import { ATTRIBUTES, FORMATIONS, MANAGER_HIDDEN, PERSONALITY, POSITIONS, STAFF_J
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
-import { language, onLanguage, t, tn } from './i18n.js';
+import { amountText, language, onLanguage, parseAmount, t, tn } from './i18n.js';
 import { freeCut, presetFilters, scout, scoutIndex, scoutUpdate } from './scout.js';
 import { scoutManager } from './shortlist.js';
 
@@ -372,9 +372,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // ---- Clubs (savedit.js clubFinances; docs/research/2026-11-26-club-finances.md): a club's finances, which the game
   // shows for the player's own club only: a member's, as the Scout's potential; features.js 'club-finances'. Read only. ----
   const clubsBox = $('editor-clubs');
-  let clubShown = null;
-  const money = (n) => n.toLocaleString(language() || 'en');
-  const toNum = (i) => (i.dataset.money !== undefined ? Number(String(i.value).replace(/(?!^-)[^\d]/g, '')) : Number(i.value));
+  let clubShown = null, typedClubs = '', typedStaff = '', staffJob = '';
+  const money = (n) => amountText(n, language());
+  // A box's number; a money box's as parseAmount reads it (a Swedish or Norwegian minus sign stays a sign).
+  const toNum = (i) => (i.dataset.money !== undefined ? parseAmount(i.value) : Number(i.value));
   // Focused: the plain digits, all selected, so what is typed replaces them (the caret is not left after a changed value).
   form.addEventListener('focusin', (e) => { const i = e.target; if (i.dataset?.money !== undefined) { i.value = String(toNum(i)); i.select(); } });
   form.addEventListener('focusout', (e) => { const i = e.target; if (i.dataset?.money !== undefined && i.value.trim() !== '' && Number.isFinite(toNum(i))) i.value = money(toNum(i)); });
@@ -406,7 +407,8 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       <input id="clubs-search" type="search" placeholder="${esc(t('Search a club'))}" aria-label="${esc(t('Search a club'))}" autocomplete="off" spellcheck="false">
       <div id="clubs-results"></div>`;
     const input = $('clubs-search');
-    input.oninput = () => listClubs(input.value);
+    if (typedClubs) { input.value = typedClubs; listClubs(typedClubs); }    // drawn again (the account checked, the language): what was typed stays
+    input.oninput = () => { typedClubs = input.value; listClubs(input.value); };
     $('clubs-results').onclick = (e) => { const b = e.target.closest('[data-club]'); if (b) showClub(Number(b.dataset.club)); };
     if (clubShown !== null) showClub(clubShown);
   }
@@ -572,9 +574,11 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       if (!words.length) hit = [...hit].sort((a, b) => b.ca - a.ca);
       out.innerHTML = hit.length ? rowsHtml(hit.slice(0, 60)) : `<p class="small">${esc(t('No member of staff found.'))}</p>`;
     };
-    $('managers-job').onchange = () => listFor($('managers-search').value);
-    $('managers-search').oninput = (e) => listFor(e.target.value);
-    listFor('');
+    // Drawn again (the account checked, the language): the search and the job chosen stay.
+    $('managers-search').value = typedStaff; $('managers-job').value = staffJob;
+    $('managers-job').onchange = () => { staffJob = $('managers-job').value; listFor($('managers-search').value); };
+    $('managers-search').oninput = (e) => { typedStaff = e.target.value; listFor(e.target.value); };
+    listFor(typedStaff);
     managersBox.onclick = (e) => { const b = e.target.closest('[data-mgr]'); if (b) showManager(Number(b.dataset.mgr), b.querySelector('b').textContent); };
   }
   // A manager's ability and attributes in the right-hand panel, editable as a player's: a change is written at once
@@ -654,7 +658,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     if (which !== pane) {
       form.onchange = null; form.oninput = null;
       form.innerHTML = '';
-      current = null; clubShown = null;
+      current = null; clubShown = null; typedClubs = ''; typedStaff = ''; staffJob = '';
       body.classList.remove('detail');
     }
     pane = which;

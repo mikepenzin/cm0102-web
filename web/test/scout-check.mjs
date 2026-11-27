@@ -393,6 +393,39 @@ try {
     check('Clubs: saved, the file has the new balance, reputation, match day, kit, rival and capacity', clubFinances(saved, 0)?.balance === 90000000
       && j?.reputation === 9900 && j.matchDay === 3 && j.kit.awayBack === 0 && j.rivals[0] === 1 && j.stadium.capacity === 70000,
       JSON.stringify([clubFinances(saved, 0)?.balance, j?.reputation, j?.matchDay, j?.kit, j?.rivals, j?.stadium?.capacity]));
+    // A negative balance in Swedish (written with U+2212, the minus sign): a click into the box and out again, with no
+    // edit, keeps it negative; saved and the save opened again, the file and the box are -1,234,567.
+    const minus = '\u22121\u00a0234\u00a0567';
+    await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('sv', { keep: false }); });
+    await p.click('#editor-form [data-cf="balance"]');
+    await p.keyboard.type('-1234567');
+    await p.keyboard.press('Tab');
+    await p.waitForTimeout(200);
+    check('Clubs, Swedish: a negative balance shows with the minus sign', await p.inputValue('#editor-form [data-cf="balance"]') === minus,
+      JSON.stringify(await p.inputValue('#editor-form [data-cf="balance"]')));
+    await p.click('#editor-form [data-cf="balance"]');
+    const focused = await p.inputValue('#editor-form [data-cf="balance"]');
+    await p.keyboard.press('Tab');
+    await p.waitForTimeout(200);
+    check('Clubs, Swedish: focus and blur without an edit keep it negative', focused === '-1234567' && await p.inputValue('#editor-form [data-cf="balance"]') === minus,
+      JSON.stringify([focused, await p.inputValue('#editor-form [data-cf="balance"]')]));
+    await p.click('#editor-save');
+    await p.waitForFunction(() => /Spar|Saved|sparad|lagrad/i.test(document.getElementById('editor-note').textContent) && !document.getElementById('editor-save').offsetParent, null, { timeout: 15000 }).catch(() => {});
+    const again = new SaveGame(new Uint8Array(await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')))));
+    await p.click('#editor-close');
+    await p.click('#saves-open');
+    await p.click('#saves-list tr:has-text("Scouting 2001-07-29.sav") button[data-edit]');
+    await p.waitForSelector('#editor[open] .ed-row');
+    await p.click('#editor-tabs [data-pane="clubs"]');
+    // The tab reads the save's finances first, then draws its search box: the search is typed once it is drawn.
+    await p.waitForFunction(() => document.getElementById('clubs-search') && document.getElementById('clubs-results'));
+    await p.fill('#clubs-search', 'juv');
+    await p.waitForFunction(() => document.getElementById('clubs-search')?.value === 'juv' && document.querySelector('#clubs-results [data-club]'));
+    await p.locator('#clubs-results [data-club]').first().click();
+    await p.waitForSelector('#editor-form [data-cf="balance"]');
+    check('Clubs, Swedish: saved and opened again, the file and the box hold -1,234,567', clubFinances(again, 0)?.balance === -1234567
+      && await p.inputValue('#editor-form [data-cf="balance"]') === minus, JSON.stringify([clubFinances(again, 0)?.balance, await p.inputValue('#editor-form [data-cf="balance"]')]));
+    await p.evaluate(async () => { const m = await import('/i18n.js'); await m.setLanguage('en', { keep: false }); });
     await ctx.close();
     const c2 = await browser.newContext({ viewport: { width: 1280, height: 820 } });
     const free = await editorOn(c2, ME.free);

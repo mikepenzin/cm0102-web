@@ -2,7 +2,7 @@
 // language, the lookup with English as the floor, placeholders and plurals.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LANGUAGES, pickLanguage, priceText, useTable, t, tn } from '../i18n.js';
+import { LANGUAGES, amountText, parseAmount, pickLanguage, priceText, useTable, t, tn } from '../i18n.js';
 
 test('the languages: English and the nine of the game, each named in its own language', () => {
   assert.deepEqual(LANGUAGES.map((l) => l.code), ['en', 'es', 'pt', 'it', 'fr', 'de', 'nl', 'da', 'no', 'sv']);
@@ -90,4 +90,16 @@ test('the price from the server (CM_PRICE, "$5 a month"): its period in the page
   assert.equal(priceText(undefined), '');
   useTable('en', {});
   assert.equal(priceText('$5 a month'), '$5 a month');
+});
+
+// Squad Hub's money boxes (editor.js cash): shown as the language writes an amount, read back the same. Norwegian and
+// Swedish write a negative with U+2212, the minus sign, not a hyphen: it must stay negative.
+test('an amount reads back as written in every language, a negative one too', () => {
+  for (const { code } of LANGUAGES) {
+    for (const n of [-2000000000, -1234567, -1, 0, 7, 59516431, 2000000000]) assert.equal(parseAmount(amountText(n, code)), n, `${code}: ${amountText(n, code)}`);
+  }
+  assert.equal(parseAmount('\u22121\u00a0234\u00a0567'), -1234567, 'Swedish and Norwegian: the minus sign');
+  assert.equal(parseAmount(' -5000 '), -5000, 'typed: a hyphen');
+  assert.equal(parseAmount('12-34'), 1234, 'a hyphen inside a number is not a sign');
+  assert.ok(Number.isNaN(parseAmount('')), 'nothing typed: no number');
 });

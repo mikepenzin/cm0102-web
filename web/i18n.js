@@ -43,6 +43,16 @@ export function t(english, vars) {
 
 // The price as the server gives it (CM_PRICE, "$5 a month"): the period in the page's language. A price of another
 // shape shows as it comes (the server's text, English).
+// An amount as the page's language writes it (59,516,431; Swedish −1 234 567), and back. A minus sign (U+2212) or
+// another dash before the first digit is the sign, as a typed hyphen is; every other character not a digit is a
+// separator. NaN when there is no digit.
+export const amountText = (n, code = lang) => n.toLocaleString(code || 'en');
+export function parseAmount(text) {
+  const s = String(text).trim().replace(/^[\u2212\u2012\u2013\u2014\uFE63\uFF0D]/, '-');
+  const digits = s.replace(/[^\d]/g, '');
+  return digits ? (s.startsWith('-') ? -1 : 1) * Number(digits) : NaN;
+}
+
 export function priceText(price) {
   const m = /^(.+?) a month$/.exec(price ?? '');
   return m ? t('{amount} a month', { amount: m[1] }) : (price ?? '');
