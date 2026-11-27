@@ -83,8 +83,11 @@ node web/deploy/stage.mjs --game "/Applications/CM 01-02 Bosman Edition.app/Cont
 cd web/deploy/stage && fly deploy
 ```
 
-`web/deploy/release.sh` does all of it, and stops after the pull when it brings nothing new (`--force` goes on
-anyway, for example after a failed deploy). `--no-build` skips the engine builds, `--game <folder>` names another game
+`web/deploy/release.sh` does all of it, and stops after the pull when HEAD is the commit of the last successful
+deploy (kept in `.git/cm0102-last-deploy`, written only after `fly deploy` succeeds). A commit made and pushed from
+this checkout itself is deployed although the pull brings nothing, and a failed deploy is tried again at the next
+run. `--force` deploys HEAD even when it is the one last deployed. The first run after this change has no record yet
+and deploys once. `--no-build` skips the engine builds, `--game <folder>` names another game
 folder, and what follows `--` goes to `fly deploy` (`web/deploy/release.sh --no-build -- --wg=false`).
 
 ## Accounts and cloud saves (optional)

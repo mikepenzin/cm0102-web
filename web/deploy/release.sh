@@ -3,8 +3,9 @@
 #
 #   web/deploy/release.sh [--force] [--no-build] [--game <folder>] [-- <fly deploy options>]
 #
-# When git pull brings nothing new, it stops there; --force builds, stages and deploys anyway (after a failed deploy).
-# --force     goes on when git pull brings nothing new
+# When HEAD is the commit of the last successful deploy (kept in .git/cm0102-last-deploy), it stops there: a commit
+# made and pushed from this checkout itself is new though git pull brings nothing, and a failed deploy is not kept.
+# --force     deploys HEAD even when it is the one last deployed
 # --no-build  skips the engine builds (when the engine's code did not change since the last build)
 # --game      the folder that holds cm0102.exe and Data (default: the Bosman Edition app's game folder)
 # After --, the rest goes to fly deploy, for example: web/deploy/release.sh -- --wg=false
@@ -32,12 +33,16 @@ done
 {
 cd "$repo"
 echo "== git pull"
-before="$(git rev-parse HEAD)"
 git pull
-if [[ "$(git rev-parse HEAD)" == "$before" && $force -eq 0 ]]; then
-  echo "== nothing new from git pull: no build, no deploy (--force to deploy anyway)"
+head="$(git rev-parse HEAD)"
+last_file="$(git rev-parse --absolute-git-dir)/cm0102-last-deploy"   # absolute: the deploy runs from web/deploy/stage
+last="$(cat "$last_file" 2>/dev/null || true)"
+if [[ "$head" == "$last" && $force -eq 0 ]]; then
+  echo "== ${head:0:8} is already deployed: no build, no deploy (--force to deploy anyway)"
   exit 0
 fi
+last_short="${last:0:8}"
+echo "== deploying ${head:0:8} (last deployed: ${last_short:-none})"
 
 if [[ $build -eq 1 ]]; then
   echo "== build the engine (JSPI)"
@@ -58,5 +63,7 @@ node web/deploy/stage.mjs --game "$game"
 echo "== fly deploy"
 cd web/deploy/stage
 fly deploy ${fly_args[@]+"${fly_args[@]}"}
+# Deployed: kept, so the next run without a new commit stops at once (set -e: a failed deploy never gets here).
+echo "$head" > "$last_file"
 exit
 }
