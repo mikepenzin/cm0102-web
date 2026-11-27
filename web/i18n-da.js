@@ -892,4 +892,6 @@ export default {
   "No member of staff found.": "Ingen i staben fundet.",
   "← Staff": "← Stab",
   "Staff": "Stab",
+  "Favourite clubs": "Yndlingsklubber",
+  "Disliked clubs": "Uønskede klubber",
 };

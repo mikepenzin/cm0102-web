@@ -892,4 +892,6 @@ export default {
   "No member of staff found.": "Nessun membro dello staff trovato.",
   "← Staff": "← Staff",
   "Staff": "Staff",
+  "Favourite clubs": "Club preferiti",
+  "Disliked clubs": "Club non graditi",
 };

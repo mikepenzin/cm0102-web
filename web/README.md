@@ -610,7 +610,9 @@ is open, the title is the save's name and Players and Scout are its tabs):
   docs/research/2026-11-26-player-editor-fields.md): Player details (nationality, second nationality, caps,
   international goals, transfer value, club first-team and reserve squads; the national squads and the European
   registration shown, as the game sets them), Reputation and morale (home, current and world reputation, morale),
-  Personality (Adaptability, Ambition, Loyalty, Pressure, Professionalism, Sportsmanship, Temperament: staff +0x56..),
+  Preferences (`preferences.dat`, the staff row's +0x65: three favourite and three disliked players or staff, and of
+  clubs; a box offers the names that match), Personality (Adaptability, Ambition, Loyalty, Pressure, Professionalism,
+  Sportsmanship, Temperament: staff +0x56..),
   and Contract (`contract.dat`: weekly wage, squad number, start and end, goal, assist and clean-sheet bonuses, the
   release fee and the five release clauses, transfer listed by club or by request, listed for loan, squad status).
   Only what changed is written; the wage and the contract end go to the contract and to the staff row's copies; a new

@@ -4,7 +4,7 @@
 //   backups/ first, so Load Game lists the edited save and Saved games the old one.
 // - A data set (dataset.js): a folder of Databases in the user folder with the 20 database files, which the game lists
 //   under Database when a new game starts (src/recomp_rt/win/dbfolders.h). A new one is a copy of the game's own data.
-import { ATTRIBUTES, FORMATIONS, MANAGER_HIDDEN, PERSONALITY, POSITIONS, STAFF_JOBS, SaveGame, clubFinances, clubInfo, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
+import { ATTRIBUTES, FORMATIONS, MANAGER_HIDDEN, PERSONALITY, POSITIONS, STAFF_JOBS, SaveGame, clubFinances, clubInfo, clubNationName, managerAttributes, nonPlayers, writeClub, writeManagerAttributes } from './savedit.js';
 import { ATTRIBUTES as DATA_ATTRIBUTES, DATA_SET_FILES, DataSet, dateShift } from './dataset.js';
 import { copyFile, listSaves, readBlob, readBytes, storeSave } from './saves.js';
 import { noteSeason } from './datasets.js';
@@ -425,7 +425,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     return model.people;
   }
   const personLabel = (id) => { const p = people().get(id); return p ? `${p.name}${p.club ? ` (${p.club})` : ''}` : ''; };
-  const clubPick = (id) => { const c = clubInfo(model, id); return c ? `${c.name}${c.nation ? ` (${c.nation})` : ''}` : ''; };
+  const clubPick = (id) => { const n = model.clubs.get(id), nat = n === undefined ? '' : clubNationName(model, id); return n === undefined ? '' : `${n}${nat ? ` (${nat})` : ''}`; };
   // The choices for a person's or a club's box: the first 20 that hold every word typed.
   function offer(kind, text) {
     const words = fold(text).split(/\s+/).filter(Boolean), list = $('club-picks');
@@ -589,6 +589,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       <div class="ed-attrs">${['Style', 'Chairman'].map((g) => `<section><h4>${esc(nm[g])} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">${a.hidden
         .filter((y) => y.group === g).map((y) => box(y.name, y.value, 1, 20, nm[y.name], `data-hid="${esc(y.name)}"`)).join('')}</div></section>`).join('')}</div>
       ${moreHtml(model.readMore(id), ['Adaptability'])}`);
+    form.oninput = (e) => { const i = e.target.closest('[data-kind]'); if (i && !picks.has(i.value.trim())) offer(i.dataset.kind, i.value); };
     form.onchange = (e) => {
       if (e.target.closest('[data-f]')) {               // details, personality, contract (savedit.js writeMore)
         try { model.writeMore(id, moreOf(model.readMore(id))); } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: reason(err) }), true); return; }
@@ -745,6 +746,12 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         ${big('m:homeRep', m.homeRep, 10000, t('Home reputation'))}${big('m:currentRep', m.currentRep, 10000, t('Current reputation'))}
         ${big('m:worldRep', m.worldRep, 10000, t('World reputation'))}${num('m:morale', m.morale, 1, 20, t('Morale'))}
       </div></section>` : ''}
+      ${m.prefs ? `<section><h4>${esc(t('Preferences'))}</h4><datalist id="club-picks"></datalist><div class="prefs">
+        ${[['favStaff', t('Favourite players and staff'), 'person'], ['dislikedStaff', t('Disliked players and staff'), 'person'],
+          ['favClubs', t('Favourite clubs'), 'club'], ['dislikedClubs', t('Disliked clubs'), 'club']].map(([k, label, kind]) => `<div class="pref"><h5>${esc(label)}</h5>${m.prefs[k].map((x, n) => {
+            const l = x < 0 ? '' : kind === 'club' ? clubPick(x) : personLabel(x);
+            return `<input type="text" list="club-picks" data-f="pref:${k}:${n}" data-kind="${kind}" data-id="${x}" value="${esc(l)}" data-was="${esc(l)}" placeholder="${esc(t('None'))}" autocomplete="off" spellcheck="false" data-raw>`;
+          }).join('')}</div>`).join('')}</div></section>` : ''}
       <section><h4>${esc(t('Personality'))} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">
         ${PERSONALITY.filter(([n]) => !skip.includes(n)).map(([n]) => num(`p:${n}`, m.personality[n], 1, 20, pn[n])).join('')}</div></section>
       ${c ? `<section><h4>${esc(t('Contract'))}</h4><div class="ed-grid">
@@ -769,6 +776,18 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       const v = val(`m:${k}`); if (v !== undefined) out[k] = v;
     }
     for (const [n] of PERSONALITY) { const v = val(`p:${n}`); if (v !== undefined) out.personality[n] = v; }
+    if (m.prefs) {
+      out.prefs = Object.fromEntries(Object.entries(m.prefs).map(([k, ids]) => [k, ids.map((x, n) => {
+        const i = el(`pref:${k}:${n}`);
+        if (!i) return x;
+        const v = i.value.trim();
+        if (v === i.dataset.was) return Number(i.dataset.id);
+        if (!v) return -1;
+        const id = picks.get(v);
+        if (id === undefined) throw Object.assign(new Error('pick a name from the list'), { key: 'pick a name from the list' });
+        return id;
+      })]));
+    }
     if (out.contract) {
       for (const k of CONTRACT_KEYS) { const v = val(`c:${k}`); if (v !== undefined) out.contract[k] = v; }
       for (const k of ['start', 'end']) { const d = el(`c:${k}`) && fromIso(el(`c:${k}`).value); if (d) out.contract[k] = d; }
@@ -840,6 +859,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     form.oninput = (e) => {
       const i = e.target.closest('[data-f]');
       if (!i) return;
+      if (i.dataset.kind && !picks.has(i.value.trim())) offer(i.dataset.kind, i.value);   // a preference: the names that match
       i.classList.toggle('changed', (i.type === 'checkbox' ? String(i.checked) : i.value) !== i.dataset.was);
       if (i.dataset.band) i.dataset.band = band(i.value);
     };
@@ -890,6 +910,12 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       };
       for (const k of ['nation', 'nation2', 'caps', 'goals', 'value', 'clubMain', 'clubReserve', 'homeRep', 'currentRep', 'worldRep', 'morale']) put(`m:${k}`, m[k]);
       for (const [n] of PERSONALITY) put(`p:${n}`, m.personality[n]);
+      if (m.prefs) for (const [k, ids] of Object.entries(m.prefs)) ids.forEach((x, n) => {
+        const i = form.querySelector(`[data-f="pref:${k}:${n}"]`);
+        if (!i) return;
+        const l = x < 0 ? '' : i.dataset.kind === 'club' ? clubPick(x) : personLabel(x);
+        i.dataset.id = x; i.value = l; i.dataset.was = l; i.classList.remove('changed');
+      });
       if (m.contract) for (const k of [...CONTRACT_KEYS, 'start', 'end']) put(`c:${k}`, m.contract[k]);
     }
     const x = model.players().find((p) => p.row === row);

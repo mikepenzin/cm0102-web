@@ -48,7 +48,7 @@ const check = (what, cond, detail = '') => { console.log(`${cond ? 'ok  ' : 'FAI
 const FIRST = ['Aurelio', 'Benedikt', 'Cassiano', 'Dorotheus', 'Eustachio', 'Florentin', 'Gaspard', 'Hilarion', 'Isidoro', 'Jovanni'];
 const players = FIRST.map((first, i) => ({ first, second: 'Scoutson', ca: 120 + i, pa: 190 - i, gk: 1, born: [i < 2 ? 1983 : 1981, 1, 1], club: i === 2 ? -1 : 0, fill: 6 + i, nation: i === 3 || i === 7 ? 1 : 0 }));   // the first two are 18: Wonderkids; Dorotheus and Hilarion are French
 // Two human managers, Klaus and Mike, with empty Short Lists (shortlist.js).
-const saveBytes = await fakeSaveGame(players, { contracts: true, managers: [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }],
+const saveBytes = await fakeSaveGame(players, { contracts: true, prefs: true, managers: [{ first: 'Klaus', second: 'Kastelmann' }, { first: 'Mike', second: 'Penzin' }],
   finance: { balance: 59516431, wageBill: 889495, topWage: 65497, thisYear: { 0x08: 19491130, 0x20: 33094379, 0x48: 5985625 }, lastYear: { 0x20: 51520409 } } });
 const g = new SaveGame(saveBytes);
 const finishing = g.players().map((p) => g.read(p.row).attrs.Finishing);
@@ -308,6 +308,10 @@ try {
     await p.locator('#editor-form [data-f="p:Ambition"]').dispatchEvent('change');
     await p.fill('#editor-form [data-f="c:wage"]', '75000');
     await p.locator('#editor-form [data-f="c:wage"]').dispatchEvent('change');
+    await p.fill('#editor-form [data-f="pref:favClubs:1"]', 'ital');
+    check('a player: a preference box offers the clubs that match', (await p.$$eval('#club-picks option', (o) => o.map((x) => x.value))).join() === 'Italy (Italy)');
+    await p.fill('#editor-form [data-f="pref:favClubs:1"]', 'Italy (Italy)');
+    await p.locator('#editor-form [data-f="pref:favClubs:1"]').dispatchEvent('change');
     await p.check('#editor-form [data-f="c:listed"]');
     await p.fill('#editor-form [data-f="c:goalBonus"]', '3000');
     await p.locator('#editor-form [data-f="c:goalBonus"]').dispatchEvent('change');
@@ -317,7 +321,7 @@ try {
     const saved = new SaveGame(new Uint8Array(await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')))));
     const m = saved.read(him.row).more;
     check('a player: saved, the file has his new nation, ambition, wage and listing', m.nation === 1 && m.personality.Ambition === 20
-      && m.contract.wage === 75000 && m.contract.listed === true && m.contract.goalBonus === 3000, JSON.stringify([m.nation, m.personality.Ambition, m.contract]));
+      && m.contract.wage === 75000 && m.contract.listed === true && m.contract.goalBonus === 3000 && m.prefs.favClubs.join() === '0,1,-1', JSON.stringify([m.nation, m.personality.Ambition, m.contract]));
     await ctx.close();
   }
 

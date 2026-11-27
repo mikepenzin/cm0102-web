@@ -217,7 +217,7 @@ test('a player as the GK editor shows him: nations, caps, value, squads, morale,
   const g = new SaveGame(await fakeSaveGame(undefined, { contracts: true }));
   const m = g.read(1).more;
   assert.deepEqual({ ...m, personality: undefined, contract: undefined }, { nation: 0, nation2: -1, caps: 5, goals: 2, value: 4000001,
-    clubMain: true, clubReserve: false, nationMain: false, nationU21: false, euro: 0, morale: 14, homeRep: 7000, currentRep: 7500, worldRep: 6800,
+    clubMain: true, clubReserve: false, nationMain: false, nationU21: false, euro: 0, morale: 14, homeRep: 7000, currentRep: 7500, worldRep: 6800, prefs: null,
     personality: undefined, contract: undefined });
   assert.deepEqual(m.personality, { Adaptability: 10, Ambition: 11, Loyalty: 13, Pressure: 14, Professionalism: 15, Sportsmanship: 16, Temperament: 17 });
   assert.deepEqual(m.contract, { wage: 21000, start: null, end: { year: 2004, month: 6, day: 30 }, number: 2, status: 2, goalBonus: 0, assistBonus: 0,
@@ -264,6 +264,19 @@ test('a manager as the GK editor shows him: reputations, the hidden style and ch
     'the changes, cut to 1..20 and 0..10000; Pressing left at 0 as it was');
   assert.equal(np[q + 0x14], 0, 'an attribute not changed keeps its byte, even one out of range');
   assert.throws(() => writeManagerAttributes(g, 3, { ca: m.ca, pa: m.pa, values, formation: 12 }), /formation/);
+});
+
+test('a player\'s preferences (preferences.dat, staff +0x65): favourite and disliked clubs and staff, written back', async () => {
+  const g = new SaveGame(await fakeSaveGame(undefined, { prefs: true }));
+  assert.deepEqual(g.read(0).more.prefs, { favClubs: [0, -1, -1], dislikedClubs: [1, -1, -1], favStaff: [1, -1, -1], dislikedStaff: [-1, -1, -1] });
+  const f = g.read(0);
+  f.more.prefs = { ...f.more.prefs, favClubs: [-1, 0, -1], dislikedStaff: [1, -1, -1] };
+  g.write(0, f);
+  assert.deepEqual(new SaveGame(await g.toBytes()).read(0).more.prefs,
+    { favClubs: [-1, 0, -1], dislikedClubs: [1, -1, -1], favStaff: [1, -1, -1], dislikedStaff: [1, -1, -1] });
+  f.more.prefs = { ...f.more.prefs, favStaff: [999, -1, -1] };
+  assert.throws(() => g.write(0, f), /no such person/);
+  assert.equal(new SaveGame(await fakeSaveGame()).read(0).more.prefs, null, 'no record: none');
 });
 
 test('non-players: the staff with a non-player record, by name and club; edits written as the game rates them', async () => {

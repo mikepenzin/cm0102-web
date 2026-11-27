@@ -343,6 +343,11 @@ const ids = (dv, o, n) => Array.from({ length: n }, (_, k) => dv.getInt32(o + 4 
 // Everything Squad Hub shows of a club, or null (no such club). { colours: true } adds colour.dat's list
 // [{ id, name, rgb }]. The finance fields are absent when the save keeps no finances for the club; stadium and its
 // city are null when the club names none.
+// A club's nation name (club +0x53) from its record alone, '' when none (for labels: no other member needed).
+export function clubNationName(game, clubId) {
+  const r = clubRow(game, clubId);
+  return r ? game.nations.get(r.t.dv.getInt32(r.o + 0x53, true)) ?? '' : '';
+}
 export function clubInfo(game, clubId, { colours = false } = {}) {
   const r = clubRow(game, clubId);
   if (!r) return null;
@@ -536,6 +541,17 @@ function contractsOf(game) {
 const BONUSES = [['goalBonus', 0x10], ['assistBonus', 0x14], ['cleanSheetBonus', 0x18]];
 const LIST_BITS = { listed: 1, loanListed: 2, listedByRequest: 8 };
 const CLAUSES = [['nonPromotion', 0x1c], ['minFee', 0x1d], ['nonPlaying', 0x1e], ['relegation', 0x1f], ['managerJob', 0x20]];
+// preferences.dat (52 bytes, the staff row's +0x65; docs/research/2026-11-26-player-editor-fields.md, 0x547d77..):
+// +0 the id, then three club ids each of favourite and disliked clubs, then three staff ids each of favourite and
+// disliked staff, -1 for none.
+const PREFS_SIZE = 52, PREFS = [['favClubs', 0x04, 'club'], ['dislikedClubs', 0x10, 'club'], ['favStaff', 0x1c, 'staff'], ['dislikedStaff', 0x28, 'staff']];
+function prefsRow(game, row) {
+  const k = game.staff.dv.getInt32(row * STAFF_SIZE + 0x65, true);
+  if (k < 0 || !game.file.has('preferences.dat')) return null;
+  const b = game.file.read('preferences.dat');
+  if ((k + 1) * PREFS_SIZE > b.length) return null;
+  return { b, dv: new DataView(b.buffer, b.byteOffset, b.byteLength), o: k * PREFS_SIZE };
+}
 const SQUAD_BITS = { clubMain: 1, clubReserve: 2, nationU21: 4, nationMain: 8 };   // staff +0x5e (0x7b0f30)
 
 export class SaveGame {
@@ -632,6 +648,7 @@ export class SaveGame {
       ...(player ? { value: s.dv.getInt32(o + 0x52, true), ...Object.fromEntries(Object.entries(SQUAD_BITS).map(([k, bit]) => [k, (s.b[o + 0x5e] & bit) !== 0])),
         euro: s.b[o + 0x6d], morale: p.b[po + 0x45], homeRep: p.dv.getInt16(po + 0x09, true), currentRep: p.dv.getInt16(po + 0x0b, true),
         worldRep: p.dv.getInt16(po + 0x0d, true) } : {}),
+      prefs: (() => { const r = prefsRow(this, row); return r && Object.fromEntries(PREFS.map(([k, off]) => [k, [0, 1, 2].map((n) => r.dv.getInt32(r.o + off + 4 * n, true))])); })(),
       personality: Object.fromEntries(PERSONALITY.map(([n, off]) => [n, s.dv.getInt8(o + off)])),
       contract: q === undefined ? null : { wage: c.dv.getInt32(q + 0x0c, true), start: readDate(c.b, q + 0x25), end: readDate(c.b, q + 0x2d),
         number: Math.abs(c.dv.getInt8(q + 0x3a)), status: c.b[q + 0x4f] >> 4,
@@ -660,6 +677,19 @@ export class SaveGame {
     for (const k of ['clubMain', 'clubReserve']) if (differs(k)) s.b[o + 0x5e] = m[k] ? s.b[o + 0x5e] | SQUAD_BITS[k] : s.b[o + 0x5e] & ~SQUAD_BITS[k];
     if (differs('morale')) p.b[po + 0x45] = cut(m.morale, 1, 20);
     for (const [k, off] of [['homeRep', 0x09], ['currentRep', 0x0b], ['worldRep', 0x0d]]) if (differs(k)) p.dv.setInt16(po + off, cut(m[k], 0, 10000), true);
+    const pr = prefsRow(this, row);
+    if (m.prefs && pr) {
+      for (const [k, , kind] of PREFS) {
+        const ids = m.prefs[k] ?? [];
+        if (ids.some((id) => id !== -1 && !(kind === 'staff' ? id >= 0 && id < s.count : this.clubs.has(id))))
+          throw Object.assign(new Error(kind === 'staff' ? 'no such person' : 'no such club'), { key: kind === 'staff' ? 'no such person' : 'no such club' });
+      }
+      let any = false;
+      for (const [k, off] of PREFS) (m.prefs[k] ?? []).slice(0, 3).forEach((id, n) => {
+        if (pr.dv.getInt32(pr.o + off + 4 * n, true) !== id) { pr.dv.setInt32(pr.o + off + 4 * n, id, true); any = true; }
+      });
+      if (any) this.file.changed('preferences.dat');
+    }
     for (const [n, off] of PERSONALITY) if (m.personality && m.personality[n] !== undefined && m.personality[n] !== was.personality[n]) s.dv.setInt8(o + off, cut(m.personality[n], 1, 20));
     const c = contractsOf(this), q = c?.at.get(row), k = m.contract, w = was.contract;
     if (k && w && q !== undefined) {
@@ -722,7 +752,7 @@ export class SaveGame {
     const file = await SaveFile.open(blob);
     await file.load(['index.dat']);
     const tables = tablesOf(file.read('index.dat'));
-    await file.load([...TABLES.map((id) => tables[id]?.file).filter(Boolean), 'contract.dat']);
+    await file.load([...TABLES.map((id) => tables[id]?.file).filter(Boolean), 'contract.dat', 'preferences.dat', 'nonplayer.dat']);
     return new SaveGame(file);
   }
 
