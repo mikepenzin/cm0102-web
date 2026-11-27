@@ -374,6 +374,10 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   const clubsBox = $('editor-clubs');
   let clubShown = null;
   const money = (n) => n.toLocaleString(language() || 'en');
+  const toNum = (i) => (i.dataset.money !== undefined ? Number(String(i.value).replace(/(?!^-)[^\d]/g, '')) : Number(i.value));
+  // Focused: the plain digits, all selected, so what is typed replaces them (the caret is not left after a changed value).
+  form.addEventListener('focusin', (e) => { const i = e.target; if (i.dataset?.money !== undefined) { i.value = String(toNum(i)); i.select(); } });
+  form.addEventListener('focusout', (e) => { const i = e.target; if (i.dataset?.money !== undefined && i.value.trim() !== '' && Number.isFinite(toNum(i))) i.value = money(toNum(i)); });
   const fold = (x) => x.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase();   // as savedit.js's search
   // The right-hand panel with a club's or a manager's details (the Clubs and Managers tabs): on a phone the panel alone,
   // its link back to the list.
@@ -475,7 +479,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         ${kit('awayBack', t('Away shirt'))}${kit('thirdText', t('Third text'))}${kit('thirdBack', t('Third shirt'))}</div></section>
       ${f ? `<section><h4>${esc(t('Finances'))}</h4>
         <table class="fin"><tr><td>${esc(t('Top wage a week'))}</td><td>${esc(money(f.topWage))}</td></tr></table>
-        <div class="ed-grid">${num('balance', f.balance, -2000000000, 2000000000, t('Bank balance'))}${num('wageLimit', f.wageLimit, 0, 10000000, t('Highest wage allowed'))}
+        <div class="ed-grid">${cash('balance', f.balance, t('Bank balance'), 'data-cf="balance"')}${cash('wageLimit', f.wageLimit, t('Highest wage allowed'), 'data-cf="wageLimit"')}
           ${pick('bankrupt', BANKRUPT().map((l, k) => [k, l]), f.bankrupt, t('Bankrupt'))}</div>
         <p class="small">${esc(t('The game works out the transfer budget from the balance: a larger balance, a larger budget. It works out the highest wage allowed and bankruptcy again in its own finance runs.'))}</p></section>` : `<p class="small">${esc(t('The game keeps no finances for this club.'))}</p>`}
       <section><h4>${esc(t('Stadium'))}</h4>
@@ -498,7 +502,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         if (got === undefined) { say(() => t('{name} was not changed: {why}', { name, why: t('pick a name from the list') }), true); return; }
         now[Number(n)] = got;
         patch = { [key]: now };
-      } else patch = { [i.dataset.cf]: i.type === 'checkbox' ? i.checked : Number(i.value) };
+      } else patch = { [i.dataset.cf]: i.type === 'checkbox' ? i.checked : toNum(i) };
       try { writeClub(model, id, patch); } catch (err) { say(() => t('{name} was not changed: {why}', { name, why: reason(err) }), true); showClub(id); return; }
       edited.add(`club:${id}`);
       dirty();
@@ -645,6 +649,14 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
 
   // show: draw the pane now (false while a save is still opening).
   function setPane(which, show = true) {
+    // Another tab: the right-hand panel is emptied (the player, manager or club of the tab left is not shown under
+    // another), and on a phone the list shows.
+    if (which !== pane) {
+      form.onchange = null; form.oninput = null;
+      form.innerHTML = '';
+      current = null; clubShown = null;
+      body.classList.remove('detail');
+    }
     pane = which;
     clearTimeout(timer);                              // a search typed in Players does not fill the list behind the Scout
     for (const b of tabs.querySelectorAll('[data-pane]')) { b.setAttribute('aria-selected', String(b.dataset.pane === pane)); b.tabIndex = b.dataset.pane === pane ? 0 : -1; }
@@ -731,6 +743,9 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     Professionalism: t('Professionalism'), Sportsmanship: t('Sportsmanship'), Temperament: t('Temperament') });
   const tick = (key, on, label, off = false) => `<label><input type="checkbox" data-f="${esc(key)}"${on ? ' checked' : ''}${off ? ' disabled' : ''} data-was="${on}"><span>${esc(label)}</span></label>`;
   const big = (key, value, max, label) => num(key, value, 0, max, label).replace('<label>', '<label class="big">');
+  // Money: shown with the language's separators (59,516,431), plain digits while it is typed in (moneyFocus); read
+  // with toNum, which takes the separators away.
+  const cash = (key, value, label, attr = `data-f="${esc(key)}"`) => `<label class="big"><span>${esc(label)}</span><input type="text" inputmode="numeric" data-money ${attr} value="${money(value)}" data-was="${money(value)}" autocomplete="off"></label>`;
   // The grievances of a contract (+0x45) and about the club (+0x40), bit by bit, as GK's Unhappiness tabs list them
   // (docs/research/2026-11-26-condition-retirement-fields.md); a bit not listed is kept as it is.
   const GRIEVANCES = () => [[0x1, t('Wants to move to a bigger club')], [0x2, t('Would like to negotiate a new contract')],
@@ -771,7 +786,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       details: `<section><h4>${esc(player ? t('Player details') : t('Details'))}${badge}</h4><div class="ed-grid">
         ${select('m:nation', m.nation, ns, t('Nationality'))}${select('m:nation2', m.nation2, [[-1, t('None')], ...ns], t('Second nationality'))}
         ${num('m:caps', m.caps, 0, 255, t('Caps'))}${num('m:goals', m.goals, 0, 255, t('International goals'))}
-        ${player ? big('m:value', m.value, 2000000000, t('Transfer value')) : ''}</div>
+        ${player ? cash('m:value', m.value, t('Transfer value')) : ''}</div>
         ${player ? `<div class="ticks">${tick('m:clubMain', m.clubMain, t('Club first team squad'))}${tick('m:clubReserve', m.clubReserve, t('Club reserve squad'))}
         ${tick('m:nation-squad', m.nationMain || m.nationU21, t('National squad'), true)}${tick('m:euro', m.euro === 2, t('Registered for Europe'), true)}</div>` : ''}
         ${m.retiring === 1 ? `<p class="small">${esc(t('Retiring at the end of the season.'))}</p>` : m.retiring === 2 ? `<p class="small">${esc(t('Retired.'))}</p>` : ''}</section>`,
@@ -792,13 +807,13 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       personality: `<section><h4>${esc(t('Personality'))} <span class="small">${esc(t('the game does not show these'))}</span></h4><div class="ed-grid">
         ${PERSONALITY.filter(([n]) => !skip.includes(n)).map(([n]) => num(`p:${n}`, m.personality[n], 1, 20, pn[n])).join('')}</div></section>`,
       contract: c ? `<section><h4>${esc(t('Contract'))}</h4><div class="ed-grid">
-        ${big('c:wage', c.wage, 10000000, t('Wage a week'))}${num('c:number', c.number, 0, 50, t('Squad number'))}
+        ${cash('c:wage', c.wage, t('Wage a week'))}${num('c:number', c.number, 0, 50, t('Squad number'))}
         ${when('c:start', c.start, t('Contract starts'), '1960-01-01')}${when('c:end', c.end, t('Contract ends'), '1990-01-01')}
         ${select('c:status', c.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
         ${num('c:playedInRow', c.playedInRow, 0, 100, t('Played in a row'))}${num('c:missedInRow', c.missedInRow, 0, 100, t('Missed in a row'))}</div>
         <h5>${esc(t('Bonuses and release fee'))}</h5><div class="ed-grid">
-        ${big('c:goalBonus', c.goalBonus, 10000000, t('Goal bonus'))}${big('c:assistBonus', c.assistBonus, 10000000, t('Assist bonus'))}
-        ${big('c:cleanSheetBonus', c.cleanSheetBonus, 10000000, t('Clean sheet bonus'))}${big('c:fee', c.fee, 2000000000, t('Release fee'))}</div>
+        ${cash('c:goalBonus', c.goalBonus, t('Goal bonus'))}${cash('c:assistBonus', c.assistBonus, t('Assist bonus'))}
+        ${cash('c:cleanSheetBonus', c.cleanSheetBonus, t('Clean sheet bonus'))}${cash('c:fee', c.fee, t('Release fee'))}</div>
         <h5>${esc(t('Release clauses'))}</h5><div class="ticks">
         ${tick('c:nonPromotion', c.nonPromotion, t('Non-promotion release clause'))}${tick('c:nonPromotionActive', c.nonPromotionActive, t('Non-promotion clause active'))}
         ${tick('c:nonPlaying', c.nonPlaying, t('Non-playing release clause'))}${tick('c:nonPlayingActive', c.nonPlayingActive, t('Non-playing clause active'))}
@@ -812,7 +827,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
         <section><h4>${esc(t('Unhappy with the club'))}</h4>${bits(CLUB_GRIEVANCES(), c.clubGrievances, 'cg')}
         <p class="small">${esc(t('Clearing a grievance does not withdraw a transfer request he has already made.'))}</p></section>` : '',
       loan: m.loan ? `<section><h4>${esc(t('Loan'))} <span class="small" data-raw>${esc(m.loan.club)}</span></h4><div class="ed-grid">
-        ${big('l:wage', m.loan.wage, 10000000, t('Weekly wage contribution'))}${select('l:status', m.loan.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
+        ${cash('l:wage', m.loan.wage, t('Weekly wage contribution'))}${select('l:status', m.loan.status, STATUS_NAMES().map((l, k) => [k, l]), t('Squad status'))}
         ${when('l:start', m.loan.start, t('Loan starts'), '1960-01-01')}${when('l:end', m.loan.end, t('Loan ends'), '1960-01-01')}</div>
         <div class="ticks">${tick('l:cup', m.loan.cup, t('Can play in cup matches'))}${tick('l:againstParent', m.loan.againstParent, t('Can play against his parent club'))}</div></section>` : '',
     };
@@ -838,7 +853,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
   // The form's values of moreHtml, over what the save holds.
   function moreOf(m) {
     const el = (k) => form.querySelector(`[data-f="${CSS.escape(k)}"]`);
-    const val = (k) => { const i = el(k); return !i ? undefined : i.type === 'checkbox' ? i.checked : Number(i.value); };
+    const val = (k) => { const i = el(k); return !i ? undefined : i.type === 'checkbox' ? i.checked : toNum(i); };
     const out = { ...m, personality: { ...m.personality }, contract: m.contract ? { ...m.contract } : null };
     for (const k of ['nation', 'nation2', 'caps', 'goals', 'value', 'clubMain', 'clubReserve', 'homeRep', 'currentRep', 'worldRep', 'morale']) {
       const v = val(`m:${k}`); if (v !== undefined) out[k] = v;
@@ -963,7 +978,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       const i = e.target.closest('[data-f]');
       if (!i) return;
       if (i.dataset.kind && !picks.has(i.value.trim())) offer(i.dataset.kind, i.value);   // a preference: the names that match
-      i.classList.toggle('changed', (i.type === 'checkbox' ? String(i.checked) : i.value) !== i.dataset.was);
+      i.classList.toggle('changed', (i.type === 'checkbox' ? String(i.checked) : i.dataset.money !== undefined ? money(toNum(i)) : i.value) !== i.dataset.was);
       if (i.dataset.band) i.dataset.band = band(i.value);
     };
     if (set && row === null) {                        // the club's nation is a good guess for a new player's
@@ -1009,7 +1024,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       const m = f.more, put = (k, v) => {
         const i = form.querySelector(`[data-f="${CSS.escape(k)}"]`);
         if (!i || document.activeElement === i || v === undefined) return;
-        if (i.type === 'checkbox') i.checked = v; else i.value = i.type === 'date' ? isoDate(v) : v;
+        if (i.type === 'checkbox') i.checked = v; else i.value = i.type === 'date' ? isoDate(v) : i.dataset.money !== undefined ? money(v) : v;
       };
       for (const k of ['nation', 'nation2', 'caps', 'goals', 'value', 'clubMain', 'clubReserve', 'homeRep', 'currentRep', 'worldRep', 'morale']) put(`m:${k}`, m[k]);
       for (const [n] of PERSONALITY) put(`p:${n}`, m.personality[n]);

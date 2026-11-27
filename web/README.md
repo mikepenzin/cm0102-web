@@ -630,7 +630,10 @@ is open, the title is the save's name and Players and Scout are its tabs):
   Personality, Contract and Unhappiness (a tab only when it has something). The tab chosen last stays chosen from
   one player (or member of staff) to the next. Every form of Squad Hub (players, staff, clubs) uses one field system
   (index.html, "The fields"): a field is its words and its control in a row, the control's width says its kind (a
-  1–20 rating, money, a date, a choice), and ticks are a group of their own, the box before its words.
+  1–20 rating, money, a date, a choice), and ticks are a group of their own, the box before its words. Money shows
+  with the language's separators and is plain digits, all selected, while it is typed in; a tick row is 44px high on
+  a touch screen. The 1–20 colours are tokens (`--band-*`), which Red for the best sets anew. Another tab of Squad
+  Hub (Players, Scout, Staff, Clubs) empties the right-hand panel.
 - The values are coloured on the game's 1–20 scale (low, middling, good, high; a position only where he plays): green
   for the best, or, by the viewer's choice above the attributes (kept in the browser; `features.js` `attribute-colours`,
   Club Legends first), red for the best with the low end grey. And

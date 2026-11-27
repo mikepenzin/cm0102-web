@@ -298,7 +298,7 @@ try {
     const tab = (k) => p.click(`#editor-form [data-ftab="${k}"]`);
     check('a player: his form in GK\'s tabs, Details first, one tab shown', (await p.$$eval('#editor-form [data-ftab]', (b) => b.map((x) => x.dataset.ftab))).join() === 'details,attributes,personality,contract,unhappiness,loan'
       && await p.isVisible('#editor-form [data-f="m:nation"]') && !(await p.isVisible('#editor-form [data-f="c:wage"]')));
-    check('a player: his contract, personality and details in the form', await p.inputValue('#editor-form [data-f="c:wage"]') === String(g.read(him.row).more.contract.wage)
+    check('a player: his contract, personality and details in the form', await p.inputValue('#editor-form [data-f="c:wage"]') === g.read(him.row).more.contract.wage.toLocaleString('en')
       && await p.inputValue('#editor-form [data-f="p:Ambition"]') === String(g.read(him.row).more.personality.Ambition)
       && await p.inputValue('#editor-form [data-f="m:caps"]') === '5');
     await tab('attributes');
@@ -325,6 +325,12 @@ try {
     await tab('contract');
     await p.fill('#editor-form [data-f="c:wage"]', '75000');
     await p.locator('#editor-form [data-f="c:wage"]').dispatchEvent('change');
+    // Money as a person types it: a click selects the plain digits, the typing replaces them, Tab shows 5,000,000.
+    await p.click('#editor-form [data-f="c:fee"]');
+    await p.keyboard.type('5000000');
+    await p.keyboard.press('Tab');
+    check('a player: money typed in a box replaces it, and shows with separators', await p.inputValue('#editor-form [data-f="c:fee"]') === '5,000,000',
+      await p.inputValue('#editor-form [data-f="c:fee"]'));
     await p.check('#editor-form [data-f="c:listed"]');
     await p.fill('#editor-form [data-f="c:goalBonus"]', '3000');
     await p.locator('#editor-form [data-f="c:goalBonus"]').dispatchEvent('change');
@@ -334,8 +340,13 @@ try {
     const saved = new SaveGame(new Uint8Array(await p.evaluate(() => Array.from(window.Module.FS.readFile('/user/Scouting 2001-07-29.sav')))));
     const m = saved.read(him.row).more;
     check('a player: saved, the file has his new nation, ambition, wage and listing', m.nation === 1 && m.personality.Ambition === 20
-      && m.contract.wage === 75000 && m.contract.listed === true && m.contract.goalBonus === 3000 && m.prefs.favClubs.join() === '0,1,-1'
+      && m.contract.wage === 75000 && m.contract.listed === true && m.contract.goalBonus === 3000 && m.contract.fee === 5000000 && m.prefs.favClubs.join() === '0,1,-1'
       && (m.contract.grievances & 0x100) !== 0 && m.condition.percent === 100 && m.condition.state === 'exhausted', JSON.stringify([m.nation, m.personality.Ambition, m.contract]));
+    // Another tab of Squad Hub empties the right-hand panel: his form does not stay under Clubs, nor come back.
+    await p.click('#editor-tabs [data-pane="clubs"]');
+    const emptyClubs = (await p.textContent('#editor-form')).trim() === '';
+    await p.click('#editor-tabs [data-pane="players"]');
+    check('another tab empties the right-hand panel', emptyClubs && (await p.textContent('#editor-form')).trim() === '');
     await ctx.close();
   }
 
@@ -356,7 +367,7 @@ try {
       && fin.topWage === '65497' && fin['thisYear.sold'] === '19491130' && fin['thisYear.wages'] === '33094379' && fin['lastYear.wages'] === '51520409', JSON.stringify(fin));
     // The club's record, and a change of the balance and the reputation saved with the game file.
     check('Clubs: the record: reputation and training facilities as the file has them', await p.inputValue('#editor-form [data-cf="reputation"]') === '9200'
-      && await p.inputValue('#editor-form [data-cf="training"]') === '18' && await p.inputValue('#editor-form [data-cf="balance"]') === '59516431');
+      && await p.inputValue('#editor-form [data-cf="training"]') === '18' && await p.inputValue('#editor-form [data-cf="balance"]') === '59,516,431', await p.inputValue('#editor-form [data-cf="balance"]'));
     for (const [k, v] of [['balance', '90000000'], ['reputation', '9900']]) {
       await p.fill(`#editor-form [data-cf="${k}"]`, v);
       await p.locator(`#editor-form [data-cf="${k}"]`).dispatchEvent('change');
