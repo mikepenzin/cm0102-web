@@ -633,7 +633,9 @@ is open, the title is the save's name and Players and Scout are its tabs):
   1–20 rating, money, a date, a choice), and ticks are a group of their own, the box before its words. Money shows
   with the language's separators and is plain digits, all selected, while it is typed in; a tick row is 44px high on
   a touch screen. The 1–20 colours are tokens (`--band-*`), which Red for the best sets anew. Another tab of Squad
-  Hub (Players, Scout, Staff, Clubs) empties the right-hand panel.
+  Hub (Players, Scout, Staff, Clubs) empties the right-hand panel. Under a player's + Shortlist and + Scout, a line
+  says whose they are ("For Klaus Kastelmann"); with two or more human managers it is a choice of them, the same
+  choice as the Scout's Manager list (kept for the save).
 - The values are coloured on the game's 1–20 scale (low, middling, good, high; a position only where he plays): green
   for the best, or, by the viewer's choice above the attributes (kept in the browser; `features.js` `attribute-colours`,
   Club Legends first), red for the best with the low end grey. And

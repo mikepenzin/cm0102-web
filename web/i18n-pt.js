@@ -966,4 +966,6 @@ export default {
   "Bonuses and release fee": "Prémios e cláusula de rescisão",
   "Release clauses": "Cláusulas de rescisão",
   "Transfer status": "Situação de transferência",
+  "For": "Para",
+  "For {manager}": "Para {manager}",
 };

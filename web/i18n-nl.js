@@ -966,4 +966,6 @@ export default {
   "Bonuses and release fee": "Premies en afkoopsom",
   "Release clauses": "Afkoopclausules",
   "Transfer status": "Transferstatus",
+  "For": "Voor",
+  "For {manager}": "Voor {manager}",
 };

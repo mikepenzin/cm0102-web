@@ -296,6 +296,15 @@ try {
     await p.waitForSelector('#editor-form [data-f="c:wage"]', { state: 'attached', timeout: 10000 }).catch(() => {});
     check('a player: the row clicked opens his form', (await p.textContent('#editor-player')).trim() === him.name, await p.textContent('#editor-player'));
     const tab = (k) => p.click(`#editor-form [data-ftab="${k}"]`);
+    // Whose shortlist and scouts the two buttons are: a line under them; with two human managers, a choice of them.
+    await p.waitForSelector('#editor-for-manager', { timeout: 10000 }).catch(() => {});
+    check('a player: under his buttons, the manager they are for, a choice of the two', (await p.$$eval('#editor-for-manager option', (o) => o.map((x) => x.textContent))).join() === 'Klaus Kastelmann,Mike Penzin'
+      && await p.inputValue('#editor-for-manager') === String(g.players().length + 1), await p.$eval('#editor-for', (e) => e.outerHTML).catch(() => 'none'));
+    await p.selectOption('#editor-for-manager', { label: 'Mike Penzin' });
+    check('a player: Mike chosen there, both buttons are for Mike, and the Scout tab follows', await p.getAttribute('#editor-shortlist', 'title') === 'The shortlist of Mike Penzin'
+      && await p.getAttribute('#editor-scoutreq', 'title') === 'The scouts of Mike Penzin'
+      && await p.evaluate(() => localStorage.getItem('cm0102-shortlist-manager:Scouting 2001-07-29.sav')) === String(g.players().length + 2));
+    await p.selectOption('#editor-for-manager', { label: 'Klaus Kastelmann' });
     check('a player: his form in GK\'s tabs, Details first, one tab shown', (await p.$$eval('#editor-form [data-ftab]', (b) => b.map((x) => x.dataset.ftab))).join() === 'details,attributes,personality,contract,unhappiness,loan'
       && await p.isVisible('#editor-form [data-f="m:nation"]') && !(await p.isVisible('#editor-form [data-f="c:wage"]')));
     check('a player: his contract, personality and details in the form', await p.inputValue('#editor-form [data-f="c:wage"]') === g.read(him.row).more.contract.wage.toLocaleString('en')

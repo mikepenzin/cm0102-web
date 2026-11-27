@@ -160,6 +160,25 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     if (pane === 'scout') runScout();
     if (current === row) drawAskedButton(row);
   }
+  // Under a player's two buttons: whose shortlist and scouts they are; with two or more human managers, a choice of
+  // them (the Scout's Manager list, the same choice, kept for the save). Hidden with both buttons.
+  function drawFor(row) {
+    const el = $('editor-for');
+    if (!el) return;
+    const shown = lists && (!$('editor-shortlist')?.hidden || !$('editor-scoutreq')?.hidden);
+    el.hidden = !shown;
+    if (!shown) return;
+    el.innerHTML = lists.managers.length > 1
+      ? `<label>${esc(t('For'))} <select id="editor-for-manager">${lists.managers.map((x) => `<option value="${x.id}"${x.id === manager ? ' selected' : ''} data-raw>${esc(x.name)}</option>`).join('')}</select></label>`
+      : esc(t('For {manager}', { manager: managerName() }));
+    const pick = $('editor-for-manager');
+    if (pick) pick.onchange = () => {
+      manager = Number(pick.value);
+      try { localStorage.setItem(LIST_KEY(name), String(manager)); } catch { /* not kept */ }
+      drawListedButton(row); drawAskedButton(row);
+      if (pane === 'scout') { drawFilters(); runScout(); }
+    };
+  }
   function drawAskedButton(row) {
     const b = $('editor-scoutreq');
     if (!b) return;
@@ -921,7 +940,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       ? `<div class="ed-name"><h3>${esc(t('A new player'))}</h3><span class="spacer"></span><button class="primary" id="editor-apply" type="button">${esc(t('Add this player'))}</button>
         <button id="editor-reset" type="button">${esc(t('Clear'))}</button></div><p class="small">${esc(t('Attributes left at 0 are random: the game sets them when a new game starts.'))}</p>`
       : `<div class="ed-name"><h3 id="editor-player">${esc(playerName(x))}</h3><span class="spacer"></span>${set ? '' : '<button id="editor-shortlist" type="button" hidden></button><button id="editor-scoutreq" type="button" hidden></button>'}<button id="editor-reset" type="button" hidden>${esc(t('Undo changes'))}</button></div>
-        <p class="small" id="editor-player-from">${esc(x.club || t('No club'))} · ${esc(x.nation)}</p>`;
+        <p class="small" id="editor-player-from">${esc(x.club || t('No club'))} · ${esc(x.nation)}</p>${set ? '' : '<p class="small ed-for" id="editor-for" hidden></p>'}`;
     const clubNow = set ? clubs.find((c) => c.id === f.club) : null;
     const who = set ? `<section><h4>${esc(t('Name and club'))}</h4><div class="ed-grid">
         ${text('first', f.first, t('First name'))}${text('second', f.second, t('Surname'))}${text('common', f.common, t('Known as (optional)'))}
@@ -962,7 +981,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
     } else {
       if (!set) {
         const draw = () => { drawListedButton(row); drawAskedButton(row); };
-        draw(); readLists().then(() => { if (current === row) draw(); });
+        draw(); readLists().then(() => { if (current === row) { draw(); drawFor(row); } });
         $('editor-shortlist').onclick = () => toggleListed(row);
         $('editor-scoutreq').onclick = () => toggleAsked(row);
       }
@@ -1192,7 +1211,7 @@ export function mountEditor({ FS, sync, log, toast, dir, gameData = '/game/Data'
       manager = Number(el.value);
       try { localStorage.setItem(LIST_KEY(name), String(manager)); } catch { /* not kept */ }
       runScout();
-      if (current !== null) { drawListedButton(current); drawAskedButton(current); }
+      if (current !== null) { drawListedButton(current); drawAskedButton(current); drawFor(current); }
       return;
     }
     if (el.dataset.k) filters[el.dataset.k] = el.value;

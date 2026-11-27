@@ -966,4 +966,6 @@ export default {
   "Bonuses and release fee": "Bonuser og frikjøpsklausul",
   "Release clauses": "Frikjøpsklausuler",
   "Transfer status": "Overgangsstatus",
+  "For": "For",
+  "For {manager}": "For {manager}",
 };
