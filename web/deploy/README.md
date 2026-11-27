@@ -83,6 +83,10 @@ node web/deploy/stage.mjs --game "/Applications/CM 01-02 Bosman Edition.app/Cont
 cd web/deploy/stage && fly deploy
 ```
 
+`web/deploy/release.sh` does all of it, and stops after the pull when it brings nothing new (`--force` goes on
+anyway, for example after a failed deploy). `--no-build` skips the engine builds, `--game <folder>` names another game
+folder, and what follows `--` goes to `fly deploy` (`web/deploy/release.sh --no-build -- --wg=false`).
+
 ## Accounts and cloud saves (optional)
 
 Sign in with Google and cloud saves (`web/README.md`, "Cloud saves") are off until their settings are on the app. Once:
