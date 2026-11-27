@@ -51,6 +51,15 @@ export function barPlace(box, availW, availH, length, thick = BAR_THICK) {
   return 'over';
 }
 
+// Where "Tap to type" goes: on the game's red title bar, at its right end, the same place on every screen. The bar is
+// at the top of each screen, its middle 54 of the picture's 800 rows down (measured on a phone, 1280x800); on the typing
+// row, as before, the chip covered the column heads and the buttons there (a player's report). box: the picture's
+// place; the stage's top 28px stay clear (the chip's half height); 6px in from the picture's right edge.
+const TITLE_ROW = 54 / 800;
+export function chipPlace(box, availH) {
+  return { x: Math.round(box.left + box.cssW - 6), y: Math.round(Math.min(Math.max(box.top + TITLE_ROW * box.cssH, 28), availH - 28)) };
+}
+
 export function mountLayout({ app, bar, stage, canvas, chip, isTouch }) {
   const vv = window.visualViewport;
   const state = {
@@ -113,9 +122,9 @@ export function mountLayout({ app, bar, stage, canvas, chip, isTouch }) {
       const showChip = isTouch && state.typingRow >= 0 && !state.fieldFocused;
       chip.hidden = !showChip;
       if (showChip) {
-        const y = top + state.typingRow / state.picture.h * fit.cssH;
-        s.setProperty('--chip-y', `${Math.round(Math.min(Math.max(y, 28), availH - 28))}px`);
-        s.setProperty('--chip-x', `${Math.round(left + fit.cssW - 12)}px`);
+        const at = chipPlace({ left, top, cssW: fit.cssW, cssH: fit.cssH }, availH);
+        s.setProperty('--chip-y', `${at.y}px`);
+        s.setProperty('--chip-x', `${at.x}px`);
       }
     }
     if (!old || old.bw !== fit.bw || old.bh !== fit.bh) tellSdl();

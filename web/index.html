@@ -97,7 +97,9 @@
 
   #type-chip { position: absolute; left: var(--chip-x, 50%); top: var(--chip-y, 50%); z-index: 3;
     transform: translate(-100%, -50%); background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
-    font-weight: 650; box-shadow: 0 4px 18px rgba(0, 0, 0, .5); animation: chip 1.6s ease-in-out infinite; }
+    font-weight: 650; box-shadow: 0 4px 18px rgba(0, 0, 0, .5); animation: chip 1.6s ease-in-out infinite;
+    height: 32px; padding: 0 10px; gap: 6px; font-size: 13px; }   /* on the game's title bar: as low as the bar (layout.js chipPlace) */
+  #type-chip svg { width: 16px; height: 16px; }
   @keyframes chip { 50% { box-shadow: 0 4px 18px rgba(0, 0, 0, .5), 0 0 0 7px rgba(53, 182, 115, .28); } }
 
   #busy { position: absolute; left: 12px; top: 12px; z-index: 3; display: flex; align-items: center; gap: 8px; opacity: 0;

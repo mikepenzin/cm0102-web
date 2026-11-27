@@ -1002,8 +1002,9 @@ click: on the game, the page turns it into the right button from the press to th
 already (a run of the real engine in Chromium: the dashed target while held, the run after the release).
 
 The game draws its text entries (a name, a search) on the canvas, so the device does not open its keyboard by
-itself. When a text entry of the game takes keys, a "Tap to type" chip shows at it: tap the chip, or the text entry,
-and the keyboard opens. The picture moves so the entry stays above the keyboard, and the keyboard closes when the
+itself. When a text entry of the game takes keys, a "Tap to type" chip shows on the game's red title bar, at its
+right end (`layout.js` `chipPlace`; at the entry's row it covered the column heads and the buttons under them, a
+player's report): tap the chip, or the text entry, and the keyboard opens. The picture moves so the entry stays above the keyboard, and the keyboard closes when the
 text is entered. The Keyboard button in the bar opens and closes the keyboard at any time. A mouse, a trackpad or a
 keyboard connected to the device work as on a computer.
 

@@ -1,7 +1,7 @@
 // Tests of the layout's arithmetic (web/layout.js): the canvas size for a picture, and the move for the keyboard.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BAR_STEP, barPlace, fitPicture, shiftForRow } from '../layout.js';
+import { BAR_STEP, barPlace, chipPlace, fitPicture, shiftForRow } from '../layout.js';
 
 test('fitPicture: whole multiples of the picture\'s shape, as large as fits', () => {
   // 1280x800 is 8 by 5: a stage of 1470x704 takes 8*140 by 5*140.
@@ -49,4 +49,12 @@ test('barPlace: the page\'s buttons go beside or above the picture when there is
   const pad = fitPicture(1280, 800, 1180, 820, 2);
   assert.equal(barPlace({ left: (1180 - pad.cssW) / 2, top: (820 - pad.cssH) / 2 }, 1180, 820, 7 * BAR_STEP + 10), 'over');
   assert.equal(barPlace(null, 800, 600, 300), 'over');
+});
+
+// "Tap to type" sits on the game's red title bar, at its right end (a player: on the typing row it covered the column
+// heads and the buttons under them). The bar is at the top of every screen of the game: 54 of 800 rows down.
+test('chipPlace: on the title bar\'s right end, whatever the typing row', () => {
+  const box = { left: 100, top: 20, cssW: 640, cssH: 400 };
+  assert.deepEqual(chipPlace(box, 375), { x: 734, y: 47 }, 'x: 6px in from the right edge; y: 20 + 400 x 54/800');
+  assert.deepEqual(chipPlace({ ...box, top: 0, cssH: 200 }, 375), { x: 734, y: 28 }, 'never closer than 28px to the stage\'s top');
 });

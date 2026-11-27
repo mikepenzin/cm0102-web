@@ -8,7 +8,7 @@
 // entries on the canvas. So the page has a hidden text field; what is typed there goes to the game through the
 // runtime (rt_web_type and rt_web_key in src/recomp_rt/win/user32.c), one character at a time, as typed keys come.
 // The runtime also says where a text entry of the game takes keys (rt_web_typing_row). With that the page offers the
-// keyboard where it is needed: a "Tap to type" chip at the entry, a tap on the entry itself opens the keyboard, the
+// keyboard where it is needed: a "Tap to type" chip on the title bar (layout.js chipPlace), a tap on the entry itself opens the keyboard, the
 // picture moves so the entry stays above the keyboard (layout.js), and the keyboard closes when the entry is done.
 // The device only opens its keyboard from inside a tap, which is why the page cannot open it by itself.
 import { onLanguage, t } from './i18n.js';

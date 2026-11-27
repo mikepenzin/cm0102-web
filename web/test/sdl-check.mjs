@@ -261,8 +261,9 @@ try {
   // The on-screen keyboard and a text entry of the game.
   await p.evaluate(() => window.Module._probe_set_typing(640));
   await p.waitForSelector('#type-chip:not([hidden])', { timeout: 3000 }).catch(() => {});
-  let chip = await p.locator('#type-chip').boundingBox(); pt = await at(p, 0, 640); b = await box(p);
-  check('a text entry takes keys: the chip shows at its row, at the right edge of the picture', chip && near(chip.y + chip.height / 2, pt.y, 2) && near(chip.x + chip.width, b.x + b.w - 12, 2), JSON.stringify(chip));
+  let chip = await p.locator('#type-chip').boundingBox(); pt = await at(p, 0, 54); b = await box(p);
+  check('a text entry takes keys: the chip shows on the game\'s title bar (row 54 of 800), at the right edge of the picture, clear of the entry\'s row',
+    chip && near(chip.y + chip.height / 2, Math.max(pt.y, 28), 2) && near(chip.x + chip.width, b.x + b.w - 6, 2) && chip.y + chip.height < (await at(p, 0, 640)).y, JSON.stringify(chip));
   check('and a message says how to get the keyboard', (await p.locator('.toast').allTextContents()).some((t) => /Tap to type/.test(t)));
   if (shots) await p.screenshot({ path: join(shots, 'sdl-touch-chip.png') });
   await p.tap('#type-chip');

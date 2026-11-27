@@ -22,7 +22,7 @@ export const TOUR_STEPS = [
   step('editor-open', () => ({ title: t('Squad Hub'),
     text: t('Change the players of a saved game, or make a database of your own for new games. In a saved game, the Scout finds players by age, potential and attributes.') })),
   step('kbd-open', () => ({ title: t('Keyboard'),
-    text: t('Opens your keyboard to type in the game: a manager\'s name, a search. When the game waits for text, a "Tap to type" sign shows beside the entry too.') })),
+    text: t('Opens your keyboard to type in the game: a manager\'s name, a search. When the game waits for text, a "Tap to type" sign shows on the game\'s title bar too.') })),
   step('right-click', () => ({ title: t('Right click'),
     text: t('Tap it, then tap the game: that tap is a right click (a player\'s instructions on the tactics screen). A long press on the game does it too.') })),
   step('fullscreen', () => ({ title: t('Full screen'),
